@@ -406,5 +406,24 @@
       "release_note_one": "{{count}} new release note",
       "release_note_other": "{{count}} new release notes"
     }
+  },
+  "attachments": {
+    "pages_one": "{{count}} page read.",
+    "pages_other": "{{count}} pages read.",
+    "parts_one": "{{count}} part read.",
+    "parts_other": "{{count}} parts read.",
+    "remove": "Remove {{name}}",
+    "timeline": {
+      "uploading": "Uploading {{name}} · {{percent}}%",
+      "queued": "Waiting to process {{name}}",
+      "preparing": "Preparing {{name}}",
+      "extracting": "Reading {{name}}",
+      "transcribing": "Transcribing {{name}}",
+      "indexing": "Making {{name}} available for search",
+      "retrying": "Retrying {{name}}",
+      "ready": "Processed {{name}}",
+      "failed": "Could not process {{name}}",
+      "removing": "Removing {{name}}"
+    }
   }
 }

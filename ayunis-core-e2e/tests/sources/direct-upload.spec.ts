@@ -4,7 +4,7 @@ import { generatedApi } from '../../src/clients/api/generated-api';
 import { login } from '../../src/clients/api/auth.client';
 import { createUser } from '../../src/factories/user.factory';
 import { createOcrRejectedPdf } from '../../src/factories/pdf.factory';
-import { sendMessage, startThread } from '../../src/flows/chat.flow';
+import { startThread } from '../../src/flows/chat.flow';
 import { config } from '../../src/config';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +19,40 @@ const BUDGET = 'Haushalt 2026: Gesamtvolumen EUR 4.200.000';
 
 // Pre-signed storage URLs carry the signature in the query; the API never does.
 const isSignedStorageRequest = (url: string) => url.includes('X-Amz-Signature');
+
+for (const existingChat of [false, true]) {
+test(`uploads before ${existingChat ? 'existing' : 'new'}-chat Send and keeps the message visible during transfer`, async ({ api, page }) => {
+  test.setTimeout(90_000);
+  await permitEmbeddingModel(api);
+  if (existingChat) await startThread(page, 'Prepare to review a budget.');
+  else await page.goto('/chat');
+  let releaseTransfer!: () => void;
+  const held = new Promise<void>(resolve => { releaseTransfer = resolve; });
+  await page.route(url => isSignedStorageRequest(url.href), async route => {
+    if (route.request().method() === 'PUT') await held;
+    await route.continue();
+  });
+  const transfer = page.waitForRequest(request => request.method() === 'PUT' && isSignedStorageRequest(request.url()));
+  try {
+    await uploadPdfs(page, ['immediate-budget.pdf']);
+    await transfer;
+    if (!existingChat) expect(new URL(page.url()).pathname).toBe('/chat');
+    await page.getByTestId('input').fill('Review this budget while the upload finishes.');
+    await page.getByTestId('send').click();
+    await expect(page).toHaveURL(/\/chats\/[^/]+$/);
+    await expect(page.getByTestId('attachment-progress')).toContainText('immediate-budget.pdf');
+    await expect(page.getByTestId('pending-user-message')).toBeVisible();
+    await expect(page.getByTestId('pending-user-message').getByTestId('chat-attachment')).toBeVisible();
+    await expect(page.getByTestId('attachment-progress')).toHaveAttribute('data-stage', 'uploading');
+    await page.screenshot({ path: test.info().outputPath('upload-in-conversation.png'), animations: 'disabled' });
+  } finally {
+    releaseTransfer();
+  }
+  await expect(page.getByTestId('chat-attachment')).toHaveAttribute('data-stage', 'ready', { timeout: 60_000 });
+  await expect(page.getByTestId('pending-user-message')).toBeHidden();
+});
+
+}
 
 test('uploads chat files straight to object storage and shows transfer apart from processing', async ({
   api,
@@ -100,34 +134,48 @@ test('uploads chat files straight to object storage and shows transfer apart fro
   await continuity.dispose();
 });
 
-test('aborts a new-chat upload after signing fails and preserves the failed chip', async ({ api, page }) => {
+test('cleans up a pre-send upload when signing fails and preserves the failed chip', async ({ api, page }) => {
   await permitEmbeddingModel(api);
   await page.goto('/chat');
-  await uploadPdfs(page, ['interrupted-budget.pdf']);
-  const reservation = page.waitForResponse(response =>
-    response.request().method() === 'POST' && /^\/api\/threads\/[^/]+\/uploads$/.test(new URL(response.url()).pathname),
-  );
-  const cleaned = page.waitForResponse(response =>
-    response.request().method() === 'DELETE' && new URL(response.url()).pathname.startsWith('/api/source-uploads/'),
-  );
   await page.route(url => url.pathname.startsWith('/api/source-uploads/') && url.pathname.endsWith('/sign'), route => route.fulfill({
     status: 410, contentType: 'application/json', body: JSON.stringify({ code: 'SOURCE_UPLOAD_EXPIRED', message: 'Upload expired' }),
   }));
-  await sendMessage(page, 'Review the attached budget.');
-  const reserved = await reservation;
-  const session = await reserved.json() as { id: string };
-  const threadId = new URL(reserved.url()).pathname.split('/').at(-2)!;
+  const cleaned = page.waitForResponse(response => response.request().method() === 'DELETE' && new URL(response.url()).pathname.startsWith('/api/source-uploads/'));
+  await uploadPdfs(page, ['interrupted-budget.pdf']);
+  expect((await cleaned).status()).toBe(204);
+  await expect(page.getByTestId('chat-source')).toHaveAttribute('data-source-status', 'failed');
+  expect(new URL(page.url()).pathname).toBe('/chat');
+  await page.getByTestId('chat-source-remove').click();
+  await expect(page.getByTestId('chat-source')).toHaveCount(0);
+});
+
+test('removing a file during completion removes committed sources before sending', async ({ api, page }) => {
+  await permitEmbeddingModel(api);
+  const threadId = await startThread(page, 'Prepare to review a budget.');
+  let release!: () => void;
+  let committed!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  const complete = new Promise<void>(resolve => { committed = resolve; });
+  await page.route(url => url.pathname.startsWith(`/api/threads/${threadId}/uploads/`) && url.pathname.endsWith('/complete'), async route => {
+    const response = await route.fetch();
+    committed();
+    await held;
+    await route.fulfill({ response });
+  });
   try {
-    const aborted = await cleaned;
-    expect(aborted.status()).toBe(204);
-    expect(new URL(aborted.url()).pathname).toBe(`/api/source-uploads/${session.id}`);
-    await expect(page.getByTestId('chat-source')).toHaveAttribute('data-source-status', 'failed');
-    expect(new URL(page.url()).pathname).toBe('/chat');
-    const signAgain = await api.post(`/api/source-uploads/${session.id}/sign`, { data: { method: 'PUT' } });
-    expect(signAgain.status()).toBe(410);
-  } finally {
-    await generatedApi.threadsControllerDelete(threadId, { api });
-  }
+    await uploadPdfs(page, ['removed-budget.pdf']);
+    await complete;
+    await page.getByTestId('input').fill('Continue without the removed budget.');
+    await page.getByTestId('send').click();
+    await expect(page.getByTestId('pending-user-message')).toBeVisible();
+    await page.getByTestId('attachment-remove').click();
+    await expect(page.getByTestId('attachment-progress')).toHaveAttribute('data-stage', 'removing');
+  } finally { release(); }
+  await expect(page.getByTestId('attachment-progress')).toHaveCount(0);
+  await expect(page.getByTestId('pending-user-message')).toBeHidden();
+  const thread = await generatedApi.threadsControllerFindOne(threadId, { api });
+  expect(thread.sources).toEqual([]);
+  expect(JSON.stringify(thread.messages)).toContain('Continue without the removed budget.');
 });
 
 test('rejects bad uploads, hides sessions from other users, and completes idempotently', async ({
@@ -354,6 +402,37 @@ test('serves thread uploads through the API and keeps a session on its own threa
   expect(thread.sources.map((source) => source.id).sort()).toEqual(
     sources.map((source) => source.id).sort(),
   );
+});
+
+test('keeps a staged chat upload owned by its uploader and binds it to only one thread', async ({ api, browser, mail }) => {
+  const model = await requireDefaultModel(api);
+  const threadA = await createEmptyThread(api, model.id);
+  const threadB = await createEmptyThread(api, model.id);
+  const pdf = createOcrRejectedPdf(BUDGET);
+  const reservation = await api.post('/api/threads/uploads', {
+    data: { fileName: 'staged-budget.pdf', mimeType: 'application/pdf', fileSize: pdf.length },
+  });
+  expect(reservation.status()).toBe(201);
+  const session = await reservation.json() as { id: string };
+  const member = await createUser(api, mail, `draft-upload-${Date.now()}`);
+  const colleague = await browser.newContext({ baseURL: config.apiURL });
+  try {
+    await login(colleague.request, member.email, member.password);
+    const otherThread = await createEmptyThread(colleague.request, model.id);
+    const sign = await colleague.request.post(`/api/source-uploads/${session.id}/sign`, { data: { method: 'PUT' } });
+    expect(sign.status()).toBe(404);
+    const claim = await colleague.request.post(`/api/threads/${otherThread.id}/uploads/${session.id}/complete`);
+    expect(claim.status()).toBe(404);
+    const progress = await colleague.request.get(`/api/threads/${threadA.id}/sources/progress`);
+    expect(progress.status()).toBe(404);
+  } finally { await colleague.close(); }
+  const signed = await generatedApi.sourceUploadsControllerSign(session.id, { method: 'PUT' }, { api });
+  expect((await api.fetch(signed.url, { method: 'PUT', data: pdf })).ok()).toBe(true);
+  const complete = await api.post(`/api/threads/${threadA.id}/uploads/${session.id}/complete`);
+  expect(complete.ok()).toBe(true);
+  const mismatch = await api.post(`/api/threads/${threadB.id}/uploads/${session.id}/complete`);
+  expect(mismatch.status()).toBe(400);
+  expect((await mismatch.json()).code).toBe('SOURCE_UPLOAD_TARGET_MISMATCH');
 });
 
 async function requireDefaultModel(api: APIRequestContext) {

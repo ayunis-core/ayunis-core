@@ -160,18 +160,25 @@ function ActivityBlock({
     setPreviousHasFollowingText(hasFollowingText);
     setUserOpen(null);
   }
-  const open = userOpen ?? !hasFollowingText;
+  const hasSourceError = block.steps.some(
+    (step) => step.kind === 'source_processing' && step.status === 'error',
+  );
+  const open = userOpen ?? (!hasFollowingText || hasSourceError);
   const headerLabel = isActive
     ? t('chat.timeline.working')
     : t('chat.timeline.summary', { count: block.steps.length });
 
   return (
     <Collapsible open={open} onOpenChange={setUserOpen}>
-      <div className="rounded-lg border border-border bg-muted/30">
+      <div
+        className="rounded-lg border border-border bg-muted/30"
+        data-testid="agent-run-activity"
+      >
         <CollapsibleTrigger asChild>
           <button
             type="button"
             className="flex items-center justify-between gap-2 w-full px-3 py-2 text-left"
+            data-testid="agent-run-activity-toggle"
           >
             <span
               className={cn(

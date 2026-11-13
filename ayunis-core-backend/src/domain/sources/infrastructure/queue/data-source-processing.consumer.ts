@@ -91,6 +91,7 @@ export class DataSourceProcessingConsumer extends WorkerHost {
       const fileBuffer = await processingStage('data_source.download', () =>
         this.readInput(job.data),
       );
+      await job.updateProgress({ stage: 'extracting' });
       const sheets = await processingStage('data_source.extraction', () =>
         this.parseFile(fileBuffer, kind),
       );

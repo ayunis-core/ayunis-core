@@ -2,20 +2,14 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ChatInput from '@/widgets/chat-input';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
-import {
-  useInitiateChat,
-  type SourceUploadStatus,
-} from '@/features/chat-initiation';
+import { useInitiateChat } from '@/features/chat-initiation';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
 import { useSelectedModel } from '@/widgets/model-select-options';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { showError } from '@/shared/lib/toast';
-import { generateUUID } from '@/shared/lib/uuid';
-import {
-  SourceResponseDtoStatus,
-  SourceResponseDtoType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useChatAttachments } from '@/features/chat-attachments';
+
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -27,36 +21,6 @@ interface ChatStarterProps {
   placeholder?: string;
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
-}
-
-type LocalSource = {
-  id: string;
-  name: string;
-  type: SourceResponseDtoType;
-  file: File;
-  status?: SourceResponseDtoStatus;
-  processingError?: string;
-  uploadProgress?: number;
-};
-
-function applySourceStatus(
-  source: LocalSource,
-  status: SourceUploadStatus,
-): LocalSource {
-  if (status.kind === 'failed') {
-    return {
-      ...source,
-      status: SourceResponseDtoStatus.failed,
-      processingError: status.message,
-      uploadProgress: undefined,
-    };
-  }
-  return {
-    ...source,
-    status: SourceResponseDtoStatus.processing,
-    processingError: undefined,
-    uploadProgress: status.kind === 'uploading' ? status.progress : undefined,
-  };
 }
 
 /**
@@ -81,7 +45,11 @@ export function ChatStarter({
   const [modelId, setModelId] = useState(selectedModelId);
   const { isAnonymousByDefault } = useAnonymousModeDefault();
   const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
-  const [sources, setSources] = useState<LocalSource[]>([]);
+  const {
+    attachments: sources,
+    upload: handleFileUpload,
+    remove: handleRemoveSource,
+  } = useChatAttachments();
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
   >([]);
@@ -97,24 +65,6 @@ export function ChatStarter({
   const isAnonymousEnforced =
     !selectedMode && (selectedModel?.anonymousOnly ?? false);
   const isVisionEnabled = selectedModel?.canVision ?? false;
-
-  function handleFileUpload(files: File[]) {
-    const newSources: LocalSource[] = files.map((file) => ({
-      id: generateUUID(),
-      name: file.name,
-      type: file.name.endsWith('.csv')
-        ? SourceResponseDtoType.data
-        : SourceResponseDtoType.text,
-      file,
-    }));
-    setSources((prev) => [...prev, ...newSources]);
-  }
-
-  function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
-    setSources((prev) =>
-      prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
-    );
-  }
 
   function handleSend(
     message: string,
@@ -139,20 +89,11 @@ export function ChatStarter({
       sourceNotificationId,
       skillId,
       voiceInput,
-      onSourceStatus: handleSourceStatus,
     });
   }
 
   function handleCancel() {
     cancel();
-    setSources((prev) =>
-      prev.map((s) => ({
-        ...s,
-        status: undefined,
-        processingError: undefined,
-        uploadProgress: undefined,
-      })),
-    );
   }
 
   return (
@@ -169,9 +110,7 @@ export function ChatStarter({
         onSend={handleSend}
         onCancel={handleCancel}
         onFileUpload={handleFileUpload}
-        onRemoveSource={(sourceId) =>
-          setSources((prev) => prev.filter((s) => s.id !== sourceId))
-        }
+        onRemoveSource={handleRemoveSource}
         onAddKnowledgeBase={(kb) => {
           setSelectedKnowledgeBases((prev) => [...prev, kb]);
         }}

@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, type ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -15,9 +15,10 @@ import RoutineNudgeNotice from './RoutineNudgeNotice';
 
 interface ChatMessageProps {
   readonly message: Message;
+  readonly attachments?: ReactNode;
 }
 
-function ChatMessage({ message }: ChatMessageProps) {
+function ChatMessage({ message, attachments }: ChatMessageProps) {
   if (message.role !== 'user' && message.role !== 'system') return null;
 
   const images = message.content.filter(
@@ -30,6 +31,7 @@ function ChatMessage({ message }: ChatMessageProps) {
   ).filter((c) => !c.isSkillInstruction);
 
   if (
+    !attachments &&
     images.length === 0 &&
     texts.length > 0 &&
     texts.every((c) => c.isNudge)
@@ -43,7 +45,7 @@ function ChatMessage({ message }: ChatMessageProps) {
         className="max-w-2xl min-w-0 space-y-2 overflow-hidden rounded-2xl bg-muted py-2.5 px-4"
         data-testid="user-message"
       >
-        {images.length > 0 && (
+        {(images.length > 0 || attachments) && (
           <div className="flex flex-wrap gap-2">
             {images.map((imageContent) => (
               <ImageThumbnail
@@ -52,6 +54,7 @@ function ChatMessage({ message }: ChatMessageProps) {
                 imageUrl={`${config.api.baseUrl}/threads/${message.threadId}/messages/${message.id}/images/${imageContent.index}`}
               />
             ))}
+            {attachments}
           </div>
         )}
         {texts.map((textContent, index) => (

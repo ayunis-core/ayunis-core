@@ -1,4 +1,1 @@
-export {
-  useInitiateChat,
-  type SourceUploadStatus,
-} from './api/useInitiateChat';
+export { useInitiateChat } from './api/useInitiateChat';

@@ -120,7 +120,7 @@ const sessionSchema = new EntitySchema<SourceUploadSessionRecord>({
     ...base,
     orgId: { type: 'uuid' },
     userId: { type: 'uuid' },
-    targetId: { type: 'uuid' },
+    targetId: { type: 'uuid', nullable: true },
     targetType: { type: String },
     fileName: { type: String },
     fileType: { type: String },
@@ -163,6 +163,8 @@ describe('CompleteSourceUploadUseCase transaction', () => {
   let session: ReturnType<typeof buildUploadSession>;
   let createdIds: UUID[];
   const queueing = { tryQueue: jest.fn() };
+
+  let threadId: UUID;
 
   beforeAll(async () => {
     schema = `upload_completion_${randomUUID().replaceAll('-', '')}`;
@@ -239,7 +241,8 @@ describe('CompleteSourceUploadUseCase transaction', () => {
   }, 30_000);
 
   beforeEach(async () => {
-    session = buildUploadSession({ id: randomUUID(), targetId: randomUUID() });
+    threadId = randomUUID();
+    session = buildUploadSession({ id: randomUUID(), targetId: threadId });
     createdIds = [];
     queueing.tryQueue.mockReset();
     queueing.tryQueue.mockImplementation(async () => {
@@ -249,7 +252,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
       });
       const committed = await db
         .getRepository(ThreadSourceAssignmentRecord)
-        .findBy({ threadId: session.targetId });
+        .findBy({ threadId });
       expect(
         committed.map((row) => row.sourceId).sort((a, b) => a.localeCompare(b)),
       ).toEqual([...createdIds].sort((a, b) => a.localeCompare(b)));
@@ -262,7 +265,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
     });
     await db
       .getRepository(ThreadRecord)
-      .save({ id: session.targetId, userId: UPLOAD_USER_ID });
+      .save({ id: threadId, userId: UPLOAD_USER_ID });
   });
 
   afterAll(async () => {
@@ -277,7 +280,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
     createdIds = created.map((source) => source.id);
     for (const source of created) {
       await assignments.addSourceAssignment({
-        threadId: session.targetId,
+        threadId,
         userId: UPLOAD_USER_ID,
         sourceAssignment: new SourceAssignment({ source }),
       });
@@ -287,7 +290,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
   function command(attachment = attach): CompleteSourceUploadCommand {
     return new CompleteSourceUploadCommand({
       uploadId: session.id,
-      targetId: session.targetId,
+      targetId: threadId,
       targetType: session.targetType,
       attach: attachment,
     });
@@ -315,7 +318,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
       expect(
         await db
           .getRepository(ThreadSourceAssignmentRecord)
-          .countBy({ threadId: session.targetId }),
+          .countBy({ threadId }),
       ).toBe(0);
       expect(await sessions.findById(session.id)).toMatchObject({
         status: SourceUploadSessionStatus.PENDING,
@@ -333,10 +336,68 @@ describe('CompleteSourceUploadUseCase transaction', () => {
       expect(
         await db
           .getRepository(ThreadSourceAssignmentRecord)
-          .countBy({ threadId: session.targetId }),
+          .countBy({ threadId }),
       ).toBe(workbook ? 2 : 1);
     },
   );
+
+  it('binds a staged upload atomically and rolls the binding back with a failed attachment', async () => {
+    session.targetId = null;
+    await sessions.save(session);
+    await expect(
+      useCase.execute(
+        command(async (created) => {
+          await attach(created);
+          throw new Error('attachment interrupted');
+        }),
+      ),
+    ).rejects.toThrow();
+    expect(await sessions.findById(session.id)).toMatchObject({
+      targetId: null,
+      status: SourceUploadSessionStatus.PENDING,
+    });
+
+    const result = await useCase.execute(command());
+    expect(result.sources).toHaveLength(1);
+    expect(await sessions.findById(session.id)).toMatchObject({
+      targetId: threadId,
+      status: SourceUploadSessionStatus.COMPLETED,
+    });
+  });
+
+  it('lets only one thread claim a staged upload during concurrent completions', async () => {
+    session.targetId = null;
+    await sessions.save(session);
+    const otherThreadId = randomUUID();
+    await db
+      .getRepository(ThreadRecord)
+      .save({ id: otherThreadId, userId: UPLOAD_USER_ID });
+    queueing.tryQueue.mockResolvedValue(true);
+    const otherCommand = new CompleteSourceUploadCommand({
+      uploadId: session.id,
+      targetId: otherThreadId,
+      targetType: session.targetType,
+      attach: async (created) => {
+        for (const source of created)
+          await assignments.addSourceAssignment({
+            threadId: otherThreadId,
+            userId: UPLOAD_USER_ID,
+            sourceAssignment: new SourceAssignment({ source }),
+          });
+      },
+    });
+    const outcomes = await Promise.allSettled([
+      useCase.execute(command()),
+      useCase.execute(otherCommand),
+    ]);
+    expect(
+      outcomes.filter((outcome) => outcome.status === 'fulfilled'),
+    ).toHaveLength(1);
+    const rejected = outcomes.find((outcome) => outcome.status === 'rejected');
+    expect(rejected).toMatchObject({
+      reason: { code: 'SOURCE_UPLOAD_TARGET_MISMATCH' },
+    });
+  });
 
   it('commits once before enqueueing, and replays without attaching or queueing again', async () => {
     await sessions.save(session);
@@ -364,7 +425,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
     expect(
       await db
         .getRepository(ThreadSourceAssignmentRecord)
-        .countBy({ threadId: session.targetId }),
+        .countBy({ threadId }),
     ).toBe(1);
   });
 

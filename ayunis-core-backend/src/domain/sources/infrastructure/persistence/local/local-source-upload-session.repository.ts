@@ -48,7 +48,10 @@ export class LocalSourceUploadSessionRepository extends SourceUploadSessionRepos
     id: UUID,
     fromStatus: SourceUploadSessionStatus,
     toStatus: SourceUploadSessionStatus,
-    updates: Partial<{ sources: UploadedSourceReference[] }> = {},
+    updates: Partial<{
+      sources: UploadedSourceReference[];
+      targetId: UUID;
+    }> = {},
   ): Promise<boolean> {
     const result = await this.repository.update(
       {

@@ -1,4 +1,8 @@
 import type {
+  SourceProcessingStage,
+  SourceProcessingErrorCode,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
   Message,
   ToolUseMessageContent,
   TextMessageContent,
@@ -7,7 +11,21 @@ import type { ToolCallDecision } from '@/shared/api';
 
 export type StepStatus = 'in_progress' | 'done' | 'error';
 
+export interface SourceProcessingTimelineStep {
+  kind: 'source_processing';
+  key: string;
+  sourceName: string;
+  isAudio: boolean;
+  stage: SourceProcessingStage | 'uploading' | 'removing';
+  status: StepStatus;
+  uploadProgress?: number;
+  completed?: number;
+  unit?: 'pages' | 'parts';
+  errorCode?: SourceProcessingErrorCode;
+}
+
 export type TimelineStep =
+  | SourceProcessingTimelineStep
   | {
       kind: 'thinking';
       key: string;

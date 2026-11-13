@@ -50,20 +50,20 @@ test('opens a new chat while its file is still processing and answers once the f
   await sendMessage(page, 'E2E cite first source');
 
   await expect(page).toHaveURL(/\/chats\/[0-9a-f-]+/);
-  const source = page.getByTestId('chat-source');
-  await expect(source).toHaveAttribute('data-source-status', 'processing');
+  const source = page.getByTestId('attachment-progress');
+  await expect(source).toBeVisible();
   await expect(page.getByTestId('user-message')).toHaveCount(1);
 
   await page.clock.fastForward('04:00');
 
-  await expect(source).toHaveAttribute('data-source-status', 'processing');
+  await expect(source).toBeVisible();
   await expect(page.getByTestId('user-message')).toHaveCount(1);
   await expect(page.getByTestId('assistant-message')).toHaveCount(0);
   expect(runRequests).toBe(0);
 
   holdProcessing = false;
 
-  await expect(source).toHaveAttribute('data-source-status', 'ready', {
+  await expect(page.getByTestId('chat-attachment')).toHaveAttribute('data-stage', 'ready', {
     timeout: 30_000,
   });
   const citation = page.getByTestId('source-citation').last();

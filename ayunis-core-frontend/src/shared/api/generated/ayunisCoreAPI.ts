@@ -246,6 +246,7 @@ import type {
   SkillsControllerFindAllParams,
   SkillsControllerPreviewOwnerChangeParams,
   SourceCitationResponseDto,
+  SourceProcessingProgressDto,
   SourceUploadSessionResponseDto,
   SsoAccountLinkStatusResponseDto,
   SsoAuthorizationResponseDto,
@@ -11491,6 +11492,167 @@ export const useThreadsControllerAssignWorkspace = <TError = void,
       > => {
       return useMutation(getThreadsControllerAssignWorkspaceMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary Reserve a file upload before creating a chat
+ */
+export const threadSourcesControllerCreateDraftUpload = (
+    createSourceUploadDto: CreateSourceUploadDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceUploadSessionResponseDto>(
+      {url: `/threads/uploads`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createSourceUploadDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourcesControllerCreateDraftUploadMutationKey = () => ['threadSourcesControllerCreateDraftUpload'] as const;
+
+export const getThreadSourcesControllerCreateDraftUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCreateDraftUpload>>, TError,ThreadSourcesControllerCreateDraftUploadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCreateDraftUpload>>, TError,ThreadSourcesControllerCreateDraftUploadMutationVariables, TContext> => {
+
+const mutationKey = getThreadSourcesControllerCreateDraftUploadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadSourcesControllerCreateDraftUpload>>, ThreadSourcesControllerCreateDraftUploadMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  threadSourcesControllerCreateDraftUpload(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadSourcesControllerCreateDraftUploadMutationResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerCreateDraftUpload>>>
+    export type ThreadSourcesControllerCreateDraftUploadMutationBody = CreateSourceUploadDto
+    export type ThreadSourcesControllerCreateDraftUploadMutationError = unknown
+    export type ThreadSourcesControllerCreateDraftUploadMutationVariables = {data: CreateSourceUploadDto}
+
+    /**
+ * @summary Reserve a file upload before creating a chat
+ */
+export const useThreadSourcesControllerCreateDraftUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadSourcesControllerCreateDraftUpload>>, TError,ThreadSourcesControllerCreateDraftUploadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadSourcesControllerCreateDraftUpload>>,
+        TError,
+        ThreadSourcesControllerCreateDraftUploadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getThreadSourcesControllerCreateDraftUploadMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get actual processing stages and counts for the thread attachments
+ */
+export const threadSourcesControllerGetProcessingProgress = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SourceProcessingProgressDto[]>(
+      {url: `/threads/${id}/sources/progress`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadSourcesControllerGetProcessingProgressQueryKey = (id: string,) => {
+    return [
+    `/threads/${id}/sources/progress`
+    ] as const;
+    }
+
+
+export const getThreadSourcesControllerGetProcessingProgressQueryOptions = <TData = Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getThreadSourcesControllerGetProcessingProgressQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>> = ({ signal }) => threadSourcesControllerGetProcessingProgress(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ThreadSourcesControllerGetProcessingProgressQueryResult = NonNullable<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>>
+export type ThreadSourcesControllerGetProcessingProgressQueryError = unknown
+
+
+export function useThreadSourcesControllerGetProcessingProgress<TData = Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourcesControllerGetProcessingProgress<TData = Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>,
+          TError,
+          Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useThreadSourcesControllerGetProcessingProgress<TData = Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get actual processing stages and counts for the thread attachments
+ */
+
+export function useThreadSourcesControllerGetProcessingProgress<TData = Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof threadSourcesControllerGetProcessingProgress>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getThreadSourcesControllerGetProcessingProgressQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * @summary Get all sources for a thread

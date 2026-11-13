@@ -3230,6 +3230,38 @@ export interface SourceUploadSessionResponseDto {
   expiresAt: string;
 }
 
+export type SourceProcessingStage = typeof SourceProcessingStage[keyof typeof SourceProcessingStage];
+
+
+export const SourceProcessingStage = {
+  queued: 'queued',
+  preparing: 'preparing',
+  extracting: 'extracting',
+  indexing: 'indexing',
+  retrying: 'retrying',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export type SourceProcessingProgressDtoUnit = typeof SourceProcessingProgressDtoUnit[keyof typeof SourceProcessingProgressDtoUnit];
+
+
+export const SourceProcessingProgressDtoUnit = {
+  pages: 'pages',
+  parts: 'parts',
+} as const;
+
+export interface SourceProcessingProgressDto {
+  sourceId: string;
+  stage: SourceProcessingStage;
+  /**
+     * Completed extraction units, when reported by the worker
+     * @minimum 0
+     */
+  completed?: number;
+  unit?: SourceProcessingProgressDtoUnit;
+}
+
 export type CreateKnowledgeBaseDtoOwnerType = typeof CreateKnowledgeBaseDtoOwnerType[keyof typeof CreateKnowledgeBaseDtoOwnerType];
 
 

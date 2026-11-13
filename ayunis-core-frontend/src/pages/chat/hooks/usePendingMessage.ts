@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   getDeferredThreadRun,
+  useIsThreadRunDeferred,
   startDeferredThreadRun,
   takeStartedThreadRun,
 } from '@/features/thread-run';
@@ -16,7 +17,7 @@ import {
 interface UsePendingMessageParams {
   threadId: string;
   /** Whether the chat route loaded the thread with saved messages. */
-  hasLoadedMessages: boolean;
+  loadedMessageCount: number;
   hasProcessingSources: boolean;
   sendTextMessage: (input: SendMessageInput) => Promise<void>;
 }
@@ -30,11 +31,12 @@ interface UsePendingMessageParams {
  */
 export function usePendingMessage({
   threadId,
-  hasLoadedMessages,
+  loadedMessageCount,
   hasProcessingSources,
   sendTextMessage,
 }: UsePendingMessageParams) {
   const { t } = useTranslation('chat');
+  const isDeferred = useIsThreadRunDeferred(threadId);
 
   useEffect(() => {
     const deferredRun = getDeferredThreadRun(threadId);
@@ -45,7 +47,7 @@ export function usePendingMessage({
       });
       return;
     }
-    startDeferredThreadRun(threadId);
+    const messageCountBeforeSend = startDeferredThreadRun(threadId) ?? 0;
     const startedRun = takeStartedThreadRun(threadId);
     if (!startedRun) return;
 
@@ -53,7 +55,8 @@ export function usePendingMessage({
     startThreadSubmission(threadId, { text, images });
     // The run may have saved the message before the chat route loaded the
     // thread; a pending bubble would then show it twice.
-    if (hasLoadedMessages) clearPendingThreadSubmission(threadId);
+    if (loadedMessageCount > messageCountBeforeSend)
+      clearPendingThreadSubmission(threadId);
 
     void (async () => {
       try {
@@ -66,5 +69,12 @@ export function usePendingMessage({
         }
       }
     })();
-  }, [threadId, hasLoadedMessages, hasProcessingSources, sendTextMessage, t]);
+  }, [
+    threadId,
+    isDeferred,
+    loadedMessageCount,
+    hasProcessingSources,
+    sendTextMessage,
+    t,
+  ]);
 }

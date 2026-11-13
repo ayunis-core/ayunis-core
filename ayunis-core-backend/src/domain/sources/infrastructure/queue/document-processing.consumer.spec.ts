@@ -60,6 +60,7 @@ function makeJob(
     id: 'job-1',
     attemptsMade: 0,
     opts: { attempts: 3 },
+    updateProgress: jest.fn().mockResolvedValue(undefined),
     ...overrides,
   } as unknown as Job<DocumentProcessingJobData>;
 }

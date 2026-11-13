@@ -55,6 +55,7 @@ describe('DataSourceProcessingConsumer', () => {
       },
       attemptsMade: opts.finalAttempt ? 2 : 0,
       opts: { attempts: 3 },
+      updateProgress: jest.fn().mockResolvedValue(undefined),
     } as unknown as Job<DataSourceProcessingJobData>;
   }
 

@@ -5,7 +5,7 @@ export interface ProcessingContext {
   /** Reject writes for inactive sources, including deletion during persistence. */
   write(key: string, value: string): Promise<void>;
   isActive(): Promise<boolean>;
-  progress(completed: number): Promise<void>;
+  progress(completed: number, unit?: 'pages' | 'parts'): Promise<void>;
   /**
    * Receives the texts of extracted pages in document order, each batch as
    * soon as every page before it is extracted, so the caller can work on the

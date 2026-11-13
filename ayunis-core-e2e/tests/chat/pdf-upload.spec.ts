@@ -145,7 +145,7 @@ async function uploadPdf(
   await expect(page.getByRole("menu")).toBeHidden();
 }
 
-test("keeps send disabled while an ongoing chat refreshes after a PDF upload", async ({
+test("keeps send available while an ongoing chat refreshes after a PDF upload", async ({
   api,
   page,
 }) => {
@@ -181,7 +181,7 @@ test("keeps send disabled while an ongoing chat refreshes after a PDF upload", a
           requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
         }),
     );
-    await expect(page.getByTestId("send")).toBeDisabled();
+    await expect(page.getByTestId("send")).toBeEnabled();
   } finally {
     releaseRefresh();
     await page.unrouteAll({ behavior: "wait" });

@@ -27,8 +27,8 @@ export class SourceUploadSessionRecord extends BaseRecord {
   @Column({ type: 'enum', enum: SourceUploadTargetType })
   targetType: SourceUploadTargetType;
 
-  @Column()
-  targetId: UUID;
+  @Column({ type: 'varchar', nullable: true })
+  targetId: UUID | null;
 
   @Column()
   fileName: string;

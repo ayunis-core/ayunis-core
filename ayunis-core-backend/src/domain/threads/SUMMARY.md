@@ -28,3 +28,5 @@ Persistence adapters participating in synchronous `@Transactional()` paths resol
 Chat search matches titles and persisted user/assistant text blocks case-insensitively, within the existing owner and workspace scope. System, tool, thinking, image metadata, and skill instructions are excluded. A correlated message EXISTS predicate preserves thread pagination and avoids duplicate results.
 
 Source assignments are unique per `(threadId, sourceId)` at the database level. The application duplicate check provides a fast 409 response; the database constraint also rejects concurrent duplicate inserts, which map to the same `SourceAlreadyAssignedError`.
+
+`POST /threads/uploads` reserves an owned upload before chat creation. The existing thread completion endpoint authorizes the destination and binds the session atomically. `GET /threads/:id/sources/progress` authorizes the thread through `GetThreadSourcesUseCase` before reading queue-derived source progress.
