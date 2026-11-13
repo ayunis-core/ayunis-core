@@ -65,7 +65,7 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
       done.push({ startPage: batch.startPage, pages: result.pages });
       completedPages += batch.pageCount;
       emitCompletedBatch(position, result.pages);
-      await options.context?.progress(completedPages);
+      await options.context?.progress(completedPages, 'pages');
     });
     done.sort((a, b) => a.startPage - b.startPage);
     const pages = done.flatMap((batch) =>

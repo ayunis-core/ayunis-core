@@ -2,64 +2,74 @@ import { Fragment, type ReactNode } from 'react';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
 import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
-import type { RenderUnit } from '@/pages/chat/ui/agent-run-timeline';
+import {
+  AgentRunTimeline,
+  type RenderUnit,
+  type SourceProcessingTimelineStep,
+} from '@/pages/chat/ui/agent-run-timeline';
 import type { Message } from '@/pages/chat/model/openapi';
+import { sourceProcessingRun } from '@/pages/chat/lib/source-processing-steps';
 
 interface ChatThreadContentProps {
   readonly renderUnits: readonly RenderUnit[];
   readonly threadId: string;
   readonly pendingSubmission: string | null;
+  /** Files a waiting message still depends on; shown only until they are ready. */
+  readonly processingSteps?: SourceProcessingTimelineStep[];
   readonly contextHint: ReactNode;
   readonly showLoadingPlaceholder: boolean;
   readonly onOpenArtifact: (artifactId: string) => void;
 }
 
-export function ChatThreadContent({
-  renderUnits,
-  threadId,
-  pendingSubmission,
-  contextHint,
-  showLoadingPlaceholder,
-  onOpenArtifact,
-}: ChatThreadContentProps) {
-  const showPendingUserBubble = pendingSubmission !== null;
-  const firstUserUnitIndex = renderUnits.findIndex(
-    (unit) => unit.kind === 'user',
-  );
+export function ChatThreadContent(props: ChatThreadContentProps) {
+  const {
+    renderUnits: units,
+    threadId,
+    pendingSubmission,
+    contextHint,
+    showLoadingPlaceholder,
+    onOpenArtifact,
+  } = props;
+  const firstUserUnitIndex = units.findIndex((unit) => unit.kind === 'user');
+  const waitingSteps =
+    pendingSubmission === null ? [] : (props.processingSteps ?? []);
 
   return (
     <div className="p-4 pb-8">
-      {renderUnits.map((unit, i) => {
-        if (unit.kind === 'user') {
+      {units.map((unit, index) => {
+        if (unit.kind === 'user')
           return (
             <Fragment key={unit.key}>
-              {i === firstUserUnitIndex && contextHint}
+              {index === firstUserUnitIndex && contextHint}
               <ChatMessage message={unit.message} />
             </Fragment>
           );
-        }
-        const previousUnit = i > 0 ? renderUnits[i - 1] : undefined;
-        const isGroupedWithPrevious = previousUnit?.kind === 'agent-run';
         return (
           <AssistantRunBlock
             key={unit.key}
             unit={unit}
-            isGroupedWithPrevious={isGroupedWithPrevious}
+            isGroupedWithPrevious={units[index - 1]?.kind === 'agent-run'}
             threadId={threadId}
             onOpenArtifact={onOpenArtifact}
           />
         );
       })}
-      {showPendingUserBubble && (
+      {pendingSubmission !== null && (
         <>
           {firstUserUnitIndex === -1 && contextHint}
-          <ChatMessage
-            key="pending-user"
-            message={makePendingUserMessage(pendingSubmission)}
-          />
+          <div data-testid="pending-user-message">
+            <ChatMessage message={makePendingUserMessage(pendingSubmission)} />
+          </div>
         </>
       )}
-      {showLoadingPlaceholder && <LoadingAssistantBlock />}
+      {waitingSteps.length > 0 && (
+        <div className="mt-4 max-w-2xl">
+          <AgentRunTimeline unit={sourceProcessingRun(waitingSteps)} />
+        </div>
+      )}
+      {showLoadingPlaceholder && waitingSteps.length === 0 && (
+        <LoadingAssistantBlock />
+      )}
     </div>
   );
 }

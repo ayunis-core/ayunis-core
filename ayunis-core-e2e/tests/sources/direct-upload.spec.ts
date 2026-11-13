@@ -356,6 +356,21 @@ test('serves thread uploads through the API and keeps a session on its own threa
   );
 });
 
+test('hides a thread\'s processing progress from other users', async ({ api, browser, mail }) => {
+  const model = await requireDefaultModel(api);
+  const thread = await createEmptyThread(api, model.id);
+  const member = await createUser(api, mail, `source-progress-${Date.now()}`);
+  const colleague = await browser.newContext({ baseURL: config.apiURL });
+  try {
+    await login(colleague.request, member.email, member.password);
+    const denied = await colleague.request.get(`/api/threads/${thread.id}/sources/progress`);
+    expect(denied.status()).toBe(404);
+  } finally { await colleague.close(); }
+  const own = await api.get(`/api/threads/${thread.id}/sources/progress`);
+  expect(own.status()).toBe(200);
+  expect(await own.json()).toEqual([]);
+});
+
 async function requireDefaultModel(api: APIRequestContext) {
   const defaultModel = await getEffectiveDefaultModel(api);
   if (!defaultModel) throw new Error('No default model is configured');

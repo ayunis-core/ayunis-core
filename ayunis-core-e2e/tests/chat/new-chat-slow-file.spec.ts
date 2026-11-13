@@ -4,7 +4,7 @@ import { generatedApi } from '../../src/clients/api/generated-api';
 import { getThread } from '../../src/clients/api/threads.client';
 import type { GetThreadResponseDto } from '../../src/clients/generated/ayunisCoreAPI.schemas';
 import { createOcrRejectedPdf } from '../../src/factories/pdf.factory';
-import { sendMessage } from '../../src/flows/chat.flow';
+import { sendMessage, startThread } from '../../src/flows/chat.flow';
 
 const BUDGET = 'Haushalt 2026: Gesamtvolumen EUR 4.200.000';
 const THREAD_PATH = /\/threads\/[0-9a-f-]{36}$/;
@@ -79,6 +79,67 @@ test('opens a new chat while its file is still processing and answers once the f
   expect(messages.filter((message) => message.role === 'user')).toHaveLength(
     1,
   );
+});
+
+test('sends in an ongoing chat while its file is still processing and shows the progress until the file is ready', async ({
+  api,
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await permitEmbeddingModel(api);
+  const threadId = await startThread(page, 'Prepare to review a budget.');
+  let holdProcessing = true;
+  await page.route(
+    (url) => THREAD_PATH.test(url.pathname),
+    async (route) => {
+      if (!holdProcessing || route.request().method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const thread = (await response.json()) as GetThreadResponseDto;
+      await route.fulfill({
+        response,
+        json: {
+          ...thread,
+          sources: thread.sources.map((source) => ({
+            ...source,
+            status: 'processing',
+          })),
+        },
+      });
+    },
+  );
+  await attachPdf(page, 'haushalt-2026.pdf');
+  const source = page.getByTestId('chat-source');
+  await expect(source).toHaveAttribute('data-source-status', 'processing');
+
+  await expect(page.getByTestId('send')).toBeDisabled();
+  await page.getByTestId('input').fill('Review this budget.');
+  await expect(page.getByTestId('send')).toBeEnabled();
+  await page.getByTestId('send').click();
+
+  await expect(page.getByTestId('pending-user-message')).toContainText(
+    'Review this budget.',
+  );
+  await expect(page.getByTestId('attachment-progress')).toContainText(
+    'haushalt-2026.pdf',
+  );
+  const waiting = await getThread(api, threadId);
+  expect(
+    waiting.messages.filter((message) => message.role === 'user'),
+  ).toHaveLength(1);
+
+  holdProcessing = false;
+
+  await expect(page.getByTestId('attachment-progress')).toHaveCount(0, {
+    timeout: 30_000,
+  });
+  await expect(page.getByTestId('pending-user-message')).toBeHidden();
+  await expect(page.getByTestId('user-message')).toHaveCount(2);
+  await expect(page.getByTestId('assistant-message')).toHaveCount(2, {
+    timeout: 60_000,
+  });
 });
 
 async function permitEmbeddingModel(api: APIRequestContext): Promise<void> {

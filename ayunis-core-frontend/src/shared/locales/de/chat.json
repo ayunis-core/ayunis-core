@@ -463,5 +463,21 @@
       "prepareReply": "Antwort vorbereiten",
       "summarizeEmail": "E-Mail zusammenfassen"
     }
+  },
+  "attachments": {
+    "pages_one": "{{count}} Seite gelesen.",
+    "pages_other": "{{count}} Seiten gelesen.",
+    "parts_one": "{{count}} Abschnitt gelesen.",
+    "parts_other": "{{count}} Abschnitte gelesen.",
+    "timeline": {
+      "queued": "Warten auf die Verarbeitung von {{name}}",
+      "preparing": "{{name}} wird vorbereitet",
+      "extracting": "{{name}} wird gelesen",
+      "transcribing": "{{name}} wird transkribiert",
+      "indexing": "{{name}} wird für die Suche vorbereitet",
+      "retrying": "{{name}} wird erneut verarbeitet",
+      "ready": "{{name}} verarbeitet",
+      "failed": "{{name}} konnte nicht verarbeitet werden"
+    }
   }
 }

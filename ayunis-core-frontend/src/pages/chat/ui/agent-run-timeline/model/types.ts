@@ -1,3 +1,4 @@
+import type { SourceProcessingStage } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type {
   Message,
   ToolUseMessageContent,
@@ -7,7 +8,19 @@ import type { ToolCallDecision } from '@/shared/api';
 
 export type StepStatus = 'in_progress' | 'done' | 'error';
 
+export interface SourceProcessingTimelineStep {
+  kind: 'source_processing';
+  key: string;
+  sourceName: string;
+  isAudio: boolean;
+  stage: SourceProcessingStage;
+  status: StepStatus;
+  completed?: number;
+  unit?: 'pages' | 'parts';
+}
+
 export type TimelineStep =
+  | SourceProcessingTimelineStep
   | {
       kind: 'thinking';
       key: string;

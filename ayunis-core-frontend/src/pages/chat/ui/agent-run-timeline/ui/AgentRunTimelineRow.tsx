@@ -17,6 +17,7 @@ import { PiiText } from '@/widgets/markdown';
 import type {
   TimelineStep,
   StepStatus,
+  SourceProcessingTimelineStep,
 } from '@/pages/chat/ui/agent-run-timeline/model/types';
 import { getToolActionLabel } from '@/pages/chat/ui/agent-run-timeline/lib/get-tool-action-label';
 
@@ -38,9 +39,14 @@ export default function AgentRunTimelineRow({
   const header = (
     <div
       className="flex items-center gap-2 py-1 text-sm text-muted-foreground"
-      data-testid={toolUse && 'agent-run-tool-step'}
+      data-testid={
+        step.kind === 'source_processing'
+          ? 'attachment-progress'
+          : toolUse && 'agent-run-tool-step'
+      }
+      data-stage={step.kind === 'source_processing' ? step.stage : undefined}
       data-tool-name={toolUse?.name}
-      data-status={toolUse && step.status}
+      data-status={step.status}
     >
       {step.kind === 'skill_instruction' ? (
         <Sparkles className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -134,6 +140,8 @@ function getStepView(
   step: TimelineStep,
   t: ReturnType<typeof useTranslation>['t'],
 ): StepView {
+  if (step.kind === 'source_processing') return sourceProcessingView(step, t);
+
   if (step.kind === 'thinking') {
     return {
       label: t('chat.timeline.thoughtProcess'),
@@ -235,4 +243,18 @@ function ThinkingTranscript({
       </div>
     </div>
   );
+}
+
+function sourceProcessingView(
+  step: SourceProcessingTimelineStep,
+  t: ReturnType<typeof useTranslation>['t'],
+): StepView {
+  const stage =
+    step.stage === 'extracting' && step.isAudio ? 'transcribing' : step.stage;
+  let label = t(`attachments.timeline.${stage}`, { name: step.sourceName });
+  if (step.completed !== undefined && step.unit) {
+    const count = t(`attachments.${step.unit}`, { count: step.completed });
+    label += ` · ${count}`;
+  }
+  return { label, hasDetails: false, expandable: false, details: null };
 }

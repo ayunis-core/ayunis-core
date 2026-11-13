@@ -235,6 +235,34 @@ describe('ChatInput prompt recall', () => {
   });
 });
 
+describe('ChatInput while a message is in flight', () => {
+  it.each(['submitting', 'streaming'] as const)(
+    'ignores Send while %s, so a waiting message is not replaced',
+    (submissionState) => {
+      const onSend = vi.fn();
+      render(
+        <ChatInput
+          modelId="municipal-model"
+          sources={[]}
+          submissionState={submissionState}
+          isEmbeddingModelEnabled={false}
+          isAnonymous={false}
+          onModelChange={vi.fn()}
+          onFileUpload={vi.fn()}
+          onRemoveSource={vi.fn()}
+          onSend={onSend}
+          onCancel={vi.fn()}
+        />,
+      );
+
+      fireEvent.click(screen.getByTestId('dictate'));
+      fireEvent.click(screen.getByTestId('send'));
+
+      expect(onSend).not.toHaveBeenCalled();
+    },
+  );
+});
+
 describe('ChatInput voice input', () => {
   function renderWithSend() {
     const onSend = vi.fn();

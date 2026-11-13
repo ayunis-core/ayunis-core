@@ -94,6 +94,28 @@ describe('uploaded recording transcription', () => {
     });
   });
 
+  it('reports each transcribed part as a completed part', async () => {
+    const reported: unknown[][] = [];
+    const counted = new TranscribeCommand({
+      file: Buffer.from('meeting recording'),
+      fileName: 'meeting.mp3',
+      mimeType: 'audio/mpeg',
+      processingContext: {
+        ...context,
+        progress: async (...args: unknown[]) => {
+          reported.push(args);
+        },
+      },
+    });
+
+    await useCase().execute(counted);
+
+    expect(reported).toEqual([
+      [1, 'parts'],
+      [2, 'parts'],
+    ]);
+  });
+
   it('rejects a recording above the configured upload cap', async () => {
     const capped = useCase(
       new ConfigService({ transcription: { maxUploadBytes: 4 } }),

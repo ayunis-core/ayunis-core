@@ -81,7 +81,7 @@ describe('ChatThreadContent', () => {
     const children = Array.from(container.firstElementChild?.children ?? []);
     expect(
       children.map((element) => element.getAttribute('data-testid')),
-    ).toEqual(['context-hint', 'rendered-user-message']);
+    ).toEqual(['context-hint', 'pending-user-message']);
   });
 
   it('does not show the hint before the chat has a user message', () => {

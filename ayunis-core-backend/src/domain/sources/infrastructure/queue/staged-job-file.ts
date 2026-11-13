@@ -23,6 +23,7 @@ export function withStagedJobFile<T>(
   data: DocumentProcessingJobData,
   root: string,
   use: (localFile: LocalFile) => Promise<T>,
+  onDownloaded?: () => Promise<void>,
 ): Promise<T> {
   const { minioPath, expectedSize, expectedETag } = data;
   return withStagingDirectory(root, async (directory) => {
@@ -37,6 +38,7 @@ export function withStagedJobFile<T>(
           )
         : storedFiles.readToFile(minioPath, path, expectedSize, expectedETag),
     );
+    await onDownloaded?.();
     return processingStage('document.extraction', () =>
       use({ path, ...stored }),
     );

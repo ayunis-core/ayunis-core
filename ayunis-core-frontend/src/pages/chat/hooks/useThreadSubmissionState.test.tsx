@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { resetThreadSubmission } from '@/pages/chat/model/pending-submissions';
+import { cancelDeferredThreadRun, deferThreadRun } from '@/features/thread-run';
+import { getChatInputSubmissionState } from '@/widgets/chat-input/model/chatInputSubmissionState';
 import { useThreadSubmissionState } from './useThreadSubmissionState';
 
 const threadA = 'thread-a';
@@ -35,6 +37,32 @@ describe(useThreadSubmissionState.name, () => {
 
     expect(result.current.pendingSubmission).toBeNull();
   });
+
+  it.each(['Summarise the minutes', ''])(
+    'keeps the composer submitting while the message %j waits for its files',
+    (text) => {
+      const { result } = renderHook(() =>
+        useThreadSubmissionState({
+          threadId: threadA,
+          isStreaming: false,
+          restoreFailedSubmission: vi.fn(),
+          onRestoreBlocked: vi.fn(),
+        }),
+      );
+
+      act(() => {
+        result.current.startSubmission(threadA, { text });
+        deferThreadRun({ threadId: threadA, text, images: [] });
+      });
+
+      expect(
+        getChatInputSubmissionState(false, result.current.pendingSubmission),
+      ).toBe('submitting');
+      act(() => {
+        cancelDeferredThreadRun(threadA);
+      });
+    },
+  );
 
   it('restores a failure after the originating chat remounts', () => {
     const staleRestore = vi.fn();
