@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.75.0](https://github.com/ayunis-core/ayunis-core/compare/v2.74.2...v2.75.0) (2026-11-13)
+
+
+### Features
+
+* **office-addins:** put the outlook add-in behind a feature flag (AYC-1588) ([#2343](https://github.com/ayunis-core/ayunis-core/issues/2343)) ([3617513](https://github.com/ayunis-core/ayunis-core/commit/36175134a7c1a45a489bce654729a3af14114ad4))
+
+
+### Bug Fixes
+
+* **errors:** stop reporting middleware client errors as incidents (AYC-000) ([#2352](https://github.com/ayunis-core/ayunis-core/issues/2352)) ([358e2d7](https://github.com/ayunis-core/ayunis-core/commit/358e2d7b1d350e77725841ec5fbaf3dcae3e9564))
+
+
+### Performance Improvements
+
+* **rag:** let a document's embedding batches follow EMBEDDINGS_MAX_CONCURRENCY (AYC-1803) ([#2348](https://github.com/ayunis-core/ayunis-core/issues/2348)) ([8cf8800](https://github.com/ayunis-core/ayunis-core/commit/8cf88003e6ada59ca70c8418d0ddc1f4c6302798))
+* **rag:** write a document's chunks and vectors with plain bulk inserts (AYC-1814) ([#2351](https://github.com/ayunis-core/ayunis-core/issues/2351)) ([abd5ff7](https://github.com/ayunis-core/ayunis-core/commit/abd5ff72d2d5e233b4d3a477443b34eea19a3922))
+* **sources:** precompute embeddings during document ocr (AYC-1813) ([#2349](https://github.com/ayunis-core/ayunis-core/issues/2349)) ([c25b1cb](https://github.com/ayunis-core/ayunis-core/commit/c25b1cbcc3997953dfe917fadf9a0b6985af2bf5))
+
 ## [2.74.2](https://github.com/ayunis-core/ayunis-core/compare/v2.74.1...v2.74.2) (2026-11-12)
 
 
