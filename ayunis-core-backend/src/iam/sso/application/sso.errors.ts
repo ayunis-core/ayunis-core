@@ -15,6 +15,9 @@ export enum SsoErrorCode {
   CONNECTION_CHANGED = 'SSO_CONNECTION_CHANGED',
   BROKER_NOT_CONFIGURED = 'SSO_BROKER_NOT_CONFIGURED',
   BROKER_RESPONSE_INVALID = 'SSO_BROKER_RESPONSE_INVALID',
+  BROKER_REQUEST_FAILED = 'SSO_BROKER_REQUEST_FAILED',
+  BROKER_IDENTITY_CLEANUP_NOT_CONFIGURED = 'SSO_BROKER_IDENTITY_CLEANUP_NOT_CONFIGURED',
+  BROKER_IDENTITY_CLEANUP_INCOMPLETE = 'SSO_BROKER_IDENTITY_CLEANUP_INCOMPLETE',
   DISCOVERY_EMAIL_INVALID = 'SSO_DISCOVERY_EMAIL_INVALID',
   CONNECTION_NOT_AVAILABLE = 'SSO_CONNECTION_NOT_AVAILABLE',
   LOGIN_TRANSACTION_INVALID = 'SSO_LOGIN_TRANSACTION_INVALID',
@@ -137,6 +140,49 @@ export class SsoBrokerNotConfiguredError extends SsoError {
       503,
     );
   }
+}
+
+export class SsoBrokerRequestFailedError extends SsoError {
+  constructor(
+    readonly operation: string,
+    readonly status: number,
+  ) {
+    super(
+      `Identity broker request '${operation}' failed with HTTP ${status}`,
+      SsoErrorCode.BROKER_REQUEST_FAILED,
+      502,
+      { operation, status },
+    );
+  }
+}
+
+export class SsoBrokerIdentityCleanupNotConfiguredError extends SsoError {
+  constructor() {
+    super(
+      'Broker identity cleanup is not configured',
+      SsoErrorCode.BROKER_IDENTITY_CLEANUP_NOT_CONFIGURED,
+      503,
+    );
+  }
+}
+
+export class SsoBrokerIdentityCleanupIncompleteError extends SsoError {
+  constructor(failedCount: number) {
+    super(
+      `${failedCount} broker identity cleanup operation(s) failed`,
+      SsoErrorCode.BROKER_IDENTITY_CLEANUP_INCOMPLETE,
+      502,
+      { failedCount },
+    );
+  }
+}
+
+// Logged next to `err`: the log serializer redacts error messages.
+export function brokerFailureDetails(error: unknown): object {
+  if (error instanceof SsoBrokerRequestFailedError)
+    return { operation: error.operation, status: error.status };
+  if (error instanceof SsoError) return { code: error.code };
+  return {};
 }
 
 export class InvalidSsoBrokerResponseError extends SsoError {

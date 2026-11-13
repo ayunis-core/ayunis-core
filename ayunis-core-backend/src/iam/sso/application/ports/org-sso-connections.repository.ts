@@ -31,6 +31,7 @@ export abstract class OrgSsoConnectionsRepository {
   abstract findByEmailDomain(
     emailDomain: string,
   ): Promise<OrgSsoConnection | null>;
+  abstract findZitadelOrgIds(): Promise<string[]>;
   abstract findOwnerOrgIdsByEmailDomains(
     emailDomains: string[],
   ): Promise<UUID[]>;

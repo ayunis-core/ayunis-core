@@ -16,6 +16,9 @@ describe('SSO account linking eligibility', () => {
   const connections = createMockOrgSsoConnectionsRepository();
   const identities = {
     existsByUserIdAndIssuer: jest.fn(),
+    findSubjectsByUserId: jest.fn().mockResolvedValue([]),
+    findSubjectsByOrgId: jest.fn().mockResolvedValue([]),
+    findLinkedSubjects: jest.fn().mockResolvedValue([]),
     findByIssuerAndSubject: jest.fn(),
     create: jest.fn(),
   };
