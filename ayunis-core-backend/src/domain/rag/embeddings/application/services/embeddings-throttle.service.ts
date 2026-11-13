@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import PQueue from 'p-queue';
+import { DEFAULT_EMBEDDINGS_MAX_CONCURRENCY } from 'src/config/embeddings.config';
 import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 
 /**
@@ -14,7 +15,6 @@ export interface PriorityQueue {
   ): Promise<T | void>;
 }
 
-const DEFAULT_MAX_CONCURRENCY = 16;
 // p-queue runs higher-priority queued tasks first, so retrieval must rank
 // above ingestion. The absolute values don't matter, only the ordering.
 const RETRIEVAL_PRIORITY = 1;
@@ -57,7 +57,7 @@ export class EmbeddingsThrottleService {
   protected createQueue(): PriorityQueue {
     const concurrency =
       this.configService.get<number>('embeddings.throttle.maxConcurrency') ??
-      DEFAULT_MAX_CONCURRENCY;
+      DEFAULT_EMBEDDINGS_MAX_CONCURRENCY;
     this.logger.log({ concurrency }, 'Embeddings throttle initialized');
     return new PQueue({ concurrency });
   }

@@ -1,5 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
+export const DEFAULT_EMBEDDINGS_MAX_CONCURRENCY = 16;
+
 export const embeddingsConfig = registerAs('embeddings', () => ({
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
@@ -15,9 +17,11 @@ export const embeddingsConfig = registerAs('embeddings', () => ({
   throttle: {
     // Max concurrent embedding API calls across the whole process. Ingestion
     // and retrieval share this budget; retrieval is prioritized within it.
-    // See EmbeddingsThrottleService.
+    // See EmbeddingsThrottleService. One ingestion sends up to this many
+    // batches of a document at once (IngestBulkContentUseCase).
     maxConcurrency: parseInt(
-      process.env.EMBEDDINGS_MAX_CONCURRENCY ?? '16',
+      process.env.EMBEDDINGS_MAX_CONCURRENCY ??
+        String(DEFAULT_EMBEDDINGS_MAX_CONCURRENCY),
       10,
     ),
   },
