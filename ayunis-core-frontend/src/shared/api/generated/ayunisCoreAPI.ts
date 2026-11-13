@@ -22450,7 +22450,7 @@ export const useApiKeysControllerCreateApiKey = <TError = void,
     }
 
 /**
- * @summary Rename an active API key or change its description. The secret stays the same.
+ * @summary Rename an active API key, change its description or set, change or remove its expiry date. The secret stays the same.
  */
 export const apiKeysControllerUpdateApiKey = (
     id: string,
@@ -22505,7 +22505,7 @@ const {mutation: mutationOptions} = options ?
     export type ApiKeysControllerUpdateApiKeyMutationVariables = {id: string;data: UpdateApiKeyDto}
 
     /**
- * @summary Rename an active API key or change its description. The secret stays the same.
+ * @summary Rename an active API key, change its description or set, change or remove its expiry date. The secret stays the same.
  */
 export const useApiKeysControllerUpdateApiKey = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof apiKeysControllerUpdateApiKey>>, TError,ApiKeysControllerUpdateApiKeyMutationVariables, TContext>, }
