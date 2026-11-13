@@ -9,6 +9,7 @@ import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-ty
 import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.use-case';
 import { MarkSourceFailedCommand } from 'src/domain/sources/application/use-cases/mark-source-failed/mark-source-failed.command';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
+import type { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
 
 /**
  * Indexing and failure-cleanup helpers shared by the source processing
@@ -29,6 +30,7 @@ export class SourceProcessingHelper {
     sourceId: UUID,
     orgId: UUID,
     chunks: TextSourceContentChunk[],
+    precomputedEmbeddings?: PreparedContentEmbeddings,
   ): Promise<void> {
     await this.deleteContentUseCase.execute(
       new DeleteContentCommand({ documentId: sourceId }),
@@ -42,6 +44,7 @@ export class SourceProcessingHelper {
           content: chunk.content,
         })),
         type: IndexType.PARENT_CHILD,
+        precomputedEmbeddings,
       }),
     );
   }

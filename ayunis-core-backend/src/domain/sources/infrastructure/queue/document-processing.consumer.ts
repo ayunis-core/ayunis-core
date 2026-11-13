@@ -24,6 +24,8 @@ import { StoredSourceFileService } from 'src/domain/sources/application/services
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { SourceProcessingHelper } from 'src/domain/sources/application/services/source-processing-helper.service';
+import { EarlyEmbeddingService } from 'src/domain/sources/application/services/early-embedding.service';
+import { SOURCE_CHUNKING } from 'src/domain/sources/application/util/source-chunking.helper';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
@@ -48,6 +50,13 @@ import { classifyJobFailure, documentRetryDelayMs } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
+import type { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
+
+interface ExtractedContent {
+  text: string;
+  chunks: TextSourceContentChunk[];
+  precomputedEmbeddings: PreparedContentEmbeddings | undefined;
+}
 
 function isProcessedFromDisk(fileType: DetectedFileType): boolean {
   return fileType === 'pdf' || isOfficeDocumentFile(fileType);
@@ -76,6 +85,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly admitOrgProcessing: AdmitOrgProcessingUseCase,
     private readonly heartbeat: SourceProcessingHeartbeatService,
     private readonly checkpoints: ProcessingCheckpointService,
+    private readonly earlyEmbedding: EarlyEmbeddingService,
     @Inject(transcriptionConfig.KEY)
     private readonly transcription: ConfigType<typeof transcriptionConfig>,
   ) {
@@ -146,8 +156,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
     cleanupPath: string | null,
   ): Promise<void> {
     const { sourceId, orgId } = job.data;
-    const { text, chunks } = await this.heartbeat.run(sourceId, () =>
-      this.downloadAndExtractText(job),
+    const { text, chunks, precomputedEmbeddings } = await this.heartbeat.run(
+      sourceId,
+      () => this.downloadAndExtractText(job),
     );
 
     // Guard: re-check the source still exists and is PROCESSING
@@ -164,7 +175,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       return;
     }
     await processingStage('document.indexing', () =>
-      this.helper.index(sourceId, orgId, chunks),
+      this.helper.index(sourceId, orgId, chunks, precomputedEmbeddings),
     );
     await this.markSourceReady(sourceId, cleanupPath);
     await this.cleanupCheckpoints(orgId, sourceId);
@@ -240,23 +251,28 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async downloadAndExtractText(
     job: Job<DocumentProcessingJobData>,
-  ): Promise<{ text: string; chunks: TextSourceContentChunk[] }> {
+  ): Promise<ExtractedContent> {
     const { fileName, fileType } = job.data;
+    const early = this.earlyEmbedding.start(job.data.orgId);
     const context = this.checkpoints.create(
       job.data.orgId,
       job.data.sourceId,
       (completed) => job.updateProgress({ stage: 'extraction', completed }),
+      (texts) => early.appendPages(texts),
     );
-    const text = isAudioFile(detectFileType(fileType, fileName))
-      ? await this.transcribeRecording(job, context)
-      : await this.extractDocument(job, context);
+    let text: string;
+    let precomputedEmbeddings: PreparedContentEmbeddings | undefined;
+    try {
+      text = await (isAudioFile(detectFileType(fileType, fileName))
+        ? this.transcribeRecording(job, context)
+        : this.extractDocument(job, context));
+    } finally {
+      precomputedEmbeddings = await early.finish();
+    }
 
     const splitResult = processingStage('document.splitting', () =>
       this.splitTextUseCase.execute(
-        new SplitTextCommand(text, SplitterType.RECURSIVE, {
-          chunkSize: 2000,
-          chunkOverlap: 200,
-        }),
+        new SplitTextCommand(text, SplitterType.RECURSIVE, SOURCE_CHUNKING),
       ),
     );
     const chunks = splitResult.chunks.map(
@@ -267,7 +283,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         }),
     );
 
-    return { text, chunks };
+    return { text, chunks, precomputedEmbeddings };
   }
 
   private async extractDocument(

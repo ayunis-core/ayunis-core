@@ -387,6 +387,58 @@ describe('batched PDF OCR across several batches', () => {
     expect(started).toEqual([0, 1]);
   });
 
+  it('hands page texts on in document order, each as soon as every page before it is read', async () => {
+    secondsFor = (batch) => [1, 3, 1, 2][batch];
+    const startedAt = Date.now();
+    const handed: { at: number; texts: readonly string[] }[] = [];
+    const work = handler(4).processFile(pdfOf(4), {
+      context: {
+        ...context,
+        onPagesExtracted: (texts: readonly string[]) => {
+          handed.push({ at: (Date.now() - startedAt) / 1000, texts });
+        },
+      },
+    });
+    await jest.runAllTimersAsync();
+    const result = await work;
+
+    expect(handed.flatMap((entry) => entry.texts)).toEqual(
+      result.pages.map((page) => page.text),
+    );
+    expect(handed.map((entry) => [entry.at, entry.texts[0]])).toEqual([
+      [1, 'batch 0 page 1'],
+      [3, 'batch 1 page 1'],
+      [3, 'batch 2 page 1'],
+      [3, 'batch 3 page 1'],
+    ]);
+  });
+
+  it('hands on the pages of batches restored from a checkpoint too', async () => {
+    const first = handler(2).processFile(pdfOf(2), { context });
+    await jest.runAllTimersAsync();
+    await first;
+    const handed: string[] = [];
+
+    const work = handler(2).processFile(pdfOf(2), {
+      context: {
+        ...context,
+        onPagesExtracted: (texts: readonly string[]) => {
+          handed.push(...texts);
+        },
+      },
+    });
+    await jest.runAllTimersAsync();
+    await work;
+
+    expect(started).toEqual([0, 1]);
+    expect(handed).toEqual([
+      'batch 0 page 1',
+      'batch 0 page 2',
+      'batch 1 page 1',
+      'batch 1 page 2',
+    ]);
+  });
+
   it('reports the pages completed so far each time a batch finishes', async () => {
     const work = handler(2).processFile(pdfOf(3), { context });
     await jest.runAllTimersAsync();

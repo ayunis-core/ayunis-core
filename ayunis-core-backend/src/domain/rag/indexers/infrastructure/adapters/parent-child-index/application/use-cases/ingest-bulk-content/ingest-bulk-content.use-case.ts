@@ -1,15 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { DEFAULT_EMBEDDINGS_MAX_CONCURRENCY } from 'src/config/embeddings.config';
 import { ParentChildIndexerRepositoryPort } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/ports/parent-child-indexer-repository.port';
 import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
-import { SplitTextUseCase } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.use-case';
-import { SplitTextCommand } from 'src/domain/rag/splitters/application/use-cases/split-text/split-text.command';
-import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
+import { ChildChunkEmbedder } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/application/services/child-chunk-embedder.service';
 import { ChildChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/child-chunk.entity';
-import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
-import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.command';
-import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
 import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
 import { IngestBulkContentCommand } from './ingest-bulk-content.command';
@@ -17,28 +10,14 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { EmbeddingModel } from 'src/domain/rag/embeddings/domain/embedding-model.entity';
 
-/**
- * Maximum number of texts to send in a single embedding API call.
- *
- * Child chunks are up to ~1000 chars (~250 tokens) each, so this batch size
- * yields ~16k tokens per request — well within all provider limits:
- *   - Mistral: error 3210 "Too many tokens" at ~256 × 1000-char chunks;
- *     64 chunks (~16k tokens) is safe with headroom.
- *   - OpenAI: max 300k total tokens per request — 64 chunks is far below.
- *   - Ollama: no documented limit.
- */
-const EMBEDDING_BATCH_SIZE = 64;
-
 @Injectable()
 export class IngestBulkContentUseCase {
   private readonly logger = new Logger(IngestBulkContentUseCase.name);
 
   constructor(
     private readonly parentChildIndexerRepository: ParentChildIndexerRepositoryPort,
-    private readonly splitTextUseCase: SplitTextUseCase,
-    private readonly embedTextUseCase: EmbedTextUseCase,
+    private readonly embedder: ChildChunkEmbedder,
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
-    private readonly configService: ConfigService,
   ) {}
 
   async execute(command: IngestBulkContentCommand): Promise<void> {
@@ -70,10 +49,10 @@ export class IngestBulkContentUseCase {
     );
 
     // 4. Embed all child texts in batches
-    const allEmbeddings = await this.embedInBatches(
+    const allEmbeddings = await this.embedMissing(
       allChildTexts,
       permittedModel.model,
-      command.orgId,
+      command,
     );
 
     // 5. Reassemble parent chunks with their embeddings
@@ -93,81 +72,31 @@ export class IngestBulkContentUseCase {
 
   private buildParentPlans(command: IngestBulkContentCommand): ParentPlan[] {
     return command.entries.map((entry) => {
-      const splitResult = this.splitTextUseCase.execute(
-        new SplitTextCommand(entry.content, SplitterType.RECURSIVE),
-      );
       const parentId = randomUUID();
       return {
         parentId,
         relatedDocumentId: entry.indexEntry.relatedDocumentId,
         relatedChunkId: entry.indexEntry.relatedChunkId,
         content: entry.content,
-        childTexts: splitResult.chunks.map((chunk) => chunk.text),
+        childTexts: this.embedder.childTexts(entry.content),
       };
     });
   }
 
-  private async embedInBatches(
+  // Texts whose vectors the caller computed ahead of the ingestion are not
+  // sent again; the result keeps the order of the texts.
+  private async embedMissing(
     texts: string[],
     model: EmbeddingModel,
-    orgId: UUID,
+    command: IngestBulkContentCommand,
   ): Promise<number[][]> {
-    const batches: string[][] = [];
-    for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
-      batches.push(texts.slice(i, i + EMBEDDING_BATCH_SIZE));
-    }
-
-    const vectors: number[][][] = [];
-    const failures: unknown[] = [];
+    const known = command.precomputedEmbeddings?.matchesModel(model)
+      ? command.precomputedEmbeddings.vectorsByText
+      : undefined;
+    const missing = texts.filter((text) => !known?.has(text));
+    const embedded = await this.embedder.embed(missing, model, command.orgId);
     let next = 0;
-    // After a failure no further batch is sent, and the ingestion fails only
-    // once the batches already sent have returned: the queue retries the job
-    // within seconds, and requests still running from this attempt would
-    // spend the provider's capacity on vectors nobody stores.
-    const sendBatches = async (): Promise<void> => {
-      while (failures.length === 0 && next < batches.length) {
-        const index = next++;
-        try {
-          vectors[index] = await this.embedBatch(batches[index], model, orgId);
-        } catch (error) {
-          failures.push(error);
-        }
-      }
-    };
-    await Promise.all(
-      Array.from({ length: this.batchesInFlight() }, sendBatches),
-    );
-    if (failures.length > 0) throw failures[0];
-    return vectors.flat();
-  }
-
-  // One ingestion may use the whole process-wide embeddings throttle
-  // (EMBEDDINGS_MAX_CONCURRENCY). Sent one after another, a 660-page PDF
-  // spent 75 s of its 110 s on embedding (AYC-1803); 60 batches took 12 s at
-  // eight and 7 s at sixteen against the provider, with single calls no
-  // slower. A chat query waiting behind a long document still goes first
-  // when a slot frees, about one call later.
-  private batchesInFlight(): number {
-    return (
-      this.configService.get<number>('embeddings.throttle.maxConcurrency') ??
-      DEFAULT_EMBEDDINGS_MAX_CONCURRENCY
-    );
-  }
-
-  private async embedBatch(
-    texts: string[],
-    model: EmbeddingModel,
-    orgId: UUID,
-  ): Promise<number[][]> {
-    const embeddings = await this.embedTextUseCase.execute(
-      new EmbedTextCommand({
-        texts,
-        model,
-        orgId,
-        priority: EmbeddingPriority.INGESTION,
-      }),
-    );
-    return embeddings.map((embedding) => embedding.vector);
+    return texts.map((text) => known?.get(text) ?? embedded[next++]);
   }
 
   private assembleParentChunks(

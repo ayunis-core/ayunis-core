@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import pLimit from 'p-limit';
 import { assertProcessingActive } from 'src/common/types/processing-context';
+import type { ProcessingContext } from 'src/common/types/processing-context';
 import { UnprocessableDocumentError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import {
   FileRetrieverHandler,
@@ -56,10 +57,14 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
     });
     const done: Array<{ startPage: number; pages: FileRetrieverPage[] }> = [];
     let completedPages = 0;
+    let nextBatchIndex = 0;
+    const emitCompletedBatch = createOrderedPageEmitter(options.context);
     await this.inParallel(batches, async (batch) => {
+      const position = nextBatchIndex++;
       const result = await this.processBatch(file, batch, identity, options);
       done.push({ startPage: batch.startPage, pages: result.pages });
       completedPages += batch.pageCount;
+      emitCompletedBatch(position, result.pages);
       await options.context?.progress(completedPages);
     });
     done.sort((a, b) => a.startPage - b.startPage);
@@ -144,6 +149,30 @@ export class BatchedPdfOcrHandler extends FileRetrieverHandler {
       return null;
     }
   }
+}
+
+// Batches answer in any order; their pages are handed on once every batch
+// before them has answered.
+function createOrderedPageEmitter(
+  context?: ProcessingContext,
+): (position: number, pages: FileRetrieverPage[]) => void {
+  const pendingBatches = new Map<number, string[]>();
+  let nextBatchToEmit = 0;
+  return (position, pages) => {
+    if (!context?.onPagesExtracted) return;
+    pendingBatches.set(
+      position,
+      pages.map((page) => page.text),
+    );
+    for (
+      let texts = pendingBatches.get(nextBatchToEmit);
+      texts;
+      texts = pendingBatches.get(nextBatchToEmit)
+    ) {
+      pendingBatches.delete(nextBatchToEmit++);
+      context.onPagesExtracted(texts);
+    }
+  };
 }
 
 function positive(value: number): number {

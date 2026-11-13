@@ -24,6 +24,7 @@ describe('SearchContentUseCase', () => {
     mockIndexer = {
       searchMulti: jest.fn(),
       ingestBulk: jest.fn(),
+      prepareEmbeddings: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
     };

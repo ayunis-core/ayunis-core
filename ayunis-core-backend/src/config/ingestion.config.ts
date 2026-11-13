@@ -17,6 +17,20 @@ export function ingestionInApi(env: NodeJS.ProcessEnv = process.env): boolean {
   return value === 'true';
 }
 
+/**
+ * Whether chunks of a document are embedded while its later pages are still
+ * being read. Off, embedding starts only once the whole text exists.
+ */
+export function ingestionEarlyEmbedding(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const value = env.INGESTION_EARLY_EMBEDDING || 'false';
+  if (value !== 'true' && value !== 'false') {
+    throw new Error('INGESTION_EARLY_EMBEDDING must be true or false');
+  }
+  return value === 'true';
+}
+
 export function ingestionConcurrency(queue: ProcessingQueue): number {
   const { variable, fallback } = CONCURRENCY[queue];
   const value = Number(process.env[variable] ?? fallback);

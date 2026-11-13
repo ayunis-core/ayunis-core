@@ -23,6 +23,7 @@ export class IngestBulkContentUseCase {
           }),
           content: entry.content,
         })),
+        precomputedEmbeddings: command.precomputedEmbeddings,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {
