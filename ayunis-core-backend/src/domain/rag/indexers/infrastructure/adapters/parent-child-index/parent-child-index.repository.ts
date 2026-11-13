@@ -1,8 +1,10 @@
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import type { EntityManager } from 'typeorm';
+import type { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm';
+import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
 import { ParentChunkRecord } from './infrastructure/persistence/schema/parent-chunk.record';
+import { ChildChunkRecord } from './infrastructure/persistence/schema/child-chunk.record';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ParentChunk } from './domain/parent-chunk.entity';
@@ -19,6 +21,27 @@ const EMBEDDING_COLUMNS: Record<number, string> = {
   1536: 'children.embedding_1536',
   2560: 'children.embedding_2560',
 };
+
+const INSERT_BATCH_ROWS = 500;
+
+async function insertInBatches<T extends ObjectLiteral>(
+  manager: EntityManager,
+  target: EntityTarget<T>,
+  rows: QueryDeepPartialEntity<T>[],
+): Promise<void> {
+  for (let start = 0; start < rows.length; start += INSERT_BATCH_ROWS) {
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(target)
+      .values(rows.slice(start, start + INSERT_BATCH_ROWS))
+      // The driver writes vector columns itself; the record's listener would
+      // only turn them into text one awaited call per row.
+      .callListeners(false)
+      .updateEntity(false)
+      .execute();
+  }
+}
 
 @Injectable()
 export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPort {
@@ -41,20 +64,34 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     );
   }
 
+  private get manager(): EntityManager {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return manager ?? this.defaultParentChunkRepository.manager;
+  }
+
   async save(parentChunk: ParentChunk) {
     const parentChunkRecord =
       this.parentChildIndexerMapper.toParentChunkRecord(parentChunk);
     await this.parentChunkRepository.save(parentChunkRecord);
   }
 
+  // These rows are always new (the document's entries are deleted before it
+  // is ingested again), so they are written with plain inserts: save() loads
+  // what exists and diffs parents against children first, which took seconds
+  // for a 660-page document where the inserts take a fraction of one
+  // (AYC-1814). One transaction, so a failed batch leaves nothing of the
+  // document behind; batched, because one statement carries at most 65535
+  // parameters.
   async saveMany(parentChunks: ParentChunk[]) {
     if (parentChunks.length === 0) return;
-    const records = parentChunks.map((chunk) =>
+    const parents = parentChunks.map((chunk) =>
       this.parentChildIndexerMapper.toParentChunkRecord(chunk),
     );
-    // Chunked insert: a large document's chunks in one statement can exceed
-    // Postgres's 65535-parameter limit.
-    await this.parentChunkRepository.save(records, { chunk: 500 });
+    const children = parents.flatMap((parent) => parent.children);
+    await this.manager.transaction(async (manager) => {
+      await insertInBatches(manager, ParentChunkRecord, parents);
+      await insertInBatches(manager, ChildChunkRecord, children);
+    });
   }
 
   async delete(relatedDocumentId: UUID) {
