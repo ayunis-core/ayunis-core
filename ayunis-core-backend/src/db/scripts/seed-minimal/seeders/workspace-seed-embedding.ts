@@ -2,20 +2,8 @@ export function hasDifferentEmbedding(
   current: number[] | null,
   next: number[],
 ): boolean {
-  const currentArray = parseEmbedding(current);
-  if (currentArray.length !== next.length) return true;
-  return currentArray.some((value, index) => value !== next[index]);
-}
-
-function parseEmbedding(current: number[] | null): number[] {
-  if (Array.isArray(current)) return current;
-  const serialized = current as unknown;
-  if (typeof serialized !== 'string') return [];
-  return serialized
-    .replace(/^\[/, '')
-    .replace(/\]$/, '')
-    .split(',')
-    .map((value) => Number(value.trim()));
+  if (current?.length !== next.length) return true;
+  return current.some((value, index) => value !== next[index]);
 }
 
 export function buildSeedEmbedding(content: string): number[] {
