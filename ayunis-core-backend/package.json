@@ -227,6 +227,7 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
+    "workerIdleMemoryLimit": "512MB",
     "setupFiles": [
       "<rootDir>/../jest.setup.js"
     ],
