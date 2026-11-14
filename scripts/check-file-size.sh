@@ -30,7 +30,7 @@ FILES=$(echo "$FILES" | grep -v '/generated/' \
     | grep -v '/shadcn/' \
     | grep -v '^packages/ui/src/components/' \
     | grep -v '\.gen\.' \
-    | grep -v '\.spec\.ts$' \
+    | grep -v '[.-]spec\.ts$' \
     | grep -v '\.spec\.tsx$' \
     | grep -v '\.test\.ts$' \
     | grep -v '\.test\.tsx$' \

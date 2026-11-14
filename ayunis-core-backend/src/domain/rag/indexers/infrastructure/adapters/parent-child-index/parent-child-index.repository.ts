@@ -35,8 +35,6 @@ async function insertInBatches<T extends ObjectLiteral>(
       .insert()
       .into(target)
       .values(rows.slice(start, start + INSERT_BATCH_ROWS))
-      // The driver writes vector columns itself; the record's listener would
-      // only turn them into text one awaited call per row.
       .callListeners(false)
       .updateEntity(false)
       .execute();
