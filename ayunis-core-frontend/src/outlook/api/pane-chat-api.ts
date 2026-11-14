@@ -32,6 +32,8 @@ export interface PaneChatApi {
   listThreads(): Promise<GetThreadsResponseDtoItem[]>;
   createThread(): Promise<GetThreadResponseDto>;
   getThread(threadId: string): Promise<GetThreadResponseDto>;
+  deleteThread(threadId: string): Promise<void>;
+  renameThread(threadId: string, title: string): Promise<void>;
   addFileSource(threadId: string, file: File): Promise<PaneSource[]>;
   listSources(threadId: string): Promise<PaneSource[]>;
   /** Streams one run; resolves when the backend closes the response. */
@@ -97,6 +99,20 @@ export function createPaneChatApi(session: PaneSession): PaneChatApi {
     },
     getThread(threadId) {
       return getJson<GetThreadResponseDto>(`/threads/${threadId}`);
+    },
+    async deleteThread(threadId) {
+      await ensureOk(
+        await session.request(`/threads/${threadId}`, { method: 'DELETE' }),
+      );
+    },
+    async renameThread(threadId, title) {
+      await ensureOk(
+        await session.request(`/threads/${threadId}/title`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title }),
+        }),
+      );
     },
     async addFileSource(threadId, file) {
       const form = new FormData();

@@ -1,13 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { PaneChatApi } from '@/outlook/api/pane-chat-api';
-import { formatRelativeDate } from '@/shared/lib/format-relative-date';
-
-type ListState =
-  | { status: 'loading' }
-  | { status: 'failed' }
-  | { status: 'loaded'; threads: GetThreadsResponseDtoItem[] };
+import { usePaneThreads } from '@/outlook/lib/use-pane-threads';
+import { PaneThreadRow } from '@/outlook/ui/PaneThreadRow';
 
 export function PaneThreadList({
   api,
@@ -18,23 +12,11 @@ export function PaneThreadList({
   onOpen: (threadId: string) => void;
   onFailure: (cause: unknown) => void;
 }>) {
-  const { t, i18n } = useTranslation();
-  const [state, setState] = useState<ListState>({ status: 'loading' });
-
-  useEffect(() => {
-    let current = true;
-    api.listThreads().then(
-      (threads) => current && setState({ status: 'loaded', threads }),
-      (cause: unknown) => {
-        if (!current) return;
-        setState({ status: 'failed' });
-        onFailure(cause);
-      },
-    );
-    return () => {
-      current = false;
-    };
-  }, [api, onFailure]);
+  const { t } = useTranslation();
+  const { state, actionFailed, rename, remove } = usePaneThreads(
+    api,
+    onFailure,
+  );
 
   if (state.status === 'loading') {
     return <p className="text-sm text-muted-foreground">{t('pane.loading')}</p>;
@@ -50,27 +32,27 @@ export function PaneThreadList({
     );
   }
   return (
-    <ul className="flex flex-col gap-1" data-testid="outlook-pane-threads">
-      {state.threads.map((thread) => (
-        <li key={thread.id}>
-          <button
-            type="button"
-            className="flex w-full flex-col rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
-            onClick={() => onOpen(thread.id)}
-            data-testid="outlook-pane-thread"
-          >
-            <span className="truncate font-medium">
-              {thread.title ?? t('chat.untitled')}
-            </span>
-            <time
-              className="text-xs text-muted-foreground"
-              dateTime={thread.updatedAt}
-            >
-              {formatRelativeDate(thread.updatedAt, i18n.language)}
-            </time>
-          </button>
-        </li>
-      ))}
-    </ul>
+    <>
+      {actionFailed && (
+        <p
+          className="px-2 pb-2 text-sm text-destructive"
+          data-testid="outlook-pane-thread-action-failed"
+        >
+          {t('chat.error.actionFailed')}
+        </p>
+      )}
+      <ul className="flex flex-col gap-1" data-testid="outlook-pane-threads">
+        {state.threads.map((thread) => (
+          <li key={thread.id}>
+            <PaneThreadRow
+              thread={thread}
+              onOpen={() => onOpen(thread.id)}
+              onRename={(title) => void rename(thread.id, title)}
+              onDelete={() => void remove(thread.id)}
+            />
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
