@@ -52,6 +52,21 @@ export class McpClientService {
     );
   }
 
+  async verifyUserConfig(
+    integration: SchemaConfiguredMcpIntegration,
+    userId: UUID,
+    encryptedValues: Record<string, string>,
+  ): Promise<void> {
+    // OAuth authorization owns its exchange; header-form saves must not start one.
+    if (integration.configSchema.oauth) return;
+    const config = await this.buildSchemaConfiguredHeaders(
+      integration,
+      userId,
+      encryptedValues,
+    );
+    await this.mcpClient.verifyCredentials(config);
+  }
+
   async buildConnectionConfig(
     integration: McpIntegration,
     userId?: UUID,
@@ -168,11 +183,6 @@ export class McpClientService {
     );
   }
 
-  /**
-   * Applies config field values as HTTP headers.
-   * Only fields with a `headerName` are sent. Prefix is prepended if present.
-   * Secret fields are decrypted before sending.
-   */
   private async applyConfigFieldHeaders(
     headers: Record<string, string>,
     fields: ConfigField[],
@@ -181,9 +191,7 @@ export class McpClientService {
     for (const field of fields) {
       if (!field.headerName) continue;
 
-      // System-fixed values from the schema are plaintext and are never stored
-      // encrypted, so they are applied directly. Otherwise fall back to the
-      // stored value, decrypting secrets.
+      // Schema-fixed secrets are plaintext; only stored user/org values are encrypted.
       let resolvedValue: string;
       if (isSystemFixedField(field)) {
         resolvedValue = field.value as string;
@@ -336,13 +344,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Lists all resource templates available on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @returns List of available resource templates
-   * @throws McpAuthenticationError on 401 responses
-   */
   async listResourceTemplates(
     integration: McpIntegration,
     userId?: UUID,
@@ -364,13 +365,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Lists all prompt templates available on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @returns List of available prompts
-   * @throws McpAuthenticationError on 401 responses
-   */
   async listPrompts(
     integration: McpIntegration,
     userId?: UUID,
@@ -392,14 +386,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Executes a tool on the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @param call Tool call parameters
-   * @returns Tool execution result
-   * @throws McpAuthenticationError on 401 responses
-   */
   async callTool(
     integration: McpIntegration,
     call: McpToolCall,
@@ -416,15 +402,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Reads a resource from the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @param uri Resource URI
-   * @param parameters Optional parameters for parameterized resources
-   * @returns Resource content and mime type
-   * @throws McpAuthenticationError on 401 responses
-   */
   async readResource(
     integration: McpIntegration,
     uri: string,
@@ -446,15 +423,6 @@ export class McpClientService {
     }
   }
 
-  /**
-   * Gets a prompt template from the MCP server.
-   *
-   * @param integration The MCP integration entity
-   * @param name Prompt template name
-   * @param args Arguments to fill the prompt template
-   * @returns Prompt messages
-   * @throws McpAuthenticationError on 401 responses
-   */
   async getPrompt(
     integration: McpIntegration,
     name: string,

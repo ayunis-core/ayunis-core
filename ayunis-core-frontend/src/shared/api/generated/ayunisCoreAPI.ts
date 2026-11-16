@@ -16562,6 +16562,72 @@ export function useMcpIntegrationsControllerGetUserConfig<TData = Awaited<Return
 
 
 /**
+ * @summary Remove current-user MCP credentials
+ */
+export const mcpIntegrationsControllerDeleteUserConfig = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/mcp-integrations/${id}/user-config`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getMcpIntegrationsControllerDeleteUserConfigMutationKey = () => ['mcpIntegrationsControllerDeleteUserConfig'] as const;
+
+export const getMcpIntegrationsControllerDeleteUserConfigMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDeleteUserConfig>>, TError,McpIntegrationsControllerDeleteUserConfigMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDeleteUserConfig>>, TError,McpIntegrationsControllerDeleteUserConfigMutationVariables, TContext> => {
+
+const mutationKey = getMcpIntegrationsControllerDeleteUserConfigMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mcpIntegrationsControllerDeleteUserConfig>>, McpIntegrationsControllerDeleteUserConfigMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  mcpIntegrationsControllerDeleteUserConfig(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type McpIntegrationsControllerDeleteUserConfigMutationResult = NonNullable<Awaited<ReturnType<typeof mcpIntegrationsControllerDeleteUserConfig>>>
+
+    export type McpIntegrationsControllerDeleteUserConfigMutationError = unknown
+    export type McpIntegrationsControllerDeleteUserConfigMutationVariables = {id: string}
+
+    /**
+ * @summary Remove current-user MCP credentials
+ */
+export const useMcpIntegrationsControllerDeleteUserConfig = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mcpIntegrationsControllerDeleteUserConfig>>, TError,McpIntegrationsControllerDeleteUserConfigMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mcpIntegrationsControllerDeleteUserConfig>>,
+        TError,
+        McpIntegrationsControllerDeleteUserConfigMutationVariables,
+        TContext
+      > => {
+      return useMutation(getMcpIntegrationsControllerDeleteUserConfigMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Set current user config for an MCP integration
  */
 export const mcpIntegrationsControllerSetUserConfig = (

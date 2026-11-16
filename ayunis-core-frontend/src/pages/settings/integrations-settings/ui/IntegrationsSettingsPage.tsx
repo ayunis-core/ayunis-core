@@ -180,6 +180,7 @@ function IntegrationRow({
         <Button
           variant={status.key === 'actionRequired' ? 'default' : 'outline'}
           size="sm"
+          data-testid={`integration-configure-${integration.id}`}
           onClick={() => onAuthorize(integration)}
           disabled={isOAuthPending}
         >

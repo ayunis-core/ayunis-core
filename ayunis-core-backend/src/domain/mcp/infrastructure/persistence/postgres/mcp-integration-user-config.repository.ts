@@ -1,7 +1,11 @@
+import { normalizeIntegrationConfigSchema } from 'src/domain/mcp/domain/value-objects/integration-config-schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { In, type Repository } from 'typeorm';
+import { isDeepStrictEqual } from 'node:util';
+import type { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
+import { McpIntegrationRecord } from './schema/mcp-integration.record';
 import { UUID } from 'crypto';
 import { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
 import { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
@@ -40,6 +44,76 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     const record = this.toRecord(config);
     const saved = await this.repository.save(record);
     return this.toDomain(saved);
+  }
+
+  async saveVerified(
+    config: McpIntegrationUserConfig,
+    expectedIntegration: SchemaConfiguredMcpIntegration,
+    expectedConfig: McpIntegrationUserConfig | null,
+  ): Promise<boolean> {
+    return this.txHost.withTransaction(async () => {
+      // Lock only during the recheck/write, never during the remote request.
+      const integration = await this.txHost.tx
+        .getRepository(McpIntegrationRecord)
+        .findOne({
+          where: { id: config.integrationId, orgId: expectedIntegration.orgId },
+          loadEagerRelations: false,
+          lock: { mode: 'pessimistic_write' },
+        });
+      if (
+        !integration ||
+        !this.matchesIntegration(integration, expectedIntegration)
+      )
+        return false;
+      const current = await this.findByIntegrationAndUser(
+        config.integrationId,
+        config.userId,
+      );
+      if (!this.matchesConfig(current, expectedConfig)) return false;
+      const record = this.toRecord(config);
+      if (!current) {
+        await this.repository.insert(record);
+        return true;
+      }
+      const result = await this.repository.update(
+        {
+          id: current.id,
+          userId: config.userId,
+          integrationId: config.integrationId,
+        },
+        { configValues: record.configValues, updatedAt: record.updatedAt },
+      );
+      return result.affected === 1;
+    });
+  }
+
+  private matchesIntegration(
+    record: McpIntegrationRecord,
+    expected: SchemaConfiguredMcpIntegration,
+  ): boolean {
+    if (!record.configSchema) return false;
+    return (
+      record.serverUrl === expected.serverUrl &&
+      record.enabled === expected.enabled &&
+      record.updatedAt.getTime() === expected.updatedAt.getTime() &&
+      isDeepStrictEqual(
+        normalizeIntegrationConfigSchema(record.configSchema),
+        expected.configSchema,
+      ) &&
+      isDeepStrictEqual(record.orgConfigValues ?? {}, expected.orgConfigValues)
+    );
+  }
+
+  private matchesConfig(
+    current: McpIntegrationUserConfig | null,
+    expected: McpIntegrationUserConfig | null,
+  ): boolean {
+    if (!current || !expected) return current === expected;
+    return (
+      current.id === expected.id &&
+      current.updatedAt.getTime() === expected.updatedAt.getTime() &&
+      isDeepStrictEqual(current.configValues, expected.configValues)
+    );
   }
 
   async findByIntegrationAndUser(
@@ -86,6 +160,13 @@ export class McpIntegrationUserConfigRepository extends McpIntegrationUserConfig
     this.logger.log({ integrationId }, 'deleteByIntegrationId');
 
     await this.repository.delete({ integrationId });
+  }
+
+  async deleteByIntegrationAndUser(
+    integrationId: UUID,
+    userId: UUID,
+  ): Promise<void> {
+    await this.repository.delete({ integrationId, userId });
   }
 
   async removeKeysByIntegrationId(

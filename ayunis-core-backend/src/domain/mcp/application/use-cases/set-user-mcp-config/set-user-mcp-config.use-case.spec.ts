@@ -1,4 +1,5 @@
 import { SetUserMcpConfigUseCase } from './set-user-mcp-config.use-case';
+import { McpConfigChangedError } from 'src/domain/mcp/application/mcp-credential-verification.error';
 import { SetUserMcpConfigCommand } from './set-user-mcp-config.command';
 import type { McpIntegrationsRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integrations.repository.port';
 import type { McpIntegrationUserConfigRepositoryPort } from 'src/domain/mcp/application/ports/mcp-integration-user-config.repository.port';
@@ -13,6 +14,7 @@ import { McpConfigService } from 'src/domain/mcp/application/services/mcp-config
 import { McpCapabilityCacheService } from 'src/domain/mcp/application/services/mcp-capability-cache.service';
 import type { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 import {
+  McpAuthenticationError,
   McpIntegrationNotFoundError,
   McpIntegrationNotConfigurableError,
   McpNoUserFieldsError,
@@ -33,7 +35,7 @@ describe('SetUserMcpConfigUseCase', () => {
   let configService: McpConfigService;
   let capabilityCache: McpCapabilityCacheService;
   let mcpClientService: jest.Mocked<
-    Pick<McpClientService, 'invalidateConnections'>
+    Pick<McpClientService, 'invalidateConnections' | 'verifyUserConfig'>
   >;
 
   const userId = '770e8400-e29b-41d4-a716-446655440001' as UUID;
@@ -79,9 +81,11 @@ describe('SetUserMcpConfigUseCase', () => {
     } as jest.Mocked<McpIntegrationsRepositoryPort>;
 
     userConfigRepository = {
+      saveVerified: jest.fn(),
       save: jest.fn(),
       findByIntegrationAndUser: jest.fn(),
       findByIntegrationIdsAndUser: jest.fn(),
+      deleteByIntegrationAndUser: jest.fn(),
       deleteByIntegrationId: jest.fn(),
       removeKeysByIntegrationId: jest.fn(),
     };
@@ -103,13 +107,16 @@ describe('SetUserMcpConfigUseCase', () => {
     credentialEncryption.encrypt.mockImplementation(
       async (plaintext) => `encrypted:${plaintext}`,
     );
-    userConfigRepository.save.mockImplementation(async (config) => config);
+    userConfigRepository.saveVerified.mockResolvedValue(true);
     userConfigRepository.findByIntegrationAndUser.mockResolvedValue(null);
 
     configService = new McpConfigService(credentialEncryption);
 
     capabilityCache = new McpCapabilityCacheService();
-    mcpClientService = { invalidateConnections: jest.fn() };
+    mcpClientService = {
+      invalidateConnections: jest.fn(),
+      verifyUserConfig: jest.fn(),
+    };
 
     useCase = new SetUserMcpConfigUseCase(
       integrationRepository,
@@ -119,6 +126,90 @@ describe('SetUserMcpConfigUseCase', () => {
       capabilityCache,
       mcpClientService as unknown as McpClientService,
     );
+  });
+
+  it('does not persist a replacement token rejected by the MCP server', async () => {
+    const integration = createMarketplaceIntegration([
+      {
+        key: 'personalToken',
+        type: 'secret',
+        label: 'Personal Access Token',
+        headerName: 'Authorization',
+        prefix: 'Bearer ',
+        required: true,
+      },
+    ]);
+    const existing = new McpIntegrationUserConfig({
+      integrationId,
+      userId,
+      configValues: { personalToken: 'encrypted:working-personal-token' },
+    });
+    integrationRepository.findById.mockResolvedValue(integration);
+    userConfigRepository.findByIntegrationAndUser.mockResolvedValue(existing);
+    Object.assign(mcpClientService, {
+      verifyUserConfig: jest
+        .fn()
+        .mockRejectedValue(
+          new McpAuthenticationError(
+            'The MCP server rejected these credentials',
+          ),
+        ),
+    });
+
+    await expect(
+      useCase.execute(
+        new SetUserMcpConfigCommand(integrationId, {
+          personalToken: 'revoked-personal-token',
+        }),
+      ),
+    ).rejects.toThrow(McpAuthenticationError);
+    expect(userConfigRepository.saveVerified).not.toHaveBeenCalled();
+    expect(existing.configValues).toEqual({
+      personalToken: 'encrypted:working-personal-token',
+    });
+    expect(mcpClientService.invalidateConnections).not.toHaveBeenCalled();
+  });
+
+  it('does not report success or invalidate working sessions when another save wins during verification', async () => {
+    integrationRepository.findById.mockResolvedValue(
+      createMarketplaceIntegration([
+        {
+          key: 'personalToken',
+          label: 'Token',
+          type: 'secret',
+          required: true,
+        },
+      ]),
+    );
+    userConfigRepository.saveVerified.mockResolvedValue(false);
+    await expect(
+      useCase.execute(
+        new SetUserMcpConfigCommand(integrationId, {
+          personalToken: 'candidate-token',
+        }),
+      ),
+    ).rejects.toThrow(McpConfigChangedError);
+    expect(mcpClientService.invalidateConnections).not.toHaveBeenCalled();
+  });
+
+  it('does not turn a blank required token into a present encrypted value', async () => {
+    integrationRepository.findById.mockResolvedValue(
+      createMarketplaceIntegration([
+        {
+          key: 'personalToken',
+          label: 'Token',
+          type: 'secret',
+          required: true,
+        },
+      ]),
+    );
+    await expect(
+      useCase.execute(
+        new SetUserMcpConfigCommand(integrationId, { personalToken: '   ' }),
+      ),
+    ).rejects.toThrow(McpMissingRequiredConfigError);
+    expect(userConfigRepository.saveVerified).not.toHaveBeenCalled();
+    expect(mcpClientService.verifyUserConfig).not.toHaveBeenCalled();
   });
 
   it('should create a new user config and return masked result', async () => {
@@ -153,7 +244,7 @@ describe('SetUserMcpConfigUseCase', () => {
       personalToken: SECRET_MASK,
       tenantId: 'my-tenant-123',
     });
-    expect(userConfigRepository.save).toHaveBeenCalled();
+    expect(userConfigRepository.saveVerified).toHaveBeenCalled();
     expect(mcpClientService.invalidateConnections).toHaveBeenCalledWith(
       integration,
       userId,
@@ -172,7 +263,7 @@ describe('SetUserMcpConfigUseCase', () => {
       },
     ]);
     integrationRepository.findById.mockResolvedValue(integration);
-    userConfigRepository.save.mockRejectedValue(
+    userConfigRepository.saveVerified.mockRejectedValue(
       new Error('Database connection failed'),
     );
 
@@ -328,7 +419,7 @@ describe('SetUserMcpConfigUseCase', () => {
     });
 
     // The saved config should retain the encrypted old token
-    const savedConfig = userConfigRepository.save.mock.calls[0][0];
+    const savedConfig = userConfigRepository.saveVerified.mock.calls[0][0];
     expect(savedConfig.configValues.personalToken).toBe('encrypted:old-token');
     expect(savedConfig.configValues.tenantId).toBe('new-tenant');
   });
@@ -376,7 +467,7 @@ describe('SetUserMcpConfigUseCase', () => {
     // tenantId should be retained from existing config
     expect(result.configValues.tenantId).toBe('existing-tenant');
 
-    const savedConfig = userConfigRepository.save.mock.calls[0][0];
+    const savedConfig = userConfigRepository.saveVerified.mock.calls[0][0];
     expect(savedConfig.configValues.tenantId).toBe('existing-tenant');
     expect(savedConfig.configValues.personalToken).toBe(
       'encrypted:brand-new-token',
@@ -563,7 +654,7 @@ describe('SetUserMcpConfigUseCase', () => {
 
     expect(result.hasConfig).toBe(true);
     // personalToken should be absent — SECRET_MASK without existing value is skipped
-    const savedConfig = userConfigRepository.save.mock.calls[0][0];
+    const savedConfig = userConfigRepository.saveVerified.mock.calls[0][0];
     expect(savedConfig.configValues).not.toHaveProperty('personalToken');
     expect(savedConfig.configValues.tenantId).toBe('my-tenant-123');
   });

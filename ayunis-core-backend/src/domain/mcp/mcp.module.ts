@@ -35,6 +35,7 @@ import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 // Use Cases
 import { CreateMcpIntegrationUseCase } from './application/use-cases/create-mcp-integration/create-mcp-integration.use-case';
 import { InstallMarketplaceIntegrationUseCase } from './application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { DeleteUserMcpConfigUseCase } from './application/use-cases/delete-user-mcp-config/delete-user-mcp-config.use-case';
 import { SetUserMcpConfigUseCase } from './application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
 import { GetUserMcpConfigUseCase } from './application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 import { GetMcpIntegrationUseCase } from './application/use-cases/get-mcp-integration/get-mcp-integration.use-case';
@@ -179,6 +180,7 @@ import { McpToolAllowanceResponseMapper } from './presenters/http/mappers/mcp-to
     GetMcpPromptUseCase,
     InstallMarketplaceIntegrationUseCase,
     SetUserMcpConfigUseCase,
+    DeleteUserMcpConfigUseCase,
     GetUserMcpConfigUseCase,
     AllowMcpToolUseCase,
     ListMcpToolAllowancesUseCase,

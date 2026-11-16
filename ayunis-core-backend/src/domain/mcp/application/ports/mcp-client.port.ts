@@ -159,5 +159,8 @@ export abstract class McpClientPort {
     config: McpConnectionConfig,
   ): Promise<{ valid: boolean; error?: string }>;
 
+  /** Verifies candidate credentials using an isolated client, without executing tools. */
+  abstract verifyCredentials(config: McpConnectionConfig): Promise<void>;
+
   abstract invalidateConnections(scope: McpConnectionScope): Promise<void>;
 }

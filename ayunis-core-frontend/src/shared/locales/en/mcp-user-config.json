@@ -6,5 +6,16 @@
   "cancel": "Cancel",
   "success": "Your credentials were saved successfully",
   "error": "Failed to save your credentials. Please try again.",
-  "notFound": "This integration is no longer available."
+  "notFound": "This integration is no longer available.",
+  "verification": {
+    "rejected": "The MCP server rejected these credentials. Check your token and try again.",
+    "forbidden": "These credentials do not have the required access.",
+    "timeout": "The connection check timed out. Your saved credentials were kept. Try again.",
+    "unavailable": "The MCP server could not be reached. Your saved credentials were kept. Try again.",
+    "invalidResponse": "The server did not return a compatible MCP response. Check the server URL.",
+    "changed": "The integration or your credentials changed during verification. Reload and try again.",
+    "required": "Complete all required credential fields."
+  },
+  "disconnect": "Disconnect",
+  "disconnected": "Your personal credentials were removed."
 }

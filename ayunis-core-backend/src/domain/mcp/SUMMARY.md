@@ -22,6 +22,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 - `RetrieveMcpResourceUseCase` — Retrieves a resource from a remote MCP server
 - `GetMcpPromptUseCase` — Fetches a prompt from a remote MCP server
 - `SetUserMcpConfigUseCase` — Saves per-user config values for a schema-configured integration
+- `DeleteUserMcpConfigUseCase` — Removes only the current user’s saved config and invalidates their connection/cache without contacting the provider
 - `GetUserMcpConfigUseCase` — Retrieves per-user config values (with secret masking)
 - `AllowMcpToolUseCase` — Always allows an upstream MCP tool of an integration of the current org for the current user; allowing an already-allowed tool changes nothing (exported)
 - `FindMcpToolAllowancesUseCase` — Loads the current user's allowances for a set of integrations in one query (exported)
@@ -68,7 +69,8 @@ The MCP module manages connections to external Model Context Protocol servers at
   - `POST /mcp-integrations/:id/disable` — Disable integration (admin)
   - `POST /mcp-integrations/:id/validate` — Validate connection (admin)
   - `GET /mcp-integrations/:id/user-config` — Get user config (user, admin)
-  - `PATCH /mcp-integrations/:id/user-config` — Set user config (user, admin)
+  - `PATCH /mcp-integrations/:id/user-config` — Verify candidate credentials with an isolated MCP client, then atomically save current-user config (user, admin); OAuth field saves retain their separate authorization flow
+  - `DELETE /mcp-integrations/:id/user-config` — Remove current-user credentials without contacting the provider (user, admin)
   - `POST /mcp-integrations/:id/oauth/authorize` — Start per-user OAuth authorization
   - `POST /mcp-integrations/oauth/complete` — Complete a pending OAuth authorization
   - `DELETE /mcp-integrations/:id/oauth/authorization` — Revoke and remove the current user's OAuth grant

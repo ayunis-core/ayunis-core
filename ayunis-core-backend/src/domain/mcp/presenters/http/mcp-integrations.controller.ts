@@ -19,6 +19,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { UUID } from 'crypto';
+import { DeleteUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/delete-user-mcp-config/delete-user-mcp-config.use-case';
+import { DeleteUserMcpConfigCommand } from 'src/domain/mcp/application/use-cases/delete-user-mcp-config/delete-user-mcp-config.command';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
@@ -50,7 +52,6 @@ import { InstallMarketplaceIntegrationUseCase } from 'src/domain/mcp/application
 import { SetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
 import { GetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 
-// Commands and Queries
 import { CreatePredefinedMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/create-mcp-integration/create-predefined-mcp-integration.command';
 import { CreateCustomMcpIntegrationCommand } from 'src/domain/mcp/application/use-cases/create-mcp-integration/create-custom-mcp-integration.command';
 import { GetMcpIntegrationQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integration/get-mcp-integration.query';
@@ -88,6 +89,7 @@ export class McpIntegrationsController {
     private readonly listPredefinedConfigsUseCase: ListPredefinedMcpIntegrationConfigsUseCase,
     private readonly installMarketplaceIntegrationUseCase: InstallMarketplaceIntegrationUseCase,
     private readonly setUserMcpConfigUseCase: SetUserMcpConfigUseCase,
+    private readonly deleteUserMcpConfigUseCase: DeleteUserMcpConfigUseCase,
     private readonly getUserMcpConfigUseCase: GetUserMcpConfigUseCase,
     private readonly responseMapper: McpIntegrationResponseMapper,
     private readonly predefinedConfigDtoMapper: PredefinedConfigDtoMapper,
@@ -425,10 +427,19 @@ export class McpIntegrationsController {
       new GetUserMcpConfigQuery(id),
     );
 
-    return {
-      hasConfig: result.hasConfig,
-      configValues: result.configValues,
-    };
+    return result;
+  }
+
+  @Delete(':id/user-config')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove current-user MCP credentials' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiResponse({ status: 204, description: 'User credentials removed' })
+  deleteUserConfig(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    return this.deleteUserMcpConfigUseCase.execute(
+      new DeleteUserMcpConfigCommand(id),
+    );
   }
 
   @Patch(':id/user-config')

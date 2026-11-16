@@ -8377,6 +8377,27 @@
         "summary": "Get current user config for an MCP integration",
         "tags": ["mcp-integrations"]
       },
+      "delete": {
+        "operationId": "McpIntegrationsController_deleteUserConfig",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User credentials removed"
+          }
+        },
+        "summary": "Remove current-user MCP credentials",
+        "tags": ["mcp-integrations"]
+      },
       "patch": {
         "operationId": "McpIntegrationsController_setUserConfig",
         "parameters": [

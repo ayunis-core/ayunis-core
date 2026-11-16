@@ -71,9 +71,11 @@ describe('GetUserMcpConfigUseCase', () => {
     } as jest.Mocked<McpIntegrationsRepositoryPort>;
 
     userConfigRepository = {
+      saveVerified: jest.fn(),
       save: jest.fn(),
       findByIntegrationAndUser: jest.fn(),
       findByIntegrationIdsAndUser: jest.fn(),
+      deleteByIntegrationAndUser: jest.fn(),
       deleteByIntegrationId: jest.fn(),
       removeKeysByIntegrationId: jest.fn(),
     };

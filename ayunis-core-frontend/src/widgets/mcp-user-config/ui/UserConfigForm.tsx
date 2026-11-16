@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DialogFooter } from '@ayunis/ui/components/dialog';
 import { Button } from '@ayunis/ui/components/button';
@@ -7,6 +7,7 @@ import { Skeleton } from '@ayunis/ui/components/skeleton';
 import {
   useGetUserConfig,
   useSetUserConfig,
+  useDeleteUserConfig,
 } from '@/widgets/mcp-user-config/api/useUserConfig';
 import type {
   McpIntegrationResponseDto,
@@ -37,12 +38,19 @@ export function UserConfigForm({
     onClose();
     onSaved?.();
   });
+  const { disconnect, isDisconnecting } = useDeleteUserConfig(
+    integration.id,
+    onClose,
+  );
+  const busy = isSaving || isDisconnecting;
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const initialized = useRef(false);
 
   const userFields = getUserFields(integration);
 
   useEffect(() => {
-    if (userConfig?.configValues) {
+    if (userConfig?.configValues && !initialized.current) {
+      initialized.current = true;
       initFormFromExisting(userConfig.configValues, userFields, setFormValues);
     }
   }, [userConfig]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -66,20 +74,31 @@ export function UserConfigForm({
           onChange={(value) =>
             setFormValues((prev) => ({ ...prev, [field.key]: value }))
           }
-          disabled={isSaving}
+          disabled={busy}
           idPrefix="user-config"
         />
       ))}
       <DialogFooter>
+        {userConfig?.hasConfig && (
+          <Button
+            type="button"
+            variant="outline"
+            data-testid="user-config-disconnect"
+            onClick={disconnect}
+            disabled={busy}
+          >
+            {t('disconnect')}
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
           onClick={onClose}
-          disabled={isSaving}
+          disabled={busy}
         >
           {t('cancel')}
         </Button>
-        <Button type="submit" disabled={isSaving}>
+        <Button type="submit" data-testid="user-config-save" disabled={busy}>
           {isSaving ? t('saving') : t('save')}
         </Button>
       </DialogFooter>

@@ -18,6 +18,7 @@ import { DisableMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cas
 import { ValidateMcpIntegrationUseCase } from 'src/domain/mcp/application/use-cases/validate-mcp-integration/validate-mcp-integration.use-case';
 import { ListPredefinedMcpIntegrationConfigsUseCase } from 'src/domain/mcp/application/use-cases/list-predefined-mcp-integration-configs/list-predefined-mcp-integration-configs.use-case';
 import { InstallMarketplaceIntegrationUseCase } from 'src/domain/mcp/application/use-cases/install-marketplace-integration/install-marketplace-integration.use-case';
+import { DeleteUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/delete-user-mcp-config/delete-user-mcp-config.use-case';
 import { SetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/set-user-mcp-config/set-user-mcp-config.use-case';
 import { GetUserMcpConfigUseCase } from 'src/domain/mcp/application/use-cases/get-user-mcp-config/get-user-mcp-config.use-case';
 import { PredefinedMcpIntegration } from 'src/domain/mcp/domain/integrations/predefined-mcp-integration.entity';
@@ -89,6 +90,10 @@ describe('McpIntegrationsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [McpIntegrationsController],
       providers: [
+        {
+          provide: DeleteUserMcpConfigUseCase,
+          useValue: { execute: jest.fn() },
+        },
         McpIntegrationDtoMapper,
         McpIntegrationResponseMapper,
         PredefinedConfigDtoMapper,
