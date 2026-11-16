@@ -201,6 +201,7 @@ export default function PlusButton({
         </DropdownMenuContent>
       </DropdownMenu>
       <Input
+        data-testid="chat-file-upload-input"
         type="file"
         hidden
         multiple

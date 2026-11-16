@@ -17,6 +17,7 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.odp',
   '.txt',
   '.md',
+  '.xml',
   '.eml',
   '.msg',
   ...AUDIO_EXTENSIONS,
