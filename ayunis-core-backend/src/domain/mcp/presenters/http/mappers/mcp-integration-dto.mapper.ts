@@ -53,6 +53,7 @@ export class McpIntegrationDtoMapper {
       updatedAt: integration.updatedAt,
       returnsPii: integration.returnsPii,
       description: integration.description,
+      instructions: integration.instructions,
     };
 
     // Add type-specific fields

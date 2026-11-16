@@ -3,6 +3,7 @@ import type {
   UpdateIntegrationFormData,
 } from '@/pages/admin-settings/integrations-settings/model/types';
 import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { buildInstructionsUpdate } from './integration-instructions';
 
 interface ConfigSchema {
   orgFields: MarketplaceIntegrationConfigFieldDto[];
@@ -104,7 +105,10 @@ export function buildUpdatePayload({
   currentOrgValues,
   hasStaticOAuthClient,
 }: BuildUpdatePayloadInput): UpdateIntegrationFormData {
-  const payload: UpdateIntegrationFormData = {};
+  const payload: UpdateIntegrationFormData = buildInstructionsUpdate(
+    data.instructions,
+    integration.instructions,
+  );
   if (data.name && data.name !== integration.name) payload.name = data.name;
 
   if (!isSchemaConfigured) {

@@ -7,6 +7,7 @@ import {
   Length,
   MinLength,
   IsUrl,
+  MaxLength,
 } from 'class-validator';
 import { IsStringRecord } from 'src/common/validators/is-string-record.validator';
 import { Type } from 'class-transformer';
@@ -15,6 +16,7 @@ import {
   CustomMcpConfigSchemaDto,
   McpOAuthClientDto,
 } from './create-custom-integration.dto';
+import { MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH } from 'src/domain/mcp/domain/value-objects/mcp-integration-instructions.constant';
 
 /**
  * DTO for updating an existing MCP integration.
@@ -109,4 +111,16 @@ export class UpdateMcpIntegrationDto {
   @ValidateNested()
   @Type(() => McpOAuthClientDto)
   oauthClient?: McpOAuthClientDto;
+
+  @ApiPropertyOptional({
+    description:
+      'Instructions written by the organization that brief the model whenever this integration is active in a chat. Omit to keep the stored text; send null or an empty string to remove it.',
+    type: 'string',
+    nullable: true,
+    maxLength: MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(MCP_INTEGRATION_INSTRUCTIONS_MAX_LENGTH)
+  instructions?: string | null;
 }

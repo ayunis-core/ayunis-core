@@ -46,7 +46,7 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
     );
     const { service } = buildService(outage);
 
-    const tools = await service.assemble(thread, new Set());
+    const { tools } = await service.assemble(thread, new Set());
 
     expect(tools).toEqual([]);
     expect(setError).toHaveBeenCalledWith(outage);
@@ -59,7 +59,7 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
     );
     const { service } = buildService(timeout);
 
-    const tools = await service.assemble(thread, new Set());
+    const { tools } = await service.assemble(thread, new Set());
 
     expect(tools).toEqual([]);
     expect(setError).toHaveBeenCalledWith(timeout);
@@ -68,7 +68,7 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
   it('does not report discovery failures that are not connectivity outages', async () => {
     const { service, logger } = buildService(new Error('Method not found'));
 
-    const tools = await service.assemble(thread, new Set());
+    const { tools } = await service.assemble(thread, new Set());
 
     expect(tools).toEqual([]);
     expect(setError).not.toHaveBeenCalled();
@@ -139,7 +139,10 @@ describe('McpToolAssemblerService — capability names', () => {
       mcpIntegrationIds: [outlineId],
     } as unknown as Thread;
 
-    const tools = await service.assemble(thread, new Set(['create_document']));
+    const { tools } = await service.assemble(
+      thread,
+      new Set(['create_document']),
+    );
 
     expect(tools.map((tool) => tool.name)).toEqual([
       `mcp__tool__create_document__${outlineId.slice(0, 8)}`,
@@ -152,7 +155,7 @@ describe('McpToolAssemblerService — capability names', () => {
       mcpIntegrationIds: [outlineId, recordsId],
     } as unknown as Thread;
 
-    const tools = await service.assemble(thread, new Set());
+    const { tools } = await service.assemble(thread, new Set());
 
     expect(tools.map((tool) => tool.name)).toEqual([
       `mcp__tool__create_document__${outlineId.slice(0, 8)}`,

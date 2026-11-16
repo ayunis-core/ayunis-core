@@ -175,6 +175,7 @@ export class InstallMarketplaceIntegrationUseCase {
       configSchema,
       orgConfigValues,
       returnsPii: command.returnsPii,
+      instructions: command.instructions,
       logoUrl: marketplace.logoUrl ?? null,
       customerProvidesServerUrl: marketplace.customerProvidesServerUrl,
       serverUrlHint: marketplace.serverUrlHint,

@@ -30,6 +30,7 @@ import { CustomConfigFieldEditor } from './custom-config-field-editor';
 import { CustomIntegrationIdentityFields } from './custom-integration-identity-fields';
 import { describeServerUrlChange } from '@/pages/admin-settings/integrations-settings/lib/server-url-change';
 import { EditOAuthClientFields } from './edit-oauth-client-fields';
+import { IntegrationInstructionsField } from './integration-instructions-field';
 import { ServerUrlChangeNotice } from './server-url-change-notice';
 
 interface EditCustomIntegrationDialogProps {
@@ -146,6 +147,7 @@ export function EditCustomIntegrationDialog({
             <ServerUrlChangeNotice
               change={describeServerUrlChange(integration, serverUrl)}
             />
+            <IntegrationInstructionsField disabled={isUpdating} />
             <FormDescription>
               {t('integrations.editDialog.authMethodDescription', {
                 method: isOAuth

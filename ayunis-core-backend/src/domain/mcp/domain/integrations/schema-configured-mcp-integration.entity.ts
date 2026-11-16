@@ -30,6 +30,7 @@ export abstract class SchemaConfiguredMcpIntegration extends McpIntegration {
     lastConnectionCheck?: Date;
     returnsPii?: boolean;
     description?: string;
+    instructions?: string | null;
   }) {
     super(params);
     this._configSchema = normalizeIntegrationConfigSchema(params.configSchema);

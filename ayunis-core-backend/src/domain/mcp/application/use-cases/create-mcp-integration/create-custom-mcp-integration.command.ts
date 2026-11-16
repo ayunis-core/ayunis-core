@@ -11,5 +11,6 @@ export class CreateCustomMcpIntegrationCommand {
       clientId: string;
       clientSecret?: string;
     },
+    public readonly instructions?: string | null,
   ) {}
 }

@@ -123,4 +123,18 @@ describe('custom integration edit mapping', () => {
       buildCustomIntegrationUpdatePayload(formData, oauthIntegration),
     ).toEqual({});
   });
+
+  it('sends null when the instructions of a custom integration are emptied', () => {
+    const withInstructions = {
+      ...integration,
+      instructions: 'Search by file number first.',
+    } as McpIntegration;
+    const formData = toEditCustomIntegrationFormData(withInstructions);
+    expect(formData.instructions).toBe('Search by file number first.');
+    formData.instructions = '';
+
+    expect(
+      buildCustomIntegrationUpdatePayload(formData, withInstructions),
+    ).toEqual({ instructions: null });
+  });
 });
