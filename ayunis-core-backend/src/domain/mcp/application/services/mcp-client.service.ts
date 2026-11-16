@@ -1,3 +1,8 @@
+import { McpConnectionHealthService } from './mcp-connection-health.service';
+import { mcpConnectionRevision } from './mcp-connection-revision';
+import type { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
+import type { McpOAuthUserToken } from 'src/domain/mcp/domain/mcp-oauth-user-token.entity';
+import type { DiscoveredCapabilities } from './mcp-capability-cache.service';
 import { Injectable, Optional, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import {
@@ -41,6 +46,7 @@ export class McpClientService {
     private readonly oauthTokens?: McpOAuthUserTokenRepositoryPort,
     @Optional()
     private readonly capabilityCache?: McpCapabilityCacheService,
+    @Optional() private readonly health?: McpConnectionHealthService,
   ) {}
 
   invalidateConnections(
@@ -81,18 +87,28 @@ export class McpClientService {
     integration: SchemaConfiguredMcpIntegration,
     userId?: UUID,
   ): Promise<McpConnectionConfig> {
-    const userConfigValues = await this.loadUserConfigValues(
+    const userConfig = await this.loadUserConfigValues(integration, userId);
+    const userConfigValues = userConfig?.configValues ?? null;
+    const token = await this.assertUserAuthorized(
       integration,
       userId,
+      userConfigValues,
     );
-    await this.assertUserAuthorized(integration, userId, userConfigValues);
 
     try {
-      return await this.buildSchemaConfiguredHeaders(
+      const config = await this.buildSchemaConfiguredHeaders(
         integration,
         userId,
         userConfigValues,
       );
+      return {
+        ...config,
+        observationRevision: mcpConnectionRevision(
+          integration,
+          userConfig,
+          token,
+        ),
+      };
     } catch (error) {
       if (error instanceof McpAuthenticationError) {
         throw error;
@@ -111,7 +127,7 @@ export class McpClientService {
   private async loadUserConfigValues(
     integration: SchemaConfiguredMcpIntegration,
     userId?: UUID,
-  ): Promise<Record<string, string> | null> {
+  ): Promise<McpIntegrationUserConfig | null> {
     if (!userId || integration.configSchema.userFields.length === 0) {
       return null;
     }
@@ -119,18 +135,18 @@ export class McpClientService {
       integration.id,
       userId,
     );
-    return config?.configValues ?? null;
+    return config;
   }
 
   private async assertUserAuthorized(
     integration: SchemaConfiguredMcpIntegration,
     userId: UUID | undefined,
     userConfigValues: Record<string, string> | null,
-  ): Promise<void> {
-    if (!userId) return;
+  ): Promise<McpOAuthUserToken | null> {
+    if (!userId) return null;
     const fieldsAuthorized = integration.isUserAuthorized(userConfigValues);
     if (!fieldsAuthorized) this.rejectUserAuthorization(integration);
-    if (!integration.configSchema.oauth) return;
+    if (!integration.configSchema.oauth) return null;
     if (!this.oauthTokens) this.rejectUserAuthorization(integration);
     const token = await this.oauthTokens.findByIntegrationAndUser(
       integration.id,
@@ -139,6 +155,7 @@ export class McpClientService {
     if (!token || (token.isExpired() && !token.encryptedRefreshToken)) {
       this.rejectUserAuthorization(integration);
     }
+    return token;
   }
 
   private async buildSchemaConfiguredHeaders(
@@ -222,6 +239,7 @@ export class McpClientService {
       return {
         serverUrl: integration.serverUrl,
         headers,
+        observationRevision: mcpConnectionRevision(integration, null, null),
         connectionScope: this.buildConnectionScope(integration, userId),
       };
     } catch (error) {
@@ -307,134 +325,138 @@ export class McpClientService {
     return headers;
   }
 
-  async listTools(
+  listTools(
     integration: McpIntegration,
     userId?: UUID,
     options?: McpRequestOptions,
   ): Promise<McpTool[]> {
-    const config = await this.buildConnectionConfig(integration, userId);
-
-    try {
-      return await this.mcpClient.listTools(config, options);
-    } catch (error) {
-      if (this.isMethodNotFoundError(error)) return [];
-      await this.handleOperationError(error, integration, 'listTools', userId);
-      throw error;
-    }
+    return this.request(integration, userId, 'listTools', (config) =>
+      this.optionalList(() => this.mcpClient.listTools(config, options)),
+    );
   }
 
-  async listResources(
+  listResources(
     integration: McpIntegration,
     userId?: UUID,
     options?: McpRequestOptions,
   ): Promise<McpResource[]> {
-    const config = await this.buildConnectionConfig(integration, userId);
-
-    try {
-      return await this.mcpClient.listResources(config, options);
-    } catch (error) {
-      if (this.isMethodNotFoundError(error)) return [];
-      await this.handleOperationError(
-        error,
-        integration,
-        'listResources',
-        userId,
-      );
-      throw error;
-    }
+    return this.request(integration, userId, 'listResources', (config) =>
+      this.optionalList(() => this.mcpClient.listResources(config, options)),
+    );
   }
 
-  async listResourceTemplates(
+  listResourceTemplates(
     integration: McpIntegration,
     userId?: UUID,
     options?: McpRequestOptions,
   ): Promise<McpResource[]> {
-    const config = await this.buildConnectionConfig(integration, userId);
-
-    try {
-      return await this.mcpClient.listResourceTemplates(config, options);
-    } catch (error) {
-      if (this.isMethodNotFoundError(error)) return [];
-      await this.handleOperationError(
-        error,
-        integration,
-        'listResourceTemplates',
-        userId,
-      );
-      throw error;
-    }
+    return this.request(
+      integration,
+      userId,
+      'listResourceTemplates',
+      (config) =>
+        this.optionalList(() =>
+          this.mcpClient.listResourceTemplates(config, options),
+        ),
+    );
   }
 
-  async listPrompts(
+  listPrompts(
     integration: McpIntegration,
     userId?: UUID,
     options?: McpRequestOptions,
   ): Promise<McpPrompt[]> {
-    const config = await this.buildConnectionConfig(integration, userId);
-
-    try {
-      return await this.mcpClient.listPrompts(config, options);
-    } catch (error) {
-      if (this.isMethodNotFoundError(error)) return [];
-      await this.handleOperationError(
-        error,
-        integration,
-        'listPrompts',
-        userId,
-      );
-      throw error;
-    }
+    return this.request(integration, userId, 'listPrompts', (config) =>
+      this.optionalList(() => this.mcpClient.listPrompts(config, options)),
+    );
   }
 
-  async callTool(
+  discoverCapabilities(
+    integration: McpIntegration,
+    userId: UUID | undefined,
+    options: McpRequestOptions,
+  ): Promise<DiscoveredCapabilities> {
+    return this.request(integration, userId, 'discovery', async (config) => {
+      const [tools, resources, resourceTemplates, prompts] = await Promise.all([
+        this.optionalList(() => this.mcpClient.listTools(config, options)),
+        this.optionalList(() => this.mcpClient.listResources(config, options)),
+        this.optionalList(() =>
+          this.mcpClient.listResourceTemplates(config, options),
+        ),
+        this.optionalList(() => this.mcpClient.listPrompts(config, options)),
+      ]);
+      return { tools, resources, resourceTemplates, prompts };
+    });
+  }
+
+  callTool(
     integration: McpIntegration,
     call: McpToolCall,
     userId?: UUID,
   ): Promise<McpToolResult> {
-    const config = await this.buildConnectionConfig(integration, userId);
-
-    try {
-      return await this.mcpClient.callTool(config, call);
-    } catch (error) {
-      call.signal?.throwIfAborted();
-      await this.handleOperationError(error, integration, 'callTool', userId);
-      throw error;
-    }
+    return this.request(
+      integration,
+      userId,
+      'callTool',
+      (config) => this.mcpClient.callTool(config, call),
+      call.signal,
+    );
   }
 
-  async readResource(
+  readResource(
     integration: McpIntegration,
     uri: string,
     parameters?: Record<string, unknown>,
     userId?: UUID,
+    signal?: AbortSignal,
   ): Promise<{ content: unknown; mimeType: string }> {
-    const config = await this.buildConnectionConfig(integration, userId);
-
-    try {
-      return await this.mcpClient.readResource(config, uri, parameters);
-    } catch (error) {
-      await this.handleOperationError(
-        error,
-        integration,
-        'readResource',
-        userId,
-      );
-      throw error;
-    }
+    return this.request(
+      integration,
+      userId,
+      'readResource',
+      (config) => this.mcpClient.readResource(config, uri, parameters),
+      signal,
+    );
   }
 
-  async getPrompt(
+  getPrompt(
     integration: McpIntegration,
     name: string,
     args: Record<string, unknown>,
     userId?: UUID,
   ): Promise<{ messages: unknown[] }> {
-    const config = await this.buildConnectionConfig(integration, userId);
+    return this.request(integration, userId, 'getPrompt', (config) =>
+      this.mcpClient.getPrompt(config, name, args),
+    );
+  }
 
+  private async request<T>(
+    integration: McpIntegration,
+    userId: UUID | undefined,
+    operation: string,
+    send: (config: McpConnectionConfig) => Promise<T>,
+    signal?: AbortSignal,
+  ): Promise<T> {
+    signal?.throwIfAborted();
+    const config = await this.buildConnectionConfig(integration, userId);
+    const execute = async () => {
+      try {
+        return await send(config);
+      } catch (error) {
+        signal?.throwIfAborted();
+        return this.handleOperationError(error, integration, operation, userId);
+      }
+    };
+    return this.health
+      ? this.health.observe(config, execute, signal)
+      : execute();
+  }
+
+  private async optionalList<T>(request: () => Promise<T[]>): Promise<T[]> {
     try {
-      return await this.mcpClient.getPrompt(config, name, args);
+      return await request();
     } catch (error) {
-      await this.handleOperationError(error, integration, 'getPrompt', userId);
+      if (this.isMethodNotFoundError(error)) return [];
       throw error;
     }
   }

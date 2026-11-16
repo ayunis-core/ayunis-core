@@ -4,6 +4,7 @@ import { normalizeScopes } from './value-objects/integration-config-schema';
 
 export class McpOAuthUserToken {
   public readonly id: UUID;
+  public readonly grantRevision: UUID;
   public readonly integrationId: UUID;
   public readonly userId: UUID;
   public issuer: string;
@@ -17,6 +18,7 @@ export class McpOAuthUserToken {
 
   constructor(params: {
     id?: UUID;
+    grantRevision?: UUID;
     integrationId: UUID;
     userId: UUID;
     issuer: string;
@@ -29,6 +31,7 @@ export class McpOAuthUserToken {
     updatedAt?: Date;
   }) {
     this.id = params.id ?? randomUUID();
+    this.grantRevision = params.grantRevision ?? randomUUID();
     this.integrationId = params.integrationId;
     this.userId = params.userId;
     this.issuer = params.issuer;

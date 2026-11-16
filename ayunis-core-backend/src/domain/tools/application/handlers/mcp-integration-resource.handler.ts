@@ -34,7 +34,6 @@ export class McpIntegrationResourceHandler implements ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    this.logger.log({ name: tool.name, input: input }, 'execute');
     const validatedInput = tool.validateParams(input);
     try {
       const { content, mimeType } =
@@ -42,11 +41,12 @@ export class McpIntegrationResourceHandler implements ToolExecutionHandler {
           new RetrieveMcpResourceCommand(
             tool.integrationId,
             validatedInput.resourceUri,
+            undefined,
+            context.signal,
           ),
         );
-      const threadId = context.threadId;
       const { thread } = await this.findThreadUseCase.execute(
-        new FindThreadQuery(threadId),
+        new FindThreadQuery(context.threadId),
       );
       if (mimeType === 'text/csv') {
         const source = await this.createDataSourceUseCase.execute(

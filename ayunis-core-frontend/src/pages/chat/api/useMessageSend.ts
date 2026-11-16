@@ -5,9 +5,10 @@ import type {
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
+  RunIntegrationWarningResponseDto,
   ToolCallDecisionDto,
 } from '@/shared/api';
-import { showError } from '@/shared/lib/toast';
+import { showError, showInfo } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ import {
   getArtifactsControllerFindByThreadQueryKey,
   getThreadAiContextControllerGetAiContextQueryKey,
   getMcpToolAllowancesControllerListQueryKey,
+  getMcpIntegrationsControllerListAvailableQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import {
   activeThreadRunsQueryKey,
@@ -266,6 +268,18 @@ export function useMessageSend(params: UseMessageSendParams) {
                   undeliveredFor(requestThreadId).masks =
                     data as RunMasksResponseDto;
                 }
+                break;
+              }
+              case 'integration_warning': {
+                const warning = data as RunIntegrationWarningResponseDto;
+                showInfo(
+                  t('chat.integrationUnavailable', {
+                    name: warning.integrationName,
+                  }),
+                );
+                void queryClient.invalidateQueries({
+                  queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
+                });
                 break;
               }
               case 'error':

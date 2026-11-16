@@ -1,3 +1,4 @@
+import { integrationWarningItems } from 'src/domain/runs/domain/run-integration-warning';
 import type { UUID } from 'crypto';
 import type {
   PreparedRun,
@@ -107,8 +108,7 @@ export class ExecuteRunUseCase {
   private async createRunStream(
     command: ExecuteRunCommand,
   ): Promise<AsyncGenerator<RunStreamItem, RunExecutionOutcome, void>> {
-    // History is read inside the lock: a run still finishing on this thread
-    // must not leave half of its turn in the next run's snapshot.
+    // Read history under the lock to avoid a partially persisted prior turn.
     return openThreadRun(this.threadRunLock, command, async () =>
       this.streamRun(
         await this.prepareRun(command),
@@ -163,6 +163,7 @@ export class ExecuteRunUseCase {
       userId,
       isAnonymous: admitted.isAnonymous,
       instructions: assembled.instructions,
+      integrationWarnings: assembled.warnings,
       maxIterations: profile.maxIterations,
       ...preparedTools,
       profileHooks: assembled.createHooks(preparedTools.toolIntegrations),
@@ -239,6 +240,8 @@ export class ExecuteRunUseCase {
         yield new RunPiiMasksUpdate(seeded.masks);
       }
       yield* seeded.messages;
+      yield* integrationWarningItems(prepared.integrationWarnings);
+      yield* integrationWarningItems(seeded.integrationWarnings);
       const outcome = yield* this.streamRuntime(prepared, own, signal);
       cleanupRequired = cleanupRequired && outcome === 'aborted';
       return outcome;
@@ -322,8 +325,7 @@ export class ExecuteRunUseCase {
       text = anonymized.anonymizedText;
       masks = anonymized.masks;
     }
-    // Sending instead of deciding rejects the calls, so every call of the
-    // turn has its result before the user message.
+    // Settle rejected calls before appending the next user message.
     const rejections = await this.rejectCallsAwaitingConfirmation(
       prepared,
       own,
@@ -348,7 +350,6 @@ export class ExecuteRunUseCase {
     };
   }
 
-  /** Returns whether the message has text. */
   private validateUserInput(
     prepared: PreparedRun,
     input: RunUserInput,
@@ -369,7 +370,6 @@ export class ExecuteRunUseCase {
     return hasText;
   }
 
-  /** Null when the thread disappeared. */
   private async rejectCallsAwaitingConfirmation(
     prepared: PreparedRun,
     own: OwnMessage,
@@ -425,7 +425,7 @@ export class ExecuteRunUseCase {
             (text) => this.anonymizeUserText(prepared, text),
           )
         : { input, masks: null };
-    const { contents, piiMasks } =
+    const { contents, piiMasks, integrationWarnings } =
       await this.toolResultCollectorService.collectToolResults({
         thread: prepared.thread,
         tools: prepared.backendTools,
@@ -441,7 +441,11 @@ export class ExecuteRunUseCase {
     }
     const message = await this.persistToolResults(prepared, contents, own);
     if (message === null) return null;
-    return { messages: [message], masks: piiMasks ?? safeInput.masks };
+    return {
+      messages: [message],
+      masks: piiMasks ?? safeInput.masks,
+      integrationWarnings,
+    };
   }
 
   private async persistToolResults(

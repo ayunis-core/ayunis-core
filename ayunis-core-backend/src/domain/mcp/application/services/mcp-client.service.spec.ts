@@ -1,3 +1,7 @@
+import { setError } from '@appsignal/nodejs';
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
+import { McpConnectionHealthService } from './mcp-connection-health.service';
+import { mcpConnectionRevision } from './mcp-connection-revision';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { McpClientService } from './mcp-client.service';
@@ -20,6 +24,8 @@ import {
   McpToolTimeoutError,
   McpUserAuthorizationRequiredError,
 } from 'src/domain/mcp/application/mcp.errors';
+
+jest.mock('@appsignal/nodejs', () => ({ setError: jest.fn() }));
 
 class MockMcpClientPort extends McpClientPort {
   listTools = jest.fn();
@@ -121,7 +127,145 @@ describe('McpClientService', () => {
     expect(client.invalidateConnections).not.toHaveBeenCalled();
   });
 
+  it('records discovery health against the same credential snapshot sent to every capability request', async () => {
+    const userId = randomUUID();
+    const integration = aCustomMcpIntegration({
+      ...baseIntegrationParams,
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [],
+        userFields: [
+          {
+            key: 'token',
+            label: 'Token',
+            type: 'secret',
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+          },
+        ],
+      },
+    });
+    const original = new McpIntegrationUserConfig({
+      integrationId: integration.id,
+      userId,
+      configValues: { token: 'encrypted:original' },
+    });
+    userConfigRepo.findByIntegrationAndUser
+      .mockResolvedValueOnce(original)
+      .mockResolvedValue(null);
+    encryption.decrypt.mockResolvedValue('original');
+    client.listTools.mockResolvedValue([]);
+    client.listResources.mockResolvedValue([]);
+    client.listResourceTemplates.mockResolvedValue([]);
+    client.listPrompts.mockResolvedValue([]);
+    const record = jest.fn().mockResolvedValue(undefined);
+    const observed = new McpClientService(
+      client,
+      encryption,
+      userConfigRepo,
+      undefined,
+      undefined,
+      new McpConnectionHealthService({ record, findForUser: jest.fn() }),
+    );
+    await observed.discoverCapabilities(integration, userId, {
+      timeout: 10000,
+    });
+    expect(userConfigRepo.findByIntegrationAndUser).toHaveBeenCalledTimes(1);
+    expect(client.listTools.mock.calls[0][0].headers).toEqual({
+      Authorization: 'Bearer original',
+    });
+    expect(client.listPrompts.mock.calls[0][0]).toBe(
+      client.listTools.mock.calls[0][0],
+    );
+    expect(record.mock.calls[0][0]).toMatchObject({
+      revision: mcpConnectionRevision(integration, original, null),
+      userId,
+      failure: null,
+    });
+  });
+
+  it.each(['readResource', 'getPrompt'] as const)(
+    'reports a slow %s once without storing a broken connection',
+    async (operation) => {
+      const integration = aCustomMcpIntegration();
+      const record = jest.fn().mockResolvedValue(undefined);
+      const observed = new McpClientService(
+        client,
+        encryption,
+        userConfigRepo,
+        undefined,
+        undefined,
+        new McpConnectionHealthService({ record, findForUser: jest.fn() }),
+      );
+      const error = new McpToolTimeoutError(integration.serverUrl, 30_000);
+      client[operation].mockRejectedValue(error);
+      const request =
+        operation === 'readResource'
+          ? observed.readResource(
+              integration,
+              'fynn://guide',
+              undefined,
+              randomUUID(),
+            )
+          : observed.getPrompt(integration, 'summarize', {}, randomUUID());
+      await expect(request).rejects.toBe(error);
+      expect(record).not.toHaveBeenCalled();
+      expect(setError).toHaveBeenCalledTimes(1);
+      expect(setError).toHaveBeenCalledWith(error);
+    },
+  );
+
   describe('callTool', () => {
+    it.each([
+      ['MCP_CONNECTION_TIMEOUT', undefined, 504],
+      ['MCP_CONNECTION_FAILED', undefined, 503],
+      ['MCP_CONNECTION_TIMEOUT', randomUUID(), 504],
+      ['MCP_CONNECTION_FAILED', randomUUID(), 503],
+      ['CLIENT_HTTP_UNEXPECTED_CONTENT', undefined, 502],
+      ['CLIENT_HTTP_UNEXPECTED_CONTENT', randomUUID(), 502],
+    ] as const)(
+      'reports one sanitized outage with or without personal health (%s, %s)',
+      async (code, userId, statusCode) => {
+        const integration = aCustomMcpIntegration({
+          ...baseIntegrationParams,
+          auth: new NoAuthMcpIntegrationAuth(),
+        });
+        const observed = new McpClientService(
+          client,
+          encryption,
+          userConfigRepo,
+          undefined,
+          undefined,
+          new McpConnectionHealthService({
+            record: jest.fn().mockResolvedValue(undefined),
+            findForUser: jest.fn(),
+          }),
+        );
+        client.callTool.mockRejectedValue(
+          Object.assign(new Error('private-token'), { code }),
+        );
+        await expect(
+          observed.callTool(
+            integration,
+            {
+              toolName: 'search_registry',
+              parameters: {},
+            },
+            userId,
+          ),
+        ).rejects.toBeInstanceOf(McpRuntimeConnectionError);
+        expect(setError).toHaveBeenCalledTimes(1);
+        const reported: unknown = jest.mocked(setError).mock.calls[0][0];
+        expect(reported).toBeInstanceOf(McpRuntimeConnectionError);
+        expect(reported).toMatchObject({
+          statusCode,
+        });
+        expect(reported).not.toHaveProperty('cause');
+        expect(JSON.stringify(reported)).not.toContain('private-token');
+      },
+    );
+
     it("rejects with the caller's cancellation instead of the mapped transport error", async () => {
       const integration = aCustomMcpIntegration({
         ...baseIntegrationParams,
@@ -221,7 +365,7 @@ describe('McpClientService', () => {
 
       const config = await service.buildConnectionConfig(integration);
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: {},
         connectionScope: {
@@ -247,7 +391,7 @@ describe('McpClientService', () => {
 
       const config = await service.buildConnectionConfig(integration);
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { Authorization: 'Bearer decrypted-token' },
         connectionScope: {
@@ -272,7 +416,7 @@ describe('McpClientService', () => {
 
       const config = await service.buildConnectionConfig(integration);
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { 'X-API-Key': 'decrypted-secret' },
         connectionScope: {
@@ -299,7 +443,7 @@ describe('McpClientService', () => {
 
       const config = await service.buildConnectionConfig(integration);
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         serverUrl: baseIntegrationParams.serverUrl,
         headers: { Authorization: 'Bearer decrypted-token' },
         connectionScope: {
@@ -375,7 +519,7 @@ describe('McpClientService', () => {
 
       const config = await service.buildConnectionConfig(integration);
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         serverUrl: 'https://mcp.ayunis.de/oparl',
         headers: { 'X-Oparl-Endpoint-Url': 'https://rim.ekom21.de/oparl' },
         connectionScope: {
@@ -749,17 +893,17 @@ describe('McpClientService', () => {
         orgConfigValues: {},
       });
 
-      await expect(service.buildConnectionConfig(integration)).resolves.toEqual(
-        {
-          serverUrl: integration.serverUrl,
-          headers: {},
-          connectionScope: {
-            orgId: integration.orgId,
-            integrationId: integration.id,
-          },
-          oauth: undefined,
+      await expect(
+        service.buildConnectionConfig(integration),
+      ).resolves.toMatchObject({
+        serverUrl: integration.serverUrl,
+        headers: {},
+        connectionScope: {
+          orgId: integration.orgId,
+          integrationId: integration.id,
         },
-      );
+        oauth: undefined,
+      });
     });
   });
 });

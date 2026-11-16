@@ -17,19 +17,23 @@ describe('McpOAuthClientConfigurationService', () => {
     findUnboundByIntegration: jest.fn(),
     hasStaticRegistration: jest.fn(),
     save: jest.fn(),
+    saveIfCurrent: jest.fn(),
     bindUnboundToIssuer: jest.fn(),
     deleteByIntegration: jest.fn(),
     deleteByIntegrationExcept: jest.fn(),
   } as jest.Mocked<McpOAuthClientRegistrationRepositoryPort>;
   const tokens = {
     findByIntegrationAndUser: jest.fn(),
+    findByIntegrationIdsAndUser: jest.fn(),
     save: jest.fn(),
+    saveIfCurrent: jest.fn(),
     withLockedToken: jest.fn(),
     delete: jest.fn(),
     deleteByIntegration: jest.fn(),
   } as jest.Mocked<McpOAuthUserTokenRepositoryPort>;
   const pendingSessions = {
     save: jest.fn(),
+    saveIfCurrent: jest.fn(),
     consumeByStateHash: jest.fn(),
     deleteByIntegration: jest.fn(),
   } as jest.Mocked<McpOAuthPendingSessionRepositoryPort>;

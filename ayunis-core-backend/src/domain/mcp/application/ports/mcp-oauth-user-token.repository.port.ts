@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { McpOAuthUserToken } from '../../domain/mcp-oauth-user-token.entity';
+import type { McpOAuthUserToken } from 'src/domain/mcp/domain/mcp-oauth-user-token.entity';
 
 export type SaveLockedMcpOAuthUserToken = (
   token: McpOAuthUserToken,
@@ -19,7 +19,17 @@ export abstract class McpOAuthUserTokenRepositoryPort {
     userId: UUID,
   ): Promise<McpOAuthUserToken | null>;
 
+  abstract findByIntegrationIdsAndUser(
+    integrationIds: UUID[],
+    userId: UUID,
+  ): Promise<McpOAuthUserToken[]>;
+
   abstract save(token: McpOAuthUserToken): Promise<McpOAuthUserToken>;
+
+  abstract saveIfCurrent(
+    token: McpOAuthUserToken,
+    grantRevision: UUID,
+  ): Promise<boolean>;
 
   abstract withLockedToken<T>(
     integrationId: UUID,

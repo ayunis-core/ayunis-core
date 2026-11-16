@@ -49,8 +49,17 @@ export interface RunMasksEvent {
 }
 
 export type RunEvent =
+  | RunIntegrationWarningEvent
   | RunSessionEvent
   | RunMessageEvent
   | RunErrorEvent
   | RunThreadEvent
   | RunMasksEvent;
+
+export interface RunIntegrationWarningEvent {
+  type: 'integration_warning';
+  threadId: string;
+  timestamp: string;
+  integrationId: string;
+  integrationName: string;
+}

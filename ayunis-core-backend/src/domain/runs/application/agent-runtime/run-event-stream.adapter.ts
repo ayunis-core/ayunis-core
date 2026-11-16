@@ -1,3 +1,8 @@
+import {
+  RunIntegrationWarning,
+  MCP_INTEGRATION_WARNING_EVENT,
+  type IntegrationWarning,
+} from 'src/domain/runs/domain/run-integration-warning';
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type {
@@ -279,6 +284,8 @@ function toSideStreamItem(
   models?: RuntimeModelRegistry,
 ): RunStreamItem | ApplicationError | null {
   if (event.type === 'custom') {
+    if (event.name === MCP_INTEGRATION_WARNING_EVENT)
+      return new RunIntegrationWarning(event.data as IntegrationWarning);
     return event.name === THREAD_PII_MASKS_EVENT
       ? new RunPiiMasksUpdate(event.data as ThreadPiiMask[])
       : null;

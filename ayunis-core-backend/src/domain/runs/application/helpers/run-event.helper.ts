@@ -1,3 +1,4 @@
+import { RunIntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import type { UUID } from 'crypto';
 import {
   ApplicationError,
@@ -5,6 +6,7 @@ import {
 } from 'src/common/errors/base.error';
 import type {
   RunErrorEvent,
+  RunIntegrationWarningEvent,
   RunMasksEvent,
   RunMessageEvent,
   RunSessionEvent,
@@ -29,7 +31,14 @@ export function runSessionEvent(
 export function runStreamItemEvent(
   item: RunStreamItem,
   threadId: UUID,
-): RunMasksEvent | RunMessageEvent {
+): RunMasksEvent | RunMessageEvent | RunIntegrationWarningEvent {
+  if (item instanceof RunIntegrationWarning)
+    return {
+      type: 'integration_warning',
+      threadId,
+      timestamp: new Date().toISOString(),
+      ...item.integration,
+    };
   if (item instanceof RunPiiMasksUpdate) {
     return {
       type: 'masks',

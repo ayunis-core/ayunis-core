@@ -218,6 +218,7 @@ import type {
   RolePermissionsResponseDto,
   RoutineResponseDto,
   RunErrorResponseDto,
+  RunIntegrationWarningResponseDto,
   RunMasksResponseDto,
   RunMessageResponseDto,
   RunSessionResponseDto,
@@ -26639,7 +26640,7 @@ if(runsControllerSendMessageBody.streaming !== undefined) {
  formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
  }
 
-      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>(
+      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | RunIntegrationWarningResponseDto>(
       {url: `/runs/send-message`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData, signal
@@ -26801,7 +26802,7 @@ export const activeRunsControllerAttach = (
 ) => {
 
 
-      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | void>(
+      return customAxiosInstance<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | RunIntegrationWarningResponseDto | void>(
       {url: `/runs/threads/${threadId}/events`, method: 'GET', signal
     },
       );

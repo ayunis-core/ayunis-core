@@ -114,6 +114,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         mockResourceUri,
         undefined,
         mockUserId,
+        undefined,
       );
       expect(logger.log).toHaveBeenCalledWith(
         {
@@ -153,6 +154,7 @@ describe('RetrieveMcpResourceUseCase', () => {
         mockResourceUri,
         parameters,
         mockUserId,
+        undefined,
       );
     });
 

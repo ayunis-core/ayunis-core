@@ -1,3 +1,4 @@
+import type { IntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import type { Hook, Tool as RuntimeTool } from '@ayunis/agent-runtime';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { RunCapabilityContext } from './run-capability-context';
@@ -25,6 +26,7 @@ export interface PromptSection {
 }
 
 export interface RunInstructionsTarget {
+  emit?(event: { name: string; data: unknown }): void;
   setTools(tools: RuntimeTool[]): void;
   setInstructions(text: string): void;
 }
@@ -40,6 +42,7 @@ export interface RunProfileHandle {
 export type CapabilityHookFactory = (run: RunProfileHandle) => Hook;
 
 export interface CapabilityContribution {
+  readonly warnings?: readonly IntegrationWarning[];
   readonly tools?: readonly Tool[];
   readonly sections?: readonly PromptSection[];
   /** Created once per run; contributions from a refresh are ignored. */

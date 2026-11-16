@@ -51,6 +51,13 @@
       "removeSuccess": "You will be asked again before this tool runs.",
       "removeError": "Could not remove the tool. Please try again.",
       "notFound": "This tool is no longer always allowed."
+    },
+    "failure": {
+      "rejected": "Your credentials were rejected. Reconnect this integration.",
+      "forbidden": "Your credentials no longer have the required access. Check permissions and reconnect.",
+      "timeout": "The server did not respond in time. Retry or reconnect this integration.",
+      "unavailable": "The server could not be reached. Retry or reconnect this integration.",
+      "invalidResponse": "The server returned an incompatible response. Check the integration and reconnect."
     }
   },
   "account": {

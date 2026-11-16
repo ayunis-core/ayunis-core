@@ -212,6 +212,35 @@ describe('RunProfileAssembler', () => {
     );
   });
 
+  it('emits a named warning when a live profile refresh discovers an unavailable integration', async () => {
+    let handle: RunProfileHandle | undefined;
+    const warning = { integrationId: RATHAUS_ID, integrationName: 'Rathaus' };
+    const contribute = jest
+      .fn()
+      .mockReturnValueOnce({
+        hooks: [
+          (run: RunProfileHandle): Hook => {
+            handle = run;
+            return { name: 'refresh-test' };
+          },
+        ],
+      })
+      .mockReturnValueOnce({ warnings: [warning] });
+    const { assemble } = buildAssembler([{ contribute }]);
+    const assembled = await assemble();
+    assembled.createHooks(new RuntimeToolIntegrationRegistry([]));
+    const emit = jest.fn();
+    await handle!.refresh({
+      setTools: jest.fn(),
+      setInstructions: jest.fn(),
+      emit,
+    });
+    expect(emit).toHaveBeenCalledWith({
+      name: 'mcp_integration_unavailable',
+      data: warning,
+    });
+  });
+
   describe('tool confirmation', () => {
     const offering = (...tools: Tool[]): RunCapability[] => [
       { contribute: () => ({ tools }) },

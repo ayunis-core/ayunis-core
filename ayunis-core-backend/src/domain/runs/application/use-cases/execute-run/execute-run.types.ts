@@ -1,3 +1,4 @@
+import type { IntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import type { UUID } from 'crypto';
@@ -10,6 +11,7 @@ import type {
 export type OwnMessage = (messageId: UUID) => void;
 
 export interface SeededInput {
+  integrationWarnings?: readonly IntegrationWarning[];
   messages: Message[];
   masks: ThreadPiiMask[] | null;
 }

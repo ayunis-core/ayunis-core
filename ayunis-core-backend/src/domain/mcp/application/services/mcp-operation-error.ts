@@ -1,9 +1,13 @@
+import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
+import { mcpConnectionFailure } from 'src/domain/mcp/application/mcp-connection-failure';
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
 import type { Logger } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import type { McpIntegration } from 'src/domain/mcp/domain/mcp-integration.entity';
 import { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import {
   McpAuthenticationError,
+  McpToolTimeoutError,
   McpUserAuthorizationRequiredError,
 } from 'src/domain/mcp/application/mcp.errors';
 import type { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
@@ -43,6 +47,20 @@ export async function handleMcpOperationError({
     );
     integration.updateConnectionStatus('error', 'Authentication failed');
     throw new McpAuthenticationError('Invalid authentication credentials');
+  }
+  const failure = mcpConnectionFailure(error);
+  if (failure) {
+    logger.warn(
+      { integrationId: integration.id, operation, failure },
+      'MCP connection unavailable',
+    );
+    const safeError = new McpRuntimeConnectionError(failure);
+    reportUnexpectedError(safeError);
+    throw safeError;
+  }
+  // Tool calls report execution deadlines when building their soft result.
+  if (error instanceof McpToolTimeoutError && operation !== 'callTool') {
+    reportUnexpectedError(error);
   }
   logger.error(
     { err: error as Error, integrationId: integration.id, operation },

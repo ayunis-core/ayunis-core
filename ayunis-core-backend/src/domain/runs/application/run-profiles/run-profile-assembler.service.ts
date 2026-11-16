@@ -1,3 +1,7 @@
+import {
+  MCP_INTEGRATION_WARNING_EVENT,
+  type IntegrationWarning,
+} from 'src/domain/runs/domain/run-integration-warning';
 import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
@@ -20,6 +24,7 @@ import { composeRunInstructions } from './compose-run-instructions';
 import type { RunProfile } from './run-profile';
 
 export interface AssembledRunProfile {
+  readonly warnings?: readonly IntegrationWarning[];
   readonly tools: Tool[];
   /** Names of the tools whose calls wait for the user's confirmation. */
   readonly toolsNeedingApproval: ReadonlySet<string>;
@@ -29,6 +34,7 @@ export interface AssembledRunProfile {
 }
 
 interface ProfileBuild {
+  warnings: IntegrationWarning[];
   tools: Tool[];
   toolsNeedingApproval: ReadonlySet<string>;
   instructions: string;
@@ -49,10 +55,11 @@ export class RunProfileAssembler {
     profile: RunProfile,
     input: RunCapabilityInput,
   ): Promise<AssembledRunProfile> {
-    const { tools, toolsNeedingApproval, instructions, hooks } =
+    const { tools, toolsNeedingApproval, instructions, hooks, warnings } =
       await this.build(profile, input);
     return {
       tools,
+      warnings,
       toolsNeedingApproval,
       instructions,
       createHooks: (integrations) => {
@@ -78,6 +85,8 @@ export class RunProfileAssembler {
           rebuilt.toolsNeedingApproval,
         );
         integrations.replaceTools(rebuilt.tools, runtimeTools);
+        for (const warning of rebuilt.warnings)
+          target.emit?.({ name: MCP_INTEGRATION_WARNING_EVENT, data: warning });
         target.setTools(runtimeTools);
         target.setInstructions(rebuilt.instructions);
       },
@@ -92,6 +101,7 @@ export class RunProfileAssembler {
   ): Promise<ProfileBuild> {
     const context = await this.contextFactory.create(input);
     const tools: Tool[] = [];
+    const warnings: IntegrationWarning[] = [];
     const sections: PromptSection[] = [];
     const hooks: CapabilityHookFactory[] = [];
     for (const capability of profile.capabilities) {
@@ -99,11 +109,13 @@ export class RunProfileAssembler {
         reservedToolNames: new Set(tools.map((tool) => tool.name)),
       });
       tools.push(...(contribution.tools ?? []));
+      warnings.push(...(contribution.warnings ?? []));
       sections.push(...(contribution.sections ?? []));
       hooks.push(...(contribution.hooks ?? []));
     }
     return {
       tools,
+      warnings,
       toolsNeedingApproval: await this.findToolsNeedingApproval(profile, tools),
       instructions: composeRunInstructions(profile, sections, tools),
       hooks,

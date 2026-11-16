@@ -48,6 +48,7 @@ import {
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
+  RunIntegrationWarningResponseDto,
 } from './dto/run-response.dto';
 import { PiiMaskResponseDto } from 'src/domain/thread-pii-masks/presenters/http/dtos/pii-mask-response.dto';
 import { SendMessageUseCase } from 'src/domain/runs/application/use-cases/send-message/send-message.use-case';
@@ -86,6 +87,7 @@ import { RequireAcademyCertificate } from 'src/iam/academy-access/application/de
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
+  RunIntegrationWarningResponseDto,
   PiiMaskResponseDto,
   SendMessageDto,
   TextInput,

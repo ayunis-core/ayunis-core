@@ -1,3 +1,6 @@
+import { MCP_CONNECTION_UNAVAILABLE_MESSAGE } from 'src/domain/mcp/application/mcp-runtime-connection.error';
+import { mcpIntegrationWarning } from 'src/domain/runs/application/helpers/mcp-integration-warning.helper';
+import type { IntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UUID } from 'crypto';
@@ -53,6 +56,7 @@ const MISSING_CLIENT_RESULT =
   'Not completed: no result was returned for this call. Call the tool again if you still need its result.';
 
 interface ProcessedToolResult {
+  integrationWarning?: IntegrationWarning;
   content: ToolResultMessageContent;
   succeeded: boolean;
   piiMasks: ThreadPiiMask[] | null;
@@ -65,6 +69,7 @@ interface ToolProcessingContext {
 }
 
 interface CollectedToolResults {
+  integrationWarnings?: IntegrationWarning[];
   contents: ToolResultMessageContent[];
   piiMasks: ThreadPiiMask[] | null;
 }
@@ -80,11 +85,6 @@ export class ToolResultCollectorService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  /**
-   * Settles every call of the thread's last turn: a client result answers
-   * its own call, decisions answer the calls that required confirmation, and
-   * the other calls settle by their runtime policy.
-   */
   async collectToolResults(params: {
     thread: Thread;
     tools: Tool[];
@@ -97,6 +97,7 @@ export class ToolResultCollectorService {
     const { thread, tools, input, orgId, isAnonymous } = params;
 
     const contents: ToolResultMessageContent[] = [];
+    const integrationWarnings: IntegrationWarning[] = [];
     let piiMasks: ThreadPiiMask[] | null = null;
 
     for (const content of findOpenToolCalls(thread)) {
@@ -107,11 +108,17 @@ export class ToolResultCollectorService {
         executionPath: params.executionPath,
       });
       contents.push(result.content);
+      if (result.integrationWarning)
+        integrationWarnings.push(result.integrationWarning);
       // Each anonymization returns the full dictionary — the latest wins.
       piiMasks = result.piiMasks ?? piiMasks;
     }
 
-    return { contents, piiMasks };
+    return {
+      contents,
+      piiMasks,
+      ...(integrationWarnings.length > 0 && { integrationWarnings }),
+    };
   }
 
   private async settleToolUse(
@@ -119,10 +126,7 @@ export class ToolResultCollectorService {
     tools: Tool[],
     input: RunToolResultInput | RunToolDecisionsInput,
     context: ToolProcessingContext & { executionPath: RunExecutionPath },
-  ): Promise<{
-    content: ToolResultMessageContent;
-    piiMasks: ThreadPiiMask[] | null;
-  }> {
+  ): Promise<ProcessedToolResult> {
     const decision =
       input instanceof RunToolDecisionsInput
         ? input.decisionFor(content.id)
@@ -136,6 +140,7 @@ export class ToolResultCollectorService {
           decision,
         ),
         piiMasks: null,
+        succeeded: false,
       };
     }
     const clientResult =
@@ -405,28 +410,10 @@ export class ToolResultCollectorService {
     orgId: UUID,
     threadId: UUID,
     isAnonymous: boolean,
-  ): Promise<{
-    content: ToolResultMessageContent;
-    succeeded: boolean;
-    piiMasks: ThreadPiiMask[] | null;
-  }> {
-    const context = {
-      orgId,
-      threadId,
-      isAnonymous,
-    };
-    let succeeded = true;
-    let result = await this.executeToolUseCase
-      .execute(new ExecuteToolCommand(tool, content.params, context))
-      .catch((error) => {
-        succeeded = false;
-        if (error instanceof ToolExecutionFailedError && error.exposeToLLM) {
-          return `The tool didn't provide any result due to the following error in tool usage: ${error.message}`;
-        } else {
-          return `The tool didn't provide any result due to an unknown error`;
-        }
-      });
-
+  ): Promise<ProcessedToolResult> {
+    const context = { orgId, threadId, isAnonymous };
+    const outcome = await this.callBackendTool(tool, content, context);
+    let result = outcome.result;
     let piiMasks: ThreadPiiMask[] | null = null;
     if (isAnonymous && tool.returnsPii) {
       const limited = truncateAnonymousToolResult(result);
@@ -446,9 +433,44 @@ export class ToolResultCollectorService {
 
     return {
       content: new ToolResultMessageContent(content.id, content.name, result),
-      succeeded,
+      succeeded: outcome.succeeded,
+      ...(outcome.integrationWarning && {
+        integrationWarning: outcome.integrationWarning,
+      }),
       piiMasks,
     };
+  }
+
+  private async callBackendTool(
+    tool: Tool,
+    content: ToolUseMessageContent,
+    context: ToolProcessingContext,
+  ): Promise<{
+    result: string;
+    succeeded: boolean;
+    integrationWarning?: IntegrationWarning;
+  }> {
+    try {
+      return {
+        result: await this.executeToolUseCase.execute(
+          new ExecuteToolCommand(tool, content.params, context),
+        ),
+        succeeded: true,
+      };
+    } catch (error) {
+      const warning = mcpIntegrationWarning(error, tool);
+      if (warning)
+        return {
+          result: MCP_CONNECTION_UNAVAILABLE_MESSAGE,
+          succeeded: false,
+          integrationWarning: warning,
+        };
+      const result =
+        error instanceof ToolExecutionFailedError && error.exposeToLLM
+          ? `The tool didn't provide any result due to the following error in tool usage: ${error.message}`
+          : "The tool didn't provide any result due to an unknown error";
+      return { result, succeeded: false };
+    }
   }
 
   private async anonymizeText(

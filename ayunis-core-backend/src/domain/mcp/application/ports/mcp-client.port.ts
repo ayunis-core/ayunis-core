@@ -8,6 +8,8 @@ export interface McpConnectionScope {
 }
 
 export interface McpConnectionConfig {
+  /** Identity of the persisted credential snapshot used to build this request. */
+  observationRevision?: string;
   /** Base URL of the MCP server (uses Streamable HTTP transport, MCP protocol 2024-11-05+) */
   serverUrl: string;
   /** Optional headers to send with every MCP request (auth + config fields) */

@@ -39,10 +39,12 @@ export class RetrieveMcpResourceUseCase {
         command.resourceUri,
         command.parameters,
         userId,
+        command.signal,
       );
 
       return { content, mimeType };
     } catch (error) {
+      command.signal?.throwIfAborted();
       if (error instanceof ApplicationError) {
         throw error;
       }

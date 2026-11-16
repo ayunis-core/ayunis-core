@@ -4,7 +4,10 @@ import type {
   RunErrorEvent,
   RunEvent,
 } from 'src/domain/runs/application/run-events';
-import type { RunErrorResponseDto, RunResponse } from '../dto/run-response.dto';
+import type {
+  RunErrorResponseDto,
+  RunResponse,
+} from 'src/domain/runs/presenters/http/dto/run-response.dto';
 
 // The application layer attaches stack traces and raw error strings to
 // error events for logging. Those must stay server-side; everything else
@@ -18,6 +21,8 @@ export class RunEventResponseMapper {
 
   toDto(event: RunEvent): RunResponse {
     switch (event.type) {
+      case 'integration_warning':
+        return { ...event };
       case 'message':
         return {
           type: 'message',
@@ -54,6 +59,8 @@ export class RunEventResponseMapper {
 
   eventId(event: RunEvent): string {
     switch (event.type) {
+      case 'integration_warning':
+        return `integration-warning-${event.integrationId}`;
       case 'message':
         return `message-${event.timestamp}`;
       case 'thread':

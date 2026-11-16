@@ -12840,6 +12840,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/RunMasksResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunIntegrationWarningResponseDto"
                     }
                   ],
                   "discriminator": {
@@ -12849,7 +12852,8 @@
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
                       "thread": "#/components/schemas/RunThreadResponseDto",
-                      "masks": "#/components/schemas/RunMasksResponseDto"
+                      "masks": "#/components/schemas/RunMasksResponseDto",
+                      "integration_warning": "#/components/schemas/RunIntegrationWarningResponseDto"
                     }
                   }
                 }
@@ -12955,6 +12959,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/RunMasksResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunIntegrationWarningResponseDto"
                     }
                   ],
                   "discriminator": {
@@ -12964,7 +12971,8 @@
                       "message": "#/components/schemas/RunMessageResponseDto",
                       "error": "#/components/schemas/RunErrorResponseDto",
                       "thread": "#/components/schemas/RunThreadResponseDto",
-                      "masks": "#/components/schemas/RunMasksResponseDto"
+                      "masks": "#/components/schemas/RunMasksResponseDto",
+                      "integration_warning": "#/components/schemas/RunIntegrationWarningResponseDto"
                     }
                   }
                 }
@@ -21283,6 +21291,21 @@
       "McpIntegrationResponseDto": {
         "type": "object",
         "properties": {
+          "userConnectionFailure": {
+            "type": "string",
+            "enum": [
+              "rejected",
+              "forbidden",
+              "timeout",
+              "unavailable",
+              "invalidResponse"
+            ],
+            "description": "Last connection failure for the current user and current configuration only"
+          },
+          "userConnectionCheckedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier of the integration",
@@ -25250,6 +25273,34 @@
           }
         },
         "required": ["type", "threadId", "masks", "timestamp"]
+      },
+      "RunIntegrationWarningResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["integration_warning"]
+          },
+          "threadId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "integrationId": {
+            "type": "string"
+          },
+          "integrationName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "threadId",
+          "timestamp",
+          "integrationId",
+          "integrationName"
+        ]
       },
       "TextInput": {
         "type": "object",

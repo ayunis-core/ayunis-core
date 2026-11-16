@@ -7,6 +7,7 @@ export class RetrieveMcpResourceCommand {
     integrationId: string,
     resourceUri: string,
     parameters?: Record<string, unknown>,
+    public readonly signal?: AbortSignal,
   ) {
     this.integrationId = integrationId;
     this.resourceUri = resourceUri;

@@ -1,3 +1,4 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
 import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { RunAbortedError, RunContext } from '@ayunis/agent-runtime';
 import type { ToolExecutionContext } from '@ayunis/agent-runtime';
@@ -69,6 +70,24 @@ describe('BackendToolAdapter', () => {
       { execute } as unknown as ExecuteToolUseCase,
       { execute: anonymize } as unknown as AnonymizeTextForThreadUseCase,
     );
+  });
+
+  it('emits a nonterminal named integration warning when an MCP call loses its connection', async () => {
+    execute.mockRejectedValue(new McpRuntimeConnectionError('rejected'));
+    const backendTool = new McpIntegrationTool(
+      new McpTool('echo', undefined, { type: 'object' }, orgId),
+      false,
+      'Fynn',
+      null,
+    );
+    const [tool] = adapter.toRuntimeTools([backendTool]);
+    const context = toolCtx();
+    const result = await tool.execute!({}, context);
+    expect(result).toMatchObject({ isError: true });
+    expect(context.emit).toHaveBeenCalledWith({
+      name: 'mcp_integration_unavailable',
+      data: { integrationId: orgId, integrationName: 'Fynn' },
+    });
   });
 
   it('runs an executable tool in-loop and returns its result', async () => {

@@ -197,6 +197,7 @@ import type {
   RolePermissionsResponseDto,
   RoutineResponseDto,
   RunErrorResponseDto,
+  RunIntegrationWarningResponseDto,
   RunMasksResponseDto,
   RunMessageResponseDto,
   RunSessionResponseDto,
@@ -4876,7 +4877,7 @@ const memoryControllerDelete = (
  */
 const runsControllerSendMessage = (
     runsControllerSendMessageBody: RunsControllerSendMessageBody,
- options?: SecondParameter<typeof playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>>,) => {const formData = new FormData();
+ options?: SecondParameter<typeof playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | RunIntegrationWarningResponseDto>>,) => {const formData = new FormData();
 formData.append(`threadId`, runsControllerSendMessageBody.threadId);
 if(runsControllerSendMessageBody.text !== undefined) {
  formData.append(`text`, runsControllerSendMessageBody.text);
@@ -4900,7 +4901,7 @@ if(runsControllerSendMessageBody.streaming !== undefined) {
  formData.append(`streaming`, runsControllerSendMessageBody.streaming.toString())
  }
 
-      return playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto>(
+      return playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | RunIntegrationWarningResponseDto>(
       {url: `/runs/send-message`, method: 'POST',
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData
@@ -4926,8 +4927,8 @@ const activeRunsControllerFindActive = (
  */
 const activeRunsControllerAttach = (
     threadId: string,
- options?: SecondParameter<typeof playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | void>>,) => {
-      return playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | void>(
+ options?: SecondParameter<typeof playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | RunIntegrationWarningResponseDto | void>>,) => {
+      return playwrightApiClient<RunSessionResponseDto | RunMessageResponseDto | RunErrorResponseDto | RunThreadResponseDto | RunMasksResponseDto | RunIntegrationWarningResponseDto | void>(
       {url: `/runs/threads/${threadId}/events`, method: 'GET'
     },
       options);

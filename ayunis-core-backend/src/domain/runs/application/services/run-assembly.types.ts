@@ -1,3 +1,4 @@
+import type { IntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import type { Hook, Tool as RuntimeTool } from '@ayunis/agent-runtime';
 import type { UUID } from 'crypto';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
@@ -13,6 +14,7 @@ export interface PreparedTools {
 }
 
 export interface PreparedRun extends PreparedTools {
+  integrationWarnings?: readonly IntegrationWarning[];
   thread: Thread;
   model: LanguageModel;
   orgId: UUID;

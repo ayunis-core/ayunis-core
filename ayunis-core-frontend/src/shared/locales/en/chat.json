@@ -406,7 +406,8 @@
       "alwaysAllow": "Always allow",
       "confirmed": "Confirmed",
       "rejected": "Rejected"
-    }
+    },
+    "integrationUnavailable": "{{name}} is unavailable. Check its connection settings or ask your administrator for help. Your chat can continue with the other available integrations."
   },
   "newChat": {
     "newChat": "New Chat",
