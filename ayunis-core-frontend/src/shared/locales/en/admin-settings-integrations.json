@@ -177,7 +177,7 @@
     "instructions": {
       "label": "Instructions for the assistant",
       "placeholder": "e.g. Search by file number first. Always cite the document title.",
-      "description": "Added to every chat in which this integration is active. Leave empty for none."
+      "description": "Added to a chat when this integration's tools or resources are available. Leave empty for none."
     },
     "serverUrlChange": {
       "title": "Users have to sign in again",

@@ -98,6 +98,7 @@ describe('McpCapability', () => {
       name: string;
       instructions: string | null;
       discovery?: Error;
+      contributes?: 'tool' | 'resource';
     }
 
     function buildWithIntegrations(integrations: StoredIntegration[]) {
@@ -109,16 +110,28 @@ describe('McpCapability', () => {
           }
           if (integration.discovery)
             return Promise.reject(integration.discovery);
+          const resourceOnly = integration.contributes === 'resource';
           return Promise.resolve({
-            tools: [
-              {
-                name: 'search',
-                description: `Search ${integration.name}`,
-                inputSchema: { type: 'object', properties: {} },
-                integrationId: id,
-              },
-            ],
-            resources: [],
+            tools: resourceOnly
+              ? []
+              : [
+                  {
+                    name: 'search',
+                    description: `Search ${integration.name}`,
+                    inputSchema: { type: 'object', properties: {} },
+                    integrationId: id,
+                  },
+                ],
+            resources: resourceOnly
+              ? [
+                  {
+                    name: 'minutes',
+                    uri: 'archive://minutes',
+                    description: `Minutes from ${integration.name}`,
+                    integrationId: id,
+                  },
+                ]
+              : [],
             prompts: [],
             returnsPii: false,
           });
@@ -199,6 +212,26 @@ describe('McpCapability', () => {
       expect(content).toContain('Registry &quot;A&amp;B&quot;');
       expect(content.match(/<\/mcp_integration_instructions>/g)).toHaveLength(
         1,
+      );
+    });
+
+    it('briefs an integration that contributed a resource and no tool', async () => {
+      const capability = buildWithIntegrations([
+        {
+          id: registryId,
+          name: 'Citizen registry',
+          instructions: 'Search by surname first.',
+          contributes: 'resource',
+        },
+      ]);
+
+      const contribution = await contribute(capability, [registryId]);
+
+      expect(contribution.tools?.map((tool) => tool.name)).toEqual([
+        `mcp__resource__minutes__${registryId.slice(0, 8)}`,
+      ]);
+      expect(contribution.sections?.[0].content).toContain(
+        'Search by surname first.',
       );
     });
 

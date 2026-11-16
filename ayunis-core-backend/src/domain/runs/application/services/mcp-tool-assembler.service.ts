@@ -31,7 +31,8 @@ export interface McpAssembly {
   readonly tools: Tool[];
   /**
    * Admin instructions of the integrations that contributed at least one
-   * tool, ordered by integration id so the prompt stays stable across runs.
+   * tool or resource, ordered by integration id so the prompt stays stable
+   * across runs.
    */
   readonly integrationInstructions: McpIntegrationInstructions[];
 }

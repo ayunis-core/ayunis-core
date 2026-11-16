@@ -178,7 +178,7 @@
     "instructions": {
       "label": "Anweisungen für den Assistenten",
       "placeholder": "z. B. Zuerst nach dem Aktenzeichen suchen. Immer den Dokumenttitel nennen.",
-      "description": "Wird jedem Chat mitgegeben, in dem diese Integration aktiv ist. Leer lassen, wenn keine nötig sind."
+      "description": "Wird einem Chat mitgegeben, wenn die Tools oder Ressourcen dieser Integration verfügbar sind. Leer lassen, wenn keine nötig sind."
     },
     "serverUrlChange": {
       "title": "Alle müssen sich neu anmelden",
