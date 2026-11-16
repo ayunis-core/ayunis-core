@@ -51,6 +51,7 @@ import { Route as AuthenticatedInboxIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedInboxNotificationIdRouteImport } from './routes/_authenticated/inbox.$notificationId'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
+import { Route as AuthenticatedPrototypeSuggestionsRouteImport } from './routes/_authenticated/prototype.suggestions'
 import { Route as AuthenticatedRecordingsIndexRouteImport } from './routes/_authenticated/recordings.index'
 import { Route as AuthenticatedRecordingsIdRouteImport } from './routes/_authenticated/recordings.$id'
 import { Route as AuthenticatedRoutinesIndexRouteImport } from './routes/_authenticated/routines.index'
@@ -321,6 +322,12 @@ const AuthenticatedKnowledgeBasesIdRoute =
     path: '/knowledge-bases/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPrototypeSuggestionsRoute =
+  AuthenticatedPrototypeSuggestionsRouteImport.update({
+    id: '/prototype/suggestions',
+    path: '/prototype/suggestions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRecordingsIndexRoute =
   AuthenticatedRecordingsIndexRouteImport.update({
     id: '/recordings/',
@@ -580,6 +587,7 @@ export interface FileRoutesByFullPath {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/prototype/suggestions': typeof AuthenticatedPrototypeSuggestionsRoute
   '/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -657,6 +665,7 @@ export interface FileRoutesByTo {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/prototype/suggestions': typeof AuthenticatedPrototypeSuggestionsRoute
   '/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -739,6 +748,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/_authenticated/prototype/suggestions': typeof AuthenticatedPrototypeSuggestionsRoute
   '/_authenticated/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/_authenticated/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -821,6 +831,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/prototype/suggestions'
     | '/recordings/$id'
     | '/routines/$routineId'
     | '/settings/account'
@@ -898,6 +909,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/prototype/suggestions'
     | '/recordings/$id'
     | '/routines/$routineId'
     | '/settings/account'
@@ -979,6 +991,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/inbox/$notificationId'
     | '/_authenticated/knowledge-bases/$id'
+    | '/_authenticated/prototype/suggestions'
     | '/_authenticated/recordings/$id'
     | '/_authenticated/routines/$routineId'
     | '/_authenticated/settings/account'
@@ -1339,6 +1352,13 @@ declare module '@tanstack/react-router' {
       path: '/knowledge-bases/$id'
       fullPath: '/knowledge-bases/$id'
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/prototype/suggestions': {
+      id: '/_authenticated/prototype/suggestions'
+      path: '/prototype/suggestions'
+      fullPath: '/prototype/suggestions'
+      preLoaderRoute: typeof AuthenticatedPrototypeSuggestionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recordings/': {
@@ -1731,6 +1751,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
+  AuthenticatedPrototypeSuggestionsRoute: typeof AuthenticatedPrototypeSuggestionsRoute
   AuthenticatedRecordingsIdRoute: typeof AuthenticatedRecordingsIdRoute
   AuthenticatedRoutinesRoutineIdRoute: typeof AuthenticatedRoutinesRoutineIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -1766,6 +1787,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
+  AuthenticatedPrototypeSuggestionsRoute:
+    AuthenticatedPrototypeSuggestionsRoute,
   AuthenticatedRecordingsIdRoute: AuthenticatedRecordingsIdRoute,
   AuthenticatedRoutinesRoutineIdRoute: AuthenticatedRoutinesRoutineIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
