@@ -31,6 +31,10 @@ export const MIME_TYPES = {
   // Markdown
   MD: 'text/markdown',
 
+  // XML
+  XML: 'application/xml',
+  XML_TEXT: 'text/xml',
+
   // Email (RFC 822 message, .eml)
   EML: 'message/rfc822',
 
@@ -61,6 +65,7 @@ export const FILE_EXTENSIONS = {
   CSV: '.csv',
   TXT: '.txt',
   MD: '.md',
+  XML: '.xml',
   EML: '.eml',
   MSG: '.msg',
   MP3: '.mp3',
@@ -77,6 +82,7 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'ODT',
   'ODP',
   'TXT',
+  'XML',
   'EML',
   'MSG',
   'CSV',
@@ -121,6 +127,8 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   // Note: MIME_TYPES.XLS is intentionally excluded — XLS MIME can also indicate CSV files
   // Note: MIME_TYPES.TXT is intentionally excluded — text/plain is too broad (matches .md, .log, .json, etc.)
   [MIME_TYPES.MD]: 'txt',
+  [MIME_TYPES.XML]: 'txt',
+  [MIME_TYPES.XML_TEXT]: 'txt',
   [MIME_TYPES.EML]: 'eml',
   [MIME_TYPES.MSG]: 'msg',
   [MIME_TYPES.MP3]: 'mp3',
@@ -143,6 +151,7 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.CSV]: 'csv',
   [FILE_EXTENSIONS.TXT]: 'txt',
   [FILE_EXTENSIONS.MD]: 'txt',
+  [FILE_EXTENSIONS.XML]: 'txt',
   [FILE_EXTENSIONS.EML]: 'eml',
   [FILE_EXTENSIONS.MSG]: 'msg',
   [FILE_EXTENSIONS.MP3]: 'mp3',

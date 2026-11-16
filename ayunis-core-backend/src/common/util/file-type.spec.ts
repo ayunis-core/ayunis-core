@@ -154,6 +154,24 @@ describe('detectFileType', () => {
     });
   });
 
+  describe('XML detection', () => {
+    it.each([MIME_TYPES.XML, MIME_TYPES.XML_TEXT])(
+      'treats %s XML files as plain text',
+      (mimeType) => {
+        expect(detectFileType(mimeType, 'invoice.xml')).toBe('txt');
+        expect(
+          getCanonicalMimeType(detectFileType(mimeType, 'invoice.xml')),
+        ).toBe(MIME_TYPES.TXT);
+      },
+    );
+
+    it('detects XML by extension when the MIME type is generic', () => {
+      expect(detectFileType('application/octet-stream', 'INVOICE.XML')).toBe(
+        'txt',
+      );
+    });
+  });
+
   describe('Audio detection', () => {
     it('returns "mp3" when MIME type is audio/mpeg', () => {
       expect(detectFileType(MIME_TYPES.MP3, 'voice.mp3')).toBe('mp3');

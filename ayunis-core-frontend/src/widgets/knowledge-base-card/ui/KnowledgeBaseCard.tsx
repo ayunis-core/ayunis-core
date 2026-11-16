@@ -68,6 +68,7 @@ const ACCEPTED_EXTENSIONS = [
   '.odp',
   '.txt',
   '.md',
+  '.xml',
   '.eml',
   '.msg',
   '.csv',

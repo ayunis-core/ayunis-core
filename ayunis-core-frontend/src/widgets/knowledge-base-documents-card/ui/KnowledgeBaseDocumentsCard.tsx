@@ -62,6 +62,7 @@ const ACCEPTED_EXTENSIONS = [
   '.ods',
   '.txt',
   '.md',
+  '.xml',
   '.eml',
   '.msg',
   '.mp3',
@@ -175,6 +176,7 @@ export default function KnowledgeBaseDocumentsCard({
         {!disabled && (
           <CardAction>
             <input
+              data-testid="knowledge-base-document-upload-input"
               ref={fileInputRef}
               type="file"
               multiple
