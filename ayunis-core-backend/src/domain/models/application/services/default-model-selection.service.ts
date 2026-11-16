@@ -105,7 +105,9 @@ export class DefaultModelSelectionService {
     // then team models by name.
     for (const mode of Object.values(ModelMode)) {
       if (!stored.some((s) => s.kind === 'mode' && s.mode === mode)) continue;
-      const selection = await this.fromMode(mode, effective);
+      const selection = await this.fromMode(mode, effective, {
+        allowAnonymousOnly: true,
+      });
       if (selection) return selection;
     }
     const excludedIds = query.excludedPermittedModelIds ?? [];
@@ -124,22 +126,32 @@ export class DefaultModelSelectionService {
     effective: Effective,
   ): Promise<DefaultModelSelection | null> {
     if (!stored) return null;
-    if (stored.kind === 'mode') return this.fromMode(stored.mode, effective);
+    if (stored.kind === 'mode') {
+      return this.fromMode(stored.mode, effective, {
+        allowAnonymousOnly: true,
+      });
+    }
     const permittedModel = effective.get(stored.permittedModel.model.id);
     return permittedModel ? { permittedModel, mode: null } : null;
   }
 
+  /**
+   * An explicitly chosen mode may land on an anonymous-only model when nothing
+   * else fits (chat creation then binds it only to anonymous chats); the
+   * implicit Auto fallback stays off them.
+   */
   private async fromMode(
     mode: ModelMode,
     effective: Effective,
+    { allowAnonymousOnly = false } = {},
   ): Promise<DefaultModelSelection | null> {
     const entries = await this.modelModeEntriesRepository.findByMode(mode);
-    const permittedModel = resolveModelMode(
-      mode,
-      entries,
-      [...effective.values()],
-      false,
-    );
+    const permits = [...effective.values()];
+    const permittedModel =
+      resolveModelMode(mode, entries, permits, false) ??
+      (allowAnonymousOnly
+        ? resolveModelMode(mode, entries, permits, true)
+        : null);
     return permittedModel ? { permittedModel, mode } : null;
   }
 

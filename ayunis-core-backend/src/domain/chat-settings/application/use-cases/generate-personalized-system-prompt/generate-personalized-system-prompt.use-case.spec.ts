@@ -16,6 +16,7 @@ import type { ContextService } from 'src/common/context/services/context.service
 import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { InferenceResponse } from 'src/domain/models/application/models/inference-response';
+import type { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 
 const userId = randomUUID();
 const orgId = randomUUID();
@@ -99,6 +100,32 @@ describe('GeneratePersonalizedSystemPromptUseCase', () => {
     expect(result.welcomeMessage).toBe(generatedWelcome);
     expect(getInferenceUseCase.execute).toHaveBeenCalledTimes(2);
     expect(upsertUserSystemPromptUseCase.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('never sends onboarding answers to an anonymous-only default model', async () => {
+    const anonymousOnlyModel = {
+      ...mockPermittedModel,
+      id: randomUUID(),
+      model: { ...mockLanguageModel, id: randomUUID() },
+      anonymousOnly: true,
+    } as unknown as PermittedLanguageModel;
+    getDefaultModelUseCase.execute.mockImplementation(
+      (query: GetDefaultModelQuery) =>
+        Promise.resolve(
+          query.excludeAnonymousOnly ? mockPermittedModel : anonymousOnlyModel,
+        ),
+    );
+    getInferenceUseCase.execute.mockResolvedValue(
+      createMockInferenceResponse('Hallo Maria!'),
+    );
+
+    await useCase.execute(
+      new GeneratePersonalizedSystemPromptCommand({ preferredName: 'Maria' }),
+    );
+
+    for (const [command] of getInferenceUseCase.execute.mock.calls) {
+      expect(command.model).toBe(mockLanguageModel);
+    }
   });
 
   it('should generate meaningful prompt when only name is provided', async () => {

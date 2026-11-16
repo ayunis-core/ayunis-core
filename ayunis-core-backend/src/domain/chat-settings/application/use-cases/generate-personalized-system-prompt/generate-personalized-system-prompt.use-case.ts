@@ -50,8 +50,10 @@ export class GeneratePersonalizedSystemPromptUseCase {
     this.logger.log({ userId }, 'execute');
 
     try {
+      // The answers are sent without anonymization, so anonymous-only models
+      // must never receive them.
       const permittedModel = await this.getDefaultModelUseCase.execute(
-        new GetDefaultModelQuery({ orgId, userId }),
+        new GetDefaultModelQuery({ orgId, userId, excludeAnonymousOnly: true }),
       );
 
       const systemPrompt = await this.generateSystemPrompt(

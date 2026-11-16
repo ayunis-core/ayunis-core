@@ -11,7 +11,7 @@ import { GetModelModeDefaultQuery } from './get-model-mode-default.query';
 
 export interface ModelModeDefault {
   mode: ModelMode | null;
-  /** Healthy, non-anonymous-only model the mode currently resolves to. */
+  /** Healthy model the mode currently resolves to, non-anonymous-only first. */
   currentPermittedModel: PermittedLanguageModel | null;
   /** Modes a new chat on this level could currently resolve to a model. */
   availableModes: ModelMode[];
@@ -43,18 +43,22 @@ export class GetModelModeDefaultUseCase {
       ),
     ]);
     const entriesOf = (m: ModelMode) => entriesByMode[modes.indexOf(m)];
+    // Mirrors chat creation: a regular resolution (Auto may fall back to a
+    // faulted model) wins; only a mode with none binds anonymous-only models.
+    const isAnonymousOnly = (m: ModelMode) =>
+      resolveModelMode(m, entriesOf(m), grants, false) === null;
+    const resolve = (
+      m: ModelMode,
+      options?: { allowFaultedFallback: boolean },
+    ) => resolveModelMode(m, entriesOf(m), grants, isAnonymousOnly(m), options);
     const mode = selection?.kind === 'mode' ? selection.mode : null;
 
     return {
       mode,
       currentPermittedModel: mode
-        ? resolveModelMode(mode, entriesOf(mode), grants, false, {
-            allowFaultedFallback: false,
-          })
+        ? resolve(mode, { allowFaultedFallback: false })
         : null,
-      availableModes: modes.filter(
-        (m) => resolveModelMode(m, entriesOf(m), grants, false) !== null,
-      ),
+      availableModes: modes.filter((m) => resolve(m) !== null),
     };
   }
 }

@@ -46,7 +46,10 @@ export function compareModels(a: SortableModel, b: SortableModel): number {
   return a.displayName.localeCompare(b.displayName);
 }
 
-/** The permitted model the backend will bind for `mode` right now. */
+/**
+ * The permitted model the backend will bind for `mode` right now. Like chat
+ * creation, a mode without a regular resolution binds its anonymous-only one.
+ */
 export function resolveModeModel<T extends { id: string }>(
   mode: ModelMode,
   models: T[],
@@ -56,11 +59,13 @@ export function resolveModeModel<T extends { id: string }>(
   const resolution = resolutions.find((r) => r.mode === mode);
   const id = isAnonymous
     ? resolution?.anonymousPermittedModelId
-    : resolution?.permittedModelId;
+    : (resolution?.permittedModelId ?? resolution?.anonymousPermittedModelId);
   return id ? models.find((model) => model.id === id) : undefined;
 }
 
-export function resolveSelectedModel<T extends { id: string }>(
+export function resolveSelectedModel<
+  T extends { id: string; anonymousOnly?: boolean },
+>(
   value: string | undefined,
   models: T[],
   resolutions: ModelModeResolutionResponseDto[],
@@ -70,24 +75,42 @@ export function resolveSelectedModel<T extends { id: string }>(
   model: T | undefined;
   modelId: string | undefined;
   mode: ModelMode | null;
+  /** The selection can only bind an anonymous-only model, so the chat must be anonymous. */
+  isAnonymousEnforced: boolean;
 } {
   const mode = getModeFromValue(value);
   if (!mode) {
+    const model = models.find((model) => model.id === value);
     return {
-      model: models.find((model) => model.id === value),
+      model,
       modelId: value,
       mode: null,
+      isAnonymousEnforced: model?.anonymousOnly ?? false,
     };
   }
   // The backend binds the mode at chat creation; until resolutions arrive (or
   // if they fail), the default selection already names the model it resolved to.
-  if (resolutions.some((r) => r.mode === mode)) {
+  const resolution = resolutions.find((r) => r.mode === mode);
+  if (resolution) {
+    const isAnonymousEnforced =
+      !resolution.permittedModelId && !!resolution.anonymousPermittedModelId;
     const model = resolveModeModel(mode, models, resolutions, isAnonymous);
-    return { model, modelId: model?.id, mode };
+    return { model, modelId: model?.id, mode, isAnonymousEnforced };
   }
   if (defaultSelection?.mode === mode) {
     const modelId = defaultSelection.permittedModelId;
-    return { model: models.find((m) => m.id === modelId), modelId, mode };
+    const model = models.find((m) => m.id === modelId);
+    return {
+      model,
+      modelId,
+      mode,
+      isAnonymousEnforced: model?.anonymousOnly ?? false,
+    };
   }
-  return { model: undefined, modelId: undefined, mode };
+  return {
+    model: undefined,
+    modelId: undefined,
+    mode,
+    isAnonymousEnforced: false,
+  };
 }

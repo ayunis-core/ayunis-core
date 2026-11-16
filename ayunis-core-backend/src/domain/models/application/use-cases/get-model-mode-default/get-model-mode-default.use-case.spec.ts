@@ -28,16 +28,23 @@ const large = new LanguageModel({
   tier: ModelTier.HIGH,
 });
 const grant = new PermittedLanguageModel({ model: large, orgId });
+const anonymousGrant = new PermittedLanguageModel({
+  model: large,
+  orgId,
+  anonymousOnly: true,
+});
 
 describe('GetModelModeDefaultUseCase', () => {
   const logger = createLoggerMock();
   let useCase: GetModelModeDefaultUseCase;
   let savedMode: ModelMode | null;
   let lists: Partial<Record<ModelMode, LanguageModel[]>>;
+  let grants: PermittedLanguageModel[];
 
   beforeEach(async () => {
     savedMode = null;
     lists = {};
+    grants = [grant];
     const module = await Test.createTestingModule({
       providers: [
         GetModelModeDefaultUseCase,
@@ -46,7 +53,7 @@ describe('GetModelModeDefaultUseCase', () => {
           useValue: {
             resolve: jest.fn().mockResolvedValue({
               target: { orgId },
-              grants: () => Promise.resolve([grant]),
+              grants: () => Promise.resolve(grants),
             }),
           },
         },
@@ -108,5 +115,40 @@ describe('GetModelModeDefaultUseCase', () => {
     lists[ModelMode.MAX] = [large];
     savedMode = ModelMode.MAX;
     expect((await run()).currentPermittedModel?.id).toBe(grant.id);
+  });
+
+  it('offers a mode whose only candidates are anonymous-only', async () => {
+    grants = [anonymousGrant];
+    lists[ModelMode.AUTO] = [large];
+    savedMode = ModelMode.AUTO;
+    const result = await run();
+    expect(result.availableModes).toEqual([ModelMode.AUTO]);
+    expect(result.currentPermittedModel?.id).toBe(anonymousGrant.id);
+  });
+
+  it('does not name an anonymous-only model while chats still bind a faulted regular one', async () => {
+    const faulted = new LanguageModel({
+      ...large,
+      id: randomUUID(),
+      hasProviderFault: true,
+    });
+    const healthy = new LanguageModel({
+      ...large,
+      id: randomUUID(),
+      name: 'mistral-medium',
+    });
+    grants = [
+      new PermittedLanguageModel({ model: faulted, orgId }),
+      new PermittedLanguageModel({
+        model: healthy,
+        orgId,
+        anonymousOnly: true,
+      }),
+    ];
+    lists[ModelMode.AUTO] = [faulted, healthy];
+    savedMode = ModelMode.AUTO;
+    const result = await run();
+    expect(result.availableModes).toContain(ModelMode.AUTO);
+    expect(result.currentPermittedModel).toBeNull();
   });
 });

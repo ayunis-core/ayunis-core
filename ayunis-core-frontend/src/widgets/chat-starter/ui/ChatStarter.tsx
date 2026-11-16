@@ -93,9 +93,8 @@ export function ChatStarter({
     model: selectedModel,
     modelId: resolvedModelId,
     mode: selectedMode,
+    isAnonymousEnforced,
   } = useSelectedModel(modelId, models, isAnonymous);
-  const isAnonymousEnforced =
-    !selectedMode && (selectedModel?.anonymousOnly ?? false);
   const isVisionEnabled = selectedModel?.canVision ?? false;
 
   function handleFileUpload(files: File[]) {
