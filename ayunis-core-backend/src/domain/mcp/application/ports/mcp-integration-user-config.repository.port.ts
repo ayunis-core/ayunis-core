@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import type { McpIntegrationUserConfig } from 'src/domain/mcp/domain/mcp-integration-user-config.entity';
 
 /**
@@ -12,6 +13,12 @@ export abstract class McpIntegrationUserConfigRepositoryPort {
   abstract save(
     config: McpIntegrationUserConfig,
   ): Promise<McpIntegrationUserConfig>;
+
+  abstract saveVerified(
+    config: McpIntegrationUserConfig,
+    expectedIntegration: SchemaConfiguredMcpIntegration,
+    expectedConfig: McpIntegrationUserConfig | null,
+  ): Promise<boolean>;
 
   /**
    * Finds user config by integration ID and user ID.
@@ -35,6 +42,11 @@ export abstract class McpIntegrationUserConfigRepositoryPort {
    * Used when an integration is deleted.
    */
   abstract deleteByIntegrationId(integrationId: UUID): Promise<void>;
+
+  abstract deleteByIntegrationAndUser(
+    integrationId: UUID,
+    userId: UUID,
+  ): Promise<void>;
 
   abstract removeKeysByIntegrationId(
     integrationId: UUID,

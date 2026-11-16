@@ -37,6 +37,7 @@ export function ConfigFieldInput({
       {field.type === 'secret' ? (
         <PasswordInput
           id={inputId}
+          data-testid={inputId}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
@@ -45,6 +46,7 @@ export function ConfigFieldInput({
       ) : (
         <Input
           id={inputId}
+          data-testid={inputId}
           type={field.type === 'url' ? 'url' : 'text'}
           value={value}
           onChange={(e) => onChange(e.target.value)}

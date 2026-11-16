@@ -13,6 +13,7 @@ export interface EchoMcpServer {
   url: string;
   // The text of every echo call the server received, in order.
   calls: readonly string[];
+  setAcceptedToken(token: string): void;
   close(): Promise<void>;
 }
 
@@ -20,6 +21,7 @@ export interface EchoMcpServer {
 // reply containing that proves the backend really called it.
 export async function startEchoMcpServer(): Promise<EchoMcpServer> {
   const calls: string[] = [];
+  let acceptedToken: string | undefined;
   const handler = createMcpHandler(() => {
     const server = new McpServer({ name: 'ayunis-e2e-echo', version: '1.0.0' });
     server.registerTool(
@@ -35,7 +37,15 @@ export async function startEchoMcpServer(): Promise<EchoMcpServer> {
     );
     return server;
   });
-  const http = createServer(toNodeHandler(handler));
+  const nodeHandler = toNodeHandler(handler);
+  const http = createServer((request, response) => {
+    if (acceptedToken !== undefined && request.headers.authorization !== `Bearer ${acceptedToken}`) {
+      response.writeHead(401, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ message: 'Invalid api token' }));
+      return;
+    }
+    void nodeHandler(request, response);
+  });
   await new Promise<void>((resolve, reject) => {
     http.once('error', reject);
     http.listen(0, '127.0.0.1', resolve);
@@ -44,6 +54,7 @@ export async function startEchoMcpServer(): Promise<EchoMcpServer> {
   return {
     url: `http://127.0.0.1:${port}/mcp`,
     calls,
+    setAcceptedToken(token) { acceptedToken = token; },
     async close() {
       await handler.close();
       http.closeAllConnections();

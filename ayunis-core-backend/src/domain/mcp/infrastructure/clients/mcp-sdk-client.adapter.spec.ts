@@ -27,6 +27,7 @@ describe('McpSdkClientAdapter', () => {
   let clientPool: McpClientPoolService;
   let configService: { get: jest.Mock };
   let clientMock: {
+    getServerCapabilities: jest.Mock;
     connect: jest.Mock;
     close: jest.Mock;
     listTools: jest.Mock;
@@ -51,6 +52,7 @@ describe('McpSdkClientAdapter', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     clientMock = {
+      getServerCapabilities: jest.fn().mockReturnValue({ tools: {} }),
       connect: jest.fn().mockResolvedValue(undefined),
       close: jest.fn().mockResolvedValue(undefined),
       listTools: jest.fn().mockResolvedValue({ tools: [] }),
@@ -75,6 +77,34 @@ describe('McpSdkClientAdapter', () => {
   afterEach(async () => {
     await clientPool.onModuleDestroy();
     jest.restoreAllMocks();
+  });
+
+  it('verifies replacement credentials on a fresh connection without closing a working pooled session', async () => {
+    await adapter.listTools(config);
+    const candidate = {
+      ...clientMock,
+      close: jest.fn().mockResolvedValue(undefined),
+    };
+    (Client as unknown as jest.Mock).mockImplementationOnce(() => candidate);
+    await adapter.verifyCredentials({
+      ...config,
+      headers: { Authorization: 'Bearer candidate-token' },
+    });
+    expect(Client).toHaveBeenCalledTimes(2);
+    expect(clientMock.close).not.toHaveBeenCalled();
+    expect(candidate.close).toHaveBeenCalledTimes(1);
+    await adapter.listTools(config);
+    expect(Client).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes a temporary client whose initialization rejects without exposing its response body', async () => {
+    clientMock.connect.mockRejectedValue(
+      Object.assign(new Error('candidate-token'), { status: 401 }),
+    );
+    await expect(adapter.verifyCredentials(config)).rejects.toMatchObject({
+      code: 'MCP_CREDENTIALS_REJECTED',
+    });
+    expect(clientMock.close).toHaveBeenCalledTimes(1);
   });
 
   describe('listTools', () => {

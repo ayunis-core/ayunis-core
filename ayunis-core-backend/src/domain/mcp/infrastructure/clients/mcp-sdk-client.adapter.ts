@@ -29,6 +29,7 @@ import {
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 import { McpClientPoolService } from './mcp-client-pool.service';
+import { verifyMcpCredentials } from './verify-mcp-credentials';
 
 /**
  * Node's AbortController.abort() mints a DOMException with name 'AbortError'
@@ -104,9 +105,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     super();
   }
 
-  /**
-   * List all tools available on the MCP server
-   */
   async listTools(
     config: McpConnectionConfig,
     options: McpRequestOptions = this.requestOptions,
@@ -122,9 +120,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
   }
 
-  /**
-   * List all resources available on the MCP server
-   */
   async listResources(
     config: McpConnectionConfig,
     options: McpRequestOptions = this.requestOptions,
@@ -140,9 +135,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
   }
 
-  /**
-   * List all resource templates available on the MCP server
-   */
   async listResourceTemplates(
     config: McpConnectionConfig,
     options: McpRequestOptions = this.requestOptions,
@@ -163,9 +155,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
   }
 
-  /**
-   * List all prompt templates available on the MCP server
-   */
   async listPrompts(
     config: McpConnectionConfig,
     options: McpRequestOptions = this.requestOptions,
@@ -181,9 +170,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
   }
 
-  /**
-   * Execute a tool on the MCP server
-   */
   async callTool(
     config: McpConnectionConfig,
     call: McpToolCall,
@@ -248,9 +234,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
   }
 
-  /**
-   * Read a resource from the MCP server
-   */
   async readResource(
     config: McpConnectionConfig,
     uri: string,
@@ -278,9 +261,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
   }
 
-  /**
-   * Get a prompt template from the MCP server
-   */
   async getPrompt(
     config: McpConnectionConfig,
     name: string,
@@ -403,6 +383,12 @@ export class McpSdkClientAdapter extends McpClientPort {
     return this.clientPool.invalidateConnections(scope);
   }
 
+  verifyCredentials(config: McpConnectionConfig): Promise<void> {
+    return verifyMcpCredentials(() =>
+      this.createClient(config, { timeout: 10_000 }),
+    );
+  }
+
   async validateConnection(
     config: McpConnectionConfig,
   ): Promise<{ valid: boolean; error?: string }> {
@@ -433,9 +419,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     }
   }
 
-  /**
-   * Create and connect a new MCP client
-   */
   private async createClient(
     config: McpConnectionConfig,
     requestOptions: { timeout: number },
@@ -469,7 +452,12 @@ export class McpSdkClientAdapter extends McpClientPort {
     );
 
     // Connect to server (covers the initialize handshake with the same timeout)
-    await client.connect(transport, requestOptions);
+    try {
+      await client.connect(transport, requestOptions);
+    } catch (error) {
+      await client.close().catch(() => undefined);
+      throw error;
+    }
 
     return client;
   }

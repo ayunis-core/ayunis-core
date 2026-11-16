@@ -20,6 +20,7 @@ import {
   UnexpectedMcpError,
 } from 'src/domain/mcp/application/mcp.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
+import { McpConfigChangedError } from 'src/domain/mcp/application/mcp-credential-verification.error';
 import { McpClientService } from 'src/domain/mcp/application/services/mcp-client.service';
 
 @Injectable()
@@ -46,10 +47,7 @@ export class SetUserMcpConfigUseCase {
       throw new UnauthorizedException('User not authenticated');
     }
 
-    const orgId = this.contextService.get('orgId');
-    if (!orgId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
+    const orgId = this.requireOrgId();
 
     const configurableIntegration =
       await this.getConfigurableIntegrationOrThrow(
@@ -77,8 +75,14 @@ export class SetUserMcpConfigUseCase {
 
     this.configService.validateRequiredFields(userFields, mergedValues);
 
+    await this.mcpClientService.verifyUserConfig(
+      configurableIntegration,
+      userId,
+      mergedValues,
+    );
+
     const saved = await this.saveConfig(
-      command.integrationId,
+      configurableIntegration,
       userId,
       mergedValues,
       existing,
@@ -91,6 +95,12 @@ export class SetUserMcpConfigUseCase {
     this.capabilityCache.invalidate(command.integrationId, userId);
 
     return this.maskResult(saved.configValues, userFields);
+  }
+
+  private requireOrgId(): UUID {
+    const orgId = this.contextService.get('orgId');
+    if (!orgId) throw new UnauthorizedException('User not authenticated');
+    return orgId;
   }
 
   private async getConfigurableIntegrationOrThrow(
@@ -150,6 +160,8 @@ export class SetUserMcpConfigUseCase {
         merged[field.key] = existing;
       } else if (provided === SECRET_MASK) {
         // SECRET_MASK with no existing value — skip, don't store the mask literal
+      } else if (provided?.trim().length === 0) {
+        merged[field.key] = '';
       } else if (provided !== undefined) {
         merged[field.key] =
           field.type === 'secret'
@@ -166,23 +178,25 @@ export class SetUserMcpConfigUseCase {
   }
 
   private async saveConfig(
-    integrationId: UUID,
+    integration: SchemaConfiguredMcpIntegration,
     userId: UUID,
     encryptedValues: Record<string, string>,
     existing: McpIntegrationUserConfig | null,
   ): Promise<McpIntegrationUserConfig> {
-    if (existing) {
-      existing.updateConfigValues(encryptedValues);
-      return this.userConfigRepository.save(existing);
-    }
-
-    const userConfig = new McpIntegrationUserConfig({
-      integrationId,
+    const candidate = new McpIntegrationUserConfig({
+      id: existing?.id,
+      integrationId: integration.id,
       userId,
       configValues: encryptedValues,
+      createdAt: existing?.createdAt,
     });
-
-    return this.userConfigRepository.save(userConfig);
+    const saved = await this.userConfigRepository.saveVerified(
+      candidate,
+      integration,
+      existing,
+    );
+    if (!saved) throw new McpConfigChangedError();
+    return candidate;
   }
 
   private maskResult(

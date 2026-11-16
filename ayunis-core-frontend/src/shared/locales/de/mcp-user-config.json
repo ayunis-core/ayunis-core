@@ -6,5 +6,16 @@
   "cancel": "Abbrechen",
   "success": "Ihre Zugangsdaten wurden erfolgreich gespeichert",
   "error": "Ihre Zugangsdaten konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
-  "notFound": "Diese Integration ist nicht mehr verfügbar."
+  "notFound": "Diese Integration ist nicht mehr verfügbar.",
+  "verification": {
+    "rejected": "Der MCP-Server hat diese Zugangsdaten abgelehnt. Prüfen Sie Ihr Token und versuchen Sie es erneut.",
+    "forbidden": "Diese Zugangsdaten haben nicht die erforderlichen Zugriffsrechte.",
+    "timeout": "Die Verbindungsprüfung hat zu lange gedauert. Ihre gespeicherten Zugangsdaten wurden beibehalten. Versuchen Sie es erneut.",
+    "unavailable": "Der MCP-Server konnte nicht erreicht werden. Ihre gespeicherten Zugangsdaten wurden beibehalten. Versuchen Sie es erneut.",
+    "invalidResponse": "Der Server hat keine kompatible MCP-Antwort zurückgegeben. Prüfen Sie die Server-URL.",
+    "changed": "Die Integration oder Ihre Zugangsdaten wurden während der Prüfung geändert. Laden Sie die Seite neu und versuchen Sie es erneut.",
+    "required": "Füllen Sie alle erforderlichen Zugangsdaten aus."
+  },
+  "disconnect": "Verbindung trennen",
+  "disconnected": "Ihre persönlichen Zugangsdaten wurden entfernt."
 }

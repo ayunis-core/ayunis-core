@@ -29,6 +29,7 @@ class MockMcpClientPort extends McpClientPort {
   callTool = jest.fn();
   readResource = jest.fn();
   getPrompt = jest.fn();
+  verifyCredentials = jest.fn();
   validateConnection = jest.fn();
   invalidateConnections = jest.fn();
 }
@@ -39,9 +40,11 @@ class MockCredentialEncryptionPort extends McpCredentialEncryptionPort {
 }
 
 class MockUserConfigRepository extends McpIntegrationUserConfigRepositoryPort {
+  saveVerified = jest.fn();
   save = jest.fn();
   findByIntegrationAndUser = jest.fn();
   findByIntegrationIdsAndUser = jest.fn();
+  deleteByIntegrationAndUser = jest.fn();
   deleteByIntegrationId = jest.fn();
   removeKeysByIntegrationId = jest.fn();
 }
@@ -85,6 +88,37 @@ describe('McpClientService', () => {
   });
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('verifies the candidate token instead of loading the stored token', async () => {
+    const integration = aCustomMcpIntegration({
+      ...baseIntegrationParams,
+      configSchema: {
+        authType: 'CUSTOM',
+        orgFields: [],
+        userFields: [
+          {
+            key: 'token',
+            label: 'Token',
+            type: 'secret',
+            headerName: 'Authorization',
+            prefix: 'Bearer ',
+            required: true,
+          },
+        ],
+      },
+    });
+    encryption.decrypt.mockResolvedValue('candidate-token');
+    await service.verifyUserConfig(integration, randomUUID(), {
+      token: 'encrypted:candidate-token',
+    });
+    expect(client.verifyCredentials).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: { Authorization: 'Bearer candidate-token' },
+      }),
+    );
+    expect(userConfigRepo.findByIntegrationAndUser).not.toHaveBeenCalled();
+    expect(client.invalidateConnections).not.toHaveBeenCalled();
   });
 
   describe('callTool', () => {

@@ -115,6 +115,7 @@ test("closes cleanly after editing an integration that requires user config", as
 
 test("removes stored user secrets when their configuration field is deleted", async ({
   api,
+  echoMcpServer,
 }) => {
   const suffix = Date.now();
   const userField = {
@@ -126,7 +127,7 @@ test("removes stored user secrets when their configuration field is deleted", as
   };
   const integration = await createCustomIntegration(api, {
     name: `Disposable user config ${suffix}`,
-    serverUrl: `${config.apiURL}/health`,
+    serverUrl: echoMcpServer.url,
     configSchema: {
       authType: "CUSTOM",
       orgFields: [],
