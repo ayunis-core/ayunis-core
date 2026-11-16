@@ -19,9 +19,10 @@ const orgId = randomUUID();
 const userId = randomUUID();
 const teamId = randomUUID();
 
-const permit = (name: string) =>
+const permit = (name: string, anonymousOnly = false) =>
   new PermittedLanguageModel({
     orgId,
+    anonymousOnly,
     model: new LanguageModel({
       id: randomUUID(),
       name,
@@ -42,6 +43,7 @@ describe('DefaultModelSelectionService', () => {
   const alpha = permit('alpha');
   const large = permit('mistral-large');
   const small = permit('mistral-small');
+  const anonymous = permit('mistral-anonymous', true);
 
   let service: DefaultModelSelectionService;
   let selections: ReturnType<typeof createDefaultModelSelectionsFake>;
@@ -61,7 +63,7 @@ describe('DefaultModelSelectionService', () => {
           useValue: {
             execute: jest.fn(() =>
               Promise.resolve({
-                models: [alpha, large, small],
+                models: [alpha, large, small, anonymous],
                 overrideTeamIds,
               }),
             ),
@@ -142,6 +144,23 @@ describe('DefaultModelSelectionService', () => {
     lists[ModelMode.MAX] = [large];
     selections.store({ orgId }, ModelMode.MAX);
     expect(await selected()).toEqual(['mistral-large', ModelMode.MAX]);
+  });
+
+  it('resolves an org mode default to an anonymous-only model when nothing else fits', async () => {
+    lists[ModelMode.MAX] = [anonymous];
+    selections.store({ orgId }, ModelMode.MAX);
+    expect(await selected()).toEqual(['mistral-anonymous', ModelMode.MAX]);
+  });
+
+  it('prefers a non-anonymous candidate for a mode default', async () => {
+    lists[ModelMode.AUTO] = [anonymous, small];
+    selections.store({ orgId }, ModelMode.AUTO);
+    expect(await selected()).toEqual(['mistral-small', ModelMode.AUTO]);
+  });
+
+  it('keeps the implicit Auto fallback off anonymous-only models', async () => {
+    lists[ModelMode.AUTO] = [anonymous];
+    expect(await selected()).toEqual(['alpha', null]);
   });
 
   it('uses a team model default before the org default', async () => {

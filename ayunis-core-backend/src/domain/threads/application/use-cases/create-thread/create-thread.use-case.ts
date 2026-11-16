@@ -114,9 +114,11 @@ export class CreateThreadUseCase {
   ): Promise<PermittedLanguageModel> {
     const resolutions = await this.resolveModelModesUseCase.execute();
     const resolution = resolutions.find((r) => r.mode === mode);
+    // A mode with only anonymous-only candidates still binds; execute() then
+    // marks the thread anonymous because the model requires it.
     const model = isAnonymous
       ? resolution?.anonymousPermittedModel
-      : resolution?.permittedModel;
+      : (resolution?.permittedModel ?? resolution?.anonymousPermittedModel);
     if (!model) {
       throw new ModelModeUnavailableError(mode);
     }

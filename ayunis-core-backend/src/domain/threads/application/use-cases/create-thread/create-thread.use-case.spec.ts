@@ -355,6 +355,23 @@ describe('CreateThreadUseCase', () => {
       expect(thread.isAnonymous).toBe(true);
     });
 
+    it('makes the thread anonymous when the mode only resolves to an anonymous-only model', async () => {
+      resolveModelModes.execute.mockResolvedValue([
+        {
+          mode: ModelMode.AUTO,
+          permittedModel: null,
+          anonymousPermittedModel: anonymousOnly,
+        },
+      ]);
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({ mode: ModelMode.AUTO }),
+      );
+
+      expect(thread.model?.id).toBe(anonymousOnly.id);
+      expect(thread.isAnonymous).toBe(true);
+    });
+
     it('rejects a mode that resolves to no model', async () => {
       await expect(
         useCase.execute(new CreateThreadCommand({ mode: ModelMode.MAX })),
