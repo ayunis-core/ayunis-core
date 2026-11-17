@@ -106,11 +106,109 @@ async function* streamMessages(
     signal: request.signal,
     classifyRejection: classifyAnthropicRejection,
   });
-  for await (const event of normalizedStream) {
+  for await (const event of withToolInputHeartbeats(
+    normalizedStream,
+    toolInputHeartbeatBudgetMs(maxTokens),
+  )) {
     const chunk = convertChunk(event, codec);
     if (chunk) yield chunk;
   }
 }
+
+export const TOOL_INPUT_HEARTBEAT_INTERVAL_MS = 30_000;
+const MIN_TOOL_INPUT_TOKENS_PER_SECOND = 10;
+
+// Size the finite keepalive window for the entire configured output budget at
+// a deliberately conservative decode rate. Any real upstream event starts a
+// fresh window; a dead connection still becomes idle after the bounded wait.
+export const toolInputHeartbeatBudgetMs = (maxTokens: number): number =>
+  Math.ceil((maxTokens / MIN_TOOL_INPUT_TOKENS_PER_SECOND) * 1_000);
+export const isToolInputHeartbeatOnTime = (
+  heartbeatDeadline: number,
+  now = Date.now(),
+): boolean => now <= heartbeatDeadline;
+const HEARTBEAT = Symbol('tool-input-heartbeat');
+
+async function* withToolInputHeartbeats(
+  events: AsyncIterable<AnthropicStreamEvent>,
+  heartbeatBudgetMs: number,
+): AsyncIterable<AnthropicStreamEvent> {
+  const iterator = events[Symbol.asyncIterator]();
+  const openToolBlocks = new Set<number>();
+  let pending: Promise<IteratorResult<AnthropicStreamEvent>> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let heartbeatDeadline = 0;
+
+  try {
+    for (;;) {
+      pending ??= iterator.next();
+      const result = !mayHeartbeat(openToolBlocks, heartbeatDeadline)
+        ? await pending
+        : await Promise.race([
+            pending,
+            new Promise<typeof HEARTBEAT>((resolve) => {
+              timer = setTimeout(() => {
+                if (isToolInputHeartbeatOnTime(heartbeatDeadline)) {
+                  resolve(HEARTBEAT);
+                }
+              }, TOOL_INPUT_HEARTBEAT_INTERVAL_MS);
+            }),
+          ]);
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      if (result === HEARTBEAT) {
+        yield { type: 'ping' };
+        continue;
+      }
+
+      pending = undefined;
+      if (result.done) return;
+      trackOpenToolBlocks(result.value, openToolBlocks);
+      heartbeatDeadline =
+        openToolBlocks.size > 0 ? Date.now() + heartbeatBudgetMs : 0;
+      yield result.value;
+    }
+  } finally {
+    if (timer) clearTimeout(timer);
+    await closeIterator(iterator, pending !== undefined);
+  }
+}
+
+const closeIterator = async (
+  iterator: AsyncIterator<AnthropicStreamEvent>,
+  hasPendingRead: boolean,
+): Promise<void> => {
+  const cleanup = iterator.return?.();
+  if (!cleanup) return;
+  if (hasPendingRead) {
+    void cleanup.catch(() => undefined);
+    return;
+  }
+  await cleanup.catch(() => undefined);
+};
+
+const mayHeartbeat = (
+  openToolBlocks: Set<number>,
+  heartbeatDeadline: number,
+): boolean =>
+  openToolBlocks.size > 0 &&
+  Date.now() + TOOL_INPUT_HEARTBEAT_INTERVAL_MS <= heartbeatDeadline;
+
+const trackOpenToolBlocks = (
+  event: AnthropicStreamEvent,
+  openToolBlocks: Set<number>,
+): void => {
+  if (
+    event.type === 'content_block_start' &&
+    event.content_block.type === 'tool_use'
+  ) {
+    openToolBlocks.add(event.index);
+  } else if (event.type === 'content_block_stop') {
+    openToolBlocks.delete(event.index);
+  } else if (event.type === 'message_stop') {
+    openToolBlocks.clear();
+  }
+};
 
 const openMessageStream = async (
   client: AnthropicCompatibleClient,
@@ -178,10 +276,11 @@ const buildParams = (
   // turn and agent-loop iteration reuses the previous request's cache.
   system: convertSystem(request.instructions),
   messages: markCacheBreakpoint(convertMessages(request.messages, codec)),
-  tools: request.tools.map((tool) => ({
-    ...convertTool(tool, codec),
-    ...(streamsToolInputEagerly(model) ? { eager_input_streaming: true } : {}),
-  })),
+  // Keep Anthropic's buffered tool-input streaming so the server validates
+  // each JSON parameter. The stream wrapper emits heartbeats while the server
+  // buffers long tool values, without masking stalls outside tool input
+  // (AYC-1863).
+  tools: request.tools.map((tool) => convertTool(tool, codec)),
   // Anthropic rejects tool_choice when no tools are supplied, so only send it
   // alongside a non-empty tools array.
   ...(request.tools.length > 0 && request.toolChoice !== undefined
@@ -194,19 +293,6 @@ const buildParams = (
   max_tokens: maxTokens,
   stream: true,
 });
-
-// Without eager streaming the API buffers each tool-input parameter until it
-// is complete, so a long `create_document` body is a multi-minute silent gap
-// that trips the runtime's idle timeout (AYC-1142). The runtime parses the
-// accumulated arguments strictly, so the server-side validation given up here
-// still surfaces as a malformed tool call. Bedrock rejects the field with a
-// 400 on Sonnet 4.5, Opus 4.5 and older. Verified on Bedrock: Opus 4.6–5.5,
-// Sonnet 4.6–5, Haiku 4.5; later families run on the same serving stack.
-const EAGER_TOOL_INPUT_MODEL =
-  /claude-(?:(?:opus|sonnet|haiku|fable|mythos)-[5-9]|(?:opus|sonnet)-4-[6-9]|haiku-4-5)(?!\d)/;
-
-const streamsToolInputEagerly = (model: string): boolean =>
-  EAGER_TOOL_INPUT_MODEL.test(model);
 
 // These models always think, but omit the thinking text by default, so a chat
 // shows nothing until the answer starts (AYC-1374). Summarized display streams

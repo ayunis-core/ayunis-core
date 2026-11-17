@@ -1,11 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { MessageCreateParamsStreaming } from '@anthropic-ai/sdk/resources/messages';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ModelProviderError } from '@ayunis/inference';
 
 import type { AnthropicCompatibleClient } from './anthropic-provider';
-import { createMessagesProvider } from './anthropic-provider';
+import {
+  createMessagesProvider,
+  isToolInputHeartbeatOnTime,
+  toolInputHeartbeatBudgetMs,
+  TOOL_INPUT_HEARTBEAT_INTERVAL_MS,
+} from './anthropic-provider';
 import { asApiPromise, events } from './test-helpers';
 
 /** Captures the params of each messages.create call and streams nothing. */
@@ -127,22 +132,17 @@ describe('createMessagesProvider tool input streaming', () => {
     'eu.anthropic.claude-sonnet-4-6',
     'eu.anthropic.claude-haiku-4-5-20251001-v1:0',
     'claude-opus-5-5',
-  ])('streams tool input eagerly for %s', async (model) => {
-    expect(await sentTools(model)).toEqual([
-      expect.objectContaining({ eager_input_streaming: true }),
-    ]);
-  });
-
-  // Bedrock rejects the field on these deployments with a 400.
-  it.each([
     'eu.anthropic.claude-sonnet-4-5-20250929-v1:0',
     'eu.anthropic.claude-opus-4-5-20251101-v1:0',
     'anthropic.claude-sonnet-4-20250514-v1:0',
-  ])('omits eager tool input streaming for %s', async (model) => {
-    expect(await sentTools(model)).toEqual([
-      expect.not.objectContaining({ eager_input_streaming: true }),
-    ]);
-  });
+  ])(
+    'keeps server-side tool-input validation enabled for %s',
+    async (model) => {
+      expect(await sentTools(model)).toEqual([
+        expect.not.objectContaining({ eager_input_streaming: true }),
+      ]);
+    },
+  );
 });
 
 const capturedParamsFor = async (
@@ -244,6 +244,15 @@ const emptyRequest = {
 };
 
 describe('createMessagesProvider stream events', () => {
+  it('sizes the tool-input keepalive for a full 128K output at ten tokens per second', () => {
+    expect(toolInputHeartbeatBudgetMs(128_000)).toBe(12_800_000);
+  });
+
+  it('withholds a heartbeat when its timer runs after the deadline', () => {
+    expect(isToolInputHeartbeatOnTime(100, 100)).toBe(true);
+    expect(isToolInputHeartbeatOnTime(100, 101)).toBe(false);
+  });
+
   it('yields an empty heartbeat chunk for each ping so silent thinking stays visible to idle watchdogs', async () => {
     const provider = createMessagesProvider(
       scriptedClient(
@@ -267,6 +276,152 @@ describe('createMessagesProvider stream events', () => {
       {},
       { textDelta: 'answer' },
     ]);
+  });
+
+  it('emits a heartbeat when the upstream stream stays silent while buffering tool input', async () => {
+    vi.useFakeTimers();
+    let releaseUpstream!: () => void;
+    const upstreamReady = new Promise<void>((resolve) => {
+      releaseUpstream = resolve;
+    });
+    const provider = createMessagesProvider(
+      scriptedClient(
+        (async function* () {
+          yield {
+            type: 'content_block_start',
+            index: 0,
+            content_block: {
+              type: 'tool_use',
+              id: 'toolu_1',
+              name: 'save_script',
+              input: {},
+            },
+          };
+          await upstreamReady;
+          yield {
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'input_json_delta', partial_json: '{"ok":true}' },
+          };
+        })(),
+      ),
+      'test:model-x',
+      'model-x',
+      128_000,
+    );
+    const iterator = provider.stream(emptyRequest)[Symbol.asyncIterator]();
+
+    try {
+      await expect(iterator.next()).resolves.toEqual({
+        done: false,
+        value: {
+          toolCallDeltas: [{ index: 0, id: 'toolu_1', name: 'save_script' }],
+        },
+      });
+      const heartbeatCount = Math.floor(
+        toolInputHeartbeatBudgetMs(128_000) / TOOL_INPUT_HEARTBEAT_INTERVAL_MS,
+      );
+      for (let heartbeat = 0; heartbeat < heartbeatCount; heartbeat += 1) {
+        const pending = iterator.next();
+        await vi.advanceTimersByTimeAsync(0);
+        const timed = Promise.race([
+          pending,
+          new Promise<'missed'>((resolve) =>
+            setTimeout(
+              () => resolve('missed'),
+              TOOL_INPUT_HEARTBEAT_INTERVAL_MS + 1,
+            ),
+          ),
+        ]);
+
+        await vi.advanceTimersByTimeAsync(TOOL_INPUT_HEARTBEAT_INTERVAL_MS + 1);
+
+        await expect(timed).resolves.toEqual({ done: false, value: {} });
+      }
+      const afterBudget = iterator.next();
+      await vi.advanceTimersByTimeAsync(0);
+      const timedAfterBudget = Promise.race([
+        afterBudget,
+        new Promise<'missed'>((resolve) =>
+          setTimeout(
+            () => resolve('missed'),
+            TOOL_INPUT_HEARTBEAT_INTERVAL_MS + 1,
+          ),
+        ),
+      ]);
+
+      await vi.advanceTimersByTimeAsync(TOOL_INPUT_HEARTBEAT_INTERVAL_MS + 1);
+
+      await expect(timedAfterBudget).resolves.toBe('missed');
+      releaseUpstream();
+      await expect(afterBudget).resolves.toEqual({
+        done: false,
+        value: {
+          toolCallDeltas: [{ index: 0, argumentsDelta: '{"ok":true}' }],
+        },
+      });
+    } finally {
+      releaseUpstream();
+      await iterator.return?.();
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not hide an upstream stall outside a tool-input block', async () => {
+    vi.useFakeTimers();
+    let releaseUpstream!: () => void;
+    const upstreamReady = new Promise<void>((resolve) => {
+      releaseUpstream = resolve;
+    });
+    const provider = createMessagesProvider(
+      scriptedClient(
+        (async function* () {
+          yield {
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'text_delta', text: 'before' },
+          };
+          await upstreamReady;
+          yield {
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'text_delta', text: 'after' },
+          };
+        })(),
+      ),
+      'test:model-x',
+      'model-x',
+      1024,
+    );
+    const iterator = provider.stream(emptyRequest)[Symbol.asyncIterator]();
+
+    try {
+      await expect(iterator.next()).resolves.toEqual({
+        done: false,
+        value: { textDelta: 'before' },
+      });
+      const pending = iterator.next();
+      await vi.advanceTimersByTimeAsync(0);
+      const timed = Promise.race([
+        pending,
+        new Promise<'idle'>((resolve) =>
+          setTimeout(() => resolve('idle'), 30_001),
+        ),
+      ]);
+
+      await vi.advanceTimersByTimeAsync(30_001);
+
+      await expect(timed).resolves.toBe('idle');
+      releaseUpstream();
+      await expect(pending).resolves.toEqual({
+        done: false,
+        value: { textDelta: 'after' },
+      });
+    } finally {
+      releaseUpstream();
+      await iterator.return?.();
+      vi.useRealTimers();
+    }
   });
 
   it('surfaces an SSE error event as a stream-consumption provider error', async () => {
