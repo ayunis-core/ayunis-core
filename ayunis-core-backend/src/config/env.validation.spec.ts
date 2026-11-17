@@ -18,6 +18,7 @@ function prodEnv(
     NODE_ENV: 'production',
     COOKIE_SECURE: 'true',
     MINIO_INTERNAL_ENDPOINT: 'minio',
+    MINIO_PUBLIC_ENDPOINT: 'minio.example.org',
     MINIO_ROOT_USER: 'minio-user',
     MINIO_ROOT_PASSWORD: 'minio-password',
     MINIO_UPLOAD_ACCESS_KEY: 'minio-uploads',
@@ -410,6 +411,12 @@ describe('validateEnv', () => {
       const env = without(prodEnv(), 'MINIO_INTERNAL_ENDPOINT');
 
       expect(() => validateEnv(env)).toThrow(/MINIO_INTERNAL_ENDPOINT/);
+    });
+
+    it('requires the browser-reachable MinIO endpoint', () => {
+      const env = without(prodEnv(), 'MINIO_PUBLIC_ENDPOINT');
+
+      expect(() => validateEnv(env)).toThrow(/MINIO_PUBLIC_ENDPOINT/);
     });
 
     it('accepts MINIO_ACCESS_KEY / MINIO_SECRET_KEY as the credentials', () => {

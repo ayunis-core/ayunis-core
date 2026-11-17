@@ -343,6 +343,15 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
   if (!env.MINIO_INTERNAL_ENDPOINT) {
     messages.push('MINIO_INTERNAL_ENDPOINT is required in production');
   }
+  // Unset, storage.config falls back to the internal endpoint, so the app boots
+  // clean and signs upload URLs the browser cannot reach — every upload then
+  // fails client-side, where no backend log records it.
+  if (!env.MINIO_PUBLIC_ENDPOINT) {
+    messages.push(
+      'MINIO_PUBLIC_ENDPOINT is required in production (the browser-reachable ' +
+        'MinIO host used to sign direct upload URLs; see DEPLOYMENT.md)',
+    );
+  }
   messages.push(...validateUploadIdentity(env));
   if (!env.REDIS_PASSWORD) {
     messages.push(
