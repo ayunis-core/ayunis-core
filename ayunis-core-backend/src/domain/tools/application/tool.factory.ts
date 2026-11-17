@@ -55,6 +55,7 @@ import { PastChatScope } from 'src/domain/threads/domain/past-chat-scope';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
 import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
+import { AddAnonymizationExceptionTool } from 'src/domain/tools/domain/tools/add-anonymization-exception-tool.entity';
 import {
   SendNotificationOrigin,
   SendNotificationTool,
@@ -100,6 +101,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
     new OutlookMoveEmailToComposerTool(),
   [ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT]: () =>
     new OutlookSaveEmailToDraftTool(),
+  [ToolType.ADD_ANONYMIZATION_EXCEPTION]: () =>
+    new AddAnonymizationExceptionTool(),
 };
 
 @Injectable()

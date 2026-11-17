@@ -9,6 +9,7 @@ Owns the whitelists that exempt detected PII from anonymization before text reac
 - **AnonymizationWhitelistEntry** — Org-level rule: one PII category, optionally restricted to values fully matching a regex (`pattern === null` exempts the whole category). At most one entry per (org, category).
 - **GlobalAnonymizationWhitelistWord** — Platform-wide plain word for one category. Matching is case-insensitive against the whole detected value; the original casing is kept for display. Uniqueness is case-insensitive per category via a normalized `wordLowercase` column.
 - **validate-pattern** — Save-time guard for org regexes: max length, must compile, must pass `safe-regex2` (ReDoS).
+- **whitelist-exception** — Guard for an exception proposed in the chat (AYC-1859). The exception is one word, appended to the category's rule as an escaped literal alternative (`previous|word`), so it adds exactly that value and nothing else; no pattern is accepted from the model. It is rejected when the category is already exempt as a whole, the current rule already exempts the word, or the resulting rule fails `validatePattern` (e.g. too long).
 
 ## Architecture
 
@@ -18,7 +19,8 @@ anonymization-settings/
 │   ├── anonymization-whitelist-entry.entity.ts
 │   ├── global-anonymization-whitelist-word.entity.ts
 │   ├── global-word-whitelist-entry.ts
-│   └── validate-pattern.ts
+│   ├── validate-pattern.ts
+│   └── whitelist-exception.ts
 ├── application/
 │   ├── anonymization-settings.errors.ts
 │   ├── ports/
@@ -27,6 +29,7 @@ anonymization-settings/
 │   └── use-cases/
 │       ├── get-pii-whitelist/            # org entries for one org
 │       ├── update-pii-whitelist/         # full replacement of an org's entries
+│       ├── validate-pii-whitelist-exception/  # checks a chat-proposed exception; saves nothing
 │       ├── get-global-pii-whitelist/     # all global words (exported for consumers outside the module)
 │       ├── add-global-pii-whitelist-words/   # bulk add: trim + dedupe input, skip words already whitelisted, record author
 │       ├── delete-global-pii-whitelist-word/
@@ -53,3 +56,4 @@ anonymization-settings/
 
 - `thread-pii-masks` — `AnonymizeTextForThreadUseCase` (the main chat path) injects `GetPiiWhitelistUseCase` and `GetGlobalPiiWhitelistUseCase` and merges both lists.
 - `runs` — uses `AnonymizeTextForOrgUseCase` for thread title generation.
+- `tools` — the `add_anonymization_exception` handler validates proposals with `ValidatePiiWhitelistExceptionUseCase`; the chat card then saves through the org endpoint.

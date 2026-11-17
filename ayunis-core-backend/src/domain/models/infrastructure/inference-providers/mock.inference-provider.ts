@@ -6,6 +6,7 @@ import { mockCodeExecutionResponse } from './mock-code-execution-response';
 import { mockToolPreparationResponse } from './mock-tool-preparation-response';
 import { mockFinishRoutineResponse } from './mock-finish-routine-response';
 import { mockRoutineWidgetResponse } from './mock-routine-widget-response';
+import { mockAnonymizationExceptionResponse } from './mock-anonymization-exception-response';
 import { mockMcpToolResponse } from './mock-mcp-tool-response';
 import { mockOutlookToolResponse } from './mock-outlook-tool-response';
 import { mockSlowResponse } from './mock-slow-response';
@@ -33,7 +34,8 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * message select scripted responses (chat naming, malformed tool calls,
  * slow tool preparation, paginated research, source citations,
  * inline-document echo, the headline of the notification a chat is
- * about, routine widget proposals, a call to the E2E MCP server's tool,
+ * about, routine widget proposals, an anonymization exception, a call to
+ * the E2E MCP server's tool,
  * the Outlook pane's quick actions, a slow answer, a recording search,
  * memory writes and reports, past-chat tool calls and reports);
  * a routine task's trigger ends the routine run, optionally after sending
@@ -128,6 +130,7 @@ function mockExternalToolResponse(
   userText: string,
 ): AsyncIterable<ProviderChunk> | null {
   return (
+    mockAnonymizationExceptionResponse(request, userText) ??
     mockMcpToolResponse(request, userText) ??
     mockOutlookToolResponse(request, userText) ??
     mockMemoryResponse(request, userText) ??

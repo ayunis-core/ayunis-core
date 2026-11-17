@@ -11,6 +11,7 @@ import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
 import CreateRoutineWidget from '@/pages/chat/ui/chat-widgets/CreateRoutineWidget';
 import EditRoutineWidget from '@/pages/chat/ui/chat-widgets/EditRoutineWidget';
 import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallMarketplaceSkillWidget';
+import AddAnonymizationExceptionWidget from '@/pages/chat/ui/chat-widgets/AddAnonymizationExceptionWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
 import { renderArtifactToolWidget } from '@/pages/chat/ui/chat-widgets/renderArtifactToolWidget';
@@ -90,6 +91,14 @@ export function renderRichToolCard({
           content={toolUse}
           isStreaming={isStreaming}
           threadId={threadId}
+        />
+      );
+    case 'add_anonymization_exception':
+      return (
+        <AddAnonymizationExceptionWidget
+          content={toolUse}
+          result={result}
+          isStreaming={isStreaming}
         />
       );
     case 'bar_chart':

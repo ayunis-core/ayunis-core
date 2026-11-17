@@ -26,6 +26,7 @@ import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilit
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
 import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routines.capability';
+import { AnonymizationExceptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
@@ -94,6 +95,9 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     new ArtifactsCapability(artifactTools),
     new SkillsCapability(assembleTool),
     new RoutinesCapability(assembleTool, resolved([]) as never),
+    new AnonymizationExceptionCapability(assembleTool, {
+      get: () => undefined,
+    } as never),
     new InternetCapability(
       resolved({ internetSearchEnabled: true }) as never,
       { get: () => true } as never,

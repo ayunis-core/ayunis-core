@@ -142,6 +142,10 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.install_marketplace_skill'),
         target: asString(params.name) ?? asString(params.identifier),
       };
+    case 'add_anonymization_exception':
+      return {
+        verb: t('chat.timeline.actions.add_anonymization_exception'),
+      };
     case 'activate_skill':
       return {
         verb: t('chat.timeline.actions.activate_skill'),

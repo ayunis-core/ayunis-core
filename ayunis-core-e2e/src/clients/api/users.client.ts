@@ -1,5 +1,6 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { config } from '../../config';
+import { generatedApi } from './generated-api';
 import type {
   PaginatedUsersListResponseDto,
   UserResponseDto,
@@ -38,4 +39,15 @@ export function requestSuperAdminUnlockUserAccount(
   userId: string,
 ): Promise<APIResponse> {
   return api.patch(`${config.apiURL}/api/super-admin/users/${userId}/unlock`);
+}
+
+export async function promoteToAdmin(
+  api: APIRequestContext,
+  userId: string,
+): Promise<void> {
+  await generatedApi.userControllerUpdateUserRole(
+    userId,
+    { role: 'admin' },
+    { api },
+  );
 }

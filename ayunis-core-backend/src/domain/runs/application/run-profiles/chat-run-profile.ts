@@ -18,6 +18,7 @@ import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilit
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
 import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routines.capability';
+import { AnonymizationExceptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
@@ -53,6 +54,7 @@ export class ChatRunProfile implements RunProfile {
     private readonly artifacts: ArtifactsCapability,
     private readonly skills: SkillsCapability,
     private readonly routines: RoutinesCapability,
+    private readonly anonymizationException: AnonymizationExceptionCapability,
     private readonly internet: InternetCapability,
     private readonly marketplace: MarketplaceCapability,
     private readonly imageGeneration: ImageGenerationCapability,
@@ -80,6 +82,7 @@ export class ChatRunProfile implements RunProfile {
       this.artifacts,
       this.skills,
       this.routines,
+      this.anonymizationException,
       this.internet,
       this.marketplace,
       this.imageGeneration,
