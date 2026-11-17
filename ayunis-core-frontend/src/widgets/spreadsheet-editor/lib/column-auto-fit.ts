@@ -41,3 +41,12 @@ export function readElementMetrics(
       (parseFloat(style.paddingRight) || 0),
   };
 }
+
+export function readFormulaMetrics(cell: Element): ElementMetrics | undefined {
+  const probe = document.createElement('span');
+  probe.className = 'rv-cell-formula';
+  cell.appendChild(probe);
+  const metrics = readElementMetrics(probe);
+  probe.remove();
+  return metrics;
+}

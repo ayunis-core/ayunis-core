@@ -23,7 +23,11 @@ import { attachGridClipboardWrite } from '@/widgets/spreadsheet-editor/lib/grid-
 import {
   fitColumnWidth,
   readElementMetrics,
+  readFormulaMetrics,
 } from '@/widgets/spreadsheet-editor/lib/column-auto-fit';
+import { useRowAutoHeight } from '@/widgets/spreadsheet-editor/lib/useRowAutoHeight';
+
+const DEFAULT_COLUMN_WIDTH = 160;
 
 const DISPLAY_VALUES_KEY = Symbol('spreadsheetDisplayValues');
 
@@ -53,15 +57,6 @@ function FormulaCell(props: Readonly<CellTemplateProp>) {
       {display}
     </span>
   );
-}
-
-function readFormulaMetrics(cell: Element) {
-  const probe = document.createElement('span');
-  probe.className = 'rv-cell-formula';
-  cell.appendChild(probe);
-  const metrics = readElementMetrics(probe);
-  probe.remove();
-  return metrics;
 }
 
 function measureHeaderWidth(header: HTMLElement): number | undefined {
@@ -269,6 +264,14 @@ export function SpreadsheetGrid({
   const isDark = document.documentElement.classList.contains('dark');
   const isEmpty = columns.length === 0;
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const widths = useMemo(
+    () =>
+      columns.map(
+        (_, index) => columnWidths[columnKey(index)] ?? DEFAULT_COLUMN_WIDTH,
+      ),
+    [columns, columnWidths],
+  );
+  const rowDefinitions = useRowAutoHeight(gridRef, rows, displayValues, widths);
 
   // Header drag-and-drop: cancel RevoGrid's internal reorder and route the
   // move through the model instead — column order changes rewrite formula
@@ -339,11 +342,11 @@ export function SpreadsheetGrid({
       columns.map((label, index) => ({
         prop: columnKey(index),
         name: `${columnIndexToLetter(index)} · ${label}`,
-        size: columnWidths[columnKey(index)] ?? 160,
+        size: widths[index],
         minSize: 60,
         cellTemplate: Template(FormulaCell as Parameters<typeof Template>[0]),
       })),
-    [columns, columnWidths],
+    [columns, widths],
   );
 
   const handleAfterEdit = (event: CustomEvent<AfterEditEvent>) => {
@@ -376,6 +379,7 @@ export function SpreadsheetGrid({
         style={{ height: '100%' }}
         source={source}
         columns={gridColumns}
+        rowDefinitions={rowDefinitions}
         theme={isDark ? 'darkCompact' : 'compact'}
         resize
         range

@@ -3,7 +3,21 @@
   font-size: 0.875rem;
 }
 
+/* Long text wraps instead of being clipped. Line height plus vertical padding
+   equals the compact theme's 32px row, so single-line rows keep their height;
+   useRowAutoHeight reads both values from a rendered cell. */
+.rv-spreadsheet revogr-data[col-type='rgCol'] .rgCell {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 20px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* A block keeps the monospace font's own line boxes; inline, mixing it with
+   the cell font's baseline makes each wrapped line taller than 20px. */
 .rv-cell-formula {
+  display: block;
   font-family: var(--font-mono, ui-monospace, monospace);
   font-style: italic;
   color: var(--muted-foreground);
