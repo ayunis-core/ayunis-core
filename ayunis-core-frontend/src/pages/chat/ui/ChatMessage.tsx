@@ -9,15 +9,18 @@ import type {
   ImageMessageContentResponseDto,
 } from '@/pages/chat/model/openapi';
 import config from '@/shared/config';
-import { Markdown } from '@/widgets/markdown';
+import { Markdown, usePiiMasks } from '@/widgets/markdown';
+import { resolvedPromptText } from '@/pages/chat/lib/sent-prompts';
 import type { TextMessageContentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import RoutineNudgeNotice from './RoutineNudgeNotice';
+import CopyMessageButton from './CopyMessageButton';
 
 interface ChatMessageProps {
   readonly message: Message;
 }
 
 function ChatMessage({ message }: ChatMessageProps) {
+  const piiMasks = usePiiMasks();
   if (message.role !== 'user' && message.role !== 'system') return null;
 
   const images = message.content.filter(
@@ -38,7 +41,7 @@ function ChatMessage({ message }: ChatMessageProps) {
   }
 
   return (
-    <div className="flex justify-end">
+    <div className="flex flex-col items-end">
       <div
         className="max-w-2xl min-w-0 space-y-2 overflow-hidden rounded-2xl bg-muted py-2.5 px-4"
         data-testid="user-message"
@@ -63,6 +66,13 @@ function ChatMessage({ message }: ChatMessageProps) {
           </Markdown>
         ))}
       </div>
+      {texts.length > 0 && (
+        <CopyMessageButton
+          getContent={() => ({
+            text: resolvedPromptText(message, piiMasks),
+          })}
+        />
+      )}
     </div>
   );
 }
