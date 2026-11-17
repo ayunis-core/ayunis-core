@@ -21,22 +21,17 @@ import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabil
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import {
+  AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
   type RunCompletionPolicy,
   type RunProfile,
 } from './run-profile';
 
-const CHAT_PREAMBLE = `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
-
-<application_details>
-Ayunis Core is an AI platform that enables intelligent conversations, customizable skills, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
-</application_details>`;
-
 /** Interactive chat with a user who reads the answers as they stream. */
 @Injectable()
 export class ChatRunProfile implements RunProfile {
   readonly id = 'chat';
-  readonly preamble = CHAT_PREAMBLE;
+  readonly preamble = AYUNIS_PREAMBLE;
   readonly closing = 'You are now ready to assist the user.';
   readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
   readonly maxIterations = 50;

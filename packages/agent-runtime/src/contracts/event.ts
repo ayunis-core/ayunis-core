@@ -74,7 +74,7 @@ export type RunEventPayload =
       result: string;
       isError: boolean;
     }
-  | { type: 'tool_result_message'; message: Message }
+  | { type: 'tool_result_message'; message: Message; endsRun: boolean }
   | { type: 'custom'; name: string; data: unknown }
   | {
       type: 'error';

@@ -17,8 +17,14 @@ import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-to
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
+import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
+import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
+import { OutlookDraftEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-draft-email-tool.entity';
+import { OutlookMoveEmailToComposerTool } from 'src/domain/tools/domain/tools/outlook/outlook-move-email-to-composer-tool.entity';
+import { OutlookSaveEmailToDraftTool } from 'src/domain/tools/domain/tools/outlook/outlook-save-email-to-draft-tool.entity';
 import {
   isAcknowledgementOnlyTool,
+  isAwaitingClientResultTool,
   isExternallyHandledTool,
   isHybridArtifactTool,
   requiresExclusiveExecution,
@@ -45,6 +51,40 @@ describe('runtime tool policy', () => {
     it('leaves backend-executed tools to their handlers', () => {
       expect(isExternallyHandledTool(new MarketplaceSearchTool())).toBe(false);
       expect(isExternallyHandledTool(new InternetSearchTool())).toBe(false);
+    });
+  });
+
+  describe('Outlook tools', () => {
+    const readTools = [
+      new OutlookReadEmailTool(),
+      new OutlookReadAttachmentTool(),
+    ];
+    const writeTools = [
+      new OutlookDraftEmailTool(),
+      new OutlookMoveEmailToComposerTool(),
+      new OutlookSaveEmailToDraftTool(),
+    ];
+
+    it.each([...readTools, ...writeTools].map((tool) => [tool.name, tool]))(
+      'ends the run with the %s call for the Outlook pane to execute',
+      (_, tool) => {
+        expect(isExternallyHandledTool(tool)).toBe(true);
+      },
+    );
+
+    it.each(readTools.map((tool) => [tool.name, tool]))(
+      'keeps the %s call open until the pane posts the result the model needs',
+      (_, tool) => {
+        expect(isAwaitingClientResultTool(tool)).toBe(true);
+      },
+    );
+
+    it.each(
+      [...writeTools, new SendEmailTool(), new FinishRoutineTool()].map(
+        (tool) => [tool.name, tool],
+      ),
+    )('settles the %s call with the placeholder, as today', (_, tool) => {
+      expect(isAwaitingClientResultTool(tool)).toBe(false);
     });
   });
 

@@ -27,6 +27,7 @@ import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/ap
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
+import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/run-profile-input';
 import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
 import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
@@ -81,7 +82,7 @@ export class ExecuteRunAndSetTitleUseCase {
       new ExecuteRunCommand({
         threadId: command.threadId,
         input: command.input,
-        profile: { id: 'chat' },
+        profile: this.runProfile(),
         streaming: command.streaming,
         signal: command.signal,
       }),
@@ -91,6 +92,13 @@ export class ExecuteRunAndSetTitleUseCase {
     } else {
       yield* this.streamRunItems(messages, command.threadId);
     }
+  }
+
+  /** The pane and the web app share this entry point; the session says which. */
+  private runProfile(): RunProfileInput {
+    return this.contextService.get('client') === 'outlook'
+      ? { id: 'outlook' }
+      : { id: 'chat' };
   }
 
   // Starts only once ExecuteRunUseCase admitted the run, so a rejected run

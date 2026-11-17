@@ -36,4 +36,9 @@ export enum ToolType {
   SEND_NOTIFICATION = 'send_notification',
   CREATE_ROUTINE = 'create_routine',
   EDIT_ROUTINE = 'edit_routine',
+  OUTLOOK_READ_EMAIL = 'outlook__read_email',
+  OUTLOOK_READ_ATTACHMENT = 'outlook__read_attachment',
+  OUTLOOK_DRAFT_EMAIL = 'outlook__draft_email',
+  OUTLOOK_MOVE_EMAIL_TO_COMPOSER = 'outlook__move_email_to_composer',
+  OUTLOOK_SAVE_EMAIL_TO_DRAFT = 'outlook__save_email_to_draft',
 }

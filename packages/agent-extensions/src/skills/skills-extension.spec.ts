@@ -133,6 +133,7 @@ async function completeActivation(
     isError,
     outcome: isError ? 'error' : 'success',
     isLastToolCall: true,
+    endsRun: false,
     transformMessages: vi.fn(),
     addTools,
     removeTools: vi.fn(),

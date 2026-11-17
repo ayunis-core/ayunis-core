@@ -9,6 +9,7 @@ export interface PreparedTools {
   tools: RuntimeTool[];
   backendTools: BackendTool[];
   toolIntegrations: RuntimeToolIntegrationRegistry;
+  awaitingClientResultToolNames: ReadonlySet<string>;
 }
 
 export interface PreparedRun extends PreparedTools {

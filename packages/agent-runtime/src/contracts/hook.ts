@@ -214,6 +214,11 @@ export interface AfterToolCallContext extends HookApi {
   readonly isError: boolean;
   readonly outcome: ToolCallOutcome;
   readonly isLastToolCall: boolean;
+  /**
+   * The run completes after this tool phase: the turn called an externally
+   * handled tool and every call passed input validation.
+   */
+  readonly endsRun: boolean;
 }
 
 export interface RunEndContext extends HookControlApi {

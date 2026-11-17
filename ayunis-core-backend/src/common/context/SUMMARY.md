@@ -11,4 +11,6 @@ The module also provides `OrgContextRunner`, a small standalone service for entr
 
 `UserContextRunner` is the user-level counterpart for background work done on a user's behalf: `runAsUser({ userId, orgId, role, systemRole }, fn)` runs `fn` in a fresh context with the same four keys the interceptor sets for a user login, so `getRequiredUserContext` and every use case downstream behave as in that user's request. Consumed by the routines module's `ExecuteRoutineUseCase`.
 
+The store's optional `client` key names the token client (registry in `iam/sessions/domain/value-objects/session-client.ts`, e.g. `outlook`) a user session was handed to; it is unset for browser sessions and read with a plain `get('client')`. The runs module selects a client's tools and prompt section by it. `UserContextInterceptor` sets it from the `ActiveUser`'s `client`, which `JwtStrategy` takes from the access token's `client` claim; API-key requests never set it.
+
 Explicit target-org reads pass a second UUID to getRequiredOrgId; that override requires a complete human super-admin context. Omitting the target preserves the existing user/API-key org-scoped contract.

@@ -191,6 +191,7 @@ export class HookRunner {
     isError: boolean;
     outcome: ToolCallOutcome;
     isLastToolCall: boolean;
+    endsRun: boolean;
   }): Promise<void> {
     const ctx: AfterToolCallContext = {
       ...this.api(this.deps.mutations),

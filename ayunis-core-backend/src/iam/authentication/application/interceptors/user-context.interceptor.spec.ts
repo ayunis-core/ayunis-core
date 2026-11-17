@@ -1,6 +1,6 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { lastValueFrom, of } from 'rxjs';
-import { ActiveUser } from '../../domain/active-user.entity';
+import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UserContextInterceptor } from './user-context.interceptor';
@@ -60,8 +60,37 @@ describe('UserContextInterceptor', () => {
     expect(setMock).toHaveBeenCalledWith('role', activeUser.role);
     expect(setMock).toHaveBeenCalledWith('systemRole', activeUser.systemRole);
     expect(setMock).toHaveBeenCalledWith('refreshToken', 'the-refresh');
+    expect(setMock).toHaveBeenCalledWith('client', undefined);
     expect(setMock).not.toHaveBeenCalledWith('apiKeyId', expect.anything());
     expect(callHandler.handle).toHaveBeenCalled();
+  });
+
+  it('sets the session client when the ActiveUser belongs to a token client', async () => {
+    const setMock = jest.fn();
+    const contextService = { set: setMock } as unknown as ContextService;
+    const interceptor = new UserContextInterceptor(
+      contextService,
+      configService,
+    );
+    const activeUser = new ActiveUser({
+      id: 'user-id' as UUID,
+      email: 'user@example.com',
+      emailVerified: true,
+      role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
+      orgId: 'org-id' as UUID,
+      name: 'Pane User',
+      client: 'outlook',
+    });
+
+    await lastValueFrom(
+      interceptor.intercept(
+        createExecutionContext(activeUser),
+        createCallHandler(),
+      ),
+    );
+
+    expect(setMock).toHaveBeenCalledWith('client', 'outlook');
   });
 
   it('sets apiKeyId and orgId only when the principal is an api-key shape', async () => {
@@ -89,6 +118,7 @@ describe('UserContextInterceptor', () => {
     expect(setMock).not.toHaveBeenCalledWith('userId', expect.anything());
     expect(setMock).not.toHaveBeenCalledWith('role', expect.anything());
     expect(setMock).not.toHaveBeenCalledWith('systemRole', expect.anything());
+    expect(setMock).not.toHaveBeenCalledWith('client', expect.anything());
     expect(callHandler.handle).toHaveBeenCalled();
   });
 

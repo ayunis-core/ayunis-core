@@ -22,6 +22,7 @@ import {
 } from 'src/domain/runs/application/agent-runtime/message-id';
 import { toBackendAssistantMessage } from 'src/domain/runs/application/agent-runtime/inference-message.mapper';
 import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
+import { awaitsClientResult } from 'src/domain/runs/application/agent-runtime/runtime-tool-policy';
 
 /** Per-run RunContext key for tool results awaiting a grouped flush. */
 const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
@@ -29,6 +30,7 @@ const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
 interface PersistenceHookParams {
   thread: Thread;
   integrations: RuntimeToolIntegrationRegistry;
+  awaitingClientResultToolNames: ReadonlySet<string>;
   onMessagePersisted: (messageId: UUID) => void;
 }
 
@@ -65,13 +67,22 @@ export class PersistenceHookFactory {
           PENDING_TOOL_RESULTS,
         ) ?? { iteration: ctx.iteration, contents: [] };
         pending.iteration = ctx.iteration;
-        pending.contents.push(
-          new ToolResultMessageContent(
-            ctx.toolCall.id,
-            ctx.toolCall.name,
-            ctx.result,
-          ),
-        );
+        // Left unanswered so the client's posted result resumes the run.
+        if (
+          !awaitsClientResult(
+            { toolName: ctx.toolCall.name, isError: ctx.isError },
+            ctx.endsRun,
+            params.awaitingClientResultToolNames,
+          )
+        ) {
+          pending.contents.push(
+            new ToolResultMessageContent(
+              ctx.toolCall.id,
+              ctx.toolCall.name,
+              ctx.result,
+            ),
+          );
+        }
         ctx.context.set(PENDING_TOOL_RESULTS, pending);
         if (ctx.isLastToolCall) {
           await this.flushToolResults(ctx.context, params);

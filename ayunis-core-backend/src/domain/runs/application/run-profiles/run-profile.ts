@@ -23,6 +23,13 @@ export interface RunCompletionPolicy {
   decide(run: CompletedRun): RunCompletionDecision;
 }
 
+/** Shared by every profile a user watches; routines have their own. */
+export const AYUNIS_PREAMBLE = `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations.
+
+<application_details>
+Ayunis Core is an AI platform that enables intelligent conversations, customizable skills, and extensible tool integration. It is built for public sector organizations that need sovereign AI solutions with full control over data, models, and integrations.
+</application_details>`;
+
 /** The run ends successfully when the model stops calling tools. */
 export const DONE_WHEN_MODEL_STOPS: RunCompletionPolicy = {
   decide: () => ({ status: 'done' }),
