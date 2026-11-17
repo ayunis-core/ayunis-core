@@ -9,7 +9,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common/guards/public.guard';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { Request, Response } from 'express';
-import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
 import { RefreshTokenCommand } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.command';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -17,6 +16,7 @@ import {
   getAccessTokenCookieName,
   setCookies,
 } from 'src/common/util/cookie.util';
+import { RefreshTokenSingleFlightService } from 'src/iam/authentication/application/services/refresh-token-single-flight.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -24,7 +24,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   constructor(
     private reflector: Reflector,
-    private refreshTokenUseCase: RefreshTokenUseCase,
+    private refreshTokens: RefreshTokenSingleFlightService,
     private configService: ConfigService,
   ) {
     super();
@@ -75,7 +75,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     refreshToken: string,
   ): Promise<boolean> {
     try {
-      const newTokens = await this.refreshTokenUseCase.execute(
+      const newTokens = await this.refreshTokens.execute(
         new RefreshTokenCommand(refreshToken),
       );
 

@@ -4,7 +4,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import type { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import type { RefreshTokenSingleFlightService } from 'src/iam/authentication/application/services/refresh-token-single-flight.service';
 import { InvalidTokenError } from 'src/iam/authentication/application/authentication.errors';
 import {
   OrgAccessError,
@@ -39,23 +39,23 @@ describe('JwtAuthGuard', () => {
     canActivate: (context: ExecutionContext) => Promise<boolean>;
   };
   let parentCanActivate: jest.SpyInstance;
-  let refreshTokenUseCase: jest.Mocked<RefreshTokenUseCase>;
+  let refreshTokens: jest.Mocked<RefreshTokenSingleFlightService>;
   let guard: JwtAuthGuard;
 
   beforeEach(() => {
     parentCanActivate = jest
       .spyOn(parentGuard, 'canActivate')
       .mockRejectedValue(new UnauthorizedException());
-    refreshTokenUseCase = {
+    refreshTokens = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<RefreshTokenUseCase>;
+    } as unknown as jest.Mocked<RefreshTokenSingleFlightService>;
     const reflector = {
       getAllAndOverride: jest.fn().mockReturnValue(false),
     } as unknown as Reflector;
     const configService = {
       get: jest.fn((key: string, fallback?: unknown) => fallback),
     } as unknown as ConfigService;
-    guard = new JwtAuthGuard(reflector, refreshTokenUseCase, configService);
+    guard = new JwtAuthGuard(reflector, refreshTokens, configService);
   });
 
   afterEach(() => {
@@ -74,7 +74,7 @@ describe('JwtAuthGuard', () => {
     const { context, response } = createContext({
       refresh_token: 'expired-refresh-token',
     });
-    refreshTokenUseCase.execute.mockRejectedValue(
+    refreshTokens.execute.mockRejectedValue(
       new InvalidTokenError('refresh token expired'),
     );
 
@@ -88,7 +88,7 @@ describe('JwtAuthGuard', () => {
     const { context, request, response } = createContext({
       refresh_token: 'valid-refresh-token',
     });
-    refreshTokenUseCase.execute.mockResolvedValue({
+    refreshTokens.execute.mockResolvedValue({
       access_token: 'renewed-access-token',
       refresh_token: 'rotated-refresh-token',
     });
@@ -110,7 +110,7 @@ describe('JwtAuthGuard', () => {
     parentCanActivate.mockRejectedValue(lookupFailure);
 
     await expect(guard.canActivate(context)).rejects.toBe(lookupFailure);
-    expect(refreshTokenUseCase.execute).not.toHaveBeenCalled();
+    expect(refreshTokens.execute).not.toHaveBeenCalled();
     expect(response.clearCookie).not.toHaveBeenCalled();
   });
 
@@ -119,7 +119,7 @@ describe('JwtAuthGuard', () => {
     const { context, response } = createContext({
       refresh_token: 'valid-refresh-token',
     });
-    refreshTokenUseCase.execute.mockRejectedValue(lookupFailure);
+    refreshTokens.execute.mockRejectedValue(lookupFailure);
 
     await expect(guard.canActivate(context)).rejects.toBe(lookupFailure);
     expect(response.clearCookie).not.toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('JwtAuthGuard', () => {
       refresh_token: 'revoked-refresh-token',
     });
     parentCanActivate.mockRejectedValue(new OrgAccessError());
-    refreshTokenUseCase.execute.mockRejectedValue(new OrgAccessError());
+    refreshTokens.execute.mockRejectedValue(new OrgAccessError());
 
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(
       UnauthorizedException,

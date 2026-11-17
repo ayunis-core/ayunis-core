@@ -16,7 +16,7 @@ import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { CoreConnectAuthModule } from 'src/integrations/core-connect/auth/core-connect-auth.module';
 import { JwtAuthGuard } from 'src/iam/authentication/application/guards/jwt-auth.guard';
-import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RefreshTokenSingleFlightService } from 'src/iam/authentication/application/services/refresh-token-single-flight.service';
 
 const TOKEN = 'a'.repeat(64);
 const JWT_SECRET = 'independent-browser-session-secret';
@@ -68,7 +68,10 @@ describe('Core Connect authentication over HTTP', () => {
       controllers: [ServiceProtectedController, ProtectedController],
       providers: [
         BrowserSessionStrategy,
-        { provide: RefreshTokenUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: RefreshTokenSingleFlightService,
+          useValue: { execute: jest.fn() },
+        },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
       ],
     }).compile();

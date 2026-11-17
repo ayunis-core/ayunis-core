@@ -18,6 +18,7 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 // Import use cases
 import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
 import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RefreshTokenSingleFlightService } from 'src/iam/authentication/application/services/refresh-token-single-flight.service';
 import { HandOffSessionUseCase } from 'src/iam/authentication/application/use-cases/hand-off-session/hand-off-session.use-case';
 import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
@@ -91,6 +92,7 @@ const AUTHENTICATION_PROVIDERS: Provider[] = [
   // Use Cases
   LoginUseCase,
   RefreshTokenUseCase,
+  RefreshTokenSingleFlightService,
   HandOffSessionUseCase,
   RegisterUserUseCase,
   GetCurrentUserUseCase,
@@ -115,7 +117,7 @@ const AUTHENTICATION_PROVIDERS: Provider[] = [
 
 const AUTHENTICATION_EXPORTS = [
   LoginUseCase,
-  RefreshTokenUseCase,
+  RefreshTokenSingleFlightService,
   RegisterUserUseCase,
   GetCurrentUserUseCase,
   StartAuthenticatedSessionUseCase,
