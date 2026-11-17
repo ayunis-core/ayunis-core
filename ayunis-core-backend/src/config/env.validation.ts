@@ -315,6 +315,30 @@ function validateUploadIdentity(env: Record<string, unknown>): string[] {
 }
 
 /**
+ * The browser-reachable endpoint is what signs direct upload URLs. Unset,
+ * storage.config falls back to the internal endpoint and the app boots clean
+ * while signing URLs no browser can resolve; without TLS the signed URL is
+ * http:// and the HTTPS app origin blocks it as mixed content. Both fail only
+ * in the browser, where no backend log records them.
+ */
+function validatePublicEndpoint(env: Record<string, unknown>): string[] {
+  if (!env.MINIO_PUBLIC_ENDPOINT) {
+    return [
+      'MINIO_PUBLIC_ENDPOINT is required in production (the browser-reachable ' +
+        'MinIO host used to sign direct upload URLs; see DEPLOYMENT.md)',
+    ];
+  }
+  if (env.MINIO_PUBLIC_USE_SSL !== 'true') {
+    return [
+      'MINIO_PUBLIC_USE_SSL must be "true" in production; upload URLs would ' +
+        'otherwise be signed as http:// and blocked as mixed content by the ' +
+        'HTTPS app origin',
+    ];
+  }
+  return [];
+}
+
+/**
  * Cross-field rules that only apply in production, folded in from the former
  * storage/redis/auth factory asserts. Blank values are already dropped, so a
  * missing secret is `undefined` here.
@@ -343,15 +367,7 @@ function validateProductionRules(env: Record<string, unknown>): string[] {
   if (!env.MINIO_INTERNAL_ENDPOINT) {
     messages.push('MINIO_INTERNAL_ENDPOINT is required in production');
   }
-  // Unset, storage.config falls back to the internal endpoint, so the app boots
-  // clean and signs upload URLs the browser cannot reach — every upload then
-  // fails client-side, where no backend log records it.
-  if (!env.MINIO_PUBLIC_ENDPOINT) {
-    messages.push(
-      'MINIO_PUBLIC_ENDPOINT is required in production (the browser-reachable ' +
-        'MinIO host used to sign direct upload URLs; see DEPLOYMENT.md)',
-    );
-  }
+  messages.push(...validatePublicEndpoint(env));
   messages.push(...validateUploadIdentity(env));
   if (!env.REDIS_PASSWORD) {
     messages.push(

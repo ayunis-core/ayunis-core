@@ -307,9 +307,9 @@ These variables MUST be configured before deployment:
   browser (AYC-1541) and short-lived downloads of chat files handed to MCP
   servers (AYC-1878). The application never sends requests to it. When unset,
   the internal endpoint is used, which is what browsers reach in local
-  development and CI; `NODE_ENV=production` rejects an unset
-  `MINIO_PUBLIC_ENDPOINT` at boot rather than signing URLs no browser can
-  reach. Deployments behind a reverse proxy set it to the public
+  development and CI; `NODE_ENV=production` requires `MINIO_PUBLIC_ENDPOINT`
+  and `MINIO_PUBLIC_USE_SSL=true` at boot, rather than signing URLs no browser
+  can reach or that an HTTPS origin blocks as mixed content. Deployments behind a reverse proxy set it to the public
   MinIO host (port defaults to `443` with SSL, `80` without) and must allow
   that host's CORS for the app origin (`MINIO_API_CORS_ALLOW_ORIGIN` on the
   MinIO service), including the `PUT` method and the `ETag` response header

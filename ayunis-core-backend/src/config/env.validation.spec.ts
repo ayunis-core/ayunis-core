@@ -19,6 +19,7 @@ function prodEnv(
     COOKIE_SECURE: 'true',
     MINIO_INTERNAL_ENDPOINT: 'minio',
     MINIO_PUBLIC_ENDPOINT: 'minio.example.org',
+    MINIO_PUBLIC_USE_SSL: 'true',
     MINIO_ROOT_USER: 'minio-user',
     MINIO_ROOT_PASSWORD: 'minio-password',
     MINIO_UPLOAD_ACCESS_KEY: 'minio-uploads',
@@ -417,6 +418,18 @@ describe('validateEnv', () => {
       const env = without(prodEnv(), 'MINIO_PUBLIC_ENDPOINT');
 
       expect(() => validateEnv(env)).toThrow(/MINIO_PUBLIC_ENDPOINT/);
+    });
+
+    it('requires TLS on the browser-reachable MinIO endpoint', () => {
+      const env = without(prodEnv(), 'MINIO_PUBLIC_USE_SSL');
+
+      expect(() => validateEnv(env)).toThrow(/MINIO_PUBLIC_USE_SSL/);
+    });
+
+    it('rejects a browser-reachable MinIO endpoint served over plain HTTP', () => {
+      const env = prodEnv({ MINIO_PUBLIC_USE_SSL: 'false' });
+
+      expect(() => validateEnv(env)).toThrow(/MINIO_PUBLIC_USE_SSL/);
     });
 
     it('accepts MINIO_ACCESS_KEY / MINIO_SECRET_KEY as the credentials', () => {
