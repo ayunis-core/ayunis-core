@@ -325,6 +325,21 @@ describe('MinioObjectStorageProvider', () => {
     },
   );
 
+  it('signs downloads against the public endpoint as the server identity, because the upload identity cannot read', async () => {
+    stubInternalRegionLookup();
+    const url = new URL(
+      await provider.presignDownload(
+        new StorageUrl('org/uploads/session/file.pdf', 'generated-images'),
+        { signedAt: new Date(), expiresInSeconds: 300 },
+      ),
+    );
+
+    expect(url.origin).toBe('https://cdn.example.org');
+    expect(url.searchParams.get('X-Amz-Credential')).toMatch(
+      /^storage-access-key\//,
+    );
+  });
+
   it('aborts multipart uploads through the internal endpoint', async () => {
     const abort = jest
       .spyOn(Minio.Client.prototype, 'abortMultipartUpload')

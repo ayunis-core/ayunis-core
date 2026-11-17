@@ -303,14 +303,21 @@ These variables MUST be configured before deployment:
   and TLS setting (defaults: `9000` / `false`).
 
 - `MINIO_PUBLIC_ENDPOINT` / `MINIO_PUBLIC_PORT` / `MINIO_PUBLIC_USE_SSL`:
-  Browser-reachable MinIO host used only to sign direct source-upload URLs
-  (AYC-1541). The application never sends requests to it. When unset, the
-  internal endpoint is used, which is what browsers reach in local development
-  and CI. Deployments behind a reverse proxy set it to the public MinIO host
-  (port defaults to `443` with SSL, `80` without) and must allow that host's
-  CORS for the app origin (`MINIO_API_CORS_ALLOW_ORIGIN` on the MinIO service),
-  including the `PUT` method and the `ETag` response header multipart uploads
-  read.
+  Public MinIO host used only to sign URLs: direct source uploads from the
+  browser (AYC-1541) and short-lived downloads of chat files handed to MCP
+  servers (AYC-1878). The application never sends requests to it. When unset,
+  the internal endpoint is used, which is what browsers reach in local
+  development and CI. Deployments behind a reverse proxy set it to the public
+  MinIO host (port defaults to `443` with SSL, `80` without) and must allow
+  that host's CORS for the app origin (`MINIO_API_CORS_ALLOW_ORIGIN` on the
+  MinIO service), including the `PUT` method and the `ETag` response header
+  multipart uploads read.
+
+  File handover to MCP servers needs this host reachable **from the internet
+  over HTTPS**, not just from users' browsers: the MCP server fetches the file
+  itself, and servers such as Accessful reject plain HTTP and private network
+  addresses. Where object storage is only reachable from the intranet, uploads
+  keep working but file handover fails with the MCP server's download error.
 
 - `MINIO_UPLOAD_ACCESS_KEY` / `MINIO_UPLOAD_SECRET_KEY`: Dedicated MinIO user
   the application signs direct source-upload URLs with. **Required in
@@ -407,7 +414,7 @@ Before starting the application:
 - [ ] `MCP_ENCRYPTION_KEY` is set and is 64 hex characters
 - [ ] `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` are set to strong, non-default values
 - [ ] `MINIO_INTERNAL_ENDPOINT` targets this deployment's own MinIO service
-- [ ] `MINIO_PUBLIC_ENDPOINT` is the browser-reachable MinIO host and its CORS allows the app origin
+- [ ] `MINIO_PUBLIC_ENDPOINT` is the browser-reachable MinIO host and its CORS allows the app origin; for file handover to MCP servers it is also reachable from the internet over HTTPS
 - [ ] `MINIO_UPLOAD_ACCESS_KEY` / `MINIO_UPLOAD_SECRET_KEY` name a MinIO user limited to `<bucket>/*/uploads/*`
 - [ ] `REDIS_PASSWORD` is set to a secure random string
 - [ ] `POSTGRES_*` variables point to valid database
@@ -727,11 +734,11 @@ source /opt/ayunis/ayunis-core/ayunis-core-backend/.env
 
 ### Configuration
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `BACKUP_DIR` | `/opt/ayunis/backups` | Local backup directory |
-| `BACKUP_RETENTION` | `5` | Days to keep local backups |
-| `BACKUP_REMOTE` | (none) | rsync target for off-site copies |
+| Variable           | Default               | Description                      |
+| ------------------ | --------------------- | -------------------------------- |
+| `BACKUP_DIR`       | `/opt/ayunis/backups` | Local backup directory           |
+| `BACKUP_RETENTION` | `5`                   | Days to keep local backups       |
+| `BACKUP_REMOTE`    | (none)                | rsync target for off-site copies |
 
 ## Monitoring and Maintenance
 

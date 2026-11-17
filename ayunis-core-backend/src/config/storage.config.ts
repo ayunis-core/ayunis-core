@@ -6,9 +6,9 @@ export interface StorageConfig {
   minio: {
     internal: MinioConnectionConfig;
     /**
-     * Browser-reachable endpoint used only to sign direct-upload URLs. Falls
-     * back to the internal endpoint, which is what browsers reach in local
-     * development and CI.
+     * Public endpoint used only to sign URLs: direct uploads from browsers and
+     * downloads handed to MCP servers. Falls back to the internal endpoint,
+     * which is what browsers reach in local development and CI.
      */
     public: MinioConnectionConfig;
     accessKey: string;
