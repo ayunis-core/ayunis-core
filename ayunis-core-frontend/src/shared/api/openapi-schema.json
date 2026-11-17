@@ -1311,7 +1311,7 @@
     },
     "/teams/{teamId}/permitted-models/{id}": {
       "patch": {
-        "description": "Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team.",
+        "description": "Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team or may use their memory. Omitted fields keep their stored value.",
         "operationId": "TeamPermittedModelsController_updateTeamPermittedModel",
         "parameters": [
           {
@@ -16171,6 +16171,11 @@
             "description": "Whether this model enforces anonymous mode. Null if not permitted.",
             "nullable": true
           },
+          "memoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may use the user's memory. Null if not permitted.",
+            "nullable": true
+          },
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
@@ -16195,7 +16200,8 @@
           "canVision",
           "isPermitted",
           "isDefault",
-          "anonymousOnly"
+          "anonymousOnly",
+          "memoryAccess"
         ]
       },
       "ModelProviderInfoResponseDto": {
@@ -16237,16 +16243,20 @@
       "CreatePermittedModelDto": {
         "type": "object",
         "properties": {
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model should enforce anonymous mode",
+            "example": false
+          },
+          "memoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled.",
+            "example": false
+          },
           "modelId": {
             "type": "string",
             "description": "The id of the model",
             "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "anonymousOnly": {
-            "type": "boolean",
-            "description": "Whether this model should enforce anonymous mode",
-            "example": false,
-            "default": false
           }
         },
         "required": ["modelId"]
@@ -16257,10 +16267,14 @@
           "anonymousOnly": {
             "type": "boolean",
             "description": "Whether this model should enforce anonymous mode",
-            "example": true
+            "example": false
+          },
+          "memoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled.",
+            "example": false
           }
-        },
-        "required": ["anonymousOnly"]
+        }
       },
       "PermittedLanguageModelResponseDto": {
         "type": "object",
@@ -16342,6 +16356,10 @@
             "type": "boolean",
             "description": "Whether this model enforces anonymous mode"
           },
+          "memoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may use the user's memory. For a user's effective models, false when any of their grants of the model denies it."
+          },
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
@@ -16369,7 +16387,8 @@
           "contextWindowSize",
           "hasProviderFault",
           "isDefault",
-          "anonymousOnly"
+          "anonymousOnly",
+          "memoryAccess"
         ]
       },
       "PermittedEmbeddingModelResponseDto": {
@@ -16564,16 +16583,20 @@
       "CreateTeamPermittedModelDto": {
         "type": "object",
         "properties": {
+          "anonymousOnly": {
+            "type": "boolean",
+            "description": "Whether this model should enforce anonymous mode",
+            "example": false
+          },
+          "memoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled.",
+            "example": false
+          },
           "modelId": {
             "type": "string",
             "description": "The ID of the catalog model to permit for the team",
             "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "anonymousOnly": {
-            "type": "boolean",
-            "description": "Whether this model should enforce anonymous mode",
-            "example": false,
-            "default": false
           }
         },
         "required": ["modelId"]

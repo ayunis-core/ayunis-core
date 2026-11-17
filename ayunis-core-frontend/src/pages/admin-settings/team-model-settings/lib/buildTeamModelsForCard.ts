@@ -4,6 +4,7 @@ interface TeamModelGrant {
   readonly id: string;
   readonly modelId: string;
   readonly anonymousOnly: boolean;
+  readonly memoryAccess?: boolean;
   readonly isDefault?: boolean;
 }
 
@@ -23,6 +24,7 @@ export function buildTeamModelsForCard(
       isDefault: grant?.isDefault ?? false,
       permittedModelId: grant?.id ?? null,
       anonymousOnly: grant?.anonymousOnly ?? null,
+      memoryAccess: grant?.memoryAccess ?? null,
     };
   });
 }

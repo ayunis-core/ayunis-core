@@ -1,6 +1,7 @@
 import {
   useSuperAdminPermittedModelsControllerUpdatePermittedModel,
   type ModelWithConfigResponseDto,
+  type UpdatePermittedModelDto,
   getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey,
@@ -14,12 +15,12 @@ import {
   prepareOptimisticUpdate,
   rollbackOptimisticUpdate,
 } from '@/widgets/permitted-model-mutations/lib/createPermittedModelMutation';
+import { applyPolicyUpdate } from '@/widgets/permitted-model-mutations/lib/applyPolicyUpdate';
 import { invalidatePermittedModelQueries } from './invalidatePermittedModelQueries';
 
-interface UpdatePermittedModelParams {
+type UpdatePermittedModelParams = {
   permittedModelId: string;
-  anonymousOnly: boolean;
-}
+} & UpdatePermittedModelDto;
 
 const UPDATE_ERROR_MAP: Record<string, string> = {
   PERMITTED_MODEL_NOT_FOUND: 'models.updatePermittedModel.notFound',
@@ -48,7 +49,7 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
           const updater = (models: ModelWithConfigResponseDto[]) =>
             models.map((model) =>
               model.permittedModelId === id
-                ? { ...model, anonymousOnly: data.anonymousOnly }
+                ? applyPolicyUpdate(model, data)
                 : model,
             );
           return Promise.all(
@@ -80,7 +81,10 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
     updatePermittedModelMutation.mutate({
       orgId,
       id: params.permittedModelId,
-      data: { anonymousOnly: params.anonymousOnly },
+      data: {
+        anonymousOnly: params.anonymousOnly,
+        memoryAccess: params.memoryAccess,
+      },
     });
   }
 

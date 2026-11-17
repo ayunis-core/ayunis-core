@@ -217,6 +217,7 @@ export class ModelsController {
       createPermittedModelDto.modelId,
       orgId,
       createPermittedModelDto.anonymousOnly,
+      createPermittedModelDto.memoryAccess,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
@@ -277,6 +278,7 @@ export class ModelsController {
       permittedModelId: id,
       orgId,
       anonymousOnly: updatePermittedModelDto.anonymousOnly,
+      memoryAccess: updatePermittedModelDto.memoryAccess,
     });
     const model = await this.updatePermittedModelUseCase.execute(command);
     if (model instanceof PermittedLanguageModel) {

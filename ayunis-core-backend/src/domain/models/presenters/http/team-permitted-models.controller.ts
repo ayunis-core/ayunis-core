@@ -167,6 +167,7 @@ export class TeamPermittedModelsController {
       orgId,
       teamId,
       dto.anonymousOnly,
+      dto.memoryAccess,
     );
     const created = await this.createTeamPermittedModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toTeamPermittedModelDto(created);
@@ -177,7 +178,8 @@ export class TeamPermittedModelsController {
     summary: "Update a team's permitted model",
     description:
       'Updates a team-scoped permitted model, e.g. toggling whether it ' +
-      'enforces anonymous mode for members of the team.',
+      'enforces anonymous mode for members of the team or may use their ' +
+      'memory. Omitted fields keep their stored value.',
   })
   @ApiResponse({
     status: 200,
@@ -196,15 +198,14 @@ export class TeamPermittedModelsController {
         teamId,
         permittedModelId: id,
         anonymousOnly: dto.anonymousOnly,
+        memoryAccess: dto.memoryAccess,
       },
       'updateTeamPermittedModel',
     );
-    const command = new UpdateTeamPermittedModelCommand(
-      id,
-      orgId,
-      teamId,
-      dto.anonymousOnly,
-    );
+    const command = new UpdateTeamPermittedModelCommand(id, orgId, teamId, {
+      anonymousOnly: dto.anonymousOnly,
+      memoryAccess: dto.memoryAccess,
+    });
     const updated = await this.updateTeamPermittedModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toLanguageModelDto(updated);
   }

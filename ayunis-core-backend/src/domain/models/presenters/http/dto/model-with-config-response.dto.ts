@@ -98,6 +98,14 @@ export class ModelWithConfigResponseDto {
   })
   anonymousOnly?: boolean;
 
+  @ApiProperty({
+    type: 'boolean',
+    description:
+      "Whether runs on this model may use the user's memory. Null if not permitted.",
+    nullable: true,
+  })
+  memoryAccess?: boolean;
+
   @ApiPropertyOptional({
     enum: ModelTier,
     description:

@@ -7,7 +7,7 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { UnexpectedModelError } from 'src/domain/models/application/models.errors';
 import { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import { EffectiveModelScopeResolverService } from 'src/domain/models/application/services/effective-model-scope-resolver.service';
-import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import type { EffectiveLanguageModelsResult } from './effective-language-models-result';
 import { GetEffectiveLanguageModelsQuery } from './get-effective-language-models.query';
 
@@ -69,10 +69,13 @@ export class GetEffectiveLanguageModelsUseCase {
     return models.filter((model) => !excludedIds.includes(model.id));
   }
 
+  // One permit per catalog model: the anonymous-only grant if any, and no
+  // memory access unless every grant allows it.
   private mergeTeamGrants(
     models: PermittedLanguageModel[],
   ): PermittedLanguageModel[] {
     const byCatalogModelId = new Map<UUID, PermittedLanguageModel>();
+    const deniesMemory = new Set<UUID>();
     const grantsByPolicy = [...models].sort((a, b) =>
       this.compareGrantPriority(a, b),
     );
@@ -80,8 +83,13 @@ export class GetEffectiveLanguageModelsUseCase {
       if (!byCatalogModelId.has(grant.model.id)) {
         byCatalogModelId.set(grant.model.id, grant);
       }
+      if (!grant.memoryAccess) deniesMemory.add(grant.model.id);
     }
-    return [...byCatalogModelId.values()];
+    return [...byCatalogModelId.values()].map((grant) =>
+      grant.memoryAccess && deniesMemory.has(grant.model.id)
+        ? withoutMemoryAccess(grant)
+        : grant,
+    );
   }
 
   private compareGrantPriority(
@@ -93,4 +101,10 @@ export class GetEffectiveLanguageModelsUseCase {
     if (a.anonymousOnly !== b.anonymousOnly) return a.anonymousOnly ? -1 : 1;
     return a.id.localeCompare(b.id);
   }
+}
+
+function withoutMemoryAccess(
+  grant: PermittedLanguageModel,
+): PermittedLanguageModel {
+  return new PermittedLanguageModel({ ...grant, memoryAccess: false });
 }

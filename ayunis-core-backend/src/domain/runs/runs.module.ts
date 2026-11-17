@@ -37,6 +37,8 @@ import { MessageCleanupService } from './application/services/message-cleanup.se
 import { ThreadRunLock } from './application/services/thread-run-lock.service';
 import { RunTelemetryService } from './application/services/run-telemetry.service';
 import { EffectiveRunModelResolverService } from './application/services/effective-run-model-resolver.service';
+import { PersonalContextAccessService } from 'src/domain/runs/application/services/personal-context-access.service';
+import { RunModelAdmissionService } from 'src/domain/runs/application/services/run-model-admission.service';
 import { UnmaskedTermsService } from './application/services/unmasked-terms.service';
 import { AnonymizationCapability } from './application/run-capabilities/capabilities/anonymization.capability';
 import { ArtifactsCapability } from './application/run-capabilities/capabilities/artifacts.capability';
@@ -158,6 +160,8 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     CancelRunsOnThreadDeletionListener,
     RunTelemetryService,
     EffectiveRunModelResolverService,
+    PersonalContextAccessService,
+    RunModelAdmissionService,
     UnmaskedTermsService,
     RunProfileRegistry,
     RunProfileAssembler,

@@ -1,7 +1,5 @@
 import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { FeatureFlag } from 'src/config/features.config';
 import { FindUserMemoryUseCase } from 'src/domain/memory/application/use-cases/find-user-memory/find-user-memory.use-case';
 import type { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 import type { Message } from 'src/domain/messages/domain/message.entity';
@@ -25,16 +23,14 @@ const MEMORY_NUDGE_TEXT = `Memory check-in: compare what you remember about this
 /**
  * What the assistant remembers about the user: `get_memory`/`set_memory`, the
  * `<memory>` block at the end of the custom instructions, and a reminder on
- * every fifth user message. Anonymous runs get none of it: anonymization does
- * not cover the system prompt, and `set_memory` would store `{{pii:…}}`
- * placeholders that mean nothing outside this thread.
+ * every fifth user message. Only runs whose personal context allows memory
+ * (`PersonalContextAccessService`) get any of it.
  */
 @Injectable()
 export class MemoryCapability implements RunCapability {
   private readonly logger = new Logger(MemoryCapability.name);
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly findUserMemoryUseCase: FindUserMemoryUseCase,
     private readonly assembleToolUseCase: AssembleToolUseCase,
   ) {}
@@ -42,12 +38,7 @@ export class MemoryCapability implements RunCapability {
   async contribute(
     context: RunCapabilityContext,
   ): Promise<CapabilityContribution> {
-    if (
-      context.isAnonymous ||
-      !this.configService.get<boolean>(`features.${FeatureFlag.Memory}`)
-    ) {
-      return {};
-    }
+    if (!context.personalContext.memory) return {};
     const toolsAvailable = context.model.canUseTools;
     const entries = await this.loadMemory();
     const section = buildMemorySection({ entries, toolsAvailable });

@@ -22,6 +22,7 @@ const candidate = (
   isPermitted,
   isDefault: isPermitted,
   anonymousOnly: isPermitted ? false : null,
+  memoryAccess: isPermitted ? true : null,
 });
 
 const grant = (
@@ -43,6 +44,7 @@ const grant = (
   hasProviderFault: false,
   isDefault: false,
   anonymousOnly: false,
+  memoryAccess: false,
   ...overrides,
 });
 
@@ -66,7 +68,13 @@ describe(buildTeamModelsForCard.name, () => {
   it('maps only explicit grants with team-owned metadata', () => {
     const result = buildTeamModelsForCard(
       [candidate('org-model', true), candidate('team-model', false)],
-      [grant('team-model', { anonymousOnly: true, isDefault: true })],
+      [
+        grant('team-model', {
+          anonymousOnly: true,
+          memoryAccess: true,
+          isDefault: true,
+        }),
+      ],
     );
 
     expect(result[0]).toMatchObject({
@@ -75,6 +83,7 @@ describe(buildTeamModelsForCard.name, () => {
       isDefault: false,
       permittedModelId: null,
       anonymousOnly: null,
+      memoryAccess: null,
     });
     expect(result[1]).toMatchObject({
       modelId: 'team-model',
@@ -82,6 +91,7 @@ describe(buildTeamModelsForCard.name, () => {
       isDefault: true,
       permittedModelId: 'team-permit-team-model',
       anonymousOnly: true,
+      memoryAccess: true,
     });
   });
 });

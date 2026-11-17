@@ -1,11 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean } from 'class-validator';
+import { PermittedModelPolicyDto } from './permitted-model-policy.dto';
 
-export class UpdatePermittedModelDto {
-  @ApiProperty({
-    description: 'Whether this model should enforce anonymous mode',
-    example: true,
-  })
-  @IsBoolean()
-  anonymousOnly: boolean;
-}
+export class UpdatePermittedModelDto extends PermittedModelPolicyDto {}

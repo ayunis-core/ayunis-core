@@ -58,6 +58,7 @@ export class CreateTeamPermittedModelUseCase {
         model,
         orgId: command.orgId,
         anonymousOnly: command.anonymousOnly,
+        memoryAccess: command.memoryAccess,
         scope: PermittedModelScope.TEAM,
         scopeId: command.teamId,
       }),

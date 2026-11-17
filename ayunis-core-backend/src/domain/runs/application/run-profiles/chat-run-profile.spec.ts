@@ -108,11 +108,7 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
       { get: () => true } as never,
     ),
     new WorkspaceInstructionsCapability(),
-    new MemoryCapability(
-      { get: () => memory !== undefined } as never,
-      resolved(memory) as never,
-      assembleTool,
-    ),
+    new MemoryCapability(resolved(memory) as never, assembleTool),
     new McpCapability(mcpTools),
   );
 }
@@ -149,6 +145,7 @@ function assembleChat(
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     isAnonymous: options.isAnonymous ?? false,
+    personalContext: { memory: options.memory !== undefined },
     activatedSkillName: options.activatedSkillName,
   });
 }

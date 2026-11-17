@@ -4,15 +4,16 @@ import {
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
   useTeamPermittedModelsControllerUpdateTeamPermittedModel,
   type PermittedLanguageModelResponseDto,
+  type UpdatePermittedModelDto,
 } from '@/shared/api';
+import { applyPolicyUpdate } from '@/widgets/permitted-model-mutations/lib/applyPolicyUpdate';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
 
-interface UpdateTeamPermittedModelParams {
+type UpdateTeamPermittedModelParams = {
   permittedModelId: string;
-  anonymousOnly: boolean;
-}
+} & UpdatePermittedModelDto;
 
 export function useUpdateTeamPermittedModel(teamId: string) {
   const { t } = useTranslation('admin-settings-teams');
@@ -32,9 +33,7 @@ export function useUpdateTeamPermittedModel(teamId: string) {
           listQueryKey,
           (models) =>
             models?.map((model) =>
-              model.id === id
-                ? { ...model, anonymousOnly: data.anonymousOnly }
-                : model,
+              model.id === id ? applyPolicyUpdate(model, data) : model,
             ),
         );
         return { previous };
@@ -64,7 +63,10 @@ export function useUpdateTeamPermittedModel(teamId: string) {
     mutation.mutate({
       teamId,
       id: params.permittedModelId,
-      data: { anonymousOnly: params.anonymousOnly },
+      data: {
+        anonymousOnly: params.anonymousOnly,
+        memoryAccess: params.memoryAccess,
+      },
     });
   }
 

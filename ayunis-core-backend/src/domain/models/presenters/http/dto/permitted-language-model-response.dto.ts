@@ -65,6 +65,13 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
   anonymousOnly: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    description:
+      "Whether runs on this model may use the user's memory. For a user's effective models, false when any of their grants of the model denies it.",
+  })
+  memoryAccess: boolean;
+
+  @ApiProperty({
     enum: ModelTier,
     required: false,
     nullable: true,

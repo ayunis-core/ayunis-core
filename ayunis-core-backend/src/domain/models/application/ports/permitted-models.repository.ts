@@ -18,6 +18,12 @@ export type FindOneParams =
       orgId?: UUID;
     };
 
+/** Omitted fields keep their stored value. */
+export interface PermittedModelPolicyUpdate {
+  anonymousOnly?: boolean;
+  memoryAccess?: boolean;
+}
+
 export abstract class PermittedModelsRepository {
   abstract findAll(
     orgId: UUID,
@@ -58,7 +64,11 @@ export abstract class PermittedModelsRepository {
     permittedModel: PermittedModel,
   ): Promise<PermittedModel>;
   abstract delete(params: { id: UUID; orgId: UUID }): Promise<void>;
-  abstract update(permittedModel: PermittedModel): Promise<PermittedModel>;
+  abstract update(params: {
+    id: UUID;
+    orgId: UUID;
+    policy: PermittedModelPolicyUpdate;
+  }): Promise<PermittedModel>;
   abstract findAllByCatalogModelId(
     catalogModelId: UUID,
   ): Promise<PermittedModel[]>;

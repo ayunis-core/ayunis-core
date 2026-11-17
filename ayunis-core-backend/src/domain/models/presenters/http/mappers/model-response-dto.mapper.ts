@@ -40,6 +40,7 @@ export class ModelResponseDtoMapper {
       hasProviderFault: permittedModel.model.hasProviderFault,
       isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,
+      memoryAccess: permittedModel.memoryAccess,
       tier: permittedModel.model.tier,
       description: permittedModel.model.description,
       // Note: Cost fields (inputTokenCost, outputTokenCost) are intentionally

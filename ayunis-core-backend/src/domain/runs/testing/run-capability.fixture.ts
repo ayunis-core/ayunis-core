@@ -43,6 +43,7 @@ export function aCapabilityContext(
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     isAnonymous: false,
+    personalContext: { memory: false },
     now: new Date('2026-11-06T10:23:45.000Z'),
     threadSources: [],
     knowledgeBases: () => Promise.resolve([]),

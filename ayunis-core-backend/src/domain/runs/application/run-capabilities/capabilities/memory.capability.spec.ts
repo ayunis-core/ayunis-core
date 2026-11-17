@@ -27,16 +27,17 @@ import {
 
 const threadId = randomUUID();
 
-function capability(
-  options: { enabled?: boolean; load?: () => Promise<MemoryEntry[]> } = {},
-) {
-  const { enabled = true, load = () => Promise.resolve([]) } = options;
+function capability(options: { load?: () => Promise<MemoryEntry[]> } = {}) {
+  const { load = () => Promise.resolve([]) } = options;
   return new MemoryCapability(
-    { get: () => enabled } as never,
     { execute: jest.fn(load) } as never,
     createAssembleToolUseCase(),
   );
 }
+
+const memoryContext = (
+  overrides: Parameters<typeof aCapabilityContext>[0] = {},
+) => aCapabilityContext({ personalContext: { memory: true }, ...overrides });
 
 function entry(key: string, content: string, description?: string) {
   return new MemoryEntry({ userId: TEST_USER_ID, key, content, description });
@@ -73,7 +74,7 @@ describe('MemoryCapability', () => {
             'Wie Ratsberichte aufgebaut sein sollen',
           ),
         ]),
-    }).contribute(aCapabilityContext());
+    }).contribute(memoryContext());
 
     expect(toolNames(contribution)).toEqual([
       ToolType.GET_MEMORY,
@@ -93,22 +94,11 @@ describe('MemoryCapability', () => {
     expect(contribution.hooks).toHaveLength(1);
   });
 
-  it('contributes nothing while the memory flag is off', async () => {
-    const load = jest.fn(() => Promise.resolve([entry('personal', 'Bauamt')]));
-
-    const contribution = await capability({ enabled: false, load }).contribute(
-      aCapabilityContext(),
-    );
-
-    expect(contribution).toEqual({});
-    expect(load).not.toHaveBeenCalled();
-  });
-
-  it('keeps memory out of anonymous runs, whose prompt is not anonymized', async () => {
+  it('contributes nothing when the run may not use memory', async () => {
     const load = jest.fn(() => Promise.resolve([entry('personal', 'Bauamt')]));
 
     const contribution = await capability({ load }).contribute(
-      aCapabilityContext({ isAnonymous: true }),
+      aCapabilityContext({ personalContext: { memory: false } }),
     );
 
     expect(contribution).toEqual({});
@@ -118,7 +108,7 @@ describe('MemoryCapability', () => {
   it('still runs, without stored memory, when memory cannot be read', async () => {
     const contribution = await capability({
       load: () => Promise.reject(new Error('connection reset')),
-    }).contribute(aCapabilityContext());
+    }).contribute(memoryContext());
 
     expect(toolNames(contribution)).toEqual([
       ToolType.GET_MEMORY,
@@ -132,7 +122,7 @@ describe('MemoryCapability', () => {
   it('shows the reserved keys without tools, rules or reminder when the model cannot use tools', async () => {
     const contribution = await capability({
       load: () => Promise.resolve([entry('personal', 'Bauamt')]),
-    }).contribute(aCapabilityContext({ canUseTools: false }));
+    }).contribute(memoryContext({ canUseTools: false }));
 
     expect(toolNames(contribution)).toEqual([]);
     expect(contribution.hooks ?? []).toEqual([]);
