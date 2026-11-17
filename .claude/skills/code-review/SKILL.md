@@ -42,18 +42,20 @@ If there are no changes, tell the user and stop.
 In parallel, collect:
 
 - The list of changed files and their directories
-- Any `CLAUDE.md` files in the repo root and in affected directories
-- A short summary of what the changes do (read the diff)
+- Applicable project instructions such as `AGENTS.md` and `CLAUDE.md` from the repository root and affected directories
+- A short summary of what the changes claim to do, using the user's request and available ticket, commit, or PR context; confirm it against the diff
+- An impact map of changed contracts and behavior: direct callers and consumers, shared routes or services, persisted state, configuration, background work, and existing user workflows that plausibly depend on them. Mark irrelevant categories as non-participating instead of expanding the review speculatively
+- The tests or other validation evidence that cover the changed behavior and the affected existing workflows
 
 If the `persistence-query-review` skill is available and the diff changes repositories, finders, QueryBuilder code, or database calls in loops, load it. Trace the affected call paths and include the resulting SQL statements and round-trip count in the review context.
 
 ### 3. Launch review agents
 
-Launch **5 parallel agents**, each with a different review lens. Provide each agent with the diff, changed file list, and relevant CLAUDE.md content.
+Launch **5 parallel agents**, each with a different review lens. Provide each agent with the diff, changed file list, applicable project instructions, change summary, and impact map.
 
-#### Agent 1 — CLAUDE.md & Convention Compliance
+#### Agent 1 — Project Instructions & Convention Compliance
 
-Check whether the changes follow project conventions defined in CLAUDE.md files:
+Check whether the changes follow the applicable project instructions:
 
 - Naming patterns, coding style, comment style
 - Architecture boundaries and module rules
@@ -68,13 +70,18 @@ Shallow scan for obvious bugs in the changed lines only:
 - Broken error handling, silent failures
 - Focus on real bugs — skip anything a linter or type checker would catch
 
-#### Agent 3 — Logic & Completeness
+#### Agent 3 — Logic, Completeness & Regression Surface
 
-Read the changed files more broadly (not just the diff) to check:
+Read the changed files, their direct callers and consumers, and the affected existing workflows to check:
 
 - Does the change do what it claims? Any missing cases?
 - Are there partial implementations (TODO left behind, half-wired features)?
 - Do new code paths have matching cleanup, rollback, or error handling?
+- Does a changed contract require updates elsewhere, including validation, persistence, caches, generated clients, background work, or user-facing consumers?
+- Do existing features share the changed route, service, hook, state, configuration, or persisted data? If so, verify their expected behavior remains intact or changes consistently with the stated intent
+- Do existing tests or other evidence still prove the affected workflows, or has the change created a credible regression path without coverage?
+
+Follow only dependencies that can plausibly change an externally observable result. Do not turn the review into a general audit of unrelated pre-existing code.
 
 #### Agent 4 — DRY & Simplicity
 
@@ -117,6 +124,9 @@ Group the surviving findings by severity:
 
 Reviewed N files, M lines changed.
 
+### Impact checked
+- `<changed contract>` → `<callers, consumers, or existing workflows>` — `<result and evidence>`
+
 ### Critical (must fix)
 - [Bug] Missing null check in `src/service.ts:42` — `user.org` can be undefined
   when called from the public endpoint (confidence: 92)
@@ -140,8 +150,11 @@ If no issues survive the confidence filter, say so clearly:
 ## Code Review — Local
 
 Reviewed N files, M lines changed.
+Impact checked: <one-line summary of affected callers, consumers, and existing workflows>.
 No significant issues found. Good to submit.
 ```
+
+Do not claim an affected workflow was checked without naming the code trace, existing test, or validation evidence. Report any plausible but unverified regression path as a finding.
 
 ### 6. Offer to fix
 
@@ -154,8 +167,8 @@ If the user says yes, fix the issues and re-run only the affected review agents 
 ## Guidelines
 
 - **Local only** — never post to GitHub, never read PR comments, never interact with remote
-- **Changes only** — review what the user changed, not pre-existing code (unless needed for context)
+- **Change-caused issues only** — inspect surrounding code, callers, consumers, and existing workflows as needed, but report only issues introduced or exposed by the change; do not report unrelated pre-existing problems
 - **Real issues only** — the confidence scoring exists to kill false positives; be aggressive about filtering
 - **Actionable** — every finding must include the file, line, and what's wrong; no vague warnings
 - **Fast** — use parallel agents; the user is waiting to submit
-- **Respect the codebase** — always check CLAUDE.md conventions before calling something an issue
+- **Respect the codebase** — always check applicable project instructions before calling something an issue
