@@ -1,6 +1,6 @@
 {
   "name": "@ayunis-core/connect-sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Core webhook contracts and internal API client for Ayunis Connect",
   "type": "module",
   "engines": {
@@ -81,6 +81,6 @@
     "registry": "https://npm.pkg.github.com"
   },
   "sdkCompatibility": {
-    "baselineVersion": "0.2.0-preview.4.1"
+    "baselineVersion": "0.3.0"
   }
 }

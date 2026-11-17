@@ -502,6 +502,27 @@ describe("parseWebhookEvent — happy paths (one per event type)", () => {
     }
   });
 
+  it("parses usage.collected with each mode, including null for a user-picked model", () => {
+    for (const mode of ["auto", "max", null] as const) {
+      const result = parseWebhookEvent(
+        envelope(WEBHOOK_EVENT_TYPE.USAGE_COLLECTED, {
+          ...baseUsageCollected,
+          mode,
+        }),
+      );
+
+      expect(result.ok).toBe(true);
+      if (
+        result.ok &&
+        result.event.eventType === WEBHOOK_EVENT_TYPE.USAGE_COLLECTED
+      ) {
+        expect(result.event.data.mode).toBe(mode);
+      } else {
+        throw new Error("expected usage.collected variant");
+      }
+    }
+  });
+
   it("parses a monthly credit snapshot envelope", () => {
     const result = parseWebhookEvent(
       envelope(WEBHOOK_EVENT_TYPE.USAGE_MONTHLY_CREDITS_SNAPSHOT, {
@@ -633,6 +654,17 @@ describe("parseWebhookEvent — rejection paths", () => {
       envelope(WEBHOOK_EVENT_TYPE.USAGE_COLLECTED, {
         ...baseUsageCollected,
         inputTokens: "lots",
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects usage.collected with an unknown mode", () => {
+    const result = parseWebhookEvent(
+      envelope(WEBHOOK_EVENT_TYPE.USAGE_COLLECTED, {
+        ...baseUsageCollected,
+        mode: "manual",
       }),
     );
 

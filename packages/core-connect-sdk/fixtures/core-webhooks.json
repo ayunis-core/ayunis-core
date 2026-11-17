@@ -225,6 +225,7 @@
       "inputTokens": 10,
       "outputTokens": 5,
       "totalTokens": 15,
+      "mode": "auto",
       "requestId": "00000000-0000-4000-8000-000000000004",
       "createdAt": "2026-10-29T12:00:00.000Z",
       "userEmail": "admin@municipality.example",

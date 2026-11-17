@@ -146,6 +146,10 @@ const usageCollectedDataSchema = z
     totalTokens: z.number(),
     cost: z.number().optional(),
     creditsConsumed: z.number().optional(),
+    // Mode that chose the run's model: `null` when the user picked the model,
+    // omitted when no chat model was selected (image generation, skill-text
+    // improvement, API keys) and by Core versions that predate the field.
+    mode: z.enum(["auto", "max"]).nullable().optional(),
     requestId: z.uuid(),
     createdAt: isoDateTime,
     // Enrichment fields added for AYC-88. Ayunis Core sets them via
