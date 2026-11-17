@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { mockTextResponse, mockToolCallResponse } from './mock-chunk-responses';
 import type {
   ProviderChunk,
   ProviderRequest,
@@ -8,7 +8,6 @@ import type {
 const MCP_ECHO_PROMPT = 'E2E call MCP echo: ';
 const MCP_ECHO_TOOL_PREFIX = 'mcp__tool__echo__';
 const CALL_ID_PREFIX = 'mock-mcp-echo-';
-const MOCK_USAGE = { inputTokens: 0, outputTokens: 0 } as const;
 
 /**
  * Calls the offered `echo` tool of the E2E MCP server with the text after the
@@ -23,13 +22,13 @@ export function mockMcpToolResponse(
   if (!userText.startsWith(MCP_ECHO_PROMPT)) return null;
   const result = echoResultSinceLastUserMessage(request);
   if (result) {
-    return textResponse(`mcp-tool-result::${resultText(result.result)}`);
+    return mockTextResponse(`mcp-tool-result::${resultText(result.result)}`);
   }
   const tool = request.tools.find((offered) =>
     offered.name.startsWith(MCP_ECHO_TOOL_PREFIX),
   );
   if (!tool) return null;
-  return toolCallResponse(tool.name, {
+  return mockToolCallResponse(CALL_ID_PREFIX, tool.name, {
     text: userText.slice(MCP_ECHO_PROMPT.length),
   });
 }
@@ -65,28 +64,4 @@ function resultText(result: string): string {
     // Not JSON: use the result as it is.
   }
   return result;
-}
-
-async function* toolCallResponse(
-  name: string,
-  args: Record<string, unknown>,
-): AsyncIterable<ProviderChunk> {
-  await new Promise((resolve) => setTimeout(resolve, 40));
-  yield {
-    toolCallDeltas: [
-      {
-        index: 0,
-        id: `${CALL_ID_PREFIX}${randomUUID()}`,
-        name,
-        argumentsDelta: JSON.stringify(args),
-      },
-    ],
-    finishReason: 'tool_calls',
-    usage: MOCK_USAGE,
-  };
-}
-
-async function* textResponse(text: string): AsyncIterable<ProviderChunk> {
-  await new Promise((resolve) => setTimeout(resolve, 40));
-  yield { textDelta: text, finishReason: 'stop', usage: MOCK_USAGE };
 }
