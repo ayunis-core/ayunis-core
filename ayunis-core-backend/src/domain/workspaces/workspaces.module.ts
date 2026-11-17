@@ -22,6 +22,14 @@ import { UpdateWorkspaceInstructionUseCase } from './application/use-cases/updat
 import { UpdateWorkspaceUseCase } from './application/use-cases/update-workspace/update-workspace.use-case';
 import { GetWorkspaceRolePermissionsUseCase } from './application/use-cases/get-workspace-role-permissions/get-workspace-role-permissions.use-case';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { UsersModule } from 'src/iam/users/users.module';
+import { WorkspaceMemberProfilesService } from './application/services/workspace-member-profiles.service';
+import { ListWorkspaceMemberCandidatesUseCase } from './application/use-cases/list-workspace-member-candidates/list-workspace-member-candidates.use-case';
+import { ListWorkspaceMembersUseCase } from './application/use-cases/list-workspace-members/list-workspace-members.use-case';
+import { AddWorkspaceMembersUseCase } from './application/use-cases/add-workspace-members/add-workspace-members.use-case';
+import { UpdateWorkspaceMemberRoleUseCase } from './application/use-cases/update-workspace-member-role/update-workspace-member-role.use-case';
+import { WorkspaceMembersController } from './presenters/http/workspace-members.controller';
+import { WorkspaceMemberDtoMapper } from './presenters/http/mappers/workspace-member-dto.mapper';
 import { LocalWorkspacesRepositoryModule } from './infrastructure/persistence/local/local-workspaces-repository.module';
 import { LocalWorkspacesRepository } from './infrastructure/persistence/local/local-workspaces.repository';
 import { LocalWorkspaceMembersRepository } from './infrastructure/persistence/local/local-workspace-members.repository';
@@ -34,12 +42,17 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
   imports: [
     LocalWorkspacesRepositoryModule,
     PermissionsModule,
+    UsersModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
     forwardRef(() => ThreadsModule),
   ],
-  controllers: [WorkspacesController, WorkspaceContextController],
+  controllers: [
+    WorkspacesController,
+    WorkspaceMembersController,
+    WorkspaceContextController,
+  ],
   providers: [
     {
       provide: WorkspacesRepository,
@@ -57,15 +70,21 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     DeleteWorkspaceUseCase,
     UpdateWorkspaceInstructionUseCase,
     GetWorkspaceRolePermissionsUseCase,
+    ListWorkspaceMembersUseCase,
+    ListWorkspaceMemberCandidatesUseCase,
+    AddWorkspaceMembersUseCase,
+    UpdateWorkspaceMemberRoleUseCase,
     GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
     WorkspaceAccessService,
     WorkspaceDeletionService,
+    WorkspaceMemberProfilesService,
     WorkspacesUserDeletionRequestedListener,
     AssertWorkspaceReadAccessUseCase,
     AssertWorkspaceWriteAccessUseCase,
     AssertWorkspaceExecutionAccessUseCase,
     WorkspaceDtoMapper,
+    WorkspaceMemberDtoMapper,
     WorkspaceContextDtoMapper,
   ],
   exports: [

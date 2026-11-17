@@ -15,6 +15,7 @@ interface SkillImproveButtonProps {
   name?: string;
   trigger: string;
   instructions: string;
+  workspaceId?: string;
   onImproved: (text: string) => void;
   onPendingChange?: (isPending: boolean) => void;
 }
@@ -24,6 +25,7 @@ export function SkillImproveButton({
   name,
   trigger,
   instructions,
+  workspaceId,
   onImproved,
   onPendingChange,
 }: Readonly<SkillImproveButtonProps>) {
@@ -46,6 +48,7 @@ export function SkillImproveButton({
         name,
         trigger: field === 'trigger' ? sourceText : trigger,
         instructions: field === 'instructions' ? sourceText : instructions,
+        workspaceId,
       },
       {
         onSuccess: (text) => {

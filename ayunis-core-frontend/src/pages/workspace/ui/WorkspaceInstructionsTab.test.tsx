@@ -35,7 +35,7 @@ describe('WorkspaceInstructionsTab', () => {
   });
 
   it('keeps the tour target mounted while the context loads', () => {
-    render(<WorkspaceInstructionsTab workspaceId="workspace-1" />);
+    render(<WorkspaceInstructionsTab workspaceId="workspace-1" canManage />);
 
     expect(
       document.querySelector('[data-tour="workspace-instruction"]'),
@@ -50,7 +50,7 @@ describe('WorkspaceInstructionsTab', () => {
     mocks.isLoading = false;
     mocks.context = { instruction: 'Immer sachlich bleiben.' };
 
-    render(<WorkspaceInstructionsTab workspaceId="workspace-1" />);
+    render(<WorkspaceInstructionsTab workspaceId="workspace-1" canManage />);
 
     expect(screen.getByTestId('workspace-instruction-input')).toHaveProperty(
       'disabled',
@@ -62,7 +62,7 @@ describe('WorkspaceInstructionsTab', () => {
     mocks.isLoading = false;
     mocks.error = new Error('nope');
 
-    render(<WorkspaceInstructionsTab workspaceId="workspace-1" />);
+    render(<WorkspaceInstructionsTab workspaceId="workspace-1" canManage />);
 
     expect(
       document.querySelector('[data-tour="workspace-instruction"]'),

@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
+import type { UUID } from 'crypto';
 import { SkillTextField } from 'src/domain/skills/application/use-cases/improve-skill-text/improve-skill-text.command';
 
 const MAX_FIELD_LENGTH = 10000;
@@ -42,6 +50,16 @@ export class ImproveSkillTextDto {
   @IsString()
   @MaxLength(MAX_FIELD_LENGTH)
   instructions: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'uuid',
+    description:
+      'The workspace whose skill is being edited; the rewrite then needs manage_workspace there instead of manage_skills',
+  })
+  @IsOptional()
+  @IsUUID()
+  workspaceId?: UUID;
 }
 
 export class ImprovedSkillTextResponseDto {
