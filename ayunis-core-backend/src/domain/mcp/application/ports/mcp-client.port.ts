@@ -33,6 +33,7 @@ export interface McpTool {
     properties?: Record<string, unknown>;
     required?: string[];
   };
+  _meta?: Record<string, unknown>;
 }
 
 /**

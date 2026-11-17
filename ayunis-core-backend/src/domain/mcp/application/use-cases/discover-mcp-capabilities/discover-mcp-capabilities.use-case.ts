@@ -36,6 +36,7 @@ import { UUID } from 'crypto';
  * Result interface containing discovered capabilities
  */
 const CAPABILITY_DISCOVERY_OPTIONS: McpRequestOptions = { timeout: 10000 };
+const OPENAI_FILE_PARAMS_META_KEY = 'openai/fileParams';
 
 export interface CapabilitiesResult {
   tools: McpTool[];
@@ -154,7 +155,7 @@ export class DiscoverMcpCapabilitiesUseCase {
     const integrationId = integration.id;
 
     const mcpTools = capabilities.tools.map((tool) =>
-      this.mapToMcpTool(tool, integrationId),
+      this.mapToMcpTool(tool, integration),
     );
     const mcpResources = capabilities.resources.map((resource) =>
       this.mapToMcpResource(resource, integrationId),
@@ -189,13 +190,43 @@ export class DiscoverMcpCapabilitiesUseCase {
   /**
    * Maps MCP SDK tool to domain entity
    */
-  private mapToMcpTool(sdkTool: McpToolDto, integrationId: UUID): McpTool {
+  private mapToMcpTool(
+    sdkTool: McpToolDto,
+    integration: McpIntegration,
+  ): McpTool {
     return new McpTool(
       sdkTool.name,
       sdkTool.description,
       sdkTool.inputSchema,
-      integrationId,
+      integration.id,
+      this.readFileParams(sdkTool, integration),
     );
+  }
+
+  private readFileParams(
+    sdkTool: McpToolDto,
+    integration: McpIntegration,
+  ): string[] {
+    const declaration = sdkTool._meta?.[OPENAI_FILE_PARAMS_META_KEY];
+    if (declaration === undefined) {
+      return [];
+    }
+    if (
+      Array.isArray(declaration) &&
+      declaration.every((field): field is string => typeof field === 'string')
+    ) {
+      return [...declaration];
+    }
+
+    this.logger.warn(
+      {
+        integrationId: integration.id,
+        integrationName: integration.name,
+        toolName: sdkTool.name,
+      },
+      'mcpToolFileParamsMalformed',
+    );
+    return [];
   }
 
   /**
