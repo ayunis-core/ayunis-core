@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.76.0](https://github.com/ayunis-core/ayunis-core/compare/v2.75.0...v2.76.0) (2026-11-17)
+
+
+### Features
+
+* **chat:** add copy button beneath submitted chat messages (AYC-1717) ([#2272](https://github.com/ayunis-core/ayunis-core/issues/2272)) ([7661f5d](https://github.com/ayunis-core/ayunis-core/commit/7661f5dd3535df57139a616de6d711dddec9980c))
+* **chat:** support HTML file uploads (AYC-1816) ([#2374](https://github.com/ayunis-core/ayunis-core/issues/2374)) ([f68037c](https://github.com/ayunis-core/ayunis-core/commit/f68037cf63ac78773564de0b0577c687eca39fca))
+* **mcp:** hand chat files to mcp tools that declare file params (AYC-1882) ([#2379](https://github.com/ayunis-core/ayunis-core/issues/2379)) ([6b50738](https://github.com/ayunis-core/ayunis-core/commit/6b5073815c506cbf70a584cace2a740e3cb460ff))
+* **outlook:** compose and answer emails with ayunis in a task pane (AYC-1591) ([#2354](https://github.com/ayunis-core/ayunis-core/issues/2354)) ([2518d6b](https://github.com/ayunis-core/ayunis-core/commit/2518d6be2a6a66eb2b699f2ffbb65f0e8390d0b5))
+* **webhooks:** send the chat mode with usage webhooks (AYC-1727) ([#2294](https://github.com/ayunis-core/ayunis-core/issues/2294)) ([3fe81ce](https://github.com/ayunis-core/ayunis-core/commit/3fe81cea80a67c8634c493247d14f5b49ff8b1f9))
+* **workspaces:** work with colleagues in shared workspaces (AYC-1701) ([#2385](https://github.com/ayunis-core/ayunis-core/issues/2385)) ([368a2e1](https://github.com/ayunis-core/ayunis-core/commit/368a2e181b66f318d7d04c3be71a798dc2a9f3a0))
+
+
+### Bug Fixes
+
+* **auth:** coalesce concurrent refreshes (AYC-1858) ([#2366](https://github.com/ayunis-core/ayunis-core/issues/2366)) ([f03ed22](https://github.com/ayunis-core/ayunis-core/commit/f03ed22c044b3242fe3947735843498738dd872d))
+* **inference:** validate Claude tool calls (AYC-1863) ([#2368](https://github.com/ayunis-core/ayunis-core/issues/2368)) ([5ebe5a3](https://github.com/ayunis-core/ayunis-core/commit/5ebe5a3fbfab3ad8c354adee3318c7be8be76890))
+* **invites:** allow valid imported invitations (AYC-1497) ([#2372](https://github.com/ayunis-core/ayunis-core/issues/2372)) ([da53622](https://github.com/ayunis-core/ayunis-core/commit/da536229a63af0322b74328e9792b8f9449dbef2))
+
+
+### Code Refactoring
+
+* **rag:** use native typeorm vector columns (AYC-1827) ([#2356](https://github.com/ayunis-core/ayunis-core/issues/2356)) ([7a75b47](https://github.com/ayunis-core/ayunis-core/commit/7a75b47b027462f5d58db72b679a497c5f549724))
+
+
+### Documentation
+
+* **skills:** sync code-review completeness (AYC-000) ([#2377](https://github.com/ayunis-core/ayunis-core/issues/2377)) ([c79e24e](https://github.com/ayunis-core/ayunis-core/commit/c79e24ef811842959f2d21b0070f0df30363d0f4))
+
 ## [2.75.0](https://github.com/ayunis-core/ayunis-core/compare/v2.74.2...v2.75.0) (2026-11-16)
 
 
