@@ -72,6 +72,7 @@ describe('UpdateLanguageModelUseCase', () => {
     return new LanguageModel({
       id,
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'GPT-4',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -95,6 +96,7 @@ describe('UpdateLanguageModelUseCase', () => {
     return new UpdateLanguageModelCommand({
       id,
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'GPT-4',
       provider: ModelProvider.OPENAI,
       canStream: true,

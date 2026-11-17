@@ -17,6 +17,11 @@ function assertValidContextWindowSize(contextWindowSize: number): void {
 }
 
 export class LanguageModel extends Model {
+  /**
+   * Stable public name for the OpenAI-compatible API. Unlike `name`, it does
+   * not change when the provider model is swapped for a newer version.
+   */
+  public readonly alias: string;
   public readonly canStream: boolean;
   public readonly canUseTools: boolean;
   public readonly isReasoning: boolean;
@@ -39,6 +44,7 @@ export class LanguageModel extends Model {
   constructor(params: {
     id?: UUID;
     name: string;
+    alias: string;
     provider: ModelProvider;
     createdAt?: Date;
     updatedAt?: Date;
@@ -57,6 +63,7 @@ export class LanguageModel extends Model {
   }) {
     super({ ...params, type: ModelType.LANGUAGE });
     assertValidContextWindowSize(params.contextWindowSize);
+    this.alias = params.alias;
     this.canStream = params.canStream;
     this.canUseTools = params.canUseTools;
     this.isReasoning = params.isReasoning;

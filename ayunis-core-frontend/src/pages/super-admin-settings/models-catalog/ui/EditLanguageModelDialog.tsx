@@ -11,6 +11,7 @@ import type {
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
+import { LanguageModelAliasField } from './LanguageModelAliasField';
 import { LanguageModelTierField } from './LanguageModelTierField';
 import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
 import { LanguageModelContextWindowSizeField } from './LanguageModelContextWindowSizeField';
@@ -32,6 +33,7 @@ export function EditLanguageModelDialog({
   const form = useForm<LanguageModelFormData>({
     defaultValues: {
       name: '',
+      alias: '',
       provider: 'openai' as UpdateLanguageModelRequestDtoProvider,
       displayName: '',
       canStream: false,
@@ -58,6 +60,7 @@ export function EditLanguageModelDialog({
     if (model && open) {
       form.reset({
         name: model.name,
+        alias: model.alias,
         provider: model.provider,
         displayName: model.displayName,
         canStream: model.canStream,
@@ -96,6 +99,7 @@ export function EditLanguageModelDialog({
       )}
       hasContent={!!model}
     >
+      <LanguageModelAliasField form={form} disabled={isUpdating} />
       <LanguageModelTierField form={form} disabled={isUpdating} />
       <LanguageModelDescriptionField form={form} disabled={isUpdating} />
       <LanguageModelContextWindowSizeField form={form} disabled={isUpdating} />

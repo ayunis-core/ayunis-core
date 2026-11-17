@@ -14,6 +14,7 @@ vi.mock('react-i18next', () => ({
 const model: LanguageModelResponseDto = {
   id: '00000000-0000-0000-0000-000000000001',
   name: 'fault-test-model',
+  alias: 'fault-test-model',
   provider: LanguageModelResponseDtoProvider.openai,
   displayName: 'Fault Test Model',
   type: LanguageModelResponseDtoType.language,

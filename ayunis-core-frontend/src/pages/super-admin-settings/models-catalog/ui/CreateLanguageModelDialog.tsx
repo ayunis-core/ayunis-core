@@ -7,6 +7,7 @@ import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';
+import { LanguageModelAliasField } from './LanguageModelAliasField';
 import { LanguageModelTierField } from './LanguageModelTierField';
 import { LanguageModelDescriptionField } from './LanguageModelDescriptionField';
 import { LanguageModelContextWindowSizeField } from './LanguageModelContextWindowSizeField';
@@ -26,6 +27,7 @@ export function CreateLanguageModelDialog({
   const form = useForm<LanguageModelFormData>({
     defaultValues: {
       name: '',
+      alias: '',
       provider: 'openai' as CreateLanguageModelRequestDtoProvider,
       displayName: '',
       canStream: false,
@@ -67,6 +69,7 @@ export function CreateLanguageModelDialog({
         'models.catalog.dialog.languageDisplayNamePlaceholder',
       )}
     >
+      <LanguageModelAliasField form={form} disabled={isCreating} />
       <LanguageModelTierField form={form} disabled={isCreating} />
       <LanguageModelDescriptionField form={form} disabled={isCreating} />
       <LanguageModelContextWindowSizeField form={form} disabled={isCreating} />

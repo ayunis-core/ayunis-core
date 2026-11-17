@@ -13,6 +13,7 @@ describe('ResolveModelProviderUseCase', () => {
 
   const model = new LanguageModel({
     name: 'claude-sonnet-4-5',
+    alias: 'claude-sonnet-4-5',
     provider: ModelProvider.ANTHROPIC,
     displayName: 'Claude Sonnet 4.5',
     canStream: true,

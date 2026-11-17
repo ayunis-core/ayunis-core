@@ -23,6 +23,14 @@ export class LanguageModelResponseDto {
 
   @ApiProperty({
     type: 'string',
+    description:
+      'Stable public model ID for the OpenAI-compatible API, unique across the catalog',
+    example: 'gpt-4',
+  })
+  alias: string;
+
+  @ApiProperty({
+    type: 'string',
     enum: Object.values(ModelProvider),
     description: 'The provider of the model',
     example: ModelProvider.OPENAI,

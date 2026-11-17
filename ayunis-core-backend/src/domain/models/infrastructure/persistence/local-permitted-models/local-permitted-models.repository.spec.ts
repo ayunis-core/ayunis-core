@@ -90,6 +90,7 @@ describe('LocalPermittedModelsRepository', () => {
     new LanguageModel({
       id: catalogModelId,
       name: 'municipal-assistant',
+      alias: 'municipal-assistant',
       provider: ModelProvider.OPENAI,
       displayName: 'Municipal Assistant',
       canStream: true,

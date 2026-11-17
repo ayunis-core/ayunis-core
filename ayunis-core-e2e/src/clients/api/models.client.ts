@@ -15,6 +15,7 @@ export interface DefaultModel {
 
 interface CreateLanguageCatalogModelInput {
   name: string;
+  alias?: string;
   displayName: string;
   provider?: LanguageModelResponseDtoProvider;
   contextWindowSize?: number;
@@ -27,6 +28,7 @@ export async function createLanguageCatalogModel(
   return generatedApi.superAdminLanguageCatalogModelsControllerCreateLanguageModel(
     {
       ...input,
+      alias: input.alias ?? input.name,
       provider: input.provider ?? 'openai',
       contextWindowSize: input.contextWindowSize ?? 128_000,
       canStream: true,
@@ -49,6 +51,7 @@ export async function archiveLanguageCatalogModel(
     model.id,
     {
       name: model.name,
+      alias: model.alias,
       displayName: model.displayName,
       provider: model.provider,
       contextWindowSize: model.contextWindowSize,

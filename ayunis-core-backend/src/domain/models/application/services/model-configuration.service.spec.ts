@@ -15,6 +15,7 @@ const createLanguageModel = (params?: {
 }): LanguageModel =>
   new LanguageModel({
     name: 'municipal-assistant',
+    alias: 'municipal-assistant',
     displayName: 'Municipal Assistant',
     provider: params?.provider ?? ModelProvider.OPENAI,
     canStream: true,

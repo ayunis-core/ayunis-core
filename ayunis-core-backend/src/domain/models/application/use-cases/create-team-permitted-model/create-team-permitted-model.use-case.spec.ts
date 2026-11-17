@@ -46,6 +46,7 @@ const createLanguageModel = (isArchived = false): LanguageModel =>
   new LanguageModel({
     id: modelId,
     name: 'municipal-assistant',
+    alias: 'municipal-assistant',
     provider: ModelProvider.OPENAI,
     displayName: 'Municipal Assistant',
     canStream: true,

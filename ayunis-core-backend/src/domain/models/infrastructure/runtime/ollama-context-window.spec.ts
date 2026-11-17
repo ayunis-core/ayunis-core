@@ -24,6 +24,7 @@ const ollamaHandlers: Array<{ name: string; Handler: HandlerConstructor }> = [
 function languageModel(contextWindowSize: number): LanguageModel {
   return new LanguageModel({
     name: 'llama3.1',
+    alias: 'llama3.1',
     displayName: 'Llama 3.1',
     provider: ModelProviderName.OLLAMA,
     canStream: true,

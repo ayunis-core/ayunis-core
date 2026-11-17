@@ -51,6 +51,7 @@ describe('DeleteTeamPermittedModelUseCase', () => {
   const languageModel = new LanguageModel({
     id: randomUUID(),
     name: 'claude-3-5-sonnet',
+    alias: 'claude-3-5-sonnet',
     provider: ModelProvider.ANTHROPIC,
     displayName: 'Claude 3.5 Sonnet',
     canStream: true,

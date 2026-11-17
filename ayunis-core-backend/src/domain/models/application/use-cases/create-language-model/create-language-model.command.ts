@@ -3,6 +3,7 @@ import type { ModelTier } from 'src/domain/models/domain/value-objects/model-tie
 
 export class CreateLanguageModelCommand {
   name: string;
+  alias: string;
   provider: ModelProvider;
   displayName: string;
   canStream: boolean;
@@ -19,6 +20,7 @@ export class CreateLanguageModelCommand {
 
   constructor(params: {
     name: string;
+    alias: string;
     provider: ModelProvider;
     displayName: string;
     canStream: boolean;
@@ -34,6 +36,7 @@ export class CreateLanguageModelCommand {
     description?: string;
   }) {
     this.name = params.name;
+    this.alias = params.alias;
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.canStream = params.canStream;

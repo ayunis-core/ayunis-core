@@ -16,6 +16,10 @@ import { ImageGenerationModel } from 'src/domain/models/domain/models/image-gene
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import {
+  ModelAliasAlreadyExistsError,
+  ModelAliasErrorCode,
+} from 'src/domain/models/application/model-alias.errors';
+import {
   ModelAlreadyExistsError,
   ModelErrorCode,
   ModelReferencedByUsageError,
@@ -108,6 +112,7 @@ describe('LocalModelsRepository', () => {
       const model = new LanguageModel({
         id: modelId,
         name: 'gpt-4o',
+        alias: 'gpt-4o',
         provider: ModelProvider.OPENAI,
         displayName: 'GPT-4o',
         canStream: true,
@@ -134,10 +139,42 @@ describe('LocalModelsRepository', () => {
       await expect(result).rejects.toBeInstanceOf(ModelAlreadyExistsError);
     });
 
+    it('maps a taken alias to an alias conflict', async () => {
+      const model = new LanguageModel({
+        id: modelId,
+        name: 'gpt-5',
+        alias: 'ayunis-gpt',
+        provider: ModelProvider.OPENAI,
+        displayName: 'GPT-5',
+        canStream: true,
+        canUseTools: true,
+        isReasoning: false,
+        canVision: true,
+        contextWindowSize: 400_000,
+        isArchived: false,
+      });
+      const driverError = Object.assign(new Error('duplicate key'), {
+        code: '23505',
+        constraint: 'IDX_6018092adfdf6e9be8dc78df49',
+      });
+      localModelRepository.save.mockRejectedValue(
+        new QueryFailedError('UPDATE models', [], driverError),
+      );
+
+      const result = repository.save(model);
+
+      await expect(result).rejects.toMatchObject({
+        code: ModelAliasErrorCode.MODEL_ALIAS_ALREADY_EXISTS,
+        statusCode: 409,
+      });
+      await expect(result).rejects.toBeInstanceOf(ModelAliasAlreadyExistsError);
+    });
+
     it('does not misclassify another unique constraint violation', async () => {
       const model = new LanguageModel({
         id: modelId,
         name: 'gpt-4o',
+        alias: 'gpt-4o',
         provider: ModelProvider.OPENAI,
         displayName: 'GPT-4o',
         canStream: true,

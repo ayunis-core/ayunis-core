@@ -110,6 +110,7 @@ describe('CreatePermittedModelUseCase', () => {
       const mockModel = new LanguageModel({
         id: mockModelId,
         name: 'gpt-4',
+        alias: 'gpt-4',
         displayName: 'gpt-4',
         provider: ModelProvider.OPENAI,
         canStream: true,
@@ -175,6 +176,7 @@ describe('CreatePermittedModelUseCase', () => {
       const mockModel = new LanguageModel({
         id: mockModelId,
         name: 'gpt-4',
+        alias: 'gpt-4',
         displayName: 'gpt-4',
         provider: ModelProvider.OPENAI,
         canStream: true,

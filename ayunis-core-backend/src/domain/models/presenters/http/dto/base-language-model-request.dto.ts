@@ -39,6 +39,16 @@ export abstract class BaseLanguageModelRequestDto {
   name: string;
 
   @ApiProperty({
+    description:
+      'Stable public model ID for the OpenAI-compatible API, unique across the catalog. Keep it when swapping the provider model for a newer version; changing it breaks API clients that use the old alias.',
+    example: 'gpt-4',
+  })
+  @Transform(trimToUndefined)
+  @IsString()
+  @IsNotEmpty()
+  alias: string;
+
+  @ApiProperty({
     description: 'The provider of the model',
     enum: ModelProvider,
     example: ModelProvider.OPENAI,

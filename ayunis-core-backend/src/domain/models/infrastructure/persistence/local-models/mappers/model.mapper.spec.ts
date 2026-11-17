@@ -56,6 +56,7 @@ describe('ModelMapper', () => {
     return new LanguageModel({
       id: mockId,
       name: 'gpt-4',
+      alias: 'gpt-4',
       provider: ModelProvider.OPENAI,
       displayName: 'GPT-4',
       canStream: true,

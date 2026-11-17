@@ -51,6 +51,7 @@ beforeAll(() => {
 const model: LanguageModelResponseDto = {
   id: '00000000-0000-0000-0000-000000000001',
   name: 'fault-test-model',
+  alias: 'fault-test-model',
   provider: LanguageModelResponseDtoProvider.openai,
   displayName: 'Fault Test Model',
   type: LanguageModelResponseDtoType.language,
@@ -81,6 +82,9 @@ describe('language model provider fault field', () => {
       ),
       { target: { value: 'fault-test-model' } },
     );
+    fireEvent.change(screen.getByTestId('model-catalog-alias'), {
+      target: { value: 'fault-test-model' },
+    });
     fireEvent.change(
       screen.getByPlaceholderText(
         'models.catalog.dialog.languageDisplayNamePlaceholder',

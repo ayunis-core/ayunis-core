@@ -15,6 +15,15 @@ export function requestChatCompletionWithApiKey(
   });
 }
 
+export function requestModelsWithApiKey(
+  api: APIRequestContext,
+  secret: string,
+): Promise<APIResponse> {
+  return api.get(`${config.apiURL}/api/openai-compat/v1/models`, {
+    headers: { Authorization: `Bearer ${secret}` },
+  });
+}
+
 export function requestUpdateApiKey(
   api: APIRequestContext,
   apiKeyId: string,

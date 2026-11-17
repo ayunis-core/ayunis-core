@@ -14,6 +14,7 @@ describe(EffectiveRunModelResolverService.name, () => {
   const catalogModel = new LanguageModel({
     id: '33333333-3333-3333-3333-333333333333',
     name: 'municipal-assistant',
+    alias: 'municipal-assistant',
     displayName: 'Municipal Assistant',
     provider: ModelProvider.OPENAI,
     canStream: true,

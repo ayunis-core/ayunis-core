@@ -114,6 +114,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const languageModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -155,6 +156,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const languageModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -188,6 +190,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const languageModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -214,6 +217,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const activeModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -226,6 +230,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const archivedModel = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'legacy-model',
+      alias: 'legacy-model',
       displayName: 'legacy-model',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -252,6 +257,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const modelWithKey = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174001',
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'gpt-4',
       provider: ModelProvider.OPENAI,
       canStream: true,
@@ -264,6 +270,7 @@ describe('GetConfiguredModelsByTypeUseCase', () => {
     const modelWithoutKey = new LanguageModel({
       id: '123e4567-e89b-12d3-a456-426614174002',
       name: 'claude-3-opus',
+      alias: 'claude-3-opus',
       displayName: 'claude-3-opus',
       provider: ModelProvider.ANTHROPIC,
       canStream: true,

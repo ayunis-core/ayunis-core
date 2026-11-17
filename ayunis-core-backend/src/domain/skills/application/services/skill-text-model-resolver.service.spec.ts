@@ -46,6 +46,7 @@ describe('SkillTextModelResolver with real model selection', () => {
       model: new LanguageModel({
         id: randomUUID(),
         name,
+        alias: name,
         displayName: name,
         provider: ModelProvider.OPENAI,
         canStream: true,

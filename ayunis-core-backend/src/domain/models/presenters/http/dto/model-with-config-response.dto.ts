@@ -70,6 +70,13 @@ export class ModelWithConfigResponseDto {
   canVision: boolean;
 
   @ApiPropertyOptional({
+    type: 'string',
+    description:
+      'Model ID for the OpenAI-compatible API. Undefined for non-language models.',
+  })
+  alias?: string;
+
+  @ApiPropertyOptional({
     type: 'integer',
     description:
       'Maximum context window size in tokens. Undefined for non-language models.',

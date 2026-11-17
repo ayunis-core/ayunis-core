@@ -32,6 +32,7 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
       model: new LanguageModel({
         id: catalogModelId,
         name,
+        alias: name,
         displayName: name,
         provider: ModelProvider.OPENAI,
         canStream: true,

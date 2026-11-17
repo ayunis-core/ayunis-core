@@ -110,6 +110,7 @@ export function ModelFormDialog<T extends BaseModelFormData>({
                           placeholder={namePlaceholder}
                           disabled={isSubmitting}
                           required
+                          data-testid="model-catalog-name"
                         />
                       </FormControl>
                       <FormMessage />

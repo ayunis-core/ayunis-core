@@ -635,6 +635,8 @@
         "createImageGenerationTitle": "Bilderzeugungsmodell anlegen",
         "editImageGenerationTitle": "Bilderzeugungsmodell bearbeiten",
         "name": "Name",
+        "alias": "Alias",
+        "aliasPlaceholder": "z. B. gpt-4",
         "provider": "Anbieter",
         "providerPlaceholder": "Anbieter auswählen",
         "displayName": "Anzeigename",
@@ -666,6 +668,11 @@
         "imageGenerationDisplayNamePlaceholder": "z. B. GPT Image 1"
       },
       "validation": {
+        "alias": {
+          "isNotEmpty": "Der Alias ist erforderlich",
+          "taken": "Dieser Alias wird bereits von einem anderen Modell verwendet",
+          "invalid": "Geben Sie einen gültigen Alias ein"
+        },
         "contextWindowSize": {
           "required": "Die Kontextfenstergröße ist erforderlich",
           "isInt": "Die Kontextfenstergröße muss eine ganze Zahl sein",

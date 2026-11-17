@@ -45,6 +45,7 @@ describe('CreateLanguageModelUseCase', () => {
   ): CreateLanguageModelCommand => {
     return new CreateLanguageModelCommand({
       name: 'gpt-4',
+      alias: 'gpt-4',
       displayName: 'GPT-4',
       provider: ModelProvider.OPENAI,
       canStream: true,

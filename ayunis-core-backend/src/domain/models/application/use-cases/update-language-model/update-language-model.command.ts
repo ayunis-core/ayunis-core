@@ -5,6 +5,7 @@ import type { ModelTier } from 'src/domain/models/domain/value-objects/model-tie
 export class UpdateLanguageModelCommand {
   id: UUID;
   name: string;
+  alias: string;
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
@@ -22,6 +23,7 @@ export class UpdateLanguageModelCommand {
   constructor(params: {
     id: UUID;
     name: string;
+    alias: string;
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
@@ -38,6 +40,7 @@ export class UpdateLanguageModelCommand {
   }) {
     this.id = params.id;
     this.name = params.name;
+    this.alias = params.alias;
     this.provider = params.provider;
     this.displayName = params.displayName;
     this.isArchived = params.isArchived;

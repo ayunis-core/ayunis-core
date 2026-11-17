@@ -8,6 +8,7 @@ describe('LanguageModel', () => {
   }): LanguageModel =>
     new LanguageModel({
       name: 'model',
+      alias: 'model',
       provider: ModelProvider.OPENAI,
       displayName: 'Model',
       canStream: true,
@@ -28,6 +29,7 @@ describe('LanguageModel', () => {
     it('preserves an explicit provider fault', () => {
       const model = new LanguageModel({
         name: 'gpt-4o',
+        alias: 'gpt-4o',
         provider: ModelProvider.OPENAI,
         displayName: 'GPT-4o',
         canStream: true,
@@ -47,6 +49,7 @@ describe('LanguageModel', () => {
     it('preserves a provided context window size', () => {
       const model = new LanguageModel({
         name: 'gpt-4o',
+        alias: 'gpt-4o',
         provider: ModelProvider.OPENAI,
         displayName: 'GPT-4o',
         canStream: true,
@@ -67,6 +70,7 @@ describe('LanguageModel', () => {
           () =>
             new LanguageModel({
               name: 'gpt-4o',
+              alias: 'gpt-4o',
               provider: ModelProvider.OPENAI,
               displayName: 'GPT-4o',
               canStream: true,

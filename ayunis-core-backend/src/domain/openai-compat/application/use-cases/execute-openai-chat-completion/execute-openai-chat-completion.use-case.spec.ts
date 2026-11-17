@@ -41,7 +41,8 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
   const apiKeyId = randomUUID();
 
   const model = new LanguageModel({
-    name: 'gpt-4o',
+    name: 'gpt-4o-2024-11-20',
+    alias: 'gpt-4o',
     provider: ModelProvider.OPENAI,
     displayName: 'GPT-4o',
     canStream: true,
@@ -344,6 +345,13 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       expect(collectUsageAsyncService.collectCritical).not.toHaveBeenCalled();
     });
 
+    it('rejects the provider name so a provider model swap cannot break clients that rely on it', async () => {
+      await expect(
+        useCase.executeNonStreaming(baseCommand({ model: model.name })),
+      ).rejects.toThrow(OpenAIModelNotFoundError);
+      expect(getInferenceUseCase.execute).not.toHaveBeenCalled();
+    });
+
     it('propagates preflight failure and does not record usage', async () => {
       inferenceAdmissionGuard.preflight.mockRejectedValue(
         new QuotaExceededError(
@@ -430,6 +438,10 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       );
       subject.next(StreamInferenceResponseChunk.text('recovered'));
 
+      expect(visible).toEqual([
+        expect.objectContaining({ model: 'gpt-4o' }),
+        expect.objectContaining({ model: 'gpt-4o' }),
+      ]);
       expect(visible).toEqual([
         expect.objectContaining({
           choices: [expect.objectContaining({ delta: { role: 'assistant' } })],
@@ -565,6 +577,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       const logger = createLoggerMock();
       const freeModel = new LanguageModel({
         name: 'open-source-free',
+        alias: 'open-source-free',
         provider: ModelProvider.OLLAMA,
         displayName: 'Open Source Free',
         canStream: true,
@@ -582,7 +595,7 @@ describe('ExecuteOpenAIChatCompletionUseCase', () => {
       streamInferenceUseCase.execute.mockReturnValue(subject.asObservable());
 
       await useCase.executeStreaming(
-        baseCommand({ model: freeModel.name, stream: true }),
+        baseCommand({ model: freeModel.alias, stream: true }),
       );
       const onCallTerminal =
         streamInferenceUseCase.execute.mock.calls[0][0].onCallTerminal;
