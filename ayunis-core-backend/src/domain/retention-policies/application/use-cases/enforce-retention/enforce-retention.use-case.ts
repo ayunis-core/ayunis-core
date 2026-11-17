@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
-import { ContextService } from 'src/common/context/services/context.service';
-import { DeleteThreadUseCase } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.use-case';
-import { DeleteThreadCommand } from 'src/domain/threads/application/use-cases/delete-thread/delete-thread.command';
+import { DeleteExpiredThreadUseCase } from 'src/domain/threads/application/use-cases/delete-expired-thread/delete-expired-thread.use-case';
+import { DeleteExpiredThreadCommand } from 'src/domain/threads/application/use-cases/delete-expired-thread/delete-expired-thread.command';
 import {
   FindExpiredThreadRefsByOrgUseCase,
   type ExpiredThreadRef,
@@ -26,8 +25,8 @@ export const MAX_BATCHES_PER_ORG = 10_000;
 /**
  * Deletes conversation data that has aged past each org's retention window.
  * Opt-in: only orgs with an enabled policy are touched. Threads are deleted
- * one at a time through DeleteThreadUseCase (which also purges storage objects
- * and cascades messages/artifacts/images) rather than via bulk SQL. Failures
+ * one at a time through DeleteExpiredThreadUseCase (which also purges storage
+ * objects and cascades messages/artifacts/images) rather than via bulk SQL. Failures
  * are isolated per thread so one bad thread can't abort the run. Inbox
  * notifications created before the same cutoff are deleted too.
  */
@@ -38,9 +37,8 @@ export class EnforceRetentionUseCase {
   constructor(
     private readonly retentionPoliciesRepository: RetentionPoliciesRepository,
     private readonly findExpiredThreadRefsByOrg: FindExpiredThreadRefsByOrgUseCase,
-    private readonly deleteThreadUseCase: DeleteThreadUseCase,
+    private readonly deleteExpiredThreadUseCase: DeleteExpiredThreadUseCase,
     private readonly deleteExpiredNotificationsUseCase: DeleteExpiredNotificationsUseCase,
-    private readonly contextService: ContextService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -219,7 +217,9 @@ export class EnforceRetentionUseCase {
     for (const ref of refs) {
       result.scanned += 1;
       try {
-        await this.deleteThread(orgId, ref);
+        await this.deleteExpiredThreadUseCase.execute(
+          new DeleteExpiredThreadCommand(orgId, ref.id, ref.userId),
+        );
         result.deleted += 1;
       } catch (error) {
         result.failed += 1;
@@ -235,18 +235,5 @@ export class EnforceRetentionUseCase {
       }
     }
     return advance;
-  }
-
-  private async deleteThread(
-    orgId: UUID,
-    ref: ExpiredThreadRef,
-  ): Promise<void> {
-    // DeleteThreadUseCase reads the owner/org from CLS and verifies ownership,
-    // so a per-thread context is established for the background job.
-    await this.contextService.run(async () => {
-      this.contextService.set('orgId', orgId);
-      this.contextService.set('userId', ref.userId);
-      await this.deleteThreadUseCase.execute(new DeleteThreadCommand(ref.id));
-    });
   }
 }

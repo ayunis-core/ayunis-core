@@ -16,6 +16,7 @@ import {
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import type { StaleThreadSourceRef } from 'src/domain/threads/application/ports/threads.repository';
+import { accessibleThread } from './queries/personal-or-member-workspace';
 
 // Resolves each directly-assigned thread's latest message once (top-1 probe on
 // the messages (threadId, createdAt) index) instead of probing messages per
@@ -121,7 +122,7 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadExists = await this.threadRepository.exists({
-      where: { id: params.threadId, userId: params.userId },
+      where: accessibleThread(params.threadId, params.userId),
     });
 
     if (!threadExists) {
@@ -150,7 +151,7 @@ export class LocalThreadAssignmentsRepository {
     // count is read after acquiring it, so the second one sees the first.
     const thread = await this.threadRepository.findOne({
       select: { id: true },
-      where: { id: threadId, userId },
+      where: accessibleThread(threadId, userId),
       lock: { mode: 'pessimistic_write' },
     });
     if (!thread) throw new ThreadNotFoundError(threadId, userId);
@@ -184,7 +185,7 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
+      where: accessibleThread(params.threadId, params.userId),
       relations: ['mcpIntegrations'],
     });
 
@@ -215,7 +216,7 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
+      where: accessibleThread(params.threadId, params.userId),
     });
 
     if (!threadEntity) {
@@ -247,7 +248,7 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadEntity = await this.threadRepository.findOne({
-      where: { id: params.threadId, userId: params.userId },
+      where: accessibleThread(params.threadId, params.userId),
     });
 
     if (!threadEntity) {

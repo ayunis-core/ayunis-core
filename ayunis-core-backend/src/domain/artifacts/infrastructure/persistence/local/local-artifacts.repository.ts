@@ -21,6 +21,7 @@ import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { personalOrMemberWorkspace } from 'src/domain/threads/infrastructure/persistence/local/queries/personal-or-member-workspace';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
@@ -73,16 +74,23 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     return this.artifactMapper.toDomain(saved);
   }
 
+  private accessibleTo(userId: UUID) {
+    return {
+      userId,
+      thread: { workspaceId: personalOrMemberWorkspace(userId) },
+    };
+  }
+
   async findById(id: UUID, userId: UUID): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
-      where: { id, userId },
+      where: { id, ...this.accessibleTo(userId) },
     });
     return record ? this.artifactMapper.toDomain(record) : null;
   }
 
   async findByThreadId(threadId: UUID, userId: UUID): Promise<Artifact[]> {
     const records = await this.artifactRepo.find({
-      where: { threadId, userId },
+      where: { threadId, ...this.accessibleTo(userId) },
       order: { createdAt: 'ASC' },
     });
     return records.map((r) => this.artifactMapper.toDomain(r));
@@ -130,7 +138,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
 
   async findByIdWithVersions(id: UUID, userId: UUID): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
-      where: { id, userId },
+      where: { id, ...this.accessibleTo(userId) },
       relations: { versions: true },
       order: { versions: { versionNumber: 'ASC' } },
     });

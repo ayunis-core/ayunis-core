@@ -202,7 +202,7 @@ describe('LocalThreadAssignmentsRepository', () => {
       });
 
       expect(threadRepo.exists).toHaveBeenCalledWith({
-        where: { id: threadId, userId },
+        where: expect.objectContaining({ id: threadId, userId }),
       });
     });
   });
