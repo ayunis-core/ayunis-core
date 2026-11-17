@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.76.2](https://github.com/ayunis-core/ayunis-core/compare/v2.76.1...v2.76.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* **config:** require MINIO_PUBLIC_USE_SSL in production (AYC-1886) ([#2390](https://github.com/ayunis-core/ayunis-core/issues/2390)) ([4575446](https://github.com/ayunis-core/ayunis-core/commit/4575446ae1356144dabd57aa8f8e17da7d9de76e))
+
 ## [2.76.1](https://github.com/ayunis-core/ayunis-core/compare/v2.76.0...v2.76.1) (2026-11-17)
 
 
