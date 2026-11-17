@@ -41,7 +41,7 @@ export function getToolActionLabel(
   const params = (toolUse.params as Record<string, unknown> | undefined) ?? {};
   const name = toolUse.name;
 
-  const pastChatLabel = getPastChatActionLabel(name, t);
+  const pastChatLabel = getPastChatActionLabel(name, params, t);
   if (pastChatLabel) return pastChatLabel;
 
   switch (name) {
@@ -206,13 +206,18 @@ export function getToolActionLabel(
 
 function getPastChatActionLabel(
   name: string,
+  params: Record<string, unknown>,
   t: TFunction,
 ): ToolActionLabel | undefined {
   switch (name) {
     case 'chat_list':
-      return { verb: t('chat.timeline.actions.chat_list') };
     case 'chat_read':
-      return { verb: t('chat.timeline.actions.chat_read') };
+      return { verb: t(`chat.timeline.actions.${name}`) };
+    case 'chat_grep':
+      return {
+        verb: t('chat.timeline.actions.chat_grep'),
+        target: asString(params.pattern),
+      };
     default:
       return undefined;
   }

@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { FindPastChatsQuery } from 'src/domain/threads/application/use-cases/find-past-chats/find-past-chats.query';
 import { FindPastChatsUseCase } from 'src/domain/threads/application/use-cases/find-past-chats/find-past-chats.use-case';
-import type { PastChatActivityRange } from 'src/domain/threads/domain/past-chat-scope';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -11,8 +10,7 @@ import {
   CHAT_LIST_PAGE_SIZE,
   ChatListTool,
 } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { toUtcDayRange } from 'src/domain/tools/domain/tools/past-chat-dates';
 
 @Injectable()
 export class ChatListToolHandler extends ToolExecutionHandler {
@@ -34,7 +32,7 @@ export class ChatListToolHandler extends ToolExecutionHandler {
     const result = await this.findPastChatsUseCase.execute(
       new FindPastChatsQuery({
         scope: tool.scope,
-        activity: toActivityRange(from, to),
+        activity: toUtcDayRange(from, to),
         limit: CHAT_LIST_PAGE_SIZE,
         offset: (page - 1) * CHAT_LIST_PAGE_SIZE,
       }),
@@ -69,14 +67,4 @@ function validateInput(
       message: error instanceof Error ? error.message : 'Invalid input',
     });
   }
-}
-
-/** Whole UTC days: `to` includes its day. */
-function toActivityRange(from?: string, to?: string): PastChatActivityRange {
-  return {
-    ...(from && { from: new Date(`${from}T00:00:00.000Z`) }),
-    ...(to && {
-      before: new Date(new Date(`${to}T00:00:00.000Z`).getTime() + DAY_MS),
-    }),
-  };
 }

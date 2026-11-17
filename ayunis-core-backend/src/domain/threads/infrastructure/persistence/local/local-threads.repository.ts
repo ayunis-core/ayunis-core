@@ -1,5 +1,6 @@
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
+import type { PastMessageMatch } from 'src/domain/threads/application/models/past-message-match';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
@@ -7,6 +8,7 @@ import {
   FindExpiredThreadRefsParams,
   FindPastChatParams,
   FindPastChatsParams,
+  GrepPastMessagesParams,
   ThreadsFindAllFilters,
   ThreadsFindAllOptions,
   ThreadsPagination,
@@ -30,6 +32,7 @@ import { findThreadCitationContext } from './queries/find-thread-citation-contex
 import { applyThreadListFilters } from './queries/apply-thread-list-filters';
 import { applyThreadListRelations } from './queries/apply-thread-list-relations';
 import { findPastChat, findPastChats } from './queries/past-chats';
+import { grepPastMessages } from './queries/grep-past-messages';
 import {
   accessibleThread,
   personalOrMemberWorkspace,
@@ -167,6 +170,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
 
   findPastChat(params: FindPastChatParams): Promise<Thread | null> {
     return findPastChat(this.threadRepository, this.threadMapper, params);
+  }
+
+  grepPastMessages(
+    params: GrepPastMessagesParams,
+  ): Promise<PastMessageMatch[]> {
+    return grepPastMessages(this.threadRepository, params);
   }
 
   async findAll(

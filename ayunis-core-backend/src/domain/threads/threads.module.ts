@@ -21,6 +21,7 @@ import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/
 import { FindThreadsByIdsUseCase } from './application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
 import { FindPastChatsUseCase } from './application/use-cases/find-past-chats/find-past-chats.use-case';
 import { FindPastChatUseCase } from './application/use-cases/find-past-chat/find-past-chat.use-case';
+import { GrepPastMessagesUseCase } from './application/use-cases/grep-past-messages/grep-past-messages.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
 import { DeleteExpiredThreadUseCase } from './application/use-cases/delete-expired-thread/delete-expired-thread.use-case';
 import { ThreadDeletionService } from './application/services/thread-deletion.service';
@@ -115,6 +116,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     FindThreadsByIdsUseCase,
     FindPastChatsUseCase,
     FindPastChatUseCase,
+    GrepPastMessagesUseCase,
     DeleteThreadUseCase,
     DeleteExpiredThreadUseCase,
     AddMessageToThreadUseCase,
@@ -169,6 +171,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     FindThreadsByIdsUseCase,
     FindPastChatsUseCase,
     FindPastChatUseCase,
+    GrepPastMessagesUseCase,
     DeleteThreadUseCase,
     DeleteExpiredThreadUseCase,
     AddMessageToThreadUseCase,

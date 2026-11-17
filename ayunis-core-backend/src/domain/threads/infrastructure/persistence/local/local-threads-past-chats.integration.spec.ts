@@ -12,6 +12,11 @@ import {
   PastChatScope,
   type PastChatActivityRange,
 } from 'src/domain/threads/domain/past-chat-scope';
+import type { PastMessageMatch } from 'src/domain/threads/application/models/past-message-match';
+import {
+  InvalidPastMessagePatternError,
+  PastMessageSearchTimeoutError,
+} from 'src/domain/threads/application/threads.errors';
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 import type { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { LocalThreadsRepository } from './local-threads.repository';
@@ -169,13 +174,17 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
     threadId: UUID,
     createdAt: string,
     role = MessageRole.USER,
+    content: MessageRecord['content'] | string = 'Wie hoch ist sie?',
   ): Promise<UUID> {
     const id = randomUUID();
-    await db.getRepository(MessageRecord).insert({
+    await db.getRepository(MessageRecord).save({
       id,
       threadId,
       role,
-      content: [{ type: MessageContentType.TEXT, text: 'Wie hoch ist sie?' }],
+      content:
+        typeof content === 'string'
+          ? [{ type: MessageContentType.TEXT, text: content }]
+          : content,
       createdAt: at(createdAt),
     });
     return id;
@@ -194,6 +203,30 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
     });
     return page.data.map((thread) => thread.id);
   }
+
+  async function grep(
+    pattern: string,
+    options: {
+      scope?: PastChatScope;
+      userId?: UUID;
+      created?: PastChatActivityRange;
+      limit?: number;
+    } = {},
+    on: LocalThreadsRepository = repository,
+  ): Promise<PastMessageMatch[]> {
+    return on.grepPastMessages({
+      userId: options.userId ?? owner,
+      scope: options.scope ?? everywhere,
+      pattern,
+      created: options.created ?? {},
+      limit: options.limit ?? 50,
+    });
+  }
+
+  const grepped = async (
+    pattern: string,
+    options: Parameters<typeof grep>[1] = {},
+  ) => (await grep(pattern, options)).map((match) => match.excerpt);
 
   const readable = async (
     threadId: UUID,
@@ -333,5 +366,300 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       second,
       third,
     ]);
+  });
+  describe('grepping past messages', () => {
+    it('matches a plain word in any case, inside longer words too', async () => {
+      const id = await chat();
+      await message(
+        id,
+        '2026-11-02T10:00:00',
+        MessageRole.USER,
+        'Der BAUANTRAG für die Musterstraße',
+      );
+      await message(
+        id,
+        '2026-11-02T10:01:00',
+        MessageRole.ASSISTANT,
+        'Der Antrag ist eingegangen.',
+      );
+      await message(id, '2026-11-02T10:02:00', MessageRole.USER, 'Danke!');
+
+      expect(await grepped('antrag')).toEqual([
+        'Der Antrag ist eingegangen.',
+        'Der BAUANTRAG für die Musterstraße',
+      ]);
+    });
+
+    it('finds word forms with alternation, and \\y keeps matches inside longer words out', async () => {
+      const id = await chat();
+      await message(id, '2026-11-02T10:00:00', MessageRole.USER, 'Mein Antrag');
+      await message(
+        id,
+        '2026-11-02T10:01:00',
+        MessageRole.USER,
+        'Zwei Anträge',
+      );
+      await message(
+        id,
+        '2026-11-02T10:02:00',
+        MessageRole.USER,
+        'Der Bauantrag',
+      );
+      await message(
+        id,
+        '2026-11-02T10:03:00',
+        MessageRole.USER,
+        'Die Antragsteller',
+      );
+
+      expect(await grepped('antr(a|ä)ge?')).toHaveLength(4);
+      expect(await grepped('\\yantr(a|ä)ge?\\y')).toEqual([
+        'Zwei Anträge',
+        'Mein Antrag',
+      ]);
+      expect(await grepped('\\mantrag\\M')).toEqual(['Mein Antrag']);
+    });
+
+    it('rejects a pattern PostgreSQL cannot compile with its reason', async () => {
+      await message(await chat(), '2026-11-02T10:00:00');
+
+      const error = await grep('(').catch((thrown: unknown) => thrown);
+
+      expect(error).toBeInstanceOf(InvalidPastMessagePatternError);
+      expect((error as InvalidPastMessagePatternError).reason).toMatch(
+        /invalid regular expression/,
+      );
+    });
+
+    it('reports a search that hits the statement timeout as such', async () => {
+      await message(
+        await chat(),
+        '2026-11-02T10:00:00',
+        MessageRole.USER,
+        'a'.repeat(40_001),
+      );
+      const impatient = new DataSource({
+        ...db.options,
+        extra: {
+          options: `-c search_path=${schema}`,
+          statement_timeout: 200,
+        },
+      });
+      await impatient.initialize();
+      try {
+        const slow = new LocalThreadsRepository(
+          impatient.getRepository(ThreadRecord),
+          {} as ThreadMapper,
+          {} as LocalThreadAssignmentsRepository,
+          {} as TransactionHost<TransactionalAdapterTypeOrm>,
+        );
+
+        await expect(grep('^(a+)\\1$', {}, slow)).rejects.toBeInstanceOf(
+          PastMessageSearchTimeoutError,
+        );
+      } finally {
+        await impatient.destroy();
+      }
+    });
+
+    it('returns each matching message once, newest first, up to the limit', async () => {
+      const older = await chat();
+      const newer = await chat();
+      await message(older, '2026-11-01T10:00:00', MessageRole.USER, 'Hund 1');
+      await message(newer, '2026-11-03T10:00:00', MessageRole.USER, [
+        { type: MessageContentType.TEXT, text: 'Kein Treffer' },
+        { type: MessageContentType.TEXT, text: 'Hund 3' },
+        { type: MessageContentType.TEXT, text: 'Hund 3 noch einmal' },
+      ]);
+      await message(
+        older,
+        '2026-11-02T10:00:00',
+        MessageRole.ASSISTANT,
+        'Hund 2',
+      );
+
+      expect(await grepped('hund')).toEqual(['Hund 3', 'Hund 2', 'Hund 1']);
+      expect(await grepped('hund', { limit: 2 })).toEqual(['Hund 3', 'Hund 2']);
+    });
+
+    it('keeps messages created in [from, before)', async () => {
+      const id = await chat();
+      await message(id, '2026-11-01T23:59:59', MessageRole.USER, 'Hund vorher');
+      await message(
+        id,
+        '2026-11-02T00:00:00',
+        MessageRole.USER,
+        'Hund am Anfang',
+      );
+      await message(
+        id,
+        '2026-11-03T23:59:59',
+        MessageRole.ASSISTANT,
+        'Hund am Ende',
+      );
+      await message(id, '2026-11-04T00:00:00', MessageRole.USER, 'Hund danach');
+
+      expect(
+        await grepped('hund', {
+          created: {
+            from: at('2026-11-02T00:00:00'),
+            before: at('2026-11-04T00:00:00'),
+          },
+        }),
+      ).toEqual(['Hund am Ende', 'Hund am Anfang']);
+      expect(
+        await grepped('hund', {
+          created: { before: at('2026-11-02T00:00:00') },
+        }),
+      ).toEqual(['Hund vorher']);
+    });
+
+    it('never matches skill instructions, nudges, tool calls and results, thinking or system messages', async () => {
+      const id = await chat();
+      await message(
+        id,
+        '2026-11-02T10:00:00',
+        MessageRole.SYSTEM,
+        'Hundesteuer',
+      );
+      await message(id, '2026-11-02T10:01:00', MessageRole.USER, [
+        {
+          type: MessageContentType.TEXT,
+          text: 'Hundesteuer',
+          isSkillInstruction: true,
+        },
+        { type: MessageContentType.TEXT, text: 'Hundesteuer', isNudge: true },
+      ]);
+      await message(id, '2026-11-02T10:02:00', MessageRole.ASSISTANT, [
+        { type: MessageContentType.THINKING, thinking: 'Hundesteuer' },
+        {
+          type: MessageContentType.TOOL_USE,
+          id: 'call',
+          name: 'internet_search',
+          params: { query: 'Hundesteuer' },
+        },
+      ]);
+      await message(id, '2026-11-02T10:03:00', MessageRole.TOOL, [
+        {
+          type: MessageContentType.TOOL_RESULT,
+          toolId: 'call',
+          toolName: 'internet_search',
+          result: 'Hundesteuer',
+        },
+      ]);
+
+      expect(await grep('hundesteuer')).toEqual([]);
+    });
+
+    it('searches only the user’s own chats in scope, never anonymous or routine ones or the current chat', async () => {
+      const own = await chat();
+      const here = await chat({ workspaceId: workspace });
+      const there = await chat({ workspaceId: otherWorkspace });
+      const excluded = [
+        await chat({ id: currentChat }),
+        await chat({ isAnonymous: true }),
+        await chat({ type: ThreadType.ROUTINE }),
+        await chat({ userId: colleague }),
+        await chat({ userId: colleague, workspaceId: workspace }),
+      ];
+      for (const id of [own, here, there, ...excluded]) {
+        await message(
+          id,
+          '2026-11-02T10:00:00',
+          MessageRole.USER,
+          `Hund in ${id}`,
+        );
+      }
+      const threadsOf = async (options: Parameters<typeof grep>[1]) =>
+        new Set((await grep('hund', options)).map((match) => match.threadId));
+
+      expect(await threadsOf({})).toEqual(new Set([own, here, there]));
+      expect(await threadsOf({ scope: inWorkspace })).toEqual(new Set([here]));
+      // The colleague is no member of the workspace their chat is filed in.
+      expect(await threadsOf({ userId: colleague })).toEqual(
+        new Set([excluded[3]]),
+      );
+    });
+
+    it('stops searching a workspace’s chats once the user leaves it and searches them again when re-added', async () => {
+      const personal = await chat();
+      const here = await chat({ workspaceId: workspace });
+      await message(
+        personal,
+        '2026-11-02T10:00:00',
+        MessageRole.USER,
+        'Hund privat',
+      );
+      await message(
+        here,
+        '2026-11-02T10:01:00',
+        MessageRole.USER,
+        'Hund im Projekt',
+      );
+      expect(await grepped('hund')).toEqual(['Hund im Projekt', 'Hund privat']);
+
+      await leave(owner, workspace);
+
+      expect(await grepped('hund')).toEqual(['Hund privat']);
+      expect(await grepped('hund', { scope: inWorkspace })).toEqual([]);
+
+      await join(owner, workspace);
+
+      expect(await grepped('hund')).toEqual(['Hund im Projekt', 'Hund privat']);
+    });
+
+    it('numbers a match like chat_read, counting every message of the chat', async () => {
+      const id = await chat({ lastActivity: '2026-11-02T10:03:00' });
+      await message(id, '2026-11-02T10:00:00', MessageRole.USER, 'Frage');
+      await message(id, '2026-11-02T10:01:00', MessageRole.TOOL, [
+        {
+          type: MessageContentType.TOOL_RESULT,
+          toolId: 'call',
+          toolName: 'internet_search',
+          result: 'Ergebnis',
+        },
+      ]);
+      const matchId = await message(
+        id,
+        '2026-11-02T10:02:00',
+        MessageRole.ASSISTANT,
+        'Die Hundesteuer',
+      );
+      await message(id, '2026-11-02T10:03:00', MessageRole.USER, 'Danke');
+
+      const [match] = await grep('hundesteuer');
+      const read = await repository.findPastChat({
+        userId: owner,
+        scope: everywhere,
+        threadId: id,
+      });
+
+      expect(match).toEqual({
+        threadId: id,
+        threadTitle: 'Hundesteuer',
+        messageNumber: 3,
+        role: MessageRole.ASSISTANT,
+        createdAt: at('2026-11-02T10:02:00'),
+        excerpt: 'Die Hundesteuer',
+      });
+      expect(read?.messages[match.messageNumber - 1].id).toBe(matchId);
+    });
+
+    it('cuts a long text to an excerpt around the first match', async () => {
+      const id = await chat();
+      const text = `${'x'.repeat(500)} Hundesteuer ${'y'.repeat(500)} Hundesteuer`;
+      await message(id, '2026-11-02T10:00:00', MessageRole.USER, text);
+
+      const [{ excerpt }] = await grep('hundesteuer');
+
+      expect(excerpt).toBe(`…${text.slice(401, 701)}…`);
+      expect(excerpt).toContain(' Hundesteuer ');
+    });
+
+    it('treats the pattern as a bound value', async () => {
+      await message(await chat(), '2026-11-02T10:00:00');
+
+      expect(await grep("' OR 1=1 --")).toEqual([]);
+    });
   });
 });

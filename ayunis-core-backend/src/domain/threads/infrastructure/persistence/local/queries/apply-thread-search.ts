@@ -1,7 +1,10 @@
 import type { SelectQueryBuilder } from 'typeorm';
 import { MessageRecord } from 'src/domain/messages/infrastructure/persistence/local/schema/message.record';
-import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import type { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import {
+  SEARCHABLE_MESSAGE_ROLES,
+  searchableTextBlockSql,
+} from './searchable-message-text';
 
 export function applyThreadSearch(
   queryBuilder: SelectQueryBuilder<ThreadRecord>,
@@ -16,10 +19,8 @@ export function applyThreadSearch(
     .andWhere(
       `EXISTS (
       SELECT 1 FROM jsonb_array_elements(searchMessage.content) AS block
-      WHERE block->>'type' = 'text'
+      WHERE ${searchableTextBlockSql('block')}
         AND block->>'text' ILIKE :search
-        AND block->>'isSkillInstruction' IS DISTINCT FROM 'true'
-        AND block->>'isNudge' IS DISTINCT FROM 'true'
     )`,
     )
     .getQuery();
@@ -27,7 +28,7 @@ export function applyThreadSearch(
     `(thread.title ILIKE :search OR EXISTS ${matchingMessages})`,
     {
       search: `%${search}%`,
-      searchRoles: [MessageRole.USER, MessageRole.ASSISTANT],
+      searchRoles: SEARCHABLE_MESSAGE_ROLES,
     },
   );
 }

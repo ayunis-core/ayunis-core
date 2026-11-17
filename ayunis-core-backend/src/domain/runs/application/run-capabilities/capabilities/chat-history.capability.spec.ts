@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
+import type { ChatGrepTool } from 'src/domain/tools/domain/tools/chat-grep-tool.entity';
 import type { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { PromptSlot } from 'src/domain/runs/application/run-capabilities/run-capability';
@@ -24,16 +25,19 @@ function contribute(overrides: Parameters<typeof aCapabilityContext>[0] = {}) {
 }
 
 describe('ChatHistoryCapability', () => {
-  it('offers both tools scoped to the run’s own chat and workspace, with usage guidance', async () => {
+  it('offers all three tools scoped to the run’s own chat and workspace, with usage guidance', async () => {
     const thread = aThread({ workspaceId });
 
     const contribution = await contribute({ thread });
 
     expect(toolNames(contribution)).toEqual([
       ToolType.CHAT_LIST,
+      ToolType.CHAT_GREP,
       ToolType.CHAT_READ,
     ]);
-    for (const tool of contribution.tools as (ChatListTool | ChatReadTool)[]) {
+    for (const tool of contribution.tools as (
+      ChatListTool | ChatGrepTool | ChatReadTool
+    )[]) {
       expect(tool.scope).toEqual({
         currentThreadId: thread.id,
         workspaceId,

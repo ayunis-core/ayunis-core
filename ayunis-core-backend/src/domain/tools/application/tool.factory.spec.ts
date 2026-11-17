@@ -200,10 +200,11 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.SET_MEMORY);
       expect(types).toContain(ToolType.CHAT_LIST);
       expect(types).toContain(ToolType.CHAT_READ);
+      expect(types).toContain(ToolType.CHAT_GREP);
       expect(types).toContain(ToolType.FINISH_ROUTINE);
       expect(types).toContain(ToolType.SEND_NOTIFICATION);
 
-      expect(types).toHaveLength(46);
+      expect(types).toHaveLength(47);
     });
   });
 });
