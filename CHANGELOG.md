@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.76.1](https://github.com/ayunis-core/ayunis-core/compare/v2.76.0...v2.76.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **config:** require MINIO_PUBLIC_ENDPOINT in production (AYC-1886) ([#2386](https://github.com/ayunis-core/ayunis-core/issues/2386)) ([93676d9](https://github.com/ayunis-core/ayunis-core/commit/93676d9e06ce85e4257e1d5a22181b8a3dbbbd71))
+
 ## [2.76.0](https://github.com/ayunis-core/ayunis-core/compare/v2.75.0...v2.76.0) (2026-11-17)
 
 
