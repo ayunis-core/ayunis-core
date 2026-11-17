@@ -12,6 +12,8 @@ import type {
   IncompleteUpload,
   UploadRequest,
 } from 'src/domain/storage/domain/multipart-upload.object';
+import type { DownloadRequest } from 'src/domain/storage/domain/download-request.object';
+import { amzDate, downloadQuery } from './presigned-download.helper';
 import storageConfig from 'src/config/storage.config';
 import { StorageObjectUpload } from 'src/domain/storage/domain/storage-object-upload.entity';
 import { StorageObject } from 'src/domain/storage/domain/storage-object.entity';
@@ -29,7 +31,15 @@ import {
 const MISSING_OBJECT_CODES = new Set(['NoSuchKey', 'NotFound']);
 
 /** SigV4 caps a presigned URL's lifetime at seven days. */
-const MAX_UPLOAD_URL_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
+const MAX_PRESIGNED_URL_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
+
+function isValidExpiry(expiresInSeconds: number): boolean {
+  return (
+    Number.isSafeInteger(expiresInSeconds) &&
+    expiresInSeconds >= 1 &&
+    expiresInSeconds <= MAX_PRESIGNED_URL_EXPIRY_SECONDS
+  );
+}
 
 /** A PUT whose length is not signed could write any body to the key. */
 function validateContentLength(request: UploadRequest): void {
@@ -332,7 +342,7 @@ export class MinioObjectStorageProvider
     this.validateUploadSignature(request, expiresInSeconds);
     const bucketName = storageUrl.bucket || this.defaultBucket;
     const region = await this.getSigningRegion(bucketName);
-    const url = this.uploadUrl(
+    const url = this.publicObjectUrl(
       bucketName,
       storageUrl.objectName,
       request.query,
@@ -359,11 +369,7 @@ export class MinioObjectStorageProvider
     request: UploadRequest,
     expiresInSeconds: number,
   ): void {
-    if (
-      !Number.isSafeInteger(expiresInSeconds) ||
-      expiresInSeconds < 1 ||
-      expiresInSeconds > MAX_UPLOAD_URL_EXPIRY_SECONDS
-    )
+    if (!isValidExpiry(expiresInSeconds))
       throw new Error('Invalid upload URL expiry');
     validateContentLength(request);
     const { accessKey, secretKey } = this.config.minio.upload;
@@ -371,7 +377,40 @@ export class MinioObjectStorageProvider
       throw new Error('Upload credentials are required to sign uploads');
   }
 
-  private uploadUrl(
+  async presignDownload(
+    storageUrl: StorageUrl,
+    request: DownloadRequest,
+  ): Promise<string> {
+    if (!isValidExpiry(request.expiresInSeconds))
+      throw new Error('Invalid download URL expiry');
+    const { accessKey, secretKey } = this.credentials();
+    if (!accessKey || !secretKey)
+      throw new Error('Storage credentials are required to sign downloads');
+    const bucketName = storageUrl.bucket || this.defaultBucket;
+    const region = await this.getSigningRegion(bucketName);
+    const url = this.publicObjectUrl(
+      bucketName,
+      storageUrl.objectName,
+      downloadQuery(request),
+      request.expiresInSeconds,
+    );
+    // The upload identity cannot read. A signed GET grants only reading this
+    // key, so signing it as the server identity does not widen access the way
+    // a signed PUT (honoured as CopyObject) would.
+    const signed = await new AwsV4Signer({
+      url: url.toString(),
+      method: 'GET',
+      service: 's3',
+      region,
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+      signQuery: true,
+      datetime: amzDate(request.signedAt),
+    }).sign();
+    return signed.url.toString();
+  }
+
+  private publicObjectUrl(
     bucket: string,
     key: string,
     query: Record<string, string>,

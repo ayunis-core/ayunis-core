@@ -6,6 +6,7 @@ import type {
   IncompleteUpload,
   UploadRequest,
 } from 'src/domain/storage/domain/multipart-upload.object';
+import type { DownloadRequest } from 'src/domain/storage/domain/download-request.object';
 
 /** An object's key plus the metadata needed to age it against a safety window. */
 export interface StorageObjectSummary {
@@ -116,6 +117,16 @@ export abstract class ObjectStoragePort {
     storageUrl: StorageUrl,
     request: UploadRequest,
     expiresInSeconds: number,
+  ): Promise<string>;
+
+  /**
+   * Sign a GET for the object against the public endpoint, as the
+   * server-side identity. Signing is local and does not check that the object
+   * exists. The URL grants read access to anyone holding it.
+   */
+  abstract presignDownload(
+    storageUrl: StorageUrl,
+    request: DownloadRequest,
   ): Promise<string>;
 
   abstract abortMultipartUpload(

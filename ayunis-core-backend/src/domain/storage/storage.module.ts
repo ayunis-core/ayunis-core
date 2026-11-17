@@ -19,6 +19,7 @@ import { OrphanStorageSweepTask } from './infrastructure/tasks/orphan-storage-sw
 import { PresignUploadRequestUseCase } from './application/use-cases/presign-upload-request/presign-upload-request.use-case';
 import { AbortMultipartUploadUseCase } from './application/use-cases/abort-multipart-upload/abort-multipart-upload.use-case';
 import { ListIncompleteUploadsUseCase } from './application/use-cases/list-incomplete-uploads/list-incomplete-uploads.use-case';
+import { PresignDownloadUseCase } from './application/use-cases/presign-download/presign-download.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 
 const DIRECT_UPLOAD_USE_CASES = [
@@ -47,6 +48,7 @@ const DIRECT_UPLOAD_USE_CASES = [
     SweepOrphanStorageUseCase,
     StorageOrgDeletionRequestedListener,
     OrphanStorageSweepTask,
+    PresignDownloadUseCase,
     ...DIRECT_UPLOAD_USE_CASES,
   ],
   exports: [
@@ -60,6 +62,7 @@ const DIRECT_UPLOAD_USE_CASES = [
     ListObjectSummariesUseCase,
     PurgeOrgStorageUseCase,
     PurgeStoragePrefixesUseCase,
+    PresignDownloadUseCase,
     ...DIRECT_UPLOAD_USE_CASES,
   ],
 })
