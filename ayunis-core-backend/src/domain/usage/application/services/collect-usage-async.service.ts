@@ -4,6 +4,7 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ImageGenerationModel } from 'src/domain/models/domain/models/image-generation.model';
 import { LanguageModel } from 'src/domain/models/domain/models/language.model';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run-usage-collection.event';
 import type {
   RunUsageCollectionOutcome,
@@ -57,6 +58,7 @@ export class CollectUsageAsyncService {
     outputTokens: number,
     messageId?: UUID,
     executionPath?: RunUsageExecutionPath,
+    mode?: ModelMode | null,
   ): Promise<void> {
     return this.persist(
       this.prepareCollection(
@@ -65,6 +67,7 @@ export class CollectUsageAsyncService {
         outputTokens,
         messageId,
         executionPath,
+        mode,
       ),
     );
   }
@@ -75,6 +78,7 @@ export class CollectUsageAsyncService {
     outputTokens: number,
     messageId?: UUID,
     executionPath?: RunUsageExecutionPath,
+    mode?: ModelMode | null,
   ): UsageCollection {
     this.logger.debug(
       {
@@ -101,6 +105,7 @@ export class CollectUsageAsyncService {
       inputTokens,
       outputTokens,
       requestId: messageId,
+      mode,
     });
     return { command, event, executionPath };
   }

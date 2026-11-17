@@ -96,7 +96,10 @@ export class RunAssemblyService {
         principal: { userId: prepared.userId, orgId: prepared.orgId },
         resolveModel: models.resolve,
       }),
-      this.usageHookFactory.create({ resolveModel: models.resolve }),
+      this.usageHookFactory.create({
+        resolveModel: models.resolve,
+        mode: prepared.thread.mode,
+      }),
       this.persistenceHookFactory.create({
         onMessagePersisted,
         thread: prepared.thread,

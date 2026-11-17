@@ -217,7 +217,12 @@ export class WebhookDispatchListener {
         ? await this.resolveUser(event.usage.userId)
         : null;
     await this.dispatch(
-      new UsageCollectedWebhookEvent(event.usage, event.modelName, user),
+      new UsageCollectedWebhookEvent(
+        event.usage,
+        event.modelName,
+        user,
+        event.mode,
+      ),
     );
   }
 
