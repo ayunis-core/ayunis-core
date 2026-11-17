@@ -39,6 +39,15 @@ export function listThreadsStatusForAccessToken(
   return withAccessToken(accessToken, listThreadsStatus);
 }
 
+/** A route the Outlook pane has no business calling. */
+export function listActiveRunsStatusForAccessToken(
+  accessToken: string,
+): Promise<number> {
+  return withAccessToken(accessToken, async (api) =>
+    (await api.get(`${config.apiURL}/api/runs/active`)).status(),
+  );
+}
+
 export function refreshWithBodyToken(
   api: APIRequestContext,
   refreshToken: string,
