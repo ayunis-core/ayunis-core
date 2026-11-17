@@ -20,11 +20,15 @@ export function buildSourceUploadKey(
   sessionId: string,
   fileName: string,
 ): string {
+  return `${orgId}/uploads/${sessionId}/${uploadObjectFileName(fileName)}`;
+}
+
+/** The last segment of the key a file with this name is uploaded under. */
+export function uploadObjectFileName(fileName: string): string {
   const sanitizedFileName = path
     .basename(fileName)
     .replace(/[^a-zA-Z0-9._-]/g, '_');
-  const objectFileName = ['', '.', '..'].includes(sanitizedFileName)
+  return ['', '.', '..'].includes(sanitizedFileName)
     ? 'upload'
     : sanitizedFileName;
-  return `${orgId}/uploads/${sessionId}/${objectFileName}`;
 }

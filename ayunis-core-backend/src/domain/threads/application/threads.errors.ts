@@ -20,6 +20,9 @@ export enum ThreadErrorCode {
   MESSAGE_IMAGE_NOT_FOUND = 'MESSAGE_IMAGE_NOT_FOUND',
   GENERATED_IMAGE_SAVE_FAILED = 'GENERATED_IMAGE_SAVE_FAILED',
   UNSUPPORTED_IMAGE_CONTENT_TYPE = 'UNSUPPORTED_IMAGE_CONTENT_TYPE',
+  THREAD_FILE_NOT_FOUND = 'THREAD_FILE_NOT_FOUND',
+  THREAD_FILE_ADDED_BY_SKILL = 'THREAD_FILE_ADDED_BY_SKILL',
+  THREAD_FILE_NOT_STORED = 'THREAD_FILE_NOT_STORED',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
 }
 
@@ -257,6 +260,43 @@ export class UnsupportedImageContentTypeError extends ThreadError {
         contentType,
         ...metadata,
       },
+    );
+  }
+}
+
+/**
+ * Also raised for an unknown ID and for another user's or another thread's
+ * file, with nothing that tells these cases apart.
+ */
+export class ThreadFileNotFoundError extends ThreadError {
+  constructor(sourceId: string) {
+    super(
+      `'${sourceId}' is not a file of this chat`,
+      ThreadErrorCode.THREAD_FILE_NOT_FOUND,
+      404,
+      { sourceId },
+    );
+  }
+}
+
+export class ThreadFileAddedBySkillError extends ThreadError {
+  constructor(sourceId: string) {
+    super(
+      `File '${sourceId}' was added by a skill, not attached by the user`,
+      ThreadErrorCode.THREAD_FILE_ADDED_BY_SKILL,
+      403,
+      { sourceId },
+    );
+  }
+}
+
+export class ThreadFileNotStoredError extends ThreadError {
+  constructor(sourceId: string) {
+    super(
+      `File '${sourceId}' has no stored original`,
+      ThreadErrorCode.THREAD_FILE_NOT_STORED,
+      422,
+      { sourceId },
     );
   }
 }
