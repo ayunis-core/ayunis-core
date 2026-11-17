@@ -9063,6 +9063,77 @@
         },
         "summary": "Change a member's role in a workspace",
         "tags": ["workspaces"]
+      },
+      "delete": {
+        "description": "Needs manage_workspace_members; only workspace admins remove admins. The member keeps their chats but cannot open them until added again.",
+        "operationId": "WorkspaceMembersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Member removed"
+          },
+          "403": {
+            "description": "Not allowed to remove members, or to remove an admin"
+          },
+          "404": {
+            "description": "Workspace not found or user is not a member"
+          },
+          "409": {
+            "description": "The last admin cannot be removed"
+          }
+        },
+        "summary": "Remove a member from a workspace",
+        "tags": ["workspaces"]
+      }
+    },
+    "/workspaces/{id}/members/me": {
+      "delete": {
+        "operationId": "WorkspaceMembersController_leave",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Left the workspace"
+          },
+          "404": {
+            "description": "Workspace not found"
+          },
+          "409": {
+            "description": "The last admin cannot leave the workspace"
+          }
+        },
+        "summary": "Leave a workspace",
+        "tags": ["workspaces"]
       }
     },
     "/workspaces/{id}/context": {

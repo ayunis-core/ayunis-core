@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { Trash2 } from 'lucide-react';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Table,
   TableBody,
@@ -7,26 +9,33 @@ import {
   TableHeader,
   TableRow,
 } from '@ayunis/ui/components/table';
-import type {
-  WorkspaceMember,
-  WorkspaceRolePermissionSet,
+import type { WorkspaceAccess } from '@/features/workspaces';
+import { useAuthenticationControllerMe } from '@/shared/api';
+import { useRemoveWorkspaceMember } from '@/pages/workspace/api/useRemoveWorkspaceMember';
+import {
+  canRemoveWorkspaceMember,
+  type WorkspaceMember,
+  type WorkspaceRolePermissionSet,
 } from '@/pages/workspace/model/workspace-members';
 import { WorkspaceMemberRoleSelect } from './WorkspaceMemberRoleSelect';
 
 interface WorkspaceMembersListProps {
   workspaceId: string;
   members: WorkspaceMember[];
-  canChangeRoles: boolean;
+  access: WorkspaceAccess;
   rolePermissions: readonly WorkspaceRolePermissionSet[] | undefined;
 }
 
 export function WorkspaceMembersList({
   workspaceId,
   members,
-  canChangeRoles,
+  access,
   rolePermissions,
 }: Readonly<WorkspaceMembersListProps>) {
   const { t } = useTranslation('workspace');
+  const { data: currentUser } = useAuthenticationControllerMe();
+  const { removeWorkspaceMember, removingUserIds } =
+    useRemoveWorkspaceMember(workspaceId);
 
   return (
     <Table>
@@ -36,6 +45,7 @@ export function WorkspaceMembersList({
           <TableHead>{t('members.email')}</TableHead>
           <TableHead>{t('members.role.label')}</TableHead>
           <TableHead>{t('members.joinedAt')}</TableHead>
+          <TableHead className="w-[50px]"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -47,7 +57,7 @@ export function WorkspaceMembersList({
             <TableCell className="font-medium">{member.name}</TableCell>
             <TableCell>{member.email}</TableCell>
             <TableCell>
-              {canChangeRoles ? (
+              {access.isAdmin ? (
                 <WorkspaceMemberRoleSelect
                   workspaceId={workspaceId}
                   member={member}
@@ -63,6 +73,20 @@ export function WorkspaceMembersList({
             </TableCell>
             <TableCell>
               {new Date(member.joinedAt).toLocaleDateString()}
+            </TableCell>
+            <TableCell>
+              {canRemoveWorkspaceMember(access, member, currentUser?.id) && (
+                <Button
+                  variant="destructive-ghost"
+                  size="icon"
+                  aria-label={t('members.remove.label', { name: member.name })}
+                  onClick={() => removeWorkspaceMember(member)}
+                  disabled={removingUserIds.has(member.userId)}
+                  data-testid={`workspace-member-remove-${member.userId}`}
+                >
+                  <Trash2 />
+                </Button>
+              )}
             </TableCell>
           </TableRow>
         ))}

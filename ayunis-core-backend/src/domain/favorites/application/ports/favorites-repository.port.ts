@@ -1,6 +1,6 @@
 import type { UUID } from 'crypto';
-import type { Favorite } from '../../domain/favorite.entity';
-import type { FavoriteReferenceType } from '../../domain/value-objects/favorite-reference-type.enum';
+import type { Favorite } from 'src/domain/favorites/domain/favorite.entity';
+import type { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 
 export abstract class FavoritesRepository {
   abstract findAllByUserId(userId: UUID): Promise<Favorite[]>;
@@ -15,9 +15,11 @@ export abstract class FavoritesRepository {
     referenceId: UUID,
   ): Promise<void>;
   abstract remove(favorite: Favorite): Promise<void>;
+  /** Removes the reference from every user's favorites, or only from `userId`'s. */
   abstract removeByReference(
     referenceType: FavoriteReferenceType,
     referenceId: UUID,
+    userId?: UUID,
   ): Promise<void>;
   abstract reorder(userId: UUID, favoriteIds: UUID[]): Promise<void>;
 }

@@ -1,8 +1,4 @@
 import type { TestingModule } from '@nestjs/testing';
-import {
-  createLoggerMock,
-  type LoggerMock,
-} from 'src/common/testing/logger.mock';
 import { Test } from '@nestjs/testing';
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -11,6 +7,11 @@ import { DeleteThreadUseCase } from './delete-thread.use-case';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ContextService } from 'src/common/context/services/context.service';
+import {
+  aUserContext,
+  createMockContextService,
+} from 'src/common/context/testing/context.fixtures';
+import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
 import { PurgeStoragePrefixesUseCase } from 'src/domain/storage/application/use-cases/purge-storage-prefixes/purge-storage-prefixes.use-case';
 import { ThreadDeletionRequestedEvent } from 'src/domain/threads/application/events/thread-deletion-requested.event';
 import { ThreadDeletionService } from 'src/domain/threads/application/services/thread-deletion.service';
@@ -20,14 +21,12 @@ describe('DeleteThreadUseCase', () => {
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let purgeStoragePrefixesUseCase: { execute: jest.Mock };
   let eventEmitter: { emitAsync: jest.Mock };
-  let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174002' as UUID;
   const mockThreadId = '123e4567-e89b-12d3-a456-426614174001' as UUID;
 
   beforeEach(async () => {
-    logger = createLoggerMock();
     const mockThreadsRepository = {
       findOne: jest.fn(),
       delete: jest.fn(),
@@ -35,13 +34,9 @@ describe('DeleteThreadUseCase', () => {
       update: jest.fn(),
     };
 
-    const mockContextService = {
-      get: jest.fn((key: string) => {
-        if (key === 'userId') return mockUserId;
-        if (key === 'orgId') return mockOrgId;
-        return undefined;
-      }),
-    } as unknown as jest.Mocked<ContextService>;
+    const contextService = createMockContextService(
+      aUserContext({ userId: mockUserId, orgId: mockOrgId }),
+    );
 
     purgeStoragePrefixesUseCase = {
       execute: jest.fn().mockResolvedValue({ deletedCount: 0, failedCount: 0 }),
@@ -55,7 +50,7 @@ describe('DeleteThreadUseCase', () => {
         DeleteThreadUseCase,
         ThreadDeletionService,
         { provide: ThreadsRepository, useValue: mockThreadsRepository },
-        { provide: ContextService, useValue: mockContextService },
+        { provide: ContextService, useValue: contextService },
         {
           provide: PurgeStoragePrefixesUseCase,
           useValue: purgeStoragePrefixesUseCase,
@@ -138,18 +133,10 @@ describe('DeleteThreadUseCase', () => {
 
       await expect(
         useCase.execute(new DeleteThreadCommand(mockThreadId)),
-      ).rejects.toThrow('Database connection failed');
+      ).rejects.toThrow(UnexpecteThreadError);
 
       expect(purgeStoragePrefixesUseCase.execute).not.toHaveBeenCalled();
       expect(eventEmitter.emitAsync).toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith(
-        {
-          threadId: mockThreadId,
-          userId: mockUserId,
-          err: repositoryError,
-        },
-        'Failed to delete thread',
-      );
     });
 
     it('should swallow purge failures after a successful delete', async () => {

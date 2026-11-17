@@ -4,6 +4,7 @@ import type {
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { UpdateWorkspaceMemberRoleDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { MemberRoleTranslation } from '@/widgets/member-role-select';
+import type { WorkspaceAccess } from '@/features/workspaces';
 
 export type WorkspaceMember = WorkspaceMemberResponseDto;
 export type WorkspaceRole = UpdateWorkspaceMemberRoleDtoRole;
@@ -29,3 +30,13 @@ export const WORKSPACE_ROLE_TRANSLATION: MemberRoleTranslation = {
 // Not a matrix permission: the backend reserves changing roles and deleting
 // the workspace for workspace admins.
 export const WORKSPACE_ADMIN_ONLY_ITEMS = ['manage_roles'];
+
+/** Members leave on their own instead of removing themselves. */
+export function canRemoveWorkspaceMember(
+  access: WorkspaceAccess,
+  member: WorkspaceMember,
+  currentUserId: string | undefined,
+): boolean {
+  if (member.userId === currentUserId) return false;
+  return member.role === 'admin' ? access.isAdmin : access.canManageMembers;
+}

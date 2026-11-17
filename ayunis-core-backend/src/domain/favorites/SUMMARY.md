@@ -37,7 +37,8 @@ prevents duplicate favorites, and a user/position constraint protects order.
 - **`ReorderFavoritesUseCase`** — Reorders the caller's favorites; unknown ids
   are ignored and omitted favorites keep their relative order at the end.
 - **`RemoveFavoriteReferenceUseCase`** — Deletes every favorite row matching a
-  reference type/id (used when a target is deleted).
+  reference type/id (used when a target is deleted), or only one user's (used
+  when that user is removed from a workspace or leaves it).
 
 ## Application Services
 
@@ -53,6 +54,10 @@ prevents duplicate favorites, and a user/position constraint protects order.
   by the workspace cascade are cleaned up by the threads module's
   `ThreadsWorkspaceDeletionRequestedListener` instead, because cascade deletes
   never emit `ThreadDeletionRequestedEvent`.
+- **`FavoriteWorkspaceMemberRemovedListener`** — Removes the workspace
+  favorite of a member who was removed from the workspace or left it. It runs
+  after the removal is committed, so it logs a failure instead of throwing.
+  Their chat favorites stay; the list hides chats they can no longer open.
 
 ## Infrastructure
 

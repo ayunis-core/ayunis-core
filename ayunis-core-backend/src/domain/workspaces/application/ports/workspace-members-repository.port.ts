@@ -18,6 +18,7 @@ export abstract class WorkspaceMembersRepository {
     userId: UUID,
     role: UserRole,
   ): Promise<void>;
+  abstract delete(workspaceId: UUID, userId: UUID): Promise<void>;
   /**
    * Locks the workspace row until the surrounding transaction ends, so
    * membership changes that must keep an admin cannot interleave. Must run

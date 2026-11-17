@@ -28,6 +28,9 @@ import { ListWorkspaceMemberCandidatesUseCase } from './application/use-cases/li
 import { ListWorkspaceMembersUseCase } from './application/use-cases/list-workspace-members/list-workspace-members.use-case';
 import { AddWorkspaceMembersUseCase } from './application/use-cases/add-workspace-members/add-workspace-members.use-case';
 import { UpdateWorkspaceMemberRoleUseCase } from './application/use-cases/update-workspace-member-role/update-workspace-member-role.use-case';
+import { RemoveWorkspaceMemberUseCase } from './application/use-cases/remove-workspace-member/remove-workspace-member.use-case';
+import { LeaveWorkspaceUseCase } from './application/use-cases/leave-workspace/leave-workspace.use-case';
+import { WorkspaceMemberRemovalService } from './application/services/workspace-member-removal.service';
 import { WorkspaceMembersController } from './presenters/http/workspace-members.controller';
 import { WorkspaceMemberDtoMapper } from './presenters/http/mappers/workspace-member-dto.mapper';
 import { LocalWorkspacesRepositoryModule } from './infrastructure/persistence/local/local-workspaces-repository.module';
@@ -74,10 +77,13 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     ListWorkspaceMemberCandidatesUseCase,
     AddWorkspaceMembersUseCase,
     UpdateWorkspaceMemberRoleUseCase,
+    RemoveWorkspaceMemberUseCase,
+    LeaveWorkspaceUseCase,
     GetWorkspaceAiContextUseCase,
     BuildWorkspaceRunContextUseCase,
     WorkspaceAccessService,
     WorkspaceDeletionService,
+    WorkspaceMemberRemovalService,
     WorkspaceMemberProfilesService,
     WorkspacesUserDeletionRequestedListener,
     AssertWorkspaceReadAccessUseCase,

@@ -9,7 +9,9 @@ import {
   aUserContext,
   createMockContextService,
 } from 'src/common/context/testing/context.fixtures';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { WorkspaceMemberRemovalService } from 'src/domain/workspaces/application/services/workspace-member-removal.service';
 import type { WorkspaceMemberProfilesService } from 'src/domain/workspaces/application/services/workspace-member-profiles.service';
 import { createRoleMatrix } from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { UpdateWorkspaceMemberRoleCommand } from 'src/domain/workspaces/application/use-cases/update-workspace-member-role/update-workspace-member-role.command';
@@ -91,6 +93,22 @@ describe('Workspace member changes', () => {
     );
   }
 
+  /** The membership removal acting as `userId` inside `runner`'s transaction. */
+  function removingAs(userId: UUID, runner: QueryRunner) {
+    const members = membersIn(runner);
+    const context = createMockContextService(aUserContext({ userId, orgId }));
+    return new WorkspaceMemberRemovalService(
+      members,
+      new WorkspaceAccessService(
+        members,
+        createRoleMatrix().getMyPermissions,
+        context,
+      ),
+      { emitAsync: () => Promise.resolve([]) } as unknown as EventEmitter2,
+      context,
+    );
+  }
+
   async function seed(userId: UUID, role: UserRole): Promise<void> {
     await db.query(
       `INSERT INTO "${schema}".workspace_members (id, "workspaceId", "userId", role)
@@ -161,6 +179,35 @@ describe('Workspace member changes', () => {
 
       await expect(committedRoles()).resolves.toEqual({
         [anna]: UserRole.USER,
+        [ben]: UserRole.ADMIN,
+      });
+    } finally {
+      await first.release();
+      await second.release();
+    }
+  });
+
+  it('keeps an admin when two admins leave at the same time', async () => {
+    await seed(anna, UserRole.ADMIN);
+    await seed(ben, UserRole.ADMIN);
+    const first = await transaction();
+    const second = await transaction();
+    try {
+      await removingAs(anna, first).remove(workspaceId, anna);
+      let secondSettled = false;
+      const leave = removingAs(ben, second)
+        .remove(workspaceId, ben)
+        .finally(() => {
+          secondSettled = true;
+        });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(secondSettled).toBe(false);
+
+      await first.commitTransaction();
+      await expect(leave).rejects.toBeInstanceOf(WorkspaceLastAdminError);
+      await second.rollbackTransaction();
+
+      await expect(committedRoles()).resolves.toEqual({
         [ben]: UserRole.ADMIN,
       });
     } finally {
