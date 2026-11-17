@@ -50,7 +50,7 @@ import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/applica
 const LOGIN_BODY_DESCRIPTION = 'User credentials for authentication';
 
 import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
-import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RefreshTokenSingleFlightService } from 'src/iam/authentication/application/services/refresh-token-single-flight.service';
 import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
 import { LoginCommand } from 'src/iam/authentication/application/use-cases/login/login.command';
@@ -81,7 +81,7 @@ export class AuthenticationController {
   // eslint-disable-next-line max-params
   constructor(
     private readonly loginUseCase: LoginUseCase,
-    private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    private readonly refreshTokens: RefreshTokenSingleFlightService,
     private readonly registerUserUseCase: RegisterUserUseCase,
     private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
     private readonly startAuthenticatedSession: StartAuthenticatedSessionUseCase,
@@ -251,7 +251,7 @@ export class AuthenticationController {
     refreshToken: string,
   ): Promise<Response> {
     try {
-      const tokens = await this.refreshTokenUseCase.execute(
+      const tokens = await this.refreshTokens.execute(
         new RefreshTokenCommand(refreshToken, false),
       );
       setCookies(res, tokens, this.configService, true);
@@ -277,7 +277,7 @@ export class AuthenticationController {
     refreshToken: string,
   ): Promise<Response> {
     try {
-      const tokens = await this.refreshTokenUseCase.execute(
+      const tokens = await this.refreshTokens.execute(
         new RefreshTokenCommand(refreshToken, true),
       );
       return res.json(this.sessionTokensMapper.toDto(tokens));
@@ -371,7 +371,7 @@ export class AuthenticationController {
   ): Promise<Response> {
     try {
       // Try to refresh tokens - this will validate the refresh token
-      const tokens = await this.refreshTokenUseCase.execute(
+      const tokens = await this.refreshTokens.execute(
         new RefreshTokenCommand(refreshToken),
       );
 

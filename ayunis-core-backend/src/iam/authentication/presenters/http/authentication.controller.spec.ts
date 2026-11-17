@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AuthenticationController } from './authentication.controller';
 import { LoginUseCase } from 'src/iam/authentication/application/use-cases/login/login.use-case';
-import { RefreshTokenUseCase } from 'src/iam/authentication/application/use-cases/refresh-token/refresh-token.use-case';
+import { RefreshTokenSingleFlightService } from 'src/iam/authentication/application/services/refresh-token-single-flight.service';
 import { RegisterUserUseCase } from 'src/iam/authentication/application/use-cases/register-user/register-user.use-case';
 import { GetCurrentUserUseCase } from 'src/iam/authentication/application/use-cases/get-current-user/get-current-user.use-case';
 import { ConfigService } from '@nestjs/config';
@@ -27,7 +27,7 @@ import { StartAuthenticatedSessionUseCase } from 'src/iam/authentication/applica
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
   let mockLoginUseCase: Partial<LoginUseCase>;
-  let mockRefreshTokenUseCase: Partial<RefreshTokenUseCase>;
+  let mockRefreshTokens: Partial<RefreshTokenSingleFlightService>;
   let mockRegisterUserUseCase: Partial<RegisterUserUseCase>;
   let mockGetCurrentUserUseCase: Partial<GetCurrentUserUseCase>;
   let mockStartAuthenticatedSessionUseCase: { execute: jest.Mock };
@@ -38,7 +38,7 @@ describe('AuthenticationController', () => {
     mockLoginUseCase = {
       execute: jest.fn(),
     };
-    mockRefreshTokenUseCase = {
+    mockRefreshTokens = {
       execute: jest.fn(),
     };
     mockRegisterUserUseCase = {
@@ -61,7 +61,10 @@ describe('AuthenticationController', () => {
       controllers: [AuthenticationController],
       providers: [
         { provide: LoginUseCase, useValue: mockLoginUseCase },
-        { provide: RefreshTokenUseCase, useValue: mockRefreshTokenUseCase },
+        {
+          provide: RefreshTokenSingleFlightService,
+          useValue: mockRefreshTokens,
+        },
         { provide: RegisterUserUseCase, useValue: mockRegisterUserUseCase },
         { provide: GetCurrentUserUseCase, useValue: mockGetCurrentUserUseCase },
         {
@@ -247,14 +250,14 @@ describe('AuthenticationController', () => {
 
     it('returns a token client its rotated tokens in the body without cookies', async () => {
       jest
-        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .spyOn(mockRefreshTokens, 'execute')
         .mockResolvedValue(new AuthTokens('pane-access', 'pane-refresh-2'));
 
       await controller.refresh(request({}), mockResponse as Response, {
         refreshToken: 'pane-refresh-1',
       });
 
-      expect(mockRefreshTokenUseCase.execute).toHaveBeenCalledWith(
+      expect(mockRefreshTokens.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           refreshToken: 'pane-refresh-1',
           clientBound: true,
@@ -271,7 +274,7 @@ describe('AuthenticationController', () => {
 
     it('answers 401 without cookie writes when a body token is replayed', async () => {
       jest
-        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .spyOn(mockRefreshTokens, 'execute')
         .mockRejectedValue(new RefreshTokenReuseError());
 
       await controller.refresh(request({}), mockResponse as Response, {
@@ -285,7 +288,7 @@ describe('AuthenticationController', () => {
 
     it('prefers the refresh cookie over a body token', async () => {
       jest
-        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .spyOn(mockRefreshTokens, 'execute')
         .mockResolvedValue(new AuthTokens('web-access', 'web-refresh-2'));
 
       await controller.refresh(
@@ -294,7 +297,7 @@ describe('AuthenticationController', () => {
         { refreshToken: 'pane-refresh-1' },
       );
 
-      expect(mockRefreshTokenUseCase.execute).toHaveBeenCalledWith(
+      expect(mockRefreshTokens.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           refreshToken: 'web-refresh-1',
           clientBound: false,
@@ -308,7 +311,7 @@ describe('AuthenticationController', () => {
     // outage must surface as the error it is so the client keeps the session.
     it('keeps a token client signed in when the refresh fails unexpectedly', async () => {
       const outage = new UnexpectedAuthenticationError(new Error('db down'));
-      jest.spyOn(mockRefreshTokenUseCase, 'execute').mockRejectedValue(outage);
+      jest.spyOn(mockRefreshTokens, 'execute').mockRejectedValue(outage);
 
       await expect(
         controller.refresh(request({}), mockResponse as Response, {
@@ -321,7 +324,7 @@ describe('AuthenticationController', () => {
 
     it('keeps the cookies when the cookie refresh fails unexpectedly', async () => {
       const outage = new UnexpectedAuthenticationError(new Error('db down'));
-      jest.spyOn(mockRefreshTokenUseCase, 'execute').mockRejectedValue(outage);
+      jest.spyOn(mockRefreshTokens, 'execute').mockRejectedValue(outage);
 
       await expect(
         controller.refresh(
@@ -467,13 +470,11 @@ describe('AuthenticationController', () => {
         .mockRejectedValueOnce(new Error('Token expired'))
         .mockResolvedValueOnce(mockUser);
 
-      jest
-        .spyOn(mockRefreshTokenUseCase, 'execute')
-        .mockResolvedValue(mockTokens);
+      jest.spyOn(mockRefreshTokens, 'execute').mockResolvedValue(mockTokens);
 
       await controller.me(mockRequest as Request, mockResponse as Response);
 
-      expect(mockRefreshTokenUseCase.execute).toHaveBeenCalledWith(
+      expect(mockRefreshTokens.execute).toHaveBeenCalledWith(
         expect.objectContaining({ refreshToken: 'valid-refresh-token' }),
       );
       expect(mockGetCurrentUserUseCase.execute).toHaveBeenCalledTimes(2);
@@ -538,7 +539,7 @@ describe('AuthenticationController', () => {
 
       // Mock refreshToken to fail
       jest
-        .spyOn(mockRefreshTokenUseCase, 'execute')
+        .spyOn(mockRefreshTokens, 'execute')
         .mockRejectedValue(new Error('Invalid refresh token'));
 
       await controller.me(mockRequest as Request, mockResponse as Response);
