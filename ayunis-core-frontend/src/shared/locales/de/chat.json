@@ -125,6 +125,8 @@
         "create_routine": "Routine erstellt",
         "edit_routine": "Routine bearbeitet",
         "activate_skill": "Fähigkeit aktiviert",
+        "get_memory": "Erinnerung gelesen",
+        "set_memory": "Erinnerung aktualisiert",
         "internet_search": "Im Internet gesucht",
         "website_content": "Website abgerufen",
         "source_query": "Dateien durchsucht",
