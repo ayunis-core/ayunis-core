@@ -37,7 +37,11 @@ function capability(options: { load?: () => Promise<MemoryEntry[]> } = {}) {
 
 const memoryContext = (
   overrides: Parameters<typeof aCapabilityContext>[0] = {},
-) => aCapabilityContext({ personalContext: { memory: true }, ...overrides });
+) =>
+  aCapabilityContext({
+    personalContext: { memory: true, chatHistory: false },
+    ...overrides,
+  });
 
 function entry(key: string, content: string, description?: string) {
   return new MemoryEntry({ userId: TEST_USER_ID, key, content, description });
@@ -98,7 +102,9 @@ describe('MemoryCapability', () => {
     const load = jest.fn(() => Promise.resolve([entry('personal', 'Bauamt')]));
 
     const contribution = await capability({ load }).contribute(
-      aCapabilityContext({ personalContext: { memory: false } }),
+      aCapabilityContext({
+        personalContext: { memory: false, chatHistory: false },
+      }),
     );
 
     expect(contribution).toEqual({});

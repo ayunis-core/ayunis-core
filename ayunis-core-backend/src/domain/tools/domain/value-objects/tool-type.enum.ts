@@ -19,6 +19,8 @@ export enum ToolType {
   ACTIVATE_SKILL = 'activate_skill',
   GET_MEMORY = 'get_memory',
   SET_MEMORY = 'set_memory',
+  CHAT_LIST = 'chat_list',
+  CHAT_READ = 'chat_read',
   CREATE_SKILL = 'create_skill',
   EDIT_SKILL = 'edit_skill',
   KNOWLEDGE_QUERY = 'knowledge_query',

@@ -30,6 +30,7 @@ import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabil
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
+import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 import {
@@ -109,6 +110,7 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     ),
     new WorkspaceInstructionsCapability(),
     new MemoryCapability(resolved(memory) as never, assembleTool),
+    new ChatHistoryCapability(assembleTool),
     new McpCapability(mcpTools),
   );
 }
@@ -145,7 +147,10 @@ function assembleChat(
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     isAnonymous: options.isAnonymous ?? false,
-    personalContext: { memory: options.memory !== undefined },
+    personalContext: {
+      memory: options.memory !== undefined,
+      chatHistory: false,
+    },
     activatedSkillName: options.activatedSkillName,
   });
 }

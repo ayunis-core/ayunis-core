@@ -705,13 +705,14 @@ describe('ExecuteRunUseCase', () => {
   });
 
   // A user's grants of one model can disagree; only the effective grant
-  // merges them, the thread's stored permit is just one of them.
+  // merges them, the thread's stored permit is just one of them. Chat history
+  // follows only the enforced anonymous mode until it gets its own switch.
   it.each([
     { stored: true, effective: false, anonymousOnly: false, memory: false },
     { stored: false, effective: true, anonymousOnly: false, memory: true },
     { stored: true, effective: true, anonymousOnly: true, memory: false },
   ])(
-    'gives memory by the current effective grant (stored $stored, effective $effective, enforced anonymous $anonymousOnly)',
+    'gives personal context by the current effective grant (stored $stored, effective $effective, enforced anonymous $anonymousOnly)',
     async ({ stored, effective, anonymousOnly, memory }) => {
       const { useCase, profileContribute } = buildHarness({
         storedMemoryAccess: stored,
@@ -722,7 +723,9 @@ describe('ExecuteRunUseCase', () => {
       await drain(await useCase.execute(userCommand()));
 
       expect(profileContribute).toHaveBeenCalledWith(
-        expect.objectContaining({ personalContext: { memory } }),
+        expect.objectContaining({
+          personalContext: { memory, chatHistory: !anonymousOnly },
+        }),
         expect.anything(),
       );
     },

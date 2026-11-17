@@ -52,6 +52,10 @@ import { GetMemoryToolHandler } from './handlers/get-memory-tool.handler';
 import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
 import { SetMemoryToolHandler } from './handlers/set-memory-tool.handler';
 import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
+import { ChatListToolHandler } from './handlers/chat-list-tool.handler';
+import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
+import { ChatReadToolHandler } from './handlers/chat-read-tool.handler';
+import { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
 type ToolConstructor = abstract new (...args: any[]) => Tool;
@@ -86,6 +90,8 @@ export class ToolHandlerRegistry {
     private readonly sendNotificationToolHandler: SendNotificationToolHandler,
     private readonly getMemoryToolHandler: GetMemoryToolHandler,
     private readonly setMemoryToolHandler: SetMemoryToolHandler,
+    private readonly chatListToolHandler: ChatListToolHandler,
+    private readonly chatReadToolHandler: ChatReadToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -126,6 +132,8 @@ export class ToolHandlerRegistry {
       [SendNotificationTool, this.sendNotificationToolHandler],
       [GetMemoryTool, this.getMemoryToolHandler],
       [SetMemoryTool, this.setMemoryToolHandler],
+      [ChatListTool, this.chatListToolHandler],
+      [ChatReadTool, this.chatReadToolHandler],
     ];
   }
 }

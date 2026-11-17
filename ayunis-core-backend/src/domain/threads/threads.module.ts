@@ -19,6 +19,8 @@ import { FindThreadContextRefsUseCase } from './application/use-cases/find-threa
 import { FindThreadCitationContextUseCase } from './application/use-cases/find-thread-citation-context/find-thread-citation-context.use-case';
 import { FindAllThreadsUseCase } from './application/use-cases/find-all-threads/find-all-threads.use-case';
 import { FindThreadsByIdsUseCase } from './application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
+import { FindPastChatsUseCase } from './application/use-cases/find-past-chats/find-past-chats.use-case';
+import { FindPastChatUseCase } from './application/use-cases/find-past-chat/find-past-chat.use-case';
 import { DeleteThreadUseCase } from './application/use-cases/delete-thread/delete-thread.use-case';
 import { DeleteExpiredThreadUseCase } from './application/use-cases/delete-expired-thread/delete-expired-thread.use-case';
 import { ThreadDeletionService } from './application/services/thread-deletion.service';
@@ -111,6 +113,8 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     FindThreadCitationContextUseCase,
     FindAllThreadsUseCase,
     FindThreadsByIdsUseCase,
+    FindPastChatsUseCase,
+    FindPastChatUseCase,
     DeleteThreadUseCase,
     DeleteExpiredThreadUseCase,
     AddMessageToThreadUseCase,
@@ -163,6 +167,8 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     FindThreadCitationContextUseCase,
     FindAllThreadsUseCase,
     FindThreadsByIdsUseCase,
+    FindPastChatsUseCase,
+    FindPastChatUseCase,
     DeleteThreadUseCase,
     DeleteExpiredThreadUseCase,
     AddMessageToThreadUseCase,

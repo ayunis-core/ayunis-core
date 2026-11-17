@@ -139,7 +139,7 @@ function assembleOutlook() {
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     isAnonymous: false,
-    personalContext: { memory: false },
+    personalContext: { memory: false, chatHistory: false },
   });
 }
 

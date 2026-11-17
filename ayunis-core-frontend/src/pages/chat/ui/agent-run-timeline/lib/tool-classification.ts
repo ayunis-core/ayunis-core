@@ -44,6 +44,8 @@ const BUILT_IN_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'marketplace_search',
   'get_memory',
   'set_memory',
+  'chat_list',
+  'chat_read',
   'send_notification',
   'finish_routine',
 ]);
