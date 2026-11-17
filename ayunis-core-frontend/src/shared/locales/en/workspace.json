@@ -107,10 +107,11 @@
     "open": "Members",
     "title": "Members",
     "description": "Members share the instructions, skills and knowledge of this workspace. Chats stay private.",
-    "loading": "Loading members…",
-    "loadError": "Members could not be loaded.",
+    "count_one": "{{count}} member",
+    "count_other": "{{count}} members",
     "name": "Name",
     "email": "Email",
+    "joinedAt": "Joined",
     "role": {
       "label": "Role",
       "roles": {
@@ -133,7 +134,11 @@
       "error": "Role could not be updated",
       "notFound": "Member not found",
       "notAllowed": "Only workspace admins can change roles",
-      "lastAdmin": "A workspace needs at least one admin"
+      "lastAdmin": "A workspace needs at least one admin",
+      "confirmTitle": "Change role",
+      "confirmDescription": "Change {{name}}'s role in this workspace to {{role}}?",
+      "confirmButton": "Change role",
+      "cancelButton": "Cancel"
     },
     "add": {
       "open": "Add members",
