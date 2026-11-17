@@ -47,12 +47,9 @@ describe(SkillsWorkspaceDeletionRequestedListener.name, () => {
         deleteSources,
       ),
     );
-    const event = new WorkspaceDeletionRequestedEvent(
-      workspaceId,
-      randomUUID(),
-      orgId,
-      [skillId],
-    );
+    const event = new WorkspaceDeletionRequestedEvent(workspaceId, orgId, [
+      skillId,
+    ]);
 
     await listener.handle(event);
     const tasks = event.takeCleanupTasks();

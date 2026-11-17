@@ -63,7 +63,7 @@ Knowledge-base assignment derives both owners from persistence and resolves read
 
 File source creation authorizes the skill before external processing starts, enforces the source cap, and compensates pre-created sources if attachment fails. Relation updates use the original aggregate snapshot so persistence can apply deltas safely.
 
-Deleting a user cascades their personal skills and `skill_sources` rows, but sources have no owner FK. `SkillsUserDeletionRequestedListener` therefore resolves the sources of the user's personal skills and of the skills in the user's workspaces (`SkillRepository.findSourceIdsByOwnerUserId` joins the workspace owner, because workspaces cascade from the user row without a `WorkspaceDeletionRequestedEvent`) before the row delete and defers the sources module's `DeleteUnreferencedSourcesUseCase`, which releases their indexes and retained originals once the delete has succeeded. Explicit workspace deletion keeps its own path: `SkillsWorkspaceDeletionRequestedListener` through `DeleteSourcesUseCase`.
+Deleting a user cascades their personal skills and `skill_sources` rows, but sources have no owner FK. `SkillsUserDeletionRequestedListener` therefore resolves the sources of the user's personal skills (`SkillRepository.findSourceIdsByOwnerUserId`) before the row delete and defers the sources module's `DeleteUnreferencedSourcesUseCase`, which releases their indexes and retained originals once the delete has succeeded. Workspace skills belong to the workspace, which outlives a deleted member; workspace deletion, explicit or because the last member's account was deleted, keeps its own path: `SkillsWorkspaceDeletionRequestedListener` through `DeleteSourcesUseCase`.
 
 ## Runtime orchestration
 

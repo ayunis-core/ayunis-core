@@ -1,3 +1,10 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (_target: unknown, _prop: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+  TransactionHost: class TransactionHost {},
+}));
+
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
@@ -12,6 +19,9 @@ import {
   WORKSPACE_NAME_MAX_LENGTH,
 } from 'src/domain/workspaces/domain/workspaces.constants';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
+import type { WorkspaceMember } from 'src/domain/workspaces/domain/workspace-member.entity';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import {
   createMockContextService,
   createMockWorkspacesRepository,
@@ -24,15 +34,26 @@ import { CreateWorkspaceUseCase } from './create-workspace.use-case';
 describe('CreateWorkspaceUseCase', () => {
   let useCase: CreateWorkspaceUseCase;
   let repository: jest.Mocked<WorkspacesRepository>;
+  let membersRepository: jest.Mocked<WorkspaceMembersRepository>;
   let addFavoriteUseCase: { execute: jest.Mock };
 
   async function setup(contextService = createMockContextService()) {
     repository = createMockWorkspacesRepository();
+    membersRepository = {
+      create: jest
+        .fn()
+        .mockImplementation((member: WorkspaceMember) =>
+          Promise.resolve(member),
+        ),
+      findWorkspaceIdsByUserId: jest.fn().mockResolvedValue([]),
+      promoteSuccessors: jest.fn().mockResolvedValue(undefined),
+    };
     addFavoriteUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
     const module = await Test.createTestingModule({
       providers: [
         CreateWorkspaceUseCase,
         { provide: WorkspacesRepository, useValue: repository },
+        { provide: WorkspaceMembersRepository, useValue: membersRepository },
         { provide: AddFavoriteUseCase, useValue: addFavoriteUseCase },
         { provide: ContextService, useValue: contextService },
       ],
@@ -48,15 +69,19 @@ describe('CreateWorkspaceUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('creates a workspace owned by the caller', async () => {
+  it('makes the caller the admin of the workspace they create', async () => {
     const workspace = await useCase.execute(
       new CreateWorkspaceCommand({ name: 'Bürgeranfragen' }),
     );
 
-    expect(workspace.userId).toBe(TEST_USER_ID);
     expect(workspace.orgId).toBe(TEST_ORG_ID);
     expect(workspace.name).toBe('Bürgeranfragen');
     expect(repository.save).toHaveBeenCalledWith(workspace);
+    expect(membersRepository.create.mock.calls[0][0]).toMatchObject({
+      workspaceId: workspace.id,
+      userId: TEST_USER_ID,
+      role: UserRole.ADMIN,
+    });
   });
 
   it('creates a workspace without adding it to favorites', async () => {

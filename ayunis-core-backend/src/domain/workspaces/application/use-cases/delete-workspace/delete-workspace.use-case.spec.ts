@@ -3,13 +3,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
+import { WorkspaceDeletionService } from 'src/domain/workspaces/application/services/workspace-deletion.service';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import {
   aWorkspace,
   createMockContextService,
   createMockWorkspacesRepository,
   TEST_ORG_ID,
-  TEST_USER_ID,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
 import { DeleteWorkspaceCommand } from './delete-workspace.command';
@@ -26,6 +26,7 @@ describe('DeleteWorkspaceUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         DeleteWorkspaceUseCase,
+        WorkspaceDeletionService,
         { provide: WorkspacesRepository, useValue: repository },
         { provide: ContextService, useValue: createMockContextService() },
         { provide: EventEmitter2, useValue: eventEmitter },
@@ -57,7 +58,6 @@ describe('DeleteWorkspaceUseCase', () => {
       WorkspaceDeletionRequestedEvent.EVENT_NAME,
       expect.objectContaining({
         workspaceId: TEST_WORKSPACE_ID,
-        userId: TEST_USER_ID,
         orgId: TEST_ORG_ID,
       }),
     );
@@ -76,10 +76,7 @@ describe('DeleteWorkspaceUseCase', () => {
     await useCase.execute(new DeleteWorkspaceCommand(TEST_WORKSPACE_ID));
 
     expect(cleanup).toHaveBeenCalledTimes(1);
-    expect(repository.delete).toHaveBeenCalledWith(
-      TEST_USER_ID,
-      TEST_WORKSPACE_ID,
-    );
+    expect(repository.delete).toHaveBeenCalledWith(TEST_WORKSPACE_ID);
   });
 
   it('does not run cleanup when the row delete fails', async () => {
@@ -99,7 +96,7 @@ describe('DeleteWorkspaceUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
-  it('throws when the workspace does not belong to the caller', async () => {
+  it('throws when the caller is not a member of the workspace', async () => {
     repository.findById.mockResolvedValue(null);
 
     await expect(

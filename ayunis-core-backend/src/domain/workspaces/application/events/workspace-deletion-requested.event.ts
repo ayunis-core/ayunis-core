@@ -8,15 +8,14 @@ import { DeferredCleanupEvent } from 'src/common/events/deferred-cleanup.event';
  * live outside the cascade and need explicit cleanup.
  *
  * Listeners resolve their cleanup targets while the rows still exist and
- * register the destructive work via `deferCleanup`; the emitting use case runs
- * the deferred tasks only after the row delete succeeds.
+ * register the destructive work via `deferCleanup`; `WorkspaceDeletionService`
+ * runs the deferred tasks only after the row delete succeeds.
  */
 export class WorkspaceDeletionRequestedEvent extends DeferredCleanupEvent {
   static readonly EVENT_NAME = 'workspace.deletion-requested';
 
   constructor(
     public readonly workspaceId: UUID,
-    public readonly userId: UUID,
     public readonly orgId: UUID,
     public readonly skillIds: UUID[] = [],
   ) {

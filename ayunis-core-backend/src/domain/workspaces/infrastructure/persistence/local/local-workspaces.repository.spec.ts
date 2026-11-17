@@ -12,13 +12,13 @@ import type { KnowledgeBaseActivationRecord } from 'src/domain/knowledge-bases/i
 describe('LocalWorkspacesRepository', () => {
   it('uses a PostgreSQL-safe activity alias for paginated ordering', async () => {
     const countQuery = {
-      where: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       getCount: jest.fn().mockResolvedValue(0),
     };
     const listQuery = {
+      innerJoin: jest.fn().mockReturnThis(),
       leftJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       addGroupBy: jest.fn().mockReturnThis(),
       addSelect: jest.fn().mockReturnThis(),
@@ -138,7 +138,10 @@ describe('LocalWorkspacesRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await expect(repository.getListStats([workspaceId])).resolves.toEqual(
+    const userId = randomUUID();
+    await expect(
+      repository.getListStats(userId, [workspaceId]),
+    ).resolves.toEqual(
       new Map([
         [
           workspaceId,
@@ -154,7 +157,7 @@ describe('LocalWorkspacesRepository', () => {
     expect(query).toHaveBeenCalledTimes(1);
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('FROM workspaces w'),
-      [[workspaceId]],
+      [[workspaceId], userId],
     );
   });
 
@@ -171,7 +174,9 @@ describe('LocalWorkspacesRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await expect(repository.getListStats([])).resolves.toEqual(new Map());
+    await expect(repository.getListStats(randomUUID(), [])).resolves.toEqual(
+      new Map(),
+    );
     expect(query).not.toHaveBeenCalled();
   });
 });

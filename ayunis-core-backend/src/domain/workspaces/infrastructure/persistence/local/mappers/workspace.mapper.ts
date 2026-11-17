@@ -7,7 +7,6 @@ export class WorkspaceMapper {
   toDomain(record: WorkspaceRecord): Workspace {
     return new Workspace({
       id: record.id,
-      userId: record.userId,
       orgId: record.orgId,
       name: record.name,
       description: record.description,
@@ -22,7 +21,6 @@ export class WorkspaceMapper {
   toRecord(domain: Workspace): WorkspaceRecord {
     const record = new WorkspaceRecord();
     record.id = domain.id;
-    record.userId = domain.userId;
     record.orgId = domain.orgId;
     record.name = domain.name;
     record.description = domain.description;

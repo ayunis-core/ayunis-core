@@ -10,8 +10,10 @@ import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/d
 import { KnowledgeBaseRepository } from 'src/domain/knowledge-bases/application/ports/knowledge-base.repository';
 
 /**
- * Snapshots sources owned through a user's personal and workspace knowledge
- * bases before the database cascade removes them. Processing cleanup, the
+ * Snapshots the sources of a user's personal knowledge bases before the
+ * database cascade removes them. Workspace knowledge bases belong to the
+ * workspace and survive the user; a workspace left without members is deleted
+ * through its own deletion flow. Processing cleanup, the
  * release of retained originals (whose keys only the snapshot still knows
  * once the rows are gone) and index deletion are deferred until the user row
  * has been deleted successfully. Failures are logged and never block user
@@ -34,8 +36,9 @@ export class KnowledgeBasesUserDeletionRequestedListener {
     event: UserDeletionRequestedEvent,
   ): Promise<void> {
     try {
-      const knowledgeBases =
-        await this.knowledgeBaseRepository.findAllOwnedByUserId(event.userId);
+      const knowledgeBases = await this.knowledgeBaseRepository.findAllByUserId(
+        event.userId,
+      );
 
       if (knowledgeBases.length === 0) {
         return;

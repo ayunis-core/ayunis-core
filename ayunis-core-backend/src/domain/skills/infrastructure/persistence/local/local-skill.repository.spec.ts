@@ -201,13 +201,11 @@ describe('LocalSkillRepository', () => {
     );
   });
 
-  it('resolves source ids of personal and workspace-owned skills for a deleted user', async () => {
+  it('resolves source ids of only the personal skills of a deleted user', async () => {
     const sourceQuery = {
       innerJoin: jest.fn().mockReturnThis(),
-      leftJoin: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
-      orWhere: jest.fn().mockReturnThis(),
       getRawMany: jest.fn().mockResolvedValue([{ sourceId: skillId }]),
     };
     mockManager.createQueryBuilder.mockReturnValue(sourceQuery);
@@ -216,17 +214,9 @@ describe('LocalSkillRepository', () => {
       repository.findSourceIdsByOwnerUserId(userId),
     ).resolves.toEqual([skillId]);
 
-    expect(sourceQuery.leftJoin).toHaveBeenCalledWith(
-      'skill.workspace',
-      'workspace',
-    );
     expect(sourceQuery.where).toHaveBeenCalledWith('skill.userId = :userId', {
       userId,
     });
-    expect(sourceQuery.orWhere).toHaveBeenCalledWith(
-      'workspace.userId = :userId',
-      { userId },
-    );
   });
 
   describe('workspace activation state', () => {
