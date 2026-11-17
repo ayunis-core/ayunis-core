@@ -143,12 +143,14 @@ test("CSV team preview remains usable across responsive breakpoints", async (
   }
 });
 
-test("an unknown team identifies the failing CSV row", async ({
+test("skips invalid rows and sends the remaining valid invitations", async ({
   page,
   publicApi,
+  mail,
 }) => {
   const suffix = Date.now().toString();
   const unknownTeam = `Unknown Team ${suffix}`;
+  const validEmail = `valid-${suffix}@e2e.local`;
   await login(publicApi, "admin@usage.local", "admin");
   await dismissWelcomeVideo(publicApi);
   await page.context().addCookies((await publicApi.storageState()).cookies);
@@ -159,7 +161,7 @@ test("an unknown team identifies the failing CSV row", async ({
     name: "users.csv",
     mimeType: "text/csv",
     buffer: Buffer.from(
-      `email,role,teams\nunknown-${suffix}@e2e.local,user,${unknownTeam}`,
+      `email,role,teams\n${validEmail},user,\nunknown-${suffix}@e2e.local,user,${unknownTeam}`,
     ),
   });
   const response = page.waitForResponse(
@@ -171,10 +173,19 @@ test("an unknown team identifies the failing CSV row", async ({
   await page.getByTestId("bulk-invite-submit").click();
 
   expect((await response).status()).toBe(400);
-  await expect(page.getByTestId("bulk-invite-server-error-2")).toHaveText(
+  await expect(page.getByTestId("bulk-invite-server-error-3")).toHaveText(
     `Nicht gefundene Teams: ${unknownTeam}`,
   );
-  await expect(page.getByTestId("bulk-invite-submit")).toBeDisabled();
+  await expect(page.getByTestId("bulk-invite-submit")).toBeEnabled();
+
+  const validResponse = page.waitForResponse(
+    (candidate) =>
+      candidate.request().method() === "POST" &&
+      new URL(candidate.url()).pathname === "/api/invites/bulk",
+  );
+  await page.getByTestId("bulk-invite-submit").click();
+  expect((await validResponse).status()).toBe(201);
+  await mail.extractLinkToken(validEmail, "/accept-invite");
 });
 
 test("super admin bulk import assigns teams in the selected organization", async (
