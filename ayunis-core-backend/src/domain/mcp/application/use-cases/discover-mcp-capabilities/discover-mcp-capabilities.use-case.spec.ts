@@ -434,4 +434,82 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       );
     });
   });
+
+  describe('openai/fileParams', () => {
+    const fileSchema = {
+      type: 'object',
+      properties: { file: { type: 'object' } },
+      required: ['file'],
+    };
+
+    const discoverTools = async (
+      tools: Awaited<ReturnType<McpClientService['listTools']>>,
+    ) => {
+      arrangeSuccessfulClientCalls();
+      mcpClientService.listTools.mockResolvedValue(tools);
+      contextService.get.mockImplementation(mockContextGet);
+      repository.findById.mockResolvedValue(buildCustomIntegration());
+
+      const result = await useCase.execute(
+        new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
+      );
+      return new Map(result.tools.map((tool) => [tool.name, tool]));
+    };
+
+    it('carries the declared file fields on the tool, also when served from the cache, and gives undeclared tools none', async () => {
+      const tools = [
+        {
+          name: 'start_pdf_file',
+          inputSchema: fileSchema,
+          _meta: { 'openai/fileParams': ['file'] },
+        },
+        { name: 'get_status', inputSchema: { type: 'object' } },
+        {
+          name: 'other_meta',
+          inputSchema: { type: 'object' },
+          _meta: { 'vendor/flag': true },
+        },
+      ];
+
+      const discovered = await discoverTools(tools);
+      const cached = await discoverTools(tools);
+
+      expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
+      for (const result of [discovered, cached]) {
+        expect(result.get('start_pdf_file')?.fileParams).toEqual(['file']);
+        expect(result.get('start_pdf_file')?.inputSchema).toEqual(fileSchema);
+        expect(result.get('get_status')?.fileParams).toEqual([]);
+        expect(result.get('other_meta')?.fileParams).toEqual([]);
+      }
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a string', 'file'],
+      ['an object', { file: true }],
+      ['null', null],
+      ['an array with a non-string', ['file', 1]],
+    ])(
+      'treats a declaration that is %s as no file fields and warns naming the integration and tool',
+      async (_label, declaration) => {
+        const discovered = await discoverTools([
+          {
+            name: 'start_pdf_file',
+            inputSchema: fileSchema,
+            _meta: { 'openai/fileParams': declaration },
+          },
+        ]);
+
+        expect(discovered.get('start_pdf_file')?.fileParams).toEqual([]);
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            integrationId: mockIntegrationId,
+            integrationName: 'Custom Integration',
+            toolName: 'start_pdf_file',
+          }),
+          expect.any(String),
+        );
+      },
+    );
+  });
 });

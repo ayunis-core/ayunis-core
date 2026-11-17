@@ -9,16 +9,20 @@ export class McpTool {
   public readonly description?: string;
   public readonly inputSchema: Record<string, unknown>;
   public readonly integrationId: UUID;
+  /** Top-level input fields the server declared as files via `_meta["openai/fileParams"]`. */
+  public readonly fileParams: readonly string[];
 
   constructor(
     name: string,
     description: string | undefined,
     inputSchema: Record<string, unknown>,
     integrationId: UUID,
+    fileParams: readonly string[] = [],
   ) {
     this.name = name;
     this.description = description;
     this.inputSchema = inputSchema;
     this.integrationId = integrationId;
+    this.fileParams = fileParams;
   }
 }
