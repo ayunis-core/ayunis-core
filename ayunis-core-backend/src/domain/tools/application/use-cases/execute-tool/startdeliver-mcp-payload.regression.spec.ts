@@ -8,6 +8,8 @@ import { ExecuteToolUseCase } from './execute-tool.use-case';
 import { ExecuteToolCommand } from './execute-tool.command';
 import type { ToolHandlerRegistry } from 'src/domain/tools/application/tool-handler.registry';
 import type { ToolExecutionContext } from 'src/domain/tools/application/ports/execution.handler';
+import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
+import type { ResolveThreadFileUseCase } from 'src/domain/threads/application/use-cases/resolve-thread-file/resolve-thread-file.use-case';
 
 // Regression for the Startdeliver ticket (AYC-413): a plain customer name
 // search must not carry the optional date filters (customfieldChurnDate,
@@ -54,7 +56,10 @@ describe('Startdeliver MCP payload regression (AYC-413)', () => {
         return Promise.resolve({ isError: false, content: [] });
       },
     } as unknown as ExecuteMcpToolUseCase;
-    const handler = new McpIntegrationToolHandler(executeMcpTool);
+    const handler = new McpIntegrationToolHandler(
+      executeMcpTool,
+      new McpFileHandoverService({} as ResolveThreadFileUseCase),
+    );
     const registry = {
       getHandler: () => handler,
     } as unknown as ToolHandlerRegistry;

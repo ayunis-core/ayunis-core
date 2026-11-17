@@ -64,6 +64,7 @@ function buildOutlookProfile(): OutlookRunProfile {
           description: 'Council information system',
           inputSchema: { type: 'object', properties: {} },
           integrationId,
+          fileParams: [],
         },
       ],
       resources: [],

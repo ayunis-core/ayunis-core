@@ -8,12 +8,16 @@ import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integratio
 import { ExecuteMcpToolCommand } from 'src/domain/mcp/application/use-cases/execute-mcp-tool/execute-mcp-tool.command';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
 
 @Injectable()
 export class McpIntegrationToolHandler implements ToolExecutionHandler {
   private readonly logger = new Logger(McpIntegrationToolHandler.name);
 
-  constructor(private readonly executeMcpToolUseCase: ExecuteMcpToolUseCase) {}
+  constructor(
+    private readonly executeMcpToolUseCase: ExecuteMcpToolUseCase,
+    private readonly mcpFileHandoverService: McpFileHandoverService,
+  ) {}
 
   async execute(params: {
     tool: McpIntegrationTool;
@@ -24,15 +28,25 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
     this.logger.log({ name: tool.name, input: input }, 'execute');
     try {
       const validatedInput = tool.validateParams(input);
+      // Signed download URLs live only in the arguments sent to the server;
+      // `input` is what the run persists, streams and logs.
+      const handover = await this.mcpFileHandoverService.handOver(
+        tool,
+        validatedInput,
+        context,
+      );
       const result = await this.executeMcpToolUseCase.execute(
         new ExecuteMcpToolCommand(
           tool.integrationId,
           tool.originalName,
-          validatedInput,
+          handover.arguments,
           context.signal,
         ),
       );
-      return JSON.stringify(result.content);
+      return this.mcpFileHandoverService.redact(
+        JSON.stringify(result.content),
+        handover.files,
+      );
     } catch (error) {
       context.signal?.throwIfAborted();
       if (error instanceof ApplicationError) throw error;

@@ -195,3 +195,17 @@ export async function setUserDefaultModel(
 export async function removeUserDefaultModel(api: APIRequestContext): Promise<void> {
   await generatedApi.modelsDefaultsControllerDeleteUserDefaultModel({ api });
 }
+
+// Chat file uploads need a permitted embedding model in the org.
+export async function permitEmbeddingModel(api: APIRequestContext): Promise<void> {
+  const model = (
+    await generatedApi.modelsControllerGetAvailableEmbeddingModels({ api })
+  )[0];
+  if (!model) throw new Error('No embedding model is available');
+  if (!model.permittedModelId) {
+    await generatedApi.modelsControllerCreatePermittedModel(
+      { modelId: model.modelId },
+      { api },
+    );
+  }
+}

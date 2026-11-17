@@ -7,6 +7,8 @@ import { DiscoverMcpCapabilitiesQuery } from 'src/domain/mcp/application/use-cas
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
+import { InvalidMcpFileParamsError } from 'src/domain/tools/domain/value-objects/mcp-file-fields';
+import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { isMcpConnectivityOutage } from 'src/domain/mcp/application/mcp.errors';
@@ -229,21 +231,52 @@ export class McpToolAssemblerService {
       .filter((cap): cap is McpCapability => cap !== null);
   }
 
+  /**
+   * A tool whose declared file fields don't fit its schema is not offered:
+   * the model would be asked to fill in download URLs itself.
+   */
+  private buildMcpTool(
+    tool: McpTool,
+    returnsPii: boolean,
+    meta: McpIntegrationMeta | undefined,
+  ): McpIntegrationTool[] {
+    try {
+      return [
+        new McpIntegrationTool(
+          tool,
+          returnsPii,
+          meta?.name ?? 'Unknown',
+          meta?.logoUrl ?? null,
+        ),
+      ];
+    } catch (error) {
+      if (!(error instanceof InvalidMcpFileParamsError)) throw error;
+      this.logger.warn(
+        {
+          integrationId: tool.integrationId,
+          integrationName: meta?.name,
+          toolName: tool.name,
+          reason: error.message,
+        },
+        'MCP tool declares invalid file params, skipping',
+      );
+      return [];
+    }
+  }
+
   private mapMcpCapabilitiesToTools(
     mcpCapabilities: McpCapability[],
     integrationMetaMap: Map<UUID, McpIntegrationMeta>,
   ): Tool[] {
     return [
       ...mcpCapabilities.flatMap((capability) =>
-        capability.tools.map((tool) => {
-          const meta = integrationMetaMap.get(tool.integrationId);
-          return new McpIntegrationTool(
+        capability.tools.flatMap((tool) =>
+          this.buildMcpTool(
             tool,
             capability.returnsPii,
-            meta?.name ?? 'Unknown',
-            meta?.logoUrl ?? null,
-          );
-        }),
+            integrationMetaMap.get(tool.integrationId),
+          ),
+        ),
       ),
       ...mcpCapabilities.flatMap((capability) =>
         capability.resources.map((resource) => {
