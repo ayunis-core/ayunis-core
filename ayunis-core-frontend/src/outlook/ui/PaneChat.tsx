@@ -94,6 +94,7 @@ export function PaneChat({
             api={api}
             onOpen={openThread}
             onFailure={onHistoryFailure}
+            onRemoved={chat.closeIfOpen}
           />
         ) : (
           <Conversation chat={chat} />

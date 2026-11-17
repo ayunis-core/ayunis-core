@@ -28,10 +28,15 @@
     "historyEmpty": "Noch keine Chats aus Outlook.",
     "historyFailed": "Die letzten Chats konnten nicht geladen werden.",
     "untitled": "Chat ohne Titel",
+    "rename": "Umbenennen",
+    "delete": "Löschen",
+    "cancel": "Abbrechen",
+    "confirmDelete": "Diesen Chat löschen?",
     "thinking": "Ayunis arbeitet …",
     "error": {
       "runFailed": "Die Antwort konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
-      "loadFailed": "Dieser Chat konnte nicht geöffnet werden."
+      "loadFailed": "Dieser Chat konnte nicht geöffnet werden.",
+      "actionFailed": "Dieser Chat konnte nicht geändert werden."
     },
     "quickAction": {
       "summarize": {

@@ -52,6 +52,9 @@ export function usePaneChat({ api, onSessionExpired }: PaneChatOptions) {
   // longer what the user is looking at and is dropped.
   const generation = useRef(0);
   const runItemKey = useRef<string | null>(null);
+  // What the pane has open right now. A delete that resolves after the user
+  // moved on must not judge by the thread id its callback closed over.
+  const openThreadId = useRef<string | null>(null);
 
   // The pane is torn down while a run is in flight when the user signs out or
   // Outlook closes it; the loop would otherwise keep writing to the email.
@@ -196,6 +199,7 @@ export function usePaneChat({ api, onSessionExpired }: PaneChatOptions) {
     handledCalls.current = new Set(
       outlookToolCalls(loaded).map(({ id }) => id),
     );
+    openThreadId.current = id;
     setThreadId(id);
     setToolStates({});
     setError(null);
@@ -223,5 +227,8 @@ export function usePaneChat({ api, onSessionExpired }: PaneChatOptions) {
     stop,
     openThread,
     newChat: () => reset(null, []),
+    closeIfOpen: (id: string) => {
+      if (openThreadId.current === id) reset(null, []);
+    },
   };
 }
