@@ -22,14 +22,16 @@ export function applyValidationErrors(
   errors: ServerValidationError[],
   translate: Translate,
 ): ParsedInvite[] {
-  const errorsByRow = new Map<number, string[]>();
+  const errorsByEmail = new Map<string, string[]>();
   for (const error of errors) {
-    const messages = errorsByRow.get(error.row) ?? [];
+    const email = error.email.toLowerCase();
+    const messages = errorsByEmail.get(email) ?? [];
     messages.push(localizedError(error, translate));
-    errorsByRow.set(error.row, messages);
+    errorsByEmail.set(email, messages);
   }
-  return current.map((item, index) => {
-    const messages = errorsByRow.get(index + 1);
+  return current.map((item) => {
+    if (!item.isValid) return item;
+    const messages = errorsByEmail.get(item.email.toLowerCase());
     if (!messages) return item;
     return {
       ...item,

@@ -182,7 +182,7 @@
     "dragDrop": "oder per Drag & Drop",
     "csvFormat": "CSV-Datei mit den Spalten email,role,teams",
     "previewTitle": "Einladungen prüfen",
-    "previewDescription": "Überprüfen Sie die Einladungen vor dem Versenden. Alle Zeilen müssen gültig sein.",
+    "previewDescription": "Überprüfen Sie die Einladungen vor dem Versenden. Gültige Zeilen werden eingeladen, ungültige Zeilen werden übersprungen.",
     "rowNumber": "Zeile",
     "email": "E-Mail",
     "role": "Rolle",

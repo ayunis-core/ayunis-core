@@ -243,7 +243,6 @@ export default function BulkInviteDialog({
     setParseError(null);
   }, []);
 
-  const allValid = parsedData.every((item) => item.isValid);
   const validCount = parsedData.filter((item) => item.isValid).length;
   const hasUrls = results?.results.some((r) => r.success && r.url);
 
@@ -399,7 +398,7 @@ export default function BulkInviteDialog({
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={!allValid || parsedData.length === 0}
+          disabled={validCount === 0}
           data-testid="bulk-invite-submit"
         >
           {t('bulkInvite.submit', { count: validCount })}

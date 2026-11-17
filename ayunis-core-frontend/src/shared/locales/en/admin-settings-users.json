@@ -181,7 +181,7 @@
     "dragDrop": "or drag and drop",
     "csvFormat": "CSV file with email,role,teams columns",
     "previewTitle": "Preview Invites",
-    "previewDescription": "Review the invites before sending. All rows must be valid to proceed.",
+    "previewDescription": "Review the invites before sending. Valid rows will be invited and invalid rows will be skipped.",
     "rowNumber": "Row",
     "email": "Email",
     "role": "Role",

@@ -105,4 +105,37 @@ describe(applyValidationErrors.name, () => {
       'E-Mail hat bereits eine ausstehende Einladung; Nicht gefundene Teams: Unknown Team',
     );
   });
+
+  it('maps compacted request errors to the matching valid CSV row', () => {
+    const locallyInvalidInvite: ParsedInvite = {
+      ...invite,
+      email: 'invalid-role@example.com',
+      rowNumber: 1,
+      isValid: false,
+    };
+    const submittedInvite: ParsedInvite = {
+      ...invite,
+      email: 'existing-user@example.com',
+      rowNumber: 2,
+    };
+
+    const result = applyValidationErrors(
+      [locallyInvalidInvite, submittedInvite],
+      [
+        {
+          row: 1,
+          email: submittedInvite.email,
+          errorCode: 'EMAIL_ALREADY_USER',
+          message: 'Backend message in English',
+        },
+      ],
+      translate,
+    );
+
+    expect(result[0]?.serverError).toBeUndefined();
+    expect(result[1]).toMatchObject({
+      isValid: false,
+      serverError: 'E-Mail ist bereits ein Benutzer in dieser Organisation',
+    });
+  });
 });
