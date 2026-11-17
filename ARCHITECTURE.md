@@ -229,6 +229,10 @@ load-bearing):
   owner's permission in the authorization services rather than on the route;
   the same goes for improving skill text in a workspace's skill editor.
   Members are added directly from the organization, without invitations.
+  Any member may leave; removing others needs `manage_workspace_members`,
+  only admins remove admins, and the last admin can neither leave nor be
+  removed. Removed members keep their chats in the workspace but cannot open
+  them until added again.
   The frontend hides workspace controls from the `role` and `permissions`
   that every workspace response carries.
   See [workspaces/SUMMARY.md](ayunis-core-backend/src/domain/workspaces/SUMMARY.md).

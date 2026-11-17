@@ -126,7 +126,7 @@
         "adminFooter": "Administratoren eines Arbeitsbereichs haben dort immer alle Berechtigungen.",
         "items": {
           "manage_workspace": "Den Arbeitsbereich, seine Anweisungen, Fähigkeiten und sein Wissen bearbeiten",
-          "manage_workspace_members": "Mitglieder hinzufügen",
+          "manage_workspace_members": "Mitglieder hinzufügen und entfernen",
           "manage_roles": "Rollen ändern und den Arbeitsbereich löschen"
         }
       },
@@ -156,6 +156,29 @@
       "notInOrg": "Nur Benutzer Ihrer Organisation können hinzugefügt werden",
       "notAllowed": "Sie dürfen keine Mitglieder mit dieser Rolle hinzufügen",
       "error": "Mitglieder konnten nicht hinzugefügt werden"
+    },
+    "remove": {
+      "label": "{{name}} entfernen",
+      "confirmTitle": "Mitglied entfernen",
+      "confirmDescription": "{{name}} aus diesem Arbeitsbereich entfernen? Die Chats bleiben hier, lassen sich aber erst wieder öffnen, wenn das Mitglied erneut hinzugefügt wird.",
+      "confirmButton": "Entfernen",
+      "cancelButton": "Abbrechen",
+      "success": "Mitglied entfernt",
+      "error": "Mitglied konnte nicht entfernt werden",
+      "notFound": "Mitglied nicht gefunden",
+      "notAllowed": "Nur Administratoren des Arbeitsbereichs können Administratoren entfernen",
+      "lastAdmin": "Ein Arbeitsbereich braucht mindestens einen Administrator"
+    },
+    "leave": {
+      "open": "Arbeitsbereich verlassen",
+      "confirmTitle": "Arbeitsbereich verlassen",
+      "confirmDescription": "{{name}} verlassen? Ihre Chats bleiben im Arbeitsbereich, lassen sich aber erst wieder öffnen, wenn Sie erneut hinzugefügt werden.",
+      "confirmButton": "Verlassen",
+      "cancelButton": "Abbrechen",
+      "success": "Sie haben den Arbeitsbereich verlassen",
+      "error": "Arbeitsbereich konnte nicht verlassen werden",
+      "notFound": "Arbeitsbereich nicht gefunden",
+      "lastAdmin": "Sie sind der letzte Administrator. Machen Sie zuerst ein anderes Mitglied zum Administrator."
     }
   }
 }

@@ -77,6 +77,10 @@ export class LocalWorkspaceMembersRepository extends WorkspaceMembersRepository 
     await this.repo.update({ workspaceId, userId }, { role });
   }
 
+  async delete(workspaceId: UUID, userId: UUID): Promise<void> {
+    await this.repo.delete({ workspaceId, userId });
+  }
+
   async lockWorkspace(workspaceId: UUID, orgId: UUID): Promise<void> {
     const manager = this.repo.manager;
     if (!manager.queryRunner?.isTransactionActive) {

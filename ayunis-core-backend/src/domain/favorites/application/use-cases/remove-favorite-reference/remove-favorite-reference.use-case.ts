@@ -16,12 +16,14 @@ export class RemoveFavoriteReferenceUseCase {
       {
         referenceType: command.referenceType,
         referenceId: command.referenceId,
+        userId: command.userId,
       },
       'Removing favorite reference',
     );
     await this.favoritesRepository.removeByReference(
       command.referenceType,
       command.referenceId,
+      command.userId,
     );
   }
 }

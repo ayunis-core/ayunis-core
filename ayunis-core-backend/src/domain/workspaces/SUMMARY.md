@@ -11,6 +11,7 @@ Workspaces group their members' chats and own workspace-scoped skills and knowle
 - Members are added, not invited: there is no pending state. Holders of `manage_workspace_members` add users of their own organization in bulk with one role (`user` by default); only workspace admins may assign `admin`. Unknown users and users of another organization reject the whole request (`WORKSPACE_MEMBER_NOT_IN_ORG`, 400) without adding anyone. Users who already are members are skipped and keep their role (an insert with `ON CONFLICT DO NOTHING`, so concurrent adds cannot fail either); the response lists only the members added.
 - Holders of `manage_workspace_members` search the colleagues they can add (`ListWorkspaceMemberCandidatesUseCase`): up to 25 users of their organization who are not members yet, matching name or email. The org-wide user list needs `assign_users_to_teams`, which workspace managers usually lack, so the search runs through the users module's `SearchOrgUsersUseCase`, which leaves authorization to the caller.
 - Only workspace admins change roles. A workspace always keeps an admin: demoting the last one fails with `WORKSPACE_LAST_ADMIN` (409). There is no org-wide way to repair a workspace without admins, so `UpdateWorkspaceMemberRoleUseCase` locks the workspace row (`WorkspaceMembersRepository.lockWorkspace`, `SELECT … FOR UPDATE` inside its transaction) before it reads the caller's admin role and counts the admins; concurrent role changes are serialized and none passes on a stale read.
+- Any member may leave (`LeaveWorkspaceUseCase`). Removing someone else (`RemoveWorkspaceMemberUseCase`) needs `manage_workspace_members`, and only workspace admins remove admins (403). Both go through `WorkspaceMemberRemovalService`, which locks the workspace row like a role change before it reads the caller's role and counts the admins, so the last admin can neither leave nor be removed (`WORKSPACE_LAST_ADMIN`, 409) even when two admins leave at once. A non-member gets `WorkspaceNotFoundError` before anything about the target is revealed. After the commit it emits `WorkspaceMemberRemovedEvent`; the favorites module deletes that user's favorite of the workspace. The member's chats keep their `workspaceId`: access to them ends with the membership and returns when the user is added again.
 - Any member lists the members with name, email and role, ordered by when they joined. Names and emails come from the users module's org-scoped `FindUsersByIdsUseCase` (`WorkspaceMemberProfilesService`).
 - Workspace lookups (`findById`, `findAllByUserId`, `findAllByIds`) only return workspaces the user is a member of. The list's chat count and chat activity only cover the requesting member's own chats, because chats stay private to their creator.
 - Creating a workspace does not add it to favorites. Users explicitly favorite or unfavorite it; existing favorites are unchanged.
@@ -27,8 +28,8 @@ What a member may do follows only their workspace role; the org role grants noth
 
 - `requireMember`: any member. Reading, chatting and executing.
 - `requirePermission(manage_workspace)`: editing details and the instruction, and write access for other modules.
-- `requirePermission(manage_workspace_members)`: searching colleagues to add and adding members.
-- `requireAdmin`: deleting the workspace, changing roles, and adding admins.
+- `requirePermission(manage_workspace_members)`: searching colleagues to add, adding members, and removing members who are not admins.
+- `requireAdmin`: deleting the workspace, changing roles, adding admins, and removing admins.
 
 Anyone who is not a member, org admins included, gets `WorkspaceNotFoundError` (404); a member lacking the permission or the admin role gets `UnauthorizedAccessError` (403). The service and the repository ports are internal. Other modules use:
 
@@ -60,6 +61,8 @@ Deleting a user account cascades their memberships but no workspace. `Workspaces
 | GET    | `/workspaces/:id/member-candidates`   | Search colleagues to add       |
 | POST   | `/workspaces/:id/members`             | Add users with one role        |
 | PATCH  | `/workspaces/:id/members/:userId`     | Change a role (admins)         |
+| DELETE | `/workspaces/:id/members/me`          | Leave the workspace            |
+| DELETE | `/workspaces/:id/members/:userId`     | Remove a member                |
 | GET    | `/workspaces/:id/context`             | Read the full runtime context  |
 | PATCH  | `/workspaces/:id/context/instruction` | Update project instruction     |
 
@@ -68,9 +71,9 @@ Every workspace response carries the caller's workspace `role` and effective wor
 ## Structure
 
 - `domain/`: workspace, workspace member and runtime-context entities.
-- `application/use-cases/`: workspace CRUD, members (list, search candidates, add, change role), access capabilities, instruction update, and run-context orchestration.
+- `application/use-cases/`: workspace CRUD, members (list, search candidates, add, change role, remove, leave), access capabilities, instruction update, and run-context orchestration.
 - `application/models/`: `WorkspaceAccess`, the workspace-scoped permissions, and the member profile and candidate read models.
-- `application/services/`: role-based access checks, member profiles, and the shared deletion flow.
+- `application/services/`: role-based access checks, member profiles, membership removal, and the shared deletion flow.
 - `application/listeners/`: workspace succession on user deletion.
 - `infrastructure/persistence/local/`: TypeORM workspace and membership repositories and mappers.
 - `presenters/http/`: workspace, members and runtime-context controllers and DTO mappers.

@@ -11737,6 +11737,110 @@ return paneFetch<workspaceMembersControllerUpdateRoleResponse>(getWorkspaceMembe
 
 
 
+export type workspaceMembersControllerRemoveResponse204 = {
+  data: void
+  status: 204
+}
+
+export type workspaceMembersControllerRemoveResponse403 = {
+  data: void
+  status: 403
+}
+
+export type workspaceMembersControllerRemoveResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspaceMembersControllerRemoveResponse409 = {
+  data: void
+  status: 409
+}
+
+export type workspaceMembersControllerRemoveResponseSuccess = (workspaceMembersControllerRemoveResponse204) & {
+  headers: Headers;
+};
+export type workspaceMembersControllerRemoveResponseError = (workspaceMembersControllerRemoveResponse403 | workspaceMembersControllerRemoveResponse404 | workspaceMembersControllerRemoveResponse409) & {
+  headers: Headers;
+};
+
+export type workspaceMembersControllerRemoveResponse = (workspaceMembersControllerRemoveResponseSuccess | workspaceMembersControllerRemoveResponseError)
+
+export const getWorkspaceMembersControllerRemoveUrl = (id: string,
+    userId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/members/${userId}`
+}
+
+/**
+ * Needs manage_workspace_members; only workspace admins remove admins. The member keeps their chats but cannot open them until added again.
+ * @summary Remove a member from a workspace
+ */
+export const workspaceMembersControllerRemove = async (id: string,
+    userId: string, options?: Parameters<typeof paneFetch>[1]): Promise<workspaceMembersControllerRemoveResponse> => {
+
+  return paneFetch<workspaceMembersControllerRemoveResponse>(getWorkspaceMembersControllerRemoveUrl(id,userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type workspaceMembersControllerLeaveResponse204 = {
+  data: void
+  status: 204
+}
+
+export type workspaceMembersControllerLeaveResponse404 = {
+  data: void
+  status: 404
+}
+
+export type workspaceMembersControllerLeaveResponse409 = {
+  data: void
+  status: 409
+}
+
+export type workspaceMembersControllerLeaveResponseSuccess = (workspaceMembersControllerLeaveResponse204) & {
+  headers: Headers;
+};
+export type workspaceMembersControllerLeaveResponseError = (workspaceMembersControllerLeaveResponse404 | workspaceMembersControllerLeaveResponse409) & {
+  headers: Headers;
+};
+
+export type workspaceMembersControllerLeaveResponse = (workspaceMembersControllerLeaveResponseSuccess | workspaceMembersControllerLeaveResponseError)
+
+export const getWorkspaceMembersControllerLeaveUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${id}/members/me`
+}
+
+/**
+ * @summary Leave a workspace
+ */
+export const workspaceMembersControllerLeave = async (id: string, options?: Parameters<typeof paneFetch>[1]): Promise<workspaceMembersControllerLeaveResponse> => {
+
+  return paneFetch<workspaceMembersControllerLeaveResponse>(getWorkspaceMembersControllerLeaveUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
 export type workspaceContextControllerFindContextResponse200 = {
   data: WorkspaceContextResponseDto
   status: 200

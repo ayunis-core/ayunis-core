@@ -126,7 +126,7 @@
         "adminFooter": "Workspace admins always have every permission in their workspace.",
         "items": {
           "manage_workspace": "Edit the workspace, its instructions, skills and knowledge",
-          "manage_workspace_members": "Add members",
+          "manage_workspace_members": "Add and remove members",
           "manage_roles": "Change roles and delete the workspace"
         }
       },
@@ -156,6 +156,29 @@
       "notInOrg": "Only users of your organisation can be added",
       "notAllowed": "You are not allowed to add members with this role",
       "error": "Members could not be added"
+    },
+    "remove": {
+      "label": "Remove {{name}}",
+      "confirmTitle": "Remove member",
+      "confirmDescription": "Remove {{name}} from this workspace? Their chats stay here, but they can only open them again once they are added back.",
+      "confirmButton": "Remove",
+      "cancelButton": "Cancel",
+      "success": "Member removed",
+      "error": "Member could not be removed",
+      "notFound": "Member not found",
+      "notAllowed": "Only workspace admins can remove admins",
+      "lastAdmin": "A workspace needs at least one admin"
+    },
+    "leave": {
+      "open": "Leave workspace",
+      "confirmTitle": "Leave workspace",
+      "confirmDescription": "Leave {{name}}? Your chats stay in the workspace, but you can only open them again once someone adds you back.",
+      "confirmButton": "Leave",
+      "cancelButton": "Cancel",
+      "success": "You left the workspace",
+      "error": "Could not leave the workspace",
+      "notFound": "Workspace not found",
+      "lastAdmin": "You are the last admin. Make another member admin before you leave."
     }
   }
 }

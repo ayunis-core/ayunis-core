@@ -18118,6 +18118,140 @@ export const useWorkspaceMembersControllerUpdateRole = <TError = void,
     }
 
 /**
+ * Needs manage_workspace_members; only workspace admins remove admins. The member keeps their chats but cannot open them until added again.
+ * @summary Remove a member from a workspace
+ */
+export const workspaceMembersControllerRemove = (
+    id: string,
+    userId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/members/${userId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceMembersControllerRemoveMutationKey = () => ['workspaceMembersControllerRemove'] as const;
+
+export const getWorkspaceMembersControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, TError,WorkspaceMembersControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, TError,WorkspaceMembersControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceMembersControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, WorkspaceMembersControllerRemoveMutationVariables> = (props) => {
+          const {id,userId} = props ?? {};
+
+          return  workspaceMembersControllerRemove(id,userId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>>
+
+    export type WorkspaceMembersControllerRemoveMutationError = void
+    export type WorkspaceMembersControllerRemoveMutationVariables = {id: string;userId: string}
+
+    /**
+ * @summary Remove a member from a workspace
+ */
+export const useWorkspaceMembersControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerRemove>>, TError,WorkspaceMembersControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerRemove>>,
+        TError,
+        WorkspaceMembersControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceMembersControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Leave a workspace
+ */
+export const workspaceMembersControllerLeave = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/workspaces/${id}/members/me`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getWorkspaceMembersControllerLeaveMutationKey = () => ['workspaceMembersControllerLeave'] as const;
+
+export const getWorkspaceMembersControllerLeaveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerLeave>>, TError,WorkspaceMembersControllerLeaveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerLeave>>, TError,WorkspaceMembersControllerLeaveMutationVariables, TContext> => {
+
+const mutationKey = getWorkspaceMembersControllerLeaveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof workspaceMembersControllerLeave>>, WorkspaceMembersControllerLeaveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  workspaceMembersControllerLeave(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WorkspaceMembersControllerLeaveMutationResult = NonNullable<Awaited<ReturnType<typeof workspaceMembersControllerLeave>>>
+
+    export type WorkspaceMembersControllerLeaveMutationError = void
+    export type WorkspaceMembersControllerLeaveMutationVariables = {id: string}
+
+    /**
+ * @summary Leave a workspace
+ */
+export const useWorkspaceMembersControllerLeave = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof workspaceMembersControllerLeave>>, TError,WorkspaceMembersControllerLeaveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof workspaceMembersControllerLeave>>,
+        TError,
+        WorkspaceMembersControllerLeaveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getWorkspaceMembersControllerLeaveMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Get workspace context
  */
 export const workspaceContextControllerFindContext = (

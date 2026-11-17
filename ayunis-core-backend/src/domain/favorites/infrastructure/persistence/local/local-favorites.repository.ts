@@ -78,8 +78,13 @@ export class LocalFavoritesRepository extends FavoritesRepository {
   async removeByReference(
     referenceType: FavoriteReferenceType,
     referenceId: UUID,
+    userId?: UUID,
   ): Promise<void> {
-    await this.favorites.delete({ referenceType, referenceId });
+    await this.favorites.delete({
+      referenceType,
+      referenceId,
+      ...(userId ? { userId } : {}),
+    });
   }
 
   async reorder(userId: UUID, favoriteIds: UUID[]): Promise<void> {

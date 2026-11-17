@@ -1,8 +1,11 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { DeleteThreadCommand } from './delete-thread.command';
 import { ContextService } from 'src/common/context/services/context.service';
+import { getRequiredUserContext } from 'src/common/context/required-context';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadDeletionService } from 'src/domain/threads/application/services/thread-deletion.service';
+import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
 
 @Injectable()
 export class DeleteThreadUseCase {
@@ -14,41 +17,23 @@ export class DeleteThreadUseCase {
     private readonly threadDeletion: ThreadDeletionService,
   ) {}
 
+  @HandleUnexpectedErrors(UnexpecteThreadError)
   async execute(command: DeleteThreadCommand): Promise<void> {
     this.logger.log({ threadId: command.id }, 'delete');
 
-    const userId = this.contextService.get('userId');
-    const orgId = this.contextService.get('orgId');
-
-    if (!userId) {
-      throw new UnauthorizedException('User not authenticated');
-    }
-
-    if (!orgId) {
-      throw new UnauthorizedException('Organization context required');
-    }
-
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
     const logContext = { threadId: command.id, userId };
-    try {
-      const thread = await this.threadsRepository.findOne(command.id, userId);
 
-      if (!thread) {
-        this.logger.warn(
-          logContext,
-          'Thread already deleted or not found, treating as success',
-        );
-        return;
-      }
-
-      await this.threadDeletion.delete({ threadId: command.id, userId, orgId });
-
-      this.logger.log(logContext, 'Thread deleted successfully');
-    } catch (error) {
-      this.logger.error(
-        { ...logContext, err: error as Error },
-        'Failed to delete thread',
+    const thread = await this.threadsRepository.findOne(command.id, userId);
+    if (!thread) {
+      this.logger.warn(
+        logContext,
+        'Thread already deleted or not found, treating as success',
       );
-      throw error;
+      return;
     }
+
+    await this.threadDeletion.delete({ threadId: command.id, userId, orgId });
+    this.logger.log(logContext, 'Thread deleted successfully');
   }
 }

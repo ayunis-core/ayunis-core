@@ -21,6 +21,7 @@ describe('RemoveFavoriteReferenceUseCase', () => {
     expect(repository.removeByReference).toHaveBeenCalledWith(
       FavoriteReferenceType.Workspace,
       WORKSPACE_ID,
+      undefined,
     );
   });
 });

@@ -7,8 +7,9 @@ import { ToggleFavoriteUseCase } from './application/use-cases/toggle-favorite/t
 import { LocalFavoritesRepositoryModule } from './infrastructure/persistence/local/local-favorites-repository.module';
 import { FavoriteThreadDeletionRequestedListener } from './application/listeners/thread-deletion-requested.listener';
 import { FavoriteWorkspaceDeletionRequestedListener } from './application/listeners/workspace-deletion-requested.listener';
-import { WorkspacesModule } from '../workspaces/workspaces.module';
-import { ThreadsModule } from '../threads/threads.module';
+import { FavoriteWorkspaceMemberRemovedListener } from 'src/domain/favorites/application/listeners/workspace-member-removed.listener';
+import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { FavoriteReferenceResolver } from './application/services/favorite-reference-resolver.service';
 import { FavoritesController } from './presenters/http/favorites.controller';
 
@@ -31,6 +32,7 @@ import { FavoritesController } from './presenters/http/favorites.controller';
     RemoveFavoriteReferenceUseCase,
     FavoriteReferenceResolver,
     FavoriteWorkspaceDeletionRequestedListener,
+    FavoriteWorkspaceMemberRemovedListener,
     FavoriteThreadDeletionRequestedListener,
   ],
   exports: [

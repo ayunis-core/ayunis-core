@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
   ParseUUIDPipe,
@@ -23,6 +26,10 @@ import { ListWorkspaceMemberCandidatesQuery } from 'src/domain/workspaces/applic
 import { ListWorkspaceMemberCandidatesUseCase } from 'src/domain/workspaces/application/use-cases/list-workspace-member-candidates/list-workspace-member-candidates.use-case';
 import { ListWorkspaceMembersQuery } from 'src/domain/workspaces/application/use-cases/list-workspace-members/list-workspace-members.query';
 import { ListWorkspaceMembersUseCase } from 'src/domain/workspaces/application/use-cases/list-workspace-members/list-workspace-members.use-case';
+import { LeaveWorkspaceCommand } from 'src/domain/workspaces/application/use-cases/leave-workspace/leave-workspace.command';
+import { LeaveWorkspaceUseCase } from 'src/domain/workspaces/application/use-cases/leave-workspace/leave-workspace.use-case';
+import { RemoveWorkspaceMemberCommand } from 'src/domain/workspaces/application/use-cases/remove-workspace-member/remove-workspace-member.command';
+import { RemoveWorkspaceMemberUseCase } from 'src/domain/workspaces/application/use-cases/remove-workspace-member/remove-workspace-member.use-case';
 import { UpdateWorkspaceMemberRoleCommand } from 'src/domain/workspaces/application/use-cases/update-workspace-member-role/update-workspace-member-role.command';
 import { UpdateWorkspaceMemberRoleUseCase } from 'src/domain/workspaces/application/use-cases/update-workspace-member-role/update-workspace-member-role.use-case';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
@@ -50,6 +57,8 @@ export class WorkspaceMembersController {
     private readonly listWorkspaceMemberCandidatesUseCase: ListWorkspaceMemberCandidatesUseCase,
     private readonly addWorkspaceMembersUseCase: AddWorkspaceMembersUseCase,
     private readonly updateWorkspaceMemberRoleUseCase: UpdateWorkspaceMemberRoleUseCase,
+    private readonly removeWorkspaceMemberUseCase: RemoveWorkspaceMemberUseCase,
+    private readonly leaveWorkspaceUseCase: LeaveWorkspaceUseCase,
     private readonly mapper: WorkspaceMemberDtoMapper,
   ) {}
 
@@ -158,5 +167,54 @@ export class WorkspaceMembersController {
       }),
     );
     return this.mapper.toDto(member);
+  }
+
+  // Declared before `:userId` so that `me` is not parsed as a user ID.
+  @Delete(':id/members/me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Leave a workspace' })
+  @ApiParam(workspaceIdParam)
+  @ApiResponse({ status: 204, description: 'Left the workspace' })
+  @ApiResponse({ status: 404, description: 'Workspace not found' })
+  @ApiResponse({
+    status: 409,
+    description: 'The last admin cannot leave the workspace',
+  })
+  async leave(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log({ id }, 'leave');
+    await this.leaveWorkspaceUseCase.execute(new LeaveWorkspaceCommand(id));
+  }
+
+  @Delete(':id/members/:userId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Remove a member from a workspace',
+    description:
+      'Needs manage_workspace_members; only workspace admins remove admins. ' +
+      'The member keeps their chats but cannot open them until added again.',
+  })
+  @ApiParam(workspaceIdParam)
+  @ApiParam({ name: 'userId', type: 'string', format: 'uuid' })
+  @ApiResponse({ status: 204, description: 'Member removed' })
+  @ApiResponse({
+    status: 403,
+    description: 'Not allowed to remove members, or to remove an admin',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Workspace not found or user is not a member',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'The last admin cannot be removed',
+  })
+  async remove(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Param('userId', ParseUUIDPipe) userId: UUID,
+  ): Promise<void> {
+    this.logger.log({ id, userId }, 'remove');
+    await this.removeWorkspaceMemberUseCase.execute(
+      new RemoveWorkspaceMemberCommand(id, userId),
+    );
   }
 }

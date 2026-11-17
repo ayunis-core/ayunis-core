@@ -53,3 +53,22 @@ export async function changeWorkspaceRoleThroughUi(
   await page.getByTestId(`workspace-member-role-option-${role}`).click();
   await page.getByTestId("confirmation-confirm").click();
 }
+
+/** Removes a member from the open members page and confirms it. */
+export async function removeWorkspaceMemberThroughUi(
+  page: Page,
+  userId: string,
+): Promise<void> {
+  const members = page.getByTestId("workspace-members-page");
+  await members.getByTestId(`workspace-member-remove-${userId}`).click();
+  await page.getByTestId("confirmation-confirm").click();
+  await expect(members.getByTestId(`workspace-member-${userId}`)).toHaveCount(
+    0,
+  );
+}
+
+/** Leaves the workspace from its open members page and confirms it. */
+export async function leaveWorkspaceThroughUi(page: Page): Promise<void> {
+  await page.getByTestId("workspace-members-leave").click();
+  await page.getByTestId("confirmation-confirm").click();
+}

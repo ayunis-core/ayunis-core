@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserPlus, Users } from 'lucide-react';
+import { LogOut, UserPlus, Users } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -14,6 +14,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { getWorkspaceAccess, type Workspace } from '@/features/workspaces';
+import { useLeaveWorkspace } from '@/pages/workspace/api/useLeaveWorkspace';
 import { useWorkspaceRolePermissions } from '@/pages/workspace/api/useWorkspaceRolePermissions';
 import type { WorkspaceMember } from '@/pages/workspace/model/workspace-members';
 import { AddWorkspaceMembersDialog } from './AddWorkspaceMembersDialog';
@@ -30,7 +31,9 @@ export function WorkspaceMembersPage({
 }: Readonly<WorkspaceMembersPageProps>) {
   const { t } = useTranslation('workspace');
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const { isAdmin, canManageMembers } = getWorkspaceAccess(workspace);
+  const access = getWorkspaceAccess(workspace);
+  const { isAdmin, canManageMembers } = access;
+  const { leaveWorkspace, isLeaving } = useLeaveWorkspace(workspace.id);
   const { rolePermissions } = useWorkspaceRolePermissions(
     workspace.id,
     isAdmin || canManageMembers,
@@ -47,16 +50,28 @@ export function WorkspaceMembersPage({
               { label: t('members.title') },
             ]}
             action={
-              canManageMembers ? (
+              <div className="flex items-center gap-2">
                 <Button
                   size="sm"
-                  onClick={() => setIsAddOpen(true)}
-                  data-testid="workspace-members-add"
+                  variant="outline"
+                  onClick={() => leaveWorkspace(workspace.name)}
+                  disabled={isLeaving}
+                  data-testid="workspace-members-leave"
                 >
-                  <UserPlus />
-                  {t('members.add.open')}
+                  <LogOut />
+                  {t('members.leave.open')}
                 </Button>
-              ) : null
+                {canManageMembers ? (
+                  <Button
+                    size="sm"
+                    onClick={() => setIsAddOpen(true)}
+                    data-testid="workspace-members-add"
+                  >
+                    <UserPlus />
+                    {t('members.add.open')}
+                  </Button>
+                ) : null}
+              </div>
             }
           />
         }
@@ -76,7 +91,7 @@ export function WorkspaceMembersPage({
               <WorkspaceMembersList
                 workspaceId={workspace.id}
                 members={members}
-                canChangeRoles={isAdmin}
+                access={access}
                 rolePermissions={rolePermissions}
               />
             </CardContent>
