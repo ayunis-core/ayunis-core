@@ -46,6 +46,9 @@ import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application
 import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { SendNotificationToolHandler } from './application/handlers/send-notification-tool.handler';
+import { MemoryModule } from 'src/domain/memory/memory.module';
+import { GetMemoryToolHandler } from './application/handlers/get-memory-tool.handler';
+import { SetMemoryToolHandler } from './application/handlers/set-memory-tool.handler';
 
 @Module({
   imports: [
@@ -64,6 +67,7 @@ import { SendNotificationToolHandler } from './application/handlers/send-notific
     QuotasModule,
     MarketplaceModule,
     NotificationsModule,
+    MemoryModule,
   ],
   providers: [
     // Use cases
@@ -96,6 +100,8 @@ import { SendNotificationToolHandler } from './application/handlers/send-notific
     UpdateSpreadsheetToolHandler,
     MarketplaceSearchToolHandler,
     SendNotificationToolHandler,
+    GetMemoryToolHandler,
+    SetMemoryToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

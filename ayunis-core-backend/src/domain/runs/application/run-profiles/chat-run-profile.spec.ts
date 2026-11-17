@@ -29,6 +29,8 @@ import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
+import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 import {
   aCapabilityContext,
@@ -45,7 +47,7 @@ const notification = aNotification({
   headline: 'Neue Verordnung zur Grundsteuer',
 });
 
-function buildChatProfile(): ChatRunProfile {
+function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
   const assembleTool = createAssembleToolUseCase();
   const resolved = <T>(value: T) => ({
     execute: jest.fn().mockResolvedValue(value),
@@ -106,6 +108,11 @@ function buildChatProfile(): ChatRunProfile {
       { get: () => true } as never,
     ),
     new WorkspaceInstructionsCapability(),
+    new MemoryCapability(
+      { get: () => memory !== undefined } as never,
+      resolved(memory) as never,
+      assembleTool,
+    ),
     new McpCapability(mcpTools),
   );
 }
@@ -116,6 +123,7 @@ function assembleChat(
     isAnonymous?: boolean;
     activatedSkillName?: string;
     thread?: Thread;
+    memory?: MemoryEntry[];
   } = {},
 ) {
   const resolved = <T>(value: T) =>
@@ -133,7 +141,7 @@ function assembleChat(
     { toRuntimeTools: jest.fn() } as never,
     resolved([]),
   );
-  return assembler.assemble(buildChatProfile(), {
+  return assembler.assemble(buildChatProfile(options.memory), {
     profile: { id: 'chat' },
     thread: options.thread ?? aThread({ mcpIntegrationIds: [integrationId] }),
     model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
@@ -219,6 +227,23 @@ describe('ChatRunProfile', () => {
     expect(instructions).toMatch(
       /<organization_instructions>[\s\S]*Antworten Sie stets auf Deutsch\.[\s\S]*<\/organization_instructions>\n\nYou are now ready to assist the user\.$/,
     );
+  });
+
+  it('renders memory after the custom instructions, at the end of the cached prefix', async () => {
+    const { tools, instructions } = await assembleChat({
+      memory: [
+        new MemoryEntry({
+          userId: TEST_USER_ID,
+          key: 'personal',
+          content: 'Sachbearbeiterin im Bauamt',
+        }),
+      ],
+    });
+
+    expect(instructions).toMatch(
+      /<\/organization_instructions>\n\n<memory>[\s\S]*<personal>\nSachbearbeiterin im Bauamt\n<\/personal>[\s\S]*<\/memory>\n\nYou are now ready to assist the user\.$/,
+    );
+    expect(tools.map((tool) => tool.name).at(-2)).toBe(ToolType.SET_MEMORY);
   });
 
   it('appends the quick-action skill note after the closing line', async () => {

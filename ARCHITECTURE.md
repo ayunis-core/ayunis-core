@@ -94,6 +94,7 @@ none of these packages implements the Agent Plugins standard.
 | [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode                                                                     |
 | [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)  | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                              |
 | [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                | Favorites      | User-owned ordered references resolved for navigation                                                          |
+| [memory](ayunis-core-backend/src/domain/memory/SUMMARY.md)                      | AI Context     | Per-user key/value memory the assistant reads in every chat and writes itself (behind a feature flag)          |
 | [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Member-owned project folders ("Projekte") grouping chats with scoped skills, knowledge bases and instructions  |
 | [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
 | [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine and release-note notifications with media, read state and "Chat about this"          |

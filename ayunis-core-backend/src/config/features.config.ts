@@ -20,6 +20,8 @@ export enum FeatureFlag {
    * add-in depends on.
    */
   OutlookAddin = 'outlookAddinEnabled',
+  /** Off until released: the memory API and memory in chat runs. */
+  Memory = 'memoryEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -60,6 +62,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
       parseBooleanWithDefault(process.env.FEATURE_READ_ALOUD_ENABLED, false),
     outlookAddinEnabled: parseBooleanWithDefault(
       process.env.FEATURE_OUTLOOK_ADDIN_ENABLED,
+      false,
+    ),
+    memoryEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_MEMORY_ENABLED,
       false,
     ),
   };

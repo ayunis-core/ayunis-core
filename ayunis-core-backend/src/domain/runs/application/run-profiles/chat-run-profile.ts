@@ -21,6 +21,7 @@ import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import {
   AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
@@ -60,6 +61,7 @@ export class ChatRunProfile implements RunProfile {
     recordings: RecordingsCapability,
     notificationContext: NotificationContextCapability,
     workspaceInstructions: WorkspaceInstructionsCapability,
+    memory: MemoryCapability,
     mcp: McpCapability,
   ) {
     this.capabilities = [
@@ -83,6 +85,7 @@ export class ChatRunProfile implements RunProfile {
       recordings,
       notificationContext,
       workspaceInstructions,
+      memory,
       mcp,
     ];
   }

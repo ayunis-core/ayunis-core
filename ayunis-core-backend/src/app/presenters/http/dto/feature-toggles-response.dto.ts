@@ -47,4 +47,11 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   outlookAddinEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'The assistant remembers facts about each user across chats, and users can manage what it remembers',
+    default: false,
+  })
+  memoryEnabled: boolean;
 }

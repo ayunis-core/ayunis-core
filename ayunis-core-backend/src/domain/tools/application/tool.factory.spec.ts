@@ -196,10 +196,12 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.UPDATE_SPREADSHEET);
       expect(types).toContain(ToolType.MARKETPLACE_SEARCH);
       expect(types).toContain(ToolType.INSTALL_MARKETPLACE_SKILL);
+      expect(types).toContain(ToolType.GET_MEMORY);
+      expect(types).toContain(ToolType.SET_MEMORY);
       expect(types).toContain(ToolType.FINISH_ROUTINE);
       expect(types).toContain(ToolType.SEND_NOTIFICATION);
 
-      expect(types).toHaveLength(42);
+      expect(types).toHaveLength(44);
     });
   });
 });

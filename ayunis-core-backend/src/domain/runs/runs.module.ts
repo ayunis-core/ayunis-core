@@ -65,6 +65,8 @@ import { NotificationContextCapability } from './application/run-capabilities/ca
 import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
+import { MemoryCapability } from './application/run-capabilities/capabilities/memory.capability';
+import { MemoryModule } from 'src/domain/memory/memory.module';
 import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
 import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
 import { OutlookRunProfile } from './application/run-profiles/outlook-run-profile';
@@ -114,6 +116,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     KnowledgeBasesModule,
     RecordingsModule,
     NotificationsModule,
+    MemoryModule,
     forwardRef(() => RoutinesModule), // Runs → Routines → Runs (circular)
   ],
   controllers: [
@@ -184,6 +187,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ThreadSourcesCapability,
     WorkspaceInstructionsCapability,
     NotificationContextCapability,
+    MemoryCapability,
     RoutineContextCapability,
     RoutineInternetCapability,
     NotificationsCapability,
