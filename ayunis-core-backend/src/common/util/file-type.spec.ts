@@ -172,6 +172,18 @@ describe('detectFileType', () => {
     });
   });
 
+  describe('HTML detection', () => {
+    it.each([
+      [MIME_TYPES.HTML, 'report.html'],
+      ['application/octet-stream', 'report.htm'],
+      ['application/octet-stream', 'REPORT.HTML'],
+    ])('detects %s %s as HTML', (mimeType, fileName) => {
+      expect(detectFileType(mimeType, fileName)).toBe('html');
+      expect(getCanonicalMimeType('html')).toBe(MIME_TYPES.HTML);
+      expect(isDocumentSourceFile('html')).toBe(true);
+    });
+  });
+
   describe('Audio detection', () => {
     it('returns "mp3" when MIME type is audio/mpeg', () => {
       expect(detectFileType(MIME_TYPES.MP3, 'voice.mp3')).toBe('mp3');

@@ -80,6 +80,8 @@ describe('useFileDrop', () => {
     'recording.wav',
     'recording.webm',
     'notes.md',
+    'report.html',
+    'report.HTM',
     'anfrage.eml',
     'anfrage.msg',
   ])('attaches a dropped %s', (fileName) => {

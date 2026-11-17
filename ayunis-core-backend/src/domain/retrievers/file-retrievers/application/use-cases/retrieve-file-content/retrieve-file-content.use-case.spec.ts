@@ -145,6 +145,120 @@ describe('RetrieveFileContentUseCase', () => {
     expect(mockMistralHandler.processFile).not.toHaveBeenCalled();
   });
 
+  it('keeps the full uploaded HTML page and table rows readable', async () => {
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from(
+          [
+            '<header>Budget report 2027</header>',
+            '<nav>Overview</nav>',
+            '<main><table><tr><th>Department</th><th>Amount</th></tr>',
+            '<tr><td>Library</td><td>EUR 42,000</td></tr></table></main>',
+            '<footer>Approved by council</footer>',
+          ].join(''),
+        ),
+        fileName: 'budget.html',
+        fileType: 'text/html',
+      }),
+    );
+
+    expect(result.pages.map(({ text }) => text).join('\n')).toBe(
+      [
+        'Budget report 2027',
+        'Overview',
+        'Department Amount',
+        'Library EUR 42,000',
+        'Approved by council',
+      ].join('\n'),
+    );
+  });
+
+  it('keeps table rows readable when cells contain block elements', async () => {
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from(
+          '<table><tr><td><p>Library</p></td><td><div>EUR 42,000</div></td></tr></table>',
+        ),
+        fileName: 'word-export.html',
+        fileType: 'text/html',
+      }),
+    );
+
+    expect(result.pages[0].text).toBe('Library EUR 42,000');
+  });
+
+  it('keeps table rows readable when cells contain line breaks', async () => {
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from(
+          '<table><tr><td>Public<br>Library</td><td>EUR 42,000</td></tr></table>',
+        ),
+        fileName: 'wrapped-cell.html',
+        fileType: 'text/html',
+      }),
+    );
+
+    expect(result.pages[0].text).toBe('Public Library EUR 42,000');
+  });
+
+  it('reports HTML without readable text as an empty document', async () => {
+    const result = useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from('<html><script>track()</script></html>'),
+        fileName: 'empty.htm',
+        fileType: 'text/html',
+      }),
+    );
+
+    await expect(result).rejects.toBeInstanceOf(EmptyOcrResultError);
+  });
+
+  it('decodes uploaded HTML using its declared charset', async () => {
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from(
+          '<meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><body>Grüße aus Köln</body>',
+          'latin1',
+        ),
+        fileName: 'bericht.html',
+        fileType: 'text/html',
+      }),
+    );
+
+    expect(result.pages[0].text).toBe('Grüße aus Köln');
+  });
+
+  it('treats a meta-declared UTF-16 charset as UTF-8', async () => {
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from(
+          '<meta charset="utf-16"><body>Grüße aus Köln</body>',
+        ),
+        fileName: 'bericht.html',
+        fileType: 'text/html',
+      }),
+    );
+
+    expect(result.pages[0].text).toBe('Grüße aus Köln');
+  });
+
+  it.each([
+    '<!-- <meta charset="windows-1252"> -->',
+    '<script>"<meta charset=windows-1252>"</script>',
+  ])('ignores charset-like text outside meta declarations', async (prefix) => {
+    const result = await useCase.execute(
+      new RetrieveFileContentCommand({
+        fileData: Buffer.from(
+          `${prefix}<meta charset="utf-8"><body>Grüße aus Köln</body>`,
+        ),
+        fileName: 'bericht.html',
+        fileType: 'text/html',
+      }),
+    );
+
+    expect(result.pages[0].text).toBe('Grüße aus Köln');
+  });
+
   it('should extract text from an EML file as a single page', async () => {
     const eml = Buffer.from(
       [
@@ -288,6 +402,22 @@ describe('RetrieveFileContentUseCase', () => {
       );
       expect(result.pages[0].text).toContain(
         '--- Attachment: agenda.docx ---\nTagesordnung',
+      );
+    });
+
+    it('extracts HTML attachments like a direct upload', async () => {
+      const result = await retrieveEml(
+        emlWith([
+          attachment(
+            'bericht.html',
+            'text/html',
+            '<header>Jahresbericht</header><table><tr><td>Bibliothek</td><td>42</td></tr></table>',
+          ),
+        ]),
+      );
+
+      expect(result.pages[0].text).toContain(
+        '--- Attachment: bericht.html ---\nJahresbericht\nBibliothek 42',
       );
     });
 

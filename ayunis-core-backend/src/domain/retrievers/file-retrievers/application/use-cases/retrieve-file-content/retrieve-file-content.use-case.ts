@@ -18,6 +18,7 @@ import {
 } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { FileRetrieverType } from 'src/domain/retrievers/file-retrievers/domain/value-objects/file-retriever-type.enum';
 import {
+  EmptyOcrResultError,
   UnprocessableDocumentError,
   FileRetrieverProviderNotAvailableError,
   FileRetrieverUnauthorizedError,
@@ -30,9 +31,15 @@ import {
   detectFileType,
   getCanonicalMimeType,
   isAudioFile,
+  isHtmlFile,
   isOfficeDocumentFile,
   MIME_TYPES,
 } from 'src/common/util/file-type';
+import {
+  decodeHtmlDocument,
+  extractHtmlDocumentText,
+} from 'src/common/util/html-text-extraction';
+import * as cheerio from 'cheerio';
 import { EmlAttachment, parseEml } from 'src/common/util/eml';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
@@ -91,6 +98,7 @@ function isExtractableAttachment(fileType: DetectedFileType): boolean {
   return (
     fileType === 'pdf' ||
     fileType === 'txt' ||
+    isHtmlFile(fileType) ||
     fileType === 'eml' ||
     fileType === 'msg' ||
     isOfficeDocumentFile(fileType)
@@ -136,10 +144,8 @@ export class RetrieveFileContentUseCase {
       throw new Error(`A ${fileType} file cannot be read from disk`);
     }
 
-    if (fileType === 'txt') {
-      const text = command.fileData.toString('utf8').replace(/^\uFEFF/, '');
-      return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
-    }
+    if (fileType === 'txt') return this.processText(command.fileData);
+    if (isHtmlFile(fileType)) return this.processHtml(command.fileData);
 
     if (fileType === 'eml') {
       return this.processEml(command, emlDepth);
@@ -182,6 +188,28 @@ export class RetrieveFileContentUseCase {
     }
 
     throw new InvalidFileTypeError(fileType);
+  }
+
+  private processText(fileData: Buffer): FileRetrieverResult {
+    const text = fileData.toString('utf8').replace(/^\uFEFF/, '');
+    return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
+  }
+
+  private processHtml(fileData: Buffer): FileRetrieverResult {
+    try {
+      const html = decodeHtmlDocument(fileData);
+      const text = extractHtmlDocumentText(cheerio.load(html));
+      if (text === '') throw new EmptyOcrResultError();
+      return new FileRetrieverResult([new FileRetrieverPage(text, 1)]);
+    } catch (error) {
+      if (error instanceof UnprocessableDocumentError) throw error;
+      throw new UnprocessableDocumentError(
+        'The HTML document could not be read',
+        {
+          error: error instanceof Error ? error : undefined,
+        },
+      );
+    }
   }
 
   private async processEml(

@@ -1,6 +1,8 @@
 Data Sources
 External data sources for RAG context enrichment
 
+HTML uploads follow the document pipeline and persist as text-file sources; their full readable body is indexed without creating separate table sources.
+
 Sources manage user-uploaded files, URLs, and text content that feed the RAG pipeline. Each source is chunked, indexed, and made available for semantic search during AI conversations. Sources may optionally belong to a knowledge base via the `knowledgeBaseId` foreign key column.
 
 Source citation reads use `FindSourceCitationTargetUseCase`, backed by a single joined repository query that returns the exact persisted content chunk and its owning text-source metadata without loading the full extracted source text. The use case intentionally performs no caller authorization; consuming modules must establish their own access boundary before exposing the result.

@@ -3,6 +3,10 @@ import { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { fileTypeFromMimeType } from './source-file-type.helpers';
 
 describe('fileTypeFromMimeType', () => {
+  it('stores HTML uploads as text files', () => {
+    expect(fileTypeFromMimeType(MIME_TYPES.HTML)).toBe(FileType.TXT);
+  });
+
   it.each([MIME_TYPES.CSV, MIME_TYPES.XLSX, MIME_TYPES.XLS, MIME_TYPES.ODS])(
     'stores table MIME %s as a text file',
     (mime) => {

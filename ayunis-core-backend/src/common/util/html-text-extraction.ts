@@ -1,4 +1,52 @@
 import type * as cheerio from 'cheerio';
+import { load } from 'cheerio';
+
+const HTML_ENCODING_SCAN_BYTES = 1024;
+
+const encodingFromBom = (buffer: Buffer): string | undefined => {
+  if (buffer.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf]))) {
+    return 'utf-8';
+  }
+  if (buffer.subarray(0, 2).equals(Buffer.from([0xff, 0xfe]))) {
+    return 'utf-16le';
+  }
+  if (buffer.subarray(0, 2).equals(Buffer.from([0xfe, 0xff]))) {
+    return 'utf-16be';
+  }
+  return undefined;
+};
+
+const encodingFromMeta = (buffer: Buffer): string | undefined => {
+  // HTML encoding declarations must occur early in the document, so bound the
+  // byte-level scan before decoding potentially large uploads.
+  const prefix = buffer
+    .subarray(0, HTML_ENCODING_SCAN_BYTES)
+    .toString('latin1');
+  const $ = load(prefix);
+  for (const meta of $('meta').toArray()) {
+    const directCharset = $(meta).attr('charset');
+    const isContentType =
+      $(meta).attr('http-equiv')?.trim().toLowerCase() === 'content-type';
+    const content = isContentType ? $(meta).attr('content') : undefined;
+    const charset =
+      directCharset ??
+      /\bcharset\s*=\s*["']?([a-z0-9._:-]+)/i.exec(content ?? '')?.[1];
+    if (charset) {
+      return charset.toLowerCase().startsWith('utf-16') ? 'utf-8' : charset;
+    }
+  }
+  return undefined;
+};
+
+export const decodeHtmlDocument = (buffer: Buffer): string => {
+  const encoding =
+    encodingFromBom(buffer) ?? encodingFromMeta(buffer) ?? 'utf-8';
+  try {
+    return new TextDecoder(encoding).decode(buffer).replace(/^\uFEFF/, '');
+  } catch {
+    return buffer.toString('utf8').replace(/^\uFEFF/, '');
+  }
+};
 
 const NON_CONTENT_ELEMENTS =
   'script, style, meta, link, noscript, template, iframe, canvas';
@@ -72,15 +120,19 @@ const normalizeExtractedText = (text: string): string =>
     .filter(Boolean)
     .join('\n');
 
-const markBlockBoundaries = ($: cheerio.CheerioAPI): void => {
+const prepareDocument = ($: cheerio.CheerioAPI): void => {
+  $(NON_CONTENT_ELEMENTS).remove();
+  $('td br, th br').replaceWith(' ');
   $('br').replaceWith(CONTENT_BOUNDARY);
   $('td, th').each((_, element) => {
     $(element).append(' ');
   });
-  $(BLOCK_ELEMENTS).each((_, element) => {
-    $(element).prepend(CONTENT_BOUNDARY);
-    $(element).append(CONTENT_BOUNDARY);
-  });
+  $(BLOCK_ELEMENTS)
+    .filter((_, element) => $(element).parents('td, th').length === 0)
+    .each((_, element) => {
+      $(element).prepend(CONTENT_BOUNDARY);
+      $(element).append(CONTENT_BOUNDARY);
+    });
 };
 
 const outermost = ($: cheerio.CheerioAPI, selector: string): Selection =>
@@ -96,18 +148,14 @@ const findMainContent = ($: cheerio.CheerioAPI): Selection | null => {
   return null;
 };
 
-/**
- * Text of `roots` without the `boilerplate` elements and forms. A form that
- * contains headings or paragraphs is kept, because ASP.NET WebForms pages wrap
- * the whole page in one; this is decided before the boilerplate inside the
- * form (such as its header) is removed.
- */
 const textWithout = (
   $: cheerio.CheerioAPI,
   roots: Selection,
   boilerplate: string,
 ): string => {
   const copy = roots.clone();
+  // ASP.NET WebForms can wrap the whole page in a form, so preserve forms that
+  // contain prose while still removing ordinary input-only forms.
   copy
     .find('form')
     .filter((_, form) => $(form).find(PROSE_ELEMENTS).length === 0)
@@ -116,16 +164,13 @@ const textWithout = (
   return normalizeExtractedText(copy.text());
 };
 
-/**
- * Convert an HTML document into line-addressable plain text of its main
- * content. Pages with a `<main>` (or, failing that, `<article>`) landmark yield
- * only that landmark; other pages drop navigation, header, footer, aside,
- * forms and dialogs. Falls back to the whole body when the stripped text is
- * empty. Mutates the document, so extract links before calling this.
- */
+export const extractHtmlDocumentText = ($: cheerio.CheerioAPI): string => {
+  prepareDocument($);
+  return normalizeExtractedText(select($, 'body').text());
+};
+
 export const extractMainContentText = ($: cheerio.CheerioAPI): string => {
-  $(NON_CONTENT_ELEMENTS).remove();
-  markBlockBoundaries($);
+  prepareDocument($);
   const body = select($, 'body');
   const pageText = textWithout($, body, PAGE_CHROME_ELEMENTS);
   const landmarks = findMainContent($);
