@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ParentChunkRecord } from '../schema/parent-chunk.record';
-import { ChildChunkRecord } from '../schema/child-chunk.record';
-import { ParentChunk } from '../../../domain/parent-chunk.entity';
-import { ChildChunk } from '../../../domain/child-chunk.entity';
+import { ParentChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/parent-chunk.record';
+import { ChildChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/child-chunk.record';
+import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
+import { ChildChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/child-chunk.entity';
 
 @Injectable()
 export class ParentChildIndexerMapper {
@@ -64,10 +64,7 @@ export class ParentChildIndexerMapper {
 
   toChildChunkEntity(input: ChildChunkRecord): ChildChunk {
     // Prefer 1536 if present, otherwise 1024
-    const embedding =
-      (input.embedding1536 as unknown as number[]) ||
-      (input.embedding1024 as unknown as number[]) ||
-      [];
+    const embedding = input.embedding1536 ?? input.embedding1024 ?? [];
     return new ChildChunk({
       id: input.id,
       embedding,

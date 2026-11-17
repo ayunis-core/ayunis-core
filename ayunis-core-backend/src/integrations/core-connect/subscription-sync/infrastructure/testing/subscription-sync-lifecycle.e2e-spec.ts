@@ -35,7 +35,6 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { DataSource } from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-import type { WithLengthColumnType } from 'typeorm/driver/types/ColumnTypes';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { ApplySubscriptionSyncUseCase } from 'src/iam/subscriptions/application/use-cases/apply-subscription-sync/apply-subscription-sync.use-case';
 import { AcquireSeatAllocationLockUseCase } from 'src/iam/subscriptions/application/use-cases/acquire-seat-allocation-lock/acquire-seat-allocation-lock.use-case';
@@ -104,8 +103,6 @@ describe('External subscription lifecycle with real Core records and transaction
       migrationsRun: false,
       logging: false,
     });
-    db.driver.supportedDataTypes.push('vector' as WithLengthColumnType);
-    db.driver.withLengthColumnTypes.push('vector' as WithLengthColumnType);
     await db.initialize();
     const runner = db.createQueryRunner();
     await runner.createSchema(schema, true);

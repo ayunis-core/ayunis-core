@@ -338,7 +338,7 @@ importers:
         specifier: ^1.0.22
         version: 1.0.22
       typeorm:
-        specifier: ^0.3.25
+        specifier: ^0.3.30
         version: 0.3.30(ioredis@5.11.1)(pg@8.23.0)(ts-node@10.9.2(@swc/core@1.16.1)(@types/node@24.19.2)(typescript@6.0.3))
       undici:
         specifier: ^8.12.2
