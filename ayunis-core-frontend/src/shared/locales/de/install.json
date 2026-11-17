@@ -22,6 +22,10 @@
       "title": "Fähigkeit konnte nicht geladen werden",
       "description": "Die Fähigkeits-Details konnten nicht vom Marktplatz geladen werden. Bitte versuchen Sie es später erneut."
     },
+    "noPermission": {
+      "title": "Installation nicht freigeschaltet",
+      "description": "Sie dürfen keine Fähigkeiten aus dem Marketplace installieren. Wenden Sie sich an Ihre Administration."
+    },
     "unavailable": "Der Marktplatz ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
     "generic": "Beim Installieren der Fähigkeit ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
   }

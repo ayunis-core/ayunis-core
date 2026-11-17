@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { ToolsModule } from 'src/domain/tools/tools.module';
 import { MessagesModule } from 'src/domain/messages/messages.module';
@@ -115,6 +116,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     RecordingsModule,
     NotificationsModule,
     forwardRef(() => RoutinesModule), // Runs → Routines → Runs (circular)
+    PermissionsModule,
   ],
   controllers: [
     RunsController,

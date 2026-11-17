@@ -35,19 +35,17 @@ describe('SeedDefaultRolePermissionsUseCase', () => {
     );
   });
 
-  it('lets managers and users manage routines in a new organization', async () => {
+  it('lets managers and users manage routines and install Marketplace skills in a new organization', async () => {
     await useCase.execute(new SeedDefaultRolePermissionsCommand(orgId));
 
     const [, grants] = repository.setForRoles.mock.calls[0];
+    const memberDefaults = expect.arrayContaining([
+      Permission.MANAGE_ROUTINES,
+      Permission.INSTALL_MARKETPLACE_SKILLS,
+    ]);
     expect(grants).toEqual([
-      {
-        role: UserRole.MANAGER,
-        permissions: expect.arrayContaining([Permission.MANAGE_ROUTINES]),
-      },
-      {
-        role: UserRole.USER,
-        permissions: expect.arrayContaining([Permission.MANAGE_ROUTINES]),
-      },
+      { role: UserRole.MANAGER, permissions: memberDefaults },
+      { role: UserRole.USER, permissions: memberDefaults },
     ]);
   });
 

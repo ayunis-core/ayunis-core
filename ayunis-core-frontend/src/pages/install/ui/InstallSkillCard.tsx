@@ -60,6 +60,7 @@ export function InstallSkillCard({
           type="button"
           className="flex-1"
           disabled={isInstalling}
+          data-testid="install-skill-confirm"
           onClick={onInstall}
         >
           {isInstalling ? t('action.installing') : t('action.install')}

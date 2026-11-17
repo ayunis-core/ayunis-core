@@ -96,7 +96,12 @@ function buildChatProfile(): ChatRunProfile {
       { get: () => true } as never,
       assembleTool,
     ),
-    new MarketplaceCapability({ enabled: false } as never, assembleTool),
+    new MarketplaceCapability(
+      { enabled: false } as never,
+      assembleTool,
+      {} as never,
+      {} as never,
+    ),
     new ImageGenerationCapability(resolved({}) as never, assembleTool),
     new ThreadSourcesCapability(assembleTool),
     new KnowledgeBasesCapability(assembleTool),

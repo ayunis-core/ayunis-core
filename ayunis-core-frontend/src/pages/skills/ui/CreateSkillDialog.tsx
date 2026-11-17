@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useMyPermissions } from '@/features/permissions';
+import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { SkillCreateDialog } from '@/widgets/resource-create-dialog';
 import { useCreateSkill } from '@/pages/skills/api/useCreateSkill';
 import { useResourceOwnership } from '@/features/resource-ownership';
@@ -24,6 +25,7 @@ export default function CreateSkillDialog({
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   const { options: ownerOptions, isLoading: isOwnerChoiceLoading } =
     useResourceOwnership('skill');
+  const marketplaceUrl = useSkillMarketplaceUrl();
 
   if (!isLoadingPermissions && !can('manage_skills')) return null;
 
@@ -32,7 +34,9 @@ export default function CreateSkillDialog({
       buttonText={buttonText}
       showIcon={showIcon}
       buttonClassName={buttonClassName}
-      footerHint={t('createDialog.marketplaceHint')}
+      footerHint={
+        marketplaceUrl ? t('createDialog.marketplaceHint') : undefined
+      }
       onCreate={createSkill}
       ownerOptions={ownerOptions}
       isOwnerChoiceLoading={isOwnerChoiceLoading}

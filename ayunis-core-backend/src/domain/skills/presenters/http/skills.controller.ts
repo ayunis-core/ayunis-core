@@ -96,7 +96,7 @@ export class SkillsController {
     private readonly previewSkillOwnerChange: PreviewSkillOwnerChangeUseCase,
   ) {}
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
+  @RequirePermission(Permission.INSTALL_MARKETPLACE_SKILLS)
   @Post('install-from-marketplace')
   @ApiOperation({ summary: 'Install a skill from the marketplace' })
   @ApiBody({ type: InstallSkillFromMarketplaceDto })

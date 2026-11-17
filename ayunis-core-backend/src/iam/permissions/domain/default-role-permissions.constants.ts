@@ -16,12 +16,13 @@ export const isConfigurableRole = (role: UserRole): boolean =>
 /**
  * Defaults granted to a role when an org is created (and backfilled onto
  * existing orgs by the CreateRolePermissions, GrantManageRoutines,
- * GrantWorkspacePermissions and GrantRecordingPermissions migrations). Chosen
- * to preserve the pre-RBAC behaviour where any member could manage skills and
- * knowledge bases, and to let every member use routines and recordings like
- * skills and knowledge bases; team management stays admin-only until an admin
- * grants it. In a workspace, managers may manage the workspace and its
- * members, while users may only use it.
+ * GrantWorkspacePermissions, GrantRecordingPermissions and
+ * GrantInstallMarketplaceSkills migrations). Chosen to preserve the pre-RBAC
+ * behaviour where any member could manage skills and knowledge bases and
+ * install Marketplace skills, and to let every member use routines and
+ * recordings like skills and knowledge bases; team management stays
+ * admin-only until an admin grants it. In a workspace, managers may manage the
+ * workspace and its members, while users may only use it.
  *
  * Keep in sync with the backfill VALUES lists in those migrations — a
  * migration cannot import this module.
@@ -32,6 +33,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<
   [UserRole.ADMIN]: [],
   [UserRole.MANAGER]: [
     Permission.MANAGE_SKILLS,
+    Permission.INSTALL_MARKETPLACE_SKILLS,
     Permission.SHARE_SKILLS_WITH_TEAMS,
     Permission.SHARE_SKILLS_WITH_ORG,
     Permission.MANAGE_KNOWLEDGE_BASES,
@@ -46,6 +48,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<
   ],
   [UserRole.USER]: [
     Permission.MANAGE_SKILLS,
+    Permission.INSTALL_MARKETPLACE_SKILLS,
     Permission.SHARE_SKILLS_WITH_TEAMS,
     Permission.SHARE_SKILLS_WITH_ORG,
     Permission.MANAGE_KNOWLEDGE_BASES,

@@ -15,7 +15,7 @@ const {
   showSuccess,
 } = vi.hoisted(() => ({
   installSkill: vi.fn(),
-  permissions: { canManageSkills: true },
+  permissions: { granted: ['install_marketplace_skills'] },
   catalogue: {
     state: 'success',
   },
@@ -67,12 +67,14 @@ vi.mock('@tanstack/react-router', () => ({
 
 vi.mock('@/features/permissions', () => ({
   PermissionGate: ({
+    permission,
     children,
     fallback,
   }: {
+    permission: string;
     children: ReactNode;
     fallback: ReactNode;
-  }) => <>{permissions.canManageSkills ? children : fallback}</>,
+  }) => <>{permissions.granted.includes(permission) ? children : fallback}</>,
 }));
 
 vi.mock('@/shared/api', () => ({
@@ -135,7 +137,7 @@ function renderWidget() {
 describe('InstallMarketplaceSkillWidget', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    permissions.canManageSkills = true;
+    permissions.granted = ['install_marketplace_skills'];
     catalogue.state = 'success';
     installedEntry.skillId = null;
     installedEntry.state = 'success';
@@ -225,8 +227,8 @@ describe('InstallMarketplaceSkillWidget', () => {
     expect(installSkill).not.toHaveBeenCalled();
   });
 
-  it('shows an administrator hint and no install action to members without manage_skills', () => {
-    permissions.canManageSkills = false;
+  it('shows an administrator hint and no install action to members without install_marketplace_skills', () => {
+    permissions.granted = ['manage_skills'];
     renderWidget();
 
     expect(screen.queryByTestId('marketplace-install-button')).toBeNull();

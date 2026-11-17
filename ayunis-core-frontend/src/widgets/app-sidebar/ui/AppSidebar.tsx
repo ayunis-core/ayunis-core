@@ -44,7 +44,7 @@ import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { InboxButton } from './InboxButton';
-import { useMarketplaceConfig } from '@/features/marketplace';
+import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import {
   allowedSettingsSections,
@@ -62,6 +62,7 @@ const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
   '/chat': 'sidebar-navigation-new-chat',
   '/routines': 'sidebar-navigation-routines',
   '/recordings': 'sidebar-navigation-recordings',
+  '/skills': 'sidebar-navigation-skills',
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -75,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const handleMobileNavigation = useMobileSidebarNavigationHandler();
-  const marketplace = useMarketplaceConfig();
+  const marketplaceUrl = useSkillMarketplaceUrl();
   const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
   const recordingsEnabled = useIsFeatureEnabled('recordingsEnabled');
   const canManageRoutines =
@@ -188,13 +189,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
-            {marketplace.enabled && marketplace.url && (
+            {marketplaceUrl && (
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a
-                    href={marketplace.url}
+                    href={marketplaceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-testid="sidebar-marketplace"
                   >
                     <Store />
                     <span>{t('sidebar.marketplace')}</span>

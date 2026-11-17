@@ -78,7 +78,10 @@ export default function CreateEntityDialog({
             }
           >
             {footerHint && (
-              <p className="text-xs text-muted-foreground sm:max-w-xs">
+              <p
+                className="text-xs text-muted-foreground sm:max-w-xs"
+                data-testid="create-entity-footer-hint"
+              >
                 {footerHint}
               </p>
             )}

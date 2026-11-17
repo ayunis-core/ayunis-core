@@ -19,6 +19,7 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
     group: 'skills',
     permissions: [
       'manage_skills',
+      'install_marketplace_skills',
       'share_skills_with_teams',
       'share_skills_with_org',
     ],

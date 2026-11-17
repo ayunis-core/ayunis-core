@@ -361,6 +361,9 @@ jobs:
           # Release notes on, read from the Announcable stand-in, never the live feed.
           ANNOUNCABLE_ORG_ID=bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154
           ANNOUNCABLE_URL=http://127.0.0.1:3198
+
+          # Marketplace entry points on, served by the Marketplace stand-in.
+          MARKETPLACE_SERVICE_URL=http://127.0.0.1:3197
           EOF
 
       - name: Start Mistral OCR and speech contract server
@@ -381,6 +384,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qpdf ffmpeg
+
+      - name: Start Marketplace stand-in
+        run: |
+          nohup node ayunis-core-e2e/src/servers/marketplace-mock.mjs > marketplace-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3197/health; do sleep 1; done' \
+            || { cat marketplace-mock.log; exit 1; }
 
       - name: Run migrations
         working-directory: ayunis-core-backend
