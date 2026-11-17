@@ -56,6 +56,11 @@ export interface PaneSession {
   restore(): Promise<MeResponseDto | null>;
   signIn(tokens: SessionTokensResponseDto): Promise<MeResponseDto>;
   signOut(): Promise<void>;
+  /**
+   * Calls the API with the pane's Bearer token, refreshing it once on 401.
+   * Any other status is returned for the caller to handle.
+   */
+  request(path: string, init?: RequestInit): Promise<Response>;
 }
 
 /**
@@ -103,13 +108,22 @@ export function createPaneSession(
     store((await response.json()) as SessionTokensResponseDto);
   }
 
-  async function authorizedGet(path: string): Promise<Response> {
+  async function authorizedRequest(
+    path: string,
+    init: RequestInit = {},
+  ): Promise<Response> {
     if (!accessToken) await refresh();
-    const send = () =>
-      fetch(`${baseUrl}${path}`, {
+    const send = () => {
+      // Headers, not a spread: a caller's `Headers` instance has no own
+      // enumerable properties, so spreading it would drop every header.
+      const headers = new Headers(init.headers);
+      headers.set('Authorization', `Bearer ${accessToken}`);
+      return fetch(`${baseUrl}${path}`, {
+        ...init,
         credentials: 'omit',
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers,
       });
+    };
     let response = await send();
     if (response.status === 401) {
       await refresh();
@@ -119,6 +133,11 @@ export function createPaneSession(
       clear();
       throw new SessionExpiredError();
     }
+    return response;
+  }
+
+  async function authorizedGet(path: string): Promise<Response> {
+    const response = await authorizedRequest(path);
     if (!response.ok) throw new Error(`GET ${path} failed: ${response.status}`);
     return response;
   }
@@ -144,5 +163,6 @@ export function createPaneSession(
         clear();
       }
     },
+    request: authorizedRequest,
   };
 }

@@ -49,8 +49,27 @@ describe('createPaneSession', () => {
     expect(refresh[1]?.body).toBe(
       JSON.stringify({ refreshToken: 'refresh-1' }),
     );
-    expect(retry[1]?.headers).toEqual({ Authorization: 'Bearer access-2' });
+    expect(new Headers(retry[1]?.headers).get('Authorization')).toBe(
+      'Bearer access-2',
+    );
     expect(window.localStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-2');
+  });
+
+  it('keeps a caller header passed as a Headers instance', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, tokens(1)))
+      .mockResolvedValueOnce(json(200, user))
+      .mockResolvedValueOnce(json(200, {}));
+    const session = createPaneSession('/api');
+    await session.signIn(tokens(1));
+
+    await session.request('/threads', {
+      headers: new Headers({ 'Content-Type': 'application/json' }),
+    });
+
+    const sent = new Headers(fetchMock.mock.calls.at(-1)?.[1]?.headers);
+    expect(sent.get('Content-Type')).toBe('application/json');
+    expect(sent.get('Authorization')).toBe('Bearer access-1');
   });
 
   it('forgets the stored session when the refresh token is rejected', async () => {

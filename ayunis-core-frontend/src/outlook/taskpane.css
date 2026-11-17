@@ -14,3 +14,29 @@ body,
     sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Assistant answers are Markdown; the pane keeps its spacing compact. */
+.pane-markdown {
+  & > * + * {
+    @apply mt-2;
+  }
+  & ul {
+    @apply list-disc pl-5;
+  }
+  & ol {
+    @apply list-decimal pl-5;
+  }
+  & a {
+    @apply underline;
+  }
+  & pre {
+    @apply overflow-x-auto rounded-md bg-muted p-2 text-xs;
+  }
+  & table {
+    @apply block overflow-x-auto text-xs;
+  }
+  & th,
+  & td {
+    @apply border px-2 py-1;
+  }
+}
