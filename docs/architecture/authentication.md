@@ -419,11 +419,18 @@ rather than treated as a browser session.
 Routes open to `outlook`: the session routes (`GET /api/auth/me`,
 `POST /api/auth/refresh`, `POST /api/auth/logout`) and what the pane's chat
 needs: `POST /api/runs/send-message`, `GET` and `POST /api/threads`, `GET` and
-`DELETE /api/threads/:id`, `PATCH /api/threads/:id/title` and
-`GET /api/models/default-selection` (the pane starts a chat with the user's
-default mode or model and has no model picker). Aborting a pane run closes its
-response, which cancels the run, so `POST /api/runs/threads/:threadId/cancel`
-stays closed.
+`DELETE /api/threads/:id`, `PATCH /api/threads/:id/title`,
+`GET /api/threads/:id/sources`, the direct-upload routes for PDF and Office
+attachments the model reads (`POST /api/threads/:id/uploads`,
+`POST /api/threads/:id/uploads/:uploadId/complete`,
+`POST /api/source-uploads/:id/sign`, `DELETE /api/source-uploads/:id`) and
+`GET /api/models/default-selection`
+(the pane starts a chat with the user's default mode or model and has no model
+picker). Aborting a pane run closes its response, which cancels the run, so
+`POST /api/runs/threads/:threadId/cancel` stays closed. The legacy
+multipart-form route `POST /api/threads/:id/sources/file` stays closed to the
+pane as well: it is slated for removal (AYC-1587), so the pane uses the same
+direct-upload flow as the web app.
 
 ## Organization authentication policy
 

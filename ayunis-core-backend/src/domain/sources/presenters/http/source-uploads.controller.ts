@@ -15,6 +15,7 @@ import { SignSourceUploadRequestUseCase } from 'src/domain/sources/application/u
 import { SignSourceUploadRequestCommand } from 'src/domain/sources/application/use-cases/sign-source-upload-request/sign-source-upload-request.command';
 import { AbortSourceUploadUseCase } from 'src/domain/sources/application/use-cases/abort-source-upload/abort-source-upload.use-case';
 import { AbortSourceUploadCommand } from 'src/domain/sources/application/use-cases/abort-source-upload/abort-source-upload.command';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 import { SignSourceUploadRequestDto } from './dto/sign-source-upload-request.dto';
 import { SignedUploadUrlResponseDto } from './dto/signed-upload-url-response.dto';
 import { toSignedUploadUrlDto } from './mappers/source-upload.mapper';
@@ -41,6 +42,7 @@ export class SourceUploadsController {
     private readonly abortUpload: AbortSourceUploadUseCase,
   ) {}
 
+  @AllowedClients('outlook')
   @Post(':id/sign')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -73,6 +75,7 @@ export class SourceUploadsController {
     );
   }
 
+  @AllowedClients('outlook')
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({

@@ -22,6 +22,7 @@ export default tseslint.config(
       'public/**',
       'src/app/routeTree.gen.ts',
       'src/shared/api/generated/**',
+      'src/outlook/api/generated/**',
       'src/shared/scripts/**',
       'vite.config.js',
       '*.config.js',

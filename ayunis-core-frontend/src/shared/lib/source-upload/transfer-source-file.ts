@@ -3,8 +3,19 @@ import AwsS3 from '@uppy/aws-s3';
 import { sourceUploadsControllerSign } from '@/shared/api/generated/ayunisCoreAPI';
 import type {
   SignSourceUploadRequestDto,
+  SignedUploadUrlResponseDto,
   SourceUploadSessionResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
+/**
+ * Signs one storage request of the upload. The Outlook pane passes its own,
+ * since it authenticates with a bearer token instead of the app's cookies.
+ */
+export type SignUploadRequest = (
+  uploadId: string,
+  body: SignSourceUploadRequestDto,
+  signal?: AbortSignal,
+) => Promise<SignedUploadUrlResponseDto>;
 
 export interface TransferSourceFileOptions {
   session: SourceUploadSessionResponseDto;
@@ -12,6 +23,7 @@ export interface TransferSourceFileOptions {
   /** Fraction of bytes stored so far, 0..1. */
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
+  sign?: SignUploadRequest;
 }
 
 /** The S3 request Uppy wants signed, as its `signRequest` hook receives it. */
@@ -42,6 +54,7 @@ export async function transferSourceFile({
   file,
   onProgress,
   signal,
+  sign = sourceUploadsControllerSign,
 }: TransferSourceFileOptions): Promise<void> {
   // An already-aborted signal never fires its listener, so a sibling that was
   // cancelled while its session was being reserved must not start the transfer.
@@ -62,7 +75,7 @@ export async function transferSourceFile({
     generateObjectKey: () => session.id,
     signRequest: async (request) => {
       try {
-        const { url } = await sourceUploadsControllerSign(
+        const { url } = await sign(
           session.id,
           toSignRequestBody(request),
           signal,

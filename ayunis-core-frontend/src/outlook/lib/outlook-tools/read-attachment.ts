@@ -3,6 +3,7 @@ import {
   officeAsync,
 } from '@/outlook/lib/outlook-tools/office-async';
 import {
+  currentOutlookItemKey,
   listAttachments,
   type AttachmentInfo,
   type OutlookItem,
@@ -12,7 +13,17 @@ export type ExtractAttachmentText = (file: {
   name: string;
   contentType: string;
   base64: string;
+  key: string;
 }) => Promise<string>;
+
+// Two mails may both attach an `invoice.pdf`, so the name does not identify
+// one. The mail and the attachment's id there do, and the size separates the
+// unsaved drafts that share an item key.
+function attachmentKey(attachment: AttachmentInfo): string {
+  return [currentOutlookItemKey() ?? '', attachment.id, attachment.size].join(
+    '|',
+  );
+}
 
 const MAX_TEXT_LENGTH = 100_000;
 const TEXT_EXTENSIONS = ['.txt', '.md', '.csv'];
@@ -100,6 +111,7 @@ async function contentToText(
     name: attachment.name,
     contentType: attachment.contentType ?? UNKNOWN_CONTENT_TYPE,
     base64: content.content,
+    key: attachmentKey(attachment),
   });
   return truncate(text);
 }

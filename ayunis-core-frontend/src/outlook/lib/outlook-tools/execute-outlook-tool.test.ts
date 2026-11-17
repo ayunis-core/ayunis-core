@@ -197,6 +197,9 @@ describe('outlook__read_attachment', () => {
       name: 'report.pdf',
       contentType: 'application/pdf',
       base64: base64('%PDF'),
+      // Identifies the attachment, so a same-named one of another mail is
+      // uploaded rather than read from the first.
+      key: expect.stringContaining('att-2'),
     });
   });
 });
