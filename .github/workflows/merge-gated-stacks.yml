@@ -1,0 +1,58 @@
+name: Merge Gated Stacks
+
+# Merges open PRs that the PR gate cleared, and posts what it merged or failed
+# to merge to #dev-ayunis-core-internal. A PR is ready when it is not a draft,
+# every check on its head SHA succeeded or was skipped, and `pr-gate` on that
+# SHA is `success`, or a `Human:` failure that an org member other than the
+# author approved on that SHA. Stacks merge only as a whole, through GitHub's
+# atomic stack merge, and only when every PR in them is ready. PRs without a
+# `pr-gate` status are never touched. The rules are in
+# scripts/merge-gated-stacks-lib.mjs.
+#
+# Office hours are Mon–Fri 08:00–18:00 Europe/Berlin. Cron runs in UTC, so the
+# schedule covers 06–17 UTC, the union of CET (07–17) and CEST (06–16), and the
+# script skips the scheduled runs that fall outside the Berlin hours. Minute 7
+# avoids the load GitHub sheds at the top of the hour.
+#
+# AYUNIS_AI_MERGE_TOKEN is a PAT of ayunis-ai. Merges made with GITHUB_TOKEN
+# don't trigger workflows, so they would skip the image build and the staging
+# deploy.
+#
+# The first run should be a manual dispatch with dry-run: true.
+
+on:
+  schedule:
+    - cron: '7 6-17 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Log what would be merged without setting statuses, merging or posting to Slack
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: merge-gated-stacks
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+
+      - name: Merge ready stacks
+        env:
+          GH_TOKEN: ${{ secrets.AYUNIS_AI_MERGE_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEV_CORE_INTERNAL_WEBHOOK_URL }}
+          DRY_RUN: ${{ inputs.dry-run || false }}
+          ENFORCE_OFFICE_HOURS: ${{ github.event_name == 'schedule' }}
+        run: node scripts/merge-gated-stacks.mjs

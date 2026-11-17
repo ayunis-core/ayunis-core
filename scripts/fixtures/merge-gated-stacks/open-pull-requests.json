@@ -1,0 +1,719 @@
+{
+  "viewer": {
+    "login": "ayunis-ai"
+  },
+  "repository": {
+    "defaultBranchRef": {
+      "name": "main"
+    },
+    "pullRequests": {
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": null
+      },
+      "nodes": [
+        {
+          "number": 201,
+          "title": "wip(memory): add the memory entity (AYC-10)",
+          "url": "https://github.com/ayunis-core/ayunis-core/pull/201",
+          "isDraft": false,
+          "baseRefName": "main",
+          "headRefOid": "201aaa1000000000000000000000000000000000",
+          "author": {
+            "login": "ayunis-ai"
+          },
+          "reviews": {
+            "pageInfo": {
+              "hasPreviousPage": false
+            },
+            "nodes": []
+          },
+          "commits": {
+            "nodes": [
+              {
+                "commit": {
+                  "oid": "201aaa1000000000000000000000000000000000",
+                  "checkSuites": {
+                    "nodes": [
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "Backend Tests"
+                          }
+                        }
+                      },
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "App Integration"
+                          }
+                        }
+                      },
+                      {
+                        "status": "QUEUED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "cursor"
+                        },
+                        "workflowRun": null
+                      }
+                    ]
+                  },
+                  "statusCheckRollup": {
+                    "contexts": {
+                      "pageInfo": {
+                        "hasNextPage": false
+                      },
+                      "nodes": [
+                        {
+                          "__typename": "CheckRun",
+                          "name": "lint-and-typecheck",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "test (1)",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Browser e2e",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "App Integration"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Publish PR media",
+                          "status": "COMPLETED",
+                          "conclusion": "SKIPPED",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "App Integration"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "validate",
+                          "status": "COMPLETED",
+                          "conclusion": "FAILURE",
+                          "startedAt": "2026-11-17T09:05:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "PR Title Check"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "validate",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:06:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "PR Title Check"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Cursor Bugbot",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:12:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "cursor"
+                            },
+                            "workflowRun": null
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Graphite / mergeability_check",
+                          "status": "QUEUED",
+                          "conclusion": null,
+                          "startedAt": null,
+                          "checkSuite": {
+                            "app": {
+                              "slug": "graphite-app"
+                            },
+                            "workflowRun": null
+                          }
+                        },
+                        {
+                          "__typename": "StatusContext",
+                          "context": "pr-gate",
+                          "state": "SUCCESS",
+                          "description": "Pass",
+                          "targetUrl": "https://github.com/ayunis-core/ayunis-core/pull/0#issuecomment-1",
+                          "createdAt": "2026-11-17T09:30:00Z"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": 202,
+          "title": "feat(memory): add the memory settings page (AYC-11)",
+          "url": "https://github.com/ayunis-core/ayunis-core/pull/202",
+          "isDraft": false,
+          "baseRefName": "main",
+          "headRefOid": "202aaa1000000000000000000000000000000000",
+          "author": {
+            "login": "ayunis-ai"
+          },
+          "reviews": {
+            "pageInfo": {
+              "hasPreviousPage": false
+            },
+            "nodes": []
+          },
+          "commits": {
+            "nodes": [
+              {
+                "commit": {
+                  "oid": "202aaa1000000000000000000000000000000000",
+                  "checkSuites": {
+                    "nodes": [
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "Backend Tests"
+                          }
+                        }
+                      },
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "App Integration"
+                          }
+                        }
+                      },
+                      {
+                        "status": "QUEUED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "cursor"
+                        },
+                        "workflowRun": null
+                      }
+                    ]
+                  },
+                  "statusCheckRollup": {
+                    "contexts": {
+                      "pageInfo": {
+                        "hasNextPage": false
+                      },
+                      "nodes": [
+                        {
+                          "__typename": "CheckRun",
+                          "name": "lint-and-typecheck",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "test (1)",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Browser e2e",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "App Integration"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Publish PR media",
+                          "status": "COMPLETED",
+                          "conclusion": "SKIPPED",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "App Integration"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "validate",
+                          "status": "COMPLETED",
+                          "conclusion": "FAILURE",
+                          "startedAt": "2026-11-17T09:05:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "PR Title Check"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "validate",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:06:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "PR Title Check"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Cursor Bugbot",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:12:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "cursor"
+                            },
+                            "workflowRun": null
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Graphite / mergeability_check",
+                          "status": "QUEUED",
+                          "conclusion": null,
+                          "startedAt": null,
+                          "checkSuite": {
+                            "app": {
+                              "slug": "graphite-app"
+                            },
+                            "workflowRun": null
+                          }
+                        },
+                        {
+                          "__typename": "StatusContext",
+                          "context": "pr-gate",
+                          "state": "SUCCESS",
+                          "description": "Pass",
+                          "targetUrl": "https://github.com/ayunis-core/ayunis-core/pull/0#issuecomment-1",
+                          "createdAt": "2026-11-17T09:30:00Z"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": 300,
+          "title": "fix(chat): ungated but green (AYC-2)",
+          "url": "https://github.com/ayunis-core/ayunis-core/pull/300",
+          "isDraft": false,
+          "baseRefName": "main",
+          "headRefOid": "300aaa1000000000000000000000000000000000",
+          "author": {
+            "login": "ayunis-ai"
+          },
+          "reviews": {
+            "pageInfo": {
+              "hasPreviousPage": false
+            },
+            "nodes": []
+          },
+          "commits": {
+            "nodes": [
+              {
+                "commit": {
+                  "oid": "300aaa1000000000000000000000000000000000",
+                  "checkSuites": {
+                    "nodes": [
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "Backend Tests"
+                          }
+                        }
+                      },
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "App Integration"
+                          }
+                        }
+                      },
+                      {
+                        "status": "QUEUED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "cursor"
+                        },
+                        "workflowRun": null
+                      }
+                    ]
+                  },
+                  "statusCheckRollup": {
+                    "contexts": {
+                      "pageInfo": {
+                        "hasNextPage": false
+                      },
+                      "nodes": [
+                        {
+                          "__typename": "CheckRun",
+                          "name": "lint-and-typecheck",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "test (1)",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Browser e2e",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "App Integration"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Publish PR media",
+                          "status": "COMPLETED",
+                          "conclusion": "SKIPPED",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "App Integration"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "validate",
+                          "status": "COMPLETED",
+                          "conclusion": "FAILURE",
+                          "startedAt": "2026-11-17T09:05:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "PR Title Check"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "validate",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:06:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "PR Title Check"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Cursor Bugbot",
+                          "status": "COMPLETED",
+                          "conclusion": "SUCCESS",
+                          "startedAt": "2026-11-17T09:12:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "cursor"
+                            },
+                            "workflowRun": null
+                          }
+                        },
+                        {
+                          "__typename": "CheckRun",
+                          "name": "Graphite / mergeability_check",
+                          "status": "QUEUED",
+                          "conclusion": null,
+                          "startedAt": null,
+                          "checkSuite": {
+                            "app": {
+                              "slug": "graphite-app"
+                            },
+                            "workflowRun": null
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "number": 301,
+          "title": "fix(chat): ungated and red (AYC-3)",
+          "url": "https://github.com/ayunis-core/ayunis-core/pull/301",
+          "isDraft": false,
+          "baseRefName": "main",
+          "headRefOid": "301aaa1000000000000000000000000000000000",
+          "author": {
+            "login": "ayunis-ai"
+          },
+          "reviews": {
+            "pageInfo": {
+              "hasPreviousPage": false
+            },
+            "nodes": []
+          },
+          "commits": {
+            "nodes": [
+              {
+                "commit": {
+                  "oid": "301aaa1000000000000000000000000000000000",
+                  "checkSuites": {
+                    "nodes": [
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "Backend Tests"
+                          }
+                        }
+                      },
+                      {
+                        "status": "COMPLETED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "github-actions"
+                        },
+                        "workflowRun": {
+                          "workflow": {
+                            "name": "App Integration"
+                          }
+                        }
+                      },
+                      {
+                        "status": "QUEUED",
+                        "createdAt": "2026-11-17T09:01:00Z",
+                        "app": {
+                          "slug": "cursor"
+                        },
+                        "workflowRun": null
+                      }
+                    ]
+                  },
+                  "statusCheckRollup": {
+                    "contexts": {
+                      "pageInfo": {
+                        "hasNextPage": false
+                      },
+                      "nodes": [
+                        {
+                          "__typename": "CheckRun",
+                          "name": "test (1)",
+                          "status": "COMPLETED",
+                          "conclusion": "FAILURE",
+                          "startedAt": "2026-11-17T09:10:00Z",
+                          "checkSuite": {
+                            "app": {
+                              "slug": "github-actions"
+                            },
+                            "workflowRun": {
+                              "workflow": {
+                                "name": "Backend Tests"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
