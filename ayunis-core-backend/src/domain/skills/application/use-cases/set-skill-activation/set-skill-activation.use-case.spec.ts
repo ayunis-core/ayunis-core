@@ -14,7 +14,6 @@ import { TeamSkill } from 'src/domain/skills/domain/team-skill.entity';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
-import type { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
 import { SetSkillActivationUseCase } from './set-skill-activation.use-case';
 
 function setup() {
@@ -55,19 +54,16 @@ function setup() {
         })[key],
     ),
   };
-  const permission = { execute: jest.fn().mockResolvedValue(true) };
   return {
     userId,
     personal,
     workspace,
     repository,
     authorization,
-    permission,
     useCase: new SetSkillActivationUseCase(
       repository as unknown as SkillRepository,
       authorization as unknown as SkillAuthorizationService,
       context as unknown as ContextService,
-      permission as unknown as HasPermissionUseCase,
     ),
   };
 }
@@ -86,14 +82,12 @@ describe(SetSkillActivationUseCase.name, () => {
   });
 
   it('sets workspace activation in workspace scope after write authorization', async () => {
-    const { useCase, workspace, repository, authorization, permission } =
-      setup();
+    const { useCase, workspace, repository, authorization } = setup();
     repository.findById.mockResolvedValue(workspace);
 
     await useCase.execute({ skillId: workspace.id, isActive: false });
 
     expect(authorization.requireWrite).toHaveBeenCalledWith(workspace);
-    expect(permission.execute).toHaveBeenCalled();
     expect(repository.deactivateWorkspaceSkill).toHaveBeenCalledWith(
       workspace.id,
       workspace.workspaceId,

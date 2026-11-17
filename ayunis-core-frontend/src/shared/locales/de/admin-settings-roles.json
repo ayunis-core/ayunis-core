@@ -16,7 +16,8 @@
     "teams": "Teams",
     "skills": "Fähigkeiten",
     "knowledge_bases": "Wissenssammlungen",
-    "routines": "Routinen"
+    "routines": "Routinen",
+    "workspace": "In einem Arbeitsbereich (nach Rolle im Arbeitsbereich)"
   },
   "permissionHints": {
     "manage_teams": "Teams erstellen, umbenennen und löschen.",
@@ -27,7 +28,9 @@
     "manage_knowledge_bases": "Wissenssammlungen und die darin enthaltenen Dokumente erstellen, bearbeiten und löschen.",
     "share_knowledge_bases_with_teams": "Eine Wissenssammlung für Teams freigeben, denen das Mitglied angehört.",
     "share_knowledge_bases_with_org": "Eine Wissenssammlung für die gesamte Organisation freigeben.",
-    "manage_routines": "Routinen erstellen, bearbeiten, löschen und ausführen."
+    "manage_routines": "Routinen erstellen, bearbeiten, löschen und ausführen.",
+    "manage_workspace": "Gilt in Arbeitsbereichen, in denen das Mitglied diese Rolle hat: Name, Beschreibung, Symbol, Farbe und Anweisungen bearbeiten sowie Fähigkeiten und Wissenssammlungen des Arbeitsbereichs erstellen, bearbeiten, löschen, ein- und ausschalten und Fähigkeiten anheften.",
+    "manage_workspace_members": "Gilt in Arbeitsbereichen, in denen das Mitglied diese Rolle hat: Mitglieder hinzufügen und Mitglieder entfernen, die keine Admins sind."
   },
   "permissions": {
     "manage_teams": "Teams verwalten",
@@ -38,7 +41,9 @@
     "manage_knowledge_bases": "Wissenssammlungen verwalten",
     "share_knowledge_bases_with_teams": "Wissenssammlungen mit eigenen Teams teilen",
     "share_knowledge_bases_with_org": "Wissenssammlungen mit der Organisation teilen",
-    "manage_routines": "Routinen verwalten"
+    "manage_routines": "Routinen verwalten",
+    "manage_workspace": "Arbeitsbereich verwalten",
+    "manage_workspace_members": "Mitglieder des Arbeitsbereichs verwalten"
   },
   "adminHint": "Administratoren haben immer alle Berechtigungen und können nicht eingeschränkt werden.",
   "save": "Änderungen speichern",

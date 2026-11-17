@@ -37,8 +37,6 @@ import { ApiSkillFileSourceUpload } from './decorators/skill-sources.decorators'
 import { MissingFileError } from 'src/domain/skills/application/skills.errors';
 import { AddFileSourceToSkillUseCase } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.use-case';
 import { AddFileSourceToSkillCommand } from 'src/domain/skills/application/use-cases/add-file-source-to-skill/add-file-source-to-skill.command';
-import { RequirePermission } from 'src/iam/authorization/application/decorators/permissions.decorator';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { CreateSkillSourceUploadUseCase } from 'src/domain/skills/application/use-cases/create-skill-source-upload/create-skill-source-upload.use-case';
 import { CreateSkillSourceUploadCommand } from 'src/domain/skills/application/use-cases/create-skill-source-upload/create-skill-source-upload.command';
 import { CompleteSkillSourceUploadUseCase } from 'src/domain/skills/application/use-cases/complete-skill-source-upload/complete-skill-source-upload.use-case';
@@ -88,7 +86,6 @@ export class SkillSourcesController {
     return this.skillDtoMapper.sourcesToDtoArray(sources);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post(':id/sources/file')
   @ApiSkillFileSourceUpload()
   async addFileSource(
@@ -129,7 +126,6 @@ export class SkillSourcesController {
     return this.skillDtoMapper.toDto(skill, context, creatorName);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post(':id/uploads')
   @ApiOperation({
     summary: 'Create a direct file upload for a skill',
@@ -162,7 +158,6 @@ export class SkillSourcesController {
     );
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post(':id/uploads/:uploadId/complete')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -205,7 +200,6 @@ export class SkillSourcesController {
     return this.toSkillDtoWithCreator(skillId);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a skill' })
   @ApiParam({

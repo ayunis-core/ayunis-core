@@ -36,6 +36,12 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
     permissions: ['manage_routines'],
     feature: 'routinesEnabled',
   },
+  // Granted through the role a member holds inside each workspace, never
+  // through their organisation role.
+  {
+    group: 'workspace',
+    permissions: ['manage_workspace', 'manage_workspace_members'],
+  },
 ];
 
 export function visiblePermissionSections(

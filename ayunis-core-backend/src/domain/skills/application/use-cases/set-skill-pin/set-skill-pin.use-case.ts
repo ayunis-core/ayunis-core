@@ -3,7 +3,6 @@ import { Transactional } from '@nestjs-cls/transactional';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { SkillRepository } from 'src/domain/skills/application/ports/skill.repository';
 import { SkillAuthorizationService } from 'src/domain/skills/application/services/skill-authorization.service';
 import {
@@ -15,9 +14,6 @@ import { PersonalSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { AbstractCollectiveSkill } from 'src/domain/skills/domain/collective-skill.entity';
 import type { Skill } from 'src/domain/skills/domain/skill';
 import type { WorkspaceSkill } from 'src/domain/skills/domain/workspace-skill.entity';
-import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
-import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
 interface SetSkillPinCommand {
@@ -33,7 +29,6 @@ export class SetSkillPinUseCase {
     private readonly repository: SkillRepository,
     private readonly authorization: SkillAuthorizationService,
     private readonly context: ContextService,
-    private readonly hasPermission: HasPermissionUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSkillError)
@@ -77,7 +72,6 @@ export class SetSkillPinUseCase {
     isPinned: boolean,
   ): Promise<void> {
     await this.authorization.requireWrite(skill);
-    await this.requireManagementPermission();
     const states = await this.repository.getWorkspaceSkillStates(
       [skill.id],
       skill.workspaceId,
@@ -90,14 +84,6 @@ export class SetSkillPinUseCase {
       skill.workspaceId,
       isPinned,
     );
-  }
-
-  private async requireManagementPermission(): Promise<void> {
-    const { orgId, role } = getRequiredUserContext(this.context);
-    const allowed = await this.hasPermission.execute(
-      new HasPermissionQuery(orgId, role, Permission.MANAGE_SKILLS),
-    );
-    if (!allowed) throw new UnauthorizedAccessError();
   }
 
   private requireUserId(): UUID {

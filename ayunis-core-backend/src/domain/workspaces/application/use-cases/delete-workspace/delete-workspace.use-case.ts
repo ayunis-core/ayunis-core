@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { WorkspaceDeletionService } from 'src/domain/workspaces/application/services/workspace-deletion.service';
 import {
   UnexpectedWorkspaceError,
@@ -17,6 +17,7 @@ export class DeleteWorkspaceUseCase {
 
   constructor(
     private readonly workspacesRepository: WorkspacesRepository,
+    private readonly workspaceAccess: WorkspaceAccessService,
     private readonly workspaceDeletion: WorkspaceDeletionService,
     private readonly contextService: ContextService,
   ) {}
@@ -25,8 +26,10 @@ export class DeleteWorkspaceUseCase {
   async execute(command: DeleteWorkspaceCommand): Promise<void> {
     this.logger.log({ workspaceId: command.id }, 'Deleting workspace');
 
+    await this.workspaceAccess.requireAdmin(command.id);
+    const { userId } = getRequiredUserContext(this.contextService);
     const workspace = await this.workspacesRepository.findById(
-      this.resolveUserId(),
+      userId,
       command.id,
     );
     if (!workspace) {
@@ -34,10 +37,5 @@ export class DeleteWorkspaceUseCase {
     }
 
     await this.workspaceDeletion.delete(workspace);
-  }
-
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
   }
 }

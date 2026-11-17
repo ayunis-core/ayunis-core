@@ -155,7 +155,6 @@ export class SkillsController {
     return { text };
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Post()
   @ApiOperation({ summary: 'Create a new skill' })
   @ApiBody({ type: CreateSkillDto })
@@ -228,7 +227,6 @@ export class SkillsController {
     return this.mapper.toDto(skill, context, creatorName);
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Put(':id')
   @ApiOperation({ summary: 'Update a skill' })
   @ApiResponse({ status: 200, type: SkillResponseDto })
@@ -272,7 +270,6 @@ export class SkillsController {
     );
   }
 
-  @RequirePermission(Permission.MANAGE_SKILLS)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {

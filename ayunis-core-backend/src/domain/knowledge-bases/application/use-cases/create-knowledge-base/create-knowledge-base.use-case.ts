@@ -11,7 +11,6 @@ import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/applica
 import { CreateKnowledgeBaseCommand } from './create-knowledge-base.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import type { UUID } from 'crypto';
-import { AbstractCollectiveKnowledgeBase } from 'src/domain/knowledge-bases/domain/collective-knowledge-base.entity';
 import { TeamKnowledgeBase } from 'src/domain/knowledge-bases/domain/team-knowledge-base.entity';
 import { OrgKnowledgeBase } from 'src/domain/knowledge-bases/domain/org-knowledge-base.entity';
 import { KnowledgeBaseWriteAccessService } from 'src/domain/knowledge-bases/application/services/knowledge-base-write-access.service';
@@ -44,7 +43,7 @@ export class CreateKnowledgeBaseUseCase {
     }
 
     const knowledgeBase = this.createEntity(command, userId, orgId);
-    if (knowledgeBase instanceof AbstractCollectiveKnowledgeBase) {
+    if (!(knowledgeBase instanceof WorkspaceKnowledgeBase)) {
       await this.writeAccess.requireCreate(knowledgeBase);
     }
 

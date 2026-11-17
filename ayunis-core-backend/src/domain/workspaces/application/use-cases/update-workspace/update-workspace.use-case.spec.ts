@@ -1,5 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/workspaces.errors';
 import {
@@ -10,6 +12,7 @@ import { WORKSPACE_DESCRIPTION_MAX_LENGTH } from 'src/domain/workspaces/domain/w
 import {
   aWorkspace,
   createMockContextService,
+  createMockWorkspaceAccessService,
   createMockWorkspacesRepository,
   TEST_WORKSPACE_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
@@ -19,13 +22,16 @@ import { UpdateWorkspaceUseCase } from './update-workspace.use-case';
 describe('UpdateWorkspaceUseCase', () => {
   let useCase: UpdateWorkspaceUseCase;
   let repository: jest.Mocked<WorkspacesRepository>;
+  let access: ReturnType<typeof createMockWorkspaceAccessService>;
 
   beforeEach(async () => {
     repository = createMockWorkspacesRepository();
+    access = createMockWorkspaceAccessService();
     const module = await Test.createTestingModule({
       providers: [
         UpdateWorkspaceUseCase,
         { provide: WorkspacesRepository, useValue: repository },
+        { provide: WorkspaceAccessService, useValue: access },
         { provide: ContextService, useValue: createMockContextService() },
       ],
     }).compile();
@@ -41,7 +47,7 @@ describe('UpdateWorkspaceUseCase', () => {
       aWorkspace({ name: 'Alt', description: 'Beschreibung', icon: 'folder' }),
     );
 
-    const updated = await useCase.execute(
+    const { workspace: updated } = await useCase.execute(
       new UpdateWorkspaceCommand({
         id: TEST_WORKSPACE_ID,
         name: 'Neu',
@@ -60,7 +66,7 @@ describe('UpdateWorkspaceUseCase', () => {
       aWorkspace({ description: 'Beschreibung' }),
     );
 
-    const updated = await useCase.execute(
+    const { workspace: updated } = await useCase.execute(
       new UpdateWorkspaceCommand({
         id: TEST_WORKSPACE_ID,
         description: null,
@@ -107,7 +113,7 @@ describe('UpdateWorkspaceUseCase', () => {
     const before = new Date('2026-08-02T10:00:00.000Z');
     repository.findById.mockResolvedValue(aWorkspace({ updatedAt: before }));
 
-    const updated = await useCase.execute(
+    const { workspace: updated } = await useCase.execute(
       new UpdateWorkspaceCommand({
         id: TEST_WORKSPACE_ID,
         name: 'Neu',
@@ -121,7 +127,7 @@ describe('UpdateWorkspaceUseCase', () => {
     const before = new Date('2026-08-02T10:00:00.000Z');
     repository.findById.mockResolvedValue(aWorkspace({ updatedAt: before }));
 
-    const updated = await useCase.execute(
+    const { workspace: updated } = await useCase.execute(
       new UpdateWorkspaceCommand({ id: TEST_WORKSPACE_ID }),
     );
 
@@ -139,6 +145,18 @@ describe('UpdateWorkspaceUseCase', () => {
         }),
       ),
     ).rejects.toThrow(WorkspaceNotFoundError);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
+  it('leaves the workspace unchanged for a member without manage_workspace', async () => {
+    access.requirePermission.mockRejectedValue(new UnauthorizedAccessError());
+    repository.findById.mockResolvedValue(aWorkspace());
+
+    await expect(
+      useCase.execute(
+        new UpdateWorkspaceCommand({ id: TEST_WORKSPACE_ID, name: 'Neu' }),
+      ),
+    ).rejects.toThrow(UnauthorizedAccessError);
     expect(repository.save).not.toHaveBeenCalled();
   });
 });

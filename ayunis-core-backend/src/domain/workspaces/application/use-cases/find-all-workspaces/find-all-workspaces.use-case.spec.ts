@@ -2,9 +2,12 @@ import { Test } from '@nestjs/testing';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
+import { WorkspaceAccess } from 'src/domain/workspaces/application/models/workspace-access.model';
 import {
   aWorkspace,
   createMockContextService,
+  createMockWorkspaceAccessService,
   createMockWorkspacesRepository,
   TEST_USER_ID,
 } from 'src/domain/workspaces/application/testing/workspace.fixtures';
@@ -15,6 +18,7 @@ import { Paginated } from 'src/common/pagination/paginated.entity';
 describe('FindAllWorkspacesUseCase', () => {
   let useCase: FindAllWorkspacesUseCase;
   let repository: jest.Mocked<WorkspacesRepository>;
+  const access = WorkspaceAccess.forAdmin();
 
   async function setup(contextService = createMockContextService()) {
     repository = createMockWorkspacesRepository();
@@ -22,6 +26,10 @@ describe('FindAllWorkspacesUseCase', () => {
       providers: [
         FindAllWorkspacesUseCase,
         { provide: WorkspacesRepository, useValue: repository },
+        {
+          provide: WorkspaceAccessService,
+          useValue: createMockWorkspaceAccessService(access),
+        },
         { provide: ContextService, useValue: contextService },
       ],
     }).compile();
@@ -60,6 +68,7 @@ describe('FindAllWorkspacesUseCase', () => {
         data: [
           {
             workspace,
+            access,
             chatCount: 3,
             skillCount: 2,
             knowledgeBaseCount: 5,

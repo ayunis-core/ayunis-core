@@ -7,46 +7,10 @@ import {
   findWorkspaceMemberRoles,
 } from "../../src/clients/database.client";
 import { createMemberSession } from "../../src/factories/user.factory";
-
-interface OwnedWorkspace {
-  id: string;
-  skillId: string;
-  knowledgeBaseId: string;
-}
-
-async function createWorkspaceWithResources(
-  api: APIRequestContext,
-  name: string,
-): Promise<OwnedWorkspace> {
-  const workspace = await generatedApi.workspacesControllerCreate(
-    { name, icon: "building-2" },
-    { api },
-  );
-  const skill = await generatedApi.skillsControllerCreate(
-    {
-      ownerType: "workspace",
-      workspaceId: workspace.id,
-      name: `Haushaltsplan prüfen ${name}`,
-      shortDescription: "Prüft Haushaltsansätze gegen die Vorjahreswerte",
-      instructions: "Vergleiche jeden Haushaltsansatz mit dem Vorjahr.",
-    },
-    { api },
-  );
-  const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
-    {
-      ownerType: "workspace",
-      workspaceId: workspace.id,
-      name: `Haushaltssatzung ${name}`,
-      description: "Satzung und Erläuterungen zum Haushalt",
-    },
-    { api },
-  );
-  return {
-    id: workspace.id,
-    skillId: skill.id,
-    knowledgeBaseId: knowledgeBase.id,
-  };
-}
+import {
+  createWorkspaceWithResources,
+  type OwnedWorkspace,
+} from "../../src/factories/workspace-resources.factory";
 
 /** Every workspace route and workspace-owned resource route a non-member could try. */
 function workspaceRequests(api: APIRequestContext, workspace: OwnedWorkspace) {

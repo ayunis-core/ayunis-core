@@ -301,5 +301,6 @@
   "/workspaces",
   "/workspaces/{id}",
   "/workspaces/{id}/context",
-  "/workspaces/{id}/context/instruction"
+  "/workspaces/{id}/context/instruction",
+  "/workspaces/{id}/role-permissions"
 ]

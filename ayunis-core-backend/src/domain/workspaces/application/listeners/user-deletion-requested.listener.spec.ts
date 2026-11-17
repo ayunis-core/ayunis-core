@@ -2,10 +2,10 @@ import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { runDeferredCleanup } from 'src/common/events/run-deferred-cleanup';
 import type { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
-import type { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
 import { WorkspaceDeletionService } from 'src/domain/workspaces/application/services/workspace-deletion.service';
 import {
   aWorkspace,
+  createMockWorkspaceMembersRepository,
   createMockWorkspacesRepository,
   TEST_ORG_ID,
   TEST_USER_ID,
@@ -20,13 +20,11 @@ describe(WorkspacesUserDeletionRequestedListener.name, () => {
 
   function setup() {
     const workspacesRepository = createMockWorkspacesRepository();
-    const membersRepository: jest.Mocked<WorkspaceMembersRepository> = {
-      create: jest.fn(),
-      findWorkspaceIdsByUserId: jest
-        .fn()
-        .mockResolvedValue([shared.id, solo.id]),
-      promoteSuccessors: jest.fn().mockResolvedValue(undefined),
-    };
+    const membersRepository = createMockWorkspaceMembersRepository();
+    membersRepository.findWorkspaceIdsByUserId.mockResolvedValue([
+      shared.id,
+      solo.id,
+    ]);
     const workspaceCleanup = jest.fn().mockResolvedValue(undefined);
     const emitted: WorkspaceDeletionRequestedEvent[] = [];
     const eventEmitter = {

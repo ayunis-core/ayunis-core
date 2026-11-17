@@ -1,6 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ContextService } from 'src/common/context/services/context.service';
+import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { WorkspacesRepository } from 'src/domain/workspaces/application/ports/workspaces-repository.port';
 import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/application/events/workspace-deletion-requested.event';
 import { WorkspaceDeletionService } from 'src/domain/workspaces/application/services/workspace-deletion.service';
@@ -8,6 +10,7 @@ import { WorkspaceNotFoundError } from 'src/domain/workspaces/application/worksp
 import {
   aWorkspace,
   createMockContextService,
+  createMockWorkspaceAccessService,
   createMockWorkspacesRepository,
   TEST_ORG_ID,
   TEST_WORKSPACE_ID,
@@ -19,15 +22,18 @@ describe('DeleteWorkspaceUseCase', () => {
   let useCase: DeleteWorkspaceUseCase;
   let repository: jest.Mocked<WorkspacesRepository>;
   let eventEmitter: { emitAsync: jest.Mock };
+  let access: ReturnType<typeof createMockWorkspaceAccessService>;
 
   beforeEach(async () => {
     repository = createMockWorkspacesRepository();
+    access = createMockWorkspaceAccessService();
     eventEmitter = { emitAsync: jest.fn().mockResolvedValue([]) };
     const module = await Test.createTestingModule({
       providers: [
         DeleteWorkspaceUseCase,
         WorkspaceDeletionService,
         { provide: WorkspacesRepository, useValue: repository },
+        { provide: WorkspaceAccessService, useValue: access },
         { provide: ContextService, useValue: createMockContextService() },
         { provide: EventEmitter2, useValue: eventEmitter },
       ],
@@ -96,8 +102,21 @@ describe('DeleteWorkspaceUseCase', () => {
     expect(cleanup).not.toHaveBeenCalled();
   });
 
+  it('keeps the workspace when the caller is not a workspace admin', async () => {
+    repository.findById.mockResolvedValue(aWorkspace());
+    access.requireAdmin.mockRejectedValue(new UnauthorizedAccessError());
+
+    await expect(
+      useCase.execute(new DeleteWorkspaceCommand(TEST_WORKSPACE_ID)),
+    ).rejects.toThrow(UnauthorizedAccessError);
+    expect(eventEmitter.emitAsync).not.toHaveBeenCalled();
+    expect(repository.delete).not.toHaveBeenCalled();
+  });
+
   it('throws when the caller is not a member of the workspace', async () => {
-    repository.findById.mockResolvedValue(null);
+    access.requireAdmin.mockRejectedValue(
+      new WorkspaceNotFoundError(TEST_WORKSPACE_ID),
+    );
 
     await expect(
       useCase.execute(new DeleteWorkspaceCommand(TEST_WORKSPACE_ID)),

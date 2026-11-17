@@ -86,6 +86,7 @@ function setup(scope: 'personal' | 'workspace' = 'personal') {
       context,
       workspaceAccess,
       {} as CollectiveKnowledgeBaseAccessService,
+      { execute: jest.fn().mockResolvedValue(true) } as never,
     ),
     processing,
     deleteSource,

@@ -114,6 +114,16 @@ describe(CreateKnowledgeBaseUseCase.name, () => {
     expect(repository.activateForWorkspace).not.toHaveBeenCalled();
   });
 
+  it('stores no personal knowledge base for a caller without manage_knowledge_bases', async () => {
+    const { useCase, repository, writeAccess } = await setup();
+    writeAccess.requireCreate.mockRejectedValue(new UnauthorizedAccessError());
+
+    await expect(
+      useCase.execute(command({ type: 'personal' })),
+    ).rejects.toBeInstanceOf(UnauthorizedAccessError);
+    expect(repository.save).not.toHaveBeenCalled();
+  });
+
   it('defaults an omitted description without changing personal ownership', async () => {
     const { useCase } = await setup();
     const input = new CreateKnowledgeBaseCommand({
