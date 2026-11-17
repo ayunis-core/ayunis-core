@@ -14,6 +14,7 @@ const FILE_TYPE_BY_MIME_TYPE: Record<string, FileType> = {
   [MIME_TYPES.ODT]: FileType.ODT,
   [MIME_TYPES.ODP]: FileType.ODP,
   [MIME_TYPES.TXT]: FileType.TXT,
+  [MIME_TYPES.HTML]: FileType.TXT,
   [MIME_TYPES.EML]: FileType.EML,
   // FileType.EML stands for any email message; .msg needs no enum value of its own.
   [MIME_TYPES.MSG]: FileType.EML,

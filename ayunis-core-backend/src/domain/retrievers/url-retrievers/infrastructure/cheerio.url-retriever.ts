@@ -1,7 +1,7 @@
 import { withAbortSignal } from 'src/common/util/network-address-policy';
 import { fetchWithUndiciDispatcher } from 'src/common/util/undici-fetch.util';
 import { UrlDestinationGuardService } from './url-destination-guard.service';
-import { extractMainContentText } from './html-text-extraction';
+import { extractMainContentText } from 'src/common/util/html-text-extraction';
 import {
   isPdfLink,
   pdfFileName,

@@ -35,6 +35,9 @@ export const MIME_TYPES = {
   XML: 'application/xml',
   XML_TEXT: 'text/xml',
 
+  // HTML
+  HTML: 'text/html',
+
   // Email (RFC 822 message, .eml)
   EML: 'message/rfc822',
 
@@ -66,6 +69,8 @@ export const FILE_EXTENSIONS = {
   TXT: '.txt',
   MD: '.md',
   XML: '.xml',
+  HTML: '.html',
+  HTM: '.htm',
   EML: '.eml',
   MSG: '.msg',
   MP3: '.mp3',
@@ -83,6 +88,7 @@ export const SUPPORTED_FILE_TYPES: string[] = [
   'ODP',
   'TXT',
   'XML',
+  'HTML',
   'EML',
   'MSG',
   'CSV',
@@ -106,6 +112,7 @@ export type DetectedFileType =
   | 'ods'
   | 'csv'
   | 'txt'
+  | 'html'
   | 'eml'
   | 'msg'
   | 'mp3'
@@ -129,6 +136,7 @@ const MIME_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [MIME_TYPES.MD]: 'txt',
   [MIME_TYPES.XML]: 'txt',
   [MIME_TYPES.XML_TEXT]: 'txt',
+  [MIME_TYPES.HTML]: 'html',
   [MIME_TYPES.EML]: 'eml',
   [MIME_TYPES.MSG]: 'msg',
   [MIME_TYPES.MP3]: 'mp3',
@@ -152,6 +160,8 @@ const EXT_TO_FILE_TYPE: Record<string, DetectedFileType> = {
   [FILE_EXTENSIONS.TXT]: 'txt',
   [FILE_EXTENSIONS.MD]: 'txt',
   [FILE_EXTENSIONS.XML]: 'txt',
+  [FILE_EXTENSIONS.HTML]: 'html',
+  [FILE_EXTENSIONS.HTM]: 'html',
   [FILE_EXTENSIONS.EML]: 'eml',
   [FILE_EXTENSIONS.MSG]: 'msg',
   [FILE_EXTENSIONS.MP3]: 'mp3',
@@ -187,6 +197,10 @@ export function detectFileType(
  */
 export function isPlainTextFile(fileType: DetectedFileType): boolean {
   return fileType === 'txt';
+}
+
+export function isHtmlFile(fileType: DetectedFileType): boolean {
+  return fileType === 'html';
 }
 
 /**
@@ -254,6 +268,7 @@ export function isDocumentSourceFile(fileType: DetectedFileType): boolean {
   return (
     isDocumentFile(fileType) ||
     isPlainTextFile(fileType) ||
+    isHtmlFile(fileType) ||
     isEmailFile(fileType) ||
     isAudioFile(fileType)
   );
@@ -273,6 +288,7 @@ const CANONICAL_MIME_BY_FILE_TYPE: Record<
   ods: MIME_TYPES.ODS,
   csv: MIME_TYPES.CSV,
   txt: MIME_TYPES.TXT,
+  html: MIME_TYPES.HTML,
   eml: MIME_TYPES.EML,
   msg: MIME_TYPES.MSG,
   mp3: MIME_TYPES.MP3,

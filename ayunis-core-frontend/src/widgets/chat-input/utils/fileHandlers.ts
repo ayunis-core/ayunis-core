@@ -18,6 +18,8 @@ export const ACCEPTED_DOCUMENT_EXTENSIONS = [
   '.txt',
   '.md',
   '.xml',
+  '.html',
+  '.htm',
   '.eml',
   '.msg',
   ...AUDIO_EXTENSIONS,
