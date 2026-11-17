@@ -5,7 +5,7 @@ import type { ModelProvider } from '@ayunis/inference';
 import { RuntimeInferenceProviderFactory } from 'src/domain/models/infrastructure/runtime/runtime-inference-provider.factory';
 import type { Model } from 'src/domain/models/domain/model.entity';
 import {
-  CLAUDE_MAX_OUTPUT_TOKENS,
+  claudeMaxOutputTokens,
   PROVIDER_SDK_MAX_RETRIES,
 } from 'src/domain/models/infrastructure/runtime/inference-config';
 
@@ -20,7 +20,7 @@ export class AnthropicInferenceProviderFactory extends RuntimeInferenceProviderF
       apiKey: this.configService.get<string>('models.anthropic.apiKey') ?? '',
       model: model.name,
       maxRetries: PROVIDER_SDK_MAX_RETRIES,
-      maxTokens: CLAUDE_MAX_OUTPUT_TOKENS,
+      maxTokens: claudeMaxOutputTokens(model.name),
     });
   }
 }

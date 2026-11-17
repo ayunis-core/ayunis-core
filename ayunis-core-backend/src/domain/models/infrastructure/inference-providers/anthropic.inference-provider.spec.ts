@@ -31,7 +31,7 @@ describe('AnthropicInferenceProviderFactory', () => {
     return { createProvider };
   };
 
-  it('raises the output-token budget above the conservative default (AYC-674)', () => {
+  it('uses the full Claude output budget so long tool calls are not cut off at 64K', () => {
     const { createProvider } = buildFactory();
 
     createProvider({ name: 'claude-opus-5' } as Model);
@@ -39,6 +39,19 @@ describe('AnthropicInferenceProviderFactory', () => {
     expect(anthropicMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'claude-opus-5',
+        maxTokens: 128_000,
+      }),
+    );
+  });
+
+  it('keeps the supported 64K ceiling for older Claude models', () => {
+    const { createProvider } = buildFactory();
+
+    createProvider({ name: 'claude-haiku-4-5' } as Model);
+
+    expect(anthropicMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'claude-haiku-4-5',
         maxTokens: 64_000,
       }),
     );

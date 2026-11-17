@@ -28,7 +28,7 @@ describe('BedrockInferenceProviderFactory', () => {
     return { createProvider };
   };
 
-  it('raises the output-token budget above the conservative default (AYC-674)', () => {
+  it('uses the full Claude output budget so long tool calls are not cut off at 64K', () => {
     const { createProvider } = buildFactory();
 
     createProvider({ name: 'eu.anthropic.claude-opus-5' } as Model);
@@ -36,6 +36,21 @@ describe('BedrockInferenceProviderFactory', () => {
     expect(bedrockMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'eu.anthropic.claude-opus-5',
+        maxTokens: 128_000,
+      }),
+    );
+  });
+
+  it('keeps the supported 64K ceiling for older Claude models', () => {
+    const { createProvider } = buildFactory();
+
+    createProvider({
+      name: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0',
+    } as Model);
+
+    expect(bedrockMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0',
         maxTokens: 64_000,
       }),
     );
