@@ -53,6 +53,29 @@ export function sendThreadMessageWithImage(
   });
 }
 
+// The multipart upload predating direct uploads: the source gets no stored
+// original.
+export async function uploadLegacyThreadPdf(
+  api: APIRequestContext,
+  threadId: string,
+  filename: string,
+  buffer: Buffer,
+): Promise<string> {
+  const response = await api.post(
+    `${config.apiURL}/api/threads/${threadId}/sources/file`,
+    {
+      multipart: {
+        file: { name: filename, mimeType: 'application/pdf', buffer },
+      },
+    },
+  );
+  if (!response.ok()) {
+    throw new Error(`Legacy upload failed: ${response.status()}`);
+  }
+  const [source] = (await response.json()) as { id: string }[];
+  return source.id;
+}
+
 export function uploadThreadCsv(
   api: APIRequestContext,
   threadId: string,

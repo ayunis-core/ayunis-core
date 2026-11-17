@@ -18,6 +18,7 @@ function buildCapability(toolDescriptions: string[]) {
       description,
       inputSchema: { type: 'object', properties: {} },
       integrationId,
+      fileParams: [],
     })),
     resources: [],
     prompts: [],
@@ -120,6 +121,7 @@ describe('McpCapability', () => {
                     description: `Search ${integration.name}`,
                     inputSchema: { type: 'object', properties: {} },
                     integrationId: id,
+                    fileParams: [],
                   },
                 ],
             resources: resourceOnly

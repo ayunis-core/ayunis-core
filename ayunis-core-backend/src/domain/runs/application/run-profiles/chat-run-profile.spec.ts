@@ -63,6 +63,7 @@ function buildChatProfile(): ChatRunProfile {
           description: 'Third-party code runner',
           inputSchema: { type: 'object', properties: {} },
           integrationId,
+          fileParams: [],
         },
       ],
       resources: [],

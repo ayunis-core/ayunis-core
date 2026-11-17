@@ -5,17 +5,25 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { UUID } from 'crypto';
 import type { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
 import { buildMcpCanonicalName } from 'src/domain/tools/domain/value-objects/mcp-canonical-name';
+import {
+  type McpFileField,
+  toModelFacingSchema,
+} from 'src/domain/tools/domain/value-objects/mcp-file-fields';
 
 /**
  * Ephemeral tool entity representing an MCP tool.
  * These tools are not persisted to the database but are dynamically loaded
  * from MCP integrations at conversation start.
+ *
+ * Throws `InvalidMcpFileParamsError` when the tool's declared file fields
+ * cannot be mapped onto its input schema.
  */
 export class McpIntegrationTool extends Tool {
   public readonly integrationId: UUID;
   public readonly integrationName: string;
   public readonly originalName: string;
   public readonly integrationLogoUrl: string | null;
+  public readonly fileFields: readonly McpFileField[];
   private readonly _returnsPii: boolean;
 
   constructor(
@@ -24,16 +32,21 @@ export class McpIntegrationTool extends Tool {
     integrationName: string,
     integrationLogoUrl: string | null,
   ) {
+    const { parameters, fileFields } = toModelFacingSchema(
+      mcpTool.inputSchema,
+      mcpTool.fileParams,
+    );
     super({
       name: buildMcpCanonicalName('tool', mcpTool.name, mcpTool.integrationId),
       description: `Use the "${mcpTool.name}" tool from MCP integration "${integrationName}".\n${mcpTool.description ?? ''}`,
-      parameters: mcpTool.inputSchema,
+      parameters,
       type: ToolType.MCP_TOOL,
     });
     this.integrationId = mcpTool.integrationId;
     this.integrationName = integrationName;
     this.originalName = mcpTool.name;
     this.integrationLogoUrl = integrationLogoUrl;
+    this.fileFields = fileFields;
     this._returnsPii = returnsPii;
   }
 

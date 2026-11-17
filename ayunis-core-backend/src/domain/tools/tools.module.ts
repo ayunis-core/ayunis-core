@@ -41,6 +41,7 @@ import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { MarketplaceSearchToolHandler } from './application/handlers/marketplace-search-tool.handler';
 import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
+import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { SendNotificationToolHandler } from './application/handlers/send-notification-tool.handler';
 
@@ -68,6 +69,7 @@ import { SendNotificationToolHandler } from './application/handlers/send-notific
     // Core services and registries
     ToolHandlerRegistry,
     AuthorizedCsvSourceResolverService,
+    McpFileHandoverService,
     HttpToolHandler,
     SourceQueryToolHandler,
     SourceGetTextToolHandler,

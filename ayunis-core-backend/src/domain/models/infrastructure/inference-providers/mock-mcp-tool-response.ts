@@ -5,32 +5,48 @@ import type {
   ToolResultContent,
 } from '@ayunis/inference';
 
-const MCP_ECHO_PROMPT = 'E2E call MCP echo: ';
-const MCP_ECHO_TOOL_PREFIX = 'mcp__tool__echo__';
+const MCP_ECHO_SCRIPTS = [
+  {
+    prompt: 'E2E call MCP echo: ',
+    toolPrefix: 'mcp__tool__echo__',
+    args: (text: string) => ({ text }),
+  },
+  {
+    prompt: 'E2E call MCP echo file: ',
+    toolPrefix: 'mcp__tool__echo_file__',
+    args: (sourceId: string) => ({ file: sourceId }),
+  },
+];
 const CALL_ID_PREFIX = 'mock-mcp-echo-';
 
 /**
- * Calls the offered `echo` tool of the E2E MCP server with the text after the
- * trigger, then answers with the text of that call's result once it is in the
- * history, so a reply proves the tool really ran (or how it was settled).
- * Without the tool the default reply follows.
+ * Calls the offered `echo` (or `echo_file`, with a chat file's source ID)
+ * tool of the E2E MCP server with the text after the trigger, then answers
+ * with the text of that call's result once it is in the history, so a reply
+ * proves the tool really ran (or how it was settled). Without the tool the
+ * default reply follows.
  */
 export function mockMcpToolResponse(
   request: ProviderRequest,
   userText: string,
 ): AsyncIterable<ProviderChunk> | null {
-  if (!userText.startsWith(MCP_ECHO_PROMPT)) return null;
+  const script = MCP_ECHO_SCRIPTS.find(({ prompt }) =>
+    userText.startsWith(prompt),
+  );
+  if (!script) return null;
   const result = echoResultSinceLastUserMessage(request);
   if (result) {
     return mockTextResponse(`mcp-tool-result::${resultText(result.result)}`);
   }
   const tool = request.tools.find((offered) =>
-    offered.name.startsWith(MCP_ECHO_TOOL_PREFIX),
+    offered.name.startsWith(script.toolPrefix),
   );
   if (!tool) return null;
-  return mockToolCallResponse(CALL_ID_PREFIX, tool.name, {
-    text: userText.slice(MCP_ECHO_PROMPT.length),
-  });
+  return mockToolCallResponse(
+    CALL_ID_PREFIX,
+    tool.name,
+    script.args(userText.slice(script.prompt.length)),
+  );
 }
 
 function echoResultSinceLastUserMessage(

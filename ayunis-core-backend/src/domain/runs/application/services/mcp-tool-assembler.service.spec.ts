@@ -163,3 +163,55 @@ describe('McpToolAssemblerService — capability names', () => {
     ]);
   });
 });
+
+describe('McpToolAssemblerService — file params', () => {
+  const integrationId = randomUUID();
+
+  it('does not offer a tool whose file params cannot be mapped, keeping its siblings', async () => {
+    const discover = {
+      execute: jest.fn().mockResolvedValue({
+        tools: [
+          new McpTool(
+            'start_pdf_url',
+            'Start from a link',
+            { type: 'object', properties: { url: { type: 'string' } } },
+            integrationId,
+          ),
+          new McpTool(
+            'start_pdf_file',
+            'Start from a file',
+            { type: 'object', properties: { file: { type: 'string' } } },
+            integrationId,
+            ['file'],
+          ),
+        ],
+        resources: [],
+        prompts: [],
+        returnsPii: false,
+      }),
+    } as unknown as DiscoverMcpCapabilitiesUseCase;
+    const getByIds = {
+      execute: jest
+        .fn()
+        .mockResolvedValue([{ id: integrationId, name: 'Accessful' }]),
+    } as unknown as GetMcpIntegrationsByIdsUseCase;
+    const logger = createLoggerMock();
+    const service = new McpToolAssemblerService(discover, getByIds);
+
+    const { tools } = await service.assemble(
+      { mcpIntegrationIds: [integrationId] } as unknown as Thread,
+      new Set(),
+    );
+
+    expect(tools.map((tool) => tool.name)).toEqual([
+      `mcp__tool__start_pdf_url__${integrationId.slice(0, 8)}`,
+    ]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        integrationName: 'Accessful',
+        toolName: 'start_pdf_file',
+      }),
+      expect.any(String),
+    );
+  });
+});
