@@ -4,6 +4,7 @@ import { handOffSessionToOutlook } from '../clients/api/session-tokens.client';
 import type {
   DialogTokens,
   OfficeStubCall,
+  OfficeStubReadItem,
   OfficeStubWindow,
 } from '../clients/office-host-stub';
 
@@ -102,4 +103,14 @@ export function officeItemCalls(pane: Page): Promise<OfficeStubCall[]> {
   return pane.evaluate(
     () => (window as unknown as OfficeStubWindow).__officeStub.calls,
   );
+}
+
+/** Selects another mail in the pinned pane, or none with `null`. */
+export async function selectOutlookItem(
+  pane: Page,
+  item: OfficeStubReadItem | null,
+): Promise<void> {
+  await pane.evaluate((selected) => {
+    (window as unknown as OfficeStubWindow).__officeStub.selectItem(selected);
+  }, item);
 }

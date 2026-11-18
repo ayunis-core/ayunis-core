@@ -23,6 +23,14 @@ export interface OfficeStubComposeItem {
   to: OfficeStubAddress[];
 }
 
+/** A received mail open in the reading pane, identified by its item id. */
+export interface OfficeStubReadItem {
+  itemId: string;
+  subject: string;
+  body: string;
+  from: OfficeStubAddress;
+}
+
 export interface OfficeStubCall {
   method: string;
   args: unknown[];
@@ -37,6 +45,8 @@ export interface OfficeStubState {
     send(message: string): void;
     closeByUser(): void;
   } | null;
+  /** Selects another item in a pinned pane, as Outlook does on a click. */
+  selectItem(item: OfficeStubReadItem | null): void;
 }
 
 export type OfficeStubWindow = Window & { __officeStub: OfficeStubState };
@@ -46,7 +56,11 @@ export type OfficeStubWindow = Window & { __officeStub: OfficeStubState };
 // would send; displayDialogAsync hands the test a handle to answer for it.
 // Given a compose item, the mailbox serves it and records every call the
 // add-in makes on it.
-const officeStub = (item: OfficeStubComposeItem | null) => `(() => {
+const officeStub = (
+  item: OfficeStubComposeItem | null,
+  readItem: OfficeStubReadItem | null,
+) => `(() => {
+  const mailboxHandlers = {};
   const state = { messages: [], calls: [], dialog: null };
   window.__officeStub = state;
   const mail = ${JSON.stringify(item)};
@@ -93,12 +107,42 @@ const officeStub = (item: OfficeStubComposeItem | null) => `(() => {
       succeed(callback, 'e2e-item-id'),
     ),
   };
+  const readItemFrom = (read) => read && {
+    itemId: read.itemId,
+    subject: read.subject,
+    from: read.from,
+    to: [],
+    cc: [],
+    attachments: [],
+    body: {
+      getAsync: recorded('body.getAsync', (_coercion, callback) =>
+        succeed(callback, read.body),
+      ),
+    },
+    displayReplyForm: recorded('displayReplyForm', () => undefined),
+  };
+  const mailbox = {
+    item: readItemFrom(${JSON.stringify(readItem)}) ?? composeItem ?? undefined,
+    addHandlerAsync: (type, handler, callback) => {
+      mailboxHandlers[type] = handler;
+      callback?.({ status: 'succeeded' });
+    },
+    removeHandlerAsync: (type, callback) => {
+      delete mailboxHandlers[type];
+      callback?.({ status: 'succeeded' });
+    },
+  };
+  state.selectItem = (read) => {
+    mailbox.item = readItemFrom(read) ?? undefined;
+    mailboxHandlers.olkItemSelectedChanged?.({ type: 'olkItemSelectedChanged' });
+  };
   window.Office = {
     AsyncResultStatus: { Succeeded: 'succeeded', Failed: 'failed' },
     CoercionType: { Text: 'text', Html: 'html' },
     EventType: {
       DialogMessageReceived: 'dialogMessageReceived',
       DialogEventReceived: 'dialogEventReceived',
+      ItemChanged: 'olkItemSelectedChanged',
     },
     MailboxEnums: {
       AttachmentContentFormat: {
@@ -115,7 +159,7 @@ const officeStub = (item: OfficeStubComposeItem | null) => `(() => {
         isSetSupported: (name, version) =>
           name === 'Mailbox' && Number(version.split('.')[1] ?? 0) <= 8,
       },
-      mailbox: { item: composeItem ?? undefined },
+      mailbox,
       ui: {
         messageParent: (message) => state.messages.push(message),
         displayDialogAsync: (url, _options, callback) => {
@@ -142,9 +186,12 @@ const officeStub = (item: OfficeStubComposeItem | null) => `(() => {
 
 export async function stubOfficeHost(
   target: Page | BrowserContext,
-  options: { composeItem?: OfficeStubComposeItem } = {},
+  options: {
+    composeItem?: OfficeStubComposeItem;
+    readItem?: OfficeStubReadItem;
+  } = {},
 ): Promise<void> {
-  const body = officeStub(options.composeItem ?? null);
+  const body = officeStub(options.composeItem ?? null, options.readItem ?? null);
   await target.route(OFFICE_JS_URL, (route) =>
     route.fulfill({ contentType: 'application/javascript', body }),
   );

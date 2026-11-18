@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
@@ -18,7 +19,7 @@ export function TaskPane({
 }: Readonly<{
   session: PaneSession;
   officeAvailable: () => Promise<boolean>;
-  children: ReactNode;
+  children: (user: MeResponseDto) => ReactNode;
 }>) {
   const { t } = useTranslation();
   const { state, signIn } = usePaneAuth(session, officeAvailable);
@@ -26,7 +27,7 @@ export function TaskPane({
   if (state.status === 'signedIn') {
     return (
       <div className="h-full" data-testid="outlook-pane-signed-in">
-        {children}
+        {children(state.user)}
       </div>
     );
   }
