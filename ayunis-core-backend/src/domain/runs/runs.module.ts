@@ -59,6 +59,7 @@ import { MarketplaceCapability } from './application/run-capabilities/capabiliti
 import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from './application/run-capabilities/capabilities/skills.capability';
 import { RoutinesCapability } from './application/run-capabilities/capabilities/routines.capability';
+import { AnonymizationExceptionCapability } from './application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from './application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from './application/run-capabilities/capabilities/workspace-instructions.capability';
 import { RunCapabilityContextFactory } from './application/run-capabilities/run-capability-context.factory';
@@ -191,6 +192,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     McpCapability,
     SkillsCapability,
     RoutinesCapability,
+    AnonymizationExceptionCapability,
     ThreadSourcesCapability,
     WorkspaceInstructionsCapability,
     NotificationContextCapability,

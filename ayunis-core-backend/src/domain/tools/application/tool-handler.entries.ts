@@ -28,6 +28,7 @@ import { CreateSpreadsheetToolHandler } from './handlers/create-spreadsheet-tool
 import { UpdateSpreadsheetToolHandler } from './handlers/update-spreadsheet-tool.handler';
 import { MarketplaceSearchToolHandler } from './handlers/marketplace-search-tool.handler';
 import { SendNotificationToolHandler } from './handlers/send-notification-tool.handler';
+import { AddAnonymizationExceptionToolHandler } from './handlers/add-anonymization-exception-tool.handler';
 import { GetMemoryToolHandler } from './handlers/get-memory-tool.handler';
 import { SetMemoryToolHandler } from './handlers/set-memory-tool.handler';
 import { ChatListToolHandler } from './handlers/chat-list-tool.handler';
@@ -56,6 +57,7 @@ import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spre
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { SendNotificationTool } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
+import { AddAnonymizationExceptionTool } from 'src/domain/tools/domain/tools/add-anonymization-exception-tool.entity';
 import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
 import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
 import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
@@ -91,6 +93,7 @@ const TOOL_HANDLER_PAIRS: readonly (readonly [
   [UpdateSpreadsheetTool, UpdateSpreadsheetToolHandler],
   [MarketplaceSearchTool, MarketplaceSearchToolHandler],
   [SendNotificationTool, SendNotificationToolHandler],
+  [AddAnonymizationExceptionTool, AddAnonymizationExceptionToolHandler],
   [GetMemoryTool, GetMemoryToolHandler],
   [SetMemoryTool, SetMemoryToolHandler],
   [ChatListTool, ChatListToolHandler],

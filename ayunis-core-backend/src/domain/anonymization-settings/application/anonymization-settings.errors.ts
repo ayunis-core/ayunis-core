@@ -1,11 +1,14 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
 import type { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import type { WhitelistExceptionRejection } from 'src/domain/anonymization-settings/domain/whitelist-exception';
 
 export enum AnonymizationSettingsErrorCode {
   INVALID_PATTERN = 'INVALID_PATTERN',
   DUPLICATE_CATEGORY = 'DUPLICATE_CATEGORY',
+  INVALID_WHITELIST_EXCEPTION = 'INVALID_WHITELIST_EXCEPTION',
   UNEXPECTED_ERROR = 'UNEXPECTED_ANONYMIZATION_SETTINGS_ERROR',
+  UNEXPECTED_WHITELIST_EXCEPTION_ERROR = 'UNEXPECTED_WHITELIST_EXCEPTION_ERROR',
   EMPTY_GLOBAL_WHITELIST_WORD = 'EMPTY_GLOBAL_WHITELIST_WORD',
   GLOBAL_WHITELIST_WORD_NOT_FOUND = 'GLOBAL_WHITELIST_WORD_NOT_FOUND',
   UNEXPECTED_GLOBAL_WHITELIST_ERROR = 'UNEXPECTED_GLOBAL_ANONYMIZATION_WHITELIST_ERROR',
@@ -40,6 +43,31 @@ export class InvalidPatternError extends ApplicationError {
       AnonymizationSettingsErrorCode.INVALID_PATTERN,
       400,
       { category, reason, ...metadata },
+    );
+  }
+}
+
+export class InvalidWhitelistExceptionError extends ApplicationError {
+  constructor(
+    category: PiiCategory,
+    public readonly reason: WhitelistExceptionRejection,
+  ) {
+    super(
+      `Invalid whitelist exception for category ${category}: ${reason}`,
+      AnonymizationSettingsErrorCode.INVALID_WHITELIST_EXCEPTION,
+      400,
+      { category, reason },
+    );
+  }
+}
+
+export class UnexpectedWhitelistExceptionError extends ApplicationError {
+  constructor(error: Error) {
+    super(
+      'Unexpected error while validating a whitelist exception',
+      AnonymizationSettingsErrorCode.UNEXPECTED_WHITELIST_EXCEPTION_ERROR,
+      500,
+      { originalError: error.message },
     );
   }
 }

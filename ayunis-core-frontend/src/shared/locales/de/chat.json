@@ -124,6 +124,7 @@
         "install_marketplace_skill": "Fähigkeit zur Installation angeboten",
         "create_routine": "Routine erstellt",
         "edit_routine": "Routine bearbeitet",
+        "add_anonymization_exception": "Ausnahme von der Anonymisierung vorgeschlagen",
         "activate_skill": "Fähigkeit aktiviert",
         "get_memory": "Erinnerung gelesen",
         "set_memory": "Erinnerung aktualisiert",
@@ -231,6 +232,23 @@
         "update": "Routine aktualisieren",
         "updated": "Routine aktualisiert",
         "routineNotFound": "Routine konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht."
+      },
+      "add_anonymization_exception": {
+        "title": "Ausnahme von der Anonymisierung",
+        "preparing": "Ausnahme wird vorbereitet…",
+        "loading": "Anonymisierungsregeln werden geladen…",
+        "loadError": "Die Anonymisierungsregeln Ihrer Organisation konnten nicht geladen werden.",
+        "previousRule": "Bisherige Regel",
+        "newRule": "Neue Regel",
+        "noRule": "Keine",
+        "orgWide": "Gilt für die gesamte Organisation: Im anonymen Modus wird der Begriff für alle Mitglieder nicht mehr maskiert.",
+        "save": "Ausnahme speichern",
+        "saving": "Wird gespeichert…",
+        "saved": "Wird nicht mehr maskiert",
+        "success": "Ausnahme gespeichert",
+        "invalidPattern": "Die Regel ist ungültig und wurde nicht gespeichert.",
+        "ruleChanged": "Die Regel dieser Kategorie wurde inzwischen geändert. Bitte prüfen Sie die Ausnahme erneut.",
+        "error": "Die Ausnahme konnte nicht gespeichert werden."
       },
       "create_document": {
         "title": "Dokument",

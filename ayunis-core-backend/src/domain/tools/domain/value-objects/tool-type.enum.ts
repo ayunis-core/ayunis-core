@@ -47,4 +47,5 @@ export enum ToolType {
   OUTLOOK_DRAFT_EMAIL = 'outlook__draft_email',
   OUTLOOK_MOVE_EMAIL_TO_COMPOSER = 'outlook__move_email_to_composer',
   OUTLOOK_SAVE_EMAIL_TO_DRAFT = 'outlook__save_email_to_draft',
+  ADD_ANONYMIZATION_EXCEPTION = 'add_anonymization_exception',
 }

@@ -11,6 +11,7 @@ import { PostgresGlobalAnonymizationWhitelistRepository } from './infrastructure
 
 import { GetPiiWhitelistUseCase } from './application/use-cases/get-pii-whitelist/get-pii-whitelist.use-case';
 import { UpdatePiiWhitelistUseCase } from './application/use-cases/update-pii-whitelist/update-pii-whitelist.use-case';
+import { ValidatePiiWhitelistExceptionUseCase } from './application/use-cases/validate-pii-whitelist-exception/validate-pii-whitelist-exception.use-case';
 import { AnonymizeTextForOrgUseCase } from './application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
 import { GetGlobalPiiWhitelistUseCase } from './application/use-cases/get-global-pii-whitelist/get-global-pii-whitelist.use-case';
 import { AddGlobalPiiWhitelistWordsUseCase } from './application/use-cases/add-global-pii-whitelist-words/add-global-pii-whitelist-words.use-case';
@@ -41,6 +42,7 @@ import { SuperAdminAnonymizationWhitelistController } from './presenters/http/su
     },
     GetPiiWhitelistUseCase,
     UpdatePiiWhitelistUseCase,
+    ValidatePiiWhitelistExceptionUseCase,
     AnonymizeTextForOrgUseCase,
     GetGlobalPiiWhitelistUseCase,
     AddGlobalPiiWhitelistWordsUseCase,
@@ -49,6 +51,7 @@ import { SuperAdminAnonymizationWhitelistController } from './presenters/http/su
   exports: [
     GetPiiWhitelistUseCase,
     UpdatePiiWhitelistUseCase,
+    ValidatePiiWhitelistExceptionUseCase,
     AnonymizeTextForOrgUseCase,
     GetGlobalPiiWhitelistUseCase,
   ],

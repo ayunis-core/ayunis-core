@@ -19,3 +19,7 @@ export function deanonymizeText(
     (token) => tokenToValue.get(token) ?? token,
   );
 }
+
+export function containsPiiToken(text: string): boolean {
+  return text.search(PII_TOKEN_REGEX) !== -1;
+}

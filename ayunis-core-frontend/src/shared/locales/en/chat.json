@@ -124,6 +124,7 @@
         "install_marketplace_skill": "Offered skill install",
         "create_routine": "Created routine",
         "edit_routine": "Edited routine",
+        "add_anonymization_exception": "Proposed an anonymization exception",
         "activate_skill": "Activated skill",
         "get_memory": "Read memory",
         "set_memory": "Updated memory",
@@ -231,6 +232,23 @@
         "update": "Update routine",
         "updated": "Routine updated",
         "routineNotFound": "Could not find this routine. It may have been deleted."
+      },
+      "add_anonymization_exception": {
+        "title": "Anonymization exception",
+        "preparing": "Preparing exception…",
+        "loading": "Loading anonymization rules…",
+        "loadError": "Your organization's anonymization rules could not be loaded.",
+        "previousRule": "Current rule",
+        "newRule": "New rule",
+        "noRule": "None",
+        "orgWide": "Applies to the whole organization: in anonymous mode, the term is no longer masked for any member.",
+        "save": "Save exception",
+        "saving": "Saving…",
+        "saved": "No longer masked",
+        "success": "Exception saved",
+        "invalidPattern": "The rule is invalid and was not saved.",
+        "ruleChanged": "The rule for this category has changed in the meantime. Please review the exception again.",
+        "error": "The exception could not be saved."
       },
       "create_document": {
         "title": "Document",

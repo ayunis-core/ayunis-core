@@ -203,8 +203,9 @@ describe('ToolFactory', () => {
       expect(types).toContain(ToolType.CHAT_GREP);
       expect(types).toContain(ToolType.FINISH_ROUTINE);
       expect(types).toContain(ToolType.SEND_NOTIFICATION);
+      expect(types).toContain(ToolType.ADD_ANONYMIZATION_EXCEPTION);
 
-      expect(types).toHaveLength(47);
+      expect(types).toHaveLength(48);
     });
   });
 });

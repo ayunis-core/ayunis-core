@@ -28,6 +28,8 @@ import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application
 import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { MemoryModule } from 'src/domain/memory/memory.module';
+import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
+import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { MemoryModule } from 'src/domain/memory/memory.module';
     MarketplaceModule,
     NotificationsModule,
     MemoryModule,
+    ThreadPiiMasksModule,
+    AnonymizationSettingsModule,
   ],
   providers: [
     // Use cases
