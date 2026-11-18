@@ -26,6 +26,9 @@ test('with connectors disabled there is no Connections section and the other adm
   expect(
     (await requestMicrosoft365Connector.remove(api, disabledApiUrl)).status(),
   ).toBe(404);
+  expect(
+    (await requestMicrosoft365Connector.test(api, disabledApiUrl)).status(),
+  ).toBe(404);
 
   await page.goto(`${disabledBaseUrl}/admin-settings/connections/microsoft-365`);
   await expect(page).toHaveURL(/\/admin-settings\/users$/);

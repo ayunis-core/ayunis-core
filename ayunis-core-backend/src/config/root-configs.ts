@@ -25,6 +25,7 @@ import { coreConnectConfig } from './core-connect.config';
 import { routinesConfig } from './routines.config';
 import { recordingsConfig } from './recordings.config';
 import { releaseNotesConfig } from './release-notes.config';
+import { connectorsConfig } from './connectors.config';
 
 /**
  * Config factories for every Nest entrypoint's ConfigModule.forRoot.
@@ -64,4 +65,5 @@ export const rootConfigs = [
   routinesConfig,
   recordingsConfig,
   releaseNotesConfig,
+  connectorsConfig,
 ];

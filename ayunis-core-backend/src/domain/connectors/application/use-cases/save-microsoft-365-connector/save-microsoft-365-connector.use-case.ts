@@ -9,10 +9,8 @@ import {
   ConnectorCredentialsRequiredError,
   UnexpectedConnectorError,
 } from 'src/domain/connectors/application/connectors.errors';
-import {
-  type Microsoft365ConnectorOverview,
-  toMicrosoft365ConnectorOverview,
-} from 'src/domain/connectors/application/models/microsoft-365-connector-overview';
+import { toMicrosoft365ConnectorOverview } from 'src/domain/connectors/application/models/microsoft-365-connector-overview';
+import { Microsoft365ConnectionTestService } from 'src/domain/connectors/application/services/microsoft-365-connection-test.service';
 import { Connector } from 'src/domain/connectors/domain/connector.entity';
 import { ConnectorProduct } from 'src/domain/connectors/domain/connector-product.enum';
 import type {
@@ -20,8 +18,12 @@ import type {
   Microsoft365Setup,
 } from 'src/domain/connectors/domain/microsoft-365/microsoft-365-connection';
 import { SaveMicrosoft365ConnectorCommand } from './save-microsoft-365-connector.command';
+import type { SavedMicrosoft365Connector } from './save-microsoft-365-connector.result';
 
-/** Sets up the organization's own Entra app, or changes its setup. */
+/**
+ * Sets up the organization's own Entra app, or changes its setup, and tests
+ * the saved connection.
+ */
 @Injectable()
 export class SaveMicrosoft365ConnectorUseCase {
   private readonly logger = new Logger(SaveMicrosoft365ConnectorUseCase.name);
@@ -29,13 +31,14 @@ export class SaveMicrosoft365ConnectorUseCase {
   constructor(
     private readonly connectorsRepository: ConnectorsRepository,
     private readonly credentialEncryption: ConnectorCredentialEncryptionPort,
+    private readonly connectionTest: Microsoft365ConnectionTestService,
     private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedConnectorError)
   async execute(
     command: SaveMicrosoft365ConnectorCommand,
-  ): Promise<Microsoft365ConnectorOverview> {
+  ): Promise<SavedMicrosoft365Connector> {
     const { orgId } = getRequiredUserContext(this.contextService);
     const replacesSecret = command.clientSecret !== undefined;
     this.logger.log({ orgId, replacesSecret }, 'execute');
@@ -50,7 +53,10 @@ export class SaveMicrosoft365ConnectorUseCase {
         : await this.setUp(orgId, setup, {
             clientSecret: command.clientSecret,
           });
-    return toMicrosoft365ConnectorOverview(connector);
+    return {
+      ...toMicrosoft365ConnectorOverview(connector),
+      connectionTest: await this.connectionTest.test(connector),
+    };
   }
 
   private async setUp(
