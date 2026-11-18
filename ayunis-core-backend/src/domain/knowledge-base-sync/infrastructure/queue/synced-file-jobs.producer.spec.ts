@@ -11,14 +11,21 @@ jest.mock('@nestjs-cls/transactional', () => ({
 describe('SyncedFileJobsProducer', () => {
   const orgId = randomUUID();
 
-  async function jobIdsOf(jobs: SyncedFileJobData[]): Promise<string[]> {
+  interface AddedJob {
+    opts: { jobId: string; removeOnComplete?: boolean; removeOnFail?: boolean };
+  }
+
+  async function added(jobs: SyncedFileJobData[]): Promise<AddedJob[]> {
     const addBulk = jest.fn().mockResolvedValue([]);
     await new SyncedFileJobsProducer(
       { execute: jest.fn().mockResolvedValue(undefined) } as never,
       { addBulk } as never,
     ).enqueue(orgId, jobs);
-    const [added] = addBulk.mock.calls[0] as [{ opts: { jobId: string } }[]];
-    return added.map(({ opts }) => opts.jobId);
+    return (addBulk.mock.calls[0] as [AddedJob[]])[0];
+  }
+
+  async function jobIdsOf(jobs: SyncedFileJobData[]): Promise<string[]> {
+    return (await added(jobs)).map(({ opts }) => opts.jobId);
   }
 
   const job = (overrides: Partial<SyncedFileJobData> = {}) => ({
@@ -50,5 +57,11 @@ describe('SyncedFileJobsProducer', () => {
     ]);
 
     expect(new Set(ids).size).toBe(3);
+  });
+
+  it('keeps no ended job, completed or failed, whose ID would stop a later sync from queueing the version again', async () => {
+    const [{ opts }] = await added([job()]);
+
+    expect(opts).toMatchObject({ removeOnComplete: true, removeOnFail: true });
   });
 });

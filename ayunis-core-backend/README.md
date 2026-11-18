@@ -247,11 +247,13 @@ this port. It checks consumers, PostgreSQL and Redis. The worker starts no API
 listener or application scheduler. Scheduled cleanup and queue telemetry stay on
 the API.
 
-Concurrency per worker defaults to 4 document jobs, 2 spreadsheet jobs, 2 crawls
-and 1 re-index job (documents embedded again after an org changed its embedding
-model, on their own queue below uploads). Override with
+Concurrency per worker defaults to 4 document jobs, 2 spreadsheet jobs, 2 crawls,
+1 re-index job (documents embedded again after an org changed its embedding
+model, on their own queue below uploads) and 1 synced file (of a synced
+knowledge base location, on its own queue). Override with
 `INGESTION_DOCUMENT_CONCURRENCY`, `INGESTION_DATA_SOURCE_CONCURRENCY`,
-`INGESTION_URL_CRAWL_CONCURRENCY` and `INGESTION_REINDEX_CONCURRENCY`.
+`INGESTION_URL_CRAWL_CONCURRENCY`, `INGESTION_REINDEX_CONCURRENCY` and
+`INGESTION_SYNC_CONCURRENCY`.
 `POSTGRES_POOL_SIZE` controls each process's database pool. Adding replicas
 multiplies concurrency, provider calls and connections, including document/audio
 part concurrency. Start with one worker and measure provider throttling, queue

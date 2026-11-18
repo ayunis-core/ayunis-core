@@ -11,6 +11,7 @@ import {
 import { BaseRecord } from 'src/common/db/base-record';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { SyncedLocationRecord } from './synced-location.record';
 
@@ -70,6 +71,15 @@ export class SyncedFileRecord extends BaseRecord {
   @JoinColumn({ name: 'sourceId' })
   source: SourceRecord | null;
 
+  // No foreign key: it outlives the document, so that a user's removal of
+  // the document can be traced back to the file.
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  lastSourceId: UUID | null;
+
   @Column({ type: 'text', nullable: true })
   documentVersion: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  processingErrorCode: SourceProcessingErrorCode | null;
 }

@@ -2,7 +2,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import type { ConfigType } from '@nestjs/config';
 import type transcriptionConfig from 'src/config/transcription.config';
-import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import type { DocumentToProcess } from 'src/domain/sources/application/models/document-to-process';
 import type { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import type { LocalFile } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { processingStage } from './job-telemetry';
@@ -20,7 +20,7 @@ export function audioStagingRoot(
 // segmenting and the provider upload all read the path.
 export function withStagedJobFile<T>(
   storedFiles: StoredSourceFileService,
-  data: DocumentProcessingJobData,
+  data: DocumentToProcess,
   root: string,
   use: (localFile: LocalFile) => Promise<T>,
   onDownloaded?: () => Promise<void>,

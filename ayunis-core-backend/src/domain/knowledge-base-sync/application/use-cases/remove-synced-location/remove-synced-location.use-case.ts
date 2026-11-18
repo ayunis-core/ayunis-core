@@ -10,6 +10,7 @@ import {
   SyncedLocationNotFoundError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import { SyncedFileJobsPort } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
@@ -17,8 +18,9 @@ import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/d
 import { RemoveSyncedLocationCommand } from './remove-synced-location.command';
 
 /**
- * Removes a location with its documents and their index entries. Stays
- * available with connectors switched off, so content can always be removed.
+ * Removes a location with its documents and their index entries, and the
+ * queued processing of its files. Stays available with connectors switched
+ * off, so content can always be removed.
  */
 @Injectable()
 export class RemoveSyncedLocationUseCase {
@@ -29,6 +31,7 @@ export class RemoveSyncedLocationUseCase {
     private readonly locks: SyncedLocationLocks,
     private readonly writeAccess: AssertKnowledgeBaseWriteAccessUseCase,
     private readonly deleteSources: DeleteSourcesUseCase,
+    private readonly jobs: SyncedFileJobsPort,
     private readonly contextService: ContextService,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
@@ -43,10 +46,11 @@ export class RemoveSyncedLocationUseCase {
     await this.writeAccess.execute(
       new AssertKnowledgeBaseWriteAccessQuery(location.knowledgeBaseId),
     );
-    await this.txHost.withTransaction(async () => {
+    const files = await this.txHost.withTransaction(async () => {
       // Locked first, so a running sync cannot add documents to it meanwhile.
       const locked = await this.locks.lock(location);
-      if (!locked) return;
+      if (!locked) return [];
+      // Their replacements still being processed go with them.
       await this.deleteSources.execute(
         new DeleteSourcesCommand(
           locked.files.flatMap(({ sourceId }) => (sourceId ? [sourceId] : [])),
@@ -54,6 +58,12 @@ export class RemoveSyncedLocationUseCase {
         ),
       );
       await this.repository.delete(location.id);
+      return locked.files;
     });
+    await this.jobs.remove(
+      files.flatMap(({ sourceId, version }) =>
+        sourceId ? [{ sourceId, version }] : [],
+      ),
+    );
   }
 }

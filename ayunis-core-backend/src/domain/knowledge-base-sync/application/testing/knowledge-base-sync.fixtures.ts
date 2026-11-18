@@ -2,9 +2,11 @@ import { randomUUID, type UUID } from 'crypto';
 import type { ConfigService } from '@nestjs/config';
 import type { TransactionHost } from '@nestjs-cls/transactional';
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import { Readable } from 'stream';
 import {
   ConnectorSyncOutcome,
   type ConnectorChangesResult,
+  type ConnectorItemContentResult,
 } from 'src/domain/connectors/application/models/connector-sync-results';
 import type {
   ConnectorItem,
@@ -18,9 +20,13 @@ import { SyncPlanApplier } from 'src/domain/knowledge-base-sync/application/serv
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { SyncLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location/sync-location.use-case';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
+import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
+import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { CheckSourceFileAcceptanceUseCase } from 'src/domain/sources/application/use-cases/check-source-file-acceptance/check-source-file-acceptance.use-case';
+import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 export const ORG_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 export const KNOWLEDGE_BASE_ID = '22222222-2222-4222-8222-222222222222' as UUID;
@@ -98,6 +104,32 @@ export class FakeSourceSystem {
     return release;
   }
 
+  /** Set to have every call answered with "retry at". */
+  throttledUntil: Date | null = null;
+
+  fetch(id: string): Promise<ConnectorItemContentResult> {
+    const item = this.items.get(id);
+    if (!this.accessGranted)
+      return Promise.resolve({ outcome: ConnectorSyncOutcome.ACCESS_LOST });
+    if (this.throttledUntil)
+      return Promise.resolve({
+        outcome: ConnectorSyncOutcome.THROTTLED,
+        retryAt: this.throttledUntil,
+      });
+    if (!item) return Promise.resolve({ outcome: ConnectorSyncOutcome.GONE });
+    const text = FakeSourceSystem.contentOf(item);
+    return Promise.resolve({
+      outcome: ConnectorSyncOutcome.CONTENT,
+      content: Readable.from([text]),
+      size: Buffer.byteLength(text),
+    });
+  }
+
+  /** What a file holds at its version. */
+  static contentOf(item: Pick<ConnectorItem, 'name' | 'version'>): string {
+    return `${item.name} at ${item.version}`;
+  }
+
   async listChanges(cursor: string | null): Promise<ConnectorChangesResult> {
     const listing = this.list(cursor);
     const held = this.held;
@@ -140,12 +172,21 @@ export class FakeSourceSystem {
 
 export interface FakeDocument {
   name: string;
-  knowledgeBaseId: UUID;
+  /** `null` for a hidden replacement. */
+  knowledgeBaseId: UUID | null;
+  status?: SourceStatus;
+  /** The indexed text of a READY document. */
+  text?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
+  /** The document a hidden replacement replaces, deleted with it. */
+  replaces?: UUID;
+  storageKey?: string;
 }
 
 /**
- * The knowledge base's documents with their index entries, the 500-document
- * limit and the `ON DELETE SET NULL` from files to documents.
+ * The knowledge base's documents with their index entries and hidden
+ * replacements, the 500-document limit and the `ON DELETE SET NULL` from
+ * files to documents.
  */
 export class FakeKnowledgeBase {
   readonly documents = new Map<UUID, FakeDocument>();
@@ -167,8 +208,10 @@ export class FakeKnowledgeBase {
     this.deleteDocuments([id]);
   }
 
+  /** The documents a user sees in the knowledge base. */
   names(): string[] {
     return [...this.documents.values()]
+      .filter(({ knowledgeBaseId }) => knowledgeBaseId !== null)
       .map(({ name }) => name)
       .sort((a, b) => a.localeCompare(b));
   }
@@ -188,7 +231,11 @@ export class FakeKnowledgeBase {
         ).length;
       const created = fileNames.slice(0, Math.max(0, room)).map((name) => {
         const id = randomUUID();
-        this.documents.set(id, { name, knowledgeBaseId });
+        this.documents.set(id, {
+          name,
+          knowledgeBaseId,
+          status: SourceStatus.PROCESSING,
+        });
         return { id };
       });
       return Promise.resolve(created);
@@ -212,8 +259,11 @@ export class FakeKnowledgeBase {
     },
   };
 
-  private deleteDocuments(ids: UUID[]): void {
-    for (const id of ids) this.documents.delete(id);
+  deleteDocuments(ids: UUID[]): void {
+    const replacements = [...this.documents.entries()].flatMap(
+      ([id, { replaces }]) => (replaces && ids.includes(replaces) ? [id] : []),
+    );
+    for (const id of [...ids, ...replacements]) this.documents.delete(id);
     this.files().clearSources(ids);
   }
 }
@@ -277,6 +327,28 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
         .filter((file) => file.locationId === locationId)
         .map((file) => new SyncedFile({ ...file })),
     );
+  }
+
+  findFileById(id: UUID): Promise<SyncedFile | null> {
+    const file = this.files.get(id);
+    return Promise.resolve(file ? new SyncedFile({ ...file }) : null);
+  }
+
+  lockFile(id: UUID): Promise<SyncedFile | null> {
+    return this.findFileById(id);
+  }
+
+  skipRemovedAfterFailure(sourceIds: UUID[]): Promise<void> {
+    for (const file of this.files.values())
+      if (
+        file.lastSourceId &&
+        sourceIds.includes(file.lastSourceId) &&
+        file.sourceId === null &&
+        file.state === SyncedFileState.IMPORTED &&
+        file.documentVersion === file.version
+      )
+        file.skip(SyncedFileSkipReason.REMOVED_AFTER_FAILURE);
+    return Promise.resolve();
   }
 
   saveFiles(files: SyncedFile[]): Promise<void> {
@@ -367,6 +439,7 @@ function syncLocationUseCase(
             options.queue.jobs.push(job);
         return Promise.resolve();
       },
+      remove: () => Promise.resolve(),
     },
     featureConfig(options.connectorsEnabled),
   );

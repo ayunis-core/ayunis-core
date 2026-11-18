@@ -7,13 +7,15 @@ import { EntityManager, In, IsNull, Not, Repository } from 'typeorm';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
+import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { SyncedFileMapper } from './mappers/synced-file.mapper';
 import { SyncedLocationMapper } from './mappers/synced-location.mapper';
 import { SyncedFileRecord } from './schema/synced-file.record';
 import { SyncedLocationRecord } from './schema/synced-location.record';
 
-// Each row binds 11 parameters; this keeps a batch far below Postgres' cap.
+// Each row binds 13 parameters; this keeps a batch far below Postgres' cap.
 const FILE_BATCH_SIZE = 1000;
 
 @Injectable()
@@ -109,6 +111,41 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
     return records.map((record) => this.fileMapper.toDomain(record));
   }
 
+  async findFileById(id: UUID): Promise<SyncedFile | null> {
+    const record = await this.files.findOne({ where: { id } });
+    return record ? this.fileMapper.toDomain(record) : null;
+  }
+
+  async lockFile(id: UUID): Promise<SyncedFile | null> {
+    const record = await this.files.findOne({
+      where: { id },
+      lock: { mode: 'pessimistic_write' },
+    });
+    return record ? this.fileMapper.toDomain(record) : null;
+  }
+
+  async skipRemovedAfterFailure(sourceIds: UUID[]): Promise<void> {
+    if (sourceIds.length === 0) return;
+    await this.files
+      .createQueryBuilder()
+      .update()
+      .set({
+        state: SyncedFileState.SKIPPED,
+        skipReason: SyncedFileSkipReason.REMOVED_AFTER_FAILURE,
+        documentVersion: null,
+        processingErrorCode: null,
+      })
+      .where({
+        lastSourceId: In(sourceIds),
+        sourceId: IsNull(),
+        state: SyncedFileState.IMPORTED,
+      })
+      // The removed document failed at the current version; a newer one
+      // still to be processed is imported again instead.
+      .andWhere('"documentVersion" = "version"')
+      .execute();
+  }
+
   async saveFiles(files: SyncedFile[]): Promise<void> {
     for (let start = 0; start < files.length; start += FILE_BATCH_SIZE) {
       await this.files
@@ -128,7 +165,9 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
             'state',
             'skipReason',
             'sourceId',
+            'lastSourceId',
             'documentVersion',
+            'processingErrorCode',
             'updatedAt',
           ],
           ['id'],

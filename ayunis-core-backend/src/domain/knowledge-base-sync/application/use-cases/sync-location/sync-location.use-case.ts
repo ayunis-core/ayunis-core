@@ -40,7 +40,8 @@ import {
 /**
  * One sync run of a location: the connector's changes since the cursor are
  * reconciled with the location's files and documents. Runs without a user;
- * scheduling it is AYC-1885, processing the queued files AYC-1950.
+ * scheduling it is AYC-1885; `SyncedFileProcessingConsumer` processes the
+ * queued files.
  */
 @Injectable()
 export class SyncLocationUseCase {

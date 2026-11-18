@@ -7,6 +7,7 @@ import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/que
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
 import { SOURCE_REINDEX_QUEUE } from 'src/domain/sources/infrastructure/queue/source-reindex.constants';
+import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
 import { SourceReindexModule } from './infrastructure/queue/source-reindex.module';
 import { FlagStaleSourcesUseCase } from './application/use-cases/flag-stale-sources/flag-stale-sources.use-case';
 import { SweepStaleReindexingUseCase } from './application/use-cases/sweep-stale-reindexing/sweep-stale-reindexing.use-case';
@@ -74,6 +75,8 @@ import { CheckSourceFileAcceptanceUseCase } from './application/use-cases/check-
 import { CreateProcessingFileSourcesUseCase } from './application/use-cases/create-processing-file-sources/create-processing-file-sources.use-case';
 import { RenameSourcesUseCase } from './application/use-cases/rename-sources/rename-sources.use-case';
 import { LockSourcesUseCase } from './application/use-cases/lock-sources/lock-sources.use-case';
+import { CreateReplacementSourceUseCase } from './application/use-cases/create-replacement-source/create-replacement-source.use-case';
+import { SwapInReplacementSourceUseCase } from './application/use-cases/swap-in-replacement-source/swap-in-replacement-source.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
 import { EmbeddingReadinessService } from './application/services/embedding-readiness.service';
@@ -97,6 +100,8 @@ const SOURCE_UPLOAD_USE_CASES = [
         DATA_SOURCE_PROCESSING_QUEUE,
         URL_CRAWL_QUEUE,
         SOURCE_REINDEX_QUEUE,
+        // Organisation deletion removes the synced files' jobs too.
+        KNOWLEDGE_BASE_SYNC_QUEUE,
       ].map((name) => ({ name })),
     ),
     LocalSourceRepositoryModule,
@@ -167,6 +172,8 @@ const SOURCE_UPLOAD_USE_CASES = [
     CreateProcessingFileSourcesUseCase,
     RenameSourcesUseCase,
     LockSourcesUseCase,
+    CreateReplacementSourceUseCase,
+    SwapInReplacementSourceUseCase,
   ],
   exports: [
     GetSourceProcessingProgressUseCase,
@@ -207,6 +214,8 @@ const SOURCE_UPLOAD_USE_CASES = [
     CreateProcessingFileSourcesUseCase,
     RenameSourcesUseCase,
     LockSourcesUseCase,
+    CreateReplacementSourceUseCase,
+    SwapInReplacementSourceUseCase,
   ],
 })
 export class SourcesModule {}

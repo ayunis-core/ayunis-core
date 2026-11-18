@@ -18,7 +18,9 @@ export class SyncedFileMapper {
       state: record.state,
       skipReason: record.skipReason,
       sourceId: record.sourceId,
+      lastSourceId: record.lastSourceId,
       documentVersion: record.documentVersion,
+      processingErrorCode: record.processingErrorCode,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -36,7 +38,9 @@ export class SyncedFileMapper {
       state: file.state,
       skipReason: file.skipReason,
       sourceId: file.sourceId,
+      lastSourceId: file.lastSourceId,
       documentVersion: file.documentVersion,
+      processingErrorCode: file.processingErrorCode,
     };
   }
 }

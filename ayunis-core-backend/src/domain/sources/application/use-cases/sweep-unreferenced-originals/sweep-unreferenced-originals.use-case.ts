@@ -6,8 +6,9 @@ import { SourceUploadStorageCleanupService } from 'src/domain/sources/applicatio
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { ListObjectSummariesCommand } from 'src/domain/storage/application/use-cases/list-object-summaries/list-object-summaries.command';
 import { ListObjectSummariesUseCase } from 'src/domain/storage/application/use-cases/list-object-summaries/list-object-summaries.use-case';
+import { SYNCED_ORIGINALS_SEGMENT } from 'src/domain/sources/domain/upload/source-upload.constants';
 
-const UPLOAD_KEY_SEGMENT = '/uploads/';
+const ORIGINAL_KEY_SEGMENTS = ['/uploads/', `/${SYNCED_ORIGINALS_SEGMENT}/`];
 /**
  * Upload sessions are purged seven days after they finish, so an object this
  * old that no source references cannot belong to a live transfer either.
@@ -50,7 +51,9 @@ export class SweepUnreferencedOriginalsUseCase {
     const candidates = summaries
       .filter(
         (object) =>
-          object.objectName.includes(UPLOAD_KEY_SEGMENT) &&
+          ORIGINAL_KEY_SEGMENTS.some((segment) =>
+            object.objectName.includes(segment),
+          ) &&
           object.lastModified !== undefined &&
           object.lastModified.getTime() < cutoff,
       )
