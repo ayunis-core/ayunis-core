@@ -1,8 +1,3 @@
-import {
-  getAuthenticationControllerMeUrl,
-  getAuthenticationControllerRefreshUrl,
-  getLogoutControllerLogoutUrl,
-} from '@/outlook/api/generated/ayunisCoreAPI';
 import config from '@/shared/config';
 import type { EmbeddedSession } from '@/shared/api/embedded-session';
 import type {
@@ -145,7 +140,7 @@ export function createPaneSession(
     const refreshToken = refreshTokens.get();
     if (!refreshToken) throw expire();
     const startedIn = signInCount;
-    const response = await post(getAuthenticationControllerRefreshUrl(), {
+    const response = await post('/auth/refresh', {
       refreshToken,
     });
     if (signInCount !== startedIn) throw new SessionExpiredError();
@@ -204,9 +199,7 @@ export function createPaneSession(
   }
 
   const currentUser = async () =>
-    (await (
-      await authorizedGet(getAuthenticationControllerMeUrl())
-    ).json()) as MeResponseDto;
+    (await (await authorizedGet('/auth/me')).json()) as MeResponseDto;
 
   return {
     async restore() {
@@ -225,7 +218,7 @@ export function createPaneSession(
       const refreshToken = refreshTokens.get();
       end('signedOut');
       if (refreshToken) {
-        await post(getLogoutControllerLogoutUrl(), { refreshToken });
+        await post('/auth/logout', { refreshToken });
       }
     },
     onEnd(listener) {

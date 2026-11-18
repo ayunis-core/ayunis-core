@@ -24,8 +24,7 @@ import {
   type OutlookToolName,
 } from '@/features/outlook-tools/lib/outlook-tool-names';
 
-export type { OutlookWriteAction };
-export type OutlookWriteFailure =
+type OutlookWriteFailure =
   'noItem' | 'nothingToSave' | 'officeFailed' | 'itemChanged';
 export type OutlookToolOutcome =
   | { status: 'result'; result: string }
