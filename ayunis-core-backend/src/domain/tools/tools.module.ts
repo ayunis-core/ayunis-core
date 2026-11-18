@@ -1,57 +1,33 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ToolHandlerRegistry } from './application/tool-handler.registry';
-import { HttpToolHandler } from './application/handlers/http-tool.handler';
-import { SourceQueryToolHandler } from './application/handlers/source-query-tool.handler';
-import { SourceGetTextToolHandler } from './application/handlers/source-get-text-tool.handler';
+import {
+  TOOL_HANDLER_ENTRIES_PROVIDER,
+  TOOL_HANDLER_PROVIDERS,
+} from './application/tool-handler.entries';
 import { ToolConfigRepository } from './application/ports/tool-config.repository';
 import { LocalToolConfigRepository } from './infrastructure/persistence/local/local-tool-config.repository';
 import { ToolFactory } from './application/tool.factory';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { LocalToolConfigRepositoryModule } from './infrastructure/persistence/local/local-tool-config-repository.module';
-import { InternetSearchToolHandler } from './application/handlers/internet-search-tool.handler';
-import { WebsiteContentToolHandler } from './application/handlers/website-content-tool.handler';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
 import { ToolConfigMapper } from './infrastructure/persistence/local/mappers/tool-config.mapper';
 import { AssembleToolUseCase } from './application/use-cases/assemble-tool/assemble-tool.use-case';
 import { ExecuteToolUseCase } from './application/use-cases/execute-tool/execute-tool.use-case';
-import { CodeExecutionToolHandler } from './application/handlers/code-execution-tool.handler';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
-import { McpIntegrationToolHandler } from './application/handlers/mcp-integration-tool.handler';
-import { McpIntegrationResourceHandler } from './application/handlers/mcp-integration-resource.handler';
-import { ActivateSkillToolHandler } from './application/handlers/activate-skill-tool.handler';
-import { KnowledgeQueryToolHandler } from './application/handlers/knowledge-query-tool.handler';
-import { KnowledgeGetTextToolHandler } from './application/handlers/knowledge-get-text-tool.handler';
-import { RecordingSearchToolHandler } from './application/handlers/recording-search-tool.handler';
-import { CreateDocumentToolHandler } from './application/handlers/create-document-tool.handler';
-import { UpdateDocumentToolHandler } from './application/handlers/update-document-tool.handler';
-import { EditDocumentToolHandler } from './application/handlers/edit-document-tool.handler';
-import { ReadDocumentToolHandler } from './application/handlers/read-document-tool.handler';
-import { CreateDiagramToolHandler } from './application/handlers/create-diagram-tool.handler';
-import { UpdateDiagramToolHandler } from './application/handlers/update-diagram-tool.handler';
-import { CreateSpreadsheetToolHandler } from './application/handlers/create-spreadsheet-tool.handler';
-import { UpdateSpreadsheetToolHandler } from './application/handlers/update-spreadsheet-tool.handler';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { RecordingsModule } from 'src/domain/recordings/recordings.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
-import { GenerateImageToolHandler } from './application/handlers/generate-image-tool.handler';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
-import { MarketplaceSearchToolHandler } from './application/handlers/marketplace-search-tool.handler';
 import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
-import { SendNotificationToolHandler } from './application/handlers/send-notification-tool.handler';
 import { MemoryModule } from 'src/domain/memory/memory.module';
-import { GetMemoryToolHandler } from './application/handlers/get-memory-tool.handler';
-import { SetMemoryToolHandler } from './application/handlers/set-memory-tool.handler';
-import { ChatListToolHandler } from './application/handlers/chat-list-tool.handler';
-import { ChatReadToolHandler } from './application/handlers/chat-read-tool.handler';
-import { ChatGrepToolHandler } from './application/handlers/chat-grep-tool.handler';
 
 @Module({
   imports: [
@@ -80,34 +56,8 @@ import { ChatGrepToolHandler } from './application/handlers/chat-grep-tool.handl
     ToolHandlerRegistry,
     AuthorizedCsvSourceResolverService,
     McpFileHandoverService,
-    HttpToolHandler,
-    SourceQueryToolHandler,
-    SourceGetTextToolHandler,
-    InternetSearchToolHandler,
-    WebsiteContentToolHandler,
-    CodeExecutionToolHandler,
-    McpIntegrationToolHandler,
-    McpIntegrationResourceHandler,
-    ActivateSkillToolHandler,
-    KnowledgeQueryToolHandler,
-    KnowledgeGetTextToolHandler,
-    RecordingSearchToolHandler,
-    CreateDocumentToolHandler,
-    UpdateDocumentToolHandler,
-    EditDocumentToolHandler,
-    ReadDocumentToolHandler,
-    GenerateImageToolHandler,
-    CreateDiagramToolHandler,
-    UpdateDiagramToolHandler,
-    CreateSpreadsheetToolHandler,
-    UpdateSpreadsheetToolHandler,
-    MarketplaceSearchToolHandler,
-    SendNotificationToolHandler,
-    GetMemoryToolHandler,
-    SetMemoryToolHandler,
-    ChatListToolHandler,
-    ChatReadToolHandler,
-    ChatGrepToolHandler,
+    ...TOOL_HANDLER_PROVIDERS,
+    TOOL_HANDLER_ENTRIES_PROVIDER,
     // Repositories and factories
     {
       provide: ToolConfigRepository,
