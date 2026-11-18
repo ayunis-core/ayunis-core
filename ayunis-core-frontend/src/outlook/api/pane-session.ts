@@ -61,11 +61,14 @@ export class SessionExpiredError extends Error {
   }
 }
 
+export type SessionEndReason = 'expired' | 'signedOut';
+
 export interface PaneSession extends EmbeddedSession {
   /** Resumes a stored session; null when the pane has never signed in. */
   restore(): Promise<MeResponseDto | null>;
   signIn(tokens: SessionTokensResponseDto): Promise<MeResponseDto>;
-  signOut(): Promise<void>;
+  /** Returns the unsubscribe function. */
+  onEnd(listener: (reason: SessionEndReason) => void): () => void;
 }
 
 /**
@@ -87,38 +90,68 @@ export function createPaneSession(
       body: JSON.stringify(body),
     });
 
+  // The access tokens of the current sign-in. A request answered 401 after
+  // the user signed out (and maybe into another account) carries a token from
+  // an earlier sign-in, and must not be retried with the current one.
+  const issuedTokens = new Set<string>();
+  // Counts sign-ins and sign-outs: a refresh still running from an earlier
+  // sign-in must neither store its tokens nor end the current session.
+  let signInCount = 0;
+  // Refresh tokens rotate: two concurrent refreshes would present the same
+  // token twice, so every caller waits on the one in flight.
+  let refreshing: Promise<void> | null = null;
+
   function store(tokens: SessionTokensResponseDto): void {
     accessToken = tokens.accessToken;
+    issuedTokens.add(tokens.accessToken);
     refreshTokens.set(tokens.refreshToken);
   }
 
   function clear(): void {
+    signInCount += 1;
+    refreshing = null;
     accessToken = null;
+    issuedTokens.clear();
     refreshTokens.remove();
   }
 
-  // Refresh tokens rotate: two concurrent refreshes would present the same
-  // token twice, so every caller waits on the one in flight.
-  let refreshing: Promise<void> | null = null;
+  const endListeners = new Set<(reason: SessionEndReason) => void>();
+  // A session ends once: a request that fails after the user signed out (or
+  // another pane did) must not report that ended session as expired.
+  function end(reason: SessionEndReason): void {
+    const hadSession = accessToken !== null || refreshTokens.get() !== null;
+    clear();
+    if (hadSession) endListeners.forEach((listener) => listener(reason));
+  }
+
+  // Every way the session can expire goes through here, so the pane always
+  // learns of it and shows its sign-in.
+  function expire(): SessionExpiredError {
+    end('expired');
+    return new SessionExpiredError();
+  }
+
   function refresh(): Promise<void> {
-    refreshing ??= refreshOnce().finally(() => {
-      refreshing = null;
-    });
+    if (!refreshing) {
+      const running = refreshOnce().finally(() => {
+        if (refreshing === running) refreshing = null;
+      });
+      refreshing = running;
+    }
     return refreshing;
   }
 
   async function refreshOnce(): Promise<void> {
     const refreshToken = refreshTokens.get();
-    if (!refreshToken) throw new SessionExpiredError();
+    if (!refreshToken) throw expire();
+    const startedIn = signInCount;
     const response = await post(getAuthenticationControllerRefreshUrl(), {
       refreshToken,
     });
+    if (signInCount !== startedIn) throw new SessionExpiredError();
     // Only a rejected token ends the session; a rate limit or a deploy gap
     // must not sign the user out.
-    if (response.status === 401) {
-      clear();
-      throw new SessionExpiredError();
-    }
+    if (response.status === 401) throw expire();
     if (!response.ok) {
       throw new Error(`POST /auth/refresh failed: ${response.status}`);
     }
@@ -127,12 +160,13 @@ export function createPaneSession(
 
   async function currentAccessToken(): Promise<string> {
     if (!accessToken) await refresh();
-    if (!accessToken) throw new SessionExpiredError();
+    if (!accessToken) throw expire();
     return accessToken;
   }
 
   /** Refreshes unless another request already replaced the rejected token. */
   async function refreshRejected(rejected: string): Promise<void> {
+    if (!issuedTokens.has(rejected)) throw new SessionExpiredError();
     if (accessToken === rejected) await refresh();
   }
 
@@ -159,10 +193,7 @@ export function createPaneSession(
       await refreshRejected(first.token);
       response = (await send()).response;
     }
-    if (response.status === 401) {
-      clear();
-      throw new SessionExpiredError();
-    }
+    if (response.status === 401) throw expire();
     return response;
   }
 
@@ -184,17 +215,22 @@ export function createPaneSession(
       return currentUser();
     },
     async signIn(tokens) {
+      clear();
       store(tokens);
       return currentUser();
     },
     async signOut() {
+      // End locally first: logout revokes the session at once, and a request
+      // still running would otherwise refresh, fail and report an expiry.
       const refreshToken = refreshTokens.get();
-      try {
-        if (refreshToken)
-          await post(getLogoutControllerLogoutUrl(), { refreshToken });
-      } finally {
-        clear();
+      end('signedOut');
+      if (refreshToken) {
+        await post(getLogoutControllerLogoutUrl(), { refreshToken });
       }
+    },
+    onEnd(listener) {
+      endListeners.add(listener);
+      return () => endListeners.delete(listener);
     },
     request: authorizedRequest,
     accessToken: currentAccessToken,

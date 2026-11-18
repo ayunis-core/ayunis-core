@@ -41,6 +41,7 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
   return (
     <ChatListItem
       chat={chat}
+      testId="chat-card"
       untitledLabel={t('card.untitled')}
       anonymousLabel={t('card.anonymous')}
       actions={

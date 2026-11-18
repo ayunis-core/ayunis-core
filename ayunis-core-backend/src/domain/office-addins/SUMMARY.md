@@ -36,8 +36,8 @@ The `Outlook manifest` workflow renders the manifest with
 with Microsoft's `office-addin-manifest` validator, which calls Microsoft's
 online validation service.
 
-The task pane is a separate Vite entry of the frontend
-(`ayunis-core-frontend/outlook/taskpane.html`, code in `src/outlook/`), built to
-the same `/outlook/taskpane.html`; the icons are static files in
+The task pane runs the frontend's own build in embedded mode: the build writes
+`/outlook/taskpane.html` from the web page's asset tags (see
+`ayunis-core-frontend/src/outlook/SUMMARY.md`); the icons are static files in
 `ayunis-core-frontend/public/outlook/assets`. Outlook on the web shows the pane
 in an iframe, so these files must stay frameable by the Outlook origins.

@@ -10,6 +10,7 @@ export interface EmbeddedSession {
   refreshRejected(token: string): Promise<void>;
   /** Calls an API path with the Bearer token, refreshing once on 401. */
   request(path: string, init?: RequestInit): Promise<Response>;
+  signOut(): Promise<void>;
 }
 
 let embeddedSession: EmbeddedSession | null = null;

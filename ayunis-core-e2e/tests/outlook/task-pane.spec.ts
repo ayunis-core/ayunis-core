@@ -47,13 +47,15 @@ test('signs in through the dialog, stays signed in on reopen, and signs out', as
     await dialogContext.close();
   }
 
-  await expect(page.getByTestId('outlook-pane-user-name')).toHaveText(user.name);
+  await expect(page.getByTestId('outlook-pane-signed-in')).toBeVisible();
   await page.reload();
-  await expect(page.getByTestId('outlook-pane-user-name')).toHaveText(user.name);
+  await expect(page.getByTestId('outlook-pane-signed-in')).toBeVisible();
+  await expect(page.getByTestId('chat-input')).toBeVisible();
 
   const refreshToken = await storedRefreshToken(page);
   expect(refreshToken).toBeTruthy();
-  await page.getByTestId('outlook-pane-sign-out').click();
+  await page.getByTestId('embedded-history').click();
+  await page.getByTestId('embedded-sign-out').click();
 
   await expect(page.getByTestId('outlook-pane-signed-out')).toBeVisible();
   expect(await storedRefreshToken(page)).toBeNull();
@@ -98,7 +100,7 @@ test('signs in when the session arrives after a close event', async ({
     await dialogContext.close();
   }
 
-  await expect(page.getByTestId('outlook-pane-user-name')).toHaveText(user.name);
+  await expect(page.getByTestId('outlook-pane-signed-in')).toBeVisible();
 });
 
 test('drops a stored session that can no longer be refreshed', async ({

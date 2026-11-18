@@ -38,6 +38,20 @@ export function usePaneAuth(
 
   useEffect(() => () => closeDialog.current?.(), []);
 
+  // The session ends inside the chat app too: a rejected refresh there, or
+  // its sign-out control.
+  useEffect(
+    () =>
+      session.onEnd((reason) =>
+        setState(
+          reason === 'expired'
+            ? { status: 'signedOut', error: 'sessionExpired' }
+            : { status: 'signedOut' },
+        ),
+      ),
+    [session],
+  );
+
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
