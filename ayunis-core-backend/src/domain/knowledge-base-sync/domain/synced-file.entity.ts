@@ -1,0 +1,92 @@
+import type { UUID } from 'crypto';
+import { randomUUID } from 'crypto';
+import { SyncedFileState } from './synced-file-state.enum';
+import type { SyncedFileSkipReason } from './synced-file-skip-reason.enum';
+
+/** A file below a synced location, with the document it is imported as. */
+export class SyncedFile {
+  readonly id: UUID;
+  readonly locationId: UUID;
+  /** The provider's item ID, stable across renames and moves. */
+  readonly externalId: string;
+  name: string;
+  /** Below the location, including the name. */
+  path: string;
+  version: string;
+  size: number;
+  state: SyncedFileState;
+  skipReason: SyncedFileSkipReason | null;
+  /** `null` while there is no document, also after a user removed it. */
+  sourceId: UUID | null;
+  /**
+   * The version the document was last processed at, successfully or not;
+   * `null` until then. Set by the processing (AYC-1950).
+   */
+  documentVersion: string | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+
+  constructor(params: {
+    id?: UUID;
+    locationId: UUID;
+    externalId: string;
+    name: string;
+    path: string;
+    version: string;
+    size: number;
+    state: SyncedFileState;
+    skipReason?: SyncedFileSkipReason | null;
+    sourceId?: UUID | null;
+    documentVersion?: string | null;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    this.id = params.id ?? randomUUID();
+    this.locationId = params.locationId;
+    this.externalId = params.externalId;
+    this.name = params.name;
+    this.path = params.path;
+    this.version = params.version;
+    this.size = params.size;
+    this.state = params.state;
+    this.skipReason = params.skipReason ?? null;
+    this.sourceId = params.sourceId ?? null;
+    this.documentVersion = params.documentVersion ?? null;
+    this.createdAt = params.createdAt ?? new Date();
+    this.updatedAt = params.updatedAt ?? new Date();
+  }
+
+  /** Waiting for room, or imported but its document was removed. */
+  needsDocument(): boolean {
+    return (
+      this.state === SyncedFileState.AWAITING_CAPACITY ||
+      (this.state === SyncedFileState.IMPORTED && this.sourceId === null)
+    );
+  }
+
+  /** Has a document that is not yet processed at the current version. */
+  needsProcessing(): boolean {
+    return this.sourceId !== null && this.documentVersion !== this.version;
+  }
+
+  skip(reason: SyncedFileSkipReason): void {
+    this.state = SyncedFileState.SKIPPED;
+    this.skipReason = reason;
+    this.sourceId = null;
+    this.documentVersion = null;
+  }
+
+  awaitCapacity(): void {
+    this.state = SyncedFileState.AWAITING_CAPACITY;
+    this.skipReason = null;
+    this.sourceId = null;
+    this.documentVersion = null;
+  }
+
+  importAs(sourceId: UUID): void {
+    this.state = SyncedFileState.IMPORTED;
+    this.skipReason = null;
+    this.sourceId = sourceId;
+    this.documentVersion = null;
+  }
+}

@@ -44,6 +44,7 @@ import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { OpenAICompatModule } from 'src/domain/openai-compat/openai-compat.module';
 import { OfficeAddinsModule } from 'src/domain/office-addins/office-addins.module';
 import { ConnectorsModule } from 'src/domain/connectors/connectors.module';
+import { KnowledgeBaseSyncModule } from 'src/domain/knowledge-base-sync/knowledge-base-sync.module';
 import { IamModule } from 'src/iam/iam.module';
 
 import { AuthProvider } from 'src/config/authentication.config';
@@ -112,6 +113,7 @@ import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-tel
     OpenAICompatModule,
     OfficeAddinsModule,
     ConnectorsModule,
+    KnowledgeBaseSyncModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast

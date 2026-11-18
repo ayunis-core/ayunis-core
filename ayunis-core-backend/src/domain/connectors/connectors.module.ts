@@ -12,6 +12,11 @@ import { SaveMicrosoft365ConnectorUseCase } from './application/use-cases/save-m
 import { RemoveConnectionUseCase } from './application/use-cases/remove-connection/remove-connection.use-case';
 import { TestMicrosoft365ConnectionUseCase } from './application/use-cases/test-microsoft-365-connection/test-microsoft-365-connection.use-case';
 import { ConnectorsController } from './presenters/http/connectors.controller';
+import { ConnectorSyncAdapterRegistry } from './application/connector-sync-adapter.registry';
+import { ConnectorSyncAccessService } from './application/services/connector-sync-access.service';
+import { ListConnectorChangesUseCase } from './application/use-cases/list-connector-changes/list-connector-changes.use-case';
+import { FetchConnectorItemContentUseCase } from './application/use-cases/fetch-connector-item-content/fetch-connector-item-content.use-case';
+import { FindSetUpConnectorUseCase } from './application/use-cases/find-set-up-connector/find-set-up-connector.use-case';
 
 @Module({
   imports: [LocalConnectorsRepositoryModule],
@@ -29,6 +34,20 @@ import { ConnectorsController } from './presenters/http/connectors.controller';
     SaveMicrosoft365ConnectorUseCase,
     RemoveConnectionUseCase,
     TestMicrosoft365ConnectionUseCase,
+    // No product syncs yet; Microsoft 365 adds its adapter here (AYC-1636).
+    {
+      provide: ConnectorSyncAdapterRegistry,
+      useFactory: () => new ConnectorSyncAdapterRegistry([]),
+    },
+    ConnectorSyncAccessService,
+    ListConnectorChangesUseCase,
+    FetchConnectorItemContentUseCase,
+    FindSetUpConnectorUseCase,
+  ],
+  exports: [
+    ListConnectorChangesUseCase,
+    FetchConnectorItemContentUseCase,
+    FindSetUpConnectorUseCase,
   ],
 })
 export class ConnectorsModule {}

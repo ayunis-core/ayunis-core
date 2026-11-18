@@ -25,6 +25,8 @@ import { SourceTranscriptSegmentRecord } from './schema/source-transcript-segmen
 import { LocalSourceTranscriptRepository } from './local-source-transcript.repository';
 import { SourceReindexRepository } from 'src/domain/sources/application/ports/source-reindex.repository';
 import { LocalSourceReindexRepository } from './local-source-reindex.repository';
+import { SourceBatchWriteRepository } from 'src/domain/sources/application/ports/source-batch-write.repository';
+import { LocalSourceBatchWriteRepository } from './local-source-batch-write.repository';
 
 @Module({
   imports: [
@@ -63,6 +65,10 @@ import { LocalSourceReindexRepository } from './local-source-reindex.repository'
       provide: SourceReindexRepository,
       useClass: LocalSourceReindexRepository,
     },
+    {
+      provide: SourceBatchWriteRepository,
+      useClass: LocalSourceBatchWriteRepository,
+    },
   ],
   exports: [
     SourceRepository,
@@ -70,6 +76,7 @@ import { LocalSourceReindexRepository } from './local-source-reindex.repository'
     SourceUploadSessionRepository,
     SourceTranscriptRepository,
     SourceReindexRepository,
+    SourceBatchWriteRepository,
   ],
 })
 export class LocalSourceRepositoryModule {}
