@@ -216,6 +216,7 @@ import type {
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
   SetOrgUsageVisibilityRequestDto,
+  SetRecordingFairUseLimitRequestDto,
   SetRecordingSummaryModelDto,
   SetSkillActivationDto,
   SetSkillPinDto,
@@ -12765,7 +12766,7 @@ export const getSuperAdminPlatformConfigControllerGetFairUseLimitsUrl = () => {
 }
 
 /**
- * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high) plus a single global image-generation limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
+ * Retrieve the configured fair-use limits: per-tier message limits (zero, low, medium, high), a single global image-generation limit and the per-user recording upload limit. Missing keys fall back to baked-in defaults so this endpoint always returns 200. The zero-tier value is informational only — runtime quota enforcement skips ZERO-tier models entirely. Super admin only.
  * @summary Get the current fair-use limits
  */
 export const superAdminPlatformConfigControllerGetFairUseLimits = async ( options?: Parameters<typeof paneFetch>[1]): Promise<superAdminPlatformConfigControllerGetFairUseLimitsResponse> => {
@@ -12896,6 +12897,71 @@ return paneFetch<superAdminPlatformConfigControllerSetImageFairUseLimitResponse>
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(setImageFairUseLimitRequestDto)
+  }
+);}
+
+
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse204 = {
+  data: void
+  status: 204
+}
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse400 = {
+  data: void
+  status: 400
+}
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse401 = {
+  data: void
+  status: 401
+}
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse404 = {
+  data: void
+  status: 404
+}
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse500 = {
+  data: void
+  status: 500
+}
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponseSuccess = (superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse204) & {
+  headers: Headers;
+};
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponseError = (superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse400 | superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse401 | superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse404 | superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse500) & {
+  headers: Headers;
+};
+
+export type superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse = (superAdminPlatformConfigControllerSetRecordingFairUseLimitResponseSuccess | superAdminPlatformConfigControllerSetRecordingFairUseLimitResponseError)
+
+export const getSuperAdminPlatformConfigControllerSetRecordingFairUseLimitUrl = () => {
+
+
+
+
+  return `/super-admin/platform-config/recording-fair-use-limit`
+}
+
+/**
+ * Update how many recording uploads each user may start per window. Takes effect on the next upload. Not available while recordings are disabled. Super admin only.
+ * @summary Set the fair-use limit for recording uploads
+ */
+export const superAdminPlatformConfigControllerSetRecordingFairUseLimit = async (setRecordingFairUseLimitRequestDto: SetRecordingFairUseLimitRequestDto, options?: Parameters<typeof paneFetch>[1]): Promise<superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<superAdminPlatformConfigControllerSetRecordingFairUseLimitResponse>(getSuperAdminPlatformConfigControllerSetRecordingFairUseLimitUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setRecordingFairUseLimitRequestDto)
   }
 );}
 

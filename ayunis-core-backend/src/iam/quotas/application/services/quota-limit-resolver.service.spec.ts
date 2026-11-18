@@ -1,7 +1,7 @@
 import { QuotaLimitResolverService } from './quota-limit-resolver.service';
 import type { GetFairUseLimitsUseCase } from 'src/iam/platform-config/application/use-cases/get-fair-use-limits/get-fair-use-limits.use-case';
 import type { FairUseLimitsByTier } from 'src/iam/platform-config/domain/fair-use-limits';
-import { QuotaType } from '../../domain/quota-type.enum';
+import { QuotaType } from 'src/iam/quotas/domain/quota-type.enum';
 
 describe('QuotaLimitResolverService', () => {
   let service: QuotaLimitResolverService;
@@ -15,6 +15,7 @@ describe('QuotaLimitResolverService', () => {
     medium: { limit: 567, windowMs: 22_222 },
     high: { limit: 89, windowMs: 33_333 },
     images: { limit: 42, windowMs: 44_444 },
+    recordings: { limit: 5, windowMs: 55_555 },
   };
 
   beforeEach(() => {
@@ -48,6 +49,12 @@ describe('QuotaLimitResolverService', () => {
     const result = await service.resolve(QuotaType.FAIR_USE_IMAGES);
 
     expect(result).toEqual(limits.images);
+  });
+
+  it('routes FAIR_USE_RECORDINGS to the recordings bucket from platform config', async () => {
+    const result = await service.resolve(QuotaType.FAIR_USE_RECORDINGS);
+
+    expect(result).toEqual(limits.recordings);
   });
 
   it('reads platform config on every call so super-admin updates take effect immediately', async () => {

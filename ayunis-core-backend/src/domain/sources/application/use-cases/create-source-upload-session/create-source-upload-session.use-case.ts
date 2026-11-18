@@ -48,7 +48,7 @@ export interface CreatedSourceUpload {
  * Reserves a server-chosen storage key for one file after the cheap checks
  * (type, size, organisation state, embedding model) so a doomed upload is
  * rejected before any bytes move. The caller has already authorised the
- * target and checked its source capacity.
+ * target and checked its source capacity; a usage limit goes in `admit`.
  */
 @Injectable()
 export class CreateSourceUploadSessionUseCase {
@@ -97,6 +97,7 @@ export class CreateSourceUploadSessionUseCase {
       );
     }
 
+    await command.admit?.();
     await this.sessions.save(session);
     recordSourceUploadOutcome('created', session);
 

@@ -17,4 +17,6 @@ export interface FairUseLimitsByTier {
   // image-gen model), so it gets a single global bucket alongside the per-tier
   // message buckets. See AYC-71.
   images: FairUseLimit;
+  // Recording upload sessions a user may start, counted per user (AYC-1781).
+  recordings: FairUseLimit;
 }
