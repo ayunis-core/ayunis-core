@@ -537,15 +537,41 @@ describe('IngestBulkContentUseCase', () => {
     },
   );
 
-  it('should do nothing when entries array is empty', async () => {
-    const command = new IngestBulkContentCommand({
-      orgId: ORG_ID,
-      entries: [],
-    });
+  it('reports the model it indexed with, so the source can record it', async () => {
+    mockGetModel.execute.mockResolvedValue(PERMITTED_MODEL);
+    mockSplitter.execute.mockReturnValue(
+      new SplitResult([new TextChunk('Satzung', { index: 0 })], {}),
+    );
+    mockEmbedder.execute.mockResolvedValue([
+      new Embedding([0.1], 'Satzung', EMBEDDING_MODEL),
+    ]);
 
-    await useCase.execute(command);
+    const modelId = await useCase.execute(
+      new IngestBulkContentCommand({
+        orgId: ORG_ID,
+        entries: [
+          {
+            indexEntry: new IndexEntry({
+              relatedDocumentId: DOC_ID,
+              relatedChunkId: CHUNK_ID_1,
+            }),
+            content: 'Satzung',
+          },
+        ],
+      }),
+    );
 
-    expect(mockGetModel.execute).not.toHaveBeenCalled();
+    expect(modelId).toBe(EMBEDDING_MODEL.id);
+  });
+
+  it('records the model for an empty document without embedding or saving anything', async () => {
+    mockGetModel.execute.mockResolvedValue(PERMITTED_MODEL);
+
+    const modelId = await useCase.execute(
+      new IngestBulkContentCommand({ orgId: ORG_ID, entries: [] }),
+    );
+
+    expect(modelId).toBe(EMBEDDING_MODEL.id);
     expect(mockEmbedder.execute).not.toHaveBeenCalled();
     expect(mockRepo.saveMany).not.toHaveBeenCalled();
   });

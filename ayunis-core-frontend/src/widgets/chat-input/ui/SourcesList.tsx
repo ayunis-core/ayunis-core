@@ -146,6 +146,8 @@ export function SourcesList({
         const isProcessing =
           !isUploading && source.status === SourceResponseDtoStatus.processing;
         const isFailed = source.status === SourceResponseDtoStatus.failed;
+        const isReindexing =
+          source.status === SourceResponseDtoStatus.reindexing;
 
         const badge = (
           <Badge
@@ -153,7 +155,7 @@ export function SourcesList({
             data-testid="chat-source"
             data-source-id={source.id}
             data-source-status={isUploading ? 'uploading' : source.status}
-            tabIndex={isFailed ? 0 : undefined}
+            tabIndex={isFailed || isReindexing ? 0 : undefined}
             variant="secondary"
             className={cn(
               'flex items-center gap-1',
@@ -161,12 +163,13 @@ export function SourcesList({
               isFailed && 'bg-destructive/10 text-destructive',
             )}
           >
-            {(isUploading || isProcessing) && (
+            {(isUploading || isProcessing || isReindexing) && (
               <Loader2 className="h-3 w-3 animate-spin" />
             )}
             {isFailed && <AlertCircle className="h-3 w-3" />}
             {!isUploading &&
               !isProcessing &&
+              !isReindexing &&
               !isFailed &&
               getSourceIcon(source)}
             <span>{source.name}</span>
@@ -191,12 +194,14 @@ export function SourcesList({
           </Badge>
         );
 
-        if (isFailed) {
+        if (isFailed || isReindexing) {
           return (
             <Tooltip key={source.id}>
               <TooltipTrigger asChild>{badge}</TooltipTrigger>
               <TooltipContent align="start">
-                {t(getSourceProcessingErrorKey(source.processingErrorCode))}
+                {isFailed
+                  ? t(getSourceProcessingErrorKey(source.processingErrorCode))
+                  : t('sources.reindexing')}
               </TooltipContent>
             </Tooltip>
           );

@@ -276,7 +276,9 @@ export class GetThreadSourceCitationUseCase {
   private isVisibleTarget(target: SourceCitationTarget): boolean {
     return (
       target.source.createdBy !== SourceCreator.SYSTEM &&
-      target.source.status === SourceStatus.READY
+      // Re-indexing keeps the text and its chunk ids.
+      (target.source.status === SourceStatus.READY ||
+        target.source.status === SourceStatus.REINDEXING)
     );
   }
 

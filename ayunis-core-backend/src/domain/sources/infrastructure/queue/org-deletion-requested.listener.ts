@@ -8,6 +8,7 @@ import { OrgProcessingActiveError } from 'src/iam/orgs/application/orgs.errors';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
+import { SOURCE_REINDEX_QUEUE } from './source-reindex.constants';
 
 const JOB_PAGE_SIZE = 100;
 const LOCKED_JOB_RETRIES = 20;
@@ -21,6 +22,7 @@ export class OrgProcessingDeletionListener {
     @InjectQueue(DATA_SOURCE_PROCESSING_QUEUE)
     private readonly dataSources: Queue,
     @InjectQueue(URL_CRAWL_QUEUE) private readonly urls: Queue,
+    @InjectQueue(SOURCE_REINDEX_QUEUE) private readonly reindexes: Queue,
   ) {}
 
   @OnEvent(OrgDeletionRequestedEvent.EVENT_NAME, { suppressErrors: false })
@@ -129,6 +131,6 @@ export class OrgProcessingDeletionListener {
   }
 
   private get queues(): Queue[] {
-    return [this.documents, this.dataSources, this.urls];
+    return [this.documents, this.dataSources, this.urls, this.reindexes];
   }
 }

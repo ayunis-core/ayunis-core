@@ -489,8 +489,11 @@ export class LocalSourceRepository extends SourceRepository {
     return findOrphanedSourceIds(this.sourceRepository, olderThan, limit);
   }
 
-  async hasIndexedSourceInOrgs(orgIds: UUID[]): Promise<boolean> {
-    this.logger.log({ orgCount: orgIds.length }, 'hasIndexedSourceInOrgs');
-    return hasIndexedSourceInOrgs(this.sourceRepository, orgIds);
+  async hasIndexedSourceInOrgs(
+    modelId: UUID,
+    orgIds: UUID[],
+  ): Promise<boolean> {
+    this.logger.log({ modelId }, 'hasIndexedSourceInOrgs');
+    return hasIndexedSourceInOrgs(this.sourceRepository, modelId, orgIds);
   }
 }

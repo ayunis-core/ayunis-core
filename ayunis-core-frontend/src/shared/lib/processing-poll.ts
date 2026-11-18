@@ -7,6 +7,11 @@ export const PROCESSING_POLL_FAST_WINDOW_MS = 20_000;
 
 export type ProcessingPollInterval = (hasProcessing: boolean) => number | false;
 
+/** True while a source is processing or being re-indexed, both of which end on their own. */
+export function isSourcePending(source: { status: string }): boolean {
+  return source.status === 'processing' || source.status === 'reindexing';
+}
+
 /**
  * Refetch interval for a list that contains processing items. Polls fast
  * while processing is young, so a finished job shows up within a second,

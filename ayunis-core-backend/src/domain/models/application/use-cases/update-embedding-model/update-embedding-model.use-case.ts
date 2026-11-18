@@ -103,7 +103,10 @@ export class UpdateEmbeddingModelUseCase {
         existingModel.id,
       );
     const isIndexed = await this.hasIndexedSourceInOrgsUseCase.execute(
-      new HasIndexedSourceInOrgsQuery(permits.map((permit) => permit.orgId)),
+      new HasIndexedSourceInOrgsQuery(
+        existingModel.id,
+        permits.map((permit) => permit.orgId),
+      ),
     );
     if (isIndexed) {
       throw new EmbeddingModelInUseError(existingModel.id, changedFields);

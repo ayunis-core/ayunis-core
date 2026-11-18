@@ -65,6 +65,7 @@ export class CrawledPdfSourcesService {
         await this.helper.cleanupIndex(source.id);
       return;
     }
+    await this.helper.reindexIfModelChanged(source.id, orgId);
     let previous = Promise.resolve();
     await Promise.all(
       registered.map((file) => {
@@ -120,7 +121,9 @@ export class CrawledPdfSourcesService {
         ))
       ) {
         await this.helper.cleanupIndex(file.id);
+        return;
       }
+      await this.helper.reindexIfModelChanged(file.id, orgId);
     } catch (error) {
       await this.markFileFailed(file.id, error);
     }

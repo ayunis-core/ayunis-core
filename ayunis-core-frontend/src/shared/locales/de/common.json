@@ -163,6 +163,7 @@
   },
   "sources": {
     "removeFile": "Datei {{name}} entfernen",
+    "reindexing": "Wird neu indexiert. Die Datei ist danach wieder durchsuchbar.",
     "processingErrors": {
       "failed": "Die Datei konnte nicht verarbeitet werden. Entfernen Sie sie und laden Sie sie in diesem Chat erneut hoch. Falls der Fehler weiterhin auftritt, wenden Sie sich an den Support.",
       "unreadable": "Diese Datei konnte nicht gelesen werden. Entfernen Sie sie und laden Sie sie erneut hoch.",

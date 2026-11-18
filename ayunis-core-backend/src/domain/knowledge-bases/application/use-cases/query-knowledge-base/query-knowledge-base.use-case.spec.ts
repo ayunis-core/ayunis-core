@@ -19,6 +19,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { FindKnowledgeBaseForThreadUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-knowledge-base-for-thread/find-knowledge-base-for-thread.use-case';
 import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.use-case';
 import type { UUID } from 'crypto';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 describe('QueryKnowledgeBaseUseCase', () => {
   let useCase: QueryKnowledgeBaseUseCase;
@@ -406,6 +407,31 @@ describe('QueryKnowledgeBaseUseCase', () => {
           queries: ['Hebesatz', 'Steuerbefreiung'],
           limit: 10,
         }),
+      );
+    });
+
+    it('leaves documents being re-indexed out of the search, so stale vectors never match', async () => {
+      mockFindKnowledgeBaseForThread.execute.mockResolvedValue(
+        knowledgeBase(kbId, 'Satzungen'),
+      );
+      const reindexing = fileSource(secondSourceId, 'Grundsteuersatzung.pdf');
+      reindexing.status = SourceStatus.REINDEXING;
+      mockKbRepo.findSourcesByKnowledgeBaseIds.mockResolvedValue([
+        fileSource(sourceId, 'Hundesteuersatzung.pdf'),
+        reindexing,
+      ]);
+      mockSearchContent.executeMulti.mockResolvedValue([]);
+
+      await useCase.execute(
+        new QueryKnowledgeBaseQuery({
+          knowledgeBaseIds: [kbId],
+          queries: ['Hebesatz'],
+          userId,
+        }),
+      );
+
+      expect(mockSearchContent.executeMulti).toHaveBeenCalledWith(
+        expect.objectContaining({ documentIds: [sourceId] }),
       );
     });
 

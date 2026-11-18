@@ -29,8 +29,6 @@ import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum'
 import { DeleteUserDefaultModelsByModelIdUseCase } from 'src/domain/models/application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { ReplaceModelWithUserDefaultUseCase } from 'src/domain/threads/application/use-cases/replace-model-with-user-default/replace-model-with-user-default.use-case';
-import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
-import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
@@ -39,8 +37,6 @@ describe('DeletePermittedModelUseCase', () => {
   let useCase: DeletePermittedModelUseCase;
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let getPermittedModelsUseCase: jest.Mocked<GetPermittedModelsUseCase>;
-  let findAllThreadsByOrgWithSourcesUseCase: jest.Mocked<FindAllThreadsByOrgWithSourcesUseCase>;
-  let deleteSourcesUseCase: jest.Mocked<DeleteSourcesUseCase>;
   let contextService: jest.Mocked<ContextService>;
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -100,14 +96,6 @@ describe('DeletePermittedModelUseCase', () => {
           useValue: { execute: jest.fn() },
         },
         {
-          provide: FindAllThreadsByOrgWithSourcesUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
-          provide: DeleteSourcesUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
           provide: ContextService,
           useValue: {
             get: jest.fn((key: string) => {
@@ -125,10 +113,6 @@ describe('DeletePermittedModelUseCase', () => {
     useCase = module.get(DeletePermittedModelUseCase);
     permittedModelsRepository = module.get(PermittedModelsRepository);
     getPermittedModelsUseCase = module.get(GetPermittedModelsUseCase);
-    findAllThreadsByOrgWithSourcesUseCase = module.get(
-      FindAllThreadsByOrgWithSourcesUseCase,
-    );
-    deleteSourcesUseCase = module.get(DeleteSourcesUseCase);
     contextService = module.get(ContextService);
 
     logger.log.mockImplementation();
@@ -140,9 +124,8 @@ describe('DeletePermittedModelUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('uses the target org when deleting sources as a cross-org super admin', async () => {
+  it('removes the embedding permit of the target org as a cross-org super admin', async () => {
     const adminOrgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
-    const sourceId = '123e4567-e89b-12d3-a456-426614174098' as UUID;
     const embeddingModel = new PermittedEmbeddingModel({
       id: mockPermittedModelId,
       model: new EmbeddingModel({
@@ -164,9 +147,6 @@ describe('DeletePermittedModelUseCase', () => {
       return null;
     });
     permittedModelsRepository.findOne.mockResolvedValue(embeddingModel);
-    findAllThreadsByOrgWithSourcesUseCase.execute.mockResolvedValue([
-      { sourceAssignments: [{ source: { id: sourceId } }] },
-    ] as never);
 
     await useCase.execute(
       new DeletePermittedModelCommand({
@@ -175,12 +155,10 @@ describe('DeletePermittedModelUseCase', () => {
       }),
     );
 
-    expect(deleteSourcesUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sourceIds: [sourceId],
-        orgId: mockOrgId,
-      }),
-    );
+    expect(permittedModelsRepository.delete).toHaveBeenCalledWith({
+      id: mockPermittedModelId,
+      orgId: mockOrgId,
+    });
   });
 
   describe('independent team-scoped grants', () => {

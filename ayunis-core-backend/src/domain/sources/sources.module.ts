@@ -3,6 +3,12 @@ import { OrgProcessingDeletionListener } from 'src/domain/sources/infrastructure
 import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
+import { SOURCE_REINDEX_QUEUE } from 'src/domain/sources/infrastructure/queue/source-reindex.constants';
+import { SourceReindexModule } from './infrastructure/queue/source-reindex.module';
+import { FlagStaleSourcesUseCase } from './application/use-cases/flag-stale-sources/flag-stale-sources.use-case';
+import { SweepStaleReindexingUseCase } from './application/use-cases/sweep-stale-reindexing/sweep-stale-reindexing.use-case';
+import { EmbeddingModelPermittedListener } from './application/listeners/embedding-model-permitted.listener';
+import { StaleReindexingSweepTask } from './infrastructure/tasks/stale-reindexing-sweep.task';
 import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import sourceUploadConfig from 'src/config/source-upload.config';
@@ -82,6 +88,7 @@ const SOURCE_UPLOAD_USE_CASES = [
         DOCUMENT_PROCESSING_QUEUE,
         DATA_SOURCE_PROCESSING_QUEUE,
         URL_CRAWL_QUEUE,
+        SOURCE_REINDEX_QUEUE,
       ].map((name) => ({ name })),
     ),
     LocalSourceRepositoryModule,
@@ -92,6 +99,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     DocumentProcessingModule,
     DataSourceProcessingModule,
     UrlCrawlModule,
+    SourceReindexModule,
     SpreadsheetParsingModule,
     OrgsModule,
     EmbeddingsModule,
@@ -110,6 +118,10 @@ const SOURCE_UPLOAD_USE_CASES = [
     SourceUploadQueueingService,
     SourceUploadSweepTask,
     StaleProcessingCleanupTask,
+    FlagStaleSourcesUseCase,
+    SweepStaleReindexingUseCase,
+    EmbeddingModelPermittedListener,
+    StaleReindexingSweepTask,
     ...SOURCE_UPLOAD_USE_CASES,
     GetTextSourceByIdUseCase,
     GetSourceByIdUseCase,

@@ -12,10 +12,16 @@ export class HasIndexedSourceInOrgsUseCase {
 
   @HandleUnexpectedErrors(UnexpectedSourceError)
   async execute(query: HasIndexedSourceInOrgsQuery): Promise<boolean> {
-    this.logger.log({ orgCount: query.orgIds.length }, 'execute');
-    if (query.orgIds.length === 0) {
-      return false;
-    }
-    return this.sourceRepository.hasIndexedSourceInOrgs(query.orgIds);
+    this.logger.log(
+      {
+        embeddingModelId: query.embeddingModelId,
+        orgCount: query.orgIds.length,
+      },
+      'execute',
+    );
+    return this.sourceRepository.hasIndexedSourceInOrgs(
+      query.embeddingModelId,
+      query.orgIds,
+    );
   }
 }

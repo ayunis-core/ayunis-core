@@ -14,7 +14,10 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import type { KnowledgeBaseDocumentsController } from '@/widgets/knowledge-base-documents-card';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
-import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
+import {
+  isSourcePending,
+  useProcessingPollInterval,
+} from '@/shared/lib/processing-poll';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
@@ -29,9 +32,7 @@ function useDocuments(
       staleTime: 0,
       refetchInterval: (query) =>
         processingPollInterval(
-          query.state.data?.data.some(
-            (document) => document.status === 'processing',
-          ) ?? false,
+          query.state.data?.data.some(isSourcePending) ?? false,
         ),
     },
   });

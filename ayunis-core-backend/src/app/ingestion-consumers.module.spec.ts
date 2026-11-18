@@ -11,11 +11,14 @@ import { UrlCrawlModule } from 'src/domain/sources/infrastructure/queue/url-craw
 import { DocumentProcessingConsumer } from 'src/domain/sources/infrastructure/queue/document-processing.consumer';
 import { DataSourceProcessingConsumer } from 'src/domain/sources/infrastructure/queue/data-source-processing.consumer';
 import { UrlCrawlConsumer } from 'src/domain/sources/infrastructure/queue/url-crawl.consumer';
+import { SourceReindexModule } from 'src/domain/sources/infrastructure/queue/source-reindex.module';
+import { SourceReindexConsumer } from 'src/domain/sources/infrastructure/queue/source-reindex.consumer';
 
 const CONSUMERS = [
   DocumentProcessingConsumer,
   DataSourceProcessingConsumer,
   UrlCrawlConsumer,
+  SourceReindexConsumer,
 ];
 
 function metadata(module: object, key: 'providers' | 'imports'): unknown[] {
@@ -28,6 +31,7 @@ describe('ingestion consumer ownership', () => {
       DocumentProcessingModule,
       DataSourceProcessingModule,
       UrlCrawlModule,
+      SourceReindexModule,
       SourcesModule,
     ]) {
       const providers = metadata(module, 'providers');

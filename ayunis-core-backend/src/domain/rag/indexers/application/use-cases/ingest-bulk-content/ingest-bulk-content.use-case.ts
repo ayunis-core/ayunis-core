@@ -4,6 +4,7 @@ import { IngestBulkContentCommand } from './ingest-bulk-content.command';
 import { IndexEntry } from 'src/domain/rag/indexers/domain/index-entry.entity';
 import { UnexpectedIndexError } from 'src/domain/rag/indexers/application/indexer.errors';
 import { ApplicationError } from 'src/common/errors/base.error';
+import type { UUID } from 'crypto';
 
 @Injectable()
 export class IngestBulkContentUseCase {
@@ -11,7 +12,8 @@ export class IngestBulkContentUseCase {
 
   constructor(private readonly indexRegistry: IndexRegistry) {}
 
-  async execute(command: IngestBulkContentCommand): Promise<void> {
+  /** Returns the catalog ID of the embedding model the entries are indexed with. */
+  async execute(command: IngestBulkContentCommand): Promise<UUID> {
     try {
       const index = this.indexRegistry.get(command.type);
       return await index.ingestBulk({
@@ -24,6 +26,7 @@ export class IngestBulkContentUseCase {
           content: entry.content,
         })),
         precomputedEmbeddings: command.precomputedEmbeddings,
+        priority: command.priority,
       });
     } catch (error) {
       if (error instanceof ApplicationError) {

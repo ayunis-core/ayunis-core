@@ -492,6 +492,17 @@ describe('GetThreadSourceCitationUseCase', () => {
     ).rejects.toThrow(SourceCitationNotFoundError);
   });
 
+  it('still shows a citation while its source is re-indexed', async () => {
+    const citationTarget = target({ status: SourceStatus.REINDEXING });
+
+    await expect(
+      executeFor(
+        thread({ directSourceIds: [citationTarget.source.id] }),
+        citationTarget,
+      ),
+    ).resolves.toEqual(expectedResult(citationTarget));
+  });
+
   it('returns the citation 404 for a source that is not ready', async () => {
     const citationTarget = target({ status: SourceStatus.PROCESSING });
 

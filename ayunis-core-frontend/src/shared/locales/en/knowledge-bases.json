@@ -158,6 +158,7 @@
       "statusProcessing": "Processing… You can safely navigate away.",
       "statusProcessingSlow": "Taking longer than expected… You can safely navigate away.",
       "statusFailed": "Failed",
+      "statusReindexing": "Being re-indexed… Not searchable until finished.",
       "retryUpload": "Remove and re-upload",
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",

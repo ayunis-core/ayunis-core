@@ -13,8 +13,14 @@ import { SourceRecord } from './schema/source.record';
 import type { SourceMapper } from './mappers/source.mapper';
 import type { SourceContentChunkMapper } from './mappers/source-content-chunk.mapper';
 
-// `type` is the table-inheritance discriminator, which has no entity property.
-const sourceSchema = new EntitySchema<SourceRecord & { type: SourceType }>({
+// `type` is the table-inheritance discriminator, which has no entity property;
+// `embeddingModelId` is a column of the text-source child entity.
+type SourceRow = SourceRecord & {
+  type: SourceType;
+  embeddingModelId: string | null;
+};
+
+const sourceSchema = new EntitySchema<SourceRow>({
   name: 'SourceRecord',
   target: SourceRecord,
   tableName: 'sources',
@@ -24,6 +30,7 @@ const sourceSchema = new EntitySchema<SourceRecord & { type: SourceType }>({
     status: { type: 'varchar' },
     knowledgeBaseId: { type: 'varchar', nullable: true },
     recordingId: { type: 'varchar', nullable: true },
+    embeddingModelId: { type: 'varchar', nullable: true },
   },
 });
 
@@ -66,6 +73,7 @@ const schemas = [
 ];
 
 describe('Indexed sources of organizations', () => {
+  const embeddingModelId = randomUUID();
   let dataSource: DataSource;
   let schemaName: string;
   let repository: LocalSourceRepository;
@@ -108,7 +116,7 @@ describe('Indexed sources of organizations', () => {
   }
 
   async function insertSource(
-    overrides: Partial<Record<keyof SourceRecord | 'type', unknown>> = {},
+    overrides: Partial<Record<keyof SourceRow, unknown>> = {},
   ): Promise<UUID> {
     const id = randomUUID();
     await insert('SourceRecord', {
@@ -141,9 +149,9 @@ describe('Indexed sources of organizations', () => {
     await insert('KnowledgeBase', { id: knowledgeBaseId, orgId });
     await insertSource({ knowledgeBaseId });
 
-    await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
-      true,
-    );
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(true);
   });
 
   it('finds a recording transcript of the organization', async () => {
@@ -152,9 +160,9 @@ describe('Indexed sources of organizations', () => {
     await insert('Recording', { id: recordingId, orgId });
     await insertSource({ recordingId });
 
-    await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
-      true,
-    );
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(true);
   });
 
   it("finds a chat document through its thread owner's organization", async () => {
@@ -164,9 +172,9 @@ describe('Indexed sources of organizations', () => {
     const sourceId = await insertSource();
     await insert('ThreadSourceAssignment', { threadId, sourceId });
 
-    await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
-      true,
-    );
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(true);
   });
 
   it.each<[string, (orgId: UUID) => Promise<Record<string, UUID>>]>([
@@ -194,9 +202,9 @@ describe('Indexed sources of organizations', () => {
       const orgId = randomUUID();
       await attachToSkill(await insertSource(), await createOwner(orgId));
 
-      await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
-        true,
-      );
+      await expect(
+        repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+      ).resolves.toBe(true);
     },
   );
 
@@ -210,11 +218,11 @@ describe('Indexed sources of organizations', () => {
       userId: await insertUser(otherOrgId),
     });
 
-    await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
-      false,
-    );
     await expect(
-      repository.hasIndexedSourceInOrgs([orgId, otherOrgId]),
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(false);
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId, otherOrgId]),
     ).resolves.toBe(true);
   });
 
@@ -224,10 +232,11 @@ describe('Indexed sources of organizations', () => {
     await insert('KnowledgeBase', { id: knowledgeBaseId, orgId });
     await insertSource({ knowledgeBaseId, status: SourceStatus.FAILED });
     await insertSource({ knowledgeBaseId, type: SourceType.DATA });
+    await insertSource({ status: SourceStatus.FAILED, embeddingModelId });
 
-    await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
-      false,
-    );
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(false);
   });
 
   it('counts a document that is still being indexed', async () => {
@@ -236,9 +245,48 @@ describe('Indexed sources of organizations', () => {
     await insert('KnowledgeBase', { id: knowledgeBaseId, orgId });
     await insertSource({ knowledgeBaseId, status: SourceStatus.PROCESSING });
 
-    await expect(repository.hasIndexedSourceInOrgs([orgId])).resolves.toBe(
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(true);
+  });
+
+  it('counts a document being re-indexed for the model', async () => {
+    const orgId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+    await insert('KnowledgeBase', { id: knowledgeBaseId, orgId });
+    await insertSource({
+      knowledgeBaseId,
+      status: SourceStatus.REINDEXING,
+      embeddingModelId: randomUUID(),
+    });
+
+    await expect(
+      repository.hasIndexedSourceInOrgs(embeddingModelId, [orgId]),
+    ).resolves.toBe(true);
+  });
+
+  it('counts a document indexed with the model when no org permits it anymore', async () => {
+    const modelId = randomUUID();
+    const formerOrgId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+    await insert('KnowledgeBase', { id: knowledgeBaseId, orgId: formerOrgId });
+    await insertSource({ knowledgeBaseId, embeddingModelId: modelId });
+
+    await expect(repository.hasIndexedSourceInOrgs(modelId, [])).resolves.toBe(
       true,
     );
+  });
+
+  it('ignores a document indexed with another model outside the orgs', async () => {
+    const modelId = randomUUID();
+    const orgId = randomUUID();
+    const knowledgeBaseId = randomUUID();
+    await insert('KnowledgeBase', { id: knowledgeBaseId, orgId });
+    await insertSource({ knowledgeBaseId, embeddingModelId: randomUUID() });
+
+    await expect(
+      repository.hasIndexedSourceInOrgs(modelId, [randomUUID()]),
+    ).resolves.toBe(false);
   });
 });
 

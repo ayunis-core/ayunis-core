@@ -30,8 +30,8 @@ export class ParentChildIndexerAdapter extends IndexerPort {
     super();
   }
 
-  async ingestBulk(params: IngestBulkInput): Promise<void> {
-    await this.ingestBulkContentUseCase.execute(
+  ingestBulk(params: IngestBulkInput): Promise<UUID> {
+    return this.ingestBulkContentUseCase.execute(
       new IngestBulkContentCommand({
         orgId: params.orgId,
         entries: params.entries.map((entry) => ({
@@ -39,6 +39,7 @@ export class ParentChildIndexerAdapter extends IndexerPort {
           content: entry.content,
         })),
         precomputedEmbeddings: params.precomputedEmbeddings,
+        priority: params.priority,
       }),
     );
   }

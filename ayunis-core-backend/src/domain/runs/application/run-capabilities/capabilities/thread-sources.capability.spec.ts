@@ -121,6 +121,17 @@ describe('ThreadSourcesCapability', () => {
     expect(prompt).not.toContain('<pending_files>');
   });
 
+  it('lists files being re-indexed as not searchable, instead of leaving them out', async () => {
+    const prompt = await filesPrompt([
+      aFileSource({ name: 'satzung.pdf', status: SourceStatus.REINDEXING }),
+    ]);
+
+    expect(prompt).toContain('<reindexing_files>');
+    expect(prompt).toContain('name="satzung.pdf"');
+    expect(prompt).not.toContain('<available_files>');
+    expect(prompt).not.toContain('<pending_files>');
+  });
+
   it('lists data sources for code execution, separate from searchable files', async () => {
     const prompt = await filesPrompt([
       aFileSource({ name: 'report.pdf' }),

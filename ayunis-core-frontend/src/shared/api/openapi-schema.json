@@ -19858,7 +19858,7 @@
           "status": {
             "type": "string",
             "description": "Processing status of the source",
-            "enum": ["processing", "ready", "failed"]
+            "enum": ["processing", "ready", "failed", "reindexing"]
           },
           "processingError": {
             "type": "string",
@@ -19920,7 +19920,7 @@
           "status": {
             "type": "string",
             "description": "Processing status of the source",
-            "enum": ["processing", "ready", "failed"]
+            "enum": ["processing", "ready", "failed", "reindexing"]
           },
           "processingError": {
             "type": "string",
@@ -19994,7 +19994,7 @@
           "status": {
             "type": "string",
             "description": "Processing status of the source",
-            "enum": ["processing", "ready", "failed"]
+            "enum": ["processing", "ready", "failed", "reindexing"]
           },
           "processingError": {
             "type": "string",
@@ -20067,7 +20067,7 @@
           "status": {
             "type": "string",
             "description": "Processing status of the source",
-            "enum": ["processing", "ready", "failed"]
+            "enum": ["processing", "ready", "failed", "reindexing"]
           },
           "processingError": {
             "type": "string",
@@ -20744,7 +20744,7 @@
           "status": {
             "type": "string",
             "description": "The processing status of the document",
-            "enum": ["processing", "ready", "failed"],
+            "enum": ["processing", "ready", "failed", "reindexing"],
             "example": "ready"
           },
           "processingError": {
@@ -21212,7 +21212,7 @@
           },
           "status": {
             "type": "string",
-            "enum": ["processing", "ready", "failed"]
+            "enum": ["processing", "ready", "failed", "reindexing"]
           },
           "processingError": {
             "type": "string"

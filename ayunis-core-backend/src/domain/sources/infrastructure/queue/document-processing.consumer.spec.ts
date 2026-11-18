@@ -141,6 +141,7 @@ const helper = {
   index: jest.fn().mockResolvedValue(undefined),
   markFailed: jest.fn().mockResolvedValue(undefined),
   cleanupIndex: jest.fn().mockResolvedValue(undefined),
+  reindexIfModelChanged: jest.fn().mockResolvedValue(undefined),
 };
 
 const admitOrgProcessing = {

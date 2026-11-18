@@ -478,6 +478,24 @@ describe(SkillActivationService.name, () => {
       );
     });
 
+    it('attaches a source being re-indexed, so a model change does not drop it from the thread', async () => {
+      const thread = makeThread();
+      const skill = makeSkill({
+        mcpIntegrationIds: [],
+        knowledgeBaseIds: [],
+      });
+      const reindexingSource = makeSource(sourceId1, SourceStatus.REINDEXING);
+
+      findActivatableSkill.execute.mockResolvedValue(skill);
+      getSourcesByIdsUseCase.execute.mockResolvedValue([reindexingSource]);
+
+      await service.activateOnThread(skillId, thread);
+
+      expect(addSourceToThreadUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ source: reindexingSource }),
+      );
+    });
+
     it('should skip sources with PROCESSING status', async () => {
       const thread = makeThread();
       const skill = makeSkill({

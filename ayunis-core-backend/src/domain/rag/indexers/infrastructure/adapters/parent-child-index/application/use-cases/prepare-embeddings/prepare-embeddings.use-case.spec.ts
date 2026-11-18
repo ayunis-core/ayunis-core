@@ -43,6 +43,7 @@ describe('PrepareEmbeddingsUseCase', () => {
       ['Haushalt', 'Stellenplan', 'Satzung'],
       MODEL,
       ORG_ID,
+      undefined,
     );
     expect([...vectors!.vectorsByText]).toEqual([
       ['Haushalt', [8]],

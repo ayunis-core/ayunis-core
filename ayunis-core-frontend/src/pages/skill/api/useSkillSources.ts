@@ -5,13 +5,15 @@ import {
   useSkillSourcesControllerRemoveSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { SkillSourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
+import {
+  isSourcePending,
+  useProcessingPollInterval,
+} from '@/shared/lib/processing-poll';
 
 export default function useSkillSources({
   skill,
@@ -28,10 +30,7 @@ export default function useSkillSources({
         staleTime: 0,
         refetchInterval: (query) => {
           const data = query.state.data ?? [];
-          const hasProcessing = data.some(
-            (s) => s.status === SkillSourceResponseDtoStatus.processing,
-          );
-          return processingPollInterval(hasProcessing);
+          return processingPollInterval(data.some(isSourcePending));
         },
       },
     });

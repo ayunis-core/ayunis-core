@@ -16,9 +16,13 @@ export interface PriorityQueue {
 }
 
 // p-queue runs higher-priority queued tasks first, so retrieval must rank
-// above ingestion. The absolute values don't matter, only the ordering.
-const RETRIEVAL_PRIORITY = 1;
-const INGESTION_PRIORITY = 0;
+// above ingestion and ingestion above re-indexing. The absolute values don't
+// matter, only the ordering.
+const QUEUE_PRIORITY: Record<EmbeddingPriority, number> = {
+  [EmbeddingPriority.RETRIEVAL]: 1,
+  [EmbeddingPriority.INGESTION]: 0,
+  [EmbeddingPriority.REINDEXING]: -1,
+};
 
 /**
  * Global throttle for every embedding API call in the process.
@@ -26,8 +30,9 @@ const INGESTION_PRIORITY = 0;
  * All embedding traffic — document/URL ingestion and chat-query retrieval —
  * funnels through {@link EmbedTextUseCase} into a single shared queue with a
  * bounded concurrency. Callers tag each request with an {@link EmbeddingPriority}
- * so retrieval embeds jump ahead of ingestion embeds: a heavy ingestion
- * workload from one org can never starve chat search for other orgs. Requests
+ * so retrieval embeds jump ahead of ingestion embeds, and ingestion ahead of
+ * re-indexing: a heavy workload from one org can never starve chat search or
+ * uploads for other orgs. Requests
  * over the cap **wait** in the queue rather than being rejected.
  */
 @Injectable()
@@ -40,11 +45,7 @@ export class EmbeddingsThrottleService {
 
   run<T>(priority: EmbeddingPriority, fn: () => Promise<T>): Promise<T> {
     const queue = this.getQueue();
-    const queuePriority =
-      priority === EmbeddingPriority.RETRIEVAL
-        ? RETRIEVAL_PRIORITY
-        : INGESTION_PRIORITY;
-    return queue.add(fn, { priority: queuePriority }) as Promise<T>;
+    return queue.add(fn, { priority: QUEUE_PRIORITY[priority] }) as Promise<T>;
   }
 
   private getQueue(): PriorityQueue {

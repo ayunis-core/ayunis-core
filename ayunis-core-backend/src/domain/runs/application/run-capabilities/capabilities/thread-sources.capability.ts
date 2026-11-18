@@ -74,6 +74,9 @@ function buildFilesSection(sources: readonly Source[]): string {
     (s) => s.status === SourceStatus.PROCESSING,
   );
   const failedSources = sources.filter((s) => s.status === SourceStatus.FAILED);
+  const reindexingSources = sources.filter(
+    (s) => s.status === SourceStatus.REINDEXING,
+  );
 
   const sections: string[] = [];
   if (readyTextSources.length > 0) {
@@ -87,6 +90,9 @@ function buildFilesSection(sources: readonly Source[]): string {
   }
   if (failedSources.length > 0) {
     sections.push(buildFailedFilesSection(failedSources));
+  }
+  if (reindexingSources.length > 0) {
+    sections.push(buildReindexingFilesSection(reindexingSources));
   }
   return sections.join('\n\n');
 }
@@ -173,6 +179,16 @@ function buildFailedFilesSection(sources: Source[]): string {
 The following file uploads failed. Let the user know if they ask about them.
 ${files}
 </failed_files>`;
+}
+
+function buildReindexingFilesSection(sources: Source[]): string {
+  const files = sources.map(formatFile).join('\n');
+
+  return `<reindexing_files>
+The following files are being re-indexed after a change of the embedding model and are temporarily NOT available for search.
+If the user asks about these files, let them know they will be searchable again shortly.
+${files}
+</reindexing_files>`;
 }
 
 function getFileTypeLabel(source: Source): string {

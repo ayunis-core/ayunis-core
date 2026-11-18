@@ -196,6 +196,20 @@ describe('Recording transcript segments', () => {
       ]);
     });
 
+    it('adds a summary to a transcript being re-indexed, so a model change does not fail the summary', async () => {
+      const sourceId = randomUUID();
+      await dataSource
+        .getRepository('SourceRecord')
+        .insert({ id: sourceId, status: 'reindexing' });
+
+      await expect(
+        inTransaction((repo) =>
+          repo.addSummaryChunks(sourceId, [summaryChunk('## Thema')]),
+        ),
+      ).resolves.toBe('added');
+      await expect(summaryContents(sourceId)).resolves.toEqual(['## Thema']);
+    });
+
     it('adds nothing to a transcript that is gone or not ready', async () => {
       const processingId = randomUUID();
       await dataSource

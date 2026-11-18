@@ -3,11 +3,14 @@
  *
  * Retrieval (chat query) embeds jump ahead of ingestion embeds so a heavy
  * document/URL ingestion workload from one org can never starve chat search
- * for other orgs. See {@link EmbeddingsThrottleService}.
+ * for other orgs, and re-indexing yields to both, so one org's model change
+ * never delays anyone's uploads. See {@link EmbeddingsThrottleService}.
  */
 export enum EmbeddingPriority {
   /** Chat query embeds — jump the queue. */
   RETRIEVAL = 'retrieval',
   /** Document/URL ingestion embeds — default lane. */
   INGESTION = 'ingestion',
+  /** Re-embedding stored documents after the org's model changed — last. */
+  REINDEXING = 'reindexing',
 }

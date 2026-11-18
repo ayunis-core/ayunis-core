@@ -21,6 +21,7 @@ import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity
 import type { UrlCrawlJobData } from 'src/domain/sources/application/ports/url-crawl-processing.port';
 import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
 import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
+import { setJobContext } from './job-context';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { classifyJobFailure } from './bullmq-job.helpers';
 import { observeJob, processingStage } from './job-telemetry';
@@ -62,7 +63,7 @@ export class UrlCrawlConsumer extends WorkerHost {
 
   private async processCrawl(job: Job<UrlCrawlJobData>): Promise<void> {
     const { sourceId, orgId, userId, rootUrl, maxDepth } = job.data;
-    this.validateAndSetContext(orgId, userId);
+    setJobContext(this.contextService, orgId, userId);
     if (
       !(await this.admitOrgProcessing.execute(
         new AdmitOrgProcessingQuery(orgId),
@@ -107,16 +108,6 @@ export class UrlCrawlConsumer extends WorkerHost {
       }
       if (rethrow) throw rethrow;
     }
-  }
-
-  private validateAndSetContext(
-    orgId: UUID | undefined,
-    userId: UUID | undefined,
-  ): void {
-    if (!orgId) throw new Error('orgId is required');
-    if (!userId) throw new Error('userId is required');
-    this.contextService.set('orgId', orgId);
-    this.contextService.set('userId', userId);
   }
 
   private async loadSourceOrSkip(sourceId: UUID): Promise<TextSource | null> {

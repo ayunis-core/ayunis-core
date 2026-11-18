@@ -1,11 +1,12 @@
 import { registerAs } from '@nestjs/config';
 
-type ProcessingQueue = 'document' | 'dataSource' | 'urlCrawl';
+type ProcessingQueue = 'document' | 'dataSource' | 'urlCrawl' | 'reindex';
 
 const CONCURRENCY = {
   document: { variable: 'INGESTION_DOCUMENT_CONCURRENCY', fallback: 4 },
   dataSource: { variable: 'INGESTION_DATA_SOURCE_CONCURRENCY', fallback: 2 },
   urlCrawl: { variable: 'INGESTION_URL_CRAWL_CONCURRENCY', fallback: 2 },
+  reindex: { variable: 'INGESTION_REINDEX_CONCURRENCY', fallback: 1 },
 } as const;
 
 /** Whether the API process also works through the ingestion queues. */
@@ -62,4 +63,5 @@ export default registerAs('ingestion', () => ({
   documentConcurrency: ingestionConcurrency('document'),
   dataSourceConcurrency: ingestionConcurrency('dataSource'),
   urlCrawlConcurrency: ingestionConcurrency('urlCrawl'),
+  reindexConcurrency: ingestionConcurrency('reindex'),
 }));

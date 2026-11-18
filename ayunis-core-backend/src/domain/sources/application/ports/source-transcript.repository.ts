@@ -14,8 +14,8 @@ export abstract class SourceTranscriptRepository {
   /** The segments in transcript order. */
   abstract findBySourceId(sourceId: UUID): Promise<TranscriptSegment[]>;
   /**
-   * Adds the summary chunks to a READY transcript source that has none yet,
-   * locking the source until the ambient transaction ends.
+   * Adds the summary chunks to a READY or REINDEXING transcript source that
+   * has none yet, locking the source until the ambient transaction ends.
    */
   abstract addSummaryChunks(
     sourceId: UUID,

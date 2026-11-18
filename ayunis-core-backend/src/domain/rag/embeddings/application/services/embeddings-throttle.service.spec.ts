@@ -65,6 +65,14 @@ describe('EmbeddingsThrottleService', () => {
     expect(retrievalPriority).toBeGreaterThan(ingestionPriority);
   });
 
+  it('enqueues re-indexing below ingestion, so a model change never delays uploads', async () => {
+    await service.run(EmbeddingPriority.REINDEXING, () => Promise.resolve(0));
+    await service.run(EmbeddingPriority.INGESTION, () => Promise.resolve(0));
+
+    const [reindexingPriority, ingestionPriority] = service.queue.priorities;
+    expect(ingestionPriority).toBeGreaterThan(reindexingPriority);
+  });
+
   it('creates the shared queue lazily and reuses it across calls', async () => {
     expect(service.createQueueCalls).toBe(0);
     await service.run(EmbeddingPriority.INGESTION, () => Promise.resolve(0));
