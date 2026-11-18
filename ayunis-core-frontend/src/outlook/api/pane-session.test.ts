@@ -3,6 +3,7 @@ import {
   createPaneSession,
   SessionExpiredError,
 } from '@/outlook/api/pane-session';
+import { shouldRetryQuery } from '@/shared/api/client';
 
 const REFRESH_TOKEN_KEY = 'ayunis.outlook.refreshToken';
 const user = {
@@ -72,6 +73,28 @@ describe('createPaneSession', () => {
     expect(sent.get('Authorization')).toBe('Bearer access-1');
   });
 
+  it('refreshes once for concurrent 401s, so the rotated token is never replayed', async () => {
+    const session = createPaneSession('/api');
+    fetchMock.mockResolvedValueOnce(json(200, user));
+    await session.signIn(tokens(1));
+    fetchMock.mockImplementation((_url, init) => {
+      if (init?.body) return Promise.resolve(json(200, tokens(2)));
+      const auth = new Headers(init?.headers).get('Authorization');
+      return Promise.resolve(json(auth === 'Bearer access-2' ? 200 : 401));
+    });
+
+    const responses = await Promise.all([
+      session.request('/threads'),
+      session.request('/models/default-selection'),
+    ]);
+
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    const refreshes = fetchMock.mock.calls.filter(([url]) =>
+      (url as string).endsWith('/auth/refresh'),
+    );
+    expect(refreshes).toHaveLength(1);
+  });
+
   it('forgets the stored session when the refresh token is rejected', async () => {
     window.localStorage.setItem(REFRESH_TOKEN_KEY, 'revoked');
     fetchMock.mockResolvedValueOnce(json(401));
@@ -80,6 +103,10 @@ describe('createPaneSession', () => {
       SessionExpiredError,
     );
     expect(window.localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+  });
+
+  it('lets queries fail at once when the session has expired, instead of retrying with backoff', () => {
+    expect(shouldRetryQuery(0, new SessionExpiredError())).toBe(false);
   });
 
   it('keeps the stored session when the backend cannot be reached', async () => {

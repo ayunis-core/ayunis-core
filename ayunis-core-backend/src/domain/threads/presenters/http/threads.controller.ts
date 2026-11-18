@@ -251,6 +251,7 @@ export class ThreadsController {
     );
   }
 
+  @AllowedClients('outlook')
   @Post(':id/pii-masks/:maskId/unmask')
   @ApiOperation({
     summary:

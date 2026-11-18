@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 import config from '@/shared/config';
+import { getEmbeddedSession } from '@/shared/api/embedded-session';
 
 const axiosInstance = axios.create({
   baseURL: config.api.baseUrl,
@@ -98,19 +99,49 @@ export function shouldRetryQuery(failureCount: number, error: unknown) {
   return failureCount < 3;
 }
 
-// Request interceptor
-axiosInstance.interceptors.request.use(
-  (config) => {
-    // With cookie-based auth, no need to manually set Authorization headers
-    // The browser will automatically send cookies
-    return config;
-  },
-  (error: AxiosError) => {
-    return Promise.reject(
-      error instanceof Error ? error : new Error(String(error)),
-    );
-  },
-);
+type AuthRetryableConfig = InternalAxiosRequestConfig & {
+  embeddedAuthRetried?: boolean;
+};
+
+// In the Outlook pane, every call carries the pane's Bearer token and no
+// cookies. XHR sends same-origin cookies whatever `withCredentials` says;
+// fetch with `withCredentials: false` sends `credentials: 'omit'`.
+axiosInstance.interceptors.request.use(async (requestConfig) => {
+  const session = getEmbeddedSession();
+  if (!session) return requestConfig;
+  requestConfig.adapter = 'fetch';
+  requestConfig.withCredentials = false;
+  requestConfig.headers.set(
+    'Authorization',
+    `Bearer ${await session.accessToken()}`,
+  );
+  return requestConfig;
+});
+
+// The backend refreshes cookie sessions inline; the pane's token is
+// refreshed here, once per request.
+async function retryWithRefreshedToken(error: AxiosError) {
+  const session = getEmbeddedSession();
+  const requestConfig = error.config as AuthRetryableConfig | undefined;
+  if (
+    !session ||
+    !requestConfig ||
+    error.response?.status !== 401 ||
+    requestConfig.embeddedAuthRetried
+  ) {
+    return undefined;
+  }
+  const rejected = requestConfig.headers
+    .get('Authorization')
+    ?.toString()
+    .replace(/^Bearer /, '');
+  if (rejected) await session.refreshRejected(rejected);
+  const retryConfig: AuthRetryableConfig = {
+    ...requestConfig,
+    embeddedAuthRetried: true,
+  };
+  return axiosInstance(retryConfig);
+}
 
 // Response interceptor
 axiosInstance.interceptors.response.use(
@@ -118,6 +149,10 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    const reauthorized = await retryWithRefreshedToken(error);
+    if (reauthorized) {
+      return reauthorized;
+    }
     const retried = await retryThroughDeployGap(error);
     if (retried) {
       return retried;

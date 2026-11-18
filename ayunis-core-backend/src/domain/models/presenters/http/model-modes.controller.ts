@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
 import { ModelModeResolutionResponseDto } from './dto/model-mode-resolution-response.dto';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 @ApiTags('models')
 @Controller('models/modes')
@@ -10,6 +11,7 @@ export class ModelModesController {
     private readonly resolveModelModesUseCase: ResolveModelModesUseCase,
   ) {}
 
+  @AllowedClients('outlook')
   @Get()
   @ApiOperation({
     summary: 'Which model each mode currently resolves to for the current user',

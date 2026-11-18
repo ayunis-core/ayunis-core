@@ -181,6 +181,7 @@ export class ThreadSourcesController {
     );
   }
 
+  @AllowedClients('outlook')
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a thread' })
   @ApiThreadIdParam()

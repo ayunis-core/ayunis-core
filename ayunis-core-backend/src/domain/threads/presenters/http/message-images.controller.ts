@@ -18,6 +18,7 @@ import {
 } from 'src/iam/authentication/application/decorators/current-user.decorator';
 import { DownloadMessageImageUseCase } from 'src/domain/threads/application/use-cases/download-message-image/download-message-image.use-case';
 import { DownloadMessageImageQuery } from 'src/domain/threads/application/use-cases/download-message-image/download-message-image.query';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 @ApiTags('threads')
 @Controller('threads')
@@ -28,6 +29,7 @@ export class MessageImagesController {
     private readonly downloadMessageImageUseCase: DownloadMessageImageUseCase,
   ) {}
 
+  @AllowedClients('outlook')
   @Get(':threadId/messages/:messageId/images/:index')
   @ApiOperation({ summary: 'Download an image attached to a message' })
   @ApiParam({ name: 'threadId', type: 'string', format: 'uuid' })

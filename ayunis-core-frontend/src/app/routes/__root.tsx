@@ -11,6 +11,8 @@ import { getTheme, setTheme } from '@/features/theme';
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   user: MeResponseDto | null;
+  /** The Outlook pane's embedded mode; see `EmbeddedContext`. */
+  embedded: boolean;
 }>()({
   beforeLoad: () => {
     const theme = getTheme();
