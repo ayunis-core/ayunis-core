@@ -8,6 +8,9 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock('@/features/academy', () => ({ useIsAcademyAddonActive: () => false }));
+vi.mock('@/features/feature-toggles', () => ({
+  useIsFeatureEnabled: () => false,
+}));
 vi.mock('@/features/credit-limits', () => ({
   useHasCreditBudget: (enabled: boolean) => enabled && state.hasBudget,
 }));

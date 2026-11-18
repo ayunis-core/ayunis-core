@@ -29,6 +29,8 @@ export interface FeatureTogglesResponseDto {
   outlookAddinEnabled: boolean;
   /** The assistant remembers facts about each user across chats, and users can manage what it remembers */
   memoryEnabled: boolean;
+  /** Admins can connect the organization to external products such as Microsoft 365 (Connections) */
+  connectorsEnabled: boolean;
 }
 
 export interface CreateOrgRequestDto {
@@ -6598,6 +6600,34 @@ export interface UpdateRetentionPolicyRequestDto {
 }
 
 export interface ChatCompletionRequestDto { [key: string]: unknown }
+
+/**
+ * The product this connector connects to
+ */
+export type ConnectorProduct = typeof ConnectorProduct[keyof typeof ConnectorProduct];
+
+
+export const ConnectorProduct = {
+  microsoft_365: 'microsoft_365',
+} as const;
+
+/**
+ * Whether the organization has set up this connector
+ */
+export type ConnectorStatus = typeof ConnectorStatus[keyof typeof ConnectorStatus];
+
+
+export const ConnectorStatus = {
+  not_set_up: 'not_set_up',
+  set_up: 'set_up',
+} as const;
+
+export interface ConnectorResponseDto {
+  /** The product this connector connects to */
+  product: ConnectorProduct;
+  /** Whether the organization has set up this connector */
+  status: ConnectorStatus;
+}
 
 export interface LoginDto {
   /** Email address for authentication */

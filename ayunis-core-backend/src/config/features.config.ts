@@ -22,6 +22,11 @@ export enum FeatureFlag {
   OutlookAddin = 'outlookAddinEnabled',
   /** Off until released: the memory API and memory in chat runs. */
   Memory = 'memoryEnabled',
+  /**
+   * Off until released: the Connections admin settings, connector endpoints
+   * and everything that syncs knowledge base sources through a connector.
+   */
+  Connectors = 'connectorsEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -66,6 +71,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
     ),
     memoryEnabled: parseBooleanWithDefault(
       process.env.FEATURE_MEMORY_ENABLED,
+      false,
+    ),
+    connectorsEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_CONNECTORS_ENABLED,
       false,
     ),
   };

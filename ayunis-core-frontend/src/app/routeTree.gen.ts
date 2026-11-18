@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminSettingsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminSettingsAcademyRouteImport } from './routes/_authenticated/admin-settings.academy'
 import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
+import { Route as AuthenticatedAdminSettingsConnectionsRouteImport } from './routes/_authenticated/admin-settings.connections'
 import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
 import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './routes/_authenticated/admin-settings.retention'
@@ -232,6 +233,12 @@ const AuthenticatedAdminSettingsApiKeysRoute =
   AuthenticatedAdminSettingsApiKeysRouteImport.update({
     id: '/api-keys',
     path: '/api-keys',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
+const AuthenticatedAdminSettingsConnectionsRoute =
+  AuthenticatedAdminSettingsConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
 const AuthenticatedAdminSettingsInstructionsRoute =
@@ -570,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/academy': typeof AuthenticatedAdminSettingsAcademyRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/connections': typeof AuthenticatedAdminSettingsConnectionsRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
@@ -647,6 +655,7 @@ export interface FileRoutesByTo {
   '/admin-settings/academy': typeof AuthenticatedAdminSettingsAcademyRoute
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/admin-settings/connections': typeof AuthenticatedAdminSettingsConnectionsRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
@@ -729,6 +738,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/academy': typeof AuthenticatedAdminSettingsAcademyRoute
   '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
+  '/_authenticated/admin-settings/connections': typeof AuthenticatedAdminSettingsConnectionsRoute
   '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
   '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
@@ -811,6 +821,7 @@ export interface FileRouteTypes {
     | '/admin-settings/academy'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
+    | '/admin-settings/connections'
     | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/retention'
@@ -888,6 +899,7 @@ export interface FileRouteTypes {
     | '/admin-settings/academy'
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
+    | '/admin-settings/connections'
     | '/admin-settings/instructions'
     | '/admin-settings/integrations'
     | '/admin-settings/retention'
@@ -969,6 +981,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/academy'
     | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
+    | '/_authenticated/admin-settings/connections'
     | '/_authenticated/admin-settings/instructions'
     | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/retention'
@@ -1234,6 +1247,13 @@ declare module '@tanstack/react-router' {
       path: '/api-keys'
       fullPath: '/admin-settings/api-keys'
       preLoaderRoute: typeof AuthenticatedAdminSettingsApiKeysRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
+    '/_authenticated/admin-settings/connections': {
+      id: '/_authenticated/admin-settings/connections'
+      path: '/connections'
+      fullPath: '/admin-settings/connections'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsConnectionsRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
     '/_authenticated/admin-settings/instructions': {
@@ -1607,6 +1627,7 @@ interface AuthenticatedAdminSettingsRouteChildren {
   AuthenticatedAdminSettingsAcademyRoute: typeof AuthenticatedAdminSettingsAcademyRoute
   AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
+  AuthenticatedAdminSettingsConnectionsRoute: typeof AuthenticatedAdminSettingsConnectionsRoute
   AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
   AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsRetentionRoute: typeof AuthenticatedAdminSettingsRetentionRoute
@@ -1632,6 +1653,8 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
       AuthenticatedAdminSettingsAnonymizationRoute,
     AuthenticatedAdminSettingsApiKeysRoute:
       AuthenticatedAdminSettingsApiKeysRoute,
+    AuthenticatedAdminSettingsConnectionsRoute:
+      AuthenticatedAdminSettingsConnectionsRoute,
     AuthenticatedAdminSettingsInstructionsRoute:
       AuthenticatedAdminSettingsInstructionsRoute,
     AuthenticatedAdminSettingsIntegrationsRoute:
