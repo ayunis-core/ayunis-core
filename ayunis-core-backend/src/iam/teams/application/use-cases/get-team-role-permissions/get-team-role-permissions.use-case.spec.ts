@@ -66,6 +66,7 @@ describe(GetTeamRolePermissionsUseCase.name, () => {
           Permission.ASSIGN_USERS_TO_TEAMS,
           Permission.SHARE_SKILLS_WITH_TEAMS,
           Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
+          Permission.MANAGE_TEAM_RECORDINGS,
         ],
       },
     ]);

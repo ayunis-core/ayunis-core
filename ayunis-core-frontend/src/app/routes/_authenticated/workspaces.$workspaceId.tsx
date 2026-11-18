@@ -22,7 +22,14 @@ const searchSchema = z.object({
   search: searchParamString.optional(),
   page: z.number().min(1).optional().catch(1),
   tab: z
-    .enum(['chats', 'artifacts', 'skills', 'knowledge', 'instructions'])
+    .enum([
+      'chats',
+      'artifacts',
+      'skills',
+      'knowledge',
+      'recordings',
+      'instructions',
+    ])
     .optional()
     .catch('chats'),
 });

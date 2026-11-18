@@ -15,11 +15,12 @@ export const isConfigurableRole = (role: UserRole): boolean =>
 
 /**
  * Defaults granted to a role when an org is created (and backfilled onto
- * existing orgs by the CreateRolePermissions, GrantManageRoutines and
- * GrantWorkspacePermissions migrations). Chosen to preserve the pre-RBAC
- * behaviour where any member could manage skills and knowledge bases, and to
- * let every member use routines; team management stays admin-only until an
- * admin grants it. In a workspace, managers may manage the workspace and its
+ * existing orgs by the CreateRolePermissions, GrantManageRoutines,
+ * GrantWorkspacePermissions and GrantRecordingPermissions migrations). Chosen
+ * to preserve the pre-RBAC behaviour where any member could manage skills and
+ * knowledge bases, and to let every member use routines and recordings like
+ * skills and knowledge bases; team management stays admin-only until an admin
+ * grants it. In a workspace, managers may manage the workspace and its
  * members, while users may only use it.
  *
  * Keep in sync with the backfill VALUES lists in those migrations — a
@@ -39,6 +40,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<
     Permission.MANAGE_ROUTINES,
     Permission.MANAGE_WORKSPACE,
     Permission.MANAGE_WORKSPACE_MEMBERS,
+    Permission.MANAGE_RECORDINGS,
+    Permission.MANAGE_TEAM_RECORDINGS,
+    Permission.MANAGE_ORG_RECORDINGS,
   ],
   [UserRole.USER]: [
     Permission.MANAGE_SKILLS,
@@ -48,5 +52,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<
     Permission.SHARE_KNOWLEDGE_BASES_WITH_TEAMS,
     Permission.SHARE_KNOWLEDGE_BASES_WITH_ORG,
     Permission.MANAGE_ROUTINES,
+    Permission.MANAGE_RECORDINGS,
+    Permission.MANAGE_TEAM_RECORDINGS,
+    Permission.MANAGE_ORG_RECORDINGS,
   ],
 };

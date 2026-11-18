@@ -20,7 +20,8 @@
   "card": {
     "title": "Owner",
     "skillDescription": "Who this skill belongs to. Team and organisation skills can be used by all members and edited by everyone allowed to manage them.",
-    "knowledgeBaseDescription": "Who this knowledge base belongs to. Team and organisation knowledge bases can be used by all members and edited by everyone allowed to manage them."
+    "knowledgeBaseDescription": "Who this knowledge base belongs to. Team and organisation knowledge bases can be used by all members and edited by everyone allowed to manage them.",
+    "recordingDescription": "Who this recording belongs to. Team and organisation recordings can be read by all members and changed by everyone allowed to manage them."
   },
   "change": {
     "title": "Change owner",

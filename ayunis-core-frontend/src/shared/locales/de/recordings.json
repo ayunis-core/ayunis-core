@@ -1,0 +1,80 @@
+{
+  "page": {
+    "title": "Aufzeichnungen"
+  },
+  "emptyState": {
+    "title": "Noch keine Aufzeichnungen",
+    "description": "Erstellen Sie eine Aufzeichnung für eine Sitzung. Sie gehört Ihnen, einem Ihrer Teams oder der Organisation.",
+    "noAccessDescription": "Hier erscheinen die Aufzeichnungen Ihrer Teams und Ihrer Organisation. Bitten Sie einen Administrator um die Berechtigung, eigene zu erstellen."
+  },
+  "listItem": {
+    "created": "Erstellt am {{date}}",
+    "createdBy": "Erstellt am {{date}} von {{name}}"
+  },
+  "createDialog": {
+    "buttonText": "Aufzeichnung hinzufügen",
+    "buttonTextFirst": "Erste Aufzeichnung erstellen",
+    "title": "Neue Aufzeichnung erstellen",
+    "description": "Erstellen Sie eine Aufzeichnung und wählen Sie, wem sie gehört.",
+    "form": {
+      "nameLabel": "Name",
+      "namePlaceholder": "z. B. Stadtratssitzung 12. November"
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich"
+    },
+    "buttons": {
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "creating": "Wird erstellt..."
+    }
+  },
+  "create": {
+    "success": "Aufzeichnung erstellt",
+    "error": "Die Aufzeichnung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "validationError": "Bitte prüfen Sie den Namen und versuchen Sie es erneut.",
+    "noPermission": "Sie dürfen für diesen Besitzer keine Aufzeichnung erstellen."
+  },
+  "delete": {
+    "success": "Aufzeichnung gelöscht",
+    "error": "Die Aufzeichnung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
+    "noPermission": "Sie dürfen diese Aufzeichnung nicht löschen."
+  },
+  "confirmDelete": {
+    "title": "Aufzeichnung löschen",
+    "description": "„{{name}}“ löschen? Das kann nicht rückgängig gemacht werden.",
+    "confirmText": "Löschen",
+    "cancelText": "Abbrechen"
+  },
+  "detail": {
+    "deleteLabel": "Löschen",
+    "properties": {
+      "title": "Eigenschaften",
+      "description": "Name und Herkunft der Aufzeichnung.",
+      "owner": "Besitzer",
+      "workspaceOwner": "Arbeitsbereich {{name}}",
+      "creator": "Erstellt von",
+      "deletedCreator": "Gelöschter Benutzer",
+      "created": "Erstellt am",
+      "form": {
+        "nameLabel": "Name",
+        "namePlaceholder": "z. B. Stadtratssitzung 12. November"
+      },
+      "buttons": {
+        "save": "Speichern",
+        "saving": "Wird gespeichert..."
+      }
+    },
+    "validation": {
+      "nameRequired": "Name ist erforderlich"
+    },
+    "rename": {
+      "success": "Aufzeichnung umbenannt",
+      "error": "Die Aufzeichnung konnte nicht umbenannt werden. Bitte versuchen Sie es erneut.",
+      "validationError": "Bitte prüfen Sie den Namen und versuchen Sie es erneut.",
+      "notFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
+      "noPermission": "Sie dürfen diese Aufzeichnung nicht umbenennen."
+    }
+  }
+}
