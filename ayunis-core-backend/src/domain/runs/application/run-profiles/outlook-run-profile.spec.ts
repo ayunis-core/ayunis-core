@@ -13,6 +13,7 @@ import { DataHandlingCapability } from 'src/domain/runs/application/run-capabili
 import { DateTimeCapability } from 'src/domain/runs/application/run-capabilities/capabilities/date-time.capability';
 import { InternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/internet.capability';
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
+import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
@@ -93,6 +94,7 @@ function buildOutlookProfile(): OutlookRunProfile {
     ),
     new ThreadSourcesCapability(assembleTool),
     new KnowledgeBasesCapability(assembleTool),
+    new RecordingsCapability(assembleTool, { get: () => true } as never),
     new NotificationContextCapability(
       resolved(null) as never,
       { get: () => true } as never,
@@ -177,6 +179,7 @@ describe('OutlookRunProfile', () => {
       expect.arrayContaining([
         ToolType.SOURCE_QUERY,
         ToolType.KNOWLEDGE_QUERY,
+        ToolType.RECORDING_SEARCH,
         ToolType.INTERNET_SEARCH,
       ]),
     );

@@ -11,6 +11,11 @@ import {
   type EntityManager,
 } from 'typeorm';
 import type { RecordingAudio } from 'src/domain/recordings/application/models/recording-audio';
+import type {
+  SearchableRecording,
+  SearchableRecordingFilter,
+} from 'src/domain/recordings/application/models/recording-search';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { whereCollectiveOwner } from 'src/domain/ownership/infrastructure/persistence/collective-owner.db-query';
 import { RecordingRepository } from 'src/domain/recordings/application/ports/recording.repository';
@@ -91,6 +96,55 @@ export class LocalRecordingRepository extends RecordingRepository {
       .addOrderBy('recording.id', 'ASC')
       .getMany();
     return records.map((record) => this.mapper.toDomain(record));
+  }
+
+  async findSearchable({
+    userId,
+    owners,
+    workspaceId,
+    uploaded,
+  }: SearchableRecordingFilter): Promise<SearchableRecording[]> {
+    const query = this.repository
+      .createQueryBuilder('recording')
+      // The audio turns ready once its transcript is indexed.
+      .innerJoin(
+        SourceRecord,
+        'audio',
+        'audio.recordingId = recording.id AND audio.status = :ready',
+        { ready: SourceStatus.READY },
+      )
+      .select('recording.id', 'id')
+      .addSelect('recording.name', 'name')
+      .addSelect('recording.createdAt', 'uploadedAt')
+      .addSelect('audio.id', 'audioSourceId')
+      .where('recording.orgId = :orgId', { orgId: owners.orgId })
+      .andWhere(
+        new Brackets((owner) => {
+          owner
+            .where('recording.userId = :userId', { userId })
+            .orWhere(
+              new Brackets((collective) =>
+                whereCollectiveOwner(collective, 'recording', owners),
+              ),
+            );
+          if (workspaceId) {
+            owner.orWhere('recording.workspaceId = :workspaceId', {
+              workspaceId,
+            });
+          }
+        }),
+      );
+    if (uploaded.from) {
+      query.andWhere('recording.createdAt >= :uploadedFrom', {
+        uploadedFrom: uploaded.from,
+      });
+    }
+    if (uploaded.to) {
+      query.andWhere('recording.createdAt <= :uploadedTo', {
+        uploadedTo: uploaded.to,
+      });
+    }
+    return query.getRawMany<SearchableRecording>();
   }
 
   async findAllByWorkspaceId(workspaceId: UUID): Promise<WorkspaceRecording[]> {

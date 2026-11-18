@@ -1,5 +1,9 @@
 import type { UUID } from 'crypto';
 import type { RecordingAudio } from 'src/domain/recordings/application/models/recording-audio';
+import type {
+  SearchableRecording,
+  SearchableRecordingFilter,
+} from 'src/domain/recordings/application/models/recording-search';
 import type { Recording } from 'src/domain/recordings/domain/recording';
 import type { WorkspaceRecording } from 'src/domain/recordings/domain/workspace-recording.entity';
 import type { ReadableCollectiveOwners } from 'src/iam/teams/application/models/collective-owner.model';
@@ -14,6 +18,13 @@ export abstract class RecordingRepository {
     userId: UUID,
     collectiveOwners: ReadableCollectiveOwners,
   ): Promise<Recording[]>;
+  /**
+   * The readable recordings whose transcript is indexed, in one query: the
+   * user's own, those of the given teams, organization and workspace.
+   */
+  abstract findSearchable(
+    filter: SearchableRecordingFilter,
+  ): Promise<SearchableRecording[]>;
   abstract findAllByWorkspaceId(
     workspaceId: UUID,
   ): Promise<WorkspaceRecording[]>;

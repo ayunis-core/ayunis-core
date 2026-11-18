@@ -14,7 +14,7 @@ import type {
   RecordingTranscriptTurnDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useRecordingTranscript } from '@/pages/recording/api';
-import { formatTranscriptTime } from '@/pages/recording/lib/format-transcript-time';
+import { formatTranscriptTime } from '@/shared/lib/format-transcript-time';
 import {
   RecordingAudioEmpty,
   type RecordingAudioUpload,

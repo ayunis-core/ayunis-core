@@ -2,6 +2,7 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import type { TranscriptSegment } from 'src/domain/transcriptions/domain/recording-transcript';
 import {
   formatTurn,
+  speakerNumbersIn,
   toTranscriptTurns,
 } from 'src/domain/transcriptions/domain/transcript-turns';
 
@@ -26,6 +27,32 @@ export interface TranscriptChunkMeta {
   end: number;
   /** The provider's speaker labels of the turns in the chunk. */
   speakers: string[];
+}
+
+/** Where a chunk of a transcript's source lies: in its summary or in a time range. */
+export type TranscriptChunkPosition =
+  | { kind: typeof TRANSCRIPT_SUMMARY_CHUNK_KIND }
+  | {
+      kind: 'transcript';
+      start: number;
+      end: number;
+      /** Numbered as in the transcript text, not the provider's labels. */
+      speakerNumbers: number[];
+    };
+
+export function transcriptChunkPosition(
+  chunk: TextSourceContentChunk,
+): TranscriptChunkPosition {
+  const { meta } = chunk;
+  if (meta.kind === TRANSCRIPT_SUMMARY_CHUNK_KIND) {
+    return { kind: TRANSCRIPT_SUMMARY_CHUNK_KIND };
+  }
+  return {
+    kind: 'transcript',
+    start: typeof meta.start === 'number' ? meta.start : 0,
+    end: typeof meta.end === 'number' ? meta.end : 0,
+    speakerNumbers: speakerNumbersIn(chunk.content),
+  };
 }
 
 /**

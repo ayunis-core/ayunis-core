@@ -1,4 +1,5 @@
 import { mockSourceReadingResponse } from './mock-source-reading-response';
+import { mockRecordingSearchResponse } from './mock-recording-search-response';
 import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
 import { mockCodeExecutionResponse } from './mock-code-execution-response';
@@ -31,7 +32,7 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * slow tool preparation, paginated research, source citations,
  * inline-document echo, the headline of the notification a chat is
  * about, routine widget proposals, a call to the E2E MCP server's tool,
- * the Outlook pane's quick actions, a slow answer);
+ * the Outlook pane's quick actions, a slow answer, a recording search);
  * a routine task's trigger ends the routine run, optionally after sending
  * a notification.
  *
@@ -96,7 +97,7 @@ function mockToolResponse(
   userText: string,
 ): AsyncIterable<ProviderChunk> | null {
   return (
-    mockSourceReadingResponse(request, userText) ??
+    mockRetrievalToolResponse(request, userText) ??
     mockCreateFileResponse(request, userText) ??
     mockCodeExecutionResponse(request, userText) ??
     mockImageEditResponse(request, userText) ??
@@ -106,6 +107,16 @@ function mockToolResponse(
     mockQuoteNotificationResponse(request, userText) ??
     mockRoutineWidgetResponse(request, userText) ??
     mockExternalToolResponse(request, userText)
+  );
+}
+
+function mockRetrievalToolResponse(
+  request: ProviderRequest,
+  userText: string,
+): AsyncIterable<ProviderChunk> | null {
+  return (
+    mockSourceReadingResponse(request, userText) ??
+    mockRecordingSearchResponse(request, userText)
   );
 }
 
