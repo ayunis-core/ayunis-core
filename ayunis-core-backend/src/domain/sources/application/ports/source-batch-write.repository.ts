@@ -30,6 +30,11 @@ export abstract class SourceBatchWriteRepository {
   ): Promise<void>;
   abstract findReplacementIds(replacedId: UUID): Promise<UUID[]>;
   /**
+   * Stops the stale-processing clock of a PROCESSING source until its
+   * processing starts again.
+   */
+  abstract pauseProcessing(sourceId: UUID): Promise<void>;
+  /**
    * Puts a settled replacement into the knowledge base of the source it
    * replaces, under `name`, and returns that source. A FAILED replacement
    * takes the place only of a source without an indexed version. `null` for

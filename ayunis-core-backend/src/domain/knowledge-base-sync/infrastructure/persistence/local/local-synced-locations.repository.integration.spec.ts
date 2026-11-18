@@ -11,6 +11,7 @@ import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { CreateKnowledgeBaseSyncTables1795019918718 } from 'src/db/migrations/1795019918718-CreateKnowledgeBaseSyncTables';
 import { AddSyncedFileProcessing1795033122250 } from 'src/db/migrations/1795033122250-AddSyncedFileProcessing';
+import { AddSyncedLocationSchedule1795040884040 } from 'src/db/migrations/1795040884040-AddSyncedLocationSchedule';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
@@ -45,6 +46,9 @@ const locationSchema = new EntitySchema<SyncedLocationRecord>({
     cursor: { type: String, nullable: true },
     state: { type: String },
     lastSyncedAt: { type: 'timestamp', nullable: true },
+    nextSyncAt: { type: 'timestamptz' },
+    syncingSince: { type: 'timestamptz', nullable: true },
+    pausedUntil: { type: 'timestamptz', nullable: true },
   },
 });
 const fileSchema = new EntitySchema<SyncedFileRecord>({
@@ -113,6 +117,7 @@ describe('LocalSyncedLocationsRepository', () => {
     } as QueryRunner;
     await new CreateKnowledgeBaseSyncTables1795019918718().up(inSchema);
     await new AddSyncedFileProcessing1795033122250().up(inSchema);
+    await new AddSyncedLocationSchedule1795040884040().up(inSchema);
     await setup.query('SET search_path TO public');
     await setup.release();
     repository = new LocalSyncedLocationsRepository(
@@ -144,12 +149,15 @@ describe('LocalSyncedLocationsRepository', () => {
     );
   }
 
-  async function aLocation() {
+  async function aLocation(
+    schedule: { nextSyncAt?: Date; pausedUntil?: Date } = {},
+  ) {
     const location = new SyncedLocation({
       orgId: await insert('orgs'),
       knowledgeBaseId: await insert('knowledge_bases'),
       connectorId: await insert('connectors'),
       location: 'https://municipality.sharepoint.com/sites/bauamt',
+      ...schedule,
     });
     expect(await repository.create(location)).toBe(true);
     return location;
@@ -248,6 +256,111 @@ describe('LocalSyncedLocationsRepository', () => {
         [changed.id, SyncedFileState.IMPORTED],
       ]),
     );
+  });
+
+  it('finds the files whose document is behind their version, by ID after the given file', async () => {
+    const location = await aLocation();
+    const processed = await anImportedFile(location);
+    processed.recordProcessed(processed.version, null);
+    const removed = await anImportedFile(location);
+    removed.sourceId = null;
+    await repository.saveFiles([processed, removed]);
+    const pending = [
+      await anImportedFile(location),
+      await anImportedFile(location),
+    ].sort((a, b) => a.id.localeCompare(b.id));
+    await anImportedFile(await aLocation());
+
+    const first = await repository.findFilesToProcess(location.id, null, 1);
+    const rest = await repository.findFilesToProcess(
+      location.id,
+      first[0].id,
+      10,
+    );
+
+    expect(first.map(({ id }) => id)).toEqual([pending[0].id]);
+    expect(rest.map(({ id }) => id)).toEqual([pending[1].id]);
+  });
+
+  describe('schedule', () => {
+    const at = (time: string) => new Date(`2000-01-01T${time}:00.000Z`);
+    const now = at('01:00');
+    const next = at('02:00');
+
+    it('takes the due locations that are not paused, oldest first, each once', async () => {
+      const oldest = await aLocation({ nextSyncAt: at('00:10') });
+      const pauseOver = await aLocation({
+        nextSyncAt: at('00:20'),
+        pausedUntil: at('00:50'),
+      });
+      const later = await aLocation({ nextSyncAt: at('00:30') });
+      await aLocation({ nextSyncAt: at('00:05'), pausedUntil: at('01:30') });
+      await aLocation({ nextSyncAt: at('01:10') });
+
+      const first = await repository.claimDue(now, next, 2);
+      const second = await repository.claimDue(now, next, 2);
+      const third = await repository.claimDue(now, next, 2);
+
+      expect(new Set(first.map(({ id }) => id))).toEqual(
+        new Set([oldest.id, pauseOver.id]),
+      );
+      expect(second).toEqual([{ id: later.id, orgId: later.orgId }]);
+      expect(third).toEqual([]);
+      expect((await repository.findById(oldest.id))?.nextSyncAt).toEqual(next);
+    });
+
+    it('leaves a location its running sync holds to a later sweep, without waiting for it', async () => {
+      const held = await aLocation({ nextSyncAt: at('00:40') });
+      let release!: () => void;
+      const released = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      let locked!: () => void;
+      const isLocked = new Promise<void>((resolve) => {
+        locked = resolve;
+      });
+      const sync = db.transaction((manager) =>
+        transactions.run(manager, async () => {
+          await repository.lockById(held.id);
+          locked();
+          await released;
+        }),
+      );
+      await isLocked;
+
+      const claimed = await repository.claimDue(now, next, 10);
+      release();
+      await sync;
+
+      expect(claimed.map(({ id }) => id)).not.toContain(held.id);
+      expect(
+        (await repository.claimDue(now, next, 10)).map(({ id }) => id),
+      ).toContain(held.id);
+    });
+
+    it('keeps the later end when a location is paused twice', async () => {
+      const location = await aLocation();
+
+      await repository.pause(location.id, at('01:30'));
+      await repository.pause(location.id, at('01:10'));
+
+      expect((await repository.findById(location.id))?.pausedUntil).toEqual(
+        at('01:30'),
+      );
+    });
+
+    it('keeps the start of a running sync until it ends, then schedules the next', async () => {
+      const location = await aLocation();
+
+      await repository.recordSyncStarted(location.id, at('00:10'));
+      await repository.recordSyncStarted(location.id, at('00:20'));
+      const running = await repository.findById(location.id);
+      await repository.recordSyncEnded(location.id, next);
+      const ended = await repository.findById(location.id);
+
+      expect(running?.syncingSince).toEqual(at('00:10'));
+      expect(ended).toMatchObject({ syncingSince: null, nextSyncAt: next });
+    });
   });
 
   it('rejects a skipped file without its reason', async () => {

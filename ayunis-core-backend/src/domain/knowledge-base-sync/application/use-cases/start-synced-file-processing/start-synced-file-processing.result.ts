@@ -3,8 +3,10 @@ import type { DocumentToProcess } from 'src/domain/sources/application/models/do
 export enum StartSyncedFileProcessingOutcome {
   /** The new version is stored as a replacement, ready for the pipeline. */
   PROCESS = 'process',
-  /** The source system asks to retry later; nothing changed. */
+  /** The source system asks to retry later; the location is paused until then. */
   THROTTLED = 'throttled',
+  /** The location is paused; nothing was read. */
+  PAUSED = 'paused',
   /** The location is no longer accessible; its documents stay. */
   ACCESS_LOST = 'access_lost',
   /** The file no longer exists; it is removed with its document. */
@@ -20,7 +22,12 @@ export type StartSyncedFileProcessingResult =
       outcome: StartSyncedFileProcessingOutcome.PROCESS;
       document: DocumentToProcess;
     }
-  | { outcome: StartSyncedFileProcessingOutcome.THROTTLED; retryAt: Date }
+  | {
+      outcome:
+        | StartSyncedFileProcessingOutcome.THROTTLED
+        | StartSyncedFileProcessingOutcome.PAUSED;
+      retryAt: Date;
+    }
   | {
       outcome:
         | StartSyncedFileProcessingOutcome.ACCESS_LOST

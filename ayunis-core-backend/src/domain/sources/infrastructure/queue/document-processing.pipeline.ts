@@ -27,7 +27,11 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SplitterType } from 'src/domain/rag/splitters/domain/splitter-type.enum';
 import { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
-import type { DocumentToProcess } from 'src/domain/sources/application/models/document-to-process';
+import {
+  ProcessingDeferredError,
+  type DocumentToProcess,
+} from 'src/domain/sources/application/models/document-to-process';
+import { findProviderOutage } from 'src/common/errors/find-provider-outage.helper';
 import { TranscriptReadyEvent } from 'src/domain/sources/application/events/transcript-ready.event';
 import { SpreadsheetParserPort } from 'src/domain/sources/application/ports/spreadsheet-parser.port';
 import { tableToText } from 'src/domain/sources/application/util/table-to-text';
@@ -105,6 +109,8 @@ export class DocumentProcessingPipeline {
         await this.cleanupCheckpoints(orgId, sourceId);
         return;
       }
+      if (document.deferProviderOutages && findProviderOutage(error))
+        throw new ProcessingDeferredError(error);
       this.logger.error(
         {
           sourceId,

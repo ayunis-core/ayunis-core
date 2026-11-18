@@ -383,6 +383,43 @@ describe('SyncLocationUseCase', () => {
     ]);
   });
 
+  it('pauses the location while its connector throttles, and lists nothing until the pause ends', async () => {
+    const harness = createSyncHarness();
+    harness.system.add('Hundesteuer.pdf');
+    const retryAt = new Date(Date.now() + 60_000);
+    harness.system.throttledUntil = retryAt;
+
+    expect(await harness.sync()).toEqual({
+      outcome: SyncLocationOutcome.THROTTLED,
+      retryAt,
+    });
+    harness.system.throttledUntil = null;
+    const listings = harness.system.listings;
+
+    expect(await harness.sync()).toEqual({
+      outcome: SyncLocationOutcome.PAUSED,
+      retryAt,
+    });
+    expect(harness.system.listings).toBe(listings);
+    expect(harness.knowledgeBase.documents.size).toBe(0);
+  });
+
+  it('never lists again at once when the connector asks to retry immediately', async () => {
+    const harness = createSyncHarness();
+    harness.system.add('Hundesteuer.pdf');
+    harness.system.throttledUntil = new Date(Date.now() - 1_000);
+    const before = Date.now();
+
+    const result = await harness.sync();
+
+    expect(result.outcome).toBe(SyncLocationOutcome.THROTTLED);
+    const retryAt = (result as { retryAt: Date }).retryAt;
+    expect(retryAt.getTime()).toBeGreaterThanOrEqual(before + 1_000);
+    expect(
+      harness.repository.locations.get(harness.location.id)?.pausedUntil,
+    ).toEqual(retryAt);
+  });
+
   it('syncs nothing while connectors are switched off', async () => {
     const harness = createSyncHarness({ connectorsEnabled: false });
     harness.system.add('Hundesteuer.pdf');

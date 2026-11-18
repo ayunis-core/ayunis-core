@@ -38,6 +38,7 @@ import { SourceReindexer } from 'src/domain/sources/application/services/source-
 import { ModelsModule } from 'src/domain/models/models.module';
 import { KnowledgeBaseSyncModule } from 'src/domain/knowledge-base-sync/knowledge-base-sync.module';
 import { SyncedFileProcessingConsumer } from 'src/domain/knowledge-base-sync/infrastructure/queue/synced-file-processing.consumer';
+import { SyncRunner } from 'src/domain/knowledge-base-sync/infrastructure/queue/sync-runner';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
 
 /** The queues this module's consumers serve; a worker's health check requires them all. */
@@ -96,6 +97,7 @@ export const INGESTION_QUEUES = [
     SourceReindexer,
     SourceReindexConsumer,
     SyncedFileProcessingConsumer,
+    SyncRunner,
   ],
 })
 export class IngestionConsumersModule {}
