@@ -335,6 +335,7 @@ export class SuperAdminPermittedModelsController {
       orgId,
       dto.anonymousOnly,
       dto.memoryAccess,
+      dto.chatHistoryAccess,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
@@ -466,6 +467,7 @@ export class SuperAdminPermittedModelsController {
         orgId,
         anonymousOnly: dto.anonymousOnly,
         memoryAccess: dto.memoryAccess,
+        chatHistoryAccess: dto.chatHistoryAccess,
       }),
     );
     return this.modelResponseDtoMapper.toDto(updated);

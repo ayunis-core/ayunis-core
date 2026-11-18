@@ -70,12 +70,13 @@ export class GetEffectiveLanguageModelsUseCase {
   }
 
   // One permit per catalog model: the anonymous-only grant if any, and no
-  // memory access unless every grant allows it.
+  // memory or past-chat access unless every grant allows it.
   private mergeTeamGrants(
     models: PermittedLanguageModel[],
   ): PermittedLanguageModel[] {
     const byCatalogModelId = new Map<UUID, PermittedLanguageModel>();
     const deniesMemory = new Set<UUID>();
+    const deniesChatHistory = new Set<UUID>();
     const grantsByPolicy = [...models].sort((a, b) =>
       this.compareGrantPriority(a, b),
     );
@@ -84,11 +85,13 @@ export class GetEffectiveLanguageModelsUseCase {
         byCatalogModelId.set(grant.model.id, grant);
       }
       if (!grant.memoryAccess) deniesMemory.add(grant.model.id);
+      if (!grant.chatHistoryAccess) deniesChatHistory.add(grant.model.id);
     }
     return [...byCatalogModelId.values()].map((grant) =>
-      grant.memoryAccess && deniesMemory.has(grant.model.id)
-        ? withoutMemoryAccess(grant)
-        : grant,
+      withPersonalContextAccess(grant, {
+        memoryAccess: !deniesMemory.has(grant.model.id),
+        chatHistoryAccess: !deniesChatHistory.has(grant.model.id),
+      }),
     );
   }
 
@@ -103,8 +106,15 @@ export class GetEffectiveLanguageModelsUseCase {
   }
 }
 
-function withoutMemoryAccess(
+function withPersonalContextAccess(
   grant: PermittedLanguageModel,
+  access: { memoryAccess: boolean; chatHistoryAccess: boolean },
 ): PermittedLanguageModel {
-  return new PermittedLanguageModel({ ...grant, memoryAccess: false });
+  if (
+    grant.memoryAccess === access.memoryAccess &&
+    grant.chatHistoryAccess === access.chatHistoryAccess
+  ) {
+    return grant;
+  }
+  return new PermittedLanguageModel({ ...grant, ...access });
 }

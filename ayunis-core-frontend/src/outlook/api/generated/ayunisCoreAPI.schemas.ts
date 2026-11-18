@@ -377,6 +377,11 @@ export interface ModelWithConfigResponseDto {
      * @nullable
      */
   memoryAccess: boolean | null;
+  /**
+     * Whether runs on this model may list, search and read the user's earlier chats. Null if not permitted.
+     * @nullable
+     */
+  chatHistoryAccess: boolean | null;
   /** Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models. */
   tier?: ModelWithConfigResponseDtoTier;
   /** User-facing description of the model, shown in the model selector info card. Maintained by super admins. */
@@ -432,6 +437,8 @@ export interface CreatePermittedModelDto {
   anonymousOnly?: boolean;
   /** Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled. */
   memoryAccess?: boolean;
+  /** Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled. */
+  chatHistoryAccess?: boolean;
   /** The id of the model */
   modelId: string;
 }
@@ -441,6 +448,8 @@ export interface UpdatePermittedModelDto {
   anonymousOnly?: boolean;
   /** Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled. */
   memoryAccess?: boolean;
+  /** Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled. */
+  chatHistoryAccess?: boolean;
 }
 
 /**
@@ -525,6 +534,8 @@ export interface PermittedLanguageModelResponseDto {
   anonymousOnly: boolean;
   /** Whether runs on this model may use the user's memory. For a user's effective models, false when any of their grants of the model denies it. */
   memoryAccess: boolean;
+  /** Whether runs on this model may list, search and read the user's earlier chats. For a user's effective models, false when any of their grants of the model denies it. */
+  chatHistoryAccess: boolean;
   /**
      * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
      * @nullable
@@ -674,6 +685,8 @@ export interface CreateTeamPermittedModelDto {
   anonymousOnly?: boolean;
   /** Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled. */
   memoryAccess?: boolean;
+  /** Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled. */
+  chatHistoryAccess?: boolean;
   /** The ID of the catalog model to permit for the team */
   modelId: string;
 }

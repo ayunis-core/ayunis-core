@@ -7,5 +7,6 @@ export class CreateTeamPermittedModelCommand {
     public readonly teamId: UUID,
     public readonly anonymousOnly?: boolean,
     public readonly memoryAccess?: boolean,
+    public readonly chatHistoryAccess?: boolean,
   ) {}
 }

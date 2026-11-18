@@ -41,6 +41,7 @@ export class ModelResponseDtoMapper {
       isDefault: permittedModel.isDefault,
       anonymousOnly: permittedModel.anonymousOnly,
       memoryAccess: permittedModel.memoryAccess,
+      chatHistoryAccess: permittedModel.chatHistoryAccess,
       tier: permittedModel.model.tier,
       description: permittedModel.model.description,
       // Note: Cost fields (inputTokenCost, outputTokenCost) are intentionally

@@ -34,6 +34,7 @@ export class UpdatePermittedModelUseCase {
         orgId: command.orgId,
         anonymousOnly: command.anonymousOnly,
         memoryAccess: command.memoryAccess,
+        chatHistoryAccess: command.chatHistoryAccess,
       },
       'execute',
     );
@@ -47,6 +48,7 @@ export class UpdatePermittedModelUseCase {
       policy: {
         anonymousOnly: command.anonymousOnly,
         memoryAccess: command.memoryAccess,
+        chatHistoryAccess: command.chatHistoryAccess,
       },
     });
   }

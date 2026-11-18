@@ -51,6 +51,7 @@ export class ModelWithConfigResponseDtoMapper {
         isDefault,
         anonymousOnly: permittedModel?.anonymousOnly,
         memoryAccess: permittedModel?.memoryAccess,
+        chatHistoryAccess: permittedModel?.chatHistoryAccess,
         ...this.languageModelFields(model),
       };
     });

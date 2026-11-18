@@ -6,16 +6,19 @@ export class UpdatePermittedModelCommand {
   /** Omitted switches keep their stored value. */
   public readonly anonymousOnly?: boolean;
   public readonly memoryAccess?: boolean;
+  public readonly chatHistoryAccess?: boolean;
 
   constructor(params: {
     permittedModelId: UUID;
     orgId: UUID;
     anonymousOnly?: boolean;
     memoryAccess?: boolean;
+    chatHistoryAccess?: boolean;
   }) {
     this.permittedModelId = params.permittedModelId;
     this.orgId = params.orgId;
     this.anonymousOnly = params.anonymousOnly;
     this.memoryAccess = params.memoryAccess;
+    this.chatHistoryAccess = params.chatHistoryAccess;
   }
 }

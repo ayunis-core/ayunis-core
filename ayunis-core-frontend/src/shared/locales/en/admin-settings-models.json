@@ -59,6 +59,7 @@
     },
     "anonymousOnly": "Anonymous mode",
     "memoryAccess": "Access to memory",
+    "chatHistoryAccess": "Access to past chats",
     "permitted": "Permitted",
     "tier": {
       "label": "Performance",

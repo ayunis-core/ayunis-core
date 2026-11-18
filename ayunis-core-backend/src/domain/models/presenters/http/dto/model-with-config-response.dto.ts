@@ -106,6 +106,14 @@ export class ModelWithConfigResponseDto {
   })
   memoryAccess?: boolean;
 
+  @ApiProperty({
+    type: 'boolean',
+    description:
+      "Whether runs on this model may list, search and read the user's earlier chats. Null if not permitted.",
+    nullable: true,
+  })
+  chatHistoryAccess?: boolean;
+
   @ApiPropertyOptional({
     enum: ModelTier,
     description:

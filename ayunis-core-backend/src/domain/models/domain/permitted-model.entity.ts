@@ -13,6 +13,7 @@ export class PermittedModel {
   public readonly isDefault: boolean;
   public readonly anonymousOnly: boolean;
   public readonly memoryAccess: boolean;
+  public readonly chatHistoryAccess: boolean;
   public readonly scope: PermittedModelScope;
   public readonly scopeId: UUID | null;
   public readonly createdAt: Date;
@@ -25,6 +26,7 @@ export class PermittedModel {
     isDefault?: boolean;
     anonymousOnly?: boolean;
     memoryAccess?: boolean;
+    chatHistoryAccess?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;
@@ -36,6 +38,7 @@ export class PermittedModel {
     this.isDefault = params.isDefault ?? false;
     this.anonymousOnly = params.anonymousOnly ?? false;
     this.memoryAccess = params.memoryAccess ?? false;
+    this.chatHistoryAccess = params.chatHistoryAccess ?? false;
     this.scope = params.scope ?? PermittedModelScope.ORG;
     this.scopeId = params.scopeId ?? null;
 
@@ -60,6 +63,7 @@ export class PermittedLanguageModel extends PermittedModel {
     isDefault?: boolean;
     anonymousOnly?: boolean;
     memoryAccess?: boolean;
+    chatHistoryAccess?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;
@@ -79,6 +83,7 @@ export class PermittedEmbeddingModel extends PermittedModel {
     isDefault?: boolean;
     anonymousOnly?: boolean;
     memoryAccess?: boolean;
+    chatHistoryAccess?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;
@@ -98,6 +103,7 @@ export class PermittedImageGenerationModel extends PermittedModel {
     isDefault?: boolean;
     anonymousOnly?: boolean;
     memoryAccess?: boolean;
+    chatHistoryAccess?: boolean;
     scope?: PermittedModelScope;
     scopeId?: UUID | null;
     createdAt?: Date;

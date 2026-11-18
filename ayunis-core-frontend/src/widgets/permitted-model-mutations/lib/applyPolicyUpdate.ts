@@ -2,7 +2,11 @@ import type { UpdatePermittedModelDto } from '@/shared/api';
 
 /** Overwrites only the switches the update names; omitted ones stay as they are. */
 export function applyPolicyUpdate<
-  T extends { anonymousOnly?: boolean | null; memoryAccess?: boolean | null },
+  T extends {
+    anonymousOnly?: boolean | null;
+    memoryAccess?: boolean | null;
+    chatHistoryAccess?: boolean | null;
+  },
 >(model: T, update: UpdatePermittedModelDto): T {
   return {
     ...model,
@@ -11,6 +15,9 @@ export function applyPolicyUpdate<
     }),
     ...(update.memoryAccess !== undefined && {
       memoryAccess: update.memoryAccess,
+    }),
+    ...(update.chatHistoryAccess !== undefined && {
+      chatHistoryAccess: update.chatHistoryAccess,
     }),
   };
 }

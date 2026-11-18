@@ -15,7 +15,7 @@ export interface PersonalContextAccess {
  * The one gate for personal context. Only chat runs get it, never anonymous
  * ones (anonymization does not cover the system prompt, and stored memory
  * would hold `{{pii:…}}` placeholders that mean nothing outside the thread),
- * only with the feature on, and for memory only when the effective grant of
+ * only with the feature on, and each part only when the effective grant of
  * the run's model allows it. Runs resolve it afresh, so a changed grant
  * applies from the next message.
  */
@@ -32,7 +32,7 @@ export class PersonalContextAccessService {
       params.profile.id === 'chat' && !params.isAnonymous && this.isEnabled();
     return {
       memory: eligible && params.permit.memoryAccess,
-      chatHistory: eligible,
+      chatHistory: eligible && params.permit.chatHistoryAccess,
     };
   }
 

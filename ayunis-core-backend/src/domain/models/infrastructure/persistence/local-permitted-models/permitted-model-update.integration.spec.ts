@@ -25,6 +25,7 @@ const permittedModelSchema = new EntitySchema<PermittedModelRecord>({
     modelId: { type: 'uuid' },
     anonymousOnly: { type: 'boolean', default: false },
     memoryAccess: { type: 'boolean', default: false },
+    chatHistoryAccess: { type: 'boolean', default: false },
   },
   relations: {
     model: {
@@ -41,22 +42,23 @@ describe('Permitted model policy update', () => {
   let repository: LocalPermittedModelsRepository;
 
   const storedPolicy = async (id: UUID) => {
-    const { anonymousOnly, memoryAccess } = await db
+    const { anonymousOnly, memoryAccess, chatHistoryAccess } = await db
       .getRepository(PermittedModelRecord)
       .findOneByOrFail({ id });
-    return { anonymousOnly, memoryAccess };
+    return { anonymousOnly, memoryAccess, chatHistoryAccess };
   };
 
   async function aGrant(policy: {
     anonymousOnly: boolean;
     memoryAccess: boolean;
+    chatHistoryAccess?: boolean;
   }): Promise<{ id: UUID; orgId: UUID }> {
     const grant = { id: randomUUID(), orgId: randomUUID() };
     const modelId = randomUUID();
     await db.getRepository('CatalogModel').insert({ id: modelId });
     await db
       .getRepository(PermittedModelRecord)
-      .insert({ ...grant, modelId, ...policy });
+      .insert({ ...grant, modelId, chatHistoryAccess: false, ...policy });
     return grant;
   }
 
@@ -99,6 +101,19 @@ describe('Permitted model policy update', () => {
     expect(await storedPolicy(grant.id)).toEqual({
       anonymousOnly: true,
       memoryAccess: true,
+      chatHistoryAccess: false,
+    });
+  });
+
+  it('turning past-chat access on keeps memory access and enforced anonymous mode', async () => {
+    const grant = await aGrant({ anonymousOnly: true, memoryAccess: true });
+
+    await repository.update({ ...grant, policy: { chatHistoryAccess: true } });
+
+    expect(await storedPolicy(grant.id)).toEqual({
+      anonymousOnly: true,
+      memoryAccess: true,
+      chatHistoryAccess: true,
     });
   });
 
@@ -110,21 +125,24 @@ describe('Permitted model policy update', () => {
     expect(await storedPolicy(grant.id)).toEqual({
       anonymousOnly: false,
       memoryAccess: true,
+      chatHistoryAccess: false,
     });
   });
 
   // Two quick clicks on different switches arrive as concurrent requests.
-  it('keeps both switches when they are changed concurrently', async () => {
+  it('keeps every switch when they are changed concurrently', async () => {
     const grant = await aGrant({ anonymousOnly: false, memoryAccess: false });
 
     await Promise.all([
       repository.update({ ...grant, policy: { anonymousOnly: true } }),
       repository.update({ ...grant, policy: { memoryAccess: true } }),
+      repository.update({ ...grant, policy: { chatHistoryAccess: true } }),
     ]);
 
     expect(await storedPolicy(grant.id)).toEqual({
       anonymousOnly: true,
       memoryAccess: true,
+      chatHistoryAccess: true,
     });
   });
 
@@ -135,12 +153,13 @@ describe('Permitted model policy update', () => {
       repository.update({
         id: grant.id,
         orgId: randomUUID(),
-        policy: { memoryAccess: true },
+        policy: { memoryAccess: true, chatHistoryAccess: true },
       }),
     ).rejects.toThrow();
     expect(await storedPolicy(grant.id)).toEqual({
       anonymousOnly: false,
       memoryAccess: false,
+      chatHistoryAccess: false,
     });
   });
 });

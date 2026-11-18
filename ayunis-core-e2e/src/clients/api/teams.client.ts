@@ -161,6 +161,18 @@ export function requestTeamGrantMemoryAccessChange(
   );
 }
 
+export function requestTeamGrantChatHistoryAccessChange(
+  api: APIRequestContext,
+  teamId: string,
+  grantId: string,
+  chatHistoryAccess: boolean,
+) {
+  return api.patch(
+    `${config.apiURL}/api/teams/${teamId}/permitted-models/${grantId}`,
+    { data: { chatHistoryAccess } },
+  );
+}
+
 export async function removeTeamModelGrant(
   api: APIRequestContext,
   teamId: string,

@@ -170,6 +170,95 @@ function ModelTitleWithInfo({
   );
 }
 
+interface PolicySwitchProps {
+  readonly id: string;
+  readonly testId: string;
+  readonly label: string;
+  readonly checked: boolean;
+  readonly onCheckedChange: (checked: boolean) => void;
+}
+
+function PolicySwitch({
+  id,
+  testId,
+  label,
+  checked,
+  onCheckedChange,
+}: PolicySwitchProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <Label htmlFor={id} className="text-sm text-muted-foreground">
+        {label}
+      </Label>
+      <Switch
+        id={id}
+        data-testid={testId}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+      />
+    </div>
+  );
+}
+
+function PolicySeparator() {
+  // Hidden on narrow screens, where the switches wrap onto several lines.
+  return (
+    <Separator
+      orientation="vertical"
+      className="hidden data-[orientation=vertical]:h-5 sm:block"
+    />
+  );
+}
+
+interface ModelPolicySwitchesProps {
+  readonly model: ModelWithConfigResponseDto;
+  readonly modelKey: string;
+  readonly showPersonalContextAccess: boolean;
+  readonly onPolicyChange: (policy: UpdatePermittedModelDto) => void;
+}
+
+function ModelPolicySwitches({
+  model,
+  modelKey,
+  showPersonalContextAccess,
+  onPolicyChange,
+}: ModelPolicySwitchesProps) {
+  const { t } = useTranslation('admin-settings-models');
+  return (
+    <ItemActions className="basis-full flex-wrap gap-x-3 gap-y-2">
+      <PolicySwitch
+        id={`${modelKey}-anonymous`}
+        testId={`model-${model.modelId}-anonymous-only-toggle`}
+        label={t('models.anonymousOnly')}
+        checked={model.anonymousOnly ?? false}
+        onCheckedChange={(anonymousOnly) => onPolicyChange({ anonymousOnly })}
+      />
+      {showPersonalContextAccess && (
+        <>
+          <PolicySeparator />
+          <PolicySwitch
+            id={`${modelKey}-memory`}
+            testId={`model-${model.modelId}-memory-access-toggle`}
+            label={t('models.memoryAccess')}
+            checked={model.memoryAccess ?? false}
+            onCheckedChange={(memoryAccess) => onPolicyChange({ memoryAccess })}
+          />
+          <PolicySeparator />
+          <PolicySwitch
+            id={`${modelKey}-chat-history`}
+            testId={`model-${model.modelId}-chat-history-access-toggle`}
+            label={t('models.chatHistoryAccess')}
+            checked={model.chatHistoryAccess ?? false}
+            onCheckedChange={(chatHistoryAccess) =>
+              onPolicyChange({ chatHistoryAccess })
+            }
+          />
+        </>
+      )}
+    </ItemActions>
+  );
+}
+
 export default function ModelTypeCard({
   type,
   models,
@@ -191,7 +280,7 @@ export default function ModelTypeCard({
   // Only language models enforce anonymous mode (on their threads); the flag
   // has no effect on embedding or image-generation models.
   const canSetAnonymousOnly = type === 'language' && !!updatePermittedModel;
-  const canSetMemoryAccess = canSetAnonymousOnly && isMemoryEnabled;
+  const canSetPersonalContextAccess = canSetAnonymousOnly && isMemoryEnabled;
   const title = t(config.titleKey);
   const emptyMessage = t(config.emptyKey);
 
@@ -278,69 +367,40 @@ export default function ModelTypeCard({
                     )}
                   </ItemContent>
                   <ItemActions>
-                    {model.isPermitted && canSetAnonymousOnly && (
-                      <div className="flex items-center gap-2">
-                        <Label
-                          htmlFor={`${modelKey}-anonymous`}
-                          className="text-sm text-muted-foreground"
-                        >
-                          {t('models.anonymousOnly')}
-                        </Label>
-
-                        <Switch
-                          id={`${modelKey}-anonymous`}
-                          data-testid={`model-${model.modelId}-anonymous-only-toggle`}
-                          checked={model.anonymousOnly ?? false}
-                          onCheckedChange={(anonymousOnly) =>
-                            handlePolicyToggle(model, { anonymousOnly })
-                          }
-                        />
-                      </div>
-                    )}
-                    {model.isPermitted && canSetMemoryAccess && (
-                      <div className="flex items-center gap-2">
-                        <Label
-                          htmlFor={`${modelKey}-memory`}
-                          className="text-sm text-muted-foreground"
-                        >
-                          {t('models.memoryAccess')}
-                        </Label>
-                        <Switch
-                          id={`${modelKey}-memory`}
-                          data-testid={`model-${model.modelId}-memory-access-toggle`}
-                          checked={model.memoryAccess ?? false}
-                          onCheckedChange={(memoryAccess) =>
-                            handlePolicyToggle(model, { memoryAccess })
-                          }
-                        />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Label
-                        htmlFor={modelKey}
-                        className="text-sm text-muted-foreground"
-                      >
-                        {t('models.permitted')}
-                      </Label>
-                      <Switch
-                        id={modelKey}
-                        data-testid={
-                          testIdPrefix
-                            ? `${testIdPrefix}-${model.modelId}-toggle`
-                            : undefined
-                        }
-                        disabled={
-                          isEnabling ||
-                          isDisabling ||
-                          (isToggleDisabled?.(model) ?? false)
-                        }
-                        checked={model.isPermitted}
-                        onCheckedChange={(isPermitted) =>
-                          handleModelToggle(model, isPermitted)
-                        }
-                      />
-                    </div>
+                    <Label
+                      htmlFor={modelKey}
+                      className="text-sm text-muted-foreground"
+                    >
+                      {t('models.permitted')}
+                    </Label>
+                    <Switch
+                      id={modelKey}
+                      data-testid={
+                        testIdPrefix
+                          ? `${testIdPrefix}-${model.modelId}-toggle`
+                          : undefined
+                      }
+                      disabled={
+                        isEnabling ||
+                        isDisabling ||
+                        (isToggleDisabled?.(model) ?? false)
+                      }
+                      checked={model.isPermitted}
+                      onCheckedChange={(isPermitted) =>
+                        handleModelToggle(model, isPermitted)
+                      }
+                    />
                   </ItemActions>
+                  {model.isPermitted && canSetAnonymousOnly && (
+                    <ModelPolicySwitches
+                      model={model}
+                      modelKey={modelKey}
+                      showPersonalContextAccess={canSetPersonalContextAccess}
+                      onPolicyChange={(policy) =>
+                        handlePolicyToggle(model, policy)
+                      }
+                    />
+                  )}
                 </Item>
                 {index < sortedModels.length - 1 && <Separator />}
               </div>

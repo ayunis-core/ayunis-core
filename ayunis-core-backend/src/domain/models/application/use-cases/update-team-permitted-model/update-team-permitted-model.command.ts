@@ -9,6 +9,7 @@ export class UpdateTeamPermittedModelCommand {
     public readonly policy: {
       readonly anonymousOnly?: boolean;
       readonly memoryAccess?: boolean;
+      readonly chatHistoryAccess?: boolean;
     },
   ) {}
 }

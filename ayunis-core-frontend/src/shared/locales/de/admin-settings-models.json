@@ -59,6 +59,7 @@
     },
     "anonymousOnly": "Anonymer Modus",
     "memoryAccess": "Zugriff auf Erinnerungen",
+    "chatHistoryAccess": "Zugriff auf frühere Chats",
     "permitted": "Freigeschaltet",
     "tier": {
       "label": "Leistung",

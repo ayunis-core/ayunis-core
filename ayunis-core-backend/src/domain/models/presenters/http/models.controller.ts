@@ -46,11 +46,6 @@ import { UpdatePermittedModelUseCase } from 'src/domain/models/application/use-c
 import { ModelProviderInfoRegistry } from 'src/domain/models/application/registry/model-provider-info.registry';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { ModelType } from 'src/domain/models/domain/value-objects/model-type.enum';
-import {
-  PermittedEmbeddingModel,
-  PermittedImageGenerationModel,
-  PermittedLanguageModel,
-} from 'src/domain/models/domain/permitted-model.entity';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { EmbeddingModelEnabledResponseDto } from './dto/embedding-model-enabled-response.dto';
 import { ModelProviderInfoResponseDto } from './dto/model-provider-info-response.dto';
@@ -218,6 +213,7 @@ export class ModelsController {
       orgId,
       createPermittedModelDto.anonymousOnly,
       createPermittedModelDto.memoryAccess,
+      createPermittedModelDto.chatHistoryAccess,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
@@ -279,18 +275,10 @@ export class ModelsController {
       orgId,
       anonymousOnly: updatePermittedModelDto.anonymousOnly,
       memoryAccess: updatePermittedModelDto.memoryAccess,
+      chatHistoryAccess: updatePermittedModelDto.chatHistoryAccess,
     });
     const model = await this.updatePermittedModelUseCase.execute(command);
-    if (model instanceof PermittedLanguageModel) {
-      return this.modelResponseDtoMapper.toLanguageModelDto(model);
-    }
-    if (model instanceof PermittedEmbeddingModel) {
-      return this.modelResponseDtoMapper.toEmbeddingModelDto(model);
-    }
-    if (model instanceof PermittedImageGenerationModel) {
-      return this.modelResponseDtoMapper.toImageGenerationModelDto(model);
-    }
-    throw new Error(`Unknown model type: ${model.constructor.name}`);
+    return this.modelResponseDtoMapper.toDto(model);
   }
 
   @Get('permitted/language-models')

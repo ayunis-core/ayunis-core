@@ -84,6 +84,7 @@ export function useUpdatePermittedModel() {
       data: {
         anonymousOnly: params.anonymousOnly,
         memoryAccess: params.memoryAccess,
+        chatHistoryAccess: params.chatHistoryAccess,
       },
     });
   }

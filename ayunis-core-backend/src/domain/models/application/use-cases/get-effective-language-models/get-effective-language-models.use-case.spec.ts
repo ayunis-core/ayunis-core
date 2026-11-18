@@ -28,6 +28,7 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
     teamId?: UUID,
     anonymousOnly = false,
     memoryAccess = false,
+    chatHistoryAccess = false,
   ): PermittedLanguageModel =>
     new PermittedLanguageModel({
       model: new LanguageModel({
@@ -47,6 +48,7 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
       scopeId: teamId ?? null,
       anonymousOnly,
       memoryAccess,
+      chatHistoryAccess,
     });
 
   beforeEach(async () => {
@@ -202,6 +204,73 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
     );
 
     expect(result.models[0]?.memoryAccess).toBe(true);
+  });
+
+  // The anonymous grant wins the merge but allows both; only the other one
+  // denies past chats.
+  it('denies past-chat access when any matching team grant denies it, independently of memory access', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    scopeResolver.resolve.mockResolvedValue({
+      orgId,
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue([
+      permit('Municipal Assistant', sharedCatalogId, teamAId, true, true, true),
+      permit(
+        'Municipal Assistant',
+        sharedCatalogId,
+        teamBId,
+        false,
+        true,
+        false,
+      ),
+    ]);
+
+    const result = await useCase.execute(
+      new GetEffectiveLanguageModelsQuery(orgId, userId),
+    );
+
+    expect(result.models).toHaveLength(1);
+    expect(result.models[0]).toMatchObject({
+      anonymousOnly: true,
+      memoryAccess: true,
+      chatHistoryAccess: false,
+    });
+  });
+
+  it('allows past-chat access when every matching team grant allows it', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    scopeResolver.resolve.mockResolvedValue({
+      orgId,
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue([
+      permit(
+        'Municipal Assistant',
+        sharedCatalogId,
+        teamAId,
+        false,
+        false,
+        true,
+      ),
+      permit(
+        'Municipal Assistant',
+        sharedCatalogId,
+        teamBId,
+        false,
+        false,
+        true,
+      ),
+    ]);
+
+    const result = await useCase.execute(
+      new GetEffectiveLanguageModelsQuery(orgId, userId),
+    );
+
+    expect(result.models[0]).toMatchObject({
+      memoryAccess: false,
+      chatHistoryAccess: true,
+    });
   });
 
   it('drops excluded permits before merging so other grants of the same catalog model survive', async () => {
