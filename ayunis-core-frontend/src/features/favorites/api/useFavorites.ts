@@ -7,10 +7,11 @@ import type { FavoritesControllerFindAll200Item } from '@/shared/api';
 export type Favorite = FavoritesControllerFindAll200Item;
 export type FavoriteReferenceType = Favorite['referenceType'];
 
-export function useFavorites() {
+export function useFavorites({ enabled = true }: { enabled?: boolean } = {}) {
   const query = useFavoritesControllerFindAll({
     query: {
       queryKey: getFavoritesControllerFindAllQueryKey(),
+      enabled,
     },
   });
 

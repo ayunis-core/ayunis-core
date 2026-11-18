@@ -11,6 +11,9 @@ import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { ChatListItem } from '@/pages/chats/model/types';
 import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
+import { Link } from '@tanstack/react-router';
+import { Button } from '@ayunis/ui/components/button';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface ChatsPageProps {
   chats: ChatListItem[];
@@ -28,7 +31,18 @@ export default function ChatsPage({
   currentPage,
 }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
-  const { favorites } = useFavorites();
+  const isEmbedded = useEmbedded();
+  const { favorites } = useFavorites({ enabled: !isEmbedded });
+  const embeddedAction = (
+    <Button
+      variant="ghost"
+      size="sm"
+      asChild
+      data-testid="embedded-back-to-start"
+    >
+      <Link to="/chat">{t('page.embedded.backToStart')}</Link>
+    </Button>
+  );
   const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
 
   const total = pagination?.total ?? 0;
@@ -42,7 +56,7 @@ export default function ChatsPage({
           header={
             <ContentAreaHeader
               breadcrumbs={[{ label: t('page.title') }]}
-              action={<HelpLink path="chat/" />}
+              action={isEmbedded ? embeddedAction : <HelpLink path="chat/" />}
             />
           }
         >
@@ -59,10 +73,14 @@ export default function ChatsPage({
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
             action={
-              <ListToolbar data-testid="chats-toolbar">
-                <ChatsFilters search={search} />
-                <HelpLink path="chat/" />
-              </ListToolbar>
+              isEmbedded ? (
+                embeddedAction
+              ) : (
+                <ListToolbar data-testid="chats-toolbar">
+                  <ChatsFilters search={search} />
+                  <HelpLink path="chat/" />
+                </ListToolbar>
+              )
             }
           />
         }

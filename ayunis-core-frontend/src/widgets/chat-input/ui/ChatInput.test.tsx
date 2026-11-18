@@ -1,12 +1,18 @@
-import type { ReactNode } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { createRef, type ReactNode } from 'react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { showError } from '@/shared/lib/toast';
 import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_TOTAL_IMAGE_SIZE_BYTES,
 } from '@/widgets/chat-input/model/image-upload-policy';
-import ChatInput from './ChatInput';
+import ChatInput, { type ChatInputRef } from './ChatInput';
 
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 vi.mock('react-i18next', () => ({
@@ -276,5 +282,42 @@ describe('ChatInput voice input', () => {
     fireEvent.change(input, { target: { value: 'Bitte Antrag prüfen' } });
 
     expect(voiceInputOfSend()).toBe(false);
+  });
+});
+
+describe('ChatInput prompt sending', () => {
+  // The Outlook pane's starter prompts send through the composer.
+  it('sends a prompt with the images already attached in the composer', async () => {
+    const onSend = vi.fn();
+    const ref = createRef<ChatInputRef>();
+    render(
+      <ChatInput
+        ref={ref}
+        modelId="municipal-model"
+        sources={[]}
+        isVisionEnabled
+        isEmbeddingModelEnabled={false}
+        isAnonymous={false}
+        onModelChange={vi.fn()}
+        onFileUpload={vi.fn()}
+        onRemoveSource={vi.fn()}
+        onSend={onSend}
+        onCancel={vi.fn()}
+      />,
+    );
+    const screenshot = imageOfSize(1024);
+    fireEvent.change(screen.getByTestId('image-picker'), {
+      target: { files: [screenshot] },
+    });
+    await act(() => Promise.resolve());
+
+    act(() => ref.current?.sendMessage('Prepare reply'));
+
+    expect(onSend).toHaveBeenCalledWith(
+      'Prepare reply',
+      [{ file: screenshot, altText: 'site-photo.jpg' }],
+      undefined,
+      false,
+    );
   });
 });

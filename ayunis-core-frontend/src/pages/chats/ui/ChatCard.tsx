@@ -11,6 +11,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ChatListItem } from '@/shared/ui/chat-list-item';
 import { PinButton } from '@/shared/ui/pin-button';
 import type { ChatListItem as Chat } from '@/pages/chats/model/types';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface ChatCardProps {
   chat: Chat;
@@ -19,7 +20,8 @@ interface ChatCardProps {
 export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
   const { t } = useTranslation('chats');
   const { deleteChat, isDeleting } = useDeleteChat();
-  const { favorites } = useFavorites();
+  const isEmbedded = useEmbedded();
+  const { favorites } = useFavorites({ enabled: !isEmbedded });
   const { toggle: toggleFavorite } = useToggleFavorite();
   const { confirm } = useConfirmation();
   const title = chat.title || t('card.untitled');
@@ -43,12 +45,14 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
       anonymousLabel={t('card.anonymous')}
       actions={
         <>
-          <PinButton
-            isPinned={isPinned}
-            pinLabel={t('card.pin')}
-            unpinLabel={t('card.unpin')}
-            onToggle={() => toggleFavorite('thread', chat.id)}
-          />
+          {!isEmbedded && (
+            <PinButton
+              isPinned={isPinned}
+              pinLabel={t('card.pin')}
+              unpinLabel={t('card.unpin')}
+              onToggle={() => toggleFavorite('thread', chat.id)}
+            />
+          )}
           <Button
             variant="destructive-ghost"
             size="icon"

@@ -16,6 +16,7 @@ import {
 import { useWorkspaces } from '@/features/workspaces';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import { Button } from '@ayunis/ui/components/button';
 import { PinButton } from '@/shared/ui/pin-button';
 import {
@@ -44,7 +45,22 @@ interface ChatHeaderProps {
   readonly onDelete: () => void;
 }
 
-export default function ChatHeader({
+export default function ChatHeader(props: Readonly<ChatHeaderProps>) {
+  const isEmbedded = useEmbedded();
+
+  return isEmbedded ? (
+    <EmbeddedChatHeader
+      threadTitle={props.threadTitle}
+      isAnonymous={props.isAnonymous}
+      onRename={props.onRename}
+      onDelete={props.onDelete}
+    />
+  ) : (
+    <WebChatHeader {...props} />
+  );
+}
+
+function WebChatHeader({
   threadId,
   threadTitle,
   isAnonymous,
@@ -81,17 +97,7 @@ export default function ChatHeader({
       ]
     : [{ label: t('chat.chats'), href: '/chats' }, { label: displayTitle }];
 
-  const anonymousBadge = isAnonymous ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge variant="secondary">
-          <ShieldCheck className="h-3 w-3" />
-          {t('chat.anonymousMode')}
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent>{t('chat.anonymousModeTooltip')}</TooltipContent>
-    </Tooltip>
-  ) : undefined;
+  const anonymousBadge = isAnonymous ? <AnonymousBadge /> : undefined;
 
   const notificationBadge =
     routinesEnabled && sourceNotificationId ? (
@@ -124,23 +130,7 @@ export default function ChatHeader({
             unpinLabel={tCommon('sidebar.unpinChat')}
             onToggle={() => togglePinned('thread', threadId)}
           />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5 text-primary" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onRename}>
-                <Pencil className="h-4 w-4" />
-                <span>{t('chat.renameThread')}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} variant="destructive">
-                <Trash2 />
-                <span>{t('chat.deleteThread')}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ThreadActionsMenu onRename={onRename} onDelete={onDelete} />
           <Button
             variant={isArtifactPanelOpen ? 'secondary' : 'ghost'}
             size="icon"
@@ -152,6 +142,88 @@ export default function ChatHeader({
             <PanelRight className="h-5 w-5 text-primary" />
           </Button>
         </div>
+      }
+    />
+  );
+}
+
+function AnonymousBadge() {
+  const { t } = useTranslation('chat');
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge variant="secondary">
+          <ShieldCheck className="h-3 w-3" />
+          {t('chat.anonymousMode')}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>{t('chat.anonymousModeTooltip')}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+interface ThreadActionsMenuProps {
+  readonly onRename: () => void;
+  readonly onDelete: () => void;
+}
+
+function ThreadActionsMenu({ onRename, onDelete }: ThreadActionsMenuProps) {
+  const { t } = useTranslation('chat');
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-5 w-5 text-primary" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onRename}>
+          <Pencil className="h-4 w-4" />
+          <span>{t('chat.renameThread')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDelete} variant="destructive">
+          <Trash2 />
+          <span>{t('chat.deleteThread')}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+interface EmbeddedChatHeaderProps {
+  readonly threadTitle?: string;
+  readonly isAnonymous: boolean;
+  readonly onRename: () => void;
+  readonly onDelete: () => void;
+}
+
+// The Outlook pane's header: the web header's pin, workspace breadcrumbs and
+// side-panel toggle stay out, and so do the favourites, workspace and
+// feature-toggle queries they need.
+function EmbeddedChatHeader({
+  threadTitle,
+  isAnonymous,
+  onRename,
+  onDelete,
+}: EmbeddedChatHeaderProps) {
+  const { t } = useTranslation('chat');
+
+  return (
+    <ContentAreaHeader
+      breadcrumbs={[
+        { label: t('chat.chats'), href: '/chats' },
+        { label: threadTitle || t('chat.untitled') },
+      ]}
+      badge={isAnonymous ? <AnonymousBadge /> : undefined}
+      action={
+        <>
+          <Button size="sm" asChild data-testid="embedded-new-chat">
+            <Link to="/chat">{t('newChat.newChat')}</Link>
+          </Button>
+          <ThreadActionsMenu onRename={onRename} onDelete={onDelete} />
+        </>
       }
     />
   );

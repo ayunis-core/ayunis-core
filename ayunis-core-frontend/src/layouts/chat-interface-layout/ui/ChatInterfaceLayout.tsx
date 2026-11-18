@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import { useAutoScroll } from '@/features/useAutoScroll';
 import { useContentScrollHeader } from '@/features/useContentScrollHeader';
 import {
@@ -20,10 +21,12 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
   chatHeader,
   chatContent,
   chatInput,
-  sidePanel,
+  sidePanel: requestedSidePanel,
   className = '',
   resetKey,
 }) => {
+  // The Outlook pane is too narrow to split, so it never opens the side panel.
+  const sidePanel = useEmbedded() ? undefined : requestedSidePanel;
   const { scrollRef: autoScrollRef, handleScroll } = useAutoScroll(
     chatContent,
     resetKey,

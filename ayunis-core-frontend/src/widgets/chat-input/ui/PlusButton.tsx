@@ -34,6 +34,8 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
+import { SkillsSubmenu } from './SkillsSubmenu';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface PlusButtonProps {
   onFileUpload: (files: File[]) => void;
@@ -44,6 +46,8 @@ interface PlusButtonProps {
   attachedKnowledgeBaseIds?: string[];
   onIntegrationSelect?: (integration: IntegrationSummary) => void;
   attachedIntegrationIds?: string[];
+  onSkillSelect?: (skillId: string, skillName: string) => void;
+  selectedSkillId?: string;
 }
 
 export default function PlusButton({
@@ -55,7 +59,10 @@ export default function PlusButton({
   attachedKnowledgeBaseIds = [],
   onIntegrationSelect,
   attachedIntegrationIds = [],
+  onSkillSelect,
+  selectedSkillId,
 }: Readonly<PlusButtonProps>) {
+  const isEmbedded = useEmbedded();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -103,6 +110,8 @@ export default function PlusButton({
     event.target.value = '';
   };
 
+  const isUploadDisabled = !!isFileSourceDisabled && isImageUploadDisabled;
+
   // Filter out already-attached knowledge bases
   const availableKBs = knowledgeBases.filter(
     (kb) => !attachedKnowledgeBaseIds.includes(kb.id),
@@ -117,7 +126,7 @@ export default function PlusButton({
             <Button
               size="icon"
               variant="outline"
-              disabled={isFileSourceDisabled && isImageUploadDisabled}
+              disabled={isUploadDisabled && !onSkillSelect}
               aria-label={t('chatInput.addButtonTooltip')}
             >
               <Plus className="h-4 w-4" />
@@ -126,15 +135,26 @@ export default function PlusButton({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+            <DropdownMenuItem
+              disabled={isUploadDisabled}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Paperclip className="h-4 w-4" />
               <span>{t('chatInput.uploadFile')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => audioInputRef.current?.click()}>
-              <AudioLines className="h-4 w-4" />
-              <span>{t('chatInput.uploadAudio')}</span>
-            </DropdownMenuItem>
+            {!isEmbedded && (
+              <DropdownMenuItem onClick={() => audioInputRef.current?.click()}>
+                <AudioLines className="h-4 w-4" />
+                <span>{t('chatInput.uploadAudio')}</span>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuGroup>
+          {onSkillSelect && (
+            <SkillsSubmenu
+              onSkillSelect={onSkillSelect}
+              selectedSkillId={selectedSkillId}
+            />
+          )}
           {onKnowledgeBaseSelect && (
             <DropdownMenuGroup>
               <DropdownMenuSub>
