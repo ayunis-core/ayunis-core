@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
+import type { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 
 export class UpdateEmbeddingModelCommand {
   id: UUID;
@@ -7,7 +8,7 @@ export class UpdateEmbeddingModelCommand {
   provider: ModelProvider;
   displayName: string;
   isArchived: boolean;
-  dimensions: number;
+  dimensions: EmbeddingDimensions;
   inputTokenCost?: number;
   outputTokenCost?: number;
 
@@ -17,7 +18,7 @@ export class UpdateEmbeddingModelCommand {
     provider: ModelProvider;
     displayName: string;
     isArchived: boolean;
-    dimensions: number;
+    dimensions: EmbeddingDimensions;
     inputTokenCost?: number;
     outputTokenCost?: number;
   }) {

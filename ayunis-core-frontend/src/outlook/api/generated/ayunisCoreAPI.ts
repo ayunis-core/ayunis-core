@@ -3568,6 +3568,11 @@ export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelRespon
   status: 404
 }
 
+export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse409 = {
+  data: void
+  status: 409
+}
+
 export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse500 = {
   data: void
   status: 500
@@ -3576,7 +3581,7 @@ export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelRespon
 export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponseSuccess = (superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse200) & {
   headers: Headers;
 };
-export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponseError = (superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse400 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse401 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse404 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse500) & {
+export type superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponseError = (superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse400 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse401 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse404 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse409 | superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModelResponse500) & {
   headers: Headers;
 };
 
