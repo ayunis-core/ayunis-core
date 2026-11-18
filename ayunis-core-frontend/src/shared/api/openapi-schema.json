@@ -2447,6 +2447,9 @@
           "404": {
             "description": "Model not found"
           },
+          "409": {
+            "description": "Model in use or name already taken"
+          },
           "500": {
             "description": "Internal server error"
           }

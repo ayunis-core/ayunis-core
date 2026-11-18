@@ -29,6 +29,7 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     deleteMany: jest.fn().mockResolvedValue(undefined),
     findUnreferencedIds: jest.fn().mockResolvedValue([]),
     findOrphanedIds: jest.fn().mockResolvedValue([]),
+    hasIndexedSourceInOrgs: jest.fn().mockResolvedValue(false),
     findReferencedStorageKeys: jest.fn().mockResolvedValue([]),
   };
 }

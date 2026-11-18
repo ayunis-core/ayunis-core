@@ -1,5 +1,7 @@
 import type { UUID } from 'crypto';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import type { SourceRecord } from './schema/source.record';
 
 /**
@@ -61,4 +63,44 @@ export async function findOrphanedSourceIds(
     .limit(limit)
     .getRawMany<{ id: UUID }>();
   return rows.map((row) => row.id);
+}
+
+/**
+ * Text sources are the ones that get embedded; failed ones have their partial
+ * index removed. Each branch resolves the owning organization of one
+ * reachability path, so a source counts for every org that can reach it.
+ */
+export async function hasIndexedSourceInOrgs(
+  repository: Repository<SourceRecord>,
+  orgIds: UUID[],
+): Promise<boolean> {
+  const reachableFromOrgs = `
+    SELECT kbs.id FROM sources kbs
+      JOIN knowledge_bases kb ON kb.id = kbs."knowledgeBaseId"
+      WHERE kb."orgId" IN (:...orgIds)
+    UNION ALL
+    SELECT rs.id FROM sources rs
+      JOIN recordings r ON r.id = rs."recordingId"
+      WHERE r."orgId" IN (:...orgIds)
+    UNION ALL
+    SELECT a."sourceId" FROM thread_source_assignments a
+      JOIN threads t ON t.id = a."threadId"
+      JOIN users tu ON tu.id = t."userId"
+      WHERE tu."orgId" IN (:...orgIds)
+    UNION ALL
+    SELECT ss."sourcesId" FROM skill_sources ss
+      JOIN skills sk ON sk.id = ss."skillsId"
+      LEFT JOIN users su ON su.id = sk."userId"
+      LEFT JOIN workspaces w ON w.id = sk."workspaceId"
+      LEFT JOIN teams tm ON tm.id = sk."teamId"
+      WHERE COALESCE(sk."orgId", su."orgId", w."orgId", tm.org_id) IN (:...orgIds)`;
+  const row = await repository
+    .createQueryBuilder('s')
+    .select('1', 'found')
+    .where('s."type" = :textType', { textType: SourceType.TEXT })
+    .andWhere('s."status" <> :failed', { failed: SourceStatus.FAILED })
+    .andWhere(`s.id IN (${reachableFromOrgs})`, { orgIds })
+    .limit(1)
+    .getRawOne<{ found: number }>();
+  return row !== undefined;
 }

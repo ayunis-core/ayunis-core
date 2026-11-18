@@ -43,6 +43,7 @@ import { StartDocumentProcessingUseCase } from './application/use-cases/start-do
 import { StartDataSourceProcessingUseCase } from './application/use-cases/start-data-source-processing/start-data-source-processing.use-case';
 import { EnqueueDataSourceProcessingUseCase } from './application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
 import { FindUnreferencedSourceIdsUseCase } from './application/use-cases/find-unreferenced-source-ids/find-unreferenced-source-ids.use-case';
+import { HasIndexedSourceInOrgsUseCase } from './application/use-cases/has-indexed-source-in-orgs/has-indexed-source-in-orgs.use-case';
 import { DeleteUnreferencedSourcesUseCase } from './application/use-cases/delete-unreferenced-sources/delete-unreferenced-sources.use-case';
 import { CreateProcessingUrlSourceUseCase } from './application/use-cases/create-processing-url-source/create-processing-url-source.use-case';
 import { EnqueueUrlCrawlUseCase } from './application/use-cases/enqueue-url-crawl/enqueue-url-crawl.use-case';
@@ -128,6 +129,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     StartDataSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
+    HasIndexedSourceInOrgsUseCase,
     DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
@@ -159,6 +161,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     StartDataSourceProcessingUseCase,
     EnqueueDataSourceProcessingUseCase,
     FindUnreferencedSourceIdsUseCase,
+    HasIndexedSourceInOrgsUseCase,
     DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,

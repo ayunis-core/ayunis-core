@@ -672,6 +672,12 @@
           "min": "Context window size must be at least 1",
           "invalid": "Enter a valid context window size"
         },
+        "name": {
+          "embeddingModelInUse": "Documents are indexed with this model, so its name can't be changed."
+        },
+        "dimensions": {
+          "embeddingModelInUse": "Documents are indexed with this model, so its dimensions can't be changed."
+        },
         "invalid": "Review the entered model details"
       }
     }

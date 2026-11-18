@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBody,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiExtraModels,
   ApiInternalServerErrorResponse,
@@ -127,6 +128,7 @@ export class SuperAdminEmbeddingCatalogModelsController {
     status: HttpStatus.NOT_FOUND,
     description: 'Model not found',
   })
+  @ApiConflictResponse({ description: 'Model in use or name already taken' })
   @ApiUnauthorizedResponse({
     description: 'User not authenticated or not authorized as super admin',
   })

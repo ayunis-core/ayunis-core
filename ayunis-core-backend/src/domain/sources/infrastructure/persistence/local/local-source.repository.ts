@@ -35,6 +35,7 @@ import { chunk } from 'src/common/util/chunk';
 import {
   findOrphanedSourceIds,
   findUnreferencedSourceIds,
+  hasIndexedSourceInOrgs,
 } from './local-source-reachability.queries';
 
 // Keeps each candidate lookup far below Postgres' 65,535 bind-parameter cap.
@@ -486,5 +487,10 @@ export class LocalSourceRepository extends SourceRepository {
   async findOrphanedIds(olderThan: Date, limit: number): Promise<UUID[]> {
     this.logger.log({ olderThan, limit }, 'findOrphanedIds');
     return findOrphanedSourceIds(this.sourceRepository, olderThan, limit);
+  }
+
+  async hasIndexedSourceInOrgs(orgIds: UUID[]): Promise<boolean> {
+    this.logger.log({ orgCount: orgIds.length }, 'hasIndexedSourceInOrgs');
+    return hasIndexedSourceInOrgs(this.sourceRepository, orgIds);
   }
 }

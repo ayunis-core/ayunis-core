@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUpdateEmbeddingModel } from '../api/useUpdateEmbeddingModel';
-import type { EmbeddingModelFormData } from '../model/types';
+import { useUpdateEmbeddingModel } from '@/pages/super-admin-settings/models-catalog/api/useUpdateEmbeddingModel';
+import type { EmbeddingModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
 import type {
   EmbeddingModelResponseDto,
   UpdateEmbeddingModelRequestDtoProvider,
@@ -24,10 +24,6 @@ export function EditEmbeddingModelDialog({
   onOpenChange,
 }: Readonly<EditEmbeddingModelDialogProps>) {
   const { t } = useTranslation('super-admin-settings-org');
-  const { updateEmbeddingModel, isUpdating } = useUpdateEmbeddingModel(() => {
-    onOpenChange(false);
-  });
-
   const form = useForm<EmbeddingModelFormData>({
     defaultValues: {
       name: '',
@@ -37,6 +33,12 @@ export function EditEmbeddingModelDialog({
       isArchived: false,
     },
   });
+  const { updateEmbeddingModel, isUpdating } = useUpdateEmbeddingModel(
+    form,
+    () => {
+      onOpenChange(false);
+    },
+  );
 
   // Reset form when model changes or dialog opens
   useEffect(() => {

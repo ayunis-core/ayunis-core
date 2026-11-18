@@ -672,6 +672,12 @@
           "min": "Die Kontextfenstergröße muss mindestens 1 betragen",
           "invalid": "Geben Sie eine gültige Kontextfenstergröße ein"
         },
+        "name": {
+          "embeddingModelInUse": "Mit diesem Modell sind Dokumente indexiert, daher kann der Name nicht geändert werden."
+        },
+        "dimensions": {
+          "embeddingModelInUse": "Mit diesem Modell sind Dokumente indexiert, daher können die Dimensionen nicht geändert werden."
+        },
         "invalid": "Überprüfen Sie die eingegebenen Modelldaten"
       }
     }
