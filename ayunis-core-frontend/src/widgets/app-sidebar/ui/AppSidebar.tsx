@@ -43,7 +43,7 @@ import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
-import { InboxButton } from './InboxButton';
+import { InboxSidebarItem } from './InboxSidebarItem';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import {
@@ -157,7 +157,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               </Link>
               <ReleaseNotesButton />
-              <InboxButton />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -167,27 +166,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarMenu>
             {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={
-                    item.exact
-                      ? location.pathname === item.url
-                      : location.pathname.startsWith(item.url)
-                  }
-                >
-                  <Link
-                    to={item.url}
-                    data-testid={NAVIGATION_TEST_IDS[item.url]}
-                    // `disabled` is inert on an anchor; the sidebar variants
-                    // style aria-disabled and block pointer events for us.
-                    aria-disabled={item.disabled}
+              <React.Fragment key={item.title}>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={
+                      item.exact
+                        ? location.pathname === item.url
+                        : location.pathname.startsWith(item.url)
+                    }
                   >
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                    <Link
+                      to={item.url}
+                      data-testid={NAVIGATION_TEST_IDS[item.url]}
+                      // `disabled` is inert on an anchor; the sidebar variants
+                      // style aria-disabled and block pointer events for us.
+                      aria-disabled={item.disabled}
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {item.url === '/chat' && <InboxSidebarItem />}
+              </React.Fragment>
             ))}
             {marketplaceUrl && (
               <SidebarMenuItem>
