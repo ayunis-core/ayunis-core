@@ -42,6 +42,8 @@ const BUILT_IN_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'code_execution',
   'activate_skill',
   'marketplace_search',
+  'get_memory',
+  'set_memory',
   'send_notification',
   'finish_routine',
 ]);

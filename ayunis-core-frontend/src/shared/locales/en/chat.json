@@ -125,6 +125,8 @@
         "create_routine": "Created routine",
         "edit_routine": "Edited routine",
         "activate_skill": "Activated skill",
+        "get_memory": "Read memory",
+        "set_memory": "Updated memory",
         "internet_search": "Searched the internet",
         "website_content": "Fetched website",
         "source_query": "Searched files",

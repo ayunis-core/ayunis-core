@@ -5,6 +5,7 @@
     "settings": "Settings",
     "general": "General",
     "chat": "Chat",
+    "memory": "Memory",
     "integrations": "Integrations",
     "account": "Account"
   },
@@ -150,5 +151,42 @@
     "defaultModelError": "Failed to update default model",
     "saveSystemPrompt": "Save",
     "deleteSystemPrompt": "Remove"
+  },
+  "memory": {
+    "title": "Memory",
+    "reserved": {
+      "personal": {
+        "title": "About you"
+      },
+      "preferences": {
+        "title": "Your preferences"
+      }
+    },
+    "emptyEntry": "Nothing stored yet.",
+    "contentPlaceholder": "What the assistant should remember",
+    "updatedAt": "Updated: {{date}}",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "delete": "Delete",
+    "clearAll": "Delete all memory",
+    "saved": "Memory updated",
+    "deleted": "Memory entry removed",
+    "cleared": "Memory deleted",
+    "saveError": "Could not save the memory entry",
+    "limitReached": "Memory is full. Delete another entry first.",
+    "deleteError": "Could not delete the memory entry",
+    "clearError": "Could not delete your memory",
+    "loadError": "Could not load your memory.",
+    "retry": "Try again",
+    "confirmClear": {
+      "title": "Delete all memory?",
+      "body": "Every entry is deleted permanently. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete all"
+    },
+    "descriptionLabel": "When is this relevant?",
+    "descriptionPlaceholder": "One line on when the assistant should use this, e.g. \"When drafting monthly council reports\""
   }
 }
