@@ -186,6 +186,7 @@
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A knowledge base can have at most 500 documents. Please remove one before adding another.",
     "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading documents.",
+    "embeddingModelUnavailableError": "The enabled embedding model can't be used. Please ask your administrator to check its configuration.",
     "uploading": "Uploading… {{percent}}%",
     "uploadInterruptedError": "The upload was interrupted. Please try again."
   }

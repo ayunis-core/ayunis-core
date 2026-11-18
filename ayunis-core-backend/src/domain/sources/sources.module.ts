@@ -61,6 +61,8 @@ import { GetSourceTranscriptSegmentsUseCase } from 'src/domain/sources/applicati
 import { IndexTranscriptSummaryUseCase } from 'src/domain/sources/application/use-cases/index-transcript-summary/index-transcript-summary.use-case';
 import { SourceUploadsController } from './presenters/http/source-uploads.controller';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
+import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
+import { EmbeddingReadinessService } from './application/services/embedding-readiness.service';
 
 const SOURCE_UPLOAD_USE_CASES = [
   CreateSourceUploadSessionUseCase,
@@ -92,10 +94,12 @@ const SOURCE_UPLOAD_USE_CASES = [
     UrlCrawlModule,
     SpreadsheetParsingModule,
     OrgsModule,
+    EmbeddingsModule,
     forwardRef(() => ModelsModule), // Models → Sources → Models (circular)
   ],
   controllers: [SourceUploadsController],
   providers: [
+    EmbeddingReadinessService,
     SourceUploadStorageCleanupService,
     SweepOrphanedSourcesUseCase,
     OrphanedSourcesSweepTask,

@@ -10,6 +10,9 @@ export const embeddingsConfig = registerAs('embeddings', () => ({
     apiKey: process.env.MISTRAL_API_KEY,
     serverUrl: process.env.MISTRAL_EMBEDDINGS_SERVER_URL,
   },
+  ollama: {
+    baseURL: process.env.OLLAMA_BASE_URL,
+  },
   ayunis: {
     baseURL: process.env.AYUNIS_BASE_URL,
     authToken: process.env.AYUNIS_AUTH_TOKEN,

@@ -26,15 +26,15 @@ jest.mock('@appsignal/nodejs', () => ({
 describe('CreateSourceUploadSessionUseCase', () => {
   const sessions = createMockSourceUploadSessionRepository();
   const assertOrgActive = { execute: jest.fn().mockResolvedValue({}) };
-  const getPermittedEmbeddingModel = {
-    execute: jest.fn().mockResolvedValue({}),
+  const embeddingReadiness = {
+    assertOrgCanEmbed: jest.fn().mockResolvedValue(undefined),
   };
   const AUDIO_MAX = 200 * 1024 * 1024;
   const PDF_MAX = 100 * 1024 * 1024;
   const useCase = new CreateSourceUploadSessionUseCase(
     sessions,
     assertOrgActive as never,
-    getPermittedEmbeddingModel as never,
+    embeddingReadiness as never,
     createOwnerContext() as unknown as ContextService,
     { maxUploadBytes: AUDIO_MAX } as ConfigType<typeof transcriptionConfig>,
     { pdfMaxBytes: PDF_MAX },
@@ -206,8 +206,8 @@ describe('CreateSourceUploadSessionUseCase', () => {
     ).rejects.toBeInstanceOf(EmptyFileDataError);
   });
 
-  it('fails fast when the org has no embedding model for a document', async () => {
-    getPermittedEmbeddingModel.execute.mockRejectedValueOnce(
+  it('fails fast when the org cannot embed a document', async () => {
+    embeddingReadiness.assertOrgCanEmbed.mockRejectedValueOnce(
       new PermittedEmbeddingModelNotFoundForOrgError(UPLOAD_ORG_ID),
     );
 
@@ -222,7 +222,7 @@ describe('CreateSourceUploadSessionUseCase', () => {
       command({ fileName: 'data.csv', mimeType: 'text/csv' }),
     );
 
-    expect(getPermittedEmbeddingModel.execute).not.toHaveBeenCalled();
+    expect(embeddingReadiness.assertOrgCanEmbed).not.toHaveBeenCalled();
   });
 
   it('requires an embedding model for a knowledge-base table upload', async () => {
@@ -234,7 +234,7 @@ describe('CreateSourceUploadSessionUseCase', () => {
       }),
     );
 
-    expect(getPermittedEmbeddingModel.execute).toHaveBeenCalled();
+    expect(embeddingReadiness.assertOrgCanEmbed).toHaveBeenCalled();
   });
 
   it('counts a saved session as created once by target kind and transfer mode', async () => {

@@ -15,8 +15,7 @@ import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases
 import { UploadOrgObjectCommand } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.command';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import { DeleteObjectCommand } from 'src/domain/storage/application/use-cases/delete-object/delete-object.command';
-import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
-import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
+import { EmbeddingReadinessService } from 'src/domain/sources/application/services/embedding-readiness.service';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
@@ -33,7 +32,7 @@ export class StartDocumentProcessingUseCase {
     private readonly uploadOrgObjectUseCase: UploadOrgObjectUseCase,
     private readonly deleteObjectUseCase: DeleteObjectUseCase,
     private readonly enqueueDocumentProcessingUseCase: EnqueueDocumentProcessingUseCase,
-    private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
+    private readonly embeddingReadiness: EmbeddingReadinessService,
     private readonly preflightCheckUseCase: PreflightCheckUseCase,
     private readonly contextService: ContextService,
   ) {}
@@ -48,12 +47,7 @@ export class StartDocumentProcessingUseCase {
       const userId = this.contextService.get('userId');
       if (!userId) throw new Error('userId is required');
 
-      // Indexing resolves the org's embedding model only inside the worker,
-      // after the (expensive) OCR step — reject here so an unprovisioned org
-      // fails fast with a clear error instead of a doomed processing job.
-      await this.getPermittedEmbeddingModelUseCase.execute(
-        new GetPermittedEmbeddingModelQuery({ orgId }),
-      );
+      await this.embeddingReadiness.assertOrgCanEmbed(orgId);
 
       // OCR would reject an oversized PDF only after the upload round trip —
       // check the page cap here so it fails before any processing starts.
