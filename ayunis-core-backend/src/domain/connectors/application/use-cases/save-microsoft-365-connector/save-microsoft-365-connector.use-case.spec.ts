@@ -5,9 +5,12 @@ import {
 import { ConnectorCredentialsRequiredError } from 'src/domain/connectors/application/connectors.errors';
 import type { ConnectorCredentialEncryptionPort } from 'src/domain/connectors/application/ports/connector-credential-encryption.port';
 import type { ConnectorsRepository } from 'src/domain/connectors/application/ports/connectors.repository';
+import type { Microsoft365ConnectionTestResult } from 'src/domain/connectors/application/models/microsoft-365-connection-test-result';
+import type { Microsoft365ConnectionTestService } from 'src/domain/connectors/application/services/microsoft-365-connection-test.service';
 import { Connector } from 'src/domain/connectors/domain/connector.entity';
 import { ConnectorProduct } from 'src/domain/connectors/domain/connector-product.enum';
 import { ConnectorStatus } from 'src/domain/connectors/domain/connector-status.enum';
+import { Microsoft365ConnectionTestOutcome } from 'src/domain/connectors/domain/microsoft-365/microsoft-365-connection-test-outcome.enum';
 import { SaveMicrosoft365ConnectorCommand } from './save-microsoft-365-connector.command';
 import { SaveMicrosoft365ConnectorUseCase } from './save-microsoft-365-connector.use-case';
 
@@ -16,9 +19,19 @@ const SETUP = {
   clientId: '0b8a7d11-2f1f-4f4e-9a59-6f1c2c4e3c1a',
 };
 const SECRET = 'Zq8~kR2.client-secret-value';
+const CONNECTION_TEST: Microsoft365ConnectionTestResult = {
+  outcome: Microsoft365ConnectionTestOutcome.CONNECTED,
+  permissions: [{ name: 'Sites.Selected', required: true, granted: true }],
+  otherGrantedPermissions: [],
+  entraErrorCode: null,
+};
 
 describe('SaveMicrosoft365ConnectorUseCase', () => {
-  function setUp(setUpConnector: Connector | null) {
+  function setUp(
+    setUpConnector: Connector | null,
+    testConnection: () => Promise<Microsoft365ConnectionTestResult> = () =>
+      Promise.resolve(CONNECTION_TEST),
+  ) {
     const repository: jest.Mocked<ConnectorsRepository> = {
       findAllByOrgId: jest.fn(),
       findByOrgIdAndProduct: jest.fn(),
@@ -31,12 +44,20 @@ describe('SaveMicrosoft365ConnectorUseCase', () => {
         Promise.resolve(`sealed:${Buffer.from(plaintext).toString('base64')}`),
       decrypt: jest.fn(),
     };
+    const tested: Connector[] = [];
+    const connectionTest = {
+      test: (connector: Connector) => {
+        tested.push(connector);
+        return testConnection();
+      },
+    } as Microsoft365ConnectionTestService;
     const useCase = new SaveMicrosoft365ConnectorUseCase(
       repository,
       encryption,
+      connectionTest,
       createMockContextService(),
     );
-    return { repository, useCase };
+    return { repository, useCase, tested };
   }
 
   const setUpConnector = new Connector({
@@ -63,26 +84,56 @@ describe('SaveMicrosoft365ConnectorUseCase', () => {
     expect(saved.encryptedCredentials).toBe(
       `sealed:${Buffer.from(JSON.stringify({ clientSecret: SECRET })).toString('base64')}`,
     );
-    expect(overview).toEqual({ status: ConnectorStatus.SET_UP, setup: SETUP });
+    expect(overview).toEqual({
+      status: ConnectorStatus.SET_UP,
+      setup: SETUP,
+      connectionTest: CONNECTION_TEST,
+    });
   });
 
-  it('changing the setup without a secret keeps the stored secret', async () => {
-    const { repository, useCase } = setUp(setUpConnector);
+  it('changing the setup without a secret keeps the stored secret and tests the connection as saved', async () => {
+    const { repository, useCase, tested } = setUp(setUpConnector);
 
     const overview = await useCase.execute(
       new SaveMicrosoft365ConnectorCommand(SETUP),
     );
 
     expect(repository.upsert).not.toHaveBeenCalled();
-    expect(overview).toEqual({ status: ConnectorStatus.SET_UP, setup: SETUP });
+    expect(overview).toEqual({
+      status: ConnectorStatus.SET_UP,
+      setup: SETUP,
+      connectionTest: CONNECTION_TEST,
+    });
+    expect(tested).toEqual([setUpConnector]);
   });
 
   it('refuses to set up a connection without a secret while none is stored', async () => {
-    const { repository, useCase } = setUp(null);
+    const { repository, useCase, tested } = setUp(null);
 
     await expect(
       useCase.execute(new SaveMicrosoft365ConnectorCommand(SETUP)),
     ).rejects.toThrow(ConnectorCredentialsRequiredError);
     expect(repository.upsert).not.toHaveBeenCalled();
+    expect(tested).toEqual([]);
+  });
+
+  it('still returns the saved connector when the connection test throws unexpectedly', async () => {
+    const { repository, useCase } = setUp(null, () =>
+      Promise.reject(new Error('Invalid JWT')),
+    );
+
+    const overview = await useCase.execute(
+      new SaveMicrosoft365ConnectorCommand({ ...SETUP, clientSecret: SECRET }),
+    );
+
+    expect(repository.upsert).toHaveBeenCalled();
+    expect(overview).toMatchObject({
+      status: ConnectorStatus.SET_UP,
+      setup: SETUP,
+      connectionTest: {
+        outcome: Microsoft365ConnectionTestOutcome.UNEXPECTED_ERROR,
+        entraErrorCode: null,
+      },
+    });
   });
 });

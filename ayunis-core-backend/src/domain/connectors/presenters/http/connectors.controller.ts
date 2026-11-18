@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Post,
   Put,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -19,10 +20,13 @@ import { SaveMicrosoft365ConnectorUseCase } from 'src/domain/connectors/applicat
 import { SaveMicrosoft365ConnectorCommand } from 'src/domain/connectors/application/use-cases/save-microsoft-365-connector/save-microsoft-365-connector.command';
 import { RemoveConnectionUseCase } from 'src/domain/connectors/application/use-cases/remove-connection/remove-connection.use-case';
 import { RemoveConnectionCommand } from 'src/domain/connectors/application/use-cases/remove-connection/remove-connection.command';
+import { TestMicrosoft365ConnectionUseCase } from 'src/domain/connectors/application/use-cases/test-microsoft-365-connection/test-microsoft-365-connection.use-case';
 import { ConnectorProduct } from 'src/domain/connectors/domain/connector-product.enum';
 import { ConnectorResponseDto } from './dtos/connector-response.dto';
 import { Microsoft365ConnectorResponseDto } from './dtos/microsoft-365-connector-response.dto';
 import { SaveMicrosoft365ConnectorDto } from './dtos/save-microsoft-365-connector.dto';
+import { SavedMicrosoft365ConnectorResponseDto } from './dtos/saved-microsoft-365-connector-response.dto';
+import { Microsoft365ConnectionTestResponseDto } from './dtos/microsoft-365-connection-test-response.dto';
 
 @ApiTags('connectors')
 @Controller('connectors')
@@ -34,6 +38,7 @@ export class ConnectorsController {
     private readonly getMicrosoft365ConnectorUseCase: GetMicrosoft365ConnectorUseCase,
     private readonly saveMicrosoft365ConnectorUseCase: SaveMicrosoft365ConnectorUseCase,
     private readonly removeConnectionUseCase: RemoveConnectionUseCase,
+    private readonly testMicrosoft365ConnectionUseCase: TestMicrosoft365ConnectionUseCase,
   ) {}
 
   @Get()
@@ -64,17 +69,31 @@ export class ConnectorsController {
   @ApiOperation({
     summary: 'Set up the Microsoft 365 connection or change it',
     description:
-      "Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one.",
+      "Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one. The saved connection is tested right away.",
   })
-  @ApiResponse({ status: 200, type: Microsoft365ConnectorResponseDto })
+  @ApiResponse({ status: 200, type: SavedMicrosoft365ConnectorResponseDto })
   async saveMicrosoft365(
     @Body() dto: SaveMicrosoft365ConnectorDto,
-  ): Promise<Microsoft365ConnectorResponseDto> {
-    return toMicrosoft365Response(
-      await this.saveMicrosoft365ConnectorUseCase.execute(
-        new SaveMicrosoft365ConnectorCommand(dto),
-      ),
+  ): Promise<SavedMicrosoft365ConnectorResponseDto> {
+    const saved = await this.saveMicrosoft365ConnectorUseCase.execute(
+      new SaveMicrosoft365ConnectorCommand(dto),
     );
+    return {
+      ...toMicrosoft365Response(saved),
+      connectionTest: saved.connectionTest,
+    };
+  }
+
+  @Post('microsoft-365/test')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Test the Microsoft 365 connection',
+    description:
+      "Requests an app-only token with the stored credentials and shows the permissions granted in it. Entra refusing the token, or not answering, is the test's outcome, not an error.",
+  })
+  @ApiResponse({ status: 200, type: Microsoft365ConnectionTestResponseDto })
+  async testMicrosoft365(): Promise<Microsoft365ConnectionTestResponseDto> {
+    return this.testMicrosoft365ConnectionUseCase.execute();
   }
 
   @Delete('microsoft-365')

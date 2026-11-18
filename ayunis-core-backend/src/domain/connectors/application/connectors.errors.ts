@@ -4,6 +4,7 @@ import type { ConnectorProduct } from 'src/domain/connectors/domain/connector-pr
 
 export enum ConnectorErrorCode {
   CONNECTOR_CREDENTIALS_REQUIRED = 'CONNECTOR_CREDENTIALS_REQUIRED',
+  CONNECTOR_NOT_SET_UP = 'CONNECTOR_NOT_SET_UP',
   UNEXPECTED_CONNECTOR_ERROR = 'UNEXPECTED_CONNECTOR_ERROR',
 }
 
@@ -14,6 +15,17 @@ export class ConnectorCredentialsRequiredError extends ApplicationError {
       'Credentials are required to set up the connector',
       ConnectorErrorCode.CONNECTOR_CREDENTIALS_REQUIRED,
       400,
+      { product },
+    );
+  }
+}
+
+export class ConnectorNotSetUpError extends ApplicationError {
+  constructor(product: ConnectorProduct) {
+    super(
+      'The connector is not set up',
+      ConnectorErrorCode.CONNECTOR_NOT_SET_UP,
+      404,
       { product },
     );
   }

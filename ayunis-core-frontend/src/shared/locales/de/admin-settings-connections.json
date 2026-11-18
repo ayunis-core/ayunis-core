@@ -18,7 +18,8 @@
       "tenantId": "Verzeichnis-ID (Mandant)",
       "clientId": "Anwendungs-ID (Client)",
       "clientSecret": "Wert des geheimen Clientschlüssels",
-      "clientSecretKept": "Leer lassen, um den gespeicherten Schlüssel zu behalten."
+      "clientSecretKept": "Leer lassen, um den gespeicherten Schlüssel zu behalten.",
+      "clientSecretLooksLikeId": "Das sieht nach der ID des geheimen Schlüssels aus. Geben Sie stattdessen seinen Wert ein: Er wird nur einmal angezeigt, wenn der Schlüssel erstellt wird; ist er verloren, erstellen Sie einen neuen Schlüssel."
     },
     "save": {
       "button": "Speichern",
@@ -34,6 +35,66 @@
       "cancel": "Abbrechen",
       "success": "Microsoft-365-Verbindung entfernt.",
       "error": "Die Microsoft-365-Verbindung konnte nicht entfernt werden."
+    },
+    "test": {
+      "title": "Verbindungstest",
+      "description": "Fordert bei Microsoft Entra ein Token für die App an und zeigt die Berechtigungen, die ihr erteilt sind.",
+      "button": "Verbindung testen",
+      "testing": "Wird getestet…",
+      "error": "Die Verbindung konnte nicht getestet werden.",
+      "notSetUp": "Die Microsoft-365-Verbindung ist nicht mehr eingerichtet.",
+      "entraErrorCode": "Entra-Fehlercode: {{code}}",
+      "required": "Erforderlich",
+      "optional": "Optional",
+      "granted": "Erteilt",
+      "notGranted": "Nicht erteilt",
+      "otherGranted": "Außerdem erteilt, von Ayunis nicht genutzt: {{permissions}}",
+      "outcomes": {
+        "connected": {
+          "title": "Verbunden",
+          "hint": "Ayunis kann sich mit dieser App anmelden."
+        },
+        "tenant_not_found": {
+          "title": "Mandant nicht gefunden",
+          "hint": "Microsoft Entra kennt diese Verzeichnis-ID (Mandant) nicht. Kopieren Sie sie von der Übersichtsseite der App im Entra Admin Center."
+        },
+        "client_not_found": {
+          "title": "App in diesem Mandanten nicht gefunden",
+          "hint": "Verwenden Sie die Anwendungs-ID (Client) von der Übersichtsseite der App, nicht die Objekt-ID oder die ID des geheimen Schlüssels. Prüfen Sie, ob die Mandanten-ID zum Mandanten gehört, in dem die App registriert ist."
+        },
+        "client_secret_invalid": {
+          "title": "Geheimer Clientschlüssel ungültig",
+          "hint": "Geben Sie den Wert des geheimen Schlüssels ein, nicht seine geheime ID. Der Wert wird nur einmal angezeigt, wenn der Schlüssel erstellt wird; ist er verloren, erstellen Sie einen neuen Schlüssel."
+        },
+        "client_secret_expired": {
+          "title": "Geheimer Clientschlüssel abgelaufen",
+          "hint": "Erstellen Sie unter „Zertifikate & Geheimnisse“ einen neuen geheimen Clientschlüssel und geben Sie seinen Wert ein."
+        },
+        "consent_missing": {
+          "title": "Keine Berechtigungen erteilt",
+          "hint": "Fügen Sie Sites.Selected unter Microsoft Graph (nicht SharePoint) als Anwendungsberechtigung hinzu und erteilen Sie die Administratorzustimmung."
+        },
+        "consent_on_wrong_api": {
+          "title": "Berechtigungen unter SharePoint hinzugefügt",
+          "hint": "Die Berechtigungen müssen unter Microsoft Graph, nicht unter SharePoint, als Anwendungsberechtigungen hinzugefügt werden, gefolgt von der Administratorzustimmung."
+        },
+        "required_permission_missing": {
+          "title": "Sites.Selected fehlt",
+          "hint": "Fügen Sie Sites.Selected unter Microsoft Graph als Anwendungsberechtigung hinzu und erteilen Sie die Administratorzustimmung."
+        },
+        "rejected": {
+          "title": "Microsoft Entra hat die Anmeldung abgelehnt",
+          "hint": "Entra hat der App kein Token ausgestellt, z. B. wegen einer Richtlinie für bedingten Zugriff oder einer deaktivierten App. Die IT kann den Fehlercode nachschlagen."
+        },
+        "microsoft_unavailable": {
+          "title": "Microsoft nicht erreichbar",
+          "hint": "Microsoft Entra hat nicht geantwortet. Versuchen Sie es in einigen Minuten erneut."
+        },
+        "unexpected_error": {
+          "title": "Verbindung nicht getestet",
+          "hint": "Die Verbindung wurde gespeichert, aber der Test ist wegen eines unerwarteten Fehlers fehlgeschlagen. Testen Sie die Verbindung erneut."
+        }
+      }
     },
     "validation": {
       "tenantId": {

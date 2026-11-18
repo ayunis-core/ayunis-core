@@ -20,6 +20,7 @@ import { validateTrustProxy } from 'src/config/trust-proxy';
 import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
 import { validateOutlookFrameOrigins } from 'src/config/outlook-frame-origins';
 import { validateConnectorRules } from 'src/config/connector-env.validation';
+import { IsOptionalHttpUrl } from 'src/config/is-optional-http-url.decorator';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
 const BOOLEAN_STRINGS = ['true', 'false'] as const;
@@ -271,16 +272,10 @@ export class EnvironmentVariables {
   )
   @IsUUID()
   ANNOUNCABLE_ORG_ID?: string;
-  @IsOptional()
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsUrl({
-    require_protocol: true,
-    require_tld: false,
-    protocols: ['http', 'https'],
-  })
-  ANNOUNCABLE_URL?: string;
+  @IsOptionalHttpUrl() ANNOUNCABLE_URL?: string;
+
+  // Connectors
+  @IsOptionalHttpUrl() MICROSOFT_LOGIN_URL?: string;
 }
 
 /**

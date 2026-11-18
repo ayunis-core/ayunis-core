@@ -42,6 +42,7 @@
   "/chat-settings/system-prompt",
   "/connectors",
   "/connectors/microsoft-365",
+  "/connectors/microsoft-365/test",
   "/credit-limits/api-keys",
   "/credit-limits/api-keys/{apiKeyId}",
   "/credit-limits/default-user",
