@@ -18,6 +18,7 @@ import {
 } from 'class-validator';
 import { validateTrustProxy } from 'src/config/trust-proxy';
 import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
+import { validateOutlookFrameOrigins } from 'src/config/outlook-frame-origins';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
 const BOOLEAN_STRINGS = ['true', 'false'] as const;
@@ -454,6 +455,7 @@ export function validateEnv(
     ...validateProductionRules(env),
     ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
+    ...validateOutlookFrameOrigins(env),
     ...validateSubscriptionSyncRules(env),
   ];
   if (messages.length > 0) {

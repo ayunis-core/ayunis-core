@@ -88,6 +88,36 @@ describe('validateEnv', () => {
       ).not.toThrow();
     },
   );
+  it.each([
+    'https://*.office.com',
+    '*',
+    'https://outlook.office.com/mail',
+    "https://outlook.office.com 'unsafe-inline'",
+    'https://outlook.office.com;script-src *',
+    'outlook.office.com',
+  ])('rejects the Outlook frame origin %s', (value) => {
+    expect(() =>
+      validateEnv(baseEnv({ OUTLOOK_ADDIN_FRAME_ORIGINS: value })),
+    ).toThrow('OUTLOOK_ADDIN_FRAME_ORIGINS');
+  });
+  it('rejects a plain HTTP Outlook frame origin in production', () => {
+    expect(() =>
+      validateEnv(
+        // eslint-disable-next-line sonarjs/no-clear-text-protocols -- invalid input under test
+        prodEnv({ OUTLOOK_ADDIN_FRAME_ORIGINS: 'http://mail.customer.de' }),
+      ),
+    ).toThrow('OUTLOOK_ADDIN_FRAME_ORIGINS');
+  });
+  it('accepts a list of HTTPS Outlook frame origins in production', () => {
+    expect(() =>
+      validateEnv(
+        prodEnv({
+          OUTLOOK_ADDIN_FRAME_ORIGINS:
+            'https://outlook.office.com, https://mail.customer.de:8443',
+        }),
+      ),
+    ).not.toThrow();
+  });
   it('returns the config unchanged when valid', () => {
     const env = baseEnv({ PORT: '3000' });
 
