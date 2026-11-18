@@ -1,35 +1,33 @@
-import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
-import { createPaneChatApi } from '@/outlook/api/pane-chat-api';
 import type { PaneSession } from '@/outlook/api/pane-session';
 import type { SignInOptions } from '@/outlook/lib/sign-in-dialog';
 import { usePaneAuth, type PaneError } from '@/outlook/lib/use-pane-auth';
-import { PaneChat } from '@/outlook/ui/PaneChat';
 
+/**
+ * Owns the pane's sign-in: the chat app (`children`) mounts only while
+ * signed in, and unmounts when its session ends, so it never needs a login
+ * route of its own.
+ */
 export function TaskPane({
   session,
   officeAvailable,
+  children,
 }: Readonly<{
   session: PaneSession;
   officeAvailable: () => Promise<boolean>;
+  children: ReactNode;
 }>) {
   const { t } = useTranslation();
-  const { state, signIn, signOut, expire } = usePaneAuth(
-    session,
-    officeAvailable,
-  );
-  const chatApi = useMemo(() => createPaneChatApi(session), [session]);
+  const { state, signIn } = usePaneAuth(session, officeAvailable);
 
   if (state.status === 'signedIn') {
     return (
-      <PaneChat
-        api={chatApi}
-        user={state.user}
-        onSignOut={() => void signOut()}
-        onSessionExpired={expire}
-      />
+      <div className="h-full" data-testid="outlook-pane-signed-in">
+        {children}
+      </div>
     );
   }
 

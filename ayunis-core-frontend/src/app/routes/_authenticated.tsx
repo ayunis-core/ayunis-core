@@ -15,7 +15,7 @@ import {
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
-  beforeLoad: async ({ context: { queryClient }, preload }) => {
+  beforeLoad: async ({ context: { queryClient, embedded }, preload }) => {
     try {
       const user = await queryClient.query(meQueryOptions());
       setAppsignalTags({ userId: user.id, orgId: user.orgId });
@@ -30,6 +30,9 @@ export const Route = createFileRoute('/_authenticated')({
       // A failed hover preload leaves the user on the current page; only a
       // real navigation that fails ends the analytics session.
       if (!preload) clearOpenPanelIdentity();
+      // The pane has no login route: its entry shows the sign-in once the
+      // session ends (`TaskPane`), and any other failure shows the error page.
+      if (embedded) throw error;
       try {
         const { code } = extractErrorData(error);
         if (code === 'IP_NOT_ALLOWED') {

@@ -428,14 +428,14 @@ closed; the embedded app hides the controls that would call them.
 | Runs | `POST /api/runs/send-message`, `GET /api/runs/active`, `GET /api/runs/threads/:threadId/events`, `POST /api/runs/threads/:threadId/cancel` | Send, reattach to a running chat, Stop |
 | Files | `GET /api/threads/:id/sources`, `POST /api/threads/:id/uploads`, `POST /api/threads/:id/uploads/:uploadId/complete`, `POST /api/source-uploads/:id/sign`, `DELETE /api/source-uploads/:id`, `DELETE /api/threads/:id/sources/:sourceId` | Upload, remove an uploaded file |
 | Message content | `GET /api/threads/:threadId/messages/:messageId/images/:index`, `GET /api/threads/:threadId/source-chunks/:chunkId`, `POST /api/threads/:id/pii-masks/:maskId/unmask` | Images in the user's messages, citations, revealing an anonymised value |
-| Composer | `GET /api/models/default-selection`, `GET /api/models/permitted/language-models`, `GET /api/models/modes`, `GET /api/skills`, `POST /api/transcriptions` | Model selector, skill picker, voice input |
+| Composer | `GET /api/models/default-selection`, `GET /api/models/permitted/language-models`, `GET /api/models/modes`, `POST /api/transcriptions` | Model selector, voice input |
 | Read-only settings | `GET /api/chat-settings/chat-start-defaults`, `GET /api/models/embedding/enabled`, `GET /api/academy-access/status` | Anonymisation default, file sources, academy gate |
 
 The embedded app never calls `GET /api/onboarding`,
 `GET /api/subscriptions/active`, `GET /api/chat-settings/system-prompt`,
-`GET /api/threads/:id/ai-context`, `GET /api/workspaces/:id` or `POST /api/speech`:
-the welcome video, onboarding, personalization, context hint and read-aloud
-controls are hidden there. Pane runs use the `outlook` run profile, which has no
+`GET /api/threads/:id/ai-context`, `GET /api/workspaces/:id`, `GET /api/skills` or
+`POST /api/speech`: the welcome video, onboarding, personalization, context
+hint, skill picker and read-aloud controls are hidden there. Pane runs use the `outlook` run profile, which has no
 artifacts, image generation, skills or routines tools, so their routes stay
 closed too. The legacy multipart-form route `POST /api/threads/:id/sources/file`
 stays closed: it is slated for removal (AYC-1587), and the pane uses the same

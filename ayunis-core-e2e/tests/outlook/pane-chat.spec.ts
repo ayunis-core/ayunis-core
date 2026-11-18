@@ -6,11 +6,17 @@ import {
 import type { MailcatcherClient } from '../../src/clients/mailcatcher.client';
 import { createMemberSession } from '../../src/factories/user.factory';
 import { expect, test } from '../../src/fixtures/test';
-import { sidebarThreadItem, startThread } from '../../src/flows/chat.flow';
+import {
+  sendMessage,
+  sidebarThreadItem,
+  startThread,
+} from '../../src/flows/chat.flow';
 import { officeItemCalls, openSignedInPane } from '../../src/flows/outlook.flow';
 
-// The pane runs its Outlook tools against the stubbed mail being composed;
-// the mock model answers the English quick-action prompts with those tools.
+// The pane runs the chat app, whose Outlook tools act on the stubbed mail
+// being composed; the mock model answers these two prompts with those tools.
+const SUMMARIZE_PROMPT = 'Summarize this email.';
+const DRAFT_REPLY_PROMPT = 'Draft a reply to this email.';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 function composeItem(key: string): OfficeStubComposeItem {
@@ -42,6 +48,12 @@ async function openPaneAsNewMember(
   }
 }
 
+/** The Outlook prompt then goes into an open chat, as a follow-up. */
+async function openChat(page: Page): Promise<void> {
+  await sendMessage(page, 'E2E hello');
+  await expect(page.getByTestId('assistant-message').last()).toBeVisible();
+}
+
 test('summarizes the open email from what the pane read', async ({
   page,
   api,
@@ -50,15 +62,13 @@ test('summarizes the open email from what the pane read', async ({
   const key = `outlook-summary-${Date.now()}`;
   const item = composeItem(key);
   await openPaneAsNewMember(page, api, mail, key, item);
+  await openChat(page);
 
-  await page.getByTestId('outlook-pane-quick-action-summarize').click();
+  await sendMessage(page, SUMMARIZE_PROMPT);
 
-  await expect(
-    page.getByTestId('outlook-pane-assistant-message').last(),
-  ).toContainText(`outlook-summary::${item.subject}`);
-  const card = page.getByTestId('outlook-pane-tool-card');
-  await expect(card).toHaveAttribute('data-tool', 'outlook__read_email');
-  await expect(card).toHaveAttribute('data-status', 'read');
+  await expect(page.getByTestId('assistant-message').last()).toContainText(
+    `outlook-summary::${item.subject}`,
+  );
 });
 
 test('inserts a drafted reply into the email being composed', async ({
@@ -68,12 +78,14 @@ test('inserts a drafted reply into the email being composed', async ({
 }) => {
   const key = `outlook-draft-${Date.now()}`;
   await openPaneAsNewMember(page, api, mail, key, composeItem(key));
+  await openChat(page);
 
-  await page.getByTestId('outlook-pane-quick-action-draftReply').click();
+  await sendMessage(page, DRAFT_REPLY_PROMPT);
 
-  const card = page.getByTestId('outlook-pane-tool-card');
-  await expect(card).toHaveAttribute('data-tool', 'outlook__draft_email');
-  await expect(card).toHaveAttribute('data-status', 'inserted');
+  await expect(page.getByTestId('outlook-draft')).toHaveAttribute(
+    'data-status',
+    'inserted',
+  );
   expect(await officeItemCalls(page)).toContainEqual({
     method: 'body.prependAsync',
     args: [
@@ -97,8 +109,9 @@ test('keeps pane chats out of the web app and web chats out of the pane', async 
     key,
     composeItem(key),
   );
-  await page.getByTestId('outlook-pane-quick-action-draftReply').click();
-  await expect(page.getByTestId('outlook-pane-tool-card')).toHaveAttribute(
+  await openChat(page);
+  await sendMessage(page, DRAFT_REPLY_PROMPT);
+  await expect(page.getByTestId('outlook-draft')).toHaveAttribute(
     'data-status',
     'inserted',
   );
@@ -116,6 +129,25 @@ test('keeps pane chats out of the web app and web chats out of the pane', async 
     await webContext.close();
   }
 
-  await page.getByTestId('outlook-pane-history').click();
-  await expect(page.getByTestId('outlook-pane-thread')).toHaveCount(1);
+  await page.getByTestId('embedded-new-chat').click();
+  await page.getByTestId('embedded-history').click();
+  await expect(page.getByTestId('chat-card')).toHaveCount(1);
+});
+
+// The starter prompts start a new chat with the Outlook prompt as its first
+// message, which the new-chat page sends before the chat page takes over.
+test('summarizes the open email when asked in a new chat', async ({
+  page,
+  api,
+  mail,
+}) => {
+  const key = `outlook-first-${Date.now()}`;
+  const item = composeItem(key);
+  await openPaneAsNewMember(page, api, mail, key, item);
+
+  await sendMessage(page, SUMMARIZE_PROMPT);
+
+  await expect(page.getByTestId('assistant-message').last()).toContainText(
+    `outlook-summary::${item.subject}`,
+  );
 });

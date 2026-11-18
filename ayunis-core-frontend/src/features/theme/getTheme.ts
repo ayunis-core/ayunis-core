@@ -1,10 +1,11 @@
 import { THEME_KEY } from './themeKey';
 
 export function getTheme() {
-  const theme = localStorage.getItem(THEME_KEY);
-
-  if (theme === 'dark') {
-    return 'dark';
+  // Storage throws when the browser blocks it, as in the Outlook pane's
+  // third-party iframe; the theme then stays light.
+  try {
+    return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
   }
-  return 'light';
 }

@@ -270,6 +270,8 @@ export default function NewChatPage({
             chatInput={
               <>
                 <AcademyGateNotice className="mb-2" />
+                {/* No skill picker in the pane for now (product decision,
+                    2026-11-18): its `+` menu offers file upload only. */}
                 <ChatInput
                   ref={chatInputRef}
                   modelId={modelId}
@@ -286,10 +288,6 @@ export default function NewChatPage({
                   onAnonymousChange={setIsAnonymous}
                   isAnonymousEnforced={isAnonymousEnforced}
                   isVisionEnabled={isVisionEnabled}
-                  selectedSkillId={selectedSkillId}
-                  selectedSkillName={selectedSkillName}
-                  onSkillRemove={handleSkillRemove}
-                  onSkillSelect={handleSkillSelect}
                 />
               </>
             }

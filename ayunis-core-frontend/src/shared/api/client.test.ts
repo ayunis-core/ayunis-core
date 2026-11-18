@@ -141,6 +141,7 @@ describe('embedded session', () => {
       accessToken: async () => token,
       refreshRejected,
       request: vi.fn(),
+      signOut: vi.fn(),
     });
   });
 

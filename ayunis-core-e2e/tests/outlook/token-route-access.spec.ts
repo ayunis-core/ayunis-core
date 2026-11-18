@@ -20,7 +20,6 @@ function embeddedAppRoutes(threadId: string): RouteCall[] {
     { method: 'GET', path: '/models/permitted/language-models' },
     { method: 'GET', path: '/models/modes' },
     { method: 'GET', path: '/academy-access/status' },
-    { method: 'GET', path: '/skills?ownerType=personal' },
     { method: 'POST', path: '/transcriptions' },
     { method: 'GET', path: '/runs/active' },
     { method: 'GET', path: `/runs/threads/${threadId}/events` },
@@ -47,6 +46,8 @@ function closedRoutes(threadId: string): RouteCall[] {
     { method: 'GET', path: `/threads/${threadId}/ai-context` },
     { method: 'GET', path: '/favorites' },
     { method: 'GET', path: '/api-keys' },
+    // The pane has no skill picker (product decision, AYC-1897).
+    { method: 'GET', path: '/skills?ownerType=personal' },
   ];
 }
 

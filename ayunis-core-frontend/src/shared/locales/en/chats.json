@@ -2,7 +2,8 @@
   "page": {
     "title": "Chats",
     "embedded": {
-      "backToStart": "Back to start"
+      "backToStart": "Back to start",
+      "signOut": "Sign out"
     }
   },
   "filters": {

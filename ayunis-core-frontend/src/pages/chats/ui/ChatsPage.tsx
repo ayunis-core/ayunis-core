@@ -14,6 +14,7 @@ import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
 import { Link } from '@tanstack/react-router';
 import { Button } from '@ayunis/ui/components/button';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
+import { getEmbeddedSession } from '@/shared/api/embedded-session';
 
 interface ChatsPageProps {
   chats: ChatListItem[];
@@ -33,15 +34,26 @@ export default function ChatsPage({
   const { t } = useTranslation('chats');
   const isEmbedded = useEmbedded();
   const { favorites } = useFavorites({ enabled: !isEmbedded });
+  // Sign-out ends the pane session; the pane entry then shows its sign-in.
   const embeddedAction = (
-    <Button
-      variant="ghost"
-      size="sm"
-      asChild
-      data-testid="embedded-back-to-start"
-    >
-      <Link to="/chat">{t('page.embedded.backToStart')}</Link>
-    </Button>
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        asChild
+        data-testid="embedded-back-to-start"
+      >
+        <Link to="/chat">{t('page.embedded.backToStart')}</Link>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => void getEmbeddedSession()?.signOut()}
+        data-testid="embedded-sign-out"
+      >
+        {t('page.embedded.signOut')}
+      </Button>
+    </div>
   );
   const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
 

@@ -74,7 +74,6 @@ import {
 } from './dto/set-skill-state.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { SkillDtoMapper } from './mappers/skill.mapper';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 @ApiTags('skills')
 @Controller('skills')
@@ -183,7 +182,6 @@ export class SkillsController {
     });
   }
 
-  @AllowedClients('outlook')
   @Get()
   @ApiOperation({ summary: 'List skills for an owner scope' })
   @ApiResponse({ status: 200, type: SkillListResponseDto })
