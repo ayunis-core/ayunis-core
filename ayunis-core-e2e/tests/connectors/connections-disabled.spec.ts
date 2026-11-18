@@ -1,4 +1,7 @@
-import { requestConnectors } from '../../src/clients/api/connectors.client';
+import {
+  requestConnectors,
+  requestMicrosoft365Connector,
+} from '../../src/clients/api/connectors.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import { expect, test } from '../../src/fixtures/test';
 
@@ -17,7 +20,15 @@ test('with connectors disabled there is no Connections section and the other adm
   const toggles = await requestFeatureToggles(api, disabledApiUrl);
   expect(await toggles.json()).toMatchObject({ connectorsEnabled: false });
   expect((await requestConnectors(api, disabledApiUrl)).status()).toBe(404);
+  expect(
+    (await requestMicrosoft365Connector.get(api, disabledApiUrl)).status(),
+  ).toBe(404);
+  expect(
+    (await requestMicrosoft365Connector.remove(api, disabledApiUrl)).status(),
+  ).toBe(404);
 
+  await page.goto(`${disabledBaseUrl}/admin-settings/connections/microsoft-365`);
+  await expect(page).toHaveURL(/\/admin-settings\/users$/);
   await page.goto(`${disabledBaseUrl}/admin-settings/connections`);
   await expect(page).toHaveURL(/\/admin-settings\/users$/);
   await expect(page.getByTestId('admin-users-sort-name')).toBeVisible();

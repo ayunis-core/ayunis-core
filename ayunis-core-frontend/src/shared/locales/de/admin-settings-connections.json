@@ -10,5 +10,44 @@
     },
     "loadError": "Die Verbindungen konnten nicht geladen werden.",
     "retry": "Erneut versuchen"
+  },
+  "microsoft365": {
+    "loadError": "Die Microsoft-365-Verbindung konnte nicht geladen werden.",
+    "setup": {
+      "title": "Entra-App",
+      "tenantId": "Verzeichnis-ID (Mandant)",
+      "clientId": "Anwendungs-ID (Client)",
+      "clientSecret": "Wert des geheimen Clientschlüssels",
+      "clientSecretKept": "Leer lassen, um den gespeicherten Schlüssel zu behalten."
+    },
+    "save": {
+      "button": "Speichern",
+      "saving": "Wird gespeichert…",
+      "success": "Microsoft-365-Verbindung gespeichert.",
+      "error": "Die Microsoft-365-Verbindung konnte nicht gespeichert werden."
+    },
+    "remove": {
+      "button": "Verbindung entfernen",
+      "title": "Microsoft-365-Verbindung entfernen?",
+      "description": "Mandanten-ID, Client-ID und geheimer Clientschlüssel werden gelöscht. Sie können die Verbindung jederzeit wieder einrichten.",
+      "confirm": "Entfernen",
+      "cancel": "Abbrechen",
+      "success": "Microsoft-365-Verbindung entfernt.",
+      "error": "Die Microsoft-365-Verbindung konnte nicht entfernt werden."
+    },
+    "validation": {
+      "tenantId": {
+        "matches": "Geben Sie die Verzeichnis-ID (Mandant) als GUID ein, z. B. 6f1c2c4e-3c1a-4f4e-9a59-2f1f0b8a7d11."
+      },
+      "clientId": {
+        "matches": "Geben Sie die Anwendungs-ID (Client) als GUID ein, z. B. 0b8a7d11-2f1f-4f4e-9a59-6f1c2c4e3c1a."
+      },
+      "clientSecret": {
+        "required": "Geben Sie den Wert des geheimen Clientschlüssels ein.",
+        "isNotEmpty": "Geben Sie den Wert des geheimen Clientschlüssels ein.",
+        "maxLength": "Der Wert des geheimen Clientschlüssels darf höchstens 1024 Zeichen lang sein."
+      },
+      "invalid": "Ungültige Eingabe"
+    }
   }
 }

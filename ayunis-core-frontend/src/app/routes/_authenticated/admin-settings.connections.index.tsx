@@ -3,7 +3,7 @@ import { ConnectionsSettingsPage } from '@/pages/admin-settings/connections-sett
 import { getFeatureToggles } from './-routines-enabled-query';
 
 export const Route = createFileRoute(
-  '/_authenticated/admin-settings/connections',
+  '/_authenticated/admin-settings/connections/',
 )({
   beforeLoad: async ({ context: { queryClient } }) => {
     const toggles = await getFeatureToggles(queryClient);
