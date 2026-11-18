@@ -33,6 +33,8 @@ import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
 import { StartupPending } from '@/shared/ui/startup-pending/StartupPending';
 import { EmbeddedContext } from '@/shared/contexts/embedded/embeddedContext';
 import { isDevEmbedded } from '@/shared/contexts/embedded/dev-embedded';
+import { setEmbeddedSession } from '@/shared/api/embedded-session';
+import { createPaneSession } from '@/outlook/api/pane-session';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 import { shouldRetryQuery } from '@/shared/api/client';
 import {
@@ -48,6 +50,9 @@ import { routeTree } from './app/routeTree.gen.ts';
 import './styles/main.css';
 import './i18n.ts';
 import reportWebVitals from './reportWebVitals.ts';
+
+const embedded = isDevEmbedded(import.meta.env.DEV, window.location.search);
+if (embedded) setEmbeddedSession(createPaneSession());
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -66,7 +71,7 @@ const queryClient = new QueryClient({
 // Create a new router instance
 const router = createRouter({
   routeTree,
-  context: { queryClient, user: null },
+  context: { queryClient, user: null, embedded },
   defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
@@ -112,9 +117,7 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <ErrorBoundary>
-        <EmbeddedContext.Provider
-          value={isDevEmbedded(import.meta.env.DEV, window.location.search)}
-        >
+        <EmbeddedContext.Provider value={embedded}>
           <RootLayout>
             <QueryClientProvider client={queryClient}>
               <RouterProvider router={router} />

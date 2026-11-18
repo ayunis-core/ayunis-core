@@ -69,7 +69,7 @@ export default function NewChatPage({
     hasSystemPrompt,
     isLoading: isSystemPromptLoading,
     isError: isSystemPromptError,
-  } = useUserSystemPromptStatus();
+  } = useUserSystemPromptStatus(!isEmbedded);
   const { skip, isSkipping } = useSkipPersonalization();
 
   useEffect(() => {

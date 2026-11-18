@@ -1,4 +1,4 @@
-import config from '@/shared/config';
+import { apiFetch } from '@/shared/api/embedded-session';
 import type { ToolCallDecisionDto } from '@/shared/api';
 
 export interface RunMessagePayload {
@@ -53,14 +53,13 @@ export function postRunMessage(
     formData.append('streaming', String(payload.streaming));
   }
 
-  return fetch(`${config.api.baseUrl}/runs/send-message`, {
+  return apiFetch('/runs/send-message', {
     method: 'POST',
     headers: {
       // Don't set Content-Type - browser will set it with boundary for multipart
       Accept: 'text/event-stream',
       'Cache-Control': 'no-cache',
     },
-    credentials: 'include',
     body: formData,
     signal,
   });

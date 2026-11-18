@@ -1,8 +1,9 @@
 import { useChatSettingsControllerGetSystemPrompt } from '@/shared/api/generated/ayunisCoreAPI';
 
-export function useUserSystemPromptStatus() {
-  const { data, isLoading, isError } =
-    useChatSettingsControllerGetSystemPrompt();
+export function useUserSystemPromptStatus(enabled = true) {
+  const { data, isLoading, isError } = useChatSettingsControllerGetSystemPrompt(
+    { query: { enabled } },
+  );
 
   return {
     hasSystemPrompt:

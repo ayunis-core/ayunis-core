@@ -4,6 +4,7 @@ import {
   getLogoutControllerLogoutUrl,
 } from '@/outlook/api/generated/ayunisCoreAPI';
 import config from '@/shared/config';
+import type { EmbeddedSession } from '@/shared/api/embedded-session';
 import type {
   MeResponseDto,
   SessionTokensResponseDto,
@@ -50,22 +51,21 @@ function createRefreshTokenStore() {
 }
 
 export class SessionExpiredError extends Error {
+  // Like a 401: query retries treat a 4xx as final, and no retry can revive
+  // an expired session.
+  readonly status = 401;
+
   constructor() {
     super('The Ayunis session has expired');
     this.name = 'SessionExpiredError';
   }
 }
 
-export interface PaneSession {
+export interface PaneSession extends EmbeddedSession {
   /** Resumes a stored session; null when the pane has never signed in. */
   restore(): Promise<MeResponseDto | null>;
   signIn(tokens: SessionTokensResponseDto): Promise<MeResponseDto>;
   signOut(): Promise<void>;
-  /**
-   * Calls the API with the pane's Bearer token, refreshing it once on 401.
-   * Any other status is returned for the caller to handle.
-   */
-  request(path: string, init?: RequestInit): Promise<Response>;
 }
 
 /**
@@ -97,7 +97,17 @@ export function createPaneSession(
     refreshTokens.remove();
   }
 
-  async function refresh(): Promise<void> {
+  // Refresh tokens rotate: two concurrent refreshes would present the same
+  // token twice, so every caller waits on the one in flight.
+  let refreshing: Promise<void> | null = null;
+  function refresh(): Promise<void> {
+    refreshing ??= refreshOnce().finally(() => {
+      refreshing = null;
+    });
+    return refreshing;
+  }
+
+  async function refreshOnce(): Promise<void> {
     const refreshToken = refreshTokens.get();
     if (!refreshToken) throw new SessionExpiredError();
     const response = await post(getAuthenticationControllerRefreshUrl(), {
@@ -115,26 +125,39 @@ export function createPaneSession(
     store((await response.json()) as SessionTokensResponseDto);
   }
 
+  async function currentAccessToken(): Promise<string> {
+    if (!accessToken) await refresh();
+    if (!accessToken) throw new SessionExpiredError();
+    return accessToken;
+  }
+
+  /** Refreshes unless another request already replaced the rejected token. */
+  async function refreshRejected(rejected: string): Promise<void> {
+    if (accessToken === rejected) await refresh();
+  }
+
   async function authorizedRequest(
     path: string,
     init: RequestInit = {},
   ): Promise<Response> {
-    if (!accessToken) await refresh();
-    const send = () => {
+    const send = async () => {
+      const token = await currentAccessToken();
       // Headers, not a spread: a caller's `Headers` instance has no own
       // enumerable properties, so spreading it would drop every header.
       const headers = new Headers(init.headers);
-      headers.set('Authorization', `Bearer ${accessToken}`);
-      return fetch(`${baseUrl}${path}`, {
+      headers.set('Authorization', `Bearer ${token}`);
+      const response = await fetch(`${baseUrl}${path}`, {
         ...init,
         credentials: 'omit',
         headers,
       });
+      return { response, token };
     };
-    let response = await send();
+    const first = await send();
+    let response = first.response;
     if (response.status === 401) {
-      await refresh();
-      response = await send();
+      await refreshRejected(first.token);
+      response = (await send()).response;
     }
     if (response.status === 401) {
       clear();
@@ -174,5 +197,7 @@ export function createPaneSession(
       }
     },
     request: authorizedRequest,
+    accessToken: currentAccessToken,
+    refreshRejected,
   };
 }

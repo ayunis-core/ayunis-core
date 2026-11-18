@@ -48,6 +48,7 @@ import { UpsertOrgAcademyAccessSettingsDto } from './dto/upsert-org-academy-acce
 import { OrgCertificateStatusesQueryParamsDto } from './dto/org-certificate-statuses-query-params.dto';
 import { OrgCertificateStatusesExportQueryParamsDto } from './dto/org-certificate-statuses-export-query-params.dto';
 import { PaginatedOrgCertificateStatusesResponseDto } from './dto/org-certificate-status-response.dto';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 @ApiTags('Academy Access')
 @Controller('academy-access')
@@ -67,6 +68,7 @@ export class AcademyAccessController {
    * Deliberately not gated — a blocked user has to be able to read why they are
    * blocked.
    */
+  @AllowedClients('outlook')
   @Get('status')
   @ApiOperation({
     summary: 'Whether the current user may use Ayunis Core chat, and why not',

@@ -8,6 +8,7 @@ import { GetThreadSourceCitationQuery } from 'src/domain/runs/application/use-ca
 import { GetThreadSourceCitationUseCase } from 'src/domain/runs/application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
 import { SourceCitationResponseDto } from './dto/source-citation-response.dto';
 import { SourceCitationResponseMapper } from './mappers/source-citation-response.mapper';
+import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -21,6 +22,7 @@ export class ThreadSourceCitationsController {
     private readonly contextService: ContextService,
   ) {}
 
+  @AllowedClients('outlook')
   @Get(':threadId/source-chunks/:chunkId')
   @ApiOperation({ summary: 'Get a source citation in a thread' })
   @ApiParam({ name: 'threadId', type: 'string', format: 'uuid' })

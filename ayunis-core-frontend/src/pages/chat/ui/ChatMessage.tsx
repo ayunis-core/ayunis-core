@@ -8,7 +8,7 @@ import type {
   Message,
   ImageMessageContentResponseDto,
 } from '@/pages/chat/model/openapi';
-import config from '@/shared/config';
+import { useApiImageSrc } from '@/shared/hooks/useApiImageSrc';
 import { Markdown, usePiiMasks } from '@/widgets/markdown';
 import { resolvedPromptText } from '@/pages/chat/lib/sent-prompts';
 import type { TextMessageContentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -52,7 +52,7 @@ function ChatMessage({ message }: ChatMessageProps) {
               <ImageThumbnail
                 key={`image-${imageContent.index}`}
                 imageContent={imageContent}
-                imageUrl={`${config.api.baseUrl}/threads/${message.threadId}/messages/${message.id}/images/${imageContent.index}`}
+                imagePath={`/threads/${message.threadId}/messages/${message.id}/images/${imageContent.index}`}
               />
             ))}
           </div>
@@ -81,12 +81,13 @@ export default memo(ChatMessage);
 
 function ImageThumbnail({
   imageContent,
-  imageUrl,
+  imagePath,
 }: {
   readonly imageContent: ImageMessageContentResponseDto;
-  readonly imageUrl: string;
+  readonly imagePath: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const imageUrl = useApiImageSrc(imagePath);
 
   return (
     <>

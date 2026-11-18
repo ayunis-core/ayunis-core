@@ -416,21 +416,36 @@ everywhere else. Browser sessions and API keys carry no client and are not
 affected. A token whose `client` is no longer in the registry is rejected
 rather than treated as a browser session.
 
-Routes open to `outlook`: the session routes (`GET /api/auth/me`,
-`POST /api/auth/refresh`, `POST /api/auth/logout`) and what the pane's chat
-needs: `POST /api/runs/send-message`, `GET` and `POST /api/threads`, `GET` and
-`DELETE /api/threads/:id`, `PATCH /api/threads/:id/title`,
-`GET /api/threads/:id/sources`, the direct-upload routes for PDF and Office
-attachments the model reads (`POST /api/threads/:id/uploads`,
-`POST /api/threads/:id/uploads/:uploadId/complete`,
-`POST /api/source-uploads/:id/sign`, `DELETE /api/source-uploads/:id`) and
-`GET /api/models/default-selection`
-(the pane starts a chat with the user's default mode or model and has no model
-picker). Aborting a pane run closes its response, which cancels the run, so
-`POST /api/runs/threads/:threadId/cancel` stays closed. The legacy
-multipart-form route `POST /api/threads/:id/sources/file` stays closed to the
-pane as well: it is slated for removal (AYC-1587), so the pane uses the same
+Routes open to `outlook` are what the chat app needs in the pane's embedded
+mode (AYC-1895). Each is user-scoped or a read of an organisation setting the
+chat depends on. Admin, organisation-management and billing routes stay
+closed; the embedded app hides the controls that would call them.
+
+| Area | Routes | Used by |
+| --- | --- | --- |
+| Session | `GET /api/auth/me`, `POST /api/auth/refresh`, `POST /api/auth/logout` | Boot, body-token refresh, sign-out |
+| Chats | `GET` and `POST /api/threads`, `GET` and `DELETE /api/threads/:id`, `PATCH /api/threads/:id/title` | New chat, history (`?client=outlook`, so only pane chats), rename, delete |
+| Runs | `POST /api/runs/send-message`, `GET /api/runs/active`, `GET /api/runs/threads/:threadId/events`, `POST /api/runs/threads/:threadId/cancel` | Send, reattach to a running chat, Stop |
+| Files | `GET /api/threads/:id/sources`, `POST /api/threads/:id/uploads`, `POST /api/threads/:id/uploads/:uploadId/complete`, `POST /api/source-uploads/:id/sign`, `DELETE /api/source-uploads/:id`, `DELETE /api/threads/:id/sources/:sourceId` | Upload, remove an uploaded file |
+| Message content | `GET /api/threads/:threadId/messages/:messageId/images/:index`, `GET /api/threads/:threadId/source-chunks/:chunkId`, `POST /api/threads/:id/pii-masks/:maskId/unmask` | Images in the user's messages, citations, revealing an anonymised value |
+| Composer | `GET /api/models/default-selection`, `GET /api/models/permitted/language-models`, `GET /api/models/modes`, `GET /api/skills`, `POST /api/transcriptions` | Model selector, skill picker, voice input |
+| Read-only settings | `GET /api/chat-settings/chat-start-defaults`, `GET /api/models/embedding/enabled`, `GET /api/academy-access/status` | Anonymisation default, file sources, academy gate |
+
+The embedded app never calls `GET /api/onboarding`,
+`GET /api/subscriptions/active`, `GET /api/chat-settings/system-prompt`,
+`GET /api/threads/:id/ai-context`, `GET /api/workspaces/:id` or `POST /api/speech`:
+the welcome video, onboarding, personalization, context hint and read-aloud
+controls are hidden there. Pane runs use the `outlook` run profile, which has no
+artifacts, image generation, skills or routines tools, so their routes stay
+closed too. The legacy multipart-form route `POST /api/threads/:id/sources/file`
+stays closed: it is slated for removal (AYC-1587), and the pane uses the same
 direct-upload flow as the web app.
+
+In embedded mode the chat app sends no cookies: the axios client uses the fetch
+adapter with `credentials: 'omit'` and the pane's Bearer token, the streaming
+calls go through `apiFetch`, and API images are fetched into blob URLs because
+an `<img>` cannot carry a Bearer token. A 401 refreshes the token once (single
+flight, since refresh tokens rotate) and retries.
 
 ## Organization authentication policy
 

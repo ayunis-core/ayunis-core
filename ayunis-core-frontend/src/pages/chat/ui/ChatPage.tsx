@@ -59,6 +59,7 @@ import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
 import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
 import { ProductiveOutcomeProvider } from '@/shared/lib/openpanel-outcomes';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -83,6 +84,7 @@ export default function ChatPage({
   initialArtifactId,
 }: ChatPageProps) {
   const { t } = useTranslation('chat');
+  const isEmbedded = useEmbedded();
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const {
@@ -374,11 +376,14 @@ export default function ChatPage({
         threadId={thread.id}
         pendingSubmission={pendingSubmission}
         contextHint={
-          <ChatContextHint
-            threadId={thread.id}
-            workspaceId={thread.workspaceId}
-            onOpen={() => sidePanelTransitions.changeTab('context')}
-          />
+          // It opens the side panel, which the pane doesn't have.
+          !isEmbedded && (
+            <ChatContextHint
+              threadId={thread.id}
+              workspaceId={thread.workspaceId}
+              onOpen={() => sidePanelTransitions.changeTab('context')}
+            />
+          )
         }
         showLoadingPlaceholder={showLoadingPlaceholder}
         onOpenArtifact={sidePanelTransitions.openArtifactPanel}

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { setEmbeddedSession } from '@/shared/api/embedded-session';
 import {
   axiosInstance,
   isRetryingThroughDeployGap,
@@ -123,6 +124,80 @@ describe('deploy-gap retry', () => {
 
     await settled;
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe('embedded session', () => {
+  const fetchMock = vi.fn<typeof fetch>();
+  let token = 'access-1';
+  const refreshRejected = vi.fn(async () => {
+    token = 'access-2';
+  });
+
+  beforeEach(() => {
+    token = 'access-1';
+    vi.stubGlobal('fetch', fetchMock);
+    setEmbeddedSession({
+      accessToken: async () => token,
+      refreshRejected,
+      request: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    setEmbeddedSession(null);
+    vi.unstubAllGlobals();
+    fetchMock.mockReset();
+    refreshRejected.mockClear();
+  });
+
+  function sentRequests(): Request[] {
+    return fetchMock.mock.calls.map(([input]) => input as Request);
+  }
+
+  it('sends the pane token and no cookies, so a browser session cannot leak into the pane', async () => {
+    fetchMock.mockResolvedValue(new Response('{}', { status: 200 }));
+
+    await axiosInstance.get('/threads');
+
+    const [request] = sentRequests();
+    expect(request.credentials).toBe('omit');
+    expect(request.headers.get('Authorization')).toBe('Bearer access-1');
+  });
+
+  it('refreshes a rejected pane token once and retries with the new one', async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response('{}', { status: 401 }))
+      .mockResolvedValueOnce(new Response('{}', { status: 200 }));
+
+    await axiosInstance.get('/threads');
+
+    expect(refreshRejected).toHaveBeenCalledWith('access-1');
+    expect(sentRequests()[1].headers.get('Authorization')).toBe(
+      'Bearer access-2',
+    );
+  });
+
+  it('gives up when the refreshed token is rejected too', async () => {
+    fetchMock.mockImplementation(
+      async () => new Response('{}', { status: 401 }),
+    );
+
+    await expect(axiosInstance.get('/threads')).rejects.toMatchObject({
+      status: 401,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('web session', () => {
+  it('keeps the cookie session and sends no Authorization header', async () => {
+    const calls = respondWith([200]);
+
+    await axiosInstance.get('/threads');
+
+    expect(calls[0].withCredentials).toBe(true);
+    expect(calls[0].headers.get('Authorization')).toBeUndefined();
   });
 });
 

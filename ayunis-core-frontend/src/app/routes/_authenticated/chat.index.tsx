@@ -50,7 +50,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { modelId }, context: { queryClient } }) => {
+  loader: async ({ deps: { modelId }, context: { queryClient, embedded } }) => {
     await queryClient.query(anonymousModeDefaultQueryOptions());
     let selectedModelId: string | undefined;
     if (modelId) {
@@ -64,6 +64,15 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { isEmbeddingModelEnabled } = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
+    // The pane has no personalization card, and its token may not read
+    // billing or the system prompt.
+    if (embedded) {
+      return {
+        selectedModelId,
+        hasActiveSubscription: false,
+        isEmbeddingModelEnabled,
+      };
+    }
     const { hasActiveSubscription } = await queryClient.query(
       queryHasActiveSubscriptionOptions(),
     );
