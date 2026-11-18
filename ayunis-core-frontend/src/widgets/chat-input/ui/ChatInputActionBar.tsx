@@ -14,6 +14,7 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface ChatInputActionBarProps {
   isSubmitting: boolean;
@@ -32,6 +33,7 @@ interface ChatInputActionBarProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  onSkillSelect?: (skillId: string, skillName: string) => void;
   isModelChangeDisabled?: boolean;
   modelId: string | undefined;
   onModelChange: (modelId: string) => void;
@@ -88,6 +90,7 @@ export function ChatInputActionBar({
   selectedSkillId,
   selectedSkillName,
   onSkillRemove,
+  onSkillSelect,
   isModelChangeDisabled,
   modelId,
   onModelChange,
@@ -101,6 +104,8 @@ export function ChatInputActionBar({
   onDictation,
 }: Readonly<ChatInputActionBarProps>) {
   const { t } = useTranslation('common');
+  // AYC-510 keeps knowledge bases and integrations out of the Outlook pane.
+  const isEmbedded = useEmbedded();
 
   return (
     <ChatInputToolbar
@@ -112,12 +117,16 @@ export function ChatInputActionBar({
               onImageSelect={onImageSelect}
               isFileSourceDisabled={!isEmbeddingModelEnabled || isSubmitting}
               isImageUploadDisabled={!isVisionEnabled || isSubmitting}
-              onKnowledgeBaseSelect={onAddKnowledgeBase}
+              onKnowledgeBaseSelect={
+                isEmbedded ? undefined : onAddKnowledgeBase
+              }
               attachedKnowledgeBaseIds={knowledgeBases?.map((kb) => kb.id)}
-              onIntegrationSelect={onAddIntegration}
+              onIntegrationSelect={isEmbedded ? undefined : onAddIntegration}
               attachedIntegrationIds={mcpIntegrations?.map(
                 (integration) => integration.id,
               )}
+              onSkillSelect={onSkillSelect}
+              selectedSkillId={selectedSkillId}
             />
           </OnboardingTourTarget>
           <OnboardingTourTarget name={TOUR_TARGET.anonymousMode} settleMs={900}>

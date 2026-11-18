@@ -436,6 +436,11 @@
         "release_note": "Neuigkeiten"
       },
       "viewAll": "Alle im Posteingang ansehen"
+    },
+    "embedded": {
+      "heading": "Wie kann Ayunis Core bei dieser E-Mail helfen?",
+      "prepareReply": "Antwort vorbereiten",
+      "summarizeEmail": "E-Mail zusammenfassen"
     }
   }
 }

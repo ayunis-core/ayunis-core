@@ -1,6 +1,9 @@
 {
   "page": {
-    "title": "Chats"
+    "title": "Chats",
+    "embedded": {
+      "backToStart": "Back to start"
+    }
   },
   "filters": {
     "searchPlaceholder": "Search chats..."

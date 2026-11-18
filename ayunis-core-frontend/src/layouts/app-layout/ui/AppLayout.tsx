@@ -7,6 +7,7 @@ import {
   CertificateExpiryBanner,
   CertificateExpiryDialog,
 } from '@/widgets/certificate-expiry';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,18 +19,19 @@ export default function AppLayout({
   sidebar,
 }: Readonly<AppLayoutProps>) {
   const { location } = useRouterState();
+  const isEmbedded = useEmbedded();
 
   return (
     <SidebarProvider pathname={location.pathname}>
-      {sidebar ?? <AppSidebar />}
+      {!isEmbedded && (sidebar ?? <AppSidebar />)}
       <SidebarInset className="md:peer-data-[variant=inset]:[box-shadow:var(--shadow-sidebar-inset)]">
         <div className="flex flex-1 flex-col min-h-0">
-          <AppAlertBanner />
-          <CertificateExpiryBanner />
+          {!isEmbedded && <AppAlertBanner />}
+          {!isEmbedded && <CertificateExpiryBanner />}
           <div className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden p-2 pt-0 sm:p-4 sm:pt-0 md:rounded-xl md:overflow-hidden">
             {children}
           </div>
-          <CertificateExpiryDialog />
+          {!isEmbedded && <CertificateExpiryDialog />}
         </div>
       </SidebarInset>
     </SidebarProvider>

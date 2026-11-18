@@ -106,6 +106,8 @@ interface ChatInputProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
+  /** Shows a skill picker in the plus menu; the Outlook pane's new chat passes it. */
+  onSkillSelect?: (skillId: string, skillName: string) => void;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
@@ -160,6 +162,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
+      onSkillSelect,
       initialMessage,
       placeholder,
       draftChatId,
@@ -245,9 +248,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
 
     useImperativeHandle(ref, () => ({
       setMessage,
-      sendMessage: (text: string) => {
-        if (text.trim() && modelId) onSend(text);
-      },
+      sendMessage: (text: string) => submit(text),
       // Restore only into a pristine input; false when a draft blocks it.
       restoreFailedSubmission: (text: string, files: File[]) => {
         if (message.trim() || pendingImages.length > 0) return false;
@@ -257,9 +258,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       },
     }));
 
-    const handleSend = () => {
+    const submit = (text: string) => {
       if (
-        (!message.trim() && pendingImages.length === 0 && !selectedSkillId) ||
+        (!text.trim() && pendingImages.length === 0 && !selectedSkillId) ||
         !modelId ||
         inFlight ||
         isSendDisabled
@@ -274,7 +275,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       }));
 
       onSend(
-        message,
+        text,
         imageFiles.length > 0 ? imageFiles : undefined,
         selectedSkillId,
         hasDictationRef.current,
@@ -285,6 +286,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       // the upload pipeline and any cancellation/error.
       clearImages();
     };
+
+    const handleSend = () => submit(message);
 
     useKeyboardShortcut(
       ['Enter'],
@@ -421,6 +424,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     selectedSkillId={selectedSkillId}
                     selectedSkillName={selectedSkillName}
                     onSkillRemove={onSkillRemove}
+                    onSkillSelect={onSkillSelect}
                     isModelChangeDisabled={isModelChangeDisabled}
                     modelId={modelId}
                     onModelChange={onModelChange}

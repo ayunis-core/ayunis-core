@@ -31,6 +31,8 @@ import RootLayout from './layouts/root-layout';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
 import { StartupPending } from '@/shared/ui/startup-pending/StartupPending';
+import { EmbeddedContext } from '@/shared/contexts/embedded/embeddedContext';
+import { isDevEmbedded } from '@/shared/contexts/embedded/dev-embedded';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 import { shouldRetryQuery } from '@/shared/api/client';
 import {
@@ -110,12 +112,16 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <ErrorBoundary>
-        <RootLayout>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-            <StartupPending router={router} />
-          </QueryClientProvider>
-        </RootLayout>
+        <EmbeddedContext.Provider
+          value={isDevEmbedded(import.meta.env.DEV, window.location.search)}
+        >
+          <RootLayout>
+            <QueryClientProvider client={queryClient}>
+              <RouterProvider router={router} />
+              <StartupPending router={router} />
+            </QueryClientProvider>
+          </RootLayout>
+        </EmbeddedContext.Provider>
       </ErrorBoundary>
     </StrictMode>,
   );

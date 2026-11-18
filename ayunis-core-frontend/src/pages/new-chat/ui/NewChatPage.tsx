@@ -37,6 +37,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
 import { useRouter } from '@tanstack/react-router';
 import { UnreadNotificationsPanel } from './UnreadNotificationsPanel';
+import {
+  EmbeddedHistoryButton,
+  EmbeddedNewChatCompose,
+} from './EmbeddedNewChat';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -55,6 +60,7 @@ export default function NewChatPage({
   initialWorkspaceId,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
+  const isEmbedded = useEmbedded();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
@@ -237,6 +243,59 @@ export default function NewChatPage({
         processingError: undefined,
         uploadProgress: undefined,
       })),
+    );
+  }
+
+  // Before the personalization check: the Outlook pane has no onboarding.
+  if (isEmbedded) {
+    const isSendDisabled = isAcademyGated || !resolvedModelId;
+    return (
+      <NewChatPageLayout
+        isSettling={isCreating}
+        mistPhase={mistPhase}
+        onMistExitComplete={handleMistExitComplete}
+        header={
+          <ContentAreaHeader
+            breadcrumbs={[{ label: t('newChat.newChat') }]}
+            action={<EmbeddedHistoryButton />}
+          />
+        }
+        compose={
+          <EmbeddedNewChatCompose
+            isCreating={isCreating}
+            isStarterDisabled={isSendDisabled}
+            onStarterPrompt={(prompt) =>
+              chatInputRef.current?.sendMessage(prompt)
+            }
+            chatInput={
+              <>
+                <AcademyGateNotice className="mb-2" />
+                <ChatInput
+                  ref={chatInputRef}
+                  modelId={modelId}
+                  sources={sources}
+                  submissionState={isCreating ? 'submitting' : 'idle'}
+                  isSendDisabled={isSendDisabled}
+                  onModelChange={handleModelChange}
+                  onSend={handleSend}
+                  onCancel={handleCancel}
+                  onFileUpload={handleFileUpload}
+                  onRemoveSource={handleRemoveSource}
+                  isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+                  isAnonymous={isAnonymous}
+                  onAnonymousChange={setIsAnonymous}
+                  isAnonymousEnforced={isAnonymousEnforced}
+                  isVisionEnabled={isVisionEnabled}
+                  selectedSkillId={selectedSkillId}
+                  selectedSkillName={selectedSkillName}
+                  onSkillRemove={handleSkillRemove}
+                  onSkillSelect={handleSkillSelect}
+                />
+              </>
+            }
+          />
+        }
+      />
     );
   }
 
