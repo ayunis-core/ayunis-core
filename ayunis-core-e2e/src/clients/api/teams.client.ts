@@ -135,6 +135,32 @@ export function grantTeamModel(
   );
 }
 
+export async function setTeamGrantMemoryAccess(
+  api: APIRequestContext,
+  teamId: string,
+  grantId: string,
+  memoryAccess: boolean,
+): Promise<void> {
+  await generatedApi.teamPermittedModelsControllerUpdateTeamPermittedModel(
+    teamId,
+    grantId,
+    { memoryAccess },
+    { api },
+  );
+}
+
+export function requestTeamGrantMemoryAccessChange(
+  api: APIRequestContext,
+  teamId: string,
+  grantId: string,
+  memoryAccess: boolean,
+) {
+  return api.patch(
+    `${config.apiURL}/api/teams/${teamId}/permitted-models/${grantId}`,
+    { data: { memoryAccess } },
+  );
+}
+
 export async function removeTeamModelGrant(
   api: APIRequestContext,
   teamId: string,

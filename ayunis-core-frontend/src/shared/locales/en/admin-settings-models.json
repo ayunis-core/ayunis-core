@@ -58,6 +58,7 @@
       "error": "An error occurred while updating the permitted model."
     },
     "anonymousOnly": "Anonymous mode",
+    "memoryAccess": "Access to memory",
     "permitted": "Permitted",
     "tier": {
       "label": "Performance",

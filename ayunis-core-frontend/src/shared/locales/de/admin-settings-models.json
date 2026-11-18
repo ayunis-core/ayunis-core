@@ -58,6 +58,7 @@
       "error": "Ein Fehler ist aufgetreten, während das Modell aktualisiert wurde."
     },
     "anonymousOnly": "Anonymer Modus",
+    "memoryAccess": "Zugriff auf Erinnerungen",
     "permitted": "Freigeschaltet",
     "tier": {
       "label": "Leistung",

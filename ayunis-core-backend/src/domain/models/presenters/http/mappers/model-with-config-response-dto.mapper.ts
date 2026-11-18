@@ -50,6 +50,7 @@ export class ModelWithConfigResponseDtoMapper {
         isPermitted,
         isDefault,
         anonymousOnly: permittedModel?.anonymousOnly,
+        memoryAccess: permittedModel?.memoryAccess,
         ...this.languageModelFields(model),
       };
     });

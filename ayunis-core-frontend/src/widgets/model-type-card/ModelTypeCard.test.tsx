@@ -1,10 +1,16 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ModelWithConfigResponseDto } from '@/shared/api';
 import ModelTypeCard, { type ModelActions } from './ModelTypeCard';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+const memoryEnabled = vi.hoisted(() => ({ value: true }));
+vi.mock('@/features/feature-toggles', () => ({
+  useIsFeatureEnabled: (feature: string) =>
+    feature === 'memoryEnabled' && memoryEnabled.value,
 }));
 
 const model = (
@@ -24,6 +30,7 @@ const model = (
   isPermitted,
   isDefault: false,
   anonymousOnly: isPermitted ? false : null,
+  memoryAccess: isPermitted ? false : null,
 });
 
 const actions = (): ModelActions => ({
@@ -34,6 +41,10 @@ const actions = (): ModelActions => ({
 });
 
 describe(ModelTypeCard.name, () => {
+  beforeEach(() => {
+    memoryEnabled.value = true;
+  });
+
   it('adds stable selectors only when a prefix is supplied', () => {
     const { rerender } = render(
       <ModelTypeCard
@@ -101,6 +112,52 @@ describe(ModelTypeCard.name, () => {
       );
       expect(screen.queryByText('models.anonymousOnly')).toBeNull();
     }
+  });
+
+  it('offers the memory access switch only while the memory feature is on', () => {
+    const modelActions = { ...actions(), updatePermittedModel: vi.fn() };
+    memoryEnabled.value = false;
+    const { rerender } = render(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={modelActions}
+      />,
+    );
+
+    expect(
+      screen.queryByTestId('model-selected-memory-access-toggle'),
+    ).toBeNull();
+
+    memoryEnabled.value = true;
+    rerender(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={modelActions}
+      />,
+    );
+    expect(
+      screen.getByTestId('model-selected-memory-access-toggle'),
+    ).toBeTruthy();
+  });
+
+  it('sends only the memory switch when it changes, so anonymous mode keeps its value', () => {
+    const updatePermittedModel = vi.fn();
+    render(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={{ ...actions(), updatePermittedModel }}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('model-selected-memory-access-toggle'));
+
+    expect(updatePermittedModel).toHaveBeenCalledWith({
+      permittedModelId: 'permit-selected',
+      memoryAccess: true,
+    });
   });
 
   it('shows the tier as the chat selector category and the model info card on hover', () => {

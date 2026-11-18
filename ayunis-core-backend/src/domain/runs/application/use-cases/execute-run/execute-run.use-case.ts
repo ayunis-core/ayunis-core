@@ -9,7 +9,6 @@ import { ProviderUnavailableError } from 'src/common/errors/provider.errors';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { Tool as BackendTool } from 'src/domain/tools/domain/tool.entity';
 import { SkillActivationService } from 'src/domain/skills/application/services/skill-activation.service';
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -39,10 +38,8 @@ import {
 import {
   RunAnonymizationUnavailableError,
   RunInvalidInputError,
-  RunNoModelFoundError,
   UnexpectedRunError,
 } from 'src/domain/runs/application/runs.errors';
-import { InferenceAdmissionGuard } from 'src/iam/quotas/application/services/inference-admission-guard.service';
 import { MessageCleanupService } from 'src/domain/runs/application/services/message-cleanup.service';
 import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-lock.service';
 import { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
@@ -53,7 +50,7 @@ import {
 } from 'src/domain/runs/application/services/tool-call-confirmation.service';
 import type { ToolResultMessageContent } from 'src/domain/messages/domain/message-contents/tool-result.message-content.entity';
 import type { ToolResultMessage } from 'src/domain/messages/domain/messages/tool-result-message.entity';
-import { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
+import { RunModelAdmissionService } from 'src/domain/runs/application/services/run-model-admission.service';
 import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/backend-tool.adapter';
 import { adaptRunEventsToStream } from 'src/domain/runs/application/agent-runtime/run-event-stream.adapter';
 import { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
@@ -78,8 +75,7 @@ export class ExecuteRunUseCase {
   constructor(
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
-    private readonly effectiveRunModelResolver: EffectiveRunModelResolverService,
-    private readonly inferenceAdmissionGuard: InferenceAdmissionGuard,
+    private readonly runModelAdmission: RunModelAdmissionService,
     private readonly backendToolAdapter: BackendToolAdapter,
     private readonly skillActivationService: SkillActivationService,
     private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
@@ -130,10 +126,10 @@ export class ExecuteRunUseCase {
       new FindThreadQuery(command.threadId),
     );
     this.toolCallConfirmationService.validateInput(found.thread, command.input);
-    const { model, isAnonymous } = await this.admitModel(
+    const admitted = await this.runModelAdmission.admit(
       found.thread,
-      userId,
-      orgId,
+      command.profile,
+      { userId, orgId },
     );
     const activated = await this.activateSkillIfRequested(
       command,
@@ -148,12 +144,11 @@ export class ExecuteRunUseCase {
     }
     const profile = this.runProfileRegistry.get(command.profile.id);
     const assembled = await this.runProfileAssembler.assemble(profile, {
+      ...admitted,
       profile: command.profile,
       thread: activated.thread,
-      model,
       userId,
       orgId,
-      isAnonymous,
       activatedSkillName: activated.skillName,
     });
     const preparedTools = this.prepareTools(
@@ -163,39 +158,15 @@ export class ExecuteRunUseCase {
 
     return {
       thread: activated.thread,
-      model,
+      model: admitted.model,
       orgId,
       userId,
-      isAnonymous,
+      isAnonymous: admitted.isAnonymous,
       instructions: assembled.instructions,
       maxIterations: profile.maxIterations,
       ...preparedTools,
       profileHooks: assembled.createHooks(preparedTools.toolIntegrations),
       skillInstructions: activated.skillInstructions,
-    };
-  }
-
-  private async admitModel(
-    thread: Thread,
-    userId: UUID,
-    orgId: UUID,
-  ): Promise<{ model: LanguageModel; isAnonymous: boolean }> {
-    const storedPermit = thread.model;
-    if (!storedPermit) {
-      throw new RunNoModelFoundError({ threadId: thread.id });
-    }
-    const permittedModel = await this.effectiveRunModelResolver.resolve({
-      storedPermit,
-      userId,
-      orgId,
-    });
-    await this.inferenceAdmissionGuard.preflight(
-      { userId, orgId },
-      permittedModel.model,
-    );
-    return {
-      model: permittedModel.model,
-      isAnonymous: thread.isAnonymous || permittedModel.anonymousOnly,
     };
   }
 

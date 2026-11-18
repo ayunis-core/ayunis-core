@@ -372,6 +372,11 @@ export interface ModelWithConfigResponseDto {
      * @nullable
      */
   anonymousOnly: boolean | null;
+  /**
+     * Whether runs on this model may use the user's memory. Null if not permitted.
+     * @nullable
+     */
+  memoryAccess: boolean | null;
   /** Fair-use tier label assigned by super admins; drives quota bucket selection. Undefined for embedding models and untiered language models. */
   tier?: ModelWithConfigResponseDtoTier;
   /** User-facing description of the model, shown in the model selector info card. Maintained by super admins. */
@@ -423,15 +428,19 @@ export interface ModelProviderInfoResponseDto {
 }
 
 export interface CreatePermittedModelDto {
-  /** The id of the model */
-  modelId: string;
   /** Whether this model should enforce anonymous mode */
   anonymousOnly?: boolean;
+  /** Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled. */
+  memoryAccess?: boolean;
+  /** The id of the model */
+  modelId: string;
 }
 
 export interface UpdatePermittedModelDto {
   /** Whether this model should enforce anonymous mode */
-  anonymousOnly: boolean;
+  anonymousOnly?: boolean;
+  /** Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled. */
+  memoryAccess?: boolean;
 }
 
 /**
@@ -514,6 +523,8 @@ export interface PermittedLanguageModelResponseDto {
   isDefault: boolean;
   /** Whether this model enforces anonymous mode */
   anonymousOnly: boolean;
+  /** Whether runs on this model may use the user's memory. For a user's effective models, false when any of their grants of the model denies it. */
+  memoryAccess: boolean;
   /**
      * Resource-usage tier of the model, used to categorise models for the user (e.g. fast vs. powerful)
      * @nullable
@@ -659,10 +670,12 @@ export interface SetOrgDefaultModelDto {
 }
 
 export interface CreateTeamPermittedModelDto {
-  /** The ID of the catalog model to permit for the team */
-  modelId: string;
   /** Whether this model should enforce anonymous mode */
   anonymousOnly?: boolean;
+  /** Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled. */
+  memoryAccess?: boolean;
+  /** The ID of the catalog model to permit for the team */
+  modelId: string;
 }
 
 export interface SetTeamDefaultModelDto {

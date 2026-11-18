@@ -43,11 +43,6 @@ import { GetPermittedModelsQuery } from 'src/domain/models/application/use-cases
 import { GetPermittedModelsUseCase } from 'src/domain/models/application/use-cases/get-permitted-models/get-permitted-models.use-case';
 import { UpdatePermittedModelCommand } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.command';
 import { UpdatePermittedModelUseCase } from 'src/domain/models/application/use-cases/update-permitted-model/update-permitted-model.use-case';
-import {
-  PermittedEmbeddingModel,
-  PermittedImageGenerationModel,
-  PermittedLanguageModel,
-} from 'src/domain/models/domain/permitted-model.entity';
 import { CreatePermittedModelDto } from './dto/create-permitted-model.dto';
 import { ModelWithConfigResponseDto } from './dto/model-with-config-response.dto';
 import { PermittedEmbeddingModelResponseDto } from './dto/permitted-embedding-model-response.dto';
@@ -339,6 +334,7 @@ export class SuperAdminPermittedModelsController {
       dto.modelId,
       orgId,
       dto.anonymousOnly,
+      dto.memoryAccess,
     );
     await this.createPermittedModelUseCase.execute(command);
   }
@@ -469,18 +465,10 @@ export class SuperAdminPermittedModelsController {
         permittedModelId: id,
         orgId,
         anonymousOnly: dto.anonymousOnly,
+        memoryAccess: dto.memoryAccess,
       }),
     );
-    if (updated instanceof PermittedLanguageModel) {
-      return this.modelResponseDtoMapper.toLanguageModelDto(updated);
-    }
-    if (updated instanceof PermittedEmbeddingModel) {
-      return this.modelResponseDtoMapper.toEmbeddingModelDto(updated);
-    }
-    if (updated instanceof PermittedImageGenerationModel) {
-      return this.modelResponseDtoMapper.toImageGenerationModelDto(updated);
-    }
-    throw new Error(`Unknown model type: ${updated.constructor.name}`);
+    return this.modelResponseDtoMapper.toDto(updated);
   }
 
   private logDelete(id: UUID, orgId: UUID, userId: UUID): void {

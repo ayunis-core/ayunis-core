@@ -1,6 +1,9 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { config } from '../../config';
-import type { TextMessageContentResponseDto } from '../generated/ayunisCoreAPI.schemas';
+import type {
+  PermittedLanguageModelResponseDto,
+  TextMessageContentResponseDto,
+} from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 import { getEffectiveDefaultModel } from './models.client';
 import { createEmptyThread, getThread } from './threads.client';
@@ -28,11 +31,30 @@ export function clearMemory(api: APIRequestContext): Promise<void> {
   return generatedApi.memoryControllerClear({ api });
 }
 
-/** A new chat on the user's default model. */
-export async function createChat(api: APIRequestContext): Promise<string> {
+/** What a run without memory reports. */
+export const NO_MEMORY: MemoryReport = {
+  tools: 'none',
+  section: 'no',
+  nudge: 'no',
+  personal: 'none',
+};
+
+/** A new chat on the given permit, or on the user's default model. */
+export async function createChat(
+  api: APIRequestContext,
+  permittedModelId?: string,
+): Promise<string> {
+  const modelId = permittedModelId ?? (await defaultModel(api)).id;
+  return (await createEmptyThread(api, modelId)).id;
+}
+
+/** The user's default model, as their effective permit. */
+export async function defaultModel(
+  api: APIRequestContext,
+): Promise<PermittedLanguageModelResponseDto> {
   const model = await getEffectiveDefaultModel(api);
   if (!model) throw new Error('The user has no default model');
-  return (await createEmptyThread(api, model.id)).id;
+  return model;
 }
 
 export function requestMemory(

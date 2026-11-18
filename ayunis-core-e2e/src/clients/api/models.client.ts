@@ -6,6 +6,7 @@ import type {
   PermittedImageGenerationModelResponseDto,
   PermittedLanguageModelResponseDto,
 } from '../generated/ayunisCoreAPI.schemas';
+import { config } from '../../config';
 import { generatedApi } from './generated-api';
 
 export interface DefaultModel {
@@ -87,6 +88,17 @@ export async function permitLanguageModel(
   return permittedModel;
 }
 
+/** Permits a configured language model the organization does not have yet. */
+export async function permitAnotherLanguageModel(
+  api: APIRequestContext,
+): Promise<PermittedLanguageModelResponseDto> {
+  const candidate = (await getConfiguredLanguageCandidates(api)).find(
+    (model) => !model.isPermitted,
+  );
+  if (!candidate) throw new Error('No unpermitted language model left');
+  return permitLanguageModel(api, candidate.modelId);
+}
+
 export async function removePermittedModel(
   api: APIRequestContext,
   permittedModelId: string,
@@ -120,6 +132,40 @@ export async function grantTeamLanguageModel(
       { api },
     );
   return grant.id;
+}
+
+export async function setMemoryAccess(
+  api: APIRequestContext,
+  permittedModelId: string,
+  memoryAccess: boolean,
+): Promise<void> {
+  await generatedApi.modelsControllerUpdatePermittedModel(
+    permittedModelId,
+    { memoryAccess },
+    { api },
+  );
+}
+
+export async function getOrgLanguageGrant(
+  api: APIRequestContext,
+  permittedModelId: string,
+): Promise<PermittedLanguageModelResponseDto> {
+  const grant = (
+    await generatedApi.modelsControllerGetOrgPermittedLanguageModels({ api })
+  ).find((model) => model.id === permittedModelId);
+  if (!grant) throw new Error(`No org grant ${permittedModelId}`);
+  return grant;
+}
+
+// Raw request for asserting the status of a change that may be denied.
+export function requestMemoryAccessChange(
+  api: APIRequestContext,
+  permittedModelId: string,
+  memoryAccess: boolean,
+) {
+  return api.patch(`${config.apiURL}/api/models/permitted/${permittedModelId}`, {
+    data: { memoryAccess },
+  });
 }
 
 export function getConfiguredLanguageCandidates(

@@ -70,6 +70,9 @@ import { ThreadRunLock } from 'src/domain/runs/application/services/thread-run-l
 import type { RunTelemetryService } from 'src/domain/runs/application/services/run-telemetry.service';
 import { ToolResultCollectorService } from 'src/domain/runs/application/services/tool-result-collector.service';
 import { ToolCallConfirmationService } from 'src/domain/runs/application/services/tool-call-confirmation.service';
+import { PersonalContextAccessService } from 'src/domain/runs/application/services/personal-context-access.service';
+import { RunModelAdmissionService } from 'src/domain/runs/application/services/run-model-admission.service';
+import type { ConfigService } from '@nestjs/config';
 import type { AllowMcpToolUseCase } from 'src/domain/mcp/application/use-cases/allow-mcp-tool/allow-mcp-tool.use-case';
 import type { EffectiveRunModelResolverService } from 'src/domain/runs/application/services/effective-run-model-resolver.service';
 import type { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
@@ -170,6 +173,8 @@ interface HarnessOptions {
   workspaceId?: UUID;
   workspaceSkills?: BackendSkill[];
   effectiveAnonymousOnly?: boolean;
+  storedMemoryAccess?: boolean;
+  effectiveMemoryAccess?: boolean;
   contextWindowSize?: number;
   modelName?: string;
   modelConsumesCredits?: boolean;
@@ -188,6 +193,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const permitted = {
     model,
     anonymousOnly: false,
+    memoryAccess: overrides.storedMemoryAccess ?? false,
   } as unknown as PermittedLanguageModel;
   const thread = {
     id: threadId,
@@ -229,6 +235,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const effectivePermit = {
     ...permitted,
     anonymousOnly: overrides.effectiveAnonymousOnly ?? permitted.anonymousOnly,
+    memoryAccess: overrides.effectiveMemoryAccess ?? permitted.memoryAccess,
   } as PermittedLanguageModel;
   const resolveModelAccess = jest.fn().mockResolvedValue(effectivePermit);
   const effectiveRunModelResolver = {
@@ -437,8 +444,13 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const useCase = new ExecuteRunUseCase(
     contextService,
     findThreadUseCase,
-    effectiveRunModelResolver,
-    inferenceAdmissionGuard,
+    new RunModelAdmissionService(
+      effectiveRunModelResolver,
+      inferenceAdmissionGuard,
+      new PersonalContextAccessService({
+        get: () => true,
+      } as unknown as ConfigService),
+    ),
     backendToolAdapter,
     skillActivationService,
     anonymizeTextForThreadUseCase,
@@ -691,6 +703,30 @@ describe('ExecuteRunUseCase', () => {
 
     expect(anonymize).toHaveBeenCalled();
   });
+
+  // A user's grants of one model can disagree; only the effective grant
+  // merges them, the thread's stored permit is just one of them.
+  it.each([
+    { stored: true, effective: false, anonymousOnly: false, memory: false },
+    { stored: false, effective: true, anonymousOnly: false, memory: true },
+    { stored: true, effective: true, anonymousOnly: true, memory: false },
+  ])(
+    'gives memory by the current effective grant (stored $stored, effective $effective, enforced anonymous $anonymousOnly)',
+    async ({ stored, effective, anonymousOnly, memory }) => {
+      const { useCase, profileContribute } = buildHarness({
+        storedMemoryAccess: stored,
+        effectiveMemoryAccess: effective,
+        effectiveAnonymousOnly: anonymousOnly,
+      });
+
+      await drain(await useCase.execute(userCommand()));
+
+      expect(profileContribute).toHaveBeenCalledWith(
+        expect.objectContaining({ personalContext: { memory } }),
+        expect.anything(),
+      );
+    },
+  );
 
   it('reports unexpected preparation failures to telemetry in the runs error family', async () => {
     const { useCase, findThread, trackedError } = buildHarness();

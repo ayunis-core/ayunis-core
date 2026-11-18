@@ -9,7 +9,10 @@ import {
 import { Switch } from '@ayunis/ui/components/switch';
 import { Label } from '@ayunis/ui/components/label';
 import { Separator } from '@ayunis/ui/components/separator';
-import type { ModelWithConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type {
+  ModelWithConfigResponseDto,
+  UpdatePermittedModelDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import {
   Item,
@@ -34,13 +37,14 @@ import { cn } from '@ayunis/ui/lib/cn';
 import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
 import { ModelInfoCard } from '@/widgets/model-select-options';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 
 export interface ModelActions {
   readonly deletePermittedModel: (permittedModelId: string) => void;
-  readonly updatePermittedModel?: (params: {
-    permittedModelId: string;
-    anonymousOnly: boolean;
-  }) => void;
+  /** Sends only the switch that changed; the others keep their value. */
+  readonly updatePermittedModel?: (
+    params: { permittedModelId: string } & UpdatePermittedModelDto,
+  ) => void;
   readonly enableModel: (model: ModelWithConfigResponseDto) => void;
   readonly isEnabling: boolean;
   readonly isDisabling?: boolean;
@@ -174,6 +178,7 @@ export default function ModelTypeCard({
   isToggleDisabled,
 }: ModelTypeCardProps) {
   const { t } = useTranslation('admin-settings-models');
+  const isMemoryEnabled = useIsFeatureEnabled('memoryEnabled');
   const {
     deletePermittedModel,
     updatePermittedModel,
@@ -186,6 +191,7 @@ export default function ModelTypeCard({
   // Only language models enforce anonymous mode (on their threads); the flag
   // has no effect on embedding or image-generation models.
   const canSetAnonymousOnly = type === 'language' && !!updatePermittedModel;
+  const canSetMemoryAccess = canSetAnonymousOnly && isMemoryEnabled;
   const title = t(config.titleKey);
   const emptyMessage = t(config.emptyKey);
 
@@ -202,14 +208,14 @@ export default function ModelTypeCard({
     }
   }
 
-  function handleAnonymousOnlyToggle(
+  function handlePolicyToggle(
     model: ModelWithConfigResponseDto,
-    anonymousOnly: boolean,
+    policy: UpdatePermittedModelDto,
   ) {
     if (!model.permittedModelId || !updatePermittedModel) return;
     updatePermittedModel({
       permittedModelId: model.permittedModelId,
-      anonymousOnly,
+      ...policy,
     });
   }
 
@@ -283,9 +289,28 @@ export default function ModelTypeCard({
 
                         <Switch
                           id={`${modelKey}-anonymous`}
+                          data-testid={`model-${model.modelId}-anonymous-only-toggle`}
                           checked={model.anonymousOnly ?? false}
                           onCheckedChange={(anonymousOnly) =>
-                            handleAnonymousOnlyToggle(model, anonymousOnly)
+                            handlePolicyToggle(model, { anonymousOnly })
+                          }
+                        />
+                      </div>
+                    )}
+                    {model.isPermitted && canSetMemoryAccess && (
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor={`${modelKey}-memory`}
+                          className="text-sm text-muted-foreground"
+                        >
+                          {t('models.memoryAccess')}
+                        </Label>
+                        <Switch
+                          id={`${modelKey}-memory`}
+                          data-testid={`model-${model.modelId}-memory-access-toggle`}
+                          checked={model.memoryAccess ?? false}
+                          onCheckedChange={(memoryAccess) =>
+                            handlePolicyToggle(model, { memoryAccess })
                           }
                         />
                       </div>

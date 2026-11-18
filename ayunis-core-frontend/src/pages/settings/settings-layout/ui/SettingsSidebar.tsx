@@ -12,11 +12,17 @@ import {
   type SidebarMenuItem,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
+import { usePermittedModels } from '@/features/usePermittedModels';
 
 export function SettingsSidebar() {
   const { t } = useTranslation('settings');
   const { t: tCommon } = useTranslation('common');
   const isMemoryEnabled = useIsFeatureEnabled('memoryEnabled');
+  const { models } = usePermittedModels();
+  // The page stays reachable by URL, so users without access can still see
+  // and delete what was stored earlier.
+  const showMemory =
+    isMemoryEnabled && models.some((model) => model.memoryAccess);
 
   const menuItems: SidebarMenuItem[] = [
     {
@@ -29,7 +35,7 @@ export function SettingsSidebar() {
       icon: <MessageSquare />,
       label: t('layout.chat'),
     },
-    ...(isMemoryEnabled
+    ...(showMemory
       ? [
           {
             to: '/settings/memory',

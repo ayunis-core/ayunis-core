@@ -2,9 +2,11 @@ import { generatedApi } from '../../src/clients/api/generated-api';
 import {
   clearMemory,
   createChat,
+  defaultModel,
   readPersonalMemory,
   reportMemory,
 } from '../../src/clients/api/memory.client';
+import { setMemoryAccess } from '../../src/clients/api/models.client';
 import { expect, test } from '../../src/fixtures/test';
 
 test('applies an entry edited in settings to the next chat run', async ({
@@ -14,6 +16,8 @@ test('applies an entry edited in settings to the next chat run', async ({
   test.setTimeout(60_000);
   const stored = `Stored ${Date.now()}`;
   const edited = `Edited ${Date.now()}`;
+  const model = await defaultModel(api);
+  await setMemoryAccess(api, model.id, true);
   await generatedApi.memoryControllerUpsert(
     'personal',
     { content: stored },
@@ -38,6 +42,7 @@ test('applies an entry edited in settings to the next chat run', async ({
     });
   } finally {
     await clearMemory(api);
+    await setMemoryAccess(api, model.id, false);
   }
 });
 

@@ -3,11 +3,23 @@ import {
   chat,
   clearMemory,
   createChat,
+  defaultModel,
   readPersonalMemory,
   reportMemory,
 } from '../../src/clients/api/memory.client';
+import { setMemoryAccess } from '../../src/clients/api/models.client';
 import { createMemberSession } from '../../src/factories/user.factory';
 import { expect, test } from '../../src/fixtures/test';
+
+// Memory needs a model an admin allowed it for; the worker org's default
+// model starts without access.
+test.beforeEach(async ({ api }) => {
+  await setMemoryAccess(api, (await defaultModel(api)).id, true);
+});
+
+test.afterEach(async ({ api }) => {
+  await setMemoryAccess(api, (await defaultModel(api)).id, false);
+});
 
 test('keeps what the assistant remembers about one user out of another user’s memory and chats', async ({
   api,

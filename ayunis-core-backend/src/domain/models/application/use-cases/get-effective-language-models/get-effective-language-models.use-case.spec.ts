@@ -27,6 +27,7 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
     catalogModelId: UUID,
     teamId?: UUID,
     anonymousOnly = false,
+    memoryAccess = false,
   ): PermittedLanguageModel =>
     new PermittedLanguageModel({
       model: new LanguageModel({
@@ -45,6 +46,7 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
       scope: teamId ? PermittedModelScope.TEAM : PermittedModelScope.ORG,
       scopeId: teamId ?? null,
       anonymousOnly,
+      memoryAccess,
     });
 
   beforeEach(async () => {
@@ -161,6 +163,45 @@ describe(GetEffectiveLanguageModelsUseCase.name, () => {
 
     expect(result.models).toHaveLength(1);
     expect(result.models[0]?.anonymousOnly).toBe(true);
+  });
+
+  // Neither grant alone is the strictest: the anonymous one allows memory.
+  it('denies memory access when any matching team grant denies it', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    scopeResolver.resolve.mockResolvedValue({
+      orgId,
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue([
+      permit('Municipal Assistant', sharedCatalogId, teamAId, true, true),
+      permit('Municipal Assistant', sharedCatalogId, teamBId, false, false),
+    ]);
+
+    const result = await useCase.execute(
+      new GetEffectiveLanguageModelsQuery(orgId, userId),
+    );
+
+    expect(result.models).toHaveLength(1);
+    expect(result.models[0]?.anonymousOnly).toBe(true);
+    expect(result.models[0]?.memoryAccess).toBe(false);
+  });
+
+  it('allows memory access when every matching team grant allows it', async () => {
+    const sharedCatalogId = '10000000-0000-0000-0000-000000000001' as UUID;
+    scopeResolver.resolve.mockResolvedValue({
+      orgId,
+      overrideTeamIds: [teamAId, teamBId],
+    });
+    repository.findManyLanguageByTeams.mockResolvedValue([
+      permit('Municipal Assistant', sharedCatalogId, teamAId, false, true),
+      permit('Municipal Assistant', sharedCatalogId, teamBId, false, true),
+    ]);
+
+    const result = await useCase.execute(
+      new GetEffectiveLanguageModelsQuery(orgId, userId),
+    );
+
+    expect(result.models[0]?.memoryAccess).toBe(true);
   });
 
   it('drops excluded permits before merging so other grants of the same catalog model survive', async () => {

@@ -102,27 +102,25 @@ describe('UpdateTeamPermittedModelUseCase', () => {
     });
   }
 
-  it('should update anonymousOnly on a team permitted model', async () => {
+  it('hands persistence only the switch that changed, so the other keeps its value', async () => {
     setAdminContext();
-    permittedModelsRepository.findOne.mockResolvedValue(makeTeamModel(false));
-    permittedModelsRepository.update.mockImplementation((model) =>
-      Promise.resolve(model),
-    );
+    const existing = makeTeamModel(true);
+    permittedModelsRepository.findOne.mockResolvedValue(existing);
+    permittedModelsRepository.update.mockResolvedValue(existing);
 
     const command = new UpdateTeamPermittedModelCommand(
       permittedModelId,
       orgId,
       teamId,
-      true,
+      { memoryAccess: true },
     );
-    const result = await useCase.execute(command);
+    await useCase.execute(command);
 
-    expect(result.anonymousOnly).toBe(true);
-    expect(result.scope).toBe(PermittedModelScope.TEAM);
-    expect(result.scopeId).toBe(teamId);
-    const updateArg = permittedModelsRepository.update.mock.calls[0][0];
-    expect(updateArg.id).toBe(permittedModelId);
-    expect(updateArg.anonymousOnly).toBe(true);
+    expect(permittedModelsRepository.update.mock.calls[0][0]).toEqual({
+      id: permittedModelId,
+      orgId,
+      policy: { memoryAccess: true },
+    });
   });
 
   it('should throw UnauthorizedAccessError for non-admin users', async () => {
@@ -138,7 +136,7 @@ describe('UpdateTeamPermittedModelUseCase', () => {
       permittedModelId,
       orgId,
       teamId,
-      true,
+      { anonymousOnly: true },
     );
     await expect(useCase.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
@@ -153,7 +151,7 @@ describe('UpdateTeamPermittedModelUseCase', () => {
       permittedModelId,
       orgId,
       teamId,
-      true,
+      { anonymousOnly: true },
     );
     await expect(useCase.execute(command)).rejects.toThrow(
       TeamNotFoundInOrgError,
@@ -168,7 +166,7 @@ describe('UpdateTeamPermittedModelUseCase', () => {
       permittedModelId,
       orgId,
       teamId,
-      true,
+      { anonymousOnly: true },
     );
     await expect(useCase.execute(command)).rejects.toThrow(
       PermittedModelNotFoundError,
@@ -190,7 +188,7 @@ describe('UpdateTeamPermittedModelUseCase', () => {
       permittedModelId,
       orgId,
       teamId,
-      true,
+      { anonymousOnly: true },
     );
     await expect(useCase.execute(command)).rejects.toThrow(
       PermittedModelNotInTeamError,

@@ -3454,7 +3454,7 @@ export function useTeamPermittedModelsControllerListTeamImageGenerationModels<TD
 
 
 /**
- * Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team.
+ * Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team or may use their memory. Omitted fields keep their stored value.
  * @summary Update a team's permitted model
  */
 export const teamPermittedModelsControllerUpdateTeamPermittedModel = (

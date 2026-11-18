@@ -5,6 +5,10 @@ export class UpdateTeamPermittedModelCommand {
     public readonly permittedModelId: UUID,
     public readonly orgId: UUID,
     public readonly teamId: UUID,
-    public readonly anonymousOnly: boolean,
+    /** Omitted switches keep their stored value. */
+    public readonly policy: {
+      readonly anonymousOnly?: boolean;
+      readonly memoryAccess?: boolean;
+    },
   ) {}
 }

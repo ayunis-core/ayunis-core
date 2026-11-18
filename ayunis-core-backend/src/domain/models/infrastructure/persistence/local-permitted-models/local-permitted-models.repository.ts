@@ -4,6 +4,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   FindOneParams,
+  PermittedModelPolicyUpdate,
   PermittedModelsRepository,
 } from 'src/domain/models/application/ports/permitted-models.repository';
 import {
@@ -242,29 +243,33 @@ export class LocalPermittedModelsRepository extends PermittedModelsRepository {
     }
   }
 
-  async update(permittedModel: PermittedModel): Promise<PermittedModel> {
-    this.logger.log(
-      {
-        id: permittedModel.id,
-        orgId: permittedModel.orgId,
-        anonymousOnly: permittedModel.anonymousOnly,
-      },
-      'update',
-    );
+  // Writes only the given fields, so concurrent edits of different switches
+  // on the same grant don't overwrite each other.
+  async update(params: {
+    id: UUID;
+    orgId: UUID;
+    policy: PermittedModelPolicyUpdate;
+  }): Promise<PermittedModel> {
+    const { id, orgId, policy } = params;
+    this.logger.log({ id, orgId, ...policy }, 'update');
 
-    const updateResult = await this.permittedModelRepository.update(
-      { id: permittedModel.id, orgId: permittedModel.orgId },
-      { anonymousOnly: permittedModel.anonymousOnly },
-    );
-
-    if (updateResult.affected === 0) {
-      throw new Error(
-        `Permitted model with id ${permittedModel.id} and orgId ${permittedModel.orgId} not found`,
+    const changes = Object.fromEntries(
+      Object.entries(policy).filter(([, value]) => value !== undefined),
+    ) as PermittedModelPolicyUpdate;
+    if (Object.keys(changes).length > 0) {
+      const updateResult = await this.permittedModelRepository.update(
+        { id, orgId },
+        changes,
       );
+      if (updateResult.affected === 0) {
+        throw new Error(
+          `Permitted model with id ${id} and orgId ${orgId} not found`,
+        );
+      }
     }
 
     const updatedModel = await this.permittedModelRepository.findOneOrFail({
-      where: { id: permittedModel.id },
+      where: { id, orgId },
       relations: { model: true },
     });
 

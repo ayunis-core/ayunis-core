@@ -77,6 +77,7 @@ function buildAssembler(
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
     isAnonymous: false,
+    personalContext: { memory: false },
   };
   return {
     assemble: () => assembler.assemble(profile, input),
