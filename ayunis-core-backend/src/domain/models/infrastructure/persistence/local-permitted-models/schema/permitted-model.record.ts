@@ -52,6 +52,9 @@ export class PermittedModelRecord extends BaseRecord {
   @Column({ nullable: false, default: false })
   memoryAccess: boolean;
 
+  @Column({ nullable: false, default: false })
+  chatHistoryAccess: boolean;
+
   @Column({
     type: 'enum',
     enum: PermittedModelScope,

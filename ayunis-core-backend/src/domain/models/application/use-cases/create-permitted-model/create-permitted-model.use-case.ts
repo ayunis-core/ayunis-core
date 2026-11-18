@@ -55,6 +55,7 @@ export class CreatePermittedModelUseCase {
         orgId: command.orgId,
         anonymousOnly: command.anonymousOnly,
         memoryAccess: command.memoryAccess,
+        chatHistoryAccess: command.chatHistoryAccess,
       });
       await this.modelPolicy.assertSingleModelPerOrg(permittedModel);
       const created =

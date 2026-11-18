@@ -156,10 +156,7 @@ export class TeamPermittedModelsController {
     PermittedLanguageModelResponseDto | PermittedImageGenerationModelResponseDto
   > {
     this.logger.log(
-      {
-        teamId,
-        modelId: dto.modelId,
-      },
+      { teamId, modelId: dto.modelId },
       'createTeamPermittedModel',
     );
     const command = new CreateTeamPermittedModelCommand(
@@ -168,6 +165,7 @@ export class TeamPermittedModelsController {
       teamId,
       dto.anonymousOnly,
       dto.memoryAccess,
+      dto.chatHistoryAccess,
     );
     const created = await this.createTeamPermittedModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toTeamPermittedModelDto(created);
@@ -179,7 +177,7 @@ export class TeamPermittedModelsController {
     description:
       'Updates a team-scoped permitted model, e.g. toggling whether it ' +
       'enforces anonymous mode for members of the team or may use their ' +
-      'memory. Omitted fields keep their stored value.',
+      'memory or earlier chats. Omitted fields keep their stored value.',
   })
   @ApiResponse({
     status: 200,
@@ -199,12 +197,14 @@ export class TeamPermittedModelsController {
         permittedModelId: id,
         anonymousOnly: dto.anonymousOnly,
         memoryAccess: dto.memoryAccess,
+        chatHistoryAccess: dto.chatHistoryAccess,
       },
       'updateTeamPermittedModel',
     );
     const command = new UpdateTeamPermittedModelCommand(id, orgId, teamId, {
       anonymousOnly: dto.anonymousOnly,
       memoryAccess: dto.memoryAccess,
+      chatHistoryAccess: dto.chatHistoryAccess,
     });
     const updated = await this.updateTeamPermittedModelUseCase.execute(command);
     return this.modelResponseDtoMapper.toLanguageModelDto(updated);

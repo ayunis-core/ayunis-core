@@ -6,5 +6,6 @@ export class CreatePermittedModelCommand {
     public readonly orgId: UUID,
     public readonly anonymousOnly?: boolean,
     public readonly memoryAccess?: boolean,
+    public readonly chatHistoryAccess?: boolean,
   ) {}
 }

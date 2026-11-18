@@ -72,6 +72,13 @@ export class PermittedLanguageModelResponseDto extends BasePermittedModelRespons
   memoryAccess: boolean;
 
   @ApiProperty({
+    type: 'boolean',
+    description:
+      "Whether runs on this model may list, search and read the user's earlier chats. For a user's effective models, false when any of their grants of the model denies it.",
+  })
+  chatHistoryAccess: boolean;
+
+  @ApiProperty({
     enum: ModelTier,
     required: false,
     nullable: true,

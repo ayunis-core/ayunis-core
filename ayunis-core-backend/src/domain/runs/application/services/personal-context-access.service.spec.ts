@@ -5,7 +5,10 @@ import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/r
 import { TEST_ORG_ID } from 'src/domain/runs/testing/run-capability.fixture';
 import { PersonalContextAccessService } from './personal-context-access.service';
 
-function permit(memoryAccess: boolean): PermittedLanguageModel {
+function permit(access: {
+  memoryAccess: boolean;
+  chatHistoryAccess: boolean;
+}): PermittedLanguageModel {
   return new PermittedLanguageModel({
     model: new LanguageModel({
       name: 'mistral-large',
@@ -19,7 +22,7 @@ function permit(memoryAccess: boolean): PermittedLanguageModel {
       contextWindowSize: 128_000,
     }),
     orgId: TEST_ORG_ID,
-    memoryAccess,
+    ...access,
   });
 }
 
@@ -29,6 +32,7 @@ function resolve(
     profile?: RunProfileInput;
     isAnonymous?: boolean;
     memoryAccess?: boolean;
+    chatHistoryAccess?: boolean;
   } = {},
 ) {
   const {
@@ -36,23 +40,32 @@ function resolve(
     profile = { id: 'chat' },
     isAnonymous = false,
     memoryAccess = true,
+    chatHistoryAccess = true,
   } = options;
   return new PersonalContextAccessService({
     get: () => enabled,
-  } as never).resolve({ profile, isAnonymous, permit: permit(memoryAccess) });
+  } as never).resolve({
+    profile,
+    isAnonymous,
+    permit: permit({ memoryAccess, chatHistoryAccess }),
+  });
 }
 
 describe('PersonalContextAccessService', () => {
-  it('gives a chat run memory and chat history when its model allows memory', () => {
-    expect(resolve()).toEqual({ memory: true, chatHistory: true });
-  });
-
-  it('gives no memory on a model whose grant denies it, but still chat history', () => {
-    expect(resolve({ memoryAccess: false })).toEqual({
-      memory: false,
-      chatHistory: true,
-    });
-  });
+  it.each([
+    { memoryAccess: true, chatHistoryAccess: true },
+    { memoryAccess: true, chatHistoryAccess: false },
+    { memoryAccess: false, chatHistoryAccess: true },
+    { memoryAccess: false, chatHistoryAccess: false },
+  ])(
+    'gives a chat run on a model with memory access $memoryAccess and past-chat access $chatHistoryAccess exactly what its grant allows',
+    (access) => {
+      expect(resolve(access)).toEqual({
+        memory: access.memoryAccess,
+        chatHistory: access.chatHistoryAccess,
+      });
+    },
+  );
 
   it('gives an anonymous run no personal context, even on a model that allows it', () => {
     expect(resolve({ isAnonymous: true })).toEqual({

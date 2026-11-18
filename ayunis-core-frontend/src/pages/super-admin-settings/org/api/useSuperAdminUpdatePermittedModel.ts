@@ -84,6 +84,7 @@ export function useSuperAdminUpdatePermittedModel(orgId: string) {
       data: {
         anonymousOnly: params.anonymousOnly,
         memoryAccess: params.memoryAccess,
+        chatHistoryAccess: params.chatHistoryAccess,
       },
     });
   }

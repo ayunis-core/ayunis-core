@@ -22,6 +22,7 @@ export type FindOneParams =
 export interface PermittedModelPolicyUpdate {
   anonymousOnly?: boolean;
   memoryAccess?: boolean;
+  chatHistoryAccess?: boolean;
 }
 
 export abstract class PermittedModelsRepository {

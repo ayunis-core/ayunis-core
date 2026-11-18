@@ -146,6 +146,18 @@ export async function setMemoryAccess(
   );
 }
 
+export async function setChatHistoryAccess(
+  api: APIRequestContext,
+  permittedModelId: string,
+  chatHistoryAccess: boolean,
+): Promise<void> {
+  await generatedApi.modelsControllerUpdatePermittedModel(
+    permittedModelId,
+    { chatHistoryAccess },
+    { api },
+  );
+}
+
 export async function getOrgLanguageGrant(
   api: APIRequestContext,
   permittedModelId: string,
@@ -165,6 +177,16 @@ export function requestMemoryAccessChange(
 ) {
   return api.patch(`${config.apiURL}/api/models/permitted/${permittedModelId}`, {
     data: { memoryAccess },
+  });
+}
+
+export function requestChatHistoryAccessChange(
+  api: APIRequestContext,
+  permittedModelId: string,
+  chatHistoryAccess: boolean,
+) {
+  return api.patch(`${config.apiURL}/api/models/permitted/${permittedModelId}`, {
+    data: { chatHistoryAccess },
   });
 }
 

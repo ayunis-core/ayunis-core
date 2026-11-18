@@ -28,6 +28,7 @@ export class PermittedModelMapper {
         isDefault: record.isDefault ?? false,
         anonymousOnly: record.anonymousOnly,
         memoryAccess: record.memoryAccess,
+        chatHistoryAccess: record.chatHistoryAccess,
         scope: record.scope,
         scopeId: record.scopeId,
         createdAt: record.createdAt,
@@ -42,6 +43,7 @@ export class PermittedModelMapper {
         isDefault: record.isDefault ?? false,
         anonymousOnly: record.anonymousOnly,
         memoryAccess: record.memoryAccess,
+        chatHistoryAccess: record.chatHistoryAccess,
         scope: record.scope,
         scopeId: record.scopeId,
         createdAt: record.createdAt,
@@ -56,6 +58,7 @@ export class PermittedModelMapper {
         isDefault: record.isDefault ?? false,
         anonymousOnly: record.anonymousOnly,
         memoryAccess: record.memoryAccess,
+        chatHistoryAccess: record.chatHistoryAccess,
         scope: record.scope,
         scopeId: record.scopeId,
         createdAt: record.createdAt,
@@ -73,6 +76,7 @@ export class PermittedModelMapper {
     record.orgId = domain.orgId;
     record.anonymousOnly = domain.anonymousOnly;
     record.memoryAccess = domain.memoryAccess;
+    record.chatHistoryAccess = domain.chatHistoryAccess;
     record.scope = domain.scope;
     record.scopeId = domain.scopeId;
     record.createdAt = domain.createdAt;

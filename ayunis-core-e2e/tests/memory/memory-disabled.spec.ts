@@ -8,6 +8,7 @@ import {
 } from '../../src/clients/api/memory.client';
 import {
   getOrgLanguageGrant,
+  setChatHistoryAccess,
   setMemoryAccess,
 } from '../../src/clients/api/models.client';
 import {
@@ -28,12 +29,13 @@ const disabledBaseUrl =
 const disabledApiUrl =
   process.env.E2E_MEMORY_DISABLED_API_URL ?? disabledBaseUrl;
 
-test('with memory disabled there is no memory API and chats get no memory or past chats, even on a model with memory access', async ({
+test('with memory disabled there is no memory API and chats get no memory or past chats, even on a model with access to both', async ({
   api,
 }) => {
   test.setTimeout(60_000);
   const model = await defaultModel(api);
   await setMemoryAccess(api, model.id, true);
+  await setChatHistoryAccess(api, model.id, true);
   try {
     const toggles = await requestFeatureToggles(api, disabledApiUrl);
     expect(await toggles.json()).toMatchObject({ memoryEnabled: false });
@@ -51,15 +53,17 @@ test('with memory disabled there is no memory API and chats get no memory or pas
     );
   } finally {
     await setMemoryAccess(api, model.id, false);
+    await setChatHistoryAccess(api, model.id, false);
   }
 });
 
-test('with memory disabled the model settings offer no memory switch and anonymous mode still saves', async ({
+test('with memory disabled the model settings offer no memory or past-chat switch and anonymous mode still saves', async ({
   api,
   page,
 }) => {
   const model = await defaultModel(api);
   await setMemoryAccess(api, model.id, true);
+  await setChatHistoryAccess(api, model.id, true);
   try {
     await openModelSettings(page, disabledBaseUrl);
     const anonymousToggle = page.getByTestId(
@@ -69,19 +73,31 @@ test('with memory disabled the model settings offer no memory switch and anonymo
     await expect(
       page.getByTestId(`model-${model.modelId}-memory-access-toggle`),
     ).toHaveCount(0);
+    await expect(
+      page.getByTestId(`model-${model.modelId}-chat-history-access-toggle`),
+    ).toHaveCount(0);
 
     await anonymousToggle.click();
     await expect
       .poll(() => getOrgLanguageGrant(api, model.id))
-      .toMatchObject({ anonymousOnly: true, memoryAccess: true });
+      .toMatchObject({
+        anonymousOnly: true,
+        memoryAccess: true,
+        chatHistoryAccess: true,
+      });
     await anonymousToggle.click();
     await expect
       .poll(() => getOrgLanguageGrant(api, model.id))
-      .toMatchObject({ anonymousOnly: false, memoryAccess: true });
+      .toMatchObject({
+        anonymousOnly: false,
+        memoryAccess: true,
+        chatHistoryAccess: true,
+      });
 
     await openSettings(page, disabledBaseUrl);
     await expect(page.getByTestId('settings-nav-memory')).toHaveCount(0);
   } finally {
     await setMemoryAccess(api, model.id, false);
+    await setChatHistoryAccess(api, model.id, false);
   }
 });

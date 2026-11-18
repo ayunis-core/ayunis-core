@@ -173,8 +173,9 @@ interface HarnessOptions {
   workspaceId?: UUID;
   workspaceSkills?: BackendSkill[];
   effectiveAnonymousOnly?: boolean;
-  storedMemoryAccess?: boolean;
-  effectiveMemoryAccess?: boolean;
+  /** Memory and past-chat access of the thread's stored permit. */
+  storedPersonalContextAccess?: boolean;
+  effectivePersonalContextAccess?: boolean;
   contextWindowSize?: number;
   modelName?: string;
   modelConsumesCredits?: boolean;
@@ -193,7 +194,8 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const permitted = {
     model,
     anonymousOnly: false,
-    memoryAccess: overrides.storedMemoryAccess ?? false,
+    memoryAccess: overrides.storedPersonalContextAccess ?? false,
+    chatHistoryAccess: overrides.storedPersonalContextAccess ?? false,
   } as unknown as PermittedLanguageModel;
   const thread = {
     id: threadId,
@@ -235,7 +237,10 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const effectivePermit = {
     ...permitted,
     anonymousOnly: overrides.effectiveAnonymousOnly ?? permitted.anonymousOnly,
-    memoryAccess: overrides.effectiveMemoryAccess ?? permitted.memoryAccess,
+    memoryAccess:
+      overrides.effectivePersonalContextAccess ?? permitted.memoryAccess,
+    chatHistoryAccess:
+      overrides.effectivePersonalContextAccess ?? permitted.chatHistoryAccess,
   } as PermittedLanguageModel;
   const resolveModelAccess = jest.fn().mockResolvedValue(effectivePermit);
   const effectiveRunModelResolver = {
@@ -705,18 +710,17 @@ describe('ExecuteRunUseCase', () => {
   });
 
   // A user's grants of one model can disagree; only the effective grant
-  // merges them, the thread's stored permit is just one of them. Chat history
-  // follows only the enforced anonymous mode until it gets its own switch.
+  // merges them, the thread's stored permit is just one of them.
   it.each([
-    { stored: true, effective: false, anonymousOnly: false, memory: false },
-    { stored: false, effective: true, anonymousOnly: false, memory: true },
-    { stored: true, effective: true, anonymousOnly: true, memory: false },
+    { stored: true, effective: false, anonymousOnly: false, allowed: false },
+    { stored: false, effective: true, anonymousOnly: false, allowed: true },
+    { stored: true, effective: true, anonymousOnly: true, allowed: false },
   ])(
     'gives personal context by the current effective grant (stored $stored, effective $effective, enforced anonymous $anonymousOnly)',
-    async ({ stored, effective, anonymousOnly, memory }) => {
+    async ({ stored, effective, anonymousOnly, allowed }) => {
       const { useCase, profileContribute } = buildHarness({
-        storedMemoryAccess: stored,
-        effectiveMemoryAccess: effective,
+        storedPersonalContextAccess: stored,
+        effectivePersonalContextAccess: effective,
         effectiveAnonymousOnly: anonymousOnly,
       });
 
@@ -724,7 +728,7 @@ describe('ExecuteRunUseCase', () => {
 
       expect(profileContribute).toHaveBeenCalledWith(
         expect.objectContaining({
-          personalContext: { memory, chatHistory: !anonymousOnly },
+          personalContext: { memory: allowed, chatHistory: allowed },
         }),
         expect.anything(),
       );

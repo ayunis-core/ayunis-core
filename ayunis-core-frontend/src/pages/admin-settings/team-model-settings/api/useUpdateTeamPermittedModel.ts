@@ -66,6 +66,7 @@ export function useUpdateTeamPermittedModel(teamId: string) {
       data: {
         anonymousOnly: params.anonymousOnly,
         memoryAccess: params.memoryAccess,
+        chatHistoryAccess: params.chatHistoryAccess,
       },
     });
   }

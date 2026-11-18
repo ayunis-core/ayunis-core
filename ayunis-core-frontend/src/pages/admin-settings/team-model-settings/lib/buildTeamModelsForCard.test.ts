@@ -23,6 +23,7 @@ const candidate = (
   isDefault: isPermitted,
   anonymousOnly: isPermitted ? false : null,
   memoryAccess: isPermitted ? true : null,
+  chatHistoryAccess: isPermitted ? true : null,
 });
 
 const grant = (
@@ -45,6 +46,7 @@ const grant = (
   isDefault: false,
   anonymousOnly: false,
   memoryAccess: false,
+  chatHistoryAccess: false,
   ...overrides,
 });
 
@@ -72,6 +74,7 @@ describe(buildTeamModelsForCard.name, () => {
         grant('team-model', {
           anonymousOnly: true,
           memoryAccess: true,
+          chatHistoryAccess: true,
           isDefault: true,
         }),
       ],
@@ -84,6 +87,7 @@ describe(buildTeamModelsForCard.name, () => {
       permittedModelId: null,
       anonymousOnly: null,
       memoryAccess: null,
+      chatHistoryAccess: null,
     });
     expect(result[1]).toMatchObject({
       modelId: 'team-model',
@@ -92,6 +96,7 @@ describe(buildTeamModelsForCard.name, () => {
       permittedModelId: 'team-permit-team-model',
       anonymousOnly: true,
       memoryAccess: true,
+      chatHistoryAccess: true,
     });
   });
 });

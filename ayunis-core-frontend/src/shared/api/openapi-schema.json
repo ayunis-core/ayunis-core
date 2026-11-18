@@ -1311,7 +1311,7 @@
     },
     "/teams/{teamId}/permitted-models/{id}": {
       "patch": {
-        "description": "Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team or may use their memory. Omitted fields keep their stored value.",
+        "description": "Updates a team-scoped permitted model, e.g. toggling whether it enforces anonymous mode for members of the team or may use their memory or earlier chats. Omitted fields keep their stored value.",
         "operationId": "TeamPermittedModelsController_updateTeamPermittedModel",
         "parameters": [
           {
@@ -16176,6 +16176,11 @@
             "description": "Whether runs on this model may use the user's memory. Null if not permitted.",
             "nullable": true
           },
+          "chatHistoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may list, search and read the user's earlier chats. Null if not permitted.",
+            "nullable": true
+          },
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
@@ -16201,7 +16206,8 @@
           "isPermitted",
           "isDefault",
           "anonymousOnly",
-          "memoryAccess"
+          "memoryAccess",
+          "chatHistoryAccess"
         ]
       },
       "ModelProviderInfoResponseDto": {
@@ -16253,6 +16259,11 @@
             "description": "Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled.",
             "example": false
           },
+          "chatHistoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled.",
+            "example": false
+          },
           "modelId": {
             "type": "string",
             "description": "The id of the model",
@@ -16272,6 +16283,11 @@
           "memoryAccess": {
             "type": "boolean",
             "description": "Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled.",
+            "example": false
+          },
+          "chatHistoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled.",
             "example": false
           }
         }
@@ -16360,6 +16376,10 @@
             "type": "boolean",
             "description": "Whether runs on this model may use the user's memory. For a user's effective models, false when any of their grants of the model denies it."
           },
+          "chatHistoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may list, search and read the user's earlier chats. For a user's effective models, false when any of their grants of the model denies it."
+          },
           "tier": {
             "type": "string",
             "enum": ["zero", "low", "medium", "high"],
@@ -16388,7 +16408,8 @@
           "hasProviderFault",
           "isDefault",
           "anonymousOnly",
-          "memoryAccess"
+          "memoryAccess",
+          "chatHistoryAccess"
         ]
       },
       "PermittedEmbeddingModelResponseDto": {
@@ -16591,6 +16612,11 @@
           "memoryAccess": {
             "type": "boolean",
             "description": "Whether runs on this model may use the user's memory. Only applies while the memory feature is enabled.",
+            "example": false
+          },
+          "chatHistoryAccess": {
+            "type": "boolean",
+            "description": "Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled.",
             "example": false
           },
           "modelId": {

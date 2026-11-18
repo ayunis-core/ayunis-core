@@ -1,7 +1,8 @@
 import { request } from "@playwright/test";
 import { config } from "../../src/config";
 import { generatedApi } from "../../src/clients/api/generated-api";
-import { chat } from "../../src/clients/api/memory.client";
+import { chat, defaultModel } from "../../src/clients/api/memory.client";
+import { setChatHistoryAccess } from "../../src/clients/api/models.client";
 import {
   WITH_PAST_CHATS,
   callPastChatTool,
@@ -16,6 +17,16 @@ import { expect, test } from "../../src/fixtures/test";
 
 const utcDate = (offsetDays = 0) =>
   new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
+
+// Past chats need a model an admin allowed them for; the worker org's
+// default model starts without access.
+test.beforeEach(async ({ api }) => {
+  await setChatHistoryAccess(api, (await defaultModel(api)).id, true);
+});
+
+test.afterEach(async ({ api }) => {
+  await setChatHistoryAccess(api, (await defaultModel(api)).id, false);
+});
 
 // Every search runs in one current chat per user: the current chat is never
 // searched, while the results stored in any other chat would match again.

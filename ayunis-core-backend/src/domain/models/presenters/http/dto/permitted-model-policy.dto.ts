@@ -24,4 +24,14 @@ export class PermittedModelPolicyDto {
   @IsBoolean()
   @IsOptional()
   memoryAccess?: boolean;
+
+  @ApiProperty({
+    description:
+      "Whether runs on this model may list, search and read the user's earlier chats. Only applies while the memory feature is enabled.",
+    example: false,
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  chatHistoryAccess?: boolean;
 }

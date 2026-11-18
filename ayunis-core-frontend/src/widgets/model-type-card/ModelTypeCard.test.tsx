@@ -31,6 +31,7 @@ const model = (
   isDefault: false,
   anonymousOnly: isPermitted ? false : null,
   memoryAccess: isPermitted ? false : null,
+  chatHistoryAccess: isPermitted ? false : null,
 });
 
 const actions = (): ModelActions => ({
@@ -114,7 +115,7 @@ describe(ModelTypeCard.name, () => {
     }
   });
 
-  it('offers the memory access switch only while the memory feature is on', () => {
+  it('offers the memory and past-chat access switches only while the memory feature is on', () => {
     const modelActions = { ...actions(), updatePermittedModel: vi.fn() };
     memoryEnabled.value = false;
     const { rerender } = render(
@@ -128,6 +129,9 @@ describe(ModelTypeCard.name, () => {
     expect(
       screen.queryByTestId('model-selected-memory-access-toggle'),
     ).toBeNull();
+    expect(
+      screen.queryByTestId('model-selected-chat-history-access-toggle'),
+    ).toBeNull();
 
     memoryEnabled.value = true;
     rerender(
@@ -139,6 +143,9 @@ describe(ModelTypeCard.name, () => {
     );
     expect(
       screen.getByTestId('model-selected-memory-access-toggle'),
+    ).toBeTruthy();
+    expect(
+      screen.getByTestId('model-selected-chat-history-access-toggle'),
     ).toBeTruthy();
   });
 
@@ -157,6 +164,26 @@ describe(ModelTypeCard.name, () => {
     expect(updatePermittedModel).toHaveBeenCalledWith({
       permittedModelId: 'permit-selected',
       memoryAccess: true,
+    });
+  });
+
+  it('sends only the past-chat switch when it changes, so memory access and anonymous mode keep their values', () => {
+    const updatePermittedModel = vi.fn();
+    render(
+      <ModelTypeCard
+        type="language"
+        models={[model('selected', true)]}
+        actions={{ ...actions(), updatePermittedModel }}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByTestId('model-selected-chat-history-access-toggle'),
+    );
+
+    expect(updatePermittedModel).toHaveBeenCalledWith({
+      permittedModelId: 'permit-selected',
+      chatHistoryAccess: true,
     });
   });
 
