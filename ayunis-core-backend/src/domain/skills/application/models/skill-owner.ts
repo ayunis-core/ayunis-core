@@ -1,13 +1,10 @@
-import type { UUID } from 'crypto';
+import type {
+  ResourceOwner,
+  TransferableResourceOwner,
+} from 'src/domain/ownership/application/models/resource-owner';
 import type { ReadableCollectiveOwners } from 'src/iam/teams/application/models/collective-owner.model';
 
-export type CollectiveSkillOwner =
-  { type: 'team'; teamId: UUID } | { type: 'org' };
-
-export type SkillOwner =
-  | { type: 'personal' }
-  | { type: 'workspace'; workspaceId: UUID }
-  | CollectiveSkillOwner;
+export type SkillOwner = ResourceOwner;
 
 /** The scopes a skill list can be requested for. */
 export type SkillListScope = Extract<
@@ -18,5 +15,4 @@ export type SkillListScope = Extract<
 /** The team and organization owners whose skills a user can read. */
 export type ReadableSkillOwners = ReadableCollectiveOwners;
 
-/** The owners a skill can be moved between; workspace skills stay put. */
-export type SkillTransferOwner = Exclude<SkillOwner, { type: 'workspace' }>;
+export type SkillTransferOwner = TransferableResourceOwner;
