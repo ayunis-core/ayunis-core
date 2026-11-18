@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.77.0](https://github.com/ayunis-core/ayunis-core/compare/v2.76.2...v2.77.0) (2026-11-18)
+
+
+### Features
+
+* **chat:** let admins add anonymization exceptions from the chat (AYC-1859) ([#2367](https://github.com/ayunis-core/ayunis-core/issues/2367)) ([57b5651](https://github.com/ayunis-core/ayunis-core/commit/57b56516acfe80171ac834adbeade9cf22c55ca1))
+* **chat:** show unread notifications in tabs under the new chat input (AYC-1725) ([#2277](https://github.com/ayunis-core/ayunis-core/issues/2277)) ([a955830](https://github.com/ayunis-core/ayunis-core/commit/a9558309bb927c448687caf4b73c24c7ab9d33b6))
+* **integrations:** show admins how to install the outlook add-in (AYC-1949) ([#2418](https://github.com/ayunis-core/ayunis-core/issues/2418)) ([efd99cc](https://github.com/ayunis-core/ayunis-core/commit/efd99ccd63c628fa4678c73a816605b88c62694e))
+* **memory:** allow access to past chats per model (AYC-1822) ([#2394](https://github.com/ayunis-core/ayunis-core/issues/2394)) ([25e2b3e](https://github.com/ayunis-core/ayunis-core/commit/25e2b3e5b22cc955b40892e68cf287a05645990f))
+* **notifications:** show the inbox in the sidebar navigation (AYC-1866) ([#2370](https://github.com/ayunis-core/ayunis-core/issues/2370)) ([6fcb1ea](https://github.com/ayunis-core/ayunis-core/commit/6fcb1eab4ad3638b0649017c48b65e2d4df8b760))
+* **permissions:** control marketplace skill installation by role (AYC-896) ([#2381](https://github.com/ayunis-core/ayunis-core/issues/2381)) ([10e37b3](https://github.com/ayunis-core/ayunis-core/commit/10e37b3e1dd0dce32978b3fc20aad1461302f60e))
+* **rag:** re-index documents when the org's embedding model changes (AYC-1919) ([#2410](https://github.com/ayunis-core/ayunis-core/issues/2410)) ([c197f43](https://github.com/ayunis-core/ayunis-core/commit/c197f430bfc8e250fb4434ab2750b7cfaf2a38a8))
+* **recordings:** search transcripts and summaries of readable recordings in chat (AYC-1654) ([#2332](https://github.com/ayunis-core/ayunis-core/issues/2332)) ([a1d8079](https://github.com/ayunis-core/ayunis-core/commit/a1d807959eb893b36c1a5d50849d1a9b5f37a2ca))
+* **security:** limit framing of the app to outlook origins (AYC-1899) ([#2397](https://github.com/ayunis-core/ayunis-core/issues/2397)) ([fb5b897](https://github.com/ayunis-core/ayunis-core/commit/fb5b89702d69edd394cd8a9744f404ec6b97dcba))
+
+
+### Bug Fixes
+
+* **chat:** show original code in fenced code blocks under anonymisation (AYC-1854) ([#2384](https://github.com/ayunis-core/ayunis-core/issues/2384)) ([23cc4f6](https://github.com/ayunis-core/ayunis-core/commit/23cc4f67a969512931bd5185eb3263a1652afc49))
+* **embeddings:** support ollama embeddings and reject unusable models at upload (AYC-1916) ([#2404](https://github.com/ayunis-core/ayunis-core/issues/2404)) ([0c19d84](https://github.com/ayunis-core/ayunis-core/commit/0c19d8411cc332e44f8f82af6d37b68abdbbbebe))
+* **models:** guard embedding model catalog edits while documents are indexed (AYC-1918) ([#2403](https://github.com/ayunis-core/ayunis-core/issues/2403)) ([3c589ae](https://github.com/ayunis-core/ayunis-core/commit/3c589aec64d031cd4def1233612f968dc2058c83))
+* **rag:** read 2560-dim child chunk embeddings back from the database (AYC-1828) ([#2402](https://github.com/ayunis-core/ayunis-core/issues/2402)) ([19ee768](https://github.com/ayunis-core/ayunis-core/commit/19ee768b953f4135af1385a52a9b02a2bbbe8716))
+* **retrievers:** give qpdf a .pdf path for staged files (AYC-000) ([#2401](https://github.com/ayunis-core/ayunis-core/issues/2401)) ([612209a](https://github.com/ayunis-core/ayunis-core/commit/612209ae42b546bf53b7e35b43f10b111471a798))
+* **sources:** parse only populated cells of xlsx sheets (AYC-1728) ([#2275](https://github.com/ayunis-core/ayunis-core/issues/2275)) ([0610fdc](https://github.com/ayunis-core/ayunis-core/commit/0610fdc6e8b82b0b8e3f5714b778bb2cec5538f1))
+
+
+### Code Refactoring
+
+* **tools:** register tool handlers from one entry list (AYC-000) ([#2406](https://github.com/ayunis-core/ayunis-core/issues/2406)) ([3e0908d](https://github.com/ayunis-core/ayunis-core/commit/3e0908da64d2abb9e8e53fb02ff41e1d0e73eae2))
+
+
+### Documentation
+
+* **skills:** create PRs before gh stack submit so titles pass PR Title Check (AYC-000) ([#2396](https://github.com/ayunis-core/ayunis-core/issues/2396)) ([dadde51](https://github.com/ayunis-core/ayunis-core/commit/dadde51060fb9110ca2bccf372c2acc79f6748a6))
+
+
+### CI/CD
+
+* **scripts:** make duplication filter work on jq 1.8 (AYC-000) ([#2398](https://github.com/ayunis-core/ayunis-core/issues/2398)) ([c14c736](https://github.com/ayunis-core/ayunis-core/commit/c14c736bbe24b34f241b3ceaa7a9d1d95fdfeb03))
+
 ## [2.76.2](https://github.com/ayunis-core/ayunis-core/compare/v2.76.1...v2.76.2) (2026-11-17)
 
 
