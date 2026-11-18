@@ -150,6 +150,7 @@ const admitOrgProcessing = {
 const transcribeRecordingUseCase = { execute: jest.fn() };
 
 const transcriptContent = { save: jest.fn().mockResolvedValue(true) };
+const eventEmitter = { emitAsync: jest.fn().mockResolvedValue([]) };
 
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
@@ -193,6 +194,7 @@ describe('DocumentProcessingConsumer', () => {
       ),
       transcriptContent as never,
       { tempDirectory: undefined } as never,
+      eventEmitter as never,
     );
   });
 

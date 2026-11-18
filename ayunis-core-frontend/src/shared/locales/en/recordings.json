@@ -53,6 +53,11 @@
   },
   "detail": {
     "deleteLabel": "Delete",
+    "tabs": {
+      "transcript": "Transcript",
+      "summary": "Summary",
+      "configuration": "Configuration"
+    },
     "properties": {
       "title": "Properties",
       "description": "Name and origin of the recording.",
@@ -80,19 +85,37 @@
       "notFound": "The recording no longer exists or you have lost access.",
       "noPermission": "You are not allowed to rename this recording."
     },
+    "summary": {
+      "title": "Summary",
+      "description": "The minutes of the meeting, generated from the transcript.",
+      "generatedWith": "Generated with {{model}} on {{date}}",
+      "summarizing": "The summary is being generated. This can take a few minutes.",
+      "retry": "Try again",
+      "retryError": "The summary could not be restarted. Please try again.",
+      "retryNotFound": "The recording no longer exists or you have lost access.",
+      "retryNotRetryable": "The summary is already being generated or is done.",
+      "retryNoPermission": "You are not allowed to manage this recording.",
+      "failure": {
+        "noModel": "The summary could not be generated: no language model is available for it. An admin can choose one in the model settings.",
+        "creditBudget": "The summary could not be generated: the organization's credits for this month are used up.",
+        "creditLimit": "The summary could not be generated: the monthly credit limit is reached.",
+        "tooLong": "The summary could not be generated: the transcript is too long for the summary model.",
+        "empty": "The summary could not be generated: the recording contains no speech.",
+        "unavailable": "The summary could not be generated: the model provider is not available.",
+        "failed": "The summary could not be generated."
+      }
+    },
     "transcript": {
       "title": "Transcript",
       "description": "What was said, by speaker. Speaker labels come from the transcription and are not names.",
       "status": {
         "uploading": "Uploading",
         "transcribing": "Transcribing",
-        "transcribed": "Transcribed",
+        "summarizing": "Summarizing",
+        "ready": "Ready",
         "failed": "Failed"
       },
       "transcribing": "The recording is being transcribed. This can take a few minutes.",
-      "noAudio": "The audio of this recording has not been uploaded yet.",
-      "uploadHint": "The audio of this recording has not been uploaded yet. Upload it to transcribe the recording.",
-      "upload": "Upload audio",
       "speaker": "Speaker {{number}}",
       "unknownSpeaker": "Unknown speaker",
       "failure": {
@@ -104,6 +127,12 @@
         "unavailable": "The transcription service is not available. Delete the recording and upload the file again later.",
         "failed": "The recording could not be transcribed. Delete it and upload the file again. If the problem persists, contact support."
       }
+    },
+    "audio": {
+      "emptyTitle": "No audio yet",
+      "uploadHint": "Upload the audio to get a transcript and a summary.",
+      "waitingHint": "Once the audio is uploaded, the transcript and summary appear here.",
+      "upload": "Upload audio"
     }
   },
   "audio": {

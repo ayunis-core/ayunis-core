@@ -163,3 +163,30 @@ export function requestRecordingTranscript(
 ): Promise<APIResponse> {
   return api.get(`${apiURL}/api/recordings/${recordingId}/transcript`);
 }
+
+export async function getRecordingSummary(
+  api: APIRequestContext,
+  recordingId: string,
+): Promise<string> {
+  const { content } = await generatedApi.recordingSummaryControllerSummary(
+    recordingId,
+    { api },
+  );
+  return content;
+}
+
+export function requestRecordingSummary(
+  api: APIRequestContext,
+  recordingId: string,
+  apiURL = config.apiURL,
+): Promise<APIResponse> {
+  return api.get(`${apiURL}/api/recordings/${recordingId}/summary`);
+}
+
+export function requestRecordingSummaryRetry(
+  api: APIRequestContext,
+  recordingId: string,
+  apiURL = config.apiURL,
+): Promise<APIResponse> {
+  return api.post(`${apiURL}/api/recordings/${recordingId}/summary/retry`);
+}

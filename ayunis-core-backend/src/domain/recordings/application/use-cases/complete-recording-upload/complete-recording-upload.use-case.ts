@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { UUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
+import { getRequiredUserContext } from 'src/common/context/required-context';
+import { ContextService } from 'src/common/context/services/context.service';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { RecordingRepository } from 'src/domain/recordings/application/ports/recording.repository';
+import { RecordingSummaryRepository } from 'src/domain/recordings/application/ports/recording-summary.repository';
 import type { RecordingDetails } from 'src/domain/recordings/application/models/recording-details';
 import {
   RecordingAudioAlreadyUploadedError,
@@ -18,7 +21,8 @@ import { CompleteRecordingUploadCommand } from './complete-recording-upload.comm
 
 /**
  * Finishes the direct upload of a recording's audio: the source holding the
- * original becomes the recording's audio and is queued for transcription.
+ * original becomes the recording's audio and is queued for transcription,
+ * and its summary run, billed to the uploader, waits for the transcript.
  * Safe to repeat; a second audio file for the same recording is rejected.
  */
 @Injectable()
@@ -30,6 +34,8 @@ export class CompleteRecordingUploadUseCase {
     private readonly access: RecordingAccessService,
     private readonly completeUpload: CompleteSourceUploadUseCase,
     private readonly details: RecordingDetailsService,
+    private readonly summaries: RecordingSummaryRepository,
+    private readonly context: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRecordingError)
@@ -38,6 +44,7 @@ export class CompleteRecordingUploadUseCase {
   ): Promise<RecordingDetails> {
     const { recordingId, uploadId } = command;
     this.logger.log({ recordingId, uploadId }, 'Completing recording upload');
+    const { userId } = getRequiredUserContext(this.context);
     const recording = await this.repository.findById(recordingId);
     if (!recording) throw new RecordingNotFoundError(recordingId);
     await this.access.requireWrite(recording);
@@ -47,7 +54,7 @@ export class CompleteRecordingUploadUseCase {
         uploadId,
         targetType: SourceUploadTargetType.RECORDING,
         targetId: recordingId,
-        attach: (sources) => this.attach(recordingId, sources),
+        attach: (sources) => this.attach(recordingId, sources, userId),
       }),
     );
     const [details] = await this.details.describe([recording]);
@@ -56,7 +63,11 @@ export class CompleteRecordingUploadUseCase {
 
   // Runs in the transaction that creates the source. The row lock orders
   // concurrent completions and keeps a deleted recording from gaining audio.
-  private async attach(recordingId: UUID, sources: Source[]): Promise<void> {
+  private async attach(
+    recordingId: UUID,
+    sources: Source[],
+    uploaderId: UUID,
+  ): Promise<void> {
     const recording = await this.repository.findById(recordingId, {
       lock: true,
     });
@@ -66,5 +77,8 @@ export class CompleteRecordingUploadUseCase {
         throw new RecordingAudioAlreadyUploadedError(recordingId);
       }
     }
+    // Created with the audio, so the recording reads as summarizing from the
+    // moment its transcript is ready.
+    await this.summaries.createPending(recordingId, randomUUID(), uploaderId);
   }
 }

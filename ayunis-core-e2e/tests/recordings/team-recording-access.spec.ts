@@ -80,7 +80,7 @@ test('a team recording is managed by permitted members, read-only for other memb
     const recordingId = new URL(adminPage.url()).pathname.split('/').pop()!;
     await expect(adminPage.getByTestId('recording-status')).toHaveAttribute(
       'data-status',
-      'transcribed',
+      'ready',
       { timeout: 60_000 },
     );
 
@@ -120,6 +120,7 @@ test('a team recording is managed by permitted members, read-only for other memb
     await memberPage.goto('/recordings');
     await memberPage.getByTestId(`recording-card-${recordingId}`).click();
     await expect(memberPage.getByTestId('recording-page')).toBeVisible();
+    await memberPage.getByTestId('recording-tab-configuration').click();
     await expect(memberPage.getByTestId('entity-form-name')).toBeDisabled();
     await expect(memberPage.getByTestId('recording-rename-submit')).toHaveCount(
       0,
@@ -131,9 +132,10 @@ test('a team recording is managed by permitted members, read-only for other memb
       0,
     );
     // It reads the status and the transcript, but cannot upload audio.
+    await memberPage.getByTestId('recording-tab-transcript').click();
     await expect(memberPage.getByTestId('recording-status')).toHaveAttribute(
       'data-status',
-      'transcribed',
+      'ready',
     );
     await expect(
       memberPage.getByTestId('recording-transcript-turn'),
@@ -153,10 +155,7 @@ test('a team recording is managed by permitted members, read-only for other memb
       name: `Ohne Audio ${key}`,
     });
     await memberPage.goto(`/recordings/${withoutAudio.id}`);
-    await expect(memberPage.getByTestId('recording-status')).toHaveAttribute(
-      'data-status',
-      'uploading',
-    );
+    await expect(memberPage.getByTestId('recording-audio-empty')).toBeVisible();
     await expect(memberPage.getByTestId('recording-audio-upload')).toHaveCount(
       0,
     );
