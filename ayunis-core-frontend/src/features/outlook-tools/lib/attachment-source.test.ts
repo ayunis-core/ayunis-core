@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { AxiosError, type AxiosResponse } from 'axios';
 import {
-  PaneRequestError,
-  type PaneChatApi,
-  type PaneSource,
-} from '@/outlook/api/pane-chat-api';
-import { addAttachmentAsSource } from '@/outlook/lib/attachment-source';
+  addAttachmentAsSource,
+  type AttachmentSource,
+  type AttachmentSourceApi,
+} from '@/features/outlook-tools';
 
 // The transfer itself is the shared direct-upload library's, tested there;
 // here only the pane's wiring around it is under test.
@@ -22,10 +22,10 @@ const pdf = {
 const sameNameOtherMail = { ...pdf, key: 'read:mail-b|attachment-1|9' };
 
 function source(
-  status: PaneSource['status'],
-  errorCode?: PaneSource['processingErrorCode'],
+  status: AttachmentSource['status'],
+  errorCode?: AttachmentSource['processingErrorCode'],
   id = 'source-1',
-): PaneSource {
+): AttachmentSource {
   return {
     id,
     name: 'Antrag.pdf',
@@ -35,12 +35,12 @@ function source(
 }
 
 /** A workbook becomes one source per sheet. */
-function sheets(status: PaneSource['status']): PaneSource[] {
+function sheets(status: AttachmentSource['status']): AttachmentSource[] {
   return [source(status), source(status, undefined, 'source-2')];
 }
 
 /** `listed` answers the `listSources` poll rounds in order. */
-function fakeApi(listed: PaneSource[][]) {
+function fakeApi(listed: AttachmentSource[][]) {
   return {
     createUpload: vi.fn(() =>
       Promise.resolve({
@@ -54,7 +54,7 @@ function fakeApi(listed: PaneSource[][]) {
     signUpload: vi.fn(() => Promise.resolve({ url: 'https://storage/put' })),
     abortUpload: vi.fn(() => Promise.resolve()),
     listSources: vi.fn(() => Promise.resolve(listed.shift() ?? [])),
-  } as unknown as PaneChatApi;
+  } as unknown as AttachmentSourceApi;
 }
 
 describe('addAttachmentAsSource', () => {
@@ -154,7 +154,9 @@ describe('addAttachmentAsSource', () => {
   it('tells the model why an oversized attachment was refused', async () => {
     const api = fakeApi([]);
     uploadSourceFile.mockRejectedValueOnce(
-      new PaneRequestError(413, 'Payload Too Large'),
+      new AxiosError('Payload Too Large', 'ERR_BAD_REQUEST', undefined, null, {
+        status: 413,
+      } as AxiosResponse),
     );
 
     const result = await addAttachmentAsSource(api, 'oversized-thread', pdf);

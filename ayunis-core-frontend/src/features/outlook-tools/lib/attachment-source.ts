@@ -1,8 +1,38 @@
-import {
-  PaneRequestError,
-  type PaneChatApi,
-  type PaneSource,
-} from '@/outlook/api/pane-chat-api';
+import { isAxiosError } from 'axios';
+import type {
+  CSVDataSourceResponseDto,
+  FileSourceResponseDto,
+  SourceUploadSessionResponseDto,
+  UrlSourceResponseDto,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SignUploadRequest } from '@/shared/lib/source-upload/transfer-source-file';
+
+type ThreadSourceResponse =
+  FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
+
+/**
+ * What is read from a thread source response. Picked from the generated DTOs
+ * so a backend change to these fields fails the type-check here.
+ */
+export type AttachmentSource = Pick<
+  ThreadSourceResponse,
+  'id' | 'name' | 'status' | 'processingErrorCode'
+>;
+
+/** The thread source endpoints, called with the caller's authentication. */
+export interface AttachmentSourceApi {
+  createUpload(
+    threadId: string,
+    file: File,
+  ): Promise<SourceUploadSessionResponseDto>;
+  completeUpload(
+    threadId: string,
+    uploadId: string,
+  ): Promise<AttachmentSource[]>;
+  signUpload: SignUploadRequest;
+  abortUpload(uploadId: string): Promise<void>;
+  listSources(threadId: string): Promise<AttachmentSource[]>;
+}
 
 const POLL_INTERVAL_MS = 2_000;
 const POLL_TIMEOUT_MS = 120_000;
@@ -43,11 +73,11 @@ const wait = (ms: number, signal?: AbortSignal) =>
   });
 
 async function waitUntilProcessed(
-  api: PaneChatApi,
+  api: AttachmentSourceApi,
   threadId: string,
   ids: Set<string>,
   signal?: AbortSignal,
-): Promise<PaneSource[]> {
+): Promise<AttachmentSource[]> {
   const deadline = Date.now() + POLL_TIMEOUT_MS;
   for (;;) {
     if (signal?.aborted) throw aborted();
@@ -60,7 +90,7 @@ async function waitUntilProcessed(
   }
 }
 
-function describe(sources: PaneSource[]): string {
+function describe(sources: AttachmentSource[]): string {
   return JSON.stringify({
     attachedAsSources: sources.map(({ id, name }) => ({ id, name })),
     note: 'The attachment was added to this chat as a source. Read it with source_get_text or search it with source_query.',
@@ -81,7 +111,7 @@ function describe(sources: PaneSource[]): string {
  * a read that stops or times out while polling must resume on them instead of
  * uploading the file again.
  */
-const uploadedSources = new Map<string, PaneSource[]>();
+const uploadedSources = new Map<string, AttachmentSource[]>();
 
 function reuseKey(threadId: string, attachment: AttachmentFile): string {
   return `${threadId}|${attachment.key}`;
@@ -93,7 +123,7 @@ function reuseKey(threadId: string, attachment: AttachmentFile): string {
  * chat, and the run the pane resumes offers the source tools to read it.
  */
 export async function addAttachmentAsSource(
-  api: PaneChatApi,
+  api: AttachmentSourceApi,
   threadId: string,
   attachment: AttachmentFile,
   signal?: AbortSignal,
@@ -135,11 +165,11 @@ export async function addAttachmentAsSource(
 
 /** The sources, or the error text the model should see instead. */
 async function upload(
-  api: PaneChatApi,
+  api: AttachmentSourceApi,
   threadId: string,
   attachment: AttachmentFile,
   signal: AbortSignal,
-): Promise<PaneSource[] | string> {
+): Promise<AttachmentSource[] | string> {
   // Uppy and the S3 multipart machinery are only needed for an attachment,
   // which most chats never have; keep them out of the pane's first load.
   const { uploadSourceFile } = await import('@/shared/lib/source-upload');
@@ -155,11 +185,21 @@ async function upload(
       signal,
     );
   } catch (cause) {
-    if (cause instanceof PaneRequestError && cause.status === 413) {
+    if (httpStatus(cause) === 413) {
       return JSON.stringify({
         error: 'the attachment is larger than this chat accepts',
       });
     }
     throw cause;
   }
+}
+
+/** The pane's fetch errors carry `status`, the app's axios errors `response`. */
+function httpStatus(cause: unknown): number | undefined {
+  if (typeof cause !== 'object' || cause === null) return undefined;
+  if ('status' in cause && typeof cause.status === 'number') {
+    return cause.status;
+  }
+  if (isAxiosError(cause)) return cause.response?.status;
+  return undefined;
 }

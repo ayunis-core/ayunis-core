@@ -1,26 +1,28 @@
-import { errorMessage } from '@/outlook/lib/outlook-tools/office-async';
+import { errorMessage } from '@/features/outlook-tools/lib/office-async';
 import {
   currentOutlookItem,
   currentOutlookItemKey,
+  isReadItemKey,
   type OutlookItem,
-} from '@/outlook/lib/outlook-tools/outlook-item';
+} from '@/features/outlook-tools/lib/outlook-item';
 import {
   readAttachment,
   toolError,
   type ExtractAttachmentText,
-} from '@/outlook/lib/outlook-tools/read-attachment';
-import { readEmail } from '@/outlook/lib/outlook-tools/read-email';
+} from '@/features/outlook-tools/lib/read-attachment';
+import { readEmail } from '@/features/outlook-tools/lib/read-email';
 import {
   draftEmail,
+  ItemChangedError,
   moveEmailToComposer,
   NothingToSaveError,
   saveEmailToDraft,
   type OutlookWriteAction,
-} from '@/outlook/lib/outlook-tools/write-email';
+} from '@/features/outlook-tools/lib/write-email';
 import {
   OUTLOOK_TOOL,
   type OutlookToolName,
-} from '@/outlook/lib/outlook-tools/outlook-tool-names';
+} from '@/features/outlook-tools/lib/outlook-tool-names';
 
 export type { OutlookWriteAction };
 export type OutlookWriteFailure =
@@ -32,8 +34,11 @@ export type OutlookToolOutcome =
 
 export interface OutlookToolDependencies {
   extractAttachmentText?: ExtractAttachmentText;
-  /** The mail the run started on; the tool refuses to act on any other. */
-  expectedItemKey?: string;
+  /**
+   * The mail the run started on, null when none was open; the tool refuses
+   * to act on any other. Without it the tool acts on whatever is open.
+   */
+  expectedItemKey?: string | null;
 }
 
 type ReadToolName =
@@ -95,6 +100,9 @@ async function runWriteTool(
     if (error instanceof NothingToSaveError) {
       return { status: 'failed', failure: 'nothingToSave' };
     }
+    if (error instanceof ItemChangedError) {
+      return { status: 'failed', failure: 'itemChanged' };
+    }
     return {
       status: 'failed',
       failure: 'officeFailed',
@@ -103,7 +111,7 @@ async function runWriteTool(
   }
 }
 
-function movedToAnotherItem(expectedItemKey?: string): boolean {
+function movedToAnotherItem(expectedItemKey?: string | null): boolean {
   return (
     expectedItemKey !== undefined && currentOutlookItemKey() !== expectedItemKey
   );
@@ -131,4 +139,20 @@ export async function executeOutlookTool(
     };
   }
   return runWriteTool(name, params);
+}
+
+/**
+ * A draft for a mail being read opens Outlook's reply form, which only the
+ * user starts; a run leaves it to them. Decided by the mail the run was
+ * about, not the one open when it ends.
+ */
+export function waitsForUser(
+  name: OutlookToolName,
+  itemKey: string | null,
+): boolean {
+  return (
+    (name === OUTLOOK_TOOL.draftEmail ||
+      name === OUTLOOK_TOOL.moveEmailToComposer) &&
+    isReadItemKey(itemKey)
+  );
 }

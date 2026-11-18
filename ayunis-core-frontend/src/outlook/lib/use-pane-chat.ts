@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PaneChatApi, PaneRunInput } from '@/outlook/api/pane-chat-api';
 import { SessionExpiredError } from '@/outlook/api/pane-session';
-import { addAttachmentAsSource } from '@/outlook/lib/attachment-source';
+import { addAttachmentAsSource } from '@/features/outlook-tools';
 import {
   currentOutlookItemKey,
   executeOutlookTool,
   isAwaitingResultTool,
   type OutlookToolOutcome,
-} from '@/outlook/lib/outlook-tools';
+} from '@/features/outlook-tools';
 import {
   answeredToolCallIds,
   hasCallAwaitingConfirmation,

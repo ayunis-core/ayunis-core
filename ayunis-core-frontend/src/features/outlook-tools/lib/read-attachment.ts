@@ -1,13 +1,13 @@
 import {
   mailboxSupports,
   officeAsync,
-} from '@/outlook/lib/outlook-tools/office-async';
+} from '@/features/outlook-tools/lib/office-async';
 import {
   currentOutlookItemKey,
   listAttachments,
   type AttachmentInfo,
   type OutlookItem,
-} from '@/outlook/lib/outlook-tools/outlook-item';
+} from '@/features/outlook-tools/lib/outlook-item';
 
 export type ExtractAttachmentText = (file: {
   name: string;

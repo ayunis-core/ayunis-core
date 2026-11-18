@@ -78,13 +78,13 @@ const officeStub = (item: OfficeStubComposeItem | null) => `(() => {
         mail.body = text;
         succeed(callback);
       }),
-      setSelectedDataAsync: recorded(
-        'body.setSelectedDataAsync',
-        (text, _options, callback) => {
-          mail.body += text;
-          succeed(callback);
-        },
+      getTypeAsync: recorded('body.getTypeAsync', (callback) =>
+        succeed(callback, 'html'),
       ),
+      prependAsync: recorded('body.prependAsync', (text, _options, callback) => {
+        mail.body = text + mail.body;
+        succeed(callback);
+      }),
     },
     getAttachmentsAsync: recorded('getAttachmentsAsync', (callback) =>
       succeed(callback, []),

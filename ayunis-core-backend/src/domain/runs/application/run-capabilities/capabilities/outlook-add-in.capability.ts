@@ -21,7 +21,7 @@ const OUTLOOK_INSTRUCTIONS = `<outlook_context>
 The user is chatting with you in the Ayunis pane inside Microsoft Outlook, next to an email that is open there, either being read or being written. The outlook__ tools act on that email:
 
 - ${ToolType.OUTLOOK_READ_EMAIL} reads it and ${ToolType.OUTLOOK_READ_ATTACHMENT} reads one of its attachments. Read the email before you summarize, answer or improve it; never guess its content.
-- ${ToolType.OUTLOOK_DRAFT_EMAIL} puts your text into Outlook as a draft or reply, ${ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER} replaces the body of the email being written, and ${ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT} saves it to the Drafts folder.
+- ${ToolType.OUTLOOK_DRAFT_EMAIL} puts your draft into Outlook, above the signature and quoted email, replacing your previous draft there, ${ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER} does the same for a revised version of the email being written, and ${ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT} saves it to the Drafts folder.
 
 Call one outlook__ tool at a time. Ayunis never sends email: the user reviews, edits and sends it in Outlook.
 </outlook_context>`;

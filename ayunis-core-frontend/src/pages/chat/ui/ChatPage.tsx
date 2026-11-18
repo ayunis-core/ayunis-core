@@ -3,7 +3,7 @@ import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfac
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
-import { useMessageSend } from '@/pages/chat/api/useMessageSend';
+import { useMessageSendWithOutlookTools } from '@/pages/chat/hooks/useMessageSendWithOutlookTools';
 import ChatHeader from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
@@ -51,6 +51,7 @@ import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-cal
 import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
 import { useToolCallDecisions } from '@/pages/chat/hooks/useToolCallDecisions';
+import { OutlookToolBridgeContext } from '@/pages/chat/model/outlook-tool-bridge';
 import { ToolCallConfirmationContext } from '@/pages/chat/ui/agent-run-timeline';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
@@ -244,20 +245,28 @@ export default function ChatPage({
     [queryClient, setThreadTitle],
   );
 
-  const { sendTextMessage, sendToolCallDecisions, attach, abort } =
-    useMessageSend({
-      threadId: thread.id,
-      onMessageReceived: () => clearPendingSubmission(thread.id),
-      onMessageEvent: (data) => handleMessage(data.message),
-      onErrorEvent: handleError,
-      onThreadEvent: handleThread,
-      onMasksEvent: handleMasks,
-      onError: (error) => {
-        console.error('Error in useMessageSend:', error);
-        showError(t('chat.errorSendMessage'));
-      },
-      onComplete: (failed) => completeSubmission(thread.id, failed),
-    });
+  const {
+    sendTextMessage,
+    sendToolCallDecisions,
+    attach,
+    abort,
+    outlookToolBridge,
+  } = useMessageSendWithOutlookTools({
+    threadId: thread.id,
+    messages,
+    isStreaming,
+    piiMasks,
+    onMessageReceived: () => clearPendingSubmission(thread.id),
+    onMessageEvent: (data) => handleMessage(data.message),
+    onErrorEvent: handleError,
+    onThreadEvent: handleThread,
+    onMasksEvent: handleMasks,
+    onError: (error) => {
+      console.error('Error in useMessageSend:', error);
+      showError(t('chat.errorSendMessage'));
+    },
+    onComplete: (failed) => completeSubmission(thread.id, failed),
+  });
   const toolCallConfirmation = useToolCallDecisions({
     messages,
     isStreaming,
@@ -371,23 +380,25 @@ export default function ChatPage({
 
   const chatContent = (
     <ToolCallConfirmationContext.Provider value={toolCallConfirmation}>
-      <ChatThreadContent
-        renderUnits={renderUnits}
-        threadId={thread.id}
-        pendingSubmission={pendingSubmission}
-        contextHint={
-          // It opens the side panel, which the pane doesn't have.
-          !isEmbedded && (
-            <ChatContextHint
-              threadId={thread.id}
-              workspaceId={thread.workspaceId}
-              onOpen={() => sidePanelTransitions.changeTab('context')}
-            />
-          )
-        }
-        showLoadingPlaceholder={showLoadingPlaceholder}
-        onOpenArtifact={sidePanelTransitions.openArtifactPanel}
-      />
+      <OutlookToolBridgeContext.Provider value={outlookToolBridge}>
+        <ChatThreadContent
+          renderUnits={renderUnits}
+          threadId={thread.id}
+          pendingSubmission={pendingSubmission}
+          contextHint={
+            // It opens the side panel, which the pane doesn't have.
+            !isEmbedded && (
+              <ChatContextHint
+                threadId={thread.id}
+                workspaceId={thread.workspaceId}
+                onOpen={() => sidePanelTransitions.changeTab('context')}
+              />
+            )
+          }
+          showLoadingPlaceholder={showLoadingPlaceholder}
+          onOpenArtifact={sidePanelTransitions.openArtifactPanel}
+        />
+      </OutlookToolBridgeContext.Provider>
     </ToolCallConfirmationContext.Provider>
   );
 

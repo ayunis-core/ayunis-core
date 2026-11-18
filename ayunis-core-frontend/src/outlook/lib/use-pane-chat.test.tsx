@@ -6,7 +6,7 @@ import type { RunStreamEvent } from '@/outlook/lib/read-run-stream';
 import { usePaneChat } from '@/outlook/lib/use-pane-chat';
 
 const executeOutlookTool = vi.hoisted(() => vi.fn());
-vi.mock('@/outlook/lib/outlook-tools/execute-outlook-tool', () => ({
+vi.mock('@/features/outlook-tools/lib/execute-outlook-tool', () => ({
   executeOutlookTool,
 }));
 

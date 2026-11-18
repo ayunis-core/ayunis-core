@@ -1,7 +1,7 @@
 import {
   mailboxSupports,
   officeAsync,
-} from '@/outlook/lib/outlook-tools/office-async';
+} from '@/features/outlook-tools/lib/office-async';
 
 type Callback<T> = (result: Office.AsyncResult<T>) => void;
 
@@ -43,7 +43,7 @@ interface AsyncGetter<T> {
   getAsync?: (callback: Callback<T>) => void;
 }
 
-type TextOptions = { coercionType: Office.CoercionType };
+type BodyOptions = { coercionType: Office.CoercionType };
 
 export interface ComposeItem extends AttachmentContentSource {
   itemId?: string;
@@ -58,14 +58,15 @@ export interface ComposeItem extends AttachmentContentSource {
       coercion: Office.CoercionType,
       callback: Callback<string>,
     ) => void;
+    getTypeAsync: (callback: Callback<Office.CoercionType>) => void;
     setAsync: (
-      text: string,
-      options: TextOptions,
+      data: string,
+      options: BodyOptions,
       callback: Callback<void>,
     ) => void;
-    setSelectedDataAsync: (
-      text: string,
-      options: TextOptions,
+    prependAsync: (
+      data: string,
+      options: BodyOptions,
       callback: Callback<void>,
     ) => void;
   };
@@ -121,6 +122,11 @@ export function currentOutlookItemKey(): string | null {
   const outlookItem = currentOutlookItem();
   if (!outlookItem) return null;
   return `${outlookItem.mode}:${outlookItem.item.itemId ?? ''}`;
+}
+
+/** Whether the mail a key identifies was being read, not written. */
+export function isReadItemKey(itemKey: string | null): boolean {
+  return itemKey?.startsWith('read:') ?? false;
 }
 
 export async function listAttachments(
