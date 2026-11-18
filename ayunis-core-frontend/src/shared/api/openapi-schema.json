@@ -6702,6 +6702,33 @@
         "tags": ["knowledge-bases"]
       }
     },
+    "/knowledge-bases/{id}/failed-documents": {
+      "delete": {
+        "operationId": "KnowledgeBasesController_removeFailedDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The failed documents have been removed"
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "Remove all failed documents from a knowledge base",
+        "tags": ["knowledge-bases"]
+      }
+    },
     "/knowledge-bases/{id}/uploads": {
       "post": {
         "description": "Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /knowledge-bases/{id}/uploads/{uploadId}/complete.",

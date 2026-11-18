@@ -2,6 +2,7 @@ import {
   useAddUrl,
   useKnowledgeBaseDocuments,
   useRemoveDocument,
+  useRemoveFailedDocuments,
   useUploadDocument,
 } from '@/pages/knowledge-base/api';
 import { KnowledgeBaseDocumentsCard as SharedKnowledgeBaseDocumentsCard } from '@/widgets/knowledge-base-documents-card';
@@ -13,6 +14,7 @@ export default function KnowledgeBaseDocumentsCard({
   const documents = useKnowledgeBaseDocuments(knowledgeBaseId);
   const upload = useUploadDocument(knowledgeBaseId);
   const remove = useRemoveDocument(knowledgeBaseId);
+  const removeFailed = useRemoveFailedDocuments(knowledgeBaseId);
   const addUrl = useAddUrl(knowledgeBaseId);
 
   return (
@@ -22,6 +24,7 @@ export default function KnowledgeBaseDocumentsCard({
         ...documents,
         ...upload,
         ...remove,
+        ...removeFailed,
         ...addUrl,
       }}
     />

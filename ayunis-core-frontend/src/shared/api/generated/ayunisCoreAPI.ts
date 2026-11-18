@@ -13277,6 +13277,72 @@ export const useKnowledgeBasesControllerRemoveDocument = <TError = void,
     }
 
 /**
+ * @summary Remove all failed documents from a knowledge base
+ */
+export const knowledgeBasesControllerRemoveFailedDocuments = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/knowledge-bases/${id}/failed-documents`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBasesControllerRemoveFailedDocumentsMutationKey = () => ['knowledgeBasesControllerRemoveFailedDocuments'] as const;
+
+export const getKnowledgeBasesControllerRemoveFailedDocumentsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveFailedDocuments>>, TError,KnowledgeBasesControllerRemoveFailedDocumentsMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveFailedDocuments>>, TError,KnowledgeBasesControllerRemoveFailedDocumentsMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBasesControllerRemoveFailedDocumentsMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveFailedDocuments>>, KnowledgeBasesControllerRemoveFailedDocumentsMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  knowledgeBasesControllerRemoveFailedDocuments(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBasesControllerRemoveFailedDocumentsMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveFailedDocuments>>>
+
+    export type KnowledgeBasesControllerRemoveFailedDocumentsMutationError = void
+    export type KnowledgeBasesControllerRemoveFailedDocumentsMutationVariables = {id: string}
+
+    /**
+ * @summary Remove all failed documents from a knowledge base
+ */
+export const useKnowledgeBasesControllerRemoveFailedDocuments = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerRemoveFailedDocuments>>, TError,KnowledgeBasesControllerRemoveFailedDocumentsMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBasesControllerRemoveFailedDocuments>>,
+        TError,
+        KnowledgeBasesControllerRemoveFailedDocumentsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBasesControllerRemoveFailedDocumentsMutationOptions(options), queryClient);
+    }
+
+/**
  * Checks access, limits and file type, then reserves an upload the browser transfers straight to object storage via the /source-uploads endpoints. Complete it with POST /knowledge-bases/{id}/uploads/{uploadId}/complete.
  * @summary Create a direct document upload for a knowledge base
  */

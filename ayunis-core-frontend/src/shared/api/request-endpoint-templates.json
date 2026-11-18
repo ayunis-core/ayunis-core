@@ -68,6 +68,7 @@
   "/knowledge-bases/{id}/activation",
   "/knowledge-bases/{id}/documents",
   "/knowledge-bases/{id}/documents/{documentId}",
+  "/knowledge-bases/{id}/failed-documents",
   "/knowledge-bases/{id}/owner",
   "/knowledge-bases/{id}/owner-change-preview",
   "/knowledge-bases/{id}/uploads",

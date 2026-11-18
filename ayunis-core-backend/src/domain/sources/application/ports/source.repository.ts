@@ -76,6 +76,15 @@ export abstract class SourceRepository {
   abstract delete(sourceId: UUID): Promise<void>;
   abstract deleteMany(sourceIds: UUID[]): Promise<void>;
   /**
+   * Deletes the knowledge base's sources that are FAILED when the delete
+   * reaches them. A source whose status changed in a concurrent transaction is
+   * re-checked once that transaction commits, so it survives when it is no
+   * longer failed.
+   */
+  abstract deleteFailedByKnowledgeBaseId(
+    knowledgeBaseId: UUID,
+  ): Promise<Pick<Source, 'id' | 'storageKey'>[]>;
+  /**
    * Returns the subset of `candidateIds` that are (a) older than `olderThan`,
    * (b) not attached to a knowledge base, and (c) not referenced by any
    * skill. Used by cross-module cleanup flows that need to confirm a source
