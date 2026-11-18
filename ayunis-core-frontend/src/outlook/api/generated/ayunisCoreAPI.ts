@@ -216,6 +216,7 @@ import type {
   SetOrgSsoIdpRequestDto,
   SetOrgSsoStateRequestDto,
   SetOrgUsageVisibilityRequestDto,
+  SetRecordingSummaryModelDto,
   SetSkillActivationDto,
   SetSkillPinDto,
   SetTeamDefaultModelDto,
@@ -3250,6 +3251,97 @@ return paneFetch<modelModeDefaultsControllerSetTeamModeDefaultResponse>(getModel
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(setModelModeDefaultDto)
+  }
+);}
+
+
+
+export type recordingSummaryModelControllerGetRecordingSummaryModelResponse200 = {
+  data: PermittedLanguageModelResponseDtoNullable
+  status: 200
+}
+
+export type recordingSummaryModelControllerGetRecordingSummaryModelResponseSuccess = (recordingSummaryModelControllerGetRecordingSummaryModelResponse200) & {
+  headers: Headers;
+};
+;
+
+export type recordingSummaryModelControllerGetRecordingSummaryModelResponse = (recordingSummaryModelControllerGetRecordingSummaryModelResponseSuccess)
+
+export const getRecordingSummaryModelControllerGetRecordingSummaryModelUrl = () => {
+
+
+
+
+  return `/models/org/recording-summary-model`
+}
+
+/**
+ * Returns null when no model is selected and summaries use the organization default model.
+ * @summary Get the model that summarizes recordings
+ */
+export const recordingSummaryModelControllerGetRecordingSummaryModel = async ( options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryModelControllerGetRecordingSummaryModelResponse> => {
+
+  return paneFetch<recordingSummaryModelControllerGetRecordingSummaryModelResponse>(getRecordingSummaryModelControllerGetRecordingSummaryModelUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type recordingSummaryModelControllerSetRecordingSummaryModelResponse200 = {
+  data: PermittedLanguageModelResponseDtoNullable
+  status: 200
+}
+
+export type recordingSummaryModelControllerSetRecordingSummaryModelResponse400 = {
+  data: void
+  status: 400
+}
+
+export type recordingSummaryModelControllerSetRecordingSummaryModelResponse404 = {
+  data: void
+  status: 404
+}
+
+export type recordingSummaryModelControllerSetRecordingSummaryModelResponseSuccess = (recordingSummaryModelControllerSetRecordingSummaryModelResponse200) & {
+  headers: Headers;
+};
+export type recordingSummaryModelControllerSetRecordingSummaryModelResponseError = (recordingSummaryModelControllerSetRecordingSummaryModelResponse400 | recordingSummaryModelControllerSetRecordingSummaryModelResponse404) & {
+  headers: Headers;
+};
+
+export type recordingSummaryModelControllerSetRecordingSummaryModelResponse = (recordingSummaryModelControllerSetRecordingSummaryModelResponseSuccess | recordingSummaryModelControllerSetRecordingSummaryModelResponseError)
+
+export const getRecordingSummaryModelControllerSetRecordingSummaryModelUrl = () => {
+
+
+
+
+  return `/models/org/recording-summary-model`
+}
+
+/**
+ * @summary Set or clear the model that summarizes recordings
+ */
+export const recordingSummaryModelControllerSetRecordingSummaryModel = async (setRecordingSummaryModelDto: SetRecordingSummaryModelDto, options?: Parameters<typeof paneFetch>[1]): Promise<recordingSummaryModelControllerSetRecordingSummaryModelResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<recordingSummaryModelControllerSetRecordingSummaryModelResponse>(getRecordingSummaryModelControllerSetRecordingSummaryModelUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setRecordingSummaryModelDto)
   }
 );}
 

@@ -83,6 +83,18 @@
       },
       "success": "Standardmodell der Organisation aktualisiert.",
       "error": "Standardmodell der Organisation konnte nicht aktualisiert werden."
+    },
+    "recordingSummaryModel": {
+      "title": "Zusammenfassungen von Aufzeichnungen",
+      "description": "Wählen Sie, welches Modell die Zusammenfassungen von Aufzeichnungen schreibt. Die Auswahl gilt für die ganze Organisation, auch für Teams mit eigener Modellrichtlinie.",
+      "label": "Modell für Zusammenfassungen",
+      "helper": "Modelle, die nur anonymisierte Eingaben erhalten dürfen, werden nicht angezeigt.",
+      "orgDefault": "Standardmodell der Organisation",
+      "loading": "Wird geladen...",
+      "success": "Modell für Zusammenfassungen aktualisiert.",
+      "error": "Modell für Zusammenfassungen konnte nicht aktualisiert werden.",
+      "notPermitted": "Dieses Modell ist für Ihre Organisation nicht freigeschaltet.",
+      "anonymousOnly": "Dieses Modell darf nur anonymisierte Eingaben erhalten und kann keine Aufzeichnungen zusammenfassen."
     }
   },
   "tabs": {

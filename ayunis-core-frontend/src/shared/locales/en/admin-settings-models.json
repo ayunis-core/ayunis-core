@@ -83,6 +83,18 @@
       },
       "success": "Organization default model updated.",
       "error": "Unable to update the organization default model."
+    },
+    "recordingSummaryModel": {
+      "title": "Recording summaries",
+      "description": "Choose which model writes the summaries of recordings. It applies to the whole organization, including teams with their own model policy.",
+      "label": "Summary model",
+      "helper": "Models that may only receive anonymized input are not listed.",
+      "orgDefault": "Organization default model",
+      "loading": "Loading...",
+      "success": "Summary model updated.",
+      "error": "Unable to update the summary model.",
+      "notPermitted": "This model is not enabled for your organization.",
+      "anonymousOnly": "This model may only receive anonymized input and can't summarize recordings."
     }
   },
   "tabs": {
