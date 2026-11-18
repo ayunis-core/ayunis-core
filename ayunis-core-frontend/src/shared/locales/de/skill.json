@@ -118,6 +118,7 @@
     "fileSourceUnreadableError": "Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
     "sourceLimitExceededError": "Eine Fähigkeit kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen.",
     "noEmbeddingModelError": "Es ist kein Embedding-Modell aktiviert. Bitte bitten Sie Ihren Administrator, eines zu aktivieren, bevor Sie Dateien hochladen.",
+    "embeddingModelUnavailableError": "Das aktivierte Embedding-Modell kann nicht verwendet werden. Bitte bitten Sie Ihren Administrator, seine Konfiguration zu prüfen.",
     "uploading": "Wird hochgeladen… {{percent}} %",
     "uploadInterruptedError": "Der Upload wurde unterbrochen. Bitte versuchen Sie es erneut."
   },

@@ -183,6 +183,7 @@
     "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
     "sourceLimitExceededError": "A chat can have at most 20 sources. Please remove one before adding another.",
     "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files.",
+    "embeddingModelUnavailableError": "The enabled embedding model can't be used. Please ask your administrator to check its configuration.",
     "uploading": "Uploading… {{percent}}%",
     "uploadInterruptedError": "The upload was interrupted. Please try again."
   },

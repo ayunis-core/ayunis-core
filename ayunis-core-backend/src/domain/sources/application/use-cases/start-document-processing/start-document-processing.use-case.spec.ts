@@ -8,8 +8,9 @@ import { MarkSourceFailedUseCase } from 'src/domain/sources/application/use-case
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { UploadOrgObjectUseCase } from 'src/domain/storage/application/use-cases/upload-org-object/upload-org-object.use-case';
 import { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
-import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
-import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
+import { EmbeddingReadinessService } from 'src/domain/sources/application/services/embedding-readiness.service';
+import { EmbeddingsProviderNotFoundError } from 'src/domain/rag/embeddings/application/embeddings.errors';
+import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { ContextService } from 'src/common/context/services/context.service';
@@ -29,7 +30,7 @@ describe('StartDocumentProcessingUseCase', () => {
   let mockUploadObjectUseCase: jest.Mocked<UploadOrgObjectUseCase>;
   let mockDeleteObjectUseCase: jest.Mocked<DeleteObjectUseCase>;
   let mockEnqueueDocumentProcessingUseCase: jest.Mocked<EnqueueDocumentProcessingUseCase>;
-  let mockGetPermittedEmbeddingModelUseCase: jest.Mocked<GetPermittedEmbeddingModelUseCase>;
+  let mockEmbeddingReadiness: jest.Mocked<EmbeddingReadinessService>;
   let mockPreflightCheckUseCase: jest.Mocked<PreflightCheckUseCase>;
   let mockContextService: jest.Mocked<ContextService>;
 
@@ -69,9 +70,9 @@ describe('StartDocumentProcessingUseCase', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<EnqueueDocumentProcessingUseCase>;
 
-    mockGetPermittedEmbeddingModelUseCase = {
-      execute: jest.fn().mockResolvedValue({}),
-    } as unknown as jest.Mocked<GetPermittedEmbeddingModelUseCase>;
+    mockEmbeddingReadiness = {
+      assertOrgCanEmbed: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<EmbeddingReadinessService>;
 
     mockPreflightCheckUseCase = {
       execute: jest.fn().mockResolvedValue(undefined),
@@ -107,8 +108,8 @@ describe('StartDocumentProcessingUseCase', () => {
           useValue: mockEnqueueDocumentProcessingUseCase,
         },
         {
-          provide: GetPermittedEmbeddingModelUseCase,
-          useValue: mockGetPermittedEmbeddingModelUseCase,
+          provide: EmbeddingReadinessService,
+          useValue: mockEmbeddingReadiness,
         },
         {
           provide: PreflightCheckUseCase,
@@ -244,9 +245,9 @@ describe('StartDocumentProcessingUseCase', () => {
     expect(mockEnqueueDocumentProcessingUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should reject before creating a source when the org has no permitted embedding model', async () => {
-    mockGetPermittedEmbeddingModelUseCase.execute.mockRejectedValue(
-      new PermittedEmbeddingModelNotFoundForOrgError(orgId),
+  it('should reject before creating a source when the org cannot embed', async () => {
+    mockEmbeddingReadiness.assertOrgCanEmbed.mockRejectedValue(
+      new EmbeddingsProviderNotFoundError(ModelProvider.ANTHROPIC),
     );
 
     const command = new StartDocumentProcessingCommand({
@@ -256,7 +257,7 @@ describe('StartDocumentProcessingUseCase', () => {
     });
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      PermittedEmbeddingModelNotFoundForOrgError,
+      EmbeddingsProviderNotFoundError,
     );
 
     // Nothing was created, uploaded, or enqueued

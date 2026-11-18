@@ -5,8 +5,10 @@ import { EmbeddingsHandlerRegistry } from './application/embeddings-handler.regi
 import { EmbeddingsProvider } from './domain/embeddings-provider.enum';
 import { EmbedTextUseCase } from './application/use-cases/embed-text/embed-text.use-case';
 import { GetAvailableProvidersUseCase } from './application/use-cases/get-available-providers/get-available-providers.use-case';
+import { AssertEmbeddingsProviderAvailableUseCase } from './application/use-cases/assert-embeddings-provider-available/assert-embeddings-provider-available.use-case';
 import { MistralEmbeddingsHandler } from './infrastructure/handler/mistral-embeddings.handler';
 import { AyunisOllamaEmbeddingsHandler } from './infrastructure/handler/ayunis-ollama-embeddings.handler';
+import { OllamaEmbeddingsHandler } from './infrastructure/handler/ollama-embeddings.handler';
 import { EmbeddingsThrottleService } from './application/services/embeddings-throttle.service';
 import { MockEmbeddingsHandler } from './infrastructure/handler/mock-embeddings.handler';
 
@@ -19,6 +21,7 @@ import { MockEmbeddingsHandler } from './infrastructure/handler/mock-embeddings.
         openaiHandler: OpenAIEmbeddingsHandler,
         mistralHandler: MistralEmbeddingsHandler,
         ayunisHandler: AyunisOllamaEmbeddingsHandler,
+        ollamaHandler: OllamaEmbeddingsHandler,
         mockHandler: MockEmbeddingsHandler,
         configService: ConfigService,
       ) => {
@@ -26,6 +29,7 @@ import { MockEmbeddingsHandler } from './infrastructure/handler/mock-embeddings.
         registry.registerHandler(EmbeddingsProvider.OPENAI, openaiHandler);
         registry.registerHandler(EmbeddingsProvider.MISTRAL, mistralHandler);
         registry.registerHandler(EmbeddingsProvider.AYUNIS, ayunisHandler);
+        registry.registerHandler(EmbeddingsProvider.OLLAMA, ollamaHandler);
         registry.registerMockHandler(mockHandler);
         return registry;
       },
@@ -33,6 +37,7 @@ import { MockEmbeddingsHandler } from './infrastructure/handler/mock-embeddings.
         OpenAIEmbeddingsHandler,
         MistralEmbeddingsHandler,
         AyunisOllamaEmbeddingsHandler,
+        OllamaEmbeddingsHandler,
         MockEmbeddingsHandler,
         ConfigService,
       ],
@@ -40,12 +45,18 @@ import { MockEmbeddingsHandler } from './infrastructure/handler/mock-embeddings.
     MistralEmbeddingsHandler,
     OpenAIEmbeddingsHandler,
     AyunisOllamaEmbeddingsHandler,
+    OllamaEmbeddingsHandler,
     MockEmbeddingsHandler,
     EmbeddingsThrottleService,
     // Use Cases
     EmbedTextUseCase,
     GetAvailableProvidersUseCase,
+    AssertEmbeddingsProviderAvailableUseCase,
   ],
-  exports: [EmbedTextUseCase, GetAvailableProvidersUseCase],
+  exports: [
+    EmbedTextUseCase,
+    GetAvailableProvidersUseCase,
+    AssertEmbeddingsProviderAvailableUseCase,
+  ],
 })
 export class EmbeddingsModule {}

@@ -63,6 +63,10 @@ export default function handleSourceUploadError(
       case 'NO_PERMITTED_EMBEDDING_MODEL':
         showError(t('sources.noEmbeddingModelError'));
         break;
+      case 'EMBEDDINGS_PROVIDER_NOT_FOUND':
+      case 'EMBEDDINGS_PROVIDER_NOT_AVAILABLE':
+        showError(t('sources.embeddingModelUnavailableError'));
+        break;
       case 'SERVICE_BUSY':
       case 'STORAGE_UNAVAILABLE':
         showError(t('sources.fileSourceServiceBusyError'));

@@ -16,8 +16,7 @@ import {
   SUPPORTED_AUDIO_FILE_TYPES,
   SUPPORTED_FILE_TYPES,
 } from 'src/common/util/file-type';
-import { GetPermittedEmbeddingModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.use-case';
-import { GetPermittedEmbeddingModelQuery } from 'src/domain/models/application/use-cases/get-permitted-embedding-model/get-permitted-embedding-model.query';
+import { EmbeddingReadinessService } from 'src/domain/sources/application/services/embedding-readiness.service';
 import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
 import {
   EmptyFileDataError,
@@ -57,7 +56,7 @@ export class CreateSourceUploadSessionUseCase {
   constructor(
     private readonly sessions: SourceUploadSessionRepository,
     private readonly assertOrgActive: AssertOrgActiveUseCase,
-    private readonly getPermittedEmbeddingModel: GetPermittedEmbeddingModelUseCase,
+    private readonly embeddingReadiness: EmbeddingReadinessService,
     private readonly contextService: ContextService,
     @Inject(transcriptionConfig.KEY)
     private readonly transcription: ConfigType<typeof transcriptionConfig>,
@@ -89,12 +88,8 @@ export class CreateSourceUploadSessionUseCase {
       expiresAt: new Date(Date.now() + SOURCE_UPLOAD_SESSION_TTL_MS),
     });
 
-    // Indexing resolves the embedding model only inside the worker, after the
-    // expensive extraction — reject an unprovisioned org before the transfer.
     if (session.pipeline === SourceUploadPipeline.DOCUMENT) {
-      await this.getPermittedEmbeddingModel.execute(
-        new GetPermittedEmbeddingModelQuery({ orgId }),
-      );
+      await this.embeddingReadiness.assertOrgCanEmbed(orgId);
     }
 
     await command.admit?.();

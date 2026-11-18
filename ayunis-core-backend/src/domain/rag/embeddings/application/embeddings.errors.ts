@@ -1,13 +1,17 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
-import type { EmbeddingsProvider } from '../domain/embeddings-provider.enum';
+import type { EmbeddingsProvider } from 'src/domain/rag/embeddings/domain/embeddings-provider.enum';
 
+// The provider codes reach upload clients, which map them to a message about
+// the organisation's embedding model, so they must not collide with the
+// generic PROVIDER_* codes of other modules.
 export enum EmbeddingsErrorCode {
-  PROVIDER_NOT_FOUND = 'PROVIDER_NOT_FOUND',
-  PROVIDER_NOT_AVAILABLE = 'PROVIDER_NOT_AVAILABLE',
+  PROVIDER_NOT_FOUND = 'EMBEDDINGS_PROVIDER_NOT_FOUND',
+  PROVIDER_NOT_AVAILABLE = 'EMBEDDINGS_PROVIDER_NOT_AVAILABLE',
   PROCESSING_FAILED = 'PROCESSING_FAILED',
   INVALID_INPUT = 'INVALID_INPUT',
   NO_EMBEDDINGS_RETURNED = 'NO_EMBEDDINGS_RETURNED',
+  UNEXPECTED_ERROR = 'UNEXPECTED_EMBEDDINGS_ERROR',
 }
 
 export class EmbeddingsError extends ApplicationError {
@@ -62,5 +66,18 @@ export class NoEmbeddingsReturnedError extends EmbeddingsError {
       { provider, ...metadata },
     );
     this.name = 'NoEmbeddingsReturnedError';
+  }
+}
+
+export class UnexpectedEmbeddingsError extends EmbeddingsError {
+  constructor(cause: Error, metadata?: ErrorMetadata) {
+    super(
+      'Unexpected error occurred',
+      EmbeddingsErrorCode.UNEXPECTED_ERROR,
+      500,
+      metadata,
+    );
+    this.name = 'UnexpectedEmbeddingsError';
+    this.cause = cause;
   }
 }

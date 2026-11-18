@@ -378,7 +378,8 @@ At least one must be configured:
 - `OPENAI_API_KEY`: OpenAI API key
 - `ANTHROPIC_API_KEY`: Anthropic API key
 - `MISTRAL_API_KEY`: Mistral API key
-- `OLLAMA_BASE_URL`: Ollama server URL
+- `OLLAMA_BASE_URL`: Ollama server URL, used by chat and embedding models with
+  provider `ollama`
 
 ### Optional Variables
 

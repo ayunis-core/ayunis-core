@@ -186,6 +186,7 @@
     "fileSourceUnreadableError": "Das Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
     "sourceLimitExceededError": "Eine Wissensdatenbank kann maximal 500 Dokumente enthalten. Bitte entfernen Sie eines, bevor Sie ein weiteres hinzufügen.",
     "noEmbeddingModelError": "Es ist kein Embedding-Modell aktiviert. Bitte bitten Sie Ihren Administrator, eines zu aktivieren, bevor Sie Dokumente hochladen.",
+    "embeddingModelUnavailableError": "Das aktivierte Embedding-Modell kann nicht verwendet werden. Bitte bitten Sie Ihren Administrator, seine Konfiguration zu prüfen.",
     "uploading": "Wird hochgeladen… {{percent}} %",
     "uploadInterruptedError": "Der Upload wurde unterbrochen. Bitte versuchen Sie es erneut."
   }

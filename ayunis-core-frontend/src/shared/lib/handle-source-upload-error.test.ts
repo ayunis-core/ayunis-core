@@ -42,4 +42,20 @@ describe('handleSourceUploadError', () => {
 
     expect(showError).toHaveBeenCalledWith('sources.fileSourceTooLargeError');
   });
+
+  it.each([
+    'EMBEDDINGS_PROVIDER_NOT_FOUND',
+    'EMBEDDINGS_PROVIDER_NOT_AVAILABLE',
+  ])(
+    'shows the unusable-embedding-model message instead of the generic error for %s',
+    (code) => {
+      extractErrorData.mockReturnValue({ code });
+
+      handleSourceUploadError(new Error('upload failed'), t);
+
+      expect(showError).toHaveBeenCalledWith(
+        'sources.embeddingModelUnavailableError',
+      );
+    },
+  );
 });
