@@ -170,6 +170,7 @@
         "timeout": "Document processing timed out. Splitting large documents may help; upload the file again afterwards.",
         "tooManyPages": "The document has too many pages. Split it into smaller files and upload those.",
         "recordingTooLong": "The recording is too long to transcribe. Split it into shorter parts and upload them separately.",
+        "spreadsheetTooLarge": "The spreadsheet is too large. Remove unused rows and columns or split it into smaller files, then upload it again.",
         "unavailable": "The document processing service is temporarily unavailable. Upload the file again later."
       }
     }

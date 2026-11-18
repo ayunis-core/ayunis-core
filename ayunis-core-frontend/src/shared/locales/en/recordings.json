@@ -123,6 +123,7 @@
         "unreadable": "The audio file could not be read. Delete the recording and upload the file again.",
         "empty": "No speech was found in the recording.",
         "tooManyPages": "The recording could not be transcribed. Delete it and upload the file again.",
+        "spreadsheetTooLarge": "The recording could not be transcribed. Delete it and upload the file again.",
         "timeout": "The transcription took too long. Delete the recording and upload the file again.",
         "unavailable": "The transcription service is not available. Delete the recording and upload the file again later.",
         "failed": "The recording could not be transcribed. Delete it and upload the file again. If the problem persists, contact support."

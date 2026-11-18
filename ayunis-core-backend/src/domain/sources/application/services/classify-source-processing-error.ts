@@ -12,6 +12,7 @@ import {
 import {
   EmptyFileDataError,
   SpreadsheetParseTimeoutError,
+  SpreadsheetTooLargeError,
 } from 'src/domain/sources/application/sources.errors';
 import { SourceProcessingErrorCode as Code } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
@@ -24,6 +25,7 @@ type ErrorClass = abstract new (...args: never[]) => unknown;
 const CLASSIFICATION: ReadonlyArray<[ErrorClass, Code]> = [
   [TooManyPagesError, Code.DOCUMENT_PAGE_LIMIT_EXCEEDED],
   [RecordingTooLongError, Code.RECORDING_TOO_LONG],
+  [SpreadsheetTooLargeError, Code.SPREADSHEET_TOO_LARGE],
   [EmptyOcrResultError, Code.DOCUMENT_EMPTY],
   [EmptyFileDataError, Code.DOCUMENT_EMPTY],
   [DocumentConversionTimeoutError, Code.PROCESSING_TIMEOUT],

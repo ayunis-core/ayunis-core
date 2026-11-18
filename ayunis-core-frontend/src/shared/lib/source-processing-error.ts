@@ -5,6 +5,7 @@ export type SourceProcessingErrorReason =
   | 'empty'
   | 'tooManyPages'
   | 'recordingTooLong'
+  | 'spreadsheetTooLarge'
   | 'timeout'
   | 'unavailable'
   | 'failed';
@@ -14,6 +15,7 @@ const REASONS: Record<Code, SourceProcessingErrorReason> = {
   [Code.DOCUMENT_EMPTY]: 'empty',
   [Code.DOCUMENT_PAGE_LIMIT_EXCEEDED]: 'tooManyPages',
   [Code.RECORDING_TOO_LONG]: 'recordingTooLong',
+  [Code.SPREADSHEET_TOO_LARGE]: 'spreadsheetTooLarge',
   [Code.PROCESSING_TIMEOUT]: 'timeout',
   [Code.PROCESSING_UNAVAILABLE]: 'unavailable',
   [Code.PROCESSING_FAILED]: 'failed',

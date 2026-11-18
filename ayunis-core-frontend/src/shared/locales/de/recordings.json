@@ -123,6 +123,7 @@
         "unreadable": "Die Audiodatei konnte nicht gelesen werden. Löschen Sie die Aufzeichnung und laden Sie die Datei erneut hoch.",
         "empty": "In der Aufzeichnung wurde keine Sprache gefunden.",
         "tooManyPages": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch.",
+        "spreadsheetTooLarge": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch.",
         "timeout": "Die Transkription hat zu lange gedauert. Löschen Sie die Aufzeichnung und laden Sie die Datei erneut hoch.",
         "unavailable": "Der Transkriptionsdienst ist nicht erreichbar. Löschen Sie die Aufzeichnung und laden Sie die Datei später erneut hoch.",
         "failed": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch. Wenn das Problem bleibt, wenden Sie sich an den Support."
