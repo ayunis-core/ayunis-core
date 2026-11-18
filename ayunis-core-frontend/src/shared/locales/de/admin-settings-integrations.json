@@ -56,7 +56,8 @@
       "addPredefined": "Vordefinierte hinzufügen",
       "addCustom": "Benutzerdefinierte hinzufügen",
       "add": "Integration hinzufügen",
-      "browseMarketplace": "Marktplatz durchsuchen"
+      "browseMarketplace": "Marktplatz durchsuchen",
+      "mcpTitle": "MCP-Integrationen"
     },
     "card": {
       "openMenu": "Menü öffnen",
@@ -205,6 +206,20 @@
         "none": "Keine",
         "apiKey": "API-Schlüssel",
         "bearerToken": "Bearer-Token"
+      }
+    },
+    "outlook": {
+      "title": "Microsoft Outlook",
+      "description": "Mit dem Ayunis-Add-in nutzen Ihre Mitarbeitenden Ayunis direkt in Outlook. Bereitgestellt wird es im Microsoft 365 Admin Center, durch eine Person mit Microsoft-365- oder Exchange-Administratorrechten.",
+      "manifestUrl": "Manifest-URL",
+      "openAdminCenter": "Microsoft 365 Admin Center öffnen",
+      "downloadManifest": "Manifest herunterladen",
+      "steps": {
+        "title": "So stellen Sie das Add-in bereit",
+        "openAdminCenter": "Öffnen Sie im Microsoft 365 Admin Center „Einstellungen“ → „Integrierte Apps“ → „Add-Ins“.",
+        "deployAddin": "Wählen Sie „Add-In bereitstellen“ und laden Sie ein benutzerdefiniertes Add-In hoch.",
+        "provideUrl": "Geben Sie die Manifest-URL an.",
+        "assign": "Wählen Sie, wer das Add-in erhält, und schließen Sie die Bereitstellung ab."
       }
     }
   }

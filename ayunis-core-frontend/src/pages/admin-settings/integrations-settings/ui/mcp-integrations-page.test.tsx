@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { expect, it, vi } from 'vitest';
+import { beforeEach, expect, it, vi } from 'vitest';
 import { McpIntegrationsPage } from './mcp-integrations-page';
 
 vi.mock('react-i18next', () => ({
@@ -13,12 +13,21 @@ vi.mock(
     useMcpIntegrationsQueries: () => ({
       integrations: [],
       isLoadingIntegrations: false,
-      integrationsError: null,
+      integrationsError: mcpQuery.error,
       refetchIntegrations: vi.fn(),
       predefinedConfigs: [],
     }),
   }),
 );
+
+const { outlookAddinEnabled, mcpQuery } = vi.hoisted(() => ({
+  outlookAddinEnabled: { current: false },
+  mcpQuery: { error: null as Error | null },
+}));
+vi.mock('@/features/feature-toggles', () => ({
+  useIsFeatureEnabled: (feature: string) =>
+    feature === 'outlookAddinEnabled' && outlookAddinEnabled.current,
+}));
 
 vi.mock('@/features/marketplace', () => ({
   useMarketplaceConfig: () => ({ enabled: false }),
@@ -69,6 +78,11 @@ vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({
   ),
 }));
 
+beforeEach(() => {
+  outlookAddinEnabled.current = false;
+  mcpQuery.error = null;
+});
+
 it('offers custom integration creation on cloud deployments', () => {
   render(<McpIntegrationsPage isCloud />);
 
@@ -77,4 +91,28 @@ it('offers custom integration creation on cloud deployments', () => {
   );
 
   expect(screen.getByText('custom-dialog-open')).toBeTruthy();
+});
+
+it('shows admins the Outlook add-in manifest URL while the add-in is enabled', () => {
+  outlookAddinEnabled.current = true;
+  render(<McpIntegrationsPage isCloud />);
+
+  expect(screen.getByTestId('outlook-addin-manifest-url').textContent).toMatch(
+    /^https?:\/\/[^/]+\/.*office-addins\/outlook\/manifest\.xml$/,
+  );
+});
+
+it('leaves the Outlook add-in out while it is disabled', () => {
+  render(<McpIntegrationsPage isCloud />);
+
+  expect(screen.queryByTestId('outlook-addin-section')).toBeNull();
+});
+
+// The add-in has nothing to do with the MCP integrations.
+it('keeps the Outlook add-in instructions when the MCP integrations fail to load', () => {
+  outlookAddinEnabled.current = true;
+  mcpQuery.error = new Error('MCP down');
+  render(<McpIntegrationsPage isCloud />);
+
+  expect(screen.getByTestId('outlook-addin-section')).toBeTruthy();
 });
