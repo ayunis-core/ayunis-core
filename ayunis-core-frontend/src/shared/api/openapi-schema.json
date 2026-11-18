@@ -14789,6 +14789,30 @@
         "tags": ["Models"]
       }
     },
+    "/connectors": {
+      "get": {
+        "description": "Returns every available product with whether the organization has set it up. Credentials are never returned.",
+        "operationId": "ConnectorsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectorResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the available connectors of the organization",
+        "tags": ["connectors"]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -15964,6 +15988,11 @@
             "type": "boolean",
             "description": "The assistant remembers facts about each user across chats, and users can manage what it remembers",
             "default": false
+          },
+          "connectorsEnabled": {
+            "type": "boolean",
+            "description": "Admins can connect the organization to external products such as Microsoft 365 (Connections)",
+            "default": false
           }
         },
         "required": [
@@ -15974,7 +16003,8 @@
           "voiceEnabled",
           "readAloudEnabled",
           "outlookAddinEnabled",
-          "memoryEnabled"
+          "memoryEnabled",
+          "connectorsEnabled"
         ]
       },
       "CreateOrgRequestDto": {
@@ -27003,6 +27033,38 @@
       "ChatCompletionRequestDto": {
         "type": "object",
         "properties": {}
+      },
+      "ConnectorProduct": {
+        "type": "string",
+        "enum": ["microsoft_365"],
+        "description": "The product this connector connects to"
+      },
+      "ConnectorStatus": {
+        "type": "string",
+        "enum": ["not_set_up", "set_up"],
+        "description": "Whether the organization has set up this connector"
+      },
+      "ConnectorResponseDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "description": "The product this connector connects to",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorProduct"
+              }
+            ]
+          },
+          "status": {
+            "description": "Whether the organization has set up this connector",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorStatus"
+              }
+            ]
+          }
+        },
+        "required": ["product", "status"]
       },
       "LoginDto": {
         "type": "object",

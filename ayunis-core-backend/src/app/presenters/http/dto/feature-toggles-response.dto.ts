@@ -54,4 +54,11 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   memoryEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'Admins can connect the organization to external products such as Microsoft 365 (Connections)',
+    default: false,
+  })
+  connectorsEnabled: boolean;
 }

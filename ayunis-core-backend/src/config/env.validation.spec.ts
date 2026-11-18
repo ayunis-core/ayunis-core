@@ -391,6 +391,46 @@ describe('validateEnv', () => {
     });
   });
 
+  describe('connector encryption key', () => {
+    const key = '0123456789abcdef'.repeat(4);
+
+    it('requires a key while connectors are enabled, so credentials can never be saved unencrypted', () => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_CONNECTORS_ENABLED: 'true' })),
+      ).toThrow(/CONNECTOR_ENCRYPTION_KEY is required/);
+    });
+
+    it('does not require a key while connectors are disabled', () => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_CONNECTORS_ENABLED: 'false' })),
+      ).not.toThrow();
+      expect(() => validateEnv(baseEnv())).not.toThrow();
+    });
+
+    it('accepts a 64-character hex key while connectors are enabled', () => {
+      expect(() =>
+        validateEnv(
+          baseEnv({
+            FEATURE_CONNECTORS_ENABLED: 'true',
+            CONNECTOR_ENCRYPTION_KEY: key,
+          }),
+        ),
+      ).not.toThrow();
+    });
+
+    it.each([
+      ['too short', key.slice(1)],
+      ['not hex', 'g'.repeat(64)],
+    ])(
+      'rejects a key that is %s, even while connectors are disabled',
+      (_, value) => {
+        expect(() =>
+          validateEnv(baseEnv({ CONNECTOR_ENCRYPTION_KEY: value })),
+        ).toThrow(/CONNECTOR_ENCRYPTION_KEY must be a 64-character hex string/);
+      },
+    );
+  });
+
   describe('production rules', () => {
     it('passes with a fully configured production env', () => {
       expect(() => validateEnv(prodEnv())).not.toThrow();

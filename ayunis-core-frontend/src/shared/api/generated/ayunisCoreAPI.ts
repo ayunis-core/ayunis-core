@@ -63,6 +63,7 @@ import type {
   CompleteMcpOAuthDto,
   ConfigureOrgSsoConnectionRequestDto,
   ConfirmEmailDto,
+  ConnectorResponseDto,
   CourseModuleResponseDto,
   CrawlDomainGrantResponseDto,
   CreateApiKeyDto,
@@ -31391,6 +31392,100 @@ export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof mo
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getModelsControllerRetrieveQueryOptions(model,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Returns every available product with whether the organization has set it up. Credentials are never returned.
+ * @summary List the available connectors of the organization
+ */
+export const connectorsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ConnectorResponseDto[]>(
+      {url: `/connectors`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerListQueryKey = () => {
+    return [
+    `/connectors`
+    ] as const;
+    }
+
+
+export const getConnectorsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getConnectorsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof connectorsControllerList>>> = ({ signal }) => connectorsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ConnectorsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerList>>>
+export type ConnectorsControllerListQueryError = unknown
+
+
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof connectorsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof connectorsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof connectorsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof connectorsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the available connectors of the organization
+ */
+
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getConnectorsControllerListQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

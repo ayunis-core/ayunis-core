@@ -1,0 +1,14 @@
+{
+  "connections": {
+    "title": "Verbindungen",
+    "products": {
+      "microsoft_365": "Microsoft 365"
+    },
+    "status": {
+      "set_up": "Eingerichtet",
+      "not_set_up": "Nicht eingerichtet"
+    },
+    "loadError": "Die Verbindungen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen"
+  }
+}
