@@ -12,6 +12,8 @@ import {
   rehypeUrlReferences,
 } from '@/widgets/markdown/lib/rehype-url-references';
 import { rehypePiiMasks } from '@/widgets/markdown/lib/rehype-pii-masks';
+import { resolvePiiTokens } from '@/widgets/markdown/lib/pii-token';
+import { usePiiMasks } from '@/widgets/markdown/model/pii-mask-context';
 import { rehypeLegalMarkers } from '@/widgets/markdown/lib/rehype-legal-markers';
 import { rehypeSourceCitations } from '@/widgets/markdown/lib/rehype-source-citations';
 import { protectSourceCitationPipes } from '@/widgets/markdown/lib/protect-source-citation-pipes';
@@ -98,6 +100,7 @@ function MarkdownCode({
   'data-fence-open': fenceOpen,
 }: Readonly<CodeComponentProps>) {
   const onCodeCopied = useContext(CodeCopiedContext);
+  const masks = usePiiMasks();
   // Convert children to string safely
   const childrenStr =
     typeof children === 'string' || typeof children === 'number'
@@ -138,7 +141,8 @@ function MarkdownCode({
       highlight={fenceOpen !== 'true'}
       onCopied={onCodeCopied}
     >
-      {childrenStr}
+      {/* Code blocks are excluded from read-aloud, so original values never reach the speech provider. */}
+      {resolvePiiTokens(childrenStr, masks)}
     </CodeBlock>
   );
 }

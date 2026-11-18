@@ -67,6 +67,20 @@ describe('Markdown PII mask rendering', () => {
     expect(screen.queryByText('Max Mustermann')).toBeNull();
   });
 
+  it('shows the original values instead of tokens in fenced code, without mask highlighting', () => {
+    const { container } = render(
+      <PiiMaskProvider masks={masks}>
+        <Markdown>
+          {'```python\nauthor = "{{pii:PERSON_NAME_1}}_v2"\n```'}
+        </Markdown>
+      </PiiMaskProvider>,
+    );
+
+    expect(container.textContent).toContain('author = "Max Mustermann_v2"');
+    expect(container.textContent).not.toContain('{{pii:');
+    expect(screen.queryByTestId('pii-mask')).toBeNull();
+  });
+
   it('renders manually unmasked entries as plain text', () => {
     render(
       <PiiMaskProvider masks={unmaskedMasks}>
