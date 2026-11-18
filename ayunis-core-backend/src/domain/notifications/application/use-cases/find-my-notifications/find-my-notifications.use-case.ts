@@ -27,6 +27,7 @@ export class FindMyNotificationsUseCase {
         offset: query.offset,
         routineId: query.routineId,
         type: query.type,
+        unread: query.unread,
       },
       'Finding notifications',
     );
@@ -34,7 +35,7 @@ export class FindMyNotificationsUseCase {
     return this.notificationsRepository.findPageByUserId(
       userId,
       { limit: query.limit, offset: query.offset },
-      { routineId: query.routineId, type: query.type },
+      { routineId: query.routineId, type: query.type, unread: query.unread },
     );
   }
 }

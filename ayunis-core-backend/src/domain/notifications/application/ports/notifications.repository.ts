@@ -9,6 +9,7 @@ import type { NotificationType } from 'src/domain/notifications/domain/notificat
 export interface NotificationsFilter {
   routineId?: UUID;
   type?: NotificationType;
+  unread?: boolean;
 }
 
 export abstract class NotificationsRepository {

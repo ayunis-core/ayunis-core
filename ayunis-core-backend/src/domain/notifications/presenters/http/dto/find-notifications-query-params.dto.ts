@@ -1,7 +1,15 @@
 import type { UUID } from 'crypto';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 
 export const DEFAULT_NOTIFICATIONS_PAGE_SIZE = 20;
@@ -47,4 +55,17 @@ export class FindNotificationsQueryParamsDto {
   @IsOptional()
   @IsEnum(NotificationType)
   type?: NotificationType;
+
+  @ApiPropertyOptional({
+    description: 'Only the unread notifications when true',
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  unread?: boolean;
 }
