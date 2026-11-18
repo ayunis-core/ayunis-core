@@ -97,6 +97,8 @@
   "/mcp-integrations/{id}/validate",
   "/mcp-tool-allowances",
   "/mcp-tool-allowances/{id}",
+  "/memory",
+  "/memory/{key}",
   "/mfa/disable",
   "/mfa/org",
   "/mfa/setup",

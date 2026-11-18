@@ -133,6 +133,8 @@ import type {
   McpOAuthCompleteResponseDto,
   McpToolAllowanceResponseDto,
   MeResponseDto,
+  MemoryEntryResponseDto,
+  MemoryResponseDto,
   MfaCodeRequestDto,
   MfaLoginConfirmResponseDto,
   MfaSetupResponseDto,
@@ -314,6 +316,7 @@ import type {
   UpdateWorkspaceDto,
   UpdateWorkspaceInstructionDto,
   UpdateWorkspaceMemberRoleDto,
+  UpsertMemoryEntryDto,
   UpsertOrgAcademyAccessSettingsDto,
   UpsertOrgChatSettingsDto,
   UpsertOrgSystemPromptDto,
@@ -16298,6 +16301,167 @@ export const letterheadsControllerDownloadContinuationPagePdf = async (id: strin
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+
+export type memoryControllerFindAllResponse200 = {
+  data: MemoryResponseDto
+  status: 200
+}
+
+export type memoryControllerFindAllResponseSuccess = (memoryControllerFindAllResponse200) & {
+  headers: Headers;
+};
+;
+
+export type memoryControllerFindAllResponse = (memoryControllerFindAllResponseSuccess)
+
+export const getMemoryControllerFindAllUrl = () => {
+
+
+
+
+  return `/memory`
+}
+
+/**
+ * Returns every memory entry of the authenticated user. The reserved keys are always included, even when the assistant has not written them yet.
+ * @summary List the memory of the authenticated user
+ */
+export const memoryControllerFindAll = async ( options?: Parameters<typeof paneFetch>[1]): Promise<memoryControllerFindAllResponse> => {
+
+  return paneFetch<memoryControllerFindAllResponse>(getMemoryControllerFindAllUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type memoryControllerClearResponse204 = {
+  data: void
+  status: 204
+}
+
+export type memoryControllerClearResponseSuccess = (memoryControllerClearResponse204) & {
+  headers: Headers;
+};
+;
+
+export type memoryControllerClearResponse = (memoryControllerClearResponseSuccess)
+
+export const getMemoryControllerClearUrl = () => {
+
+
+
+
+  return `/memory`
+}
+
+/**
+ * @summary Delete the whole memory of the authenticated user
+ */
+export const memoryControllerClear = async ( options?: Parameters<typeof paneFetch>[1]): Promise<memoryControllerClearResponse> => {
+
+  return paneFetch<memoryControllerClearResponse>(getMemoryControllerClearUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type memoryControllerUpsertResponse200 = {
+  data: MemoryEntryResponseDto
+  status: 200
+}
+
+export type memoryControllerUpsertResponse400 = {
+  data: void
+  status: 400
+}
+
+export type memoryControllerUpsertResponseSuccess = (memoryControllerUpsertResponse200) & {
+  headers: Headers;
+};
+export type memoryControllerUpsertResponseError = (memoryControllerUpsertResponse400) & {
+  headers: Headers;
+};
+
+export type memoryControllerUpsertResponse = (memoryControllerUpsertResponseSuccess | memoryControllerUpsertResponseError)
+
+export const getMemoryControllerUpsertUrl = (key: string,) => {
+
+
+
+
+  return `/memory/${key}`
+}
+
+/**
+ * Replaces the whole snippet stored under this key for the authenticated user.
+ * @summary Create or replace a memory entry
+ */
+export const memoryControllerUpsert = async (key: string,
+    upsertMemoryEntryDto: UpsertMemoryEntryDto, options?: Parameters<typeof paneFetch>[1]): Promise<memoryControllerUpsertResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Array.isArray(h)) return Object.fromEntries(h);
+    return h;
+  };
+return paneFetch<memoryControllerUpsertResponse>(getMemoryControllerUpsertUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(upsertMemoryEntryDto)
+  }
+);}
+
+
+
+export type memoryControllerDeleteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type memoryControllerDeleteResponseSuccess = (memoryControllerDeleteResponse204) & {
+  headers: Headers;
+};
+;
+
+export type memoryControllerDeleteResponse = (memoryControllerDeleteResponseSuccess)
+
+export const getMemoryControllerDeleteUrl = (key: string,) => {
+
+
+
+
+  return `/memory/${key}`
+}
+
+/**
+ * Removes the entry. A reserved key stays available to the assistant and becomes empty.
+ * @summary Delete a memory entry
+ */
+export const memoryControllerDelete = async (key: string, options?: Parameters<typeof paneFetch>[1]): Promise<memoryControllerDeleteResponse> => {
+
+  return paneFetch<memoryControllerDeleteResponse>(getMemoryControllerDeleteUrl(key),
+  {
+    ...options,
+    method: 'DELETE'
 
 
   }

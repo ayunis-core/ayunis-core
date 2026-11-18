@@ -46,6 +46,8 @@ import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spre
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
+import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
+import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
 import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
@@ -83,6 +85,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
   [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
   [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
+  [ToolType.GET_MEMORY]: () => new GetMemoryTool(),
+  [ToolType.SET_MEMORY]: () => new SetMemoryTool(),
   [ToolType.FINISH_ROUTINE]: () => new FinishRoutineTool(),
   [ToolType.CREATE_ROUTINE]: () => new CreateRoutineTool(),
   [ToolType.OUTLOOK_READ_EMAIL]: () => new OutlookReadEmailTool(),

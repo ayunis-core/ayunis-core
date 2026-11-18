@@ -48,6 +48,10 @@ import { MarketplaceSearchToolHandler } from './handlers/marketplace-search-tool
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { SendNotificationToolHandler } from './handlers/send-notification-tool.handler';
 import { SendNotificationTool } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
+import { GetMemoryToolHandler } from './handlers/get-memory-tool.handler';
+import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
+import { SetMemoryToolHandler } from './handlers/set-memory-tool.handler';
+import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
 type ToolConstructor = abstract new (...args: any[]) => Tool;
@@ -80,6 +84,8 @@ export class ToolHandlerRegistry {
     private readonly updateSpreadsheetToolHandler: UpdateSpreadsheetToolHandler,
     private readonly marketplaceSearchToolHandler: MarketplaceSearchToolHandler,
     private readonly sendNotificationToolHandler: SendNotificationToolHandler,
+    private readonly getMemoryToolHandler: GetMemoryToolHandler,
+    private readonly setMemoryToolHandler: SetMemoryToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -118,6 +124,8 @@ export class ToolHandlerRegistry {
       [UpdateSpreadsheetTool, this.updateSpreadsheetToolHandler],
       [MarketplaceSearchTool, this.marketplaceSearchToolHandler],
       [SendNotificationTool, this.sendNotificationToolHandler],
+      [GetMemoryTool, this.getMemoryToolHandler],
+      [SetMemoryTool, this.setMemoryToolHandler],
     ];
   }
 }

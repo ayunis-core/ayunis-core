@@ -9,6 +9,7 @@ import { mockRoutineWidgetResponse } from './mock-routine-widget-response';
 import { mockMcpToolResponse } from './mock-mcp-tool-response';
 import { mockOutlookToolResponse } from './mock-outlook-tool-response';
 import { mockSlowResponse } from './mock-slow-response';
+import { mockMemoryResponse } from './mock-memory-response';
 import {
   mockNotifyRoutineResponse,
   mockQuoteNotificationResponse,
@@ -32,7 +33,8 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * slow tool preparation, paginated research, source citations,
  * inline-document echo, the headline of the notification a chat is
  * about, routine widget proposals, a call to the E2E MCP server's tool,
- * the Outlook pane's quick actions, a slow answer, a recording search);
+ * the Outlook pane's quick actions, a slow answer, a recording search,
+ * memory writes and reports);
  * a routine task's trigger ends the routine run, optionally after sending
  * a notification.
  *
@@ -126,7 +128,8 @@ function mockExternalToolResponse(
 ): AsyncIterable<ProviderChunk> | null {
   return (
     mockMcpToolResponse(request, userText) ??
-    mockOutlookToolResponse(request, userText)
+    mockOutlookToolResponse(request, userText) ??
+    mockMemoryResponse(request, userText)
   );
 }
 
