@@ -118,7 +118,7 @@ git commit -m "<type>(<scope>): <description> (<ticket-id>)"
 
 ### Amending a branch
 
-Use when fixing QA findings, PR review comments, or bug bot findings. **Never add a new branch for these** — they belong to the same logical change. Keep one commit per branch: `gh stack submit` uses that commit's subject as the PR title.
+Use when fixing QA findings, PR review comments, or bug bot findings. **Never add a new branch for these** — they belong to the same logical change. Keep one commit per branch: its subject is the PR title.
 
 ```bash
 gh stack checkout <branch>             # or gh stack down / up — the layer that owns the change
@@ -146,12 +146,15 @@ git log --oneline <branch>..origin/<branch>   # remote-only commits — for EACH
 Any commits in `<branch>..origin/<branch>` → **stop and reconcile** (see `references/submit-troubleshooting.md`). Never push past them: Cursor agent autofixes, CI commits, and teammate pushes routinely land on branches you didn't touch this session.
 
 ```bash
-gh stack submit --auto     # pushes, creates PRs for branches that have none, links the stack on GitHub
-gh stack push              # updates branches that already have PRs
+gh stack push              # pushes every branch; enough on its own when every branch already has a PR
+# for each branch without a PR, bottom to top (<parent> is the branch below it, or main):
+gh pr create --draft --base <parent> --head <branch> \
+  --title "$(git log -1 --format=%s <branch>)" --body "$(git log -1 --format=%b <branch>)"
+gh stack submit --auto     # adopts those PRs and links the stack on GitHub
 ```
 
-- `gh stack submit --auto` creates new PRs as drafts; add `--open` to create them ready for review (and to mark existing ones ready).
-- The PR title is the commit subject when the branch has exactly one commit, otherwise the humanized branch name. The body is the commit body. Check titles after submitting and fix them with `gh pr edit <number> --title "..."`: release-please builds the changelog from the squash-merged PR title, so it must follow the commit format above.
+- Create new PRs with `gh pr create` before `gh stack submit`, never let submit create them. Submit uses the commit subject as the title only when `<parent>..<branch>` is exactly one commit; for the bottom layer `<parent>` is the local `main`, which is usually behind `origin/main`, so the range spans many commits and the PR opens titled after the branch (`ayc 1234 some slug`). PR Title Check fails on that `opened` event, and release-please builds the changelog from the squash-merged title.
+- `--draft` matches what `submit --auto` would create; `gh stack submit --open` (or `gh pr ready`) marks them ready for review.
 - Merging is the user's call. When asked, merge a stacked PR with `gh stack merge <pr-number> --yes`, which merges that PR and every unmerged PR below it; `gh pr merge` cannot merge a stacked PR. A one-branch stack has no stack on GitHub, so its PR is merged with `gh pr merge <pr-number> --squash`. `gh stack merge` rejects it (`is not a stack number or a stacked pull request`) and still exits 0, so check the PR state afterwards.
 
 ### Verifying stack state after rebase / push / submit
