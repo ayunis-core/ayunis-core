@@ -1,6 +1,7 @@
 import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useRouterState } from '@tanstack/react-router';
 import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
+import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import {
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
@@ -106,9 +107,17 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 function RouteComponent() {
   const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
   const { prompt, attachmentUrl, workspaceId } = Route.useSearch();
+  // In the Outlook pane every navigation to a new chat (another email, "Neuer
+  // Chat") starts a fresh composer; text typed for one email stays with it.
+  const isEmbedded = useEmbedded();
+  const navigationKey = useRouterState({
+    select: (state) => state.location.state.__TSR_key,
+  });
   return (
     <NewChatPage
-      key={workspaceId ?? 'no-workspace'}
+      key={
+        isEmbedded ? (navigationKey ?? 'pane') : (workspaceId ?? 'no-workspace')
+      }
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       initialPrompt={prompt}

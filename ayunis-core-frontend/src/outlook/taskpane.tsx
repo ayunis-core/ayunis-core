@@ -34,7 +34,7 @@ export function mountPane(): void {
     <StrictMode>
       <I18nextProvider i18n={i18n}>
         <TaskPane session={session} officeAvailable={officeDialogAvailable}>
-          <EmbeddedApp />
+          {(user) => <EmbeddedApp userId={user.id} />}
         </TaskPane>
       </I18nextProvider>
     </StrictMode>,
