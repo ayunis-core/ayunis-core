@@ -22,6 +22,7 @@ import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabil
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
+import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
 import {
   AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
@@ -38,55 +39,58 @@ export class ChatRunProfile implements RunProfile {
   readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
   readonly maxIterations = 50;
   readonly asksForToolConfirmation = true;
-  readonly capabilities: readonly RunCapability[];
 
   constructor(
-    dateTime: DateTimeCapability,
-    dataHandling: DataHandlingCapability,
-    anonymization: AnonymizationCapability,
-    behavior: BehaviorCapability,
-    legalReferences: LegalReferencesCapability,
-    customInstructions: CustomInstructionsCapability,
-    codeExecution: CodeExecutionCapability,
-    emailCalendar: EmailCalendarCapability,
-    filesChartsMap: FilesChartsMapCapability,
-    artifacts: ArtifactsCapability,
-    skills: SkillsCapability,
-    routines: RoutinesCapability,
-    internet: InternetCapability,
-    marketplace: MarketplaceCapability,
-    imageGeneration: ImageGenerationCapability,
-    threadSources: ThreadSourcesCapability,
-    knowledgeBases: KnowledgeBasesCapability,
-    recordings: RecordingsCapability,
-    notificationContext: NotificationContextCapability,
-    workspaceInstructions: WorkspaceInstructionsCapability,
-    memory: MemoryCapability,
-    mcp: McpCapability,
-  ) {
-    this.capabilities = [
-      dateTime,
-      dataHandling,
-      anonymization,
-      behavior,
-      legalReferences,
-      customInstructions,
-      codeExecution,
-      emailCalendar,
-      filesChartsMap,
-      artifacts,
-      skills,
-      routines,
-      internet,
-      marketplace,
-      imageGeneration,
-      threadSources,
-      knowledgeBases,
-      recordings,
-      notificationContext,
-      workspaceInstructions,
-      memory,
-      mcp,
+    private readonly dateTime: DateTimeCapability,
+    private readonly dataHandling: DataHandlingCapability,
+    private readonly anonymization: AnonymizationCapability,
+    private readonly behavior: BehaviorCapability,
+    private readonly legalReferences: LegalReferencesCapability,
+    private readonly customInstructions: CustomInstructionsCapability,
+    private readonly codeExecution: CodeExecutionCapability,
+    private readonly emailCalendar: EmailCalendarCapability,
+    private readonly filesChartsMap: FilesChartsMapCapability,
+    private readonly artifacts: ArtifactsCapability,
+    private readonly skills: SkillsCapability,
+    private readonly routines: RoutinesCapability,
+    private readonly internet: InternetCapability,
+    private readonly marketplace: MarketplaceCapability,
+    private readonly imageGeneration: ImageGenerationCapability,
+    private readonly threadSources: ThreadSourcesCapability,
+    private readonly knowledgeBases: KnowledgeBasesCapability,
+    private readonly recordings: RecordingsCapability,
+    private readonly notificationContext: NotificationContextCapability,
+    private readonly workspaceInstructions: WorkspaceInstructionsCapability,
+    private readonly memory: MemoryCapability,
+    private readonly chatHistory: ChatHistoryCapability,
+    private readonly mcp: McpCapability,
+  ) {}
+
+  get capabilities(): readonly RunCapability[] {
+    return [
+      this.dateTime,
+      this.dataHandling,
+      this.anonymization,
+      this.behavior,
+      this.legalReferences,
+      this.customInstructions,
+      this.codeExecution,
+      this.emailCalendar,
+      this.filesChartsMap,
+      this.artifacts,
+      this.skills,
+      this.routines,
+      this.internet,
+      this.marketplace,
+      this.imageGeneration,
+      this.threadSources,
+      this.knowledgeBases,
+      this.recordings,
+      this.notificationContext,
+      this.workspaceInstructions,
+      this.memory,
+      this.chatHistory,
+      this.mcp,
     ];
   }
 }

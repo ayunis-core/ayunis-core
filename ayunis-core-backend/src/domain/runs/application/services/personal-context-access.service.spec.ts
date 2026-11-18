@@ -43,20 +43,29 @@ function resolve(
 }
 
 describe('PersonalContextAccessService', () => {
-  it('gives a chat run memory when its model allows it', () => {
-    expect(resolve()).toEqual({ memory: true });
+  it('gives a chat run memory and chat history when its model allows memory', () => {
+    expect(resolve()).toEqual({ memory: true, chatHistory: true });
   });
 
-  it('gives no memory on a model whose grant denies it', () => {
-    expect(resolve({ memoryAccess: false })).toEqual({ memory: false });
+  it('gives no memory on a model whose grant denies it, but still chat history', () => {
+    expect(resolve({ memoryAccess: false })).toEqual({
+      memory: false,
+      chatHistory: true,
+    });
   });
 
-  it('gives an anonymous run no memory, even on a model that allows it', () => {
-    expect(resolve({ isAnonymous: true })).toEqual({ memory: false });
+  it('gives an anonymous run no personal context, even on a model that allows it', () => {
+    expect(resolve({ isAnonymous: true })).toEqual({
+      memory: false,
+      chatHistory: false,
+    });
   });
 
-  it('gives no memory while the feature is off, whatever the grant says', () => {
-    expect(resolve({ enabled: false })).toEqual({ memory: false });
+  it('gives no personal context while the feature is off, whatever the grant says', () => {
+    expect(resolve({ enabled: false })).toEqual({
+      memory: false,
+      chatHistory: false,
+    });
   });
 
   it.each<RunProfileInput>([
@@ -65,7 +74,10 @@ describe('PersonalContextAccessService', () => {
       routine: { name: 'Pressespiegel', internetEnabled: true },
     },
     { id: 'outlook' },
-  ])('gives no memory to $id runs', (profile) => {
-    expect(resolve({ profile })).toEqual({ memory: false });
+  ])('gives $id runs no personal context', (profile) => {
+    expect(resolve({ profile })).toEqual({
+      memory: false,
+      chatHistory: false,
+    });
   });
 });

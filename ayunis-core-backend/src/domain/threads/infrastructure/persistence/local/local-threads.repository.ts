@@ -5,6 +5,8 @@ import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
   ExpiredThreadRef,
   FindExpiredThreadRefsParams,
+  FindPastChatParams,
+  FindPastChatsParams,
   ThreadsFindAllFilters,
   ThreadsFindAllOptions,
   ThreadsPagination,
@@ -27,6 +29,7 @@ import { LocalThreadAssignmentsRepository } from './local-thread-assignments.rep
 import { findThreadCitationContext } from './queries/find-thread-citation-context';
 import { applyThreadListFilters } from './queries/apply-thread-list-filters';
 import { applyThreadListRelations } from './queries/apply-thread-list-relations';
+import { findPastChat, findPastChats } from './queries/past-chats';
 import {
   accessibleThread,
   personalOrMemberWorkspace,
@@ -156,6 +159,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
       },
     });
     return records.map((record) => this.threadMapper.toDomain(record));
+  }
+
+  findPastChats(params: FindPastChatsParams): Promise<Paginated<Thread>> {
+    return findPastChats(this.threadRepository, this.threadMapper, params);
+  }
+
+  findPastChat(params: FindPastChatParams): Promise<Thread | null> {
+    return findPastChat(this.threadRepository, this.threadMapper, params);
   }
 
   async findAll(

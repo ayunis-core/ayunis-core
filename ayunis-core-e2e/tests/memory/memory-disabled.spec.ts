@@ -10,6 +10,10 @@ import {
   getOrgLanguageGrant,
   setMemoryAccess,
 } from '../../src/clients/api/models.client';
+import {
+  NO_PAST_CHATS,
+  reportPastChats,
+} from '../../src/clients/api/past-chats.client';
 import { expect, test } from '../../src/fixtures/test';
 import {
   openModelSettings,
@@ -24,7 +28,7 @@ const disabledBaseUrl =
 const disabledApiUrl =
   process.env.E2E_MEMORY_DISABLED_API_URL ?? disabledBaseUrl;
 
-test('with memory disabled there is no memory API and chats get no memory, even on a model with memory access', async ({
+test('with memory disabled there is no memory API and chats get no memory or past chats, even on a model with memory access', async ({
   api,
 }) => {
   test.setTimeout(60_000);
@@ -42,6 +46,9 @@ test('with memory disabled there is no memory API and chats get no memory, even 
     }
 
     expect(reports).toEqual(Array(5).fill(NO_MEMORY));
+    expect(await reportPastChats(api, threadId, disabledApiUrl)).toEqual(
+      NO_PAST_CHATS,
+    );
   } finally {
     await setMemoryAccess(api, model.id, false);
   }

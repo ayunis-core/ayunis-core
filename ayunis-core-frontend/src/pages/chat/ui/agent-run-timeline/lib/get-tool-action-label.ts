@@ -41,6 +41,9 @@ export function getToolActionLabel(
   const params = (toolUse.params as Record<string, unknown> | undefined) ?? {};
   const name = toolUse.name;
 
+  const pastChatLabel = getPastChatActionLabel(name, t);
+  if (pastChatLabel) return pastChatLabel;
+
   switch (name) {
     case 'create_file':
       return {
@@ -198,6 +201,20 @@ export function getToolActionLabel(
       const target = pickFirstScalarParam(params);
       return { verb, target };
     }
+  }
+}
+
+function getPastChatActionLabel(
+  name: string,
+  t: TFunction,
+): ToolActionLabel | undefined {
+  switch (name) {
+    case 'chat_list':
+      return { verb: t('chat.timeline.actions.chat_list') };
+    case 'chat_read':
+      return { verb: t('chat.timeline.actions.chat_read') };
+    default:
+      return undefined;
   }
 }
 

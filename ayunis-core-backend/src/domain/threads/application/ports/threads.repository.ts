@@ -1,6 +1,10 @@
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
+import type {
+  PastChatActivityRange,
+  PastChatScope,
+} from 'src/domain/threads/domain/past-chat-scope';
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
@@ -51,6 +55,19 @@ export interface ThreadContextRefs {
   knowledgeBaseIds: UUID[];
 }
 
+export interface FindPastChatsParams {
+  userId: UUID;
+  scope: PastChatScope;
+  activity: PastChatActivityRange;
+  pagination: ThreadsPagination;
+}
+
+export interface FindPastChatParams {
+  userId: UUID;
+  scope: PastChatScope;
+  threadId: UUID;
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
@@ -64,6 +81,16 @@ export abstract class ThreadsRepository {
     userId: UUID,
   ): Promise<ThreadCitationContext | null>;
   abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]>;
+  /**
+   * The user's own non-anonymous chats in the scope, with the same workspace
+   * membership condition as every user-scoped read. Routine threads and the
+   * current chat are left out. Most recent activity first.
+   */
+  abstract findPastChats(
+    params: FindPastChatsParams,
+  ): Promise<Paginated<Thread>>;
+  /** One chat `findPastChats` could list, with its messages in order. */
+  abstract findPastChat(params: FindPastChatParams): Promise<Thread | null>;
   abstract findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,

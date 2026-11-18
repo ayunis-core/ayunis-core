@@ -48,6 +48,9 @@ import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
 import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
+import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
+import { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
+import { PastChatScope } from 'src/domain/threads/domain/past-chat-scope';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
 import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
@@ -140,6 +143,10 @@ export class ToolFactory {
         new RecordingSearchTool(requireRecordingSearchScope(p.context)),
       [ToolType.SEND_NOTIFICATION]: (p) =>
         new SendNotificationTool(requireSendNotificationOrigin(p.context)),
+      [ToolType.CHAT_LIST]: (p) =>
+        new ChatListTool(requirePastChatScope(p.context, ToolType.CHAT_LIST)),
+      [ToolType.CHAT_READ]: (p) =>
+        new ChatReadTool(requirePastChatScope(p.context, ToolType.CHAT_READ)),
     };
   }
 
@@ -253,6 +260,17 @@ function requireSendNotificationOrigin(
   if (context instanceof SendNotificationOrigin) return context;
   throw new ToolInvalidContextError({
     toolType: ToolType.SEND_NOTIFICATION,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requirePastChatScope(
+  context: unknown,
+  toolType: ToolType,
+): PastChatScope {
+  if (context instanceof PastChatScope) return context;
+  throw new ToolInvalidContextError({
+    toolType,
     metadata: { contextType: contextTypeName(context) },
   });
 }

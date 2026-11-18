@@ -49,6 +49,8 @@ import { SendNotificationToolHandler } from './application/handlers/send-notific
 import { MemoryModule } from 'src/domain/memory/memory.module';
 import { GetMemoryToolHandler } from './application/handlers/get-memory-tool.handler';
 import { SetMemoryToolHandler } from './application/handlers/set-memory-tool.handler';
+import { ChatListToolHandler } from './application/handlers/chat-list-tool.handler';
+import { ChatReadToolHandler } from './application/handlers/chat-read-tool.handler';
 
 @Module({
   imports: [
@@ -102,6 +104,8 @@ import { SetMemoryToolHandler } from './application/handlers/set-memory-tool.han
     SendNotificationToolHandler,
     GetMemoryToolHandler,
     SetMemoryToolHandler,
+    ChatListToolHandler,
+    ChatReadToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,
