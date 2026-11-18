@@ -75,8 +75,11 @@ test('inserts a drafted reply into the email being composed', async ({
   await expect(card).toHaveAttribute('data-tool', 'outlook__draft_email');
   await expect(card).toHaveAttribute('data-status', 'inserted');
   expect(await officeItemCalls(page)).toContainEqual({
-    method: 'body.setSelectedDataAsync',
-    args: ['E2E mock reply', { coercionType: 'text' }],
+    method: 'body.prependAsync',
+    args: [
+      expect.stringMatching(/^<div id="ayunis-draft-[^"]+">E2E mock reply<\/div>$/),
+      { coercionType: 'html' },
+    ],
   });
 });
 

@@ -22,7 +22,7 @@ export class OutlookMoveEmailToComposerTool extends Tool {
     super({
       name: ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER,
       description:
-        'Replace the whole body of the email the user is writing in Outlook with this text, for example once they approved a revised version from the chat. While they read an email, a reply with this text is opened instead. Nothing is sent: the user finishes and sends it in Outlook. The body must be PLAIN TEXT only.',
+        'Put a revised version into the email the user is writing in Outlook, for example once they approved it in the chat. It replaces your previous draft there and keeps their signature, the quoted email and any text they wrote themselves. While they read an email, the chat shows the text and the user opens an Outlook reply with it. Nothing is sent: the user finishes and sends it in Outlook. The body must be PLAIN TEXT only.',
       parameters: outlookMoveEmailToComposerToolParameters,
       type: ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER,
     });

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { isOutlookTool } from '@/outlook/lib/outlook-tools';
+import { isOutlookTool } from '@/features/outlook-tools';
 import type { PaneMessage } from '@/outlook/lib/pane-messages';
 import type { PaneToolState } from '@/outlook/lib/use-pane-chat';
 import { PaneToolCard } from '@/outlook/ui/PaneToolCard';

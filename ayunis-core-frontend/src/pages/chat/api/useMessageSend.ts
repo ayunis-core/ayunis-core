@@ -53,7 +53,7 @@ interface SendToolResultInput {
   result: string;
 }
 
-interface UseMessageSendParams {
+export interface UseMessageSendParams {
   threadId: string;
   onMessageEvent?: (data: RunMessageResponseDto) => void;
   onMessageReceived?: () => void;

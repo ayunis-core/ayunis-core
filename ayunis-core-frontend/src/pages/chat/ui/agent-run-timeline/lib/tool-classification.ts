@@ -23,6 +23,8 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'create_routine',
   'edit_routine',
   'add_anonymization_exception',
+  'outlook__draft_email',
+  'outlook__move_email_to_composer',
 ]);
 
 export function isRichTool(toolName: string): boolean {
@@ -50,6 +52,9 @@ const BUILT_IN_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'chat_grep',
   'send_notification',
   'finish_routine',
+  'outlook__read_email',
+  'outlook__read_attachment',
+  'outlook__save_email_to_draft',
 ]);
 
 const ARTIFACT_CREATION_TOOLS: ReadonlySet<string> = new Set<string>([

@@ -5,6 +5,7 @@ import type { ToolCallDecision } from '@/shared/api';
 import ToolCallConfirmationCard from '@/pages/chat/ui/agent-run-timeline/ui/ToolCallConfirmationCard';
 
 import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
+import OutlookDraftWidget from '@/pages/chat/ui/chat-widgets/OutlookDraftWidget';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
@@ -56,6 +57,9 @@ export function renderRichToolCard({
       return <CreateFileWidget content={toolUse} isStreaming={isStreaming} />;
     case 'send_email':
       return <SendEmailWidget content={toolUse} isStreaming={isStreaming} />;
+    case 'outlook__draft_email':
+    case 'outlook__move_email_to_composer':
+      return <OutlookDraftWidget content={toolUse} isStreaming={isStreaming} />;
     case 'create_calendar_event':
       return (
         <CreateCalendarEventWidget

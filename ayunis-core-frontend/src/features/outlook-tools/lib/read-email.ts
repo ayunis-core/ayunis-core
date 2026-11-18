@@ -1,11 +1,11 @@
-import { officeAsync } from '@/outlook/lib/outlook-tools/office-async';
+import { officeAsync } from '@/features/outlook-tools/lib/office-async';
 import {
   listAttachments,
   type AttachmentInfo,
   type ComposeItem,
   type OutlookItem,
   type ReadItem,
-} from '@/outlook/lib/outlook-tools/outlook-item';
+} from '@/features/outlook-tools/lib/outlook-item';
 
 interface EmailSnapshot {
   subject: string;

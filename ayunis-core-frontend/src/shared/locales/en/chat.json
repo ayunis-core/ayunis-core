@@ -152,6 +152,11 @@
       "ariaLabel": "Interactive map: {{title}}"
     },
     "tools": {
+      "outlook__read_email": "Read the email",
+      "outlook__read_attachment": "Read an attachment",
+      "outlook__draft_email": "Drafted a reply",
+      "outlook__move_email_to_composer": "Drafted a reply",
+      "outlook__save_email_to_draft": "Saved the draft",
       "internet_search": "Search the internet",
       "marketplace_search": "Search the marketplace",
       "website_content": "Query website",
@@ -379,6 +384,22 @@
     "academyCertificateRequiredError": "Your organization requires the EU AI Act training before you can send messages. Complete the academy to unlock chat.",
     "errorModeUnavailable": "No model is currently available for this mode. Please choose a model under \"More models\".",
     "fromNotification": "Notification",
+    "outlookDraft": {
+      "insert": "Insert into Outlook reply",
+      "status": {
+        "running": "Working in Outlook …",
+        "inserted": "Inserted into your reply",
+        "replaced": "Replaced the previous draft",
+        "replyOpened": "Reply opened",
+        "saved": "Saved as draft",
+        "failed": {
+          "noItem": "No email is open.",
+          "nothingToSave": "Only an email you are writing can be saved.",
+          "officeFailed": "Outlook could not do this.",
+          "itemChanged": "The open email changed, so this was not done."
+        }
+      }
+    },
     "toolConfirmation": {
       "confirm": "Confirm",
       "reject": "Reject",
