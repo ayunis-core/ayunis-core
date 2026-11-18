@@ -26,6 +26,11 @@ export class LocalConnectorsRepository extends ConnectorsRepository {
     return records.map((record) => this.mapper.toDomain(record));
   }
 
+  async findById(id: UUID): Promise<Connector | null> {
+    const record = await this.repository.findOne({ where: { id } });
+    return record ? this.mapper.toDomain(record) : null;
+  }
+
   async findByOrgIdAndProduct(
     orgId: UUID,
     product: ConnectorProduct,

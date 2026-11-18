@@ -12,6 +12,7 @@ describe('ListConnectorsUseCase', () => {
   function listWith(connectors: Connector[]) {
     const repository: ConnectorsRepository = {
       findAllByOrgId: jest.fn().mockResolvedValue(connectors),
+      findById: jest.fn(),
       findByOrgIdAndProduct: jest.fn(),
       upsert: jest.fn(),
       updateSetupOfSetUp: jest.fn(),

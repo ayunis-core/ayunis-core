@@ -67,6 +67,10 @@ import { StaleProcessingCleanupTask } from './infrastructure/tasks/stale-process
 import { GetSourceTranscriptSegmentsUseCase } from 'src/domain/sources/application/use-cases/get-source-transcript-segments/get-source-transcript-segments.use-case';
 import { IndexTranscriptSummaryUseCase } from 'src/domain/sources/application/use-cases/index-transcript-summary/index-transcript-summary.use-case';
 import { SourceUploadsController } from './presenters/http/source-uploads.controller';
+import { CheckSourceFileAcceptanceUseCase } from './application/use-cases/check-source-file-acceptance/check-source-file-acceptance.use-case';
+import { CreateProcessingFileSourcesUseCase } from './application/use-cases/create-processing-file-sources/create-processing-file-sources.use-case';
+import { RenameSourcesUseCase } from './application/use-cases/rename-sources/rename-sources.use-case';
+import { LockSourcesUseCase } from './application/use-cases/lock-sources/lock-sources.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
 import { EmbeddingReadinessService } from './application/services/embedding-readiness.service';
@@ -151,6 +155,10 @@ const SOURCE_UPLOAD_USE_CASES = [
     DeleteUnreferencedSourcesUseCase,
     CreateProcessingUrlSourceUseCase,
     EnqueueUrlCrawlUseCase,
+    CheckSourceFileAcceptanceUseCase,
+    CreateProcessingFileSourcesUseCase,
+    RenameSourcesUseCase,
+    LockSourcesUseCase,
   ],
   exports: [
     LocalSourceRepositoryModule,
@@ -186,6 +194,10 @@ const SOURCE_UPLOAD_USE_CASES = [
     EnqueueUrlCrawlUseCase,
     CreateSourceUploadSessionUseCase,
     CompleteSourceUploadUseCase,
+    CheckSourceFileAcceptanceUseCase,
+    CreateProcessingFileSourcesUseCase,
+    RenameSourcesUseCase,
+    LockSourcesUseCase,
   ],
 })
 export class SourcesModule {}
