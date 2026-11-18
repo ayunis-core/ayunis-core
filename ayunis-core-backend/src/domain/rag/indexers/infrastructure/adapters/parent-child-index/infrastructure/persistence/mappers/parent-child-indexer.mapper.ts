@@ -63,8 +63,8 @@ export class ParentChildIndexerMapper {
   }
 
   toChildChunkEntity(input: ChildChunkRecord): ChildChunk {
-    // Prefer 1536 if present, otherwise 1024
-    const embedding = input.embedding1536 ?? input.embedding1024 ?? [];
+    const embedding =
+      input.embedding1536 ?? input.embedding1024 ?? input.embedding2560 ?? [];
     return new ChildChunk({
       id: input.id,
       embedding,
