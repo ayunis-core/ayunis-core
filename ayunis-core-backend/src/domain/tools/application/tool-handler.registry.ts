@@ -56,6 +56,8 @@ import { ChatListToolHandler } from './handlers/chat-list-tool.handler';
 import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
 import { ChatReadToolHandler } from './handlers/chat-read-tool.handler';
 import { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
+import { ChatGrepToolHandler } from './handlers/chat-grep-tool.handler';
+import { ChatGrepTool } from 'src/domain/tools/domain/tools/chat-grep-tool.entity';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
 type ToolConstructor = abstract new (...args: any[]) => Tool;
@@ -92,6 +94,7 @@ export class ToolHandlerRegistry {
     private readonly setMemoryToolHandler: SetMemoryToolHandler,
     private readonly chatListToolHandler: ChatListToolHandler,
     private readonly chatReadToolHandler: ChatReadToolHandler,
+    private readonly chatGrepToolHandler: ChatGrepToolHandler,
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
@@ -134,6 +137,7 @@ export class ToolHandlerRegistry {
       [SetMemoryTool, this.setMemoryToolHandler],
       [ChatListTool, this.chatListToolHandler],
       [ChatReadTool, this.chatReadToolHandler],
+      [ChatGrepTool, this.chatGrepToolHandler],
     ];
   }
 }

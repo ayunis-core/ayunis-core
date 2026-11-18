@@ -129,6 +129,7 @@
         "set_memory": "Erinnerung aktualisiert",
         "chat_list": "Frühere Chats aufgelistet",
         "chat_read": "Früheren Chat gelesen",
+        "chat_grep": "Frühere Chats durchsucht",
         "internet_search": "Im Internet gesucht",
         "website_content": "Website abgerufen",
         "source_query": "Dateien durchsucht",

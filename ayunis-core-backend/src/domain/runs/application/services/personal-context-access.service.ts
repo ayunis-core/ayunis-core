@@ -7,7 +7,7 @@ import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/r
 /** What a run may know about its user from outside the current chat. */
 export interface PersonalContextAccess {
   readonly memory: boolean;
-  /** The user's earlier chats, through `chat_list` and `chat_read`. */
+  /** The user's earlier chats: `chat_list`, `chat_grep` and `chat_read`. */
   readonly chatHistory: boolean;
 }
 

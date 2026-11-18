@@ -51,6 +51,7 @@ import { GetMemoryToolHandler } from './application/handlers/get-memory-tool.han
 import { SetMemoryToolHandler } from './application/handlers/set-memory-tool.handler';
 import { ChatListToolHandler } from './application/handlers/chat-list-tool.handler';
 import { ChatReadToolHandler } from './application/handlers/chat-read-tool.handler';
+import { ChatGrepToolHandler } from './application/handlers/chat-grep-tool.handler';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { ChatReadToolHandler } from './application/handlers/chat-read-tool.handl
     SetMemoryToolHandler,
     ChatListToolHandler,
     ChatReadToolHandler,
+    ChatGrepToolHandler,
     // Repositories and factories
     {
       provide: ToolConfigRepository,

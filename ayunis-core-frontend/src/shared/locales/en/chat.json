@@ -129,6 +129,7 @@
         "set_memory": "Updated memory",
         "chat_list": "Listed past chats",
         "chat_read": "Read past chat",
+        "chat_grep": "Searched past chats",
         "internet_search": "Searched the internet",
         "website_content": "Fetched website",
         "source_query": "Searched files",

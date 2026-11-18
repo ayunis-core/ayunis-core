@@ -17,7 +17,10 @@ export class PastChatScope {
   }
 }
 
-/** Keeps chats with a user or assistant message in `[from, before)`. */
+/**
+ * A `[from, before)` range of message creation times: `chat_list` keeps chats
+ * with a user or assistant message in it, `chat_grep` messages created in it.
+ */
 export interface PastChatActivityRange {
   from?: Date;
   before?: Date;

@@ -58,7 +58,7 @@ export async function findPastChat(
   return record ? threadMapper.toDomain(record) : null;
 }
 
-function pastChatsQuery(
+export function pastChatsQuery(
   threadRepository: Repository<ThreadRecord>,
   userId: UUID,
   scope: PastChatScope,

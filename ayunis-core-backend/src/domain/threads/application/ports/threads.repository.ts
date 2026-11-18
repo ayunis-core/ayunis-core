@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
+import type { PastMessageMatch } from 'src/domain/threads/application/models/past-message-match';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import type {
   PastChatActivityRange,
@@ -68,6 +69,14 @@ export interface FindPastChatParams {
   threadId: UUID;
 }
 
+export interface GrepPastMessagesParams {
+  userId: UUID;
+  scope: PastChatScope;
+  pattern: string;
+  created: PastChatActivityRange;
+  limit: number;
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
@@ -91,6 +100,16 @@ export abstract class ThreadsRepository {
   ): Promise<Paginated<Thread>>;
   /** One chat `findPastChats` could list, with its messages in order. */
   abstract findPastChat(params: FindPastChatParams): Promise<Thread | null>;
+  /**
+   * User and assistant messages of the chats `findPastChats` could list whose
+   * searchable text (the same as the chat search's) matches `pattern` as a
+   * case-insensitive PostgreSQL regular expression, created in `created`.
+   * Newest first, one match per message. Throws
+   * `InvalidPastMessagePatternError` and `PastMessageSearchTimeoutError`.
+   */
+  abstract grepPastMessages(
+    params: GrepPastMessagesParams,
+  ): Promise<PastMessageMatch[]>;
   abstract findAll(
     userId: UUID,
     options?: ThreadsFindAllOptions,

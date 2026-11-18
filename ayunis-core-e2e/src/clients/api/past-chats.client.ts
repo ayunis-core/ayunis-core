@@ -1,7 +1,7 @@
-import type { APIRequestContext } from '@playwright/test';
-import { config } from '../../config';
-import { generatedApi } from './generated-api';
-import { chat, defaultModel } from './memory.client';
+import type { APIRequestContext } from "@playwright/test";
+import { config } from "../../config";
+import { generatedApi } from "./generated-api";
+import { chat, defaultModel } from "./memory.client";
 
 /** What the run offered for past chats, as the mock model reports it. */
 export interface PastChatsReport {
@@ -9,10 +9,10 @@ export interface PastChatsReport {
   section: string;
 }
 
-export const NO_PAST_CHATS: PastChatsReport = { tools: 'none', section: 'no' };
+export const NO_PAST_CHATS: PastChatsReport = { tools: "none", section: "no" };
 export const WITH_PAST_CHATS: PastChatsReport = {
-  tools: 'chat_list,chat_read',
-  section: 'yes',
+  tools: "chat_list,chat_grep,chat_read",
+  section: "yes",
 };
 
 export interface PastChatListing {
@@ -34,19 +34,34 @@ export interface PastChatReading {
   nextMessageNumber: number | null;
 }
 
+export interface PastMessageGrep {
+  matches: {
+    threadId: string;
+    title: string | null;
+    messageNumber: number;
+    role: string;
+    createdAt: string;
+    excerpt: string;
+  }[];
+  moreMatches: boolean;
+}
+
+export const NO_GREP_MATCH =
+  "No message in the earlier chats matches this pattern.";
+
 export async function reportPastChats(
   api: APIRequestContext,
   threadId: string,
   apiURL = config.apiURL,
 ): Promise<PastChatsReport> {
-  const answer = await chat(api, threadId, 'E2E report past chats', apiURL);
-  const [kind, tools, section] = answer.split('::');
-  if (kind !== 'past-chats-report') {
+  const answer = await chat(api, threadId, "E2E report past chats", apiURL);
+  const [kind, tools, section] = answer.split("::");
+  if (kind !== "past-chats-report") {
     throw new Error(`Not a past chats report: ${answer}`);
   }
   return {
-    tools: tools.replace('tools=', ''),
-    section: section.replace('section=', ''),
+    tools: tools.replace("tools=", ""),
+    section: section.replace("section=", ""),
   };
 }
 
@@ -54,7 +69,7 @@ export async function reportPastChats(
 export async function callPastChatTool(
   api: APIRequestContext,
   threadId: string,
-  tool: 'chat_list' | 'chat_read',
+  tool: "chat_list" | "chat_read" | "chat_grep",
   args: Record<string, unknown>,
 ): Promise<string> {
   const answer = await chat(
@@ -62,7 +77,7 @@ export async function callPastChatTool(
     threadId,
     `E2E past chats call ${tool} ${JSON.stringify(args)}`,
   );
-  const prefix = 'past-chats-result::';
+  const prefix = "past-chats-result::";
   if (!answer.startsWith(prefix)) {
     throw new Error(`Not a past chats result: ${answer}`);
   }
@@ -75,7 +90,7 @@ export async function listPastChats(
   args: { page?: number; from?: string; to?: string } = {},
 ): Promise<PastChatListing> {
   return JSON.parse(
-    await callPastChatTool(api, threadId, 'chat_list', args),
+    await callPastChatTool(api, threadId, "chat_list", args),
   ) as PastChatListing;
 }
 
@@ -92,13 +107,24 @@ export async function listedPastChatIds(
   }
 }
 
+/** The matches of `chat_grep`; none when nothing matched. */
+export async function grepPastChats(
+  api: APIRequestContext,
+  threadId: string,
+  args: { pattern: string; from?: string; to?: string },
+): Promise<PastMessageGrep> {
+  const result = await callPastChatTool(api, threadId, "chat_grep", args);
+  if (result === NO_GREP_MATCH) return { matches: [], moreMatches: false };
+  return JSON.parse(result) as PastMessageGrep;
+}
+
 /** The reading, or null when `chat_read` did not find the chat. */
 export async function readPastChat(
   api: APIRequestContext,
   threadId: string,
   args: { threadId: string; messageNumber?: number; turns?: number },
 ): Promise<PastChatReading | null> {
-  const result = await callPastChatTool(api, threadId, 'chat_read', args);
+  const result = await callPastChatTool(api, threadId, "chat_read", args);
   if (result === `No chat with ID ${args.threadId} was found.`) return null;
   return JSON.parse(result) as PastChatReading;
 }

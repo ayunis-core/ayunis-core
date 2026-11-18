@@ -23,6 +23,8 @@ export enum ThreadErrorCode {
   THREAD_FILE_NOT_FOUND = 'THREAD_FILE_NOT_FOUND',
   THREAD_FILE_ADDED_BY_SKILL = 'THREAD_FILE_ADDED_BY_SKILL',
   THREAD_FILE_NOT_STORED = 'THREAD_FILE_NOT_STORED',
+  INVALID_PAST_MESSAGE_PATTERN = 'INVALID_PAST_MESSAGE_PATTERN',
+  PAST_MESSAGE_SEARCH_TIMEOUT = 'PAST_MESSAGE_SEARCH_TIMEOUT',
   UNEXPECTED_THREAD_ERROR = 'UNEXPECTED_THREAD_ERROR',
 }
 
@@ -297,6 +299,28 @@ export class ThreadFileNotStoredError extends ThreadError {
       ThreadErrorCode.THREAD_FILE_NOT_STORED,
       422,
       { sourceId },
+    );
+  }
+}
+
+/** PostgreSQL rejected the pattern; `reason` is its explanation. */
+export class InvalidPastMessagePatternError extends ThreadError {
+  constructor(public readonly reason: string) {
+    super(
+      `Invalid regular expression: ${reason}`,
+      ThreadErrorCode.INVALID_PAST_MESSAGE_PATTERN,
+      400,
+      { reason },
+    );
+  }
+}
+
+export class PastMessageSearchTimeoutError extends ThreadError {
+  constructor() {
+    super(
+      'The search of past messages exceeded the statement timeout',
+      ThreadErrorCode.PAST_MESSAGE_SEARCH_TIMEOUT,
+      504,
     );
   }
 }

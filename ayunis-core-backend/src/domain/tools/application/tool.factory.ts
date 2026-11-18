@@ -50,6 +50,7 @@ import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.ent
 import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
 import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
 import { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
+import { ChatGrepTool } from 'src/domain/tools/domain/tools/chat-grep-tool.entity';
 import { PastChatScope } from 'src/domain/threads/domain/past-chat-scope';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
@@ -147,6 +148,8 @@ export class ToolFactory {
         new ChatListTool(requirePastChatScope(p.context, ToolType.CHAT_LIST)),
       [ToolType.CHAT_READ]: (p) =>
         new ChatReadTool(requirePastChatScope(p.context, ToolType.CHAT_READ)),
+      [ToolType.CHAT_GREP]: (p) =>
+        new ChatGrepTool(requirePastChatScope(p.context, ToolType.CHAT_GREP)),
     };
   }
 
