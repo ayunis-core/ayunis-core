@@ -7,12 +7,18 @@ import { SyncedFileDocuments } from 'src/domain/knowledge-base-sync/application/
 import { CompleteSyncedFileProcessingUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/complete-synced-file-processing/complete-synced-file-processing.use-case';
 import { FailSyncedFileProcessingUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/fail-synced-file-processing/fail-synced-file-processing.use-case';
 import { StartSyncedFileProcessingUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/start-synced-file-processing/start-synced-file-processing.use-case';
-import type { DocumentToProcess } from 'src/domain/sources/application/models/document-to-process';
+import {
+  ProcessingDeferredError,
+  type DocumentToProcess,
+} from 'src/domain/sources/application/models/document-to-process';
 import { FailedSourcesDeletedEvent } from 'src/domain/sources/application/events/failed-sources-deleted.event';
 import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
+import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { PauseSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.use-case';
+import { ProviderServerError } from 'src/common/errors/provider.errors';
 import {
   createSyncHarness,
   featureConfig,
@@ -38,6 +44,9 @@ class FakePipeline {
   failing = false;
   /** Thrown by the next run, as a failure BullMQ retries. */
   interruption: Error | null = null;
+  /** While set, every run fails at the provider with it, like embeddings. */
+  outage: Error | null = null;
+  runs = 0;
   private held: { reached: () => void; released: Promise<void> } | null = null;
 
   constructor(
@@ -66,6 +75,15 @@ class FakePipeline {
     }
     const source = this.processing(document.sourceId);
     if (!source) return;
+    this.runs++;
+    if (this.outage) {
+      if (document.deferProviderOutages)
+        throw new ProcessingDeferredError(this.outage);
+      source.status = SourceStatus.FAILED;
+      source.processingErrorCode =
+        SourceProcessingErrorCode.PROCESSING_UNAVAILABLE;
+      return;
+    }
     const interruption = this.interruption;
     this.interruption = null;
     if (interruption) throw interruption;
@@ -200,6 +218,13 @@ function createProcessingHarness(
   const replacements = fakeReplacements(knowledgeBase);
   const reindexed: UUID[] = [];
   const delays: number[] = [];
+  const processingPaused: UUID[] = [];
+  const pauseSourceProcessing = {
+    execute: ({ sourceId }: { sourceId: UUID }) => {
+      processingPaused.push(sourceId);
+      return Promise.resolve();
+    },
+  } as never;
   const documents = new SyncedFileDocuments(
     repository,
     syncedLocationLocks(repository),
@@ -244,6 +269,7 @@ function createProcessingHarness(
           }),
       } as never,
       documents,
+      pauseSourceProcessing,
       featureConfig(options.processingEnabled ?? true),
     ),
     new CompleteSyncedFileProcessingUseCase(
@@ -258,6 +284,8 @@ function createProcessingHarness(
         return Promise.resolve();
       },
     } as never,
+    new PauseSyncedLocationUseCase(repository, pauseSourceProcessing),
+    { handles: () => false } as never,
   );
   const listener = new FailedSourcesDeletedListener(repository);
 
@@ -273,6 +301,10 @@ function createProcessingHarness(
         delays.push(timestamp);
         return Promise.resolve();
       },
+      updateData: (changed: SyncedFileJobData) => {
+        Object.assign(data, changed);
+        return Promise.resolve();
+      },
     } as unknown as Job<SyncedFileJobData>;
   }
 
@@ -283,6 +315,15 @@ function createProcessingHarness(
     upload,
     reindexed,
     delays,
+    processingPaused,
+    /** The location's pause is over. */
+    endPause(): void {
+      const location = repository.locations.get(harness.location.id)!;
+      repository.locations.set(
+        location.id,
+        new SyncedLocation({ ...location, pausedUntil: new Date(0) }),
+      );
+    },
     process: (data: SyncedFileJobData, attemptsMade = 0) =>
       consumer.process(aJob(data, attemptsMade), 'token'),
     /** Processes every queued job once, oldest first. */
@@ -632,6 +673,114 @@ describe('SyncedFileProcessingConsumer', () => {
       SourceStatus.PROCESSING,
     );
     expect(fileAt(harness, 'Hundesteuer.pdf').documentVersion).toBeNull();
+    expect(
+      harness.repository.locations.get(harness.location.id)?.pausedUntil,
+    ).toEqual(retryAt);
+  });
+
+  it('never retries a file at once when the source system asks to retry immediately', async () => {
+    const harness = createProcessingHarness();
+    harness.system.add('Hundesteuer.pdf');
+    await harness.sync();
+    const [job] = harness.jobs;
+    harness.system.throttledUntil = new Date(Date.now() - 1_000);
+    const before = Date.now();
+
+    await expect(harness.process(job)).rejects.toBeInstanceOf(DelayedError);
+
+    expect(harness.delays[0]).toBeGreaterThanOrEqual(before + 1_000);
+  });
+
+  it('pauses the location for an embedding outage instead of failing its files, and finishes them once it is over', async () => {
+    const harness = createProcessingHarness();
+    harness.system.add('Hundesteuer.pdf');
+    harness.system.add('Gebühren.pdf');
+    await harness.sync();
+    const jobs = harness.jobs.splice(0);
+    harness.pipeline.outage = new ProviderServerError({
+      provider: 'mistral',
+      upstreamStatus: 503,
+    });
+
+    for (const job of jobs)
+      await expect(harness.process(job, 2)).rejects.toBeInstanceOf(
+        DelayedError,
+      );
+
+    const pausedUntil = harness.repository.locations.get(
+      harness.location.id,
+    )?.pausedUntil;
+    expect(pausedUntil!.getTime()).toBeGreaterThan(Date.now());
+    // The second file waits for the pause without trying.
+    expect(harness.pipeline.runs).toBe(1);
+    expect(harness.delays).toEqual([
+      pausedUntil!.getTime(),
+      pausedUntil!.getTime(),
+    ]);
+    expect(harness.processingPaused).toHaveLength(2);
+    expect(
+      harness.filesOf().map(({ documentVersion }) => documentVersion),
+    ).toEqual([null, null]);
+    expect(
+      ['Hundesteuer.pdf', 'Gebühren.pdf'].map(
+        (path) => documentOf(harness, path)?.status,
+      ),
+    ).toEqual([SourceStatus.PROCESSING, SourceStatus.PROCESSING]);
+
+    harness.pipeline.outage = null;
+    harness.endPause();
+    for (const job of jobs) await harness.process(job, 2);
+
+    expect(harness.searchable()).toHaveLength(2);
+    expect(
+      harness.filesOf().every((file) => file.documentVersion === file.version),
+    ).toBe(true);
+  });
+
+  it('keeps a replacement an earlier attempt left processing from being failed as stuck while it waits for a pause', async () => {
+    const harness = createProcessingHarness();
+    harness.system.add('Hundesteuer.pdf');
+    await harness.sync();
+    const [job] = harness.jobs.splice(0);
+    harness.pipeline.interruption = new Error('converter busy');
+    await expect(harness.process(job)).rejects.toThrow('converter busy');
+    const [replacement] = [...harness.knowledgeBase.documents.keys()].filter(
+      (id) => harness.knowledgeBase.documents.get(id)?.replaces,
+    );
+    const location = harness.repository.locations.get(harness.location.id)!;
+    harness.repository.locations.set(
+      location.id,
+      new SyncedLocation({
+        ...location,
+        pausedUntil: new Date(Date.now() + 60 * 60_000),
+      }),
+    );
+
+    await expect(harness.process(job, 1)).rejects.toBeInstanceOf(DelayedError);
+
+    expect(harness.processingPaused).toEqual([replacement]);
+  });
+
+  it('fails a file as usual once its job has paused for an hour, so one file cannot hold up its location for good', async () => {
+    const harness = createProcessingHarness();
+    harness.system.add('Hundesteuer.pdf');
+    await harness.sync();
+    const [job] = harness.jobs.splice(0);
+    harness.pipeline.outage = new ProviderServerError({
+      provider: 'mistral',
+      upstreamStatus: 503,
+    });
+
+    for (let pause = 0; pause < 6; pause++) {
+      await expect(harness.process(job)).rejects.toBeInstanceOf(DelayedError);
+      harness.endPause();
+    }
+    await harness.process(job);
+
+    expect(documentOf(harness, 'Hundesteuer.pdf')).toMatchObject({
+      status: SourceStatus.FAILED,
+      processingErrorCode: SourceProcessingErrorCode.PROCESSING_UNAVAILABLE,
+    });
   });
 
   it('reads nothing for a version the file has moved on from, and discards a replacement whose version changed meanwhile', async () => {

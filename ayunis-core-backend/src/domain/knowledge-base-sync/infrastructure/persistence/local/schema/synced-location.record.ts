@@ -54,4 +54,14 @@ export class SyncedLocationRecord extends BaseRecord {
 
   @Column({ type: 'timestamp', nullable: true })
   lastSyncedAt: Date | null;
+
+  @Index()
+  @Column({ type: 'timestamptz', default: () => 'now()' })
+  nextSyncAt: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  syncingSince: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  pausedUntil: Date | null;
 }

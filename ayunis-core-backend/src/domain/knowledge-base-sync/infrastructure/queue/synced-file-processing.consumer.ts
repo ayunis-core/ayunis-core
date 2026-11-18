@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { DelayedError, Job } from 'bullmq';
@@ -14,7 +15,13 @@ import {
   type StartSyncedFileProcessingResult,
 } from 'src/domain/knowledge-base-sync/application/use-cases/start-synced-file-processing/start-synced-file-processing.result';
 import { StartSyncedFileProcessingUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/start-synced-file-processing/start-synced-file-processing.use-case';
-import type { DocumentToProcess } from 'src/domain/sources/application/models/document-to-process';
+import {
+  ProcessingDeferredError,
+  type DocumentToProcess,
+} from 'src/domain/sources/application/models/document-to-process';
+import { PauseSyncedLocationCommand } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.command';
+import { PauseSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.use-case';
+import { mayPauseForOutage } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
 import { SourceReindexScheduler } from 'src/domain/sources/application/services/source-reindex-scheduler.service';
 import {
   classifyJobFailure,
@@ -25,13 +32,18 @@ import { observeJob } from 'src/domain/sources/infrastructure/queue/job-telemetr
 import { AdmitOrgProcessingQuery } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.query';
 import { AdmitOrgProcessingUseCase } from 'src/iam/orgs/application/use-cases/admit-org-processing/admit-org-processing.use-case';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from './knowledge-base-sync.constants';
+import { SyncRunner } from './sync-runner';
 
 /**
- * Processes synced files on their own queue, with the document pipeline of
- * uploads, so uploads never wait behind a sync. A job reads its version of
- * the file into a hidden replacement of the file's document, runs the
- * pipeline on it and then settles the version. A throttling source system
- * delays the job until the time it names.
+ * The worker of the sync queue. Processes synced files on their own queue,
+ * with the document pipeline of uploads, so uploads never wait behind a
+ * sync; location runs and the sweep queueing them go to `SyncRunner`. A job
+ * reads its version of the file into a hidden replacement of the file's
+ * document, runs the pipeline on it and then settles the version. While its
+ * location is paused, the job waits until the pause ends; a throttling
+ * source system or a provider outage (OCR, embeddings, the source system)
+ * pauses the location and delays the job, without spending an attempt or
+ * failing the file.
  */
 @Processor(KNOWLEDGE_BASE_SYNC_QUEUE, {
   concurrency: ingestionConcurrency('sync'),
@@ -51,11 +63,14 @@ export class SyncedFileProcessingConsumer extends WorkerHost {
     private readonly failProcessing: FailSyncedFileProcessingUseCase,
     private readonly pipeline: DocumentProcessingPipeline,
     private readonly reindexScheduler: SourceReindexScheduler,
+    private readonly pauseLocation: PauseSyncedLocationUseCase,
+    private readonly runner: SyncRunner,
   ) {
     super();
   }
 
   async process(job: Job<SyncedFileJobData>, token?: string): Promise<void> {
+    if (this.runner.handles(job)) return this.runner.process(job, token);
     this.logger.log(
       { jobId: job.id, syncedFileId: job.data.syncedFileId },
       'Processing synced file',
@@ -71,7 +86,7 @@ export class SyncedFileProcessingConsumer extends WorkerHost {
     }
   }
 
-  /** When the source system throttles, the time it may be asked again. */
+  /** When the job waits for a pause, the time it may run again. */
   private async processFile(job: Job<SyncedFileJobData>): Promise<Date | null> {
     // Synced files are processed without a user.
     this.contextService.set('orgId', job.data.orgId);
@@ -84,10 +99,13 @@ export class SyncedFileProcessingConsumer extends WorkerHost {
       return null;
     }
     const started = await this.start(job);
-    if (started?.outcome === StartSyncedFileProcessingOutcome.THROTTLED)
+    if (
+      started?.outcome === StartSyncedFileProcessingOutcome.THROTTLED ||
+      started?.outcome === StartSyncedFileProcessingOutcome.PAUSED
+    )
       return started.retryAt;
     if (started?.outcome === StartSyncedFileProcessingOutcome.PROCESS)
-      await this.runPipeline(job, started.document);
+      return this.runPipeline(job, started.document);
     return null;
   }
 
@@ -100,6 +118,12 @@ export class SyncedFileProcessingConsumer extends WorkerHost {
         new StartSyncedFileProcessingCommand(job.data),
       );
     } catch (error) {
+      const pausedUntil = await this.pauseFor(job, error);
+      if (pausedUntil)
+        return {
+          outcome: StartSyncedFileProcessingOutcome.PAUSED,
+          retryAt: pausedUntil,
+        };
       this.logger.error(
         { jobId: job.id, err: error as Error },
         'Reading the synced file failed',
@@ -115,13 +139,28 @@ export class SyncedFileProcessingConsumer extends WorkerHost {
   }
 
   // The version is settled also when the pipeline rethrows its final
-  // failure; a replacement still PROCESSING waits for the retry.
+  // failure; a replacement still PROCESSING waits for the retry or the end
+  // of the pause.
   private async runPipeline(
     job: Job<SyncedFileJobData>,
     document: DocumentToProcess,
-  ): Promise<void> {
+  ): Promise<Date | null> {
     try {
-      await this.pipeline.process(job, document);
+      await this.pipeline.process(job, {
+        ...document,
+        deferProviderOutages: mayPauseForOutage(job.data.pauses ?? 0),
+      });
+      return null;
+    } catch (error) {
+      if (!(error instanceof ProcessingDeferredError)) throw error;
+      const pausedUntil = await this.pauseFor(
+        job,
+        error.outage,
+        document.sourceId,
+      );
+      // A retry follows as for any failure.
+      if (!pausedUntil) throw error.outage;
+      return pausedUntil;
     } finally {
       const indexed = await this.completeProcessing.execute(
         new CompleteSyncedFileProcessingCommand(job.data, document.sourceId),
@@ -132,5 +171,24 @@ export class SyncedFileProcessingConsumer extends WorkerHost {
           job.data.orgId,
         );
     }
+  }
+
+  /** `null` when the failure is no provider outage to pause for. */
+  private async pauseFor(
+    job: Job<SyncedFileJobData>,
+    error: unknown,
+    processingSourceId?: UUID,
+  ): Promise<Date | null> {
+    const pausesMade = job.data.pauses ?? 0;
+    const until = await this.pauseLocation.execute(
+      new PauseSyncedLocationCommand({
+        locationId: job.data.locationId,
+        error,
+        pausesMade,
+        processingSourceId,
+      }),
+    );
+    if (until) await job.updateData({ ...job.data, pauses: pausesMade + 1 });
+    return until;
   }
 }

@@ -90,6 +90,18 @@ export class LocalSourceBatchWriteRepository extends SourceBatchWriteRepository 
     return rows.map(({ id }) => id);
   }
 
+  async pauseProcessing(sourceId: UUID): Promise<void> {
+    await this.manager
+      .createQueryBuilder()
+      .update(SourceRecord)
+      .set({ processingStartedAt: null })
+      .where('id = :sourceId AND status = :status', {
+        sourceId,
+        status: SourceStatus.PROCESSING,
+      })
+      .execute();
+  }
+
   async moveReplacementIn(
     replacementId: UUID,
     name: string,

@@ -16,6 +16,11 @@ import { FailSyncedFileProcessingUseCase } from './application/use-cases/fail-sy
 import { AddSyncedLocationUseCase } from './application/use-cases/add-synced-location/add-synced-location.use-case';
 import { RemoveSyncedLocationUseCase } from './application/use-cases/remove-synced-location/remove-synced-location.use-case';
 import { SyncLocationUseCase } from './application/use-cases/sync-location/sync-location.use-case';
+import { NextSyncedFileBatchUseCase } from './application/use-cases/next-synced-file-batch/next-synced-file-batch.use-case';
+import { FinishLocationSyncUseCase } from './application/use-cases/finish-location-sync/finish-location-sync.use-case';
+import { PauseSyncedLocationUseCase } from './application/use-cases/pause-synced-location/pause-synced-location.use-case';
+import { SyncLocationNowUseCase } from './application/use-cases/sync-location-now/sync-location-now.use-case';
+import { SyncDueLocationsUseCase } from './application/use-cases/sync-due-locations/sync-due-locations.use-case';
 import { LocalSyncedLocationsRepositoryModule } from './infrastructure/persistence/local/local-synced-locations-repository.module';
 import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-base-sync-queue.module';
 
@@ -39,6 +44,11 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     AddSyncedLocationUseCase,
     RemoveSyncedLocationUseCase,
     SyncLocationUseCase,
+    NextSyncedFileBatchUseCase,
+    FinishLocationSyncUseCase,
+    PauseSyncedLocationUseCase,
+    SyncLocationNowUseCase,
+    SyncDueLocationsUseCase,
     StartSyncedFileProcessingUseCase,
     CompleteSyncedFileProcessingUseCase,
     FailSyncedFileProcessingUseCase,
@@ -49,6 +59,11 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     AddSyncedLocationUseCase,
     RemoveSyncedLocationUseCase,
     SyncLocationUseCase,
+    NextSyncedFileBatchUseCase,
+    FinishLocationSyncUseCase,
+    PauseSyncedLocationUseCase,
+    SyncLocationNowUseCase,
+    SyncDueLocationsUseCase,
     StartSyncedFileProcessingUseCase,
     CompleteSyncedFileProcessingUseCase,
     FailSyncedFileProcessingUseCase,

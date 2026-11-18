@@ -23,6 +23,26 @@ export abstract class SyncedLocationsRepository {
   /** Stores the new cursor and marks the location active again. */
   abstract recordSync(id: UUID, cursor: string, syncedAt: Date): Promise<void>;
 
+  /** Marks the location as syncing since `startedAt`, unless it already is. */
+  abstract recordSyncStarted(id: UUID, startedAt: Date): Promise<void>;
+
+  /** Ends the location's sync; the next one is due at `nextSyncAt`. */
+  abstract recordSyncEnded(id: UUID, nextSyncAt: Date): Promise<void>;
+
+  /** Pauses syncing until `until`, unless it is paused longer already. */
+  abstract pause(id: UUID, until: Date): Promise<void>;
+
+  /**
+   * Takes up to `limit` locations whose sync is due at `now` and that are not
+   * paused, oldest due first, and moves their next sync to `next`, so a
+   * concurrent call takes others.
+   */
+  abstract claimDue(
+    now: Date,
+    next: Date,
+    limit: number,
+  ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]>;
+
   /** Removes the location with its files; their documents are the caller's. */
   abstract delete(id: UUID): Promise<void>;
 
@@ -33,6 +53,16 @@ export abstract class SyncedLocationsRepository {
   abstract lockFiles(locationId: UUID): Promise<SyncedFile[]>;
 
   abstract findFileById(id: UUID): Promise<SyncedFile | null>;
+
+  /**
+   * Up to `limit` files of the location whose document is behind their
+   * version, by ID, after `afterFileId`.
+   */
+  abstract findFilesToProcess(
+    locationId: UUID,
+    afterFileId: UUID | null,
+    limit: number,
+  ): Promise<SyncedFile[]>;
 
   /** Locks one file until the transaction ends; `null` once removed. */
   abstract lockFile(id: UUID): Promise<SyncedFile | null>;

@@ -1,0 +1,166 @@
+import type { UUID } from 'crypto';
+import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
+import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
+import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
+import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
+
+/** The locations and files of the sync engine, without a database. */
+export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository {
+  readonly locations = new Map<UUID, SyncedLocation>();
+  readonly files = new Map<UUID, SyncedFile>();
+
+  create(location: SyncedLocation): Promise<boolean> {
+    const duplicate = [...this.locations.values()].some(
+      (existing) =>
+        existing.knowledgeBaseId === location.knowledgeBaseId &&
+        existing.connectorId === location.connectorId &&
+        existing.location === location.location,
+    );
+    if (!duplicate) this.locations.set(location.id, location);
+    return Promise.resolve(!duplicate);
+  }
+
+  findById(id: UUID): Promise<SyncedLocation | null> {
+    return Promise.resolve(this.locations.get(id) ?? null);
+  }
+
+  lockById(id: UUID): Promise<SyncedLocation | null> {
+    return this.findById(id);
+  }
+
+  markNoLongerAccessible(id: UUID, lastSyncedAt: Date | null): Promise<void> {
+    if (this.locations.get(id)?.lastSyncedAt === lastSyncedAt)
+      this.update(id, { state: SyncedLocationState.NO_LONGER_ACCESSIBLE });
+    return Promise.resolve();
+  }
+
+  recordSync(id: UUID, cursor: string, syncedAt: Date): Promise<void> {
+    this.update(id, {
+      cursor,
+      lastSyncedAt: syncedAt,
+      state: SyncedLocationState.ACTIVE,
+    });
+    return Promise.resolve();
+  }
+
+  recordSyncStarted(id: UUID, startedAt: Date): Promise<void> {
+    const syncingSince = this.locations.get(id)?.syncingSince ?? startedAt;
+    this.update(id, { syncingSince });
+    return Promise.resolve();
+  }
+
+  recordSyncEnded(id: UUID, nextSyncAt: Date): Promise<void> {
+    this.update(id, { syncingSince: null, nextSyncAt });
+    return Promise.resolve();
+  }
+
+  pause(id: UUID, until: Date): Promise<void> {
+    const pausedUntil = this.locations.get(id)?.pausedUntil;
+    if (!pausedUntil || pausedUntil < until)
+      this.update(id, { pausedUntil: until });
+    return Promise.resolve();
+  }
+
+  claimDue(
+    now: Date,
+    next: Date,
+    limit: number,
+  ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]> {
+    const due = [...this.locations.values()]
+      .filter(
+        (location) => location.nextSyncAt <= now && !location.pausedAt(now),
+      )
+      .sort((a, b) => a.nextSyncAt.getTime() - b.nextSyncAt.getTime())
+      .slice(0, limit);
+    for (const { id } of due) this.update(id, { nextSyncAt: next });
+    return Promise.resolve(due.map(({ id, orgId }) => ({ id, orgId })));
+  }
+
+  delete(id: UUID): Promise<void> {
+    this.locations.delete(id);
+    for (const file of this.files.values())
+      if (file.locationId === id) this.files.delete(file.id);
+    return Promise.resolve();
+  }
+
+  findFileSourceIds(locationId: UUID): Promise<UUID[]> {
+    return Promise.resolve(
+      [...this.files.values()].flatMap((file) =>
+        file.locationId === locationId && file.sourceId ? [file.sourceId] : [],
+      ),
+    );
+  }
+
+  lockFiles(locationId: UUID): Promise<SyncedFile[]> {
+    return Promise.resolve(
+      [...this.files.values()]
+        .filter((file) => file.locationId === locationId)
+        .map((file) => new SyncedFile({ ...file })),
+    );
+  }
+
+  findFileById(id: UUID): Promise<SyncedFile | null> {
+    const file = this.files.get(id);
+    return Promise.resolve(file ? new SyncedFile({ ...file }) : null);
+  }
+
+  findFilesToProcess(
+    locationId: UUID,
+    afterFileId: UUID | null,
+    limit: number,
+  ): Promise<SyncedFile[]> {
+    return Promise.resolve(
+      [...this.files.values()]
+        .filter(
+          (file) =>
+            file.locationId === locationId &&
+            file.needsProcessing() &&
+            (afterFileId === null || file.id > afterFileId),
+        )
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .slice(0, limit)
+        .map((file) => new SyncedFile({ ...file })),
+    );
+  }
+
+  lockFile(id: UUID): Promise<SyncedFile | null> {
+    return this.findFileById(id);
+  }
+
+  skipRemovedAfterFailure(sourceIds: UUID[]): Promise<void> {
+    for (const file of this.files.values())
+      if (
+        file.lastSourceId &&
+        sourceIds.includes(file.lastSourceId) &&
+        file.sourceId === null &&
+        file.state === SyncedFileState.IMPORTED &&
+        file.documentVersion === file.version
+      )
+        file.skip(SyncedFileSkipReason.REMOVED_AFTER_FAILURE);
+    return Promise.resolve();
+  }
+
+  saveFiles(files: SyncedFile[]): Promise<void> {
+    for (const file of files) this.files.set(file.id, new SyncedFile(file));
+    return Promise.resolve();
+  }
+
+  deleteFiles(fileIds: UUID[]): Promise<void> {
+    for (const id of fileIds) this.files.delete(id);
+    return Promise.resolve();
+  }
+
+  clearSources(sourceIds: UUID[]): void {
+    for (const file of this.files.values())
+      if (file.sourceId && sourceIds.includes(file.sourceId))
+        file.sourceId = null;
+  }
+
+  private update(id: UUID, changes: Partial<SyncedLocation>): void {
+    const location = this.locations.get(id);
+    if (location)
+      this.locations.set(id, new SyncedLocation({ ...location, ...changes }));
+  }
+}
