@@ -9,6 +9,7 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { workspaceRecordingListParams } from '@/shared/api/recording-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import { useUploadNewRecordingAudio } from '@/features/recording-audio';
 
 export function useWorkspaceRecordings(workspaceId: string, enabled: boolean) {
   const query = useRecordingsControllerFindAll(
@@ -37,6 +38,7 @@ export function useWorkspaceRecordingActions(workspaceId: string) {
   const { t } = useTranslation('recordings');
   const queryClient = useQueryClient();
   const showMutationError = useShowError();
+  const uploadAudio = useUploadNewRecordingAudio();
   const invalidate = () =>
     queryClient.invalidateQueries({
       queryKey: getRecordingsControllerFindAllQueryKey(
@@ -45,12 +47,15 @@ export function useWorkspaceRecordingActions(workspaceId: string) {
     });
 
   const create = useMutation({
-    mutationFn: (name: string) =>
-      recordingsControllerCreate({
+    mutationFn: async ({ name, file }: { name: string; file: File }) => {
+      const recording = await recordingsControllerCreate({
         ownerType: 'workspace',
         workspaceId,
         name,
-      }),
+      });
+      await uploadAudio(recording.id, file);
+      return recording;
+    },
     onSuccess: async () => {
       await invalidate();
       showSuccess(t('create.success'));

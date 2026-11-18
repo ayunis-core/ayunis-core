@@ -93,6 +93,8 @@ async function interruptedDelivery(
         finish: async () => undefined,
       }),
     } as never,
+    {} as never,
+    {} as never,
     { tempDirectory: undefined } as never,
   );
   await consumer.process({

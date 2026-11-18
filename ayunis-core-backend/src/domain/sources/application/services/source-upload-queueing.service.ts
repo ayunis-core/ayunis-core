@@ -5,6 +5,7 @@ import { SourceUploadSessionRepository } from 'src/domain/sources/application/po
 import { SourceUploadSession } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 import { SourceUploadPipeline } from 'src/domain/sources/domain/upload/source-upload-pipeline.enum';
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
+import { SourceUploadTargetType } from 'src/domain/sources/domain/upload/source-upload-target-type.enum';
 import { EnqueueDocumentProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.use-case';
 import { EnqueueDocumentProcessingCommand } from 'src/domain/sources/application/use-cases/enqueue-document-processing/enqueue-document-processing.command';
 import { EnqueueDataSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/enqueue-data-source-processing/enqueue-data-source-processing.use-case';
@@ -91,6 +92,8 @@ export class SourceUploadQueueingService {
         retainFile: true,
         expectedSize: session.fileSize,
         expectedETag: session.expectedETag ?? undefined,
+        keepTranscriptSegments:
+          session.targetType === SourceUploadTargetType.RECORDING,
       }),
     );
   }

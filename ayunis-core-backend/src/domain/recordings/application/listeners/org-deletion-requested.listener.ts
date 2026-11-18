@@ -19,7 +19,7 @@ export class RecordingsOrgDeletionRequestedListener {
   async handle(event: OrgDeletionRequestedEvent): Promise<void> {
     try {
       const recordings = await this.repository.findAllByOrgId(event.orgId);
-      this.cleanup.deferCleanup(event, recordings, 'organization');
+      await this.cleanup.deferCleanup(event, recordings, 'organization');
     } catch (error) {
       this.logger.error(
         { orgId: event.orgId, err: error as Error },

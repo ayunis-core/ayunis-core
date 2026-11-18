@@ -4,6 +4,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum RecordingErrorCode {
   RECORDING_NOT_FOUND = 'RECORDING_NOT_FOUND',
   OWNER_CHANGE_NOT_ALLOWED = 'RECORDING_OWNER_CHANGE_NOT_ALLOWED',
+  AUDIO_ALREADY_UPLOADED = 'RECORDING_AUDIO_ALREADY_UPLOADED',
   UNEXPECTED_RECORDING_ERROR = 'UNEXPECTED_RECORDING_ERROR',
 }
 
@@ -35,6 +36,18 @@ export class RecordingOwnerChangeNotAllowedError extends RecordingError {
       'Workspace recordings cannot change owner',
       RecordingErrorCode.OWNER_CHANGE_NOT_ALLOWED,
       400,
+      { recordingId },
+    );
+  }
+}
+
+/** A recording keeps one audio file; another is uploaded to a new recording. */
+export class RecordingAudioAlreadyUploadedError extends RecordingError {
+  constructor(recordingId: string) {
+    super(
+      'The recording already has its audio',
+      RecordingErrorCode.AUDIO_ALREADY_UPLOADED,
+      409,
       { recordingId },
     );
   }

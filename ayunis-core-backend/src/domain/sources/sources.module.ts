@@ -56,6 +56,7 @@ import { SourceUploadSessionAccessService } from './application/services/source-
 import { SourceUploadQueueingService } from './application/services/source-upload-queueing.service';
 import { SourceUploadSweepTask } from './infrastructure/tasks/source-upload-sweep.task';
 import { StaleProcessingCleanupTask } from './infrastructure/tasks/stale-processing-cleanup.task';
+import { GetSourceTranscriptSegmentsUseCase } from 'src/domain/sources/application/use-cases/get-source-transcript-segments/get-source-transcript-segments.use-case';
 import { SourceUploadsController } from './presenters/http/source-uploads.controller';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 
@@ -117,6 +118,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     FindSourceCitationTargetUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
+    GetSourceTranscriptSegmentsUseCase,
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,
@@ -146,6 +148,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     FindSourceCitationTargetUseCase,
     ExtractTextLinesUseCase,
     GetSourcesByKnowledgeBaseIdUseCase,
+    GetSourceTranscriptSegmentsUseCase,
     CreateProcessingSourceUseCase,
     MarkSourceFailedUseCase,
     EnqueueDocumentProcessingUseCase,

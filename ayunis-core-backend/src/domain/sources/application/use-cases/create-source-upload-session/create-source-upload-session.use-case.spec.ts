@@ -118,6 +118,28 @@ describe('CreateSourceUploadSessionUseCase', () => {
     expect(sessions.save).not.toHaveBeenCalled();
   });
 
+  it('accepts only audio for a recording, before touching storage', async () => {
+    await expect(
+      useCase.execute(
+        command({ targetType: SourceUploadTargetType.RECORDING }),
+      ),
+    ).rejects.toMatchObject({
+      code: 'UNSUPPORTED_FILE_TYPE',
+      message: expect.stringContaining('MP3, M4A, WAV, WEBM'),
+    });
+    expect(sessions.save).not.toHaveBeenCalled();
+
+    await expect(
+      useCase.execute(
+        command({
+          targetType: SourceUploadTargetType.RECORDING,
+          fileName: 'sitzung.mp3',
+          mimeType: 'audio/mpeg',
+        }),
+      ),
+    ).resolves.toMatchObject({ session: { fileType: 'audio/mpeg' } });
+  });
+
   it('rejects files above the caller-supplied limit with FILE_TOO_LARGE', async () => {
     await expect(
       useCase.execute(

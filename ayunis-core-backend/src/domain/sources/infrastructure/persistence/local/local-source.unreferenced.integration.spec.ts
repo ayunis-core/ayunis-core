@@ -21,6 +21,7 @@ const sourceSchema = new EntitySchema<SourceRecord>({
   columns: {
     id: { type: 'uuid', primary: true },
     knowledgeBaseId: { type: 'uuid', nullable: true },
+    recordingId: { type: 'uuid', nullable: true },
     createdAt: { type: 'timestamp' },
   },
 });
@@ -152,6 +153,28 @@ describe('Unreferenced source lookup', () => {
     await expect(
       repository.findUnreferencedIds([inThread, unused], new Date(), true),
     ).resolves.toEqual(expect.arrayContaining([inThread, unused]));
+  });
+
+  it("keeps a recording's audio, which nothing else references", async () => {
+    const old = new Date(Date.now() - 40 * DAY_MS);
+    const recordingAudio = randomUUID();
+    const unused = randomUUID();
+    await dataSource.getRepository(SourceRecord).insert([
+      {
+        id: recordingAudio,
+        knowledgeBaseId: null,
+        recordingId: randomUUID(),
+        createdAt: old,
+      },
+      { id: unused, knowledgeBaseId: null, createdAt: old },
+    ]);
+
+    await expect(
+      repository.findUnreferencedIds([recordingAudio, unused], new Date()),
+    ).resolves.toEqual([unused]);
+    await expect(
+      repository.findOrphanedIds(new Date(), 10_000),
+    ).resolves.not.toContain(recordingAudio);
   });
 
   it('returns nothing for an empty candidate list', async () => {

@@ -24,7 +24,7 @@ export class RecordingsUserDeletionRequestedListener {
   async handle(event: UserDeletionRequestedEvent): Promise<void> {
     try {
       const recordings = await this.repository.findAllByUserId(event.userId);
-      this.cleanup.deferCleanup(event, recordings, 'user');
+      await this.cleanup.deferCleanup(event, recordings, 'user');
     } catch (error) {
       this.logger.error(
         { userId: event.userId, err: error as Error },

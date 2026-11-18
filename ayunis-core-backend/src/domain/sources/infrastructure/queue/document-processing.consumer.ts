@@ -7,7 +7,6 @@ import { ProcessingCheckpointService } from 'src/domain/sources/application/serv
 import { Inject, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { tmpdir } from 'os';
-import { withStagingDirectory } from './staging-directory';
 import { join } from 'path';
 import transcriptionConfig from 'src/config/transcription.config';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
@@ -51,12 +50,12 @@ import { SourceProcessingHeartbeatService } from 'src/domain/sources/application
 import { observeJob, processingStage } from './job-telemetry';
 import { cleanupMinioProcessingFile } from 'src/domain/sources/application/util/minio-processing-file.helpers';
 import type { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
-
-interface ExtractedContent {
-  text: string;
-  chunks: TextSourceContentChunk[];
-  precomputedEmbeddings: PreparedContentEmbeddings | undefined;
-}
+import { SourceTranscriptContentService } from 'src/domain/sources/application/services/source-transcript-content.service';
+import { audioStagingRoot, withStagedJobFile } from './staged-job-file';
+import {
+  RecordingTranscriptExtractor,
+  type ExtractedContent,
+} from './recording-transcript.extractor';
 
 function isProcessedFromDisk(fileType: DetectedFileType): boolean {
   return fileType === 'pdf' || isOfficeDocumentFile(fileType);
@@ -86,6 +85,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     private readonly heartbeat: SourceProcessingHeartbeatService,
     private readonly checkpoints: ProcessingCheckpointService,
     private readonly earlyEmbedding: EarlyEmbeddingService,
+    private readonly recordingTranscripts: RecordingTranscriptExtractor,
+    private readonly transcriptContent: SourceTranscriptContentService,
     @Inject(transcriptionConfig.KEY)
     private readonly transcription: ConfigType<typeof transcriptionConfig>,
   ) {
@@ -156,9 +157,8 @@ export class DocumentProcessingConsumer extends WorkerHost {
     cleanupPath: string | null,
   ): Promise<void> {
     const { sourceId, orgId } = job.data;
-    const { text, chunks, precomputedEmbeddings } = await this.heartbeat.run(
-      sourceId,
-      () => this.downloadAndExtractText(job),
+    const content = await this.heartbeat.run(sourceId, () =>
+      this.downloadAndExtractText(job),
     );
 
     // Guard: re-check the source still exists and is PROCESSING
@@ -169,11 +169,12 @@ export class DocumentProcessingConsumer extends WorkerHost {
       return;
     }
 
-    if (!(await this.updateSourceWithContent(source, text, chunks))) {
+    if (!(await this.updateSourceWithContent(source, content))) {
       await this.cleanupMinioFile(cleanupPath);
       await this.cleanupCheckpoints(orgId, sourceId);
       return;
     }
+    const { chunks, precomputedEmbeddings } = content;
     await processingStage('document.indexing', () =>
       this.helper.index(sourceId, orgId, chunks, precomputedEmbeddings),
     );
@@ -252,12 +253,21 @@ export class DocumentProcessingConsumer extends WorkerHost {
   private async downloadAndExtractText(
     job: Job<DocumentProcessingJobData>,
   ): Promise<ExtractedContent> {
-    const { fileName, fileType } = job.data;
-    const early = this.earlyEmbedding.start(job.data.orgId);
+    const { fileName, fileType, orgId, sourceId } = job.data;
+    const progress = (completed: number) =>
+      job.updateProgress({ stage: 'extraction', completed });
+    // A kept transcript is chunked by speaker turn, not by the text splitter
+    // the early embeddings are computed for.
+    if (job.data.keepTranscriptSegments)
+      return this.recordingTranscripts.extract(
+        job.data,
+        this.checkpoints.create(orgId, sourceId, progress),
+      );
+    const early = this.earlyEmbedding.start(orgId);
     const context = this.checkpoints.create(
-      job.data.orgId,
-      job.data.sourceId,
-      (completed) => job.updateProgress({ stage: 'extraction', completed }),
+      orgId,
+      sourceId,
+      progress,
       (texts) => early.appendPages(texts),
     );
     let text: string;
@@ -333,43 +343,18 @@ export class DocumentProcessingConsumer extends WorkerHost {
     job: Job<DocumentProcessingJobData>,
     context?: ProcessingContext,
   ): Promise<string> {
-    const root =
-      this.transcription.tempDirectory ?? join(tmpdir(), 'ayunis-audio');
+    const root = audioStagingRoot(this.transcription);
     return this.withStagedFile(job, root, (localFile) =>
       this.retrieveText(job, localFile, context),
     );
   }
 
-  // PDFs, office documents and recordings are streamed to disk and processed
-  // from there: the process never holds the file, and splitting, conversion,
-  // segmenting and the provider upload all read the path.
-  private async withStagedFile<T>(
+  private withStagedFile<T>(
     job: Job<DocumentProcessingJobData>,
     root: string,
     use: (localFile: LocalFile) => Promise<T>,
   ): Promise<T> {
-    const { minioPath, expectedSize, expectedETag } = job.data;
-    return withStagingDirectory(root, async (directory) => {
-      const path = join(directory, 'file');
-      const stored = await processingStage('document.download', () =>
-        job.data.retainFile
-          ? this.storedFiles.readRetainedToFile(
-              minioPath,
-              path,
-              expectedSize,
-              expectedETag,
-            )
-          : this.storedFiles.readToFile(
-              minioPath,
-              path,
-              expectedSize,
-              expectedETag,
-            ),
-      );
-      return processingStage('document.extraction', () =>
-        use({ path, ...stored }),
-      );
-    });
+    return withStagedJobFile(this.storedFiles, job.data, root, use);
   }
 
   private async retrieveText(
@@ -449,9 +434,10 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
   private async updateSourceWithContent(
     source: TextSource,
-    text: string,
-    chunks: TextSourceContentChunk[],
+    { text, chunks, segments }: ExtractedContent,
   ): Promise<boolean> {
+    if (segments)
+      return this.transcriptContent.save(source, { text, chunks }, segments);
     return this.sourceRepository.saveProcessingTextSourceContent(source, {
       text,
       chunks,
