@@ -10,10 +10,19 @@ export function inboxItem(page: Page, headline: string) {
   });
 }
 
-export function unreadNotificationsButton(page: Page, type: NotificationType) {
+export function unreadNotificationsTab(page: Page, type: NotificationType) {
   return page
-    .getByTestId('new-chat-unread-notifications-button')
+    .getByTestId('new-chat-unread-notifications-tab')
     .and(page.locator(`[data-type="${type}"]`));
+}
+
+/** An unread notification in the new chat page's panel. */
+export function unreadNotificationItem(page: Page, headline: string) {
+  return page.getByTestId('new-chat-unread-notification').filter({
+    has: page
+      .getByTestId('new-chat-unread-notification-headline')
+      .filter({ hasText: headline }),
+  });
 }
 
 export function sidebarInbox(page: Page) {
