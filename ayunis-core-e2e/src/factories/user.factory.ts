@@ -5,6 +5,7 @@ import { acceptInvite, inviteUser } from '../clients/api/invites.client';
 import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
 import { findUserByEmail } from '../clients/api/users.client';
 import type { MailcatcherClient } from '../clients/mailcatcher.client';
+import { CreateInviteDtoRole } from '../clients/generated/ayunisCoreAPI.schemas';
 import { createApiContext } from './api-context.factory';
 
 export interface UserContext {
@@ -18,13 +19,14 @@ export async function createUser(
   api: APIRequestContext,
   mail: MailcatcherClient,
   uniqueKey: string,
+  role: CreateInviteDtoRole = CreateInviteDtoRole.user,
 ): Promise<UserContext> {
   const user = {
     email: `e2e-lockout-${uniqueKey}@e2e.local`,
     password: 'E2e-Password-1',
     name: `E2E Lockout ${uniqueKey}`,
   };
-  await inviteUser(api, user.email);
+  await inviteUser(api, user.email, role);
   const inviteToken = await mail.extractLinkToken(user.email, '/accept-invite');
   await acceptInvite(api, {
     inviteToken,

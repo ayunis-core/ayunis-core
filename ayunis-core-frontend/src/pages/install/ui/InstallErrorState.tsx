@@ -15,6 +15,7 @@ interface InstallErrorStateProps {
   description: string;
   backTo?: string;
   backLabel?: string;
+  testId?: string;
 }
 
 export function InstallErrorState({
@@ -22,13 +23,14 @@ export function InstallErrorState({
   description,
   backTo,
   backLabel,
+  testId,
 }: Readonly<InstallErrorStateProps>) {
   const { t } = useTranslation('install');
   const linkTo = backTo ?? '/skills';
   const linkLabel = backLabel ?? t('action.backToSkills');
 
   return (
-    <Card className="w-full max-w-lg">
+    <Card className="w-full max-w-lg" data-testid={testId}>
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
           <AlertCircle className="h-8 w-8 text-destructive" />
