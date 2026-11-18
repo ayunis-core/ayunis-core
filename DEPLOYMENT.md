@@ -196,6 +196,16 @@ Releases that need an operator action before or during the deploy. Entries
 stay until the next major version; everything else upgrades by pulling the
 new images and restarting.
 
+### 2.77.0: other sites can no longer frame Ayunis
+
+Every HTML page now sends `Content-Security-Policy: frame-ancestors 'self'`,
+so browsers refuse to show Ayunis inside an iframe on another site, such as an
+intranet portal. Open Ayunis in its own tab or window instead. Only the
+Outlook task pane may be framed, by the origins in
+`OUTLOOK_ADDIN_FRAME_ORIGINS`; see [Outlook Add-in](#outlook-add-in). If your
+reverse proxy sets its own framing headers, browsers apply both, so keep the
+proxy from restricting `/outlook/taskpane.html` further.
+
 ### 2.75.0: the Outlook add-in is behind a flag
 
 `FEATURE_OUTLOOK_ADDIN_ENABLED` defaults to `false`. A deployment that served
@@ -394,6 +404,8 @@ At least one must be configured:
 - `FEATURE_OUTLOOK_ADDIN_ENABLED`: `true` serves the Outlook add-in manifest and
   lets the add-in sign in (see [Outlook Add-in](#outlook-add-in)). Off by
   default.
+- `OUTLOOK_ADDIN_FRAME_ORIGINS`: comma-separated origins allowed to frame the
+  Outlook task pane while the add-in is on (see [Outlook Add-in](#outlook-add-in)).
 - `OCR_MAX_CONCURRENCY`: OCR requests in flight per process (default `4`). The
   batches of one long PDF run in parallel and may use every slot, so the total
   against the Mistral account is this value times the number of API and worker
@@ -539,10 +551,29 @@ that address: changing `FRONTEND_BASEURL` makes Outlook see a different add-in,
 and admins have to deploy the new manifest and remove the old one.
 
 Outlook on the web and the new Outlook for Windows show the add-in in an
-iframe. Ayunis sends no framing headers for `/outlook/`; if your reverse proxy
-adds `X-Frame-Options` or a `Content-Security-Policy` with `frame-ancestors`,
-leave `/outlook/` out of it or allow `https://outlook.office.com`,
-`https://outlook.office365.com` and `https://outlook.cloud.microsoft` there.
+iframe. Ayunis lets only these origins frame the task pane
+(`/outlook/taskpane.html`), and only while the add-in is on; every other page
+may be framed by Ayunis itself only:
+
+```text
+https://outlook.office.com
+https://outlook.office365.com
+https://outlook.cloud.microsoft
+https://outlook.live.com
+```
+
+Outlook on the web for an on-premises Exchange Server runs on your own OWA
+host. Set `OUTLOOK_ADDIN_FRAME_ORIGINS` to a comma-separated list of origins
+(`https://`, host and optional port, no wildcards or paths) to replace the list
+above, and include the Microsoft origins if mailboxes are in Exchange Online
+too:
+
+```bash
+OUTLOOK_ADDIN_FRAME_ORIGINS=https://outlook.office.com,https://outlook.office365.com,https://outlook.cloud.microsoft,https://outlook.live.com,https://owa.example.org
+```
+
+If your reverse proxy adds `X-Frame-Options` or its own `frame-ancestors`,
+leave `/outlook/taskpane.html` out of it or allow the same origins there.
 
 ### Exchange Online (Microsoft 365)
 
