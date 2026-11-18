@@ -178,6 +178,16 @@
       "removeSuccess": "Document removed successfully!",
       "removeError": "Failed to remove document. Please try again.",
       "removeNotFound": "The document was already removed from this knowledge base.",
+      "removeFailed": "Remove all failed",
+      "confirmRemoveFailed": {
+        "title": "Remove failed documents",
+        "description_one": "{{count}} document could not be processed. It will be removed from this knowledge base. This cannot be undone.",
+        "description_other": "{{count}} documents could not be processed. They will be removed from this knowledge base. This cannot be undone.",
+        "confirmText": "Remove",
+        "cancelText": "Cancel"
+      },
+      "removeFailedSuccess": "Failed documents removed.",
+      "removeFailedError": "Failed documents could not be removed. Please try again.",
       "urlDialogCancel": "Cancel",
       "processingErrors": {
         "failed": "The file could not be processed. Upload it again. If the problem persists, contact support.",

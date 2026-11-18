@@ -49,6 +49,7 @@ import { formatDate } from '@/shared/lib/format-date';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 import { isValidUrl } from '@/widgets/knowledge-base-documents-card/lib/isValidUrl';
 import { AddUrlDialog } from './AddUrlDialog';
+import { RemoveFailedDocumentsButton } from './RemoveFailedDocumentsButton';
 
 const ACCEPTED_EXTENSIONS = [
   '.pdf',
@@ -83,6 +84,8 @@ export interface KnowledgeBaseDocumentsController {
   uploads?: PendingSourceUpload[];
   removeDocument: (id: string) => void;
   isRemoving: boolean;
+  removeFailedDocuments: () => void;
+  isRemovingFailed: boolean;
   addUrlAsync?: (url: string, depth: number) => Promise<unknown>;
   isAddingUrl?: boolean;
 }
@@ -109,9 +112,14 @@ export default function KnowledgeBaseDocumentsCard({
     uploads = [],
     removeDocument,
     isRemoving,
+    removeFailedDocuments,
+    isRemovingFailed,
     addUrlAsync,
     isAddingUrl = false,
   } = controller;
+  const failedCount = documents.filter(
+    (doc) => doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed,
+  ).length;
 
   const { isDragging } = useDocumentDrop({
     containerRef: cardRef,
@@ -224,6 +232,13 @@ export default function KnowledgeBaseDocumentsCard({
         )}
       </CardHeader>
       <CardContent>
+        {!disabled && (
+          <RemoveFailedDocumentsButton
+            failedCount={failedCount}
+            removeFailedDocuments={removeFailedDocuments}
+            isRemovingFailed={isRemovingFailed}
+          />
+        )}
         <PendingUploadItems uploads={uploads} />
         <DocumentsContent
           isLoading={isLoading}

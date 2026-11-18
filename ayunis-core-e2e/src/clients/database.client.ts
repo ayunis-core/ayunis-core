@@ -427,3 +427,21 @@ export async function expireRecordingUploadWindow(
     await client.end();
   }
 }
+
+/** Puts a ready source back into processing, as if its job were still running. */
+export async function markSourceProcessing(sourceId: string): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query(
+      `UPDATE sources SET status = 'processing', "processingStartedAt" = now()
+       WHERE id = $1`,
+      [sourceId],
+    );
+    if (result.rowCount !== 1) {
+      throw new Error(`Source ${sourceId} was not updated`);
+    }
+  } finally {
+    await client.end();
+  }
+}
