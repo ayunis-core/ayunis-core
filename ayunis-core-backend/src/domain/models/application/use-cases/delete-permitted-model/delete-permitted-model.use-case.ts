@@ -21,10 +21,6 @@ import {
 } from 'src/domain/models/domain/permitted-model.entity';
 import { UUID } from 'crypto';
 import { ApplicationError } from 'src/common/errors/base.error';
-import { FindAllThreadsByOrgWithSourcesUseCase } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.use-case';
-import { FindAllThreadsByOrgWithSourcesQuery } from 'src/domain/threads/application/use-cases/find-all-threads-by-org-with-sources/find-all-threads-by-org-with-sources.query';
-import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
-import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { Transactional } from '@nestjs-cls/transactional';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
@@ -43,8 +39,6 @@ export class DeletePermittedModelUseCase {
     private readonly deleteUserDefaultModelByModelIdUseCase: DeleteUserDefaultModelsByModelIdUseCase,
     private readonly getPermittedModelsUseCase: GetPermittedModelsUseCase,
     private readonly replaceModelWithUserDefaultUseCase: ReplaceModelWithUserDefaultUseCase,
-    private readonly findAllThreadsByOrgWithSourcesUseCase: FindAllThreadsByOrgWithSourcesUseCase,
-    private readonly deleteSourcesUseCase: DeleteSourcesUseCase,
     private readonly contextService: ContextService,
   ) {}
 
@@ -182,28 +176,13 @@ export class DeletePermittedModelUseCase {
     );
   }
 
+  // Sources keep their text and index entries: they cannot be searched
+  // until another model is permitted, which re-indexes those that need it
+  // (sources module, EmbeddingModelPermittedEvent).
   private async deletePermittedEmbeddingModel(
     orgId: UUID,
     model: PermittedEmbeddingModel,
   ): Promise<void> {
-    // Single query - get all threads with sources for the org
-    const threads = await this.findAllThreadsByOrgWithSourcesUseCase.execute(
-      new FindAllThreadsByOrgWithSourcesQuery(orgId),
-    );
-
-    // Collect all source IDs from all threads
-    const sourceIds = threads
-      .flatMap((t) => t.sourceAssignments?.map((sa) => sa.source.id) ?? [])
-      .filter(Boolean);
-
-    // Batch delete RAG index + sources (2 queries total)
-    if (sourceIds.length > 0) {
-      await this.deleteSourcesUseCase.execute(
-        new DeleteSourcesCommand(sourceIds, orgId),
-      );
-    }
-
-    // Delete the model
     await this.permittedModelsRepository.delete({
       id: model.id,
       orgId: orgId,

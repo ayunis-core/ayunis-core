@@ -39,7 +39,7 @@
     },
     "deletePermittedModel": {
       "title": "Model löschen",
-      "description": "Sind Sie sicher, dass Sie dieses Modell löschen möchten? Wenn Sie ein Embedding-Modell löschen, werden alle Quellen, die mit diesem Modell verknüpft sind, ebenfalls gelöscht. Wenn Sie ein Sprachmodell löschen, fallen alle Threads, die mit diesem Modell verknüpft sind, auf ein anderes Modell zurück.",
+      "description": "Sind Sie sicher, dass Sie dieses Modell löschen möchten? Wenn Sie ein Embedding-Modell löschen, bleiben alle Dokumente erhalten, sind aber nicht durchsuchbar, bis wieder ein Embedding-Modell aktiviert ist. Bei Bedarf werden sie dann neu indexiert. Wenn Sie ein Sprachmodell löschen, fallen alle Threads, die mit diesem Modell verknüpft sind, auf ein anderes Modell zurück.",
       "confirmText": "Löschen",
       "cancelText": "Abbrechen",
       "error": "Modellzugriff konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",

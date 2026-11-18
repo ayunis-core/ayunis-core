@@ -163,6 +163,7 @@
   },
   "sources": {
     "removeFile": "Remove file {{name}}",
+    "reindexing": "Being re-indexed. The file can be searched again once this is finished.",
     "processingErrors": {
       "failed": "The file could not be processed. Remove it and upload it again in this chat. If the problem persists, contact support.",
       "unreadable": "Couldn’t read this file. Remove it and try uploading it again.",

@@ -158,6 +158,7 @@
       "statusProcessing": "Wird verarbeitet… Sie können diese Seite verlassen.",
       "statusProcessingSlow": "Verarbeitung dauert länger als erwartet… Sie können diese Seite verlassen.",
       "statusFailed": "Fehlgeschlagen",
+      "statusReindexing": "Wird neu indexiert… Bis dahin nicht durchsuchbar.",
       "retryUpload": "Entfernen und erneut hochladen",
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",

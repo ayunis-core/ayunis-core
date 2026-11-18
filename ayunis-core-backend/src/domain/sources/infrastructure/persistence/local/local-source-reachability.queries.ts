@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { Repository, SelectQueryBuilder } from 'typeorm';
+import { Brackets, type Repository, type SelectQueryBuilder } from 'typeorm';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceType } from 'src/domain/sources/domain/source-type.enum';
 import type { SourceRecord } from './schema/source.record';
@@ -65,41 +65,65 @@ export async function findOrphanedSourceIds(
   return rows.map((row) => row.id);
 }
 
+const SKILL_OWNER_ORG = `COALESCE(k."orgId", ku."orgId", kw."orgId", kt.org_id)`;
+
+/**
+ * `SELECT "sourceId", "orgId"` for every source the organisation reaches
+ * through a knowledge base, a recording, a thread or a skill. `where` is
+ * applied in each branch, given that branch's source and org columns, so a
+ * filter on either reaches the branch's indexes.
+ */
+export function sourceOrgsQuery(
+  where: (sourceId: string, orgId: string) => string,
+): string {
+  return [
+    `SELECT s.id AS "sourceId", kb."orgId" AS "orgId" FROM sources s
+       JOIN knowledge_bases kb ON kb.id = s."knowledgeBaseId"
+       WHERE ${where('s.id', 'kb."orgId"')}`,
+    `SELECT s.id, r."orgId" FROM sources s
+       JOIN recordings r ON r.id = s."recordingId"
+       WHERE ${where('s.id', 'r."orgId"')}`,
+    `SELECT a."sourceId", u."orgId" FROM thread_source_assignments a
+       JOIN threads t ON t.id = a."threadId"
+       JOIN users u ON u.id = t."userId"
+       WHERE ${where('a."sourceId"', 'u."orgId"')}`,
+    `SELECT ss."sourcesId", ${SKILL_OWNER_ORG} FROM skill_sources ss
+       JOIN skills k ON k.id = ss."skillsId"
+       LEFT JOIN users ku ON ku.id = k."userId"
+       LEFT JOIN workspaces kw ON kw.id = k."workspaceId"
+       LEFT JOIN teams kt ON kt.id = k."teamId"
+       WHERE ${where('ss."sourcesId"', SKILL_OWNER_ORG)}`,
+  ].join('\nUNION\n');
+}
+
 /**
  * Text sources are the ones that get embedded; failed ones have their partial
- * index removed. Each branch resolves the owning organization of one
- * reachability path, so a source counts for every org that can reach it.
+ * index removed. A source counts when it was recorded with the model, which
+ * outlives the org's permit, or when one of `orgIds` reaches it, which covers
+ * sources indexed before the model was recorded and those being re-indexed.
  */
 export async function hasIndexedSourceInOrgs(
   repository: Repository<SourceRecord>,
+  embeddingModelId: UUID,
   orgIds: UUID[],
 ): Promise<boolean> {
-  const reachableFromOrgs = `
-    SELECT kbs.id FROM sources kbs
-      JOIN knowledge_bases kb ON kb.id = kbs."knowledgeBaseId"
-      WHERE kb."orgId" IN (:...orgIds)
-    UNION ALL
-    SELECT rs.id FROM sources rs
-      JOIN recordings r ON r.id = rs."recordingId"
-      WHERE r."orgId" IN (:...orgIds)
-    UNION ALL
-    SELECT a."sourceId" FROM thread_source_assignments a
-      JOIN threads t ON t.id = a."threadId"
-      JOIN users tu ON tu.id = t."userId"
-      WHERE tu."orgId" IN (:...orgIds)
-    UNION ALL
-    SELECT ss."sourcesId" FROM skill_sources ss
-      JOIN skills sk ON sk.id = ss."skillsId"
-      LEFT JOIN users su ON su.id = sk."userId"
-      LEFT JOIN workspaces w ON w.id = sk."workspaceId"
-      LEFT JOIN teams tm ON tm.id = sk."teamId"
-      WHERE COALESCE(sk."orgId", su."orgId", w."orgId", tm.org_id) IN (:...orgIds)`;
+  const indexed = new Brackets((qb) => {
+    qb.where('s."embeddingModelId" = :embeddingModelId', { embeddingModelId });
+    if (orgIds.length === 0) return;
+    const reachableFromOrgs = sourceOrgsQuery(
+      (_sourceId, orgId) => `${orgId} IN (:...orgIds)`,
+    );
+    qb.orWhere(
+      `s.id IN (SELECT reachable."sourceId" FROM (${reachableFromOrgs}) reachable)`,
+      { orgIds },
+    );
+  });
   const row = await repository
     .createQueryBuilder('s')
     .select('1', 'found')
     .where('s."type" = :textType', { textType: SourceType.TEXT })
     .andWhere('s."status" <> :failed', { failed: SourceStatus.FAILED })
-    .andWhere(`s.id IN (${reachableFromOrgs})`, { orgIds })
+    .andWhere(indexed)
     .limit(1)
     .getRawOne<{ found: number }>();
   return row !== undefined;

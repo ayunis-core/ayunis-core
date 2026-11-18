@@ -23,6 +23,7 @@ import { TextSourceDetailsRecord } from './text-source-details.record';
 import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { RecordingRecord } from 'src/domain/recordings/infrastructure/persistence/local/schema/recording.record';
+import { ModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 
 @Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
@@ -104,6 +105,16 @@ export class TextSourceRecord extends SourceRecord {
     cascade: true,
   })
   textSourceDetails: TextSourceDetailsRecord;
+
+  // The catalog embedding model the source's index entries were produced
+  // with; null when unknown (indexed before this was recorded, or never
+  // indexed). Written only by the indexing paths, never by save().
+  @Column({ type: 'varchar', nullable: true })
+  embeddingModelId: UUID | null;
+
+  @ManyToOne(() => ModelRecord, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'embeddingModelId' })
+  embeddingModel: ModelRecord | null;
 }
 
 @ChildEntity(SourceType.DATA)

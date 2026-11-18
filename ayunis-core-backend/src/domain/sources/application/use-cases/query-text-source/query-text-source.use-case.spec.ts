@@ -11,6 +11,7 @@ import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content
 import { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { QueryTextSourceCommand } from './query-text-source.command';
 import { QueryTextSourceUseCase } from './query-text-source.use-case';
 
@@ -97,6 +98,45 @@ describe('QueryTextSourceUseCase', () => {
         limit: 10,
       }),
     );
+  });
+
+  it('leaves a source being re-indexed out of the search, so stale vectors never match', async () => {
+    const { searchContentUseCase, sourceRepository, useCase } = setup();
+    sourceRepository.findById.mockImplementation((id: UUID) =>
+      Promise.resolve(
+        new FileSource({
+          id,
+          name: 'Bauordnung.pdf',
+          fileType: FileType.PDF,
+          type: TextType.FILE,
+          status: id === feesId ? SourceStatus.REINDEXING : SourceStatus.READY,
+        }),
+      ),
+    );
+
+    await useCase.execute(command());
+
+    expect(searchContentUseCase.executeMulti).toHaveBeenCalledWith(
+      expect.objectContaining({ documentIds: [permitId] }),
+    );
+  });
+
+  it('searches nothing when every requested source is being re-indexed', async () => {
+    const { searchContentUseCase, sourceRepository, useCase } = setup();
+    sourceRepository.findById.mockImplementation((id: UUID) =>
+      Promise.resolve(
+        new FileSource({
+          id,
+          name: 'Bauordnung.pdf',
+          fileType: FileType.PDF,
+          type: TextType.FILE,
+          status: SourceStatus.REINDEXING,
+        }),
+      ),
+    );
+
+    await expect(useCase.execute(command())).resolves.toEqual([]);
+    expect(searchContentUseCase.executeMulti).not.toHaveBeenCalled();
   });
 
   it('rejects the whole query when any requested source does not exist', async () => {

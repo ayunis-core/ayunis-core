@@ -95,10 +95,14 @@ export abstract class SourceRepository {
    */
   abstract findOrphanedIds(olderThan: Date, limit: number): Promise<UUID[]>;
   /**
-   * Whether a knowledge base, recording, skill or thread of one of `orgIds`
-   * reaches a text source that is indexed or being indexed.
+   * Whether a text source that is indexed or being indexed was recorded with
+   * `embeddingModelId`, or is reached by a knowledge base, recording, skill or
+   * thread of one of `orgIds`.
    */
-  abstract hasIndexedSourceInOrgs(orgIds: UUID[]): Promise<boolean>;
+  abstract hasIndexedSourceInOrgs(
+    embeddingModelId: UUID,
+    orgIds: UUID[],
+  ): Promise<boolean>;
   /**
    * The subset of `storageKeys` still referenced by any source. Deletion
    * releases an uploaded original only once no source points at it (table

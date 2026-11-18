@@ -18,6 +18,7 @@ import { FindContentChunksByIdsUseCase } from 'src/domain/sources/application/us
 import { FindContentChunksByIdsQuery } from 'src/domain/sources/application/use-cases/find-content-chunks-by-ids/find-content-chunks-by-ids.query';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
 import type { UUID } from 'crypto';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 
 const MAX_MATCHES_PER_QUERY = 10;
 const MAX_TOTAL_MATCHES = 20;
@@ -63,11 +64,13 @@ export class QueryKnowledgeBaseUseCase {
       ),
     );
 
-    // Sources are now metadata-only (no text or chunks loaded)
-    const sources =
+    // Sources are now metadata-only (no text or chunks loaded). Only READY
+    // ones are indexed with the org's current model.
+    const sources = (
       await this.knowledgeBaseRepository.findSourcesByKnowledgeBaseIds(
         knowledgeBaseIds,
-      );
+      )
+    ).filter((source) => source.status === SourceStatus.READY);
 
     if (sources.length === 0) {
       return [];

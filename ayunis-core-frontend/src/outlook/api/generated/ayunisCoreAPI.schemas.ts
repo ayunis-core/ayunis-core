@@ -2826,6 +2826,7 @@ export const SourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 export interface SourceResponseDto {
@@ -2886,6 +2887,7 @@ export const FileSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -2978,6 +2980,7 @@ export const UrlSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -3053,6 +3056,7 @@ export const CSVDataSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -3425,6 +3429,7 @@ export const KnowledgeBaseDocumentResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -3746,6 +3751,7 @@ export const SkillSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 export interface SkillSourceResponseDto {

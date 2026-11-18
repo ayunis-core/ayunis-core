@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { IngestBulkContentCommand } from 'src/domain/rag/indexers/application/use-cases/ingest-bulk-content/ingest-bulk-content.command';
@@ -15,6 +16,8 @@ import {
 } from 'src/domain/sources/application/util/transcript-chunks';
 import { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import { IndexTranscriptSummaryCommand } from './index-transcript-summary.command';
+import { PermittedEmbeddingModelNotFoundForOrgError } from 'src/domain/models/application/models.errors';
+import { SourceReindexRepository } from 'src/domain/sources/application/ports/source-reindex.repository';
 
 /**
  * Makes a transcript's summary searchable under the transcript's source, in
@@ -22,7 +25,9 @@ import { IndexTranscriptSummaryCommand } from './index-transcript-summary.comman
  * summarized once: when it already has summary chunks nothing is added, so a
  * retried job does not index it twice. Chunks and index entries are written
  * in one transaction holding the source's row lock, so a deleted source gets
- * neither. Returns false when the source is gone or not READY.
+ * neither. Returns false when the source is gone or neither READY nor
+ * REINDEXING. Without a permitted embedding model the chunks are kept and
+ * the source records no model, so the next permitted one indexes them.
  */
 @Injectable()
 export class IndexTranscriptSummaryUseCase {
@@ -32,6 +37,7 @@ export class IndexTranscriptSummaryUseCase {
     private readonly transcripts: SourceTranscriptRepository,
     private readonly splitText: SplitTextUseCase,
     private readonly ingestBulkContent: IngestBulkContentUseCase,
+    private readonly reindexRepository: SourceReindexRepository,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedSourceError)
@@ -50,7 +56,16 @@ export class IndexTranscriptSummaryUseCase {
   ): Promise<boolean> {
     const outcome = await this.transcripts.addSummaryChunks(sourceId, chunks);
     if (outcome === 'source_gone') return false;
-    if (outcome === 'added') {
+    if (outcome === 'added') await this.ingest(sourceId, orgId, chunks);
+    return true;
+  }
+
+  private async ingest(
+    sourceId: UUID,
+    orgId: UUID,
+    chunks: TextSourceContentChunk[],
+  ): Promise<void> {
+    try {
       await this.ingestBulkContent.execute(
         new IngestBulkContentCommand({
           orgId,
@@ -62,8 +77,11 @@ export class IndexTranscriptSummaryUseCase {
           type: IndexType.PARENT_CHILD,
         }),
       );
+    } catch (error) {
+      if (!(error instanceof PermittedEmbeddingModelNotFoundForOrgError))
+        throw error;
+      await this.reindexRepository.recordEmbeddingModel(sourceId, null);
     }
-    return true;
   }
 
   private summaryChunks(summary: string): TextSourceContentChunk[] {

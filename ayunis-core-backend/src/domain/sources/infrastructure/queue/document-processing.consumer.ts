@@ -46,6 +46,7 @@ import {
 } from 'src/common/util/file-type';
 import type { LocalFile } from 'src/domain/retrievers/file-retrievers/domain/file.entity';
 import { EmptyFileDataError } from 'src/domain/sources/application/sources.errors';
+import { setJobContext } from './job-context';
 import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { classifyJobFailure, documentRetryDelayMs } from './bullmq-job.helpers';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
@@ -119,7 +120,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
 
     // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
-      this.validateAndSetContext(orgId, userId);
+      setJobContext(this.contextService, orgId, userId);
       if (!(await this.isAdmitted(job))) return;
 
       try {
@@ -183,6 +184,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
     );
     const ready = await this.markSourceReady(sourceId, cleanupPath);
     await this.cleanupCheckpoints(orgId, sourceId);
+    if (ready) await this.helper.reindexIfModelChanged(sourceId, orgId);
     if (ready && job.data.keepTranscriptSegments) {
       await this.announceTranscript(job.data);
     }
@@ -209,20 +211,6 @@ export class DocumentProcessingConsumer extends WorkerHost {
       );
     }
     return admitted;
-  }
-
-  private validateAndSetContext(
-    orgId: UUID | undefined,
-    userId: UUID | undefined,
-  ): void {
-    if (!orgId) {
-      throw new Error('orgId is required');
-    }
-    if (!userId) {
-      throw new Error('userId is required');
-    }
-    this.contextService.set('orgId', orgId);
-    this.contextService.set('userId', userId);
   }
 
   private async loadSourceOrSkip(

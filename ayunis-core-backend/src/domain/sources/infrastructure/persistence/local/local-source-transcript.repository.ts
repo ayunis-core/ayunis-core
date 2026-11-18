@@ -73,9 +73,11 @@ export class LocalSourceTranscriptRepository extends SourceTranscriptRepository 
     chunks: TextSourceContentChunk[],
   ): Promise<SummaryChunksOutcome> {
     const { manager } = this.repository;
+    // A source being re-indexed takes the summary too: the re-index re-reads
+    // the chunks under this same lock before replacing the index.
     const ready: unknown[] = await manager.query(
-      'SELECT 1 FROM sources WHERE id = $1 AND status = $2 FOR UPDATE',
-      [sourceId, SourceStatus.READY],
+      'SELECT 1 FROM sources WHERE id = $1 AND status IN ($2, $3) FOR UPDATE',
+      [sourceId, SourceStatus.READY, SourceStatus.REINDEXING],
     );
     if (ready.length === 0) return 'source_gone';
     const summarized: unknown[] = await manager.query(

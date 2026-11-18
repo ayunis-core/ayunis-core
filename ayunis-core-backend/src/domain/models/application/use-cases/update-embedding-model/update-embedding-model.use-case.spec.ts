@@ -52,15 +52,18 @@ describe('UpdateEmbeddingModelUseCase', () => {
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let useCase: UpdateEmbeddingModelUseCase;
   let indexedOrgIds: UUID[];
+  let indexedModelIds: UUID[];
+  let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
 
   beforeEach(() => {
     indexedOrgIds = [];
+    indexedModelIds = [];
     modelsRepository = {
       findOneEmbedding: jest.fn().mockResolvedValue(existingModel),
       findOne: jest.fn().mockResolvedValue(undefined),
       save: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ModelsRepository>;
-    const permittedModelsRepository = {
+    permittedModelsRepository = {
       findAllByCatalogModelId: jest.fn().mockResolvedValue([
         new PermittedEmbeddingModel({
           model: existingModel,
@@ -72,7 +75,8 @@ describe('UpdateEmbeddingModelUseCase', () => {
     const hasIndexedSourceInOrgs = {
       execute: jest.fn((query: HasIndexedSourceInOrgsQuery) =>
         Promise.resolve(
-          query.orgIds.some((orgId) => indexedOrgIds.includes(orgId)),
+          indexedModelIds.includes(query.embeddingModelId) ||
+            query.orgIds.some((orgId) => indexedOrgIds.includes(orgId)),
         ),
       ),
     } as unknown as jest.Mocked<HasIndexedSourceInOrgsUseCase>;
@@ -156,6 +160,18 @@ describe('UpdateEmbeddingModelUseCase', () => {
     await useCase.execute(commandWith({ name: 'mistral-embed-2' }));
 
     expect(savedModel().name).toBe('mistral-embed-2');
+  });
+
+  it('rejects a dimensions change while documents keep vectors of the model after its last permit was removed', async () => {
+    permittedModelsRepository.findAllByCatalogModelId.mockResolvedValue([]);
+    indexedModelIds = [modelId];
+
+    await expect(
+      useCase.execute(
+        commandWith({ dimensions: EmbeddingDimensions.DIMENSION_1536 }),
+      ),
+    ).rejects.toThrow(EmbeddingModelInUseError);
+    expect(modelsRepository.save).not.toHaveBeenCalled();
   });
 
   it('rejects taking the name and provider of another catalog model', async () => {

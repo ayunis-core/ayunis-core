@@ -214,6 +214,7 @@ function SourceItem({
   const { t } = useTranslation(translationNamespace);
   const isProcessing = source.status === 'processing';
   const isFailed = source.status === 'failed';
+  const isReindexing = source.status === 'reindexing';
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -231,7 +232,7 @@ function SourceItem({
     <Item data-testid={`source-item-${source.id}`}>
       <ItemMedia variant="icon">
         <SourceItemIcon
-          isProcessing={isProcessing}
+          isProcessing={isProcessing || isReindexing}
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
         />
@@ -242,6 +243,7 @@ function SourceItem({
           isProcessing={isProcessing}
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
+          isReindexing={isReindexing}
           processingError={source.processingError}
           t={t}
         />
@@ -289,15 +291,24 @@ function SourceItemDescription({
   isProcessing,
   isProcessingSlow,
   isFailed,
+  isReindexing,
   processingError,
   t,
 }: Readonly<{
   isProcessing: boolean;
   isProcessingSlow: boolean;
   isFailed: boolean;
+  isReindexing: boolean;
   processingError: string | undefined;
   t: (key: string) => string;
 }>) {
+  if (isReindexing) {
+    return (
+      <ItemDescription>
+        {t('additionalDocuments.statusReindexing')}
+      </ItemDescription>
+    );
+  }
   if (isProcessing) {
     return (
       <ItemDescription

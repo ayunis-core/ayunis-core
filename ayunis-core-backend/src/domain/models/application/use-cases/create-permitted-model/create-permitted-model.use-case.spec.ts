@@ -1,4 +1,10 @@
 import { createLoggerMock } from 'src/common/testing/logger.mock';
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () =>
+    (_target: unknown, _propertyName: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreatePermittedModelUseCase } from './create-permitted-model.use-case';
@@ -27,6 +33,8 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { EmbeddingModelPermittedEvent } from 'src/domain/models/application/events/embedding-model-permitted.event';
 
 describe('CreatePermittedModelUseCase', () => {
   const logger = createLoggerMock();
@@ -34,6 +42,7 @@ describe('CreatePermittedModelUseCase', () => {
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
   let modelsRepository: jest.Mocked<ModelsRepository>;
   let mockContextService: any;
+  const eventEmitter = { emitAsync: jest.fn() };
 
   const mockOrgId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockUserId = '123e4567-e89b-12d3-a456-426614174003' as UUID;
@@ -75,6 +84,7 @@ describe('CreatePermittedModelUseCase', () => {
         },
         { provide: ModelsRepository, useValue: mockModelsRepository },
         { provide: ContextService, useValue: mockContextService },
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 
@@ -250,6 +260,71 @@ describe('CreatePermittedModelUseCase', () => {
         }),
       );
       expect(result).toBe(mockPermittedModel);
+    });
+
+    it('announces a permitted embedding model and runs its queued work only after the permit is stored', async () => {
+      const mockModel = new EmbeddingModel({
+        id: mockModelId,
+        name: 'text-embedding-3',
+        displayName: 'Text Embedding 3',
+        provider: ModelProvider.OPENAI,
+        isArchived: false,
+        dimensions: EmbeddingDimensions.DIMENSION_1536,
+      });
+      modelsRepository.findOne.mockResolvedValue(mockModel);
+      permittedModelsRepository.findOneEmbedding.mockResolvedValue(null);
+      permittedModelsRepository.create.mockImplementation((model) =>
+        Promise.resolve(model),
+      );
+      const steps: string[] = [];
+      eventEmitter.emitAsync.mockImplementation(
+        (_name: string, event: EmbeddingModelPermittedEvent) => {
+          steps.push(`flag sources of ${event.orgId}`);
+          event.afterCommit(async () => {
+            steps.push('queue re-index jobs');
+          });
+          return Promise.resolve([]);
+        },
+      );
+
+      await useCase.execute(
+        new CreatePermittedModelCommand(mockModelId, mockOrgId),
+      );
+
+      expect(steps).toEqual([
+        `flag sources of ${mockOrgId}`,
+        'queue re-index jobs',
+      ]);
+    });
+
+    it('queues no re-index work when flagging the sources failed', async () => {
+      const mockModel = new EmbeddingModel({
+        id: mockModelId,
+        name: 'text-embedding-3',
+        displayName: 'Text Embedding 3',
+        provider: ModelProvider.OPENAI,
+        isArchived: false,
+        dimensions: EmbeddingDimensions.DIMENSION_1536,
+      });
+      modelsRepository.findOne.mockResolvedValue(mockModel);
+      permittedModelsRepository.findOneEmbedding.mockResolvedValue(null);
+      permittedModelsRepository.create.mockImplementation((model) =>
+        Promise.resolve(model),
+      );
+      const queue = jest.fn();
+      eventEmitter.emitAsync.mockImplementation(
+        (_name: string, event: EmbeddingModelPermittedEvent) => {
+          event.afterCommit(queue);
+          return Promise.reject(new Error('database unavailable'));
+        },
+      );
+
+      await expect(
+        useCase.execute(
+          new CreatePermittedModelCommand(mockModelId, mockOrgId),
+        ),
+      ).rejects.toThrow(UnexpectedModelError);
+      expect(queue).not.toHaveBeenCalled();
     });
 
     it('rejects creating a second embedding model for the org', async () => {

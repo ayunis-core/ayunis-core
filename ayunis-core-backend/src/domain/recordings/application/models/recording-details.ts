@@ -18,6 +18,8 @@ const STATUS_BY_SOURCE_STATUS: Record<SourceStatus, RecordingStatus> = {
   [SourceStatus.PROCESSING]: RecordingStatus.TRANSCRIBING,
   [SourceStatus.READY]: RecordingStatus.READY,
   [SourceStatus.FAILED]: RecordingStatus.FAILED,
+  // The transcript stays readable; only searching it waits for the new index.
+  [SourceStatus.REINDEXING]: RecordingStatus.READY,
 };
 
 export function recordingStatusOf({

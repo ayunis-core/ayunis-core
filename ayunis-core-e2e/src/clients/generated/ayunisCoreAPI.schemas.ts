@@ -2787,6 +2787,7 @@ export const SourceProcessingErrorCode = {
   DOCUMENT_EMPTY: 'DOCUMENT_EMPTY',
   DOCUMENT_PAGE_LIMIT_EXCEEDED: 'DOCUMENT_PAGE_LIMIT_EXCEEDED',
   RECORDING_TOO_LONG: 'RECORDING_TOO_LONG',
+  SPREADSHEET_TOO_LARGE: 'SPREADSHEET_TOO_LARGE',
   PROCESSING_TIMEOUT: 'PROCESSING_TIMEOUT',
   PROCESSING_UNAVAILABLE: 'PROCESSING_UNAVAILABLE',
   PROCESSING_FAILED: 'PROCESSING_FAILED',
@@ -2825,6 +2826,7 @@ export const SourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 export interface SourceResponseDto {
@@ -2885,6 +2887,7 @@ export const FileSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -2977,6 +2980,7 @@ export const UrlSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -3052,6 +3056,7 @@ export const CSVDataSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -3424,6 +3429,7 @@ export const KnowledgeBaseDocumentResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 /**
@@ -3745,6 +3751,7 @@ export const SkillSourceResponseDtoStatus = {
   processing: 'processing',
   ready: 'ready',
   failed: 'failed',
+  reindexing: 'reindexing',
 } as const;
 
 export interface SkillSourceResponseDto {

@@ -75,6 +75,7 @@ function setup() {
   const helper = {
     index: jest.fn(),
     cleanupIndex: jest.fn(),
+    reindexIfModelChanged: jest.fn(),
     markFailed: jest.fn(async (id: string) => {
       const file = files.get(id);
       if (file) file.status = SourceStatus.FAILED;

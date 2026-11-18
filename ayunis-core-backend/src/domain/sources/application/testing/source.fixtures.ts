@@ -1,4 +1,5 @@
 import type { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
+import type { SourceReindexRepository } from 'src/domain/sources/application/ports/source-reindex.repository';
 import type { Source } from 'src/domain/sources/domain/source.entity';
 import type { TextSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
@@ -31,5 +32,21 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     findOrphanedIds: jest.fn().mockResolvedValue([]),
     hasIndexedSourceInOrgs: jest.fn().mockResolvedValue(false),
     findReferencedStorageKeys: jest.fn().mockResolvedValue([]),
+  };
+}
+
+export function createMockSourceReindexRepository(): jest.Mocked<SourceReindexRepository> {
+  return {
+    recordEmbeddingModel: jest.fn().mockResolvedValue(undefined),
+    flagOrgSourcesForReindex: jest.fn().mockResolvedValue([]),
+    flagIfIndexedWithOtherModel: jest.fn().mockResolvedValue(false),
+    claimStaleReindexing: jest.fn().mockResolvedValue([]),
+    lockReindexing: jest.fn().mockResolvedValue(true),
+    isReindexing: jest.fn().mockResolvedValue(false),
+    deferReindex: jest.fn().mockResolvedValue(true),
+    findContentChunks: jest.fn().mockResolvedValue([]),
+    completeReindex: jest.fn().mockResolvedValue(true),
+    releaseReindexing: jest.fn().mockResolvedValue(true),
+    failReindex: jest.fn().mockResolvedValue(true),
   };
 }

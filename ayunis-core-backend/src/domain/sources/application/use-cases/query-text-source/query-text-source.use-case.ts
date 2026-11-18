@@ -12,6 +12,8 @@ import {
 } from 'src/domain/sources/application/sources.errors';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
 import type { SourceCreator } from 'src/domain/sources/domain/source-creator.enum';
+import type { Source } from 'src/domain/sources/domain/source.entity';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { QueryTextSourceCommand } from './query-text-source.command';
 
 const MAX_MATCHES_PER_QUERY = 10;
@@ -43,12 +45,17 @@ export class QueryTextSourceUseCase {
       { orgId: command.orgId, sourceIds, queryCount: command.queries.length },
       'execute',
     );
-    await this.assertSourcesExist(sourceIds);
+    // Only READY sources are indexed with the org's current model; one being
+    // re-indexed would be compared against vectors of another model.
+    const readySourceIds = (await this.findExistingSources(sourceIds))
+      .filter((source) => source.status === SourceStatus.READY)
+      .map((source) => source.id);
+    if (readySourceIds.length === 0) return [];
 
     const matches = await this.searchContentUseCase.executeMulti(
       new SearchMultiContentQuery({
         orgId: command.orgId,
-        documentIds: sourceIds,
+        documentIds: readySourceIds,
         queries: command.queries,
         type: IndexType.PARENT_CHILD,
         limit: MAX_MATCHES_PER_QUERY,
@@ -58,14 +65,14 @@ export class QueryTextSourceUseCase {
     return this.resolveResults(matches.slice(0, MAX_TOTAL_MATCHES));
   }
 
-  private async assertSourcesExist(sourceIds: UUID[]): Promise<void> {
+  private async findExistingSources(sourceIds: UUID[]): Promise<Source[]> {
     const sources = await Promise.all(
       sourceIds.map((id) => this.sourceRepository.findById(id)),
     );
-    const missingIndex = sources.findIndex((source) => !source);
-    if (missingIndex !== -1) {
-      throw new SourceNotFoundError(sourceIds[missingIndex]);
-    }
+    return sources.map((source, index) => {
+      if (!source) throw new SourceNotFoundError(sourceIds[index]);
+      return source;
+    });
   }
 
   private async resolveResults(

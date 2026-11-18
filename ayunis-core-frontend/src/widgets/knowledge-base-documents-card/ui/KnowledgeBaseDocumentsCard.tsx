@@ -320,6 +320,8 @@ function DocumentItem({
   const isProcessing =
     doc.status === KnowledgeBaseDocumentResponseDtoStatus.processing;
   const isFailed = doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed;
+  const isReindexing =
+    doc.status === KnowledgeBaseDocumentResponseDtoStatus.reindexing;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!isProcessing) return;
@@ -332,11 +334,14 @@ function DocumentItem({
     now - new Date(doc.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
 
   return (
-    <Item>
+    <Item
+      data-testid={`knowledge-base-document-${doc.id}`}
+      data-document-status={doc.status}
+    >
       <ItemMedia variant="icon">
         <DocumentItemIcon
           isWeb={isWeb}
-          isProcessing={isProcessing}
+          isProcessing={isProcessing || isReindexing}
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
         />
@@ -349,6 +354,7 @@ function DocumentItem({
           isProcessing={isProcessing}
           isProcessingSlow={isProcessingSlow}
           isFailed={isFailed}
+          isReindexing={isReindexing}
           processingErrorCode={doc.processingErrorCode}
           t={t}
         />
@@ -381,6 +387,7 @@ function DocumentItemDescription({
   isProcessing,
   isProcessingSlow,
   isFailed,
+  isReindexing,
   processingErrorCode,
   t,
 }: Readonly<{
@@ -389,9 +396,17 @@ function DocumentItemDescription({
   isProcessing: boolean;
   isProcessingSlow: boolean;
   isFailed: boolean;
+  isReindexing: boolean;
   processingErrorCode: SourceProcessingErrorCode | undefined;
   t: (key: string) => string;
 }>) {
+  if (isReindexing) {
+    return (
+      <ItemDescription>
+        {t('detail.documents.statusReindexing')}
+      </ItemDescription>
+    );
+  }
   if (isProcessing) {
     return (
       <ItemDescription

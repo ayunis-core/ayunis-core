@@ -86,7 +86,10 @@ export class SkillActivationService {
       });
   }
 
-  /** Copies the skill's sources to the thread (skips non-ready sources). */
+  /**
+   * Copies the skill's sources to the thread (skips non-ready sources). One
+   * being re-indexed is ready to read and searchable again shortly.
+   */
   private async copySourcesToThread(
     skill: Skill,
     thread: Thread,
@@ -95,7 +98,10 @@ export class SkillActivationService {
       new GetSourcesByIdsQuery(skill.sourceIds),
     );
     const sources = allSources.filter((source) => {
-      if (source.status !== SourceStatus.READY) {
+      if (
+        source.status !== SourceStatus.READY &&
+        source.status !== SourceStatus.REINDEXING
+      ) {
         this.logger.warn(
           {
             sourceId: source.id,

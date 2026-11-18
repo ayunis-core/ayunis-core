@@ -7,11 +7,13 @@ import {
   useSkillSourcesControllerGetSkillSources,
   useSkillSourcesControllerRemoveSource,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import { SkillSourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { showError, showSuccess } from '@/shared/lib/toast';
-import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
+import {
+  isSourcePending,
+  useProcessingPollInterval,
+} from '@/shared/lib/processing-poll';
 
 export function useWorkspaceSkillSources({ skillId }: { skillId: string }) {
   const { t } = useTranslation('skill');
@@ -25,10 +27,7 @@ export function useWorkspaceSkillSources({ skillId }: { skillId: string }) {
         staleTime: 0,
         refetchInterval: (query) =>
           processingPollInterval(
-            (query.state.data ?? []).some(
-              (source) =>
-                source.status === SkillSourceResponseDtoStatus.processing,
-            ),
+            (query.state.data ?? []).some(isSourcePending),
           ),
       },
     });

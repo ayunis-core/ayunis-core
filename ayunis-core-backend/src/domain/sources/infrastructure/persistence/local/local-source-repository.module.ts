@@ -23,6 +23,8 @@ import { SourceUploadSessionRepository } from 'src/domain/sources/application/po
 import { SourceTranscriptRepository } from 'src/domain/sources/application/ports/source-transcript.repository';
 import { SourceTranscriptSegmentRecord } from './schema/source-transcript-segment.record';
 import { LocalSourceTranscriptRepository } from './local-source-transcript.repository';
+import { SourceReindexRepository } from 'src/domain/sources/application/ports/source-reindex.repository';
+import { LocalSourceReindexRepository } from './local-source-reindex.repository';
 
 @Module({
   imports: [
@@ -57,12 +59,17 @@ import { LocalSourceTranscriptRepository } from './local-source-transcript.repos
       provide: SourceTranscriptRepository,
       useClass: LocalSourceTranscriptRepository,
     },
+    {
+      provide: SourceReindexRepository,
+      useClass: LocalSourceReindexRepository,
+    },
   ],
   exports: [
     SourceRepository,
     SourceMapper,
     SourceUploadSessionRepository,
     SourceTranscriptRepository,
+    SourceReindexRepository,
   ],
 })
 export class LocalSourceRepositoryModule {}

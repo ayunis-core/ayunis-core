@@ -35,6 +35,7 @@ export class PrepareEmbeddingsUseCase {
       texts,
       permittedModel.model,
       command.orgId,
+      command.priority,
     );
     return new PreparedContentEmbeddings(
       permittedModel.model,

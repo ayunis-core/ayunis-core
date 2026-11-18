@@ -4,7 +4,10 @@ import {
   threadsControllerFindOne,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { useProcessingPollInterval } from '@/shared/lib/processing-poll';
+import {
+  isSourcePending,
+  useProcessingPollInterval,
+} from '@/shared/lib/processing-poll';
 import type { Thread } from '@/pages/chat/model/openapi';
 
 function hasProcessingSource(thread: Thread | undefined): boolean {
@@ -23,9 +26,11 @@ export function useChatThread(initialThread: Thread, isStreaming: boolean) {
     initialData: initialThread,
     staleTime: 0,
     // Polling during streaming can replace local output with stale persisted text.
+    // A re-index is polled for but, unlike processing, does not hold up sending.
     refetchInterval: (query) =>
       processingPollInterval(
-        !isStreaming && hasProcessingSource(query.state.data),
+        !isStreaming &&
+          (query.state.data?.sources.some(isSourcePending) ?? false),
       ),
   });
 

@@ -45,6 +45,7 @@ export class ChildChunkEmbedder {
     texts: string[],
     model: EmbeddingModel,
     orgId: UUID,
+    priority = EmbeddingPriority.INGESTION,
   ): Promise<number[][]> {
     const batches: string[][] = [];
     for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
@@ -62,7 +63,12 @@ export class ChildChunkEmbedder {
       while (failures.length === 0 && next < batches.length) {
         const index = next++;
         try {
-          vectors[index] = await this.embedBatch(batches[index], model, orgId);
+          vectors[index] = await this.embedBatch(
+            batches[index],
+            model,
+            orgId,
+            priority,
+          );
         } catch (error) {
           failures.push(error);
         }
@@ -92,13 +98,14 @@ export class ChildChunkEmbedder {
     texts: string[],
     model: EmbeddingModel,
     orgId: UUID,
+    priority: EmbeddingPriority,
   ): Promise<number[][]> {
     const embeddings = await this.embedTextUseCase.execute(
       new EmbedTextCommand({
         texts,
         model,
         orgId,
-        priority: EmbeddingPriority.INGESTION,
+        priority,
       }),
     );
     return embeddings.map((embedding) => embedding.vector);

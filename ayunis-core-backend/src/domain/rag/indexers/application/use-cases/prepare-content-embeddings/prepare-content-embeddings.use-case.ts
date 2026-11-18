@@ -22,6 +22,7 @@ export class PrepareContentEmbeddingsUseCase {
     return this.indexRegistry.get(command.type).prepareEmbeddings({
       orgId: command.orgId,
       contents: command.contents,
+      priority: command.priority,
     });
   }
 }

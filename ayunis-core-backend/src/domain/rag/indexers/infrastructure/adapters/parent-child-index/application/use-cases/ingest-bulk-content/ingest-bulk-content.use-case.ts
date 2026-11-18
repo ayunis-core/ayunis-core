@@ -20,18 +20,19 @@ export class IngestBulkContentUseCase {
     private readonly getPermittedEmbeddingModelUseCase: GetPermittedEmbeddingModelUseCase,
   ) {}
 
-  async execute(command: IngestBulkContentCommand): Promise<void> {
-    if (command.entries.length === 0) return;
-
+  /** Returns the catalog ID of the embedding model the entries are indexed with. */
+  async execute(command: IngestBulkContentCommand): Promise<UUID> {
     this.logger.debug(
       { entryCount: command.entries.length, orgId: command.orgId },
       'Bulk ingesting entries',
     );
 
-    // 1. Resolve embedding model ONCE for the entire batch
+    // 1. Resolve embedding model ONCE for the entire batch, also without
+    // entries, so an empty document records a model as well.
     const permittedModel = await this.getPermittedEmbeddingModelUseCase.execute(
       new GetPermittedEmbeddingModelQuery({ orgId: command.orgId }),
     );
+    if (command.entries.length === 0) return permittedModel.model.id;
 
     // 2. Split all entries into child chunks, tracking parent ownership
     const parentPlans = this.buildParentPlans(command);
@@ -68,6 +69,7 @@ export class IngestBulkContentUseCase {
       },
       'Bulk ingested chunks',
     );
+    return permittedModel.model.id;
   }
 
   private buildParentPlans(command: IngestBulkContentCommand): ParentPlan[] {
@@ -94,7 +96,12 @@ export class IngestBulkContentUseCase {
       ? command.precomputedEmbeddings.vectorsByText
       : undefined;
     const missing = texts.filter((text) => !known?.has(text));
-    const embedded = await this.embedder.embed(missing, model, command.orgId);
+    const embedded = await this.embedder.embed(
+      missing,
+      model,
+      command.orgId,
+      command.priority,
+    );
     let next = 0;
     return texts.map((text) => known?.get(text) ?? embedded[next++]);
   }

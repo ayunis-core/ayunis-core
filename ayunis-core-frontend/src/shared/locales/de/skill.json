@@ -86,6 +86,7 @@
     "statusProcessing": "wird verarbeitet… Sie können diese Seite verlassen.",
     "statusProcessingSlow": "wird noch verarbeitet… Sie können diese Seite verlassen.",
     "statusFailed": "fehlgeschlagen",
+    "statusReindexing": "wird neu indexiert… bis dahin nicht durchsuchbar.",
     "retryUpload": "Versuchen Sie, die Datei erneut hochzuladen."
   },
   "knowledgeBases": {

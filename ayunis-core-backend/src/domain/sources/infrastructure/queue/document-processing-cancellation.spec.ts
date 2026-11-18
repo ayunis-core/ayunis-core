@@ -55,6 +55,8 @@ async function interruptedDelivery(
       },
     } as never,
     new MarkSourceFailedUseCase(repository),
+    { recordEmbeddingModel: async () => undefined } as never,
+    { reindexIfModelChanged: async () => undefined } as never,
   );
   const consumer = new DocumentProcessingConsumer(
     {

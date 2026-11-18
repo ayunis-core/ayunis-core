@@ -29,12 +29,19 @@ import { UrlCrawlConsumer } from 'src/domain/sources/infrastructure/queue/url-cr
 import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-crawl.constants';
+import { SourceReindexModule } from 'src/domain/sources/infrastructure/queue/source-reindex.module';
+import { SourceReindexConsumer } from 'src/domain/sources/infrastructure/queue/source-reindex.consumer';
+import { SOURCE_REINDEX_QUEUE } from 'src/domain/sources/infrastructure/queue/source-reindex.constants';
+import { SourceReindexScheduler } from 'src/domain/sources/application/services/source-reindex-scheduler.service';
+import { SourceReindexer } from 'src/domain/sources/application/services/source-reindexer.service';
+import { ModelsModule } from 'src/domain/models/models.module';
 
 /** The queues this module's consumers serve; a worker's health check requires them all. */
 export const INGESTION_QUEUES = [
   DOCUMENT_PROCESSING_QUEUE,
   DATA_SOURCE_PROCESSING_QUEUE,
   URL_CRAWL_QUEUE,
+  SOURCE_REINDEX_QUEUE,
 ] as const;
 
 /**
@@ -50,6 +57,7 @@ export const INGESTION_QUEUES = [
     DocumentProcessingModule,
     DataSourceProcessingModule,
     UrlCrawlModule,
+    SourceReindexModule,
     RetrieverModule,
     TranscriptionsModule,
     SplitterModule,
@@ -60,6 +68,8 @@ export const INGESTION_QUEUES = [
     LocalSourceRepositoryModule,
     // Recordings are summarized once the document consumer has their transcript.
     RecordingSummaryTriggerModule,
+    // Completed sources are checked against the org's current embedding model.
+    ModelsModule,
   ],
   providers: [
     StoredSourceFileService,
@@ -74,6 +84,9 @@ export const INGESTION_QUEUES = [
     DocumentProcessingConsumer,
     DataSourceProcessingConsumer,
     UrlCrawlConsumer,
+    SourceReindexScheduler,
+    SourceReindexer,
+    SourceReindexConsumer,
   ],
 })
 export class IngestionConsumersModule {}

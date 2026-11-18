@@ -86,6 +86,7 @@
     "statusProcessing": "processing… You can safely navigate away.",
     "statusProcessingSlow": "still processing… You can safely navigate away.",
     "statusFailed": "failed",
+    "statusReindexing": "being re-indexed… not searchable until finished.",
     "retryUpload": "Try uploading the file again."
   },
   "knowledgeBases": {
