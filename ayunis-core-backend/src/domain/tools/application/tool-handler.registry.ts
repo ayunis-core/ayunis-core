@@ -1,143 +1,32 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolExecutionHandler } from './ports/execution.handler';
 import { ToolHandlerNotFoundError } from './tools.errors';
-import { HttpToolHandler } from './handlers/http-tool.handler';
-import { SourceQueryToolHandler } from './handlers/source-query-tool.handler';
-import { SourceGetTextToolHandler } from './handlers/source-get-text-tool.handler';
-import { HttpTool } from 'src/domain/tools/domain/tools/http-tool.entity';
-import { SourceQueryTool } from 'src/domain/tools/domain/tools/source-query-tool.entity';
-import { SourceGetTextTool } from 'src/domain/tools/domain/tools/source-get-text-tool.entity';
-import { InternetSearchToolHandler } from './handlers/internet-search-tool.handler';
-import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
-import { WebsiteContentToolHandler } from './handlers/website-content-tool.handler';
-import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
-import { CodeExecutionToolHandler } from './handlers/code-execution-tool.handler';
-import { CodeExecutionTool } from 'src/domain/tools/domain/tools/code-execution-tool.entity';
-import { McpIntegrationToolHandler } from './handlers/mcp-integration-tool.handler';
-import { McpIntegrationResourceHandler } from './handlers/mcp-integration-resource.handler';
-import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
-import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
-import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler';
-import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
-import { KnowledgeQueryToolHandler } from './handlers/knowledge-query-tool.handler';
-import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
-import { KnowledgeGetTextToolHandler } from './handlers/knowledge-get-text-tool.handler';
-import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
-import { RecordingSearchToolHandler } from './handlers/recording-search-tool.handler';
-import { RecordingSearchTool } from 'src/domain/tools/domain/tools/recording-search-tool.entity';
-import { CreateDocumentToolHandler } from './handlers/create-document-tool.handler';
-import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
-import { UpdateDocumentToolHandler } from './handlers/update-document-tool.handler';
-import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
-import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
-import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
-import { ReadDocumentToolHandler } from './handlers/read-document-tool.handler';
-import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-tool.entity';
-import { GenerateImageToolHandler } from './handlers/generate-image-tool.handler';
-import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
-import { CreateDiagramToolHandler } from './handlers/create-diagram-tool.handler';
-import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
-import { UpdateDiagramToolHandler } from './handlers/update-diagram-tool.handler';
-import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
-import { CreateSpreadsheetToolHandler } from './handlers/create-spreadsheet-tool.handler';
-import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
-import { UpdateSpreadsheetToolHandler } from './handlers/update-spreadsheet-tool.handler';
-import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
-import { MarketplaceSearchToolHandler } from './handlers/marketplace-search-tool.handler';
-import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
-import { SendNotificationToolHandler } from './handlers/send-notification-tool.handler';
-import { SendNotificationTool } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
-import { GetMemoryToolHandler } from './handlers/get-memory-tool.handler';
-import { GetMemoryTool } from 'src/domain/tools/domain/tools/get-memory-tool.entity';
-import { SetMemoryToolHandler } from './handlers/set-memory-tool.handler';
-import { SetMemoryTool } from 'src/domain/tools/domain/tools/set-memory-tool.entity';
-import { ChatListToolHandler } from './handlers/chat-list-tool.handler';
-import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entity';
-import { ChatReadToolHandler } from './handlers/chat-read-tool.handler';
-import { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
-import { ChatGrepToolHandler } from './handlers/chat-grep-tool.handler';
-import { ChatGrepTool } from 'src/domain/tools/domain/tools/chat-grep-tool.entity';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only as Map keys for instanceof matching
-type ToolConstructor = abstract new (...args: any[]) => Tool;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- constructor types vary; used only for instanceof matching
+export type ToolConstructor = abstract new (...args: any[]) => Tool;
+
+export type ToolHandlerEntry = readonly [ToolConstructor, ToolExecutionHandler];
+
+export const TOOL_HANDLER_ENTRIES = Symbol('TOOL_HANDLER_ENTRIES');
 
 @Injectable()
 export class ToolHandlerRegistry {
   private readonly logger = new Logger(ToolHandlerRegistry.name);
 
   constructor(
-    private readonly httpToolHandler: HttpToolHandler,
-    private readonly sourceQueryToolHandler: SourceQueryToolHandler,
-    private readonly sourceGetTextToolHandler: SourceGetTextToolHandler,
-    private readonly internetSearchToolHandler: InternetSearchToolHandler,
-    private readonly websiteContentToolHandler: WebsiteContentToolHandler,
-    private readonly codeExecutionToolHandler: CodeExecutionToolHandler,
-    private readonly mcpIntegrationToolHandler: McpIntegrationToolHandler,
-    private readonly mcpIntegrationResourceHandler: McpIntegrationResourceHandler,
-    private readonly activateSkillToolHandler: ActivateSkillToolHandler,
-    private readonly knowledgeQueryToolHandler: KnowledgeQueryToolHandler,
-    private readonly knowledgeGetTextToolHandler: KnowledgeGetTextToolHandler,
-    private readonly recordingSearchToolHandler: RecordingSearchToolHandler,
-    private readonly createDocumentToolHandler: CreateDocumentToolHandler,
-    private readonly updateDocumentToolHandler: UpdateDocumentToolHandler,
-    private readonly editDocumentToolHandler: EditDocumentToolHandler,
-    private readonly readDocumentToolHandler: ReadDocumentToolHandler,
-    private readonly generateImageToolHandler: GenerateImageToolHandler,
-    private readonly createDiagramToolHandler: CreateDiagramToolHandler,
-    private readonly updateDiagramToolHandler: UpdateDiagramToolHandler,
-    private readonly createSpreadsheetToolHandler: CreateSpreadsheetToolHandler,
-    private readonly updateSpreadsheetToolHandler: UpdateSpreadsheetToolHandler,
-    private readonly marketplaceSearchToolHandler: MarketplaceSearchToolHandler,
-    private readonly sendNotificationToolHandler: SendNotificationToolHandler,
-    private readonly getMemoryToolHandler: GetMemoryToolHandler,
-    private readonly setMemoryToolHandler: SetMemoryToolHandler,
-    private readonly chatListToolHandler: ChatListToolHandler,
-    private readonly chatReadToolHandler: ChatReadToolHandler,
-    private readonly chatGrepToolHandler: ChatGrepToolHandler,
+    @Inject(TOOL_HANDLER_ENTRIES)
+    private readonly entries: readonly ToolHandlerEntry[],
   ) {}
 
   getHandler(tool: Tool): ToolExecutionHandler {
     this.logger.log({ name: tool.name }, 'Getting handler for tool');
 
-    const entry = this.handlers().find(([ctor]) => tool instanceof ctor);
+    const entry = this.entries.find(([ctor]) => tool instanceof ctor);
     if (entry) {
       return entry[1];
     }
 
     throw new ToolHandlerNotFoundError({ toolType: tool.name });
-  }
-
-  private handlers(): [ToolConstructor, ToolExecutionHandler][] {
-    return [
-      [HttpTool, this.httpToolHandler],
-      [SourceQueryTool, this.sourceQueryToolHandler],
-      [SourceGetTextTool, this.sourceGetTextToolHandler],
-      [InternetSearchTool, this.internetSearchToolHandler],
-      [WebsiteContentTool, this.websiteContentToolHandler],
-      [CodeExecutionTool, this.codeExecutionToolHandler],
-      [McpIntegrationTool, this.mcpIntegrationToolHandler],
-      [McpIntegrationResource, this.mcpIntegrationResourceHandler],
-      [ActivateSkillTool, this.activateSkillToolHandler],
-      [KnowledgeQueryTool, this.knowledgeQueryToolHandler],
-      [KnowledgeGetTextTool, this.knowledgeGetTextToolHandler],
-      [RecordingSearchTool, this.recordingSearchToolHandler],
-      [CreateDocumentTool, this.createDocumentToolHandler],
-      [UpdateDocumentTool, this.updateDocumentToolHandler],
-      [EditDocumentTool, this.editDocumentToolHandler],
-      [ReadDocumentTool, this.readDocumentToolHandler],
-      [GenerateImageTool, this.generateImageToolHandler],
-      [CreateDiagramTool, this.createDiagramToolHandler],
-      [UpdateDiagramTool, this.updateDiagramToolHandler],
-      [CreateSpreadsheetTool, this.createSpreadsheetToolHandler],
-      [UpdateSpreadsheetTool, this.updateSpreadsheetToolHandler],
-      [MarketplaceSearchTool, this.marketplaceSearchToolHandler],
-      [SendNotificationTool, this.sendNotificationToolHandler],
-      [GetMemoryTool, this.getMemoryToolHandler],
-      [SetMemoryTool, this.setMemoryToolHandler],
-      [ChatListTool, this.chatListToolHandler],
-      [ChatReadTool, this.chatReadToolHandler],
-      [ChatGrepTool, this.chatGrepToolHandler],
-    ];
   }
 }
