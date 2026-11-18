@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { execFile } from 'child_process';
-import { mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
+import { link, mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
 import { promisify } from 'util';
@@ -53,8 +53,7 @@ export class QpdfPdfBatcherAdapter extends PdfBatcherPort {
   }
 
   async pageCount(source: PdfSource): Promise<number> {
-    if (!Buffer.isBuffer(source)) return this.countPages(source.path);
-    const directory = await mkdtemp(join(tmpdir(), 'ayunis-pdf-'));
+    const directory = await this.workDirectory(source);
     try {
       const input = await this.onDisk(source, directory);
       return await this.countPages(input.path);
@@ -68,10 +67,7 @@ export class QpdfPdfBatcherAdapter extends PdfBatcherPort {
     limits: PdfBatchLimits,
   ): AsyncIterable<PdfBatch> {
     this.validateLimits(limits);
-    // Next to a staged file, so whoever staged it also owns removing the
-    // batches when this process is stopped before it can.
-    const parent = Buffer.isBuffer(source) ? tmpdir() : dirname(source.path);
-    const directory = await mkdtemp(join(parent, 'ayunis-pdf-'));
+    const directory = await this.workDirectory(source);
     try {
       const input = await this.onDisk(source, directory);
       const total = await this.pagesToSend(input, limits);
@@ -96,12 +92,27 @@ export class QpdfPdfBatcherAdapter extends PdfBatcherPort {
     }
   }
 
+  // Next to a staged file, so whoever staged it also owns removing the
+  // batches when this process is stopped before it can. Being on the same
+  // filesystem also lets onDisk hard-link the staged file.
+  private workDirectory(source: PdfSource): Promise<string> {
+    const parent = Buffer.isBuffer(source) ? tmpdir() : dirname(source.path);
+    return mkdtemp(join(parent, 'ayunis-pdf-'));
+  }
+
+  // qpdf only ever reads a path ending in .pdf: Ubuntu's AppArmor profile for
+  // qpdf denies it any file without a PDF, JSON or QDF extension, and staged
+  // files have none. A hard link, unlike a symlink, passes that path check
+  // without copying the document.
   private async onDisk(
     source: PdfSource,
     directory: string,
   ): Promise<PdfFileRef> {
-    if (!Buffer.isBuffer(source)) return source;
     const path = join(directory, 'input.pdf');
+    if (!Buffer.isBuffer(source)) {
+      await link(source.path, path);
+      return { path, size: source.size };
+    }
     await writeFile(path, source, { mode: 0o600 });
     return { path, size: source.length };
   }
