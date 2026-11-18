@@ -63,6 +63,16 @@ describe(SweepUnreferencedOriginalsUseCase.name, () => {
     });
   });
 
+  it("removes a synced file's old original no source references", async () => {
+    const synced = 'org/synced/s4/Hundesteuer.pdf';
+    list.execute.mockResolvedValue([{ objectName: synced, lastModified: old }]);
+    sources.findReferencedStorageKeys.mockResolvedValue([]);
+
+    await useCase.execute(now);
+
+    expect(cleanup.remove.mock.calls).toEqual([[synced]]);
+  });
+
   it('does nothing when nothing is old enough', async () => {
     list.execute.mockResolvedValue([
       { objectName: orphan, lastModified: fresh },

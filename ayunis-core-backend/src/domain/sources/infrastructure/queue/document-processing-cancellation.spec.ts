@@ -10,6 +10,7 @@ import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { TextType, FileType } from 'src/domain/sources/domain/source-type.enum';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
+import { DocumentProcessingPipeline } from './document-processing.pipeline';
 
 const sourceId = '00000000-0000-0000-0000-000000000001';
 const orgId = '00000000-0000-0000-0000-000000000010';
@@ -63,42 +64,44 @@ async function interruptedDelivery(
       run: async (fn: () => Promise<void>) => fn(),
       set: () => undefined,
     } as never,
-    {
-      execute: async (command: RetrieveFileContentCommand) => {
-        current = status === null ? null : source(status);
-        await command.processingContext!.read('a'.repeat(64));
-        return { pages: [] };
-      },
-    } as never,
-    { execute: async () => undefined } as never,
-    {} as never,
-    {
-      read: async () => Buffer.from('PDF fixture'),
-      readRetained: async () => Buffer.from('PDF fixture'),
-      readToFile: async () => ({ size: 11, sha256: 'fixture' }),
-      readRetainedToFile: async () => ({ size: 11, sha256: 'fixture' }),
-    } as never,
-    {
-      execute: async () => {
-        filePresent = false;
-      },
-    } as never,
-    repository,
-    helper,
-    {} as never,
     { execute: async () => true } as never,
-    new SourceProcessingHeartbeatService(repository),
-    checkpoints,
-    {
-      start: () => ({
-        appendPages: () => undefined,
-        finish: async () => undefined,
-      }),
-    } as never,
-    {} as never,
-    {} as never,
-    { tempDirectory: undefined } as never,
-    {} as never,
+    new DocumentProcessingPipeline(
+      {
+        execute: async (command: RetrieveFileContentCommand) => {
+          current = status === null ? null : source(status);
+          await command.processingContext!.read('a'.repeat(64));
+          return { pages: [] };
+        },
+      } as never,
+      { execute: async () => undefined } as never,
+      {} as never,
+      {
+        read: async () => Buffer.from('PDF fixture'),
+        readRetained: async () => Buffer.from('PDF fixture'),
+        readToFile: async () => ({ size: 11, sha256: 'fixture' }),
+        readRetainedToFile: async () => ({ size: 11, sha256: 'fixture' }),
+      } as never,
+      {
+        execute: async () => {
+          filePresent = false;
+        },
+      } as never,
+      repository,
+      helper,
+      {} as never,
+      new SourceProcessingHeartbeatService(repository),
+      checkpoints,
+      {
+        start: () => ({
+          appendPages: () => undefined,
+          finish: async () => undefined,
+        }),
+      } as never,
+      {} as never,
+      {} as never,
+      { tempDirectory: undefined } as never,
+      {} as never,
+    ),
   );
   await consumer.process({
     id: 'overlapping-delivery',

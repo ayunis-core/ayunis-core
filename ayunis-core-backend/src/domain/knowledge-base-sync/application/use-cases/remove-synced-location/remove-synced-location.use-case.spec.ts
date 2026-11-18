@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, type UUID } from 'crypto';
 import { createMockContextService } from 'src/common/context/testing/context.fixtures';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
@@ -22,6 +22,11 @@ describe('RemoveSyncedLocationUseCase', () => {
     return harness;
   }
 
+  let removedJobs: { sourceId: UUID; version: string }[] = [];
+  beforeEach(() => {
+    removedJobs = [];
+  });
+
   function removal(
     harness: Awaited<ReturnType<typeof syncedHarness>>,
     options: { orgId?: typeof ORG_ID; writable?: boolean } = {},
@@ -36,6 +41,12 @@ describe('RemoveSyncedLocationUseCase', () => {
             : Promise.resolve(),
       } as never,
       harness.knowledgeBase.deleteSources as never,
+      {
+        remove: (jobs: { sourceId: UUID; version: string }[]) => {
+          removedJobs.push(...jobs);
+          return Promise.resolve();
+        },
+      } as never,
       createMockContextService(
         aUserContext({ orgId: options.orgId ?? ORG_ID }),
       ),
@@ -51,6 +62,19 @@ describe('RemoveSyncedLocationUseCase', () => {
     expect(harness.repository.locations.size).toBe(0);
     expect(harness.repository.files.size).toBe(0);
     expect(harness.knowledgeBase.names()).toEqual(['Upload 0.pdf']);
+  });
+
+  it('removes the queued processing of its files', async () => {
+    const harness = await syncedHarness();
+
+    await removal(harness).execute({ locationId: harness.location.id });
+
+    expect(removedJobs).toEqual(
+      expect.arrayContaining(
+        harness.jobs.map(({ sourceId, version }) => ({ sourceId, version })),
+      ),
+    );
+    expect(removedJobs).toHaveLength(2);
   });
 
   it('removes nothing for a user who may not change the knowledge base', async () => {

@@ -14,6 +14,7 @@ import {
   TooManyPagesError,
 } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 import { DocumentProcessingConsumer } from './document-processing.consumer';
+import { DocumentProcessingPipeline } from './document-processing.pipeline';
 import { StaleProcessingCleanupTask } from 'src/domain/sources/infrastructure/tasks/stale-processing-cleanup.task';
 import { SourceProcessingHeartbeatService } from 'src/domain/sources/application/services/source-processing-heartbeat.service';
 import { RecordingTranscriptExtractor } from './recording-transcript.extractor';
@@ -176,26 +177,28 @@ describe('DocumentProcessingConsumer', () => {
 
     consumer = new DocumentProcessingConsumer(
       contextService as never,
-      retrieveFileContentUseCase as never,
-      preflightCheckUseCase as never,
-      splitTextUseCase as never,
-      storedFiles as never,
-      deleteObjectUseCase as never,
-      sourceRepository as never,
-      helper as never,
-      spreadsheetParser as never,
       admitOrgProcessing as never,
-      new SourceProcessingHeartbeatService(sourceRepository as never),
-      checkpoints as never,
-      earlyEmbedding as never,
-      new RecordingTranscriptExtractor(
+      new DocumentProcessingPipeline(
+        retrieveFileContentUseCase as never,
+        preflightCheckUseCase as never,
+        splitTextUseCase as never,
         storedFiles as never,
-        transcribeRecordingUseCase as never,
+        deleteObjectUseCase as never,
+        sourceRepository as never,
+        helper as never,
+        spreadsheetParser as never,
+        new SourceProcessingHeartbeatService(sourceRepository as never),
+        checkpoints as never,
+        earlyEmbedding as never,
+        new RecordingTranscriptExtractor(
+          storedFiles as never,
+          transcribeRecordingUseCase as never,
+          { tempDirectory: undefined } as never,
+        ),
+        transcriptContent as never,
         { tempDirectory: undefined } as never,
+        eventEmitter as never,
       ),
-      transcriptContent as never,
-      { tempDirectory: undefined } as never,
-      eventEmitter as never,
     );
   });
 

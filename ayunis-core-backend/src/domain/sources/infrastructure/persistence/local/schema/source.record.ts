@@ -84,6 +84,17 @@ export abstract class SourceRecord extends BaseRecord {
   @ManyToOne(() => RecordingRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'recordingId' })
   recording: RecordingRecord | null;
+
+  // Set on a hidden replacement: the next version of this source, processed
+  // outside every knowledge base until it is swapped in. Deleting the source
+  // it replaces deletes it too.
+  @Index()
+  @Column({ nullable: true })
+  replacesSourceId: UUID | null;
+
+  @ManyToOne(() => SourceRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'replacesSourceId' })
+  replaces: SourceRecord | null;
 }
 
 @ChildEntity(SourceType.TEXT)

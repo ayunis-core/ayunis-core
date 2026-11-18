@@ -5,8 +5,8 @@ import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from './knowledge-base-sync.constants';
 import { SyncedFileJobsProducer } from './synced-file-jobs.producer';
 
-// Enqueue side only; the consumer (AYC-1950) belongs in
-// IngestionConsumersModule like the other ingestion consumers.
+// Enqueue side only; the consumer lives in IngestionConsumersModule like the
+// other ingestion consumers.
 @Module({
   imports: [
     OrgsModule,

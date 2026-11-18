@@ -22,6 +22,7 @@ const sourceSchema = new EntitySchema<SourceRecord>({
     id: { type: 'uuid', primary: true },
     knowledgeBaseId: { type: 'uuid', nullable: true },
     recordingId: { type: 'uuid', nullable: true },
+    replacesSourceId: { type: 'uuid', nullable: true },
     createdAt: { type: 'timestamp' },
   },
 });
@@ -130,6 +131,26 @@ describe('Unreferenced source lookup', () => {
     expect([...unreferenced].sort((a, b) => a.localeCompare(b))).toEqual(
       [...expected].sort((a, b) => a.localeCompare(b)),
     );
+  });
+
+  it('keeps a hidden replacement of a document out of the orphans', async () => {
+    const old = new Date(Date.now() - 40 * DAY_MS);
+    const document = randomUUID();
+    const replacement = randomUUID();
+    const orphan = randomUUID();
+    await dataSource.getRepository(SourceRecord).insert([
+      { id: document, knowledgeBaseId: randomUUID(), createdAt: old },
+      { id: replacement, replacesSourceId: document, createdAt: old },
+      { id: orphan, createdAt: old },
+    ]);
+
+    const orphaned = await repository.findOrphanedIds(
+      new Date(Date.now() - 30 * DAY_MS),
+      10_000,
+    );
+
+    expect(orphaned).toContain(orphan);
+    expect(orphaned).not.toContain(replacement);
   });
 
   it("keeps a source that another user's thread still shows", async () => {
