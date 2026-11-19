@@ -1,23 +1,23 @@
-import { UsageRecord } from '../schema/usage.record';
+import { UsageRecord } from 'src/domain/usage/infrastructure/persistence/local-usage/schema/usage.record';
 import type {
   GetUserUsageQueryParams,
   UserUsageRow,
 } from './usage-query.types';
 
+// All id columns involved are varchar: comparing them uncast keeps the
+// (organizationId, createdAt) and (userId, createdAt) indexes usable.
 export async function getUserUsageRows(
   params: GetUserUsageQueryParams,
 ): Promise<UserUsageRow[]> {
-  // Use subquery to aggregate usage separately to avoid Cartesian product
-  // when joining with usageAll for lastActivity
+  const orgId = params.organizationId.toString();
+
   const usageSubquery = params.userRepository.manager
     .createQueryBuilder()
     .select('usage.userId', 'userId')
     .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
     .addSelect('COUNT(usage.id)', 'requests')
     .from(UsageRecord, 'usage')
-    .where('CAST(usage.organizationId AS uuid) = CAST(:orgId AS uuid)', {
-      orgId: params.organizationId.toString(),
-    })
+    .where('usage.organizationId = :orgId', { orgId })
     .groupBy('usage.userId');
 
   if (params.startDate) {
@@ -31,51 +31,30 @@ export async function getUserUsageRows(
     });
   }
 
-  // Subquery for lastActivity to avoid Cartesian product
+  // Correlated per user so Postgres reads one row from the (userId, createdAt)
+  // index instead of aggregating the org's whole usage history.
   const lastActivitySubquery = params.userRepository.manager
     .createQueryBuilder()
-    .select('usageAll.userId', 'userId')
-    .addSelect('MAX(usageAll.createdAt)', 'lastActivity')
+    .select('MAX(usageAll.createdAt)')
     .from(UsageRecord, 'usageAll')
-    .where('CAST(usageAll.organizationId AS uuid) = CAST(:orgId AS uuid)', {
-      orgId: params.organizationId.toString(),
-    })
-    .groupBy('usageAll.userId');
+    .where('usageAll.userId = "user"."id"')
+    .andWhere('usageAll.organizationId = :orgId', { orgId });
 
   const qb = params.userRepository
     .createQueryBuilder('user')
     .leftJoin(
       `(${usageSubquery.getQuery()})`,
       'usageagg',
-      'CAST("usageagg"."userId" AS uuid) = CAST("user"."id" AS uuid)',
-    )
-    .leftJoin(
-      `(${lastActivitySubquery.getQuery()})`,
-      'lastactivityagg',
-      'CAST("lastactivityagg"."userId" AS uuid) = CAST("user"."id" AS uuid)',
+      '"usageagg"."userId" = "user"."id"',
     )
     .select('user.id', 'userId')
     .addSelect('user.name', 'userName')
     .addSelect('user.email', 'userEmail')
     .addSelect('COALESCE("usageagg"."credits", 0)', 'credits')
     .addSelect('COALESCE("usageagg"."requests", 0)', 'requests')
-    .addSelect('"lastactivityagg"."lastActivity"', 'lastActivity')
-    .where('CAST(user.orgId AS uuid) = CAST(:orgId AS uuid)', {
-      orgId: params.organizationId.toString(),
-    })
-    .groupBy('user.id')
-    .addGroupBy('user.name')
-    .addGroupBy('user.email')
-    .addGroupBy('"usageagg"."credits"')
-    .addGroupBy('"usageagg"."requests"')
-    .addGroupBy('"lastactivityagg"."lastActivity"');
-
-  // Set parameters from subqueries
-  const allParameters = {
-    ...usageSubquery.getParameters(),
-    ...lastActivitySubquery.getParameters(),
-  };
-  qb.setParameters(allParameters);
+    .addSelect(`(${lastActivitySubquery.getQuery()})`, 'lastActivity')
+    .where('user.orgId = :orgId', { orgId })
+    .setParameters(usageSubquery.getParameters());
 
   if (params.searchTerm) {
     qb.andWhere('(user.name ILIKE :search OR user.email ILIKE :search)', {
@@ -83,32 +62,26 @@ export async function getUserUsageRows(
     });
   }
 
-  // Map sortField to use the correct column reference
-  let orderByField = params.sortField;
-  if (
-    params.sortField === 'COALESCE(SUM(usage.creditsConsumed), 0)' ||
-    params.sortField.includes('usage.creditsConsumed')
-  ) {
-    orderByField = 'COALESCE("usageagg"."credits", 0)';
-  } else if (
-    params.sortField === 'COUNT(usage.id)' ||
-    params.sortField.includes('usage.id')
-  ) {
-    orderByField = 'COALESCE("usageagg"."requests", 0)';
-  } else if (
-    params.sortField === 'MAX(usageAll.createdAt)' ||
-    params.sortField === 'MAX(usage.createdAt)' ||
-    params.sortField.includes('usageAll.createdAt') ||
-    params.sortField.includes('usage.createdAt')
-  ) {
-    orderByField = '"lastactivityagg"."lastActivity"';
-  }
-
-  qb.orderBy(orderByField, params.sortOrder);
-  qb.addOrderBy('user.name', 'ASC');
-
   return await qb
+    .orderBy(mapSortField(params.sortField), params.sortOrder)
+    .addOrderBy('user.name', 'ASC')
     .offset(params.offset)
     .limit(params.limit)
     .getRawMany<UserUsageRow>();
+}
+
+function mapSortField(sortField: string): string {
+  if (sortField.includes('usage.creditsConsumed')) {
+    return 'COALESCE("usageagg"."credits", 0)';
+  }
+  if (sortField.includes('usage.id')) {
+    return 'COALESCE("usageagg"."requests", 0)';
+  }
+  if (
+    sortField.includes('usageAll.createdAt') ||
+    sortField.includes('usage.createdAt')
+  ) {
+    return '"lastActivity"';
+  }
+  return sortField;
 }

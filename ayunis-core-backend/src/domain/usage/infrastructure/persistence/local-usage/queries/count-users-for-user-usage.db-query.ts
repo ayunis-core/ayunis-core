@@ -1,54 +1,16 @@
-import { UsageRecord } from '../schema/usage.record';
 import type { GetUserUsageQueryParams } from './usage-query.types';
 
+// The report lists every user of the org (users without usage show zeros), so
+// the total depends only on the users table, not on usage or the date range.
 export async function countUsersForUserUsage(
   params: Omit<
     GetUserUsageQueryParams,
     'offset' | 'limit' | 'sortField' | 'sortOrder'
   >,
 ): Promise<number> {
-  // Use subquery to aggregate usage separately to avoid Cartesian product
-  const usageSubquery = params.userRepository.manager
-    .createQueryBuilder()
-    .select('usage.userId', 'userId')
-    .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
-    .addSelect('COUNT(usage.id)', 'requests')
-    .addSelect('SUM(usage.cost)', 'cost')
-    .from(UsageRecord, 'usage')
-    .where('CAST(usage.organizationId AS uuid) = CAST(:orgId AS uuid)', {
-      orgId: params.organizationId.toString(),
-    })
-    .groupBy('usage.userId');
-
-  if (params.startDate) {
-    usageSubquery.andWhere('usage.createdAt >= :startDate', {
-      startDate: params.startDate,
-    });
-  }
-  if (params.endDate) {
-    usageSubquery.andWhere('usage.createdAt < :endDate', {
-      endDate: params.endDate,
-    });
-  }
-
   const qb = params.userRepository
     .createQueryBuilder('user')
-    .leftJoin(
-      `(${usageSubquery.getQuery()})`,
-      'usageagg',
-      'CAST("usageagg"."userId" AS uuid) = CAST("user"."id" AS uuid)',
-    )
-    .select('user.id', 'userId')
-    .where('CAST(user.orgId AS uuid) = CAST(:orgId AS uuid)', {
-      orgId: params.organizationId.toString(),
-    })
-    .groupBy('user.id')
-    .addGroupBy('"usageagg"."credits"')
-    .addGroupBy('"usageagg"."requests"')
-    .addGroupBy('"usageagg"."cost"');
-
-  // Set parameters from subquery
-  qb.setParameters(usageSubquery.getParameters());
+    .where('user.orgId = :orgId', { orgId: params.organizationId.toString() });
 
   if (params.searchTerm) {
     qb.andWhere('(user.name ILIKE :search OR user.email ILIKE :search)', {
@@ -56,7 +18,5 @@ export async function countUsersForUserUsage(
     });
   }
 
-  const totalRows = await qb.getRawMany<{ userId: string }>();
-
-  return totalRows.length;
+  return await qb.getCount();
 }
