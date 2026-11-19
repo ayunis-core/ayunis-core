@@ -1,6 +1,6 @@
 import type { Repository } from 'typeorm';
 import type { UUID } from 'crypto';
-import type { UsageRecord } from '../schema/usage.record';
+import type { UsageRecord } from 'src/domain/usage/infrastructure/persistence/local-usage/schema/usage.record';
 import { ModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
 import type { TopModelRow } from './usage-query.types';
 
@@ -13,11 +13,7 @@ export async function getTopModels(
 ): Promise<TopModelRow[]> {
   const qb = usageRepository
     .createQueryBuilder('usage')
-    .leftJoin(
-      ModelRecord,
-      'model',
-      'CAST(model.id AS uuid) = CAST(usage.modelId AS uuid)',
-    )
+    .leftJoin(ModelRecord, 'model', 'model.id = usage.modelId')
     .select('usage.modelId', 'modelId')
     .addSelect('model.displayName', 'displayName')
     .addSelect('COALESCE(SUM(usage.creditsConsumed), 0)', 'credits')
