@@ -4,6 +4,7 @@ import type { LetterheadConfig } from 'src/domain/artifacts/application/ports/do
 import { ArtifactExportTimeoutError } from 'src/domain/artifacts/application/artifacts.errors';
 import { TimeoutError } from 'puppeteer-core';
 import * as JSZip from 'jszip';
+import { PDFDocument, PageSizes, rgb } from 'pdf-lib';
 
 async function extractDocumentXml(buffer: Buffer): Promise<string> {
   const zip = await JSZip.loadAsync(buffer);
@@ -11,6 +12,15 @@ async function extractDocumentXml(buffer: Buffer): Promise<string> {
   if (!docXml) throw new Error('No word/document.xml in DOCX');
   return docXml.async('text');
 }
+
+async function letterheadBackground(color: ReturnType<typeof rgb>) {
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage(PageSizes.A4);
+  page.drawRectangle({ x: 0, y: 780, width: 240, height: 60, color });
+  return Buffer.from(await pdf.save());
+}
+
+const docxMargins = { top: 45, right: 25, bottom: 20, left: 25 };
 
 // ---------------------------------------------------------------------------
 // Puppeteer mock — avoids launching a real browser in unit tests
@@ -88,6 +98,80 @@ describe('HtmlDocumentExportService', () => {
   });
 
   describe('exportToDocx', () => {
+    it('keeps text editable and uses separate first and continuation artwork behind it', async () => {
+      const zip = await JSZip.loadAsync(
+        await service.exportToDocx(
+          '<p>Municipal notice</p><table><tr><td>Recipient</td><td>Sender</td></tr></table>',
+          {
+            firstPagePdf: await letterheadBackground(rgb(1, 0, 0)),
+            continuationPagePdf: await letterheadBackground(rgb(0, 0, 1)),
+            firstPageMargins: docxMargins,
+            continuationPageMargins: { ...docxMargins, top: 20, left: 30 },
+          },
+          { fontFamily: 'Calibri', fontSizePt: 10 },
+        ),
+      );
+      const xml = await zip.file('word/document.xml')?.async('text');
+
+      expect(xml).toContain('<w:t xml:space="preserve">Municipal notice</w:t>');
+      expect(xml).toContain('w:type="first"');
+      expect(xml).toContain('w:type="default"');
+      expect(xml).toContain('<w:titlePg');
+      expect(xml).toContain('w:top="2551"');
+      expect(xml).toContain('w:left="1700"');
+      const columnWidths = [
+        ...(xml ?? '').matchAll(/<w:gridCol w:w="(\d+)"\/>/g),
+      ];
+      expect(columnWidths.map(([, width]) => width)).toEqual(['4393', '4393']);
+      expect(await zip.file('word/styles.xml')?.async('text')).toContain(
+        '<w:sz w:val="20"',
+      );
+
+      const headers = zip.file(/^word\/header\d+\.xml$/);
+      expect(headers).toHaveLength(2);
+      for (const header of headers) {
+        const headerXml = await header.async('text');
+        expect(headerXml).toContain('behindDoc="1"');
+        expect(headerXml).toContain('<wp:wrapNone/>');
+      }
+      expect(zip.file(/^word\/media\/.*\.png$/)).toHaveLength(2);
+    });
+
+    it('repeats the first page artwork when there is no continuation file', async () => {
+      const zip = await JSZip.loadAsync(
+        await service.exportToDocx('<p>Letter</p>', {
+          firstPagePdf: await letterheadBackground(rgb(0, 1, 0)),
+          firstPageMargins: docxMargins,
+          continuationPageMargins: docxMargins,
+        }),
+      );
+      const xml = await zip.file('word/document.xml')?.async('text');
+      expect(xml).toContain('w:type="default"');
+      expect(xml).not.toContain('<w:titlePg');
+      expect(zip.file(/^word\/media\/.*\.png$/)).toHaveLength(1);
+    });
+
+    it('preserves editable text when the letterhead cannot be rendered', async () => {
+      const buffer = await service.exportToDocx('<p>Letter body</p>', {
+        firstPagePdf: Buffer.from('invalid PDF'),
+        firstPageMargins: docxMargins,
+        continuationPageMargins: docxMargins,
+      });
+      const xml = await extractDocumentXml(buffer);
+      expect(xml).toContain('Letter body');
+      expect(xml).not.toContain('w:headerReference');
+    });
+
+    it('preserves editable text when the combined margins leave no Word text area', async () => {
+      const buffer = await service.exportToDocx('<p>Letter body</p>', {
+        firstPagePdf: await letterheadBackground(rgb(0, 1, 0)),
+        firstPageMargins: { ...docxMargins, right: 110 },
+        continuationPageMargins: { ...docxMargins, left: 110 },
+      });
+      const xml = await extractDocumentXml(buffer);
+      expect(xml).toContain('Letter body');
+      expect(xml).not.toContain('w:headerReference');
+    });
     it('should produce a non-empty buffer from sample HTML', async () => {
       const result = await service.exportToDocx(sampleHtml);
 

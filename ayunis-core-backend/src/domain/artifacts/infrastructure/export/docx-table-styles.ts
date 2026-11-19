@@ -39,7 +39,8 @@ export function cellFrame(isLayout: boolean) {
 }
 
 function parseSpan(attr: string | undefined): number | undefined {
-  return attr ? parseInt(attr, 10) : undefined;
+  const span = parseInt(attr ?? '', 10);
+  return Number.isFinite(span) ? span : undefined;
 }
 
 export function cellSpans(cell: HTMLElement) {
@@ -50,4 +51,17 @@ export function cellSpans(cell: HTMLElement) {
     ...(columnSpan && columnSpan > 1 && { columnSpan }),
     ...(rowSpan && rowSpan > 1 && { rowSpan }),
   };
+}
+
+export function tableColumnWidths(rows: HTMLElement[], tableWidth: number) {
+  const columnCount = rows.reduce((largest, row) => {
+    const cells = row.querySelectorAll(':scope > td, :scope > th');
+    const count = cells.reduce((total, cell) => {
+      const span = cellSpans(cell).columnSpan ?? 1;
+      return total + span;
+    }, 0);
+    return Math.max(largest, count);
+  }, 1);
+  const width = Math.floor(tableWidth / columnCount);
+  return Array.from({ length: columnCount }, () => width);
 }

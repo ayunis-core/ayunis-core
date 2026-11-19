@@ -4,6 +4,7 @@ import {
   LetterheadConfig,
 } from 'src/domain/artifacts/application/ports/document-export.port';
 import { convertHtmlToDocx } from './html-to-docx-converter';
+import { renderDocxLetterhead } from './docx-letterhead';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import { markLayoutTables } from './letter-layout-tables';
 import { bundledDocumentFontCss } from './bundled-document-fonts';
@@ -146,11 +147,29 @@ export class HtmlDocumentExportService
     await this.chromium.close();
   }
 
-  async exportToDocx(html: string): Promise<Buffer> {
+  async exportToDocx(
+    html: string,
+    letterhead?: LetterheadConfig,
+    typography?: DocumentTypography,
+  ): Promise<Buffer> {
     this.logger.log('Exporting HTML to DOCX');
 
     const sanitized = sanitizeHtmlContent(html);
-    return convertHtmlToDocx(sanitized);
+    const background =
+      letterhead && (await this.renderWordBackground(letterhead));
+    return convertHtmlToDocx(sanitized, background, typography);
+  }
+
+  private async renderWordBackground(letterhead: LetterheadConfig) {
+    try {
+      return await renderDocxLetterhead(letterhead);
+    } catch (error) {
+      this.logger.warn(
+        { err: error as Error },
+        'Letterhead rendering failed, exporting Word without background',
+      );
+      return undefined;
+    }
   }
 
   async exportToPdf(

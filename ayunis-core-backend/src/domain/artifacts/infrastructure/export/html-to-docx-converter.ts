@@ -19,10 +19,12 @@ import {
 import type { HTMLElement, TextNode } from 'node-html-parser';
 import { parse, NodeType } from 'node-html-parser';
 
-import { buildDocument } from './docx-document-config';
-import { cellFrame, cellSpans } from './docx-table-styles';
+import { buildDocument, docxContentWidthTwips } from './docx-document-config';
+import type { DocxLetterhead } from './docx-letterhead';
+import { cellFrame, cellSpans, tableColumnWidths } from './docx-table-styles';
 import { parseAlignment, parseSpacing } from './paragraph-style-parser';
 import { parseRunColors } from './run-color-parser';
+import type { DocumentTypography } from 'src/domain/letterheads/domain/value-objects/document-typography';
 
 /** Inline formatting context accumulated while walking the tree. */
 interface InlineContext {
@@ -66,23 +68,17 @@ const INLINE_FORMAT_BY_TAG: Record<string, Partial<InlineContext>> = {
   mark: { highlight: true },
 };
 
-// A4 portrait usable width = 210mm page − 2×25mm margins (see docx-document-config.ts).
-const TABLE_USABLE_WIDTH_TWIPS = convertMillimetersToTwip(210 - 2 * 25);
-
-/**
- * Converts TipTap-generated HTML into a DOCX buffer using the `docx` library.
- *
- * Supported elements (matching the TipTap editor config):
- * - Headings: h1–h6, paragraphs with text-align
- * - Inline: strong/b, em/i, u, s/del/strike, code, mark, a[href], and
- *   inline color / background-color styles
- * - Lists: ul, ol (including nested)
- * - Blockquotes, code blocks (pre > code), tables, hr
- */
-export async function convertHtmlToDocx(html: string): Promise<Buffer> {
+export async function convertHtmlToDocx(
+  html: string,
+  letterhead?: DocxLetterhead,
+  typography?: DocumentTypography,
+): Promise<Buffer> {
   const root = parse(html);
-  const children = convertBlockNodes(root.childNodes as HTMLElement[]);
-  const doc = buildDocument(children);
+  const children = convertBlockNodes(
+    root.childNodes as HTMLElement[],
+    docxContentWidthTwips(letterhead),
+  );
+  const doc = buildDocument(children, letterhead, typography);
   const buffer = await Packer.toBuffer(doc);
   return Buffer.from(buffer);
 }
@@ -91,7 +87,10 @@ export async function convertHtmlToDocx(html: string): Promise<Buffer> {
 // Block-level conversion
 // ---------------------------------------------------------------------------
 
-function convertBlockNodes(nodes: HTMLElement[]): BlockChild[] {
+function convertBlockNodes(
+  nodes: HTMLElement[],
+  contentWidth: number,
+): BlockChild[] {
   const result: BlockChild[] = [];
 
   for (const node of nodes) {
@@ -108,13 +107,17 @@ function convertBlockNodes(nodes: HTMLElement[]): BlockChild[] {
     if (node.nodeType !== NodeType.ELEMENT_NODE) continue;
 
     const tag = node.tagName.toLowerCase();
-    result.push(...convertElement(node, tag));
+    result.push(...convertElement(node, tag, contentWidth));
   }
 
   return result;
 }
 
-function convertElement(node: HTMLElement, tag: string): BlockChild[] {
+function convertElement(
+  node: HTMLElement,
+  tag: string,
+  contentWidth: number,
+): BlockChild[] {
   if (tag in HEADING_MAP) {
     return [convertHeading(node, tag)];
   }
@@ -123,7 +126,7 @@ function convertElement(node: HTMLElement, tag: string): BlockChild[] {
     case 'p':
       return [convertParagraph(node)];
     case 'blockquote':
-      return convertBlockquote(node);
+      return convertBlockquote(node, contentWidth);
     case 'pre':
       return [convertCodeBlock(node)];
     case 'ul':
@@ -131,13 +134,13 @@ function convertElement(node: HTMLElement, tag: string): BlockChild[] {
     case 'ol':
       return convertList(node, true);
     case 'table':
-      return [convertTable(node)];
+      return [convertTable(node, contentWidth)];
     case 'hr':
       return [new Paragraph({ thematicBreak: true })];
     case 'br':
       return [new Paragraph({ children: [] })];
     default:
-      return convertBlockNodes(node.childNodes as HTMLElement[]);
+      return convertBlockNodes(node.childNodes as HTMLElement[], contentWidth);
   }
 }
 
@@ -159,7 +162,10 @@ function convertParagraph(node: HTMLElement): Paragraph {
   });
 }
 
-function convertBlockquote(node: HTMLElement): BlockChild[] {
+function convertBlockquote(
+  node: HTMLElement,
+  contentWidth: number,
+): BlockChild[] {
   const blockquoteStyle = {
     indent: { left: convertMillimetersToTwip(10) },
     border: {
@@ -198,7 +204,7 @@ function convertBlockquote(node: HTMLElement): BlockChild[] {
           }),
         );
       } else {
-        result.push(...convertElement(child, tag));
+        result.push(...convertElement(child, tag, contentWidth));
       }
     }
   }
@@ -317,12 +323,11 @@ function buildListParagraph(
 
 // Tables
 
-function convertTable(node: HTMLElement): Table {
+function convertTable(node: HTMLElement, contentWidth: number): Table {
   const rowElements = node.querySelectorAll(
     ':scope > tr, :scope > thead > tr, :scope > tbody > tr, :scope > tfoot > tr',
   );
-  const columnCount = Math.max(1, countTableColumns(rowElements));
-  const columnWidths = buildEqualColumnWidths(columnCount);
+  const columnWidths = tableColumnWidths(rowElements, contentWidth);
   const isLayout = !node.querySelector('th');
   const rows = rowElements
     .map((tr) => convertTableRow(tr, isLayout))
@@ -350,25 +355,6 @@ function convertTable(node: HTMLElement): Table {
     layout: TableLayoutType.FIXED,
     width: { size: 100, type: WidthType.PERCENTAGE },
   });
-}
-
-function countTableColumns(rowElements: HTMLElement[]): number {
-  let max = 0;
-  for (const tr of rowElements) {
-    const cells = tr.querySelectorAll(':scope > td, :scope > th');
-    let count = 0;
-    for (const cell of cells) {
-      const colspan = parseInt(cell.getAttribute('colspan') ?? '1', 10);
-      count += Number.isFinite(colspan) && colspan > 0 ? colspan : 1;
-    }
-    if (count > max) max = count;
-  }
-  return max;
-}
-
-function buildEqualColumnWidths(columnCount: number): number[] {
-  const width = Math.floor(TABLE_USABLE_WIDTH_TWIPS / columnCount);
-  return Array.from({ length: columnCount }, () => width);
 }
 
 function convertTableRow(tr: HTMLElement, isLayout: boolean): TableRow | null {

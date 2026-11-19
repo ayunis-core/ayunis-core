@@ -213,6 +213,35 @@ describe('ExportArtifactUseCase', () => {
     );
   });
 
+  it('exports the assigned letterhead and effective typography to Word', async () => {
+    const firstPagePdf = Buffer.from('%PDF-first');
+    const continuationPagePdf = Buffer.from('%PDF-continuation');
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(
+      createArtifact({ letterheadId: mockLetterheadId }),
+    );
+    findLetterheadUseCase.execute.mockResolvedValue(
+      createLetterhead({ fontSizePt: 10 }),
+    );
+    getDocumentDefaults.execute.mockResolvedValue({
+      fontFamily: 'Calibri',
+      fontSizePt: 12,
+    });
+    downloadObjectUseCase.execute
+      .mockResolvedValueOnce(createBufferStream(firstPagePdf))
+      .mockResolvedValueOnce(createBufferStream(continuationPagePdf));
+    documentExportPort.exportToDocx.mockResolvedValue(Buffer.from('docx'));
+
+    await useCase.execute(
+      new ExportArtifactCommand({ artifactId: mockArtifactId, format: 'docx' }),
+    );
+
+    expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
+      '<p>Meeting notes content</p>',
+      expect.objectContaining({ firstPagePdf, continuationPagePdf }),
+      { fontFamily: 'Calibri', fontSizePt: 10 },
+    );
+  });
+
   it('should export the current version as PDF without letterhead', async () => {
     const artifact = createArtifact();
     const defaults = {
@@ -373,11 +402,14 @@ describe('ExportArtifactUseCase', () => {
     );
   });
 
-  it('should export DOCX ignoring letterhead even when artifact has letterheadId', async () => {
+  it('exports an editable DOCX when the assigned letterhead was deleted', async () => {
     const artifact = createArtifact({ letterheadId: mockLetterheadId });
     const docxBuffer = Buffer.from('fake-docx');
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    findLetterheadUseCase.execute.mockRejectedValue(
+      new LetterheadNotFoundError(mockLetterheadId),
+    );
     documentExportPort.exportToDocx.mockResolvedValue(docxBuffer);
 
     const command = new ExportArtifactCommand({
@@ -388,7 +420,11 @@ describe('ExportArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.buffer).toBe(docxBuffer);
-    expect(findLetterheadUseCase.execute).not.toHaveBeenCalled();
+    expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
+      '<p>Meeting notes content</p>',
+      undefined,
+      unspecifiedTypography,
+    );
     expect(downloadObjectUseCase.execute).not.toHaveBeenCalled();
   });
 

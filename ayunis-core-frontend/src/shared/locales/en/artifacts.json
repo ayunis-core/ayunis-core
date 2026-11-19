@@ -43,6 +43,15 @@
     "pdf": "PDF",
     "errorFormat": "Failed to export as {{format}}"
   },
+  "preview": {
+    "title": "PDF preview",
+    "savedVersion": "Shows the last saved version of this document.",
+    "loading": "Loading PDF preview…",
+    "failed": "Unable to show the PDF preview.",
+    "pageCount": "Page {{page}} of {{total}}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
+  },
   "versionHistory": {
     "title": "Version History ({{count}})",
     "current": "(current)",

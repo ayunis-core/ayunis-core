@@ -203,6 +203,51 @@ test("preserves omitted values, rejects invalid sizes, and clears fonts through 
   ).toMatchObject(initial);
 });
 
+test("previews the saved letterhead PDF without saving edits in the document editor", async ({
+  api,
+  page,
+}) => {
+  const letterhead = await createLetterhead(api, { fontSizePt: "10" });
+  await page.goto(await createDocument(api, letterhead.id));
+
+  const content = page.getByTestId("artifact-document-content");
+  await content.fill("Unsaved changes to the notice");
+
+  const exportResponse = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      url.pathname.endsWith("/export") &&
+      url.searchParams.get("format") === "pdf" &&
+      url.searchParams.get("versionNumber") === "1"
+    );
+  });
+  await page.getByTestId("artifact-pdf-preview-open").click();
+  expect((await exportResponse).status()).toBe(200);
+  await expect(page.getByTestId("artifact-pdf-preview-page")).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("artifact-pdf-preview-page")).toBeHidden();
+  await expect(content).toHaveText("Unsaved changes to the notice");
+});
+
+test("downloads a Word document from the letterhead editor", async ({
+  api,
+  page,
+}, testInfo) => {
+  const letterhead = await createLetterhead(api, { fontSizePt: "10" });
+  await page.goto(await createDocument(api, letterhead.id));
+
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Word", exact: true }).click();
+  const exported = await download;
+  expect(exported.suggestedFilename()).toBe("Municipal notice.docx");
+  const file = testInfo.outputPath("letterhead-document.docx");
+  await exported.saveAs(file);
+  expect((await readFile(file)).subarray(0, 4)).toEqual(
+    Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+  );
+});
+
 test("allows organization members to read defaults and scopes writes to organization admins", async ({
   api,
   mail,
