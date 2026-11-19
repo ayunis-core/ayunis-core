@@ -19,6 +19,7 @@ const activeRuns = vi.hoisted(() => ({
 }));
 vi.mock('@/features/thread-run', () => ({
   useActiveThreadRuns: () => activeRuns.current,
+  isThreadRunActive: () => false,
   isThreadRunStopped: (id: string) => isThreadRunStopped(id),
 }));
 

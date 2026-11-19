@@ -93,6 +93,7 @@ function renderBridge(
         threadId,
         messages,
         isStreaming,
+        isCheckingForRun: false,
         piiMasks: [{ token: '{{pii:PERSON_NAME_1}}', value: 'Bob Becker' }],
         sendToolResult,
       }),

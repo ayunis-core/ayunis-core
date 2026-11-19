@@ -113,6 +113,7 @@ export function ChatInputActionBar({
         <>
           <OnboardingTourTarget name={TOUR_TARGET.chatUpload} settleMs={900}>
             <PlusButton
+              isSubmitting={isSubmitting}
               onFileUpload={onFileUpload}
               onImageSelect={onImageSelect}
               isFileSourceDisabled={!isEmbeddingModelEnabled || isSubmitting}

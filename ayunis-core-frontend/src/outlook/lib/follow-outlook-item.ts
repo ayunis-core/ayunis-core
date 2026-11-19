@@ -19,12 +19,19 @@ interface FollowOutlookItemParams {
   watchItem: (listener: () => void) => () => void;
   /**
    * Calls `onStart` when the chat app starts creating a chat, and the
-   * function it returns with the new chat's id; returns the unsubscribe.
+   * function it returns with the new chat's id, or no id on failure.
    */
-  watchNewChats: (onStart: () => (threadId: string) => void) => () => void;
+  watchNewChats: (onStart: () => (threadId?: string) => void) => () => void;
   chatExists: (threadId: string) => Promise<boolean>;
   /** Tells the chat app which email a chat it opens is for. */
   rememberChatItem: (threadId: string, itemKey: string) => void;
+}
+
+interface ChatOpening {
+  itemKey: string;
+  threadId: string | undefined;
+  exists?: boolean;
+  pendingCreates: number;
 }
 
 const CHAT_PATH = /^\/chats\/([^/]+)$/;
@@ -44,28 +51,38 @@ export function followOutlookItem({
   chatExists,
   rememberChatItem,
 }: FollowOutlookItemParams): () => void {
-  // Counts chats started or navigated to, which supersede an open() still
-  // checking whether the email's chat exists.
-  let chatActivity = 0;
+  let opening: ChatOpening | undefined;
 
   async function open(itemKey: string): Promise<void> {
     const threadId = chats.chatFor(itemKey);
-    const activityBefore = chatActivity;
-    const exists = threadId !== undefined && (await chatExists(threadId));
-    if (chatActivity !== activityBefore) return;
+    const attempt: ChatOpening = { itemKey, threadId, pendingCreates: 0 };
+    opening = attempt;
+    attempt.exists = threadId !== undefined && (await chatExists(threadId));
+    showOpenedChat(attempt);
+  }
+
+  function showOpenedChat(attempt: ChatOpening): void {
+    const { itemKey, threadId, exists, pendingCreates } = attempt;
+    // A send started during the lookup gets first chance to open its chat.
+    if (opening !== attempt || exists === undefined || pendingCreates > 0) {
+      return;
+    }
+    opening = undefined;
     // Another pane of the user remembered a newer chat for this email.
     if (chats.chatFor(itemKey) !== threadId) return;
     if (threadId !== undefined && !exists) chats.forget(itemKey);
     // A reply started meanwhile still belongs to this email.
     if (contextItemKey() !== itemKey) return;
     // The chat app's record does not survive a reload; the map does.
-    if (exists) rememberChatItem(threadId, itemKey);
+    if (exists && threadId !== undefined) {
+      rememberChatItem(threadId, itemKey);
+      void router.navigate({ to: '/chats/$threadId', params: { threadId } });
+      return;
+    }
     // The email in the state makes each email's new chat its own location:
     // the router reuses the page for an identical one, and with it the text
     // typed for the previous email.
-    await (exists
-      ? router.navigate({ to: '/chats/$threadId', params: { threadId } })
-      : router.navigate({ to: '/chat', state: { paneItem: itemKey } }));
+    void router.navigate({ to: '/chat', state: { paneItem: itemKey } });
   }
 
   // A draft or an empty selection keeps the pane on the email it showed, so
@@ -78,13 +95,23 @@ export function followOutlookItem({
   // loading a chat page both take a moment the user may spend switching.
   const startedChats = new Map<string, string | null>();
   const stopNewChats = watchNewChats(() => {
-    chatActivity += 1;
     const itemKey = contextItemKey();
-    return (threadId) => startedChats.set(threadId, itemKey);
+    const attempt = opening;
+    if (attempt) attempt.pendingCreates += 1;
+    return (threadId) => {
+      if (threadId !== undefined) {
+        startedChats.set(threadId, itemKey);
+        if (opening === attempt) opening = undefined;
+        return;
+      }
+      if (!attempt) return;
+      attempt.pendingCreates -= 1;
+      showOpenedChat(attempt);
+    };
   });
   const startedOn = new Map<string, string | null>();
   const stopNoting = router.subscribe('onBeforeNavigate', ({ toLocation }) => {
-    if (CHAT_PATH.test(toLocation.pathname)) chatActivity += 1;
+    if (CHAT_PATH.test(toLocation.pathname)) opening = undefined;
     startedOn.set(toLocation.href, contextItemKey());
   });
   const stopRecording = router.subscribe('onResolved', ({ toLocation }) => {
@@ -116,6 +143,7 @@ export function followOutlookItem({
   if (itemKey && chats.chatFor(itemKey)) void open(itemKey);
 
   return () => {
+    opening = undefined;
     stopWatching();
     stopNewChats();
     stopNoting();

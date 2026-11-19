@@ -77,6 +77,36 @@ describe('PlusButton', () => {
     ).toBe('true');
   });
 
+  it('closes skill selection during submit and allows it again after cancel', async () => {
+    const props = {
+      onFileUpload: vi.fn(),
+      onSkillSelect: vi.fn(),
+      isFileSourceDisabled: true,
+      isImageUploadDisabled: true,
+    };
+    const { rerender } = render(<PlusButton {...props} />);
+    await openMenu();
+    const menuItem = screen.getByRole('menuitem', {
+      name: 'chatInput.addSkill',
+    });
+    fireEvent.keyDown(menuItem, { key: 'ArrowRight' });
+    await screen.findByRole('menuitem', { name: 'Formal tone' });
+
+    rerender(<PlusButton {...props} isSubmitting />);
+    expect(screen.queryByRole('menuitem', { name: 'Formal tone' })).toBeNull();
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', {
+        name: 'chatInput.addButtonTooltip',
+      }).disabled,
+    ).toBe(true);
+
+    rerender(<PlusButton {...props} />);
+    await openMenu();
+    expect(
+      screen.getByRole('menuitem', { name: 'chatInput.addSkill' }),
+    ).toBeTruthy();
+  });
+
   it('keeps audio upload and shows no skill picker in the web composer', async () => {
     render(<PlusButton onFileUpload={vi.fn()} />);
     await openMenu();

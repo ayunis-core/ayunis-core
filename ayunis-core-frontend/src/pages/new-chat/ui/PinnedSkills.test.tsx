@@ -70,6 +70,18 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('PinnedSkills project context', () => {
+  it('does not change the selected skill during submit', async () => {
+    const { onSelect, rerender } = setup();
+    const skill = await screen.findByRole('button', { name: 'Personal Skill' });
+    rerender(<PinnedSkills onSkillSelect={onSelect} isSubmitting />);
+    fireEvent.click(skill);
+    expect(onSelect).not.toHaveBeenCalled();
+
+    rerender(<PinnedSkills onSkillSelect={onSelect} />);
+    fireEvent.click(skill);
+    expect(onSelect).toHaveBeenCalledOnce();
+  });
+
   it('uses identical selection controls for personal and project pins', async () => {
     const { onSelect } = setup('project-a');
     fireEvent.click(

@@ -20,12 +20,14 @@ interface PinnedSkillsProps {
     workspaceId?: string,
   ) => void;
   selectedSkillId?: string;
+  isSubmitting?: boolean;
   workspaceId?: string | null;
 }
 
 export function PinnedSkills({
   onSkillSelect,
   selectedSkillId,
+  isSubmitting = false,
   workspaceId,
 }: Readonly<PinnedSkillsProps>) {
   const { t } = useTranslation('common');
@@ -61,6 +63,7 @@ export function PinnedSkills({
             <Button
               variant={selectedSkillId === skill.id ? 'default' : 'outline'}
               size="sm"
+              disabled={isSubmitting}
               aria-pressed={selectedSkillId === skill.id}
               data-testid={`pinned-skill-${skill.id}`}
               onClick={() =>

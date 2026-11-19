@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   addAttachmentAsSource,
   answeredToolCallIds,
@@ -13,6 +20,7 @@ import {
   type OutlookToolCall,
   type OutlookToolOutcome,
 } from '@/features/outlook-tools';
+import { isThreadRunActive } from '@/features/thread-run';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import { resolvePiiTokens } from '@/widgets/markdown';
 import { outlookAttachmentSourceApi } from '@/pages/chat/api/outlook-attachment-source-api';
@@ -32,6 +40,7 @@ interface UseOutlookToolBridgeParams {
   threadId: string;
   messages: readonly Message[];
   isStreaming: boolean;
+  isCheckingForRun: boolean;
   piiMasks: readonly PiiMask[];
   sendToolResult: (result: ToolResult) => Promise<void>;
 }
@@ -131,6 +140,7 @@ export function useOutlookToolBridge({
   threadId,
   messages,
   isStreaming,
+  isCheckingForRun,
   piiMasks,
   sendToolResult,
 }: UseOutlookToolBridgeParams) {
@@ -146,21 +156,44 @@ export function useOutlookToolBridge({
   // the chat did not start, such as one reattached after a reload, belongs
   // to the mail the chat was opened next to.
   const runItemKey = useRef<string | null>(null);
-  const endedRun = useRef<{ failed: boolean } | null>(null);
-  const [runEnds, setRunEnds] = useState(0);
+  const [endedRun, setEndedRun] = useState<{
+    threadId: string;
+    failed: boolean;
+    reopened?: boolean;
+  } | null>(null);
+  const settledRun = useRef<typeof endedRun>(null);
+  const activeThreadId = useRef<string | null>(null);
   // The mail each call of a run this page saw was made for. A draft opens a
   // reply only there, and a draft without one is not offered at all.
   const [callItemKeys, setCallItemKeys] = useState<
     Record<string, string | null>
   >({});
 
+  useLayoutEffect(() => {
+    if (!embedded) return;
+    activeThreadId.current = threadId;
+    return () => {
+      activeThreadId.current = null;
+    };
+  }, [embedded, threadId]);
+
   const runEnded = useCallback(
-    (failed: boolean) => {
-      if (!embedded) return;
-      endedRun.current = { failed };
-      setRunEnds((count) => count + 1);
+    (failed: boolean, reason?: 'reattach-failed') => {
+      // An in-flight request retains its original callback across chat switches.
+      if (activeThreadId.current !== threadId) return;
+      setEndedRun((current) => {
+        // A transport error tells us nothing about the saved call we reopened.
+        if (
+          reason === 'reattach-failed' &&
+          current?.threadId === threadId &&
+          current.reopened
+        ) {
+          return current;
+        }
+        return { threadId, failed };
+      });
     },
-    [embedded],
+    [threadId],
   );
 
   useEffect(() => {
@@ -194,10 +227,12 @@ export function useOutlookToolBridge({
           .map(({ id }) => id)
           .filter((id) => !waiting.has(id)),
       );
-      if (waiting.size > 0) runEnded(false);
+      if (waiting.size > 0) {
+        setEndedRun({ threadId, failed: false, reopened: true });
+      }
     }
     return () => batch.current?.abort();
-  }, [embedded, threadId, runEnded]);
+  }, [embedded, threadId]);
 
   const execute = useCallback(
     async (
@@ -225,14 +260,18 @@ export function useOutlookToolBridge({
   );
 
   useEffect(() => {
-    const ended = endedRun.current;
-    if (!embedded || !ended || isStreaming) return;
-    endedRun.current = null;
-    const calls = outlookToolCalls(messagesRef.current).filter(
-      ({ id }) => !handled.current.has(id),
-    );
+    if (!embedded || endedRun?.threadId !== threadId || isStreaming) return;
+    if (settledRun.current === endedRun) return;
+    if (endedRun.reopened && isCheckingForRun) return;
+    // Reattach registers its stream before React can publish isStreaming.
+    if (isThreadRunActive(threadId)) return;
+    settledRun.current = endedRun;
+    const candidates = endedRun.reopened
+      ? waitingReads(messagesRef.current)
+      : outlookToolCalls(messagesRef.current);
+    const calls = candidates.filter(({ id }) => !handled.current.has(id));
     calls.forEach(({ id }) => handled.current.add(id));
-    if (ended.failed || calls.length === 0) return;
+    if (endedRun.failed || calls.length === 0) return;
     const runItem = runItemKey.current;
     setCallItemKeys((current) => ({
       ...current,
@@ -250,7 +289,15 @@ export function useOutlookToolBridge({
       (call) => execute(call, { signal: controller.signal, expectedItemKey }),
       runItem,
     ).then((result) => result && sendToolResult(result));
-  }, [embedded, runEnds, isStreaming, execute, sendToolResult]);
+  }, [
+    embedded,
+    endedRun,
+    isStreaming,
+    isCheckingForRun,
+    threadId,
+    execute,
+    sendToolResult,
+  ]);
 
   /**
    * Before the user's message is sent: a new turn supersedes the last. A new

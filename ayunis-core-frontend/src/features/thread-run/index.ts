@@ -14,6 +14,7 @@ export {
 } from './model/useIsThreadRunActive';
 export {
   abortActiveThreadRun,
+  isThreadRunActive,
   registerActiveThreadRun,
   unregisterActiveThreadRun,
 } from './model/active-thread-run';

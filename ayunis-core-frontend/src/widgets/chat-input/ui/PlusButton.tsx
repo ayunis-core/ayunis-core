@@ -17,7 +17,7 @@ import {
 import { Badge } from '@ayunis/ui/components/badge';
 import { AudioLines, Brain, Loader2, Paperclip, Plus } from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
-import { useRef, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { useKnowledgeBases } from '@/widgets/chat-input/api/useKnowledgeBases';
 import { useTranslation } from 'react-i18next';
 import { showError } from '@/shared/lib/toast';
@@ -39,6 +39,7 @@ import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface PlusButtonProps {
   onFileUpload: (files: File[]) => void;
+  isSubmitting?: boolean;
   onImageSelect?: (files: FileList | null) => void;
   isFileSourceDisabled?: boolean;
   isImageUploadDisabled?: boolean;
@@ -52,6 +53,7 @@ interface PlusButtonProps {
 
 export default function PlusButton({
   onFileUpload,
+  isSubmitting = false,
   onImageSelect,
   isFileSourceDisabled,
   isImageUploadDisabled = false,
@@ -63,6 +65,8 @@ export default function PlusButton({
   selectedSkillId,
 }: Readonly<PlusButtonProps>) {
   const isEmbedded = useEmbedded();
+  const [menuOpen, setMenuOpen] = useState(false);
+  if (isSubmitting && menuOpen) setMenuOpen(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -120,13 +124,13 @@ export default function PlusButton({
   return (
     <Tooltip>
       <TooltipContent>{t('chatInput.addButtonTooltip')}</TooltipContent>
-      <DropdownMenu>
+      <DropdownMenu open={!isSubmitting && menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <TooltipTrigger asChild>
             <Button
               size="icon"
               variant="outline"
-              disabled={isUploadDisabled && !onSkillSelect}
+              disabled={isSubmitting || (isUploadDisabled && !onSkillSelect)}
               aria-label={t('chatInput.addButtonTooltip')}
             >
               <Plus className="h-4 w-4" />
