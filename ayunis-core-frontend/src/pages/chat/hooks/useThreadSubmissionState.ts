@@ -1,5 +1,8 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { useIsThreadRunDeferred } from '@/features/thread-run';
+import {
+  takeInterruptedThreadRunText,
+  useIsThreadRunDeferred,
+} from '@/features/thread-run';
 import {
   clearPendingThreadSubmission,
   completeThreadSubmission,
@@ -38,6 +41,13 @@ export function useThreadSubmissionState({
     () => getFailedThreadSubmission(threadId),
     () => null,
   );
+
+  useEffect(() => {
+    const text = takeInterruptedThreadRunText(threadId);
+    if (text === null) return;
+    startThreadSubmission(threadId, { text });
+    completeThreadSubmission(threadId, true);
+  }, [threadId]);
 
   useEffect(() => {
     if (!failedSubmission) return;
