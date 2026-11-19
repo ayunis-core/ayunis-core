@@ -6629,6 +6629,33 @@ export interface ConnectorResponseDto {
   status: ConnectorStatus;
 }
 
+export interface Microsoft365ConnectorResponseDto {
+  /** Whether the organization has set up Microsoft 365 */
+  status: ConnectorStatus;
+  /**
+     * Directory (tenant) ID; null while not set up
+     * @nullable
+     */
+  tenantId: string | null;
+  /**
+     * Application (client) ID; null while not set up
+     * @nullable
+     */
+  clientId: string | null;
+}
+
+export interface SaveMicrosoft365ConnectorDto {
+  /** Directory (tenant) ID of the Entra tenant */
+  tenantId: string;
+  /** Application (client) ID of the Entra app registration */
+  clientId: string;
+  /**
+     * Value of a client secret of the app registration. Required to set up the connection; omit it to keep the stored secret. Never returned.
+     * @maxLength 1024
+     */
+  clientSecret?: string;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;

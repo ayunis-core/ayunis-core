@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { AlertCircle } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { AlertCircle, ChevronRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
@@ -12,7 +13,14 @@ import {
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { useConnectors } from '@/pages/admin-settings/connections-settings/api/useConnectors';
-import { ConnectorStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import {
+  ConnectorStatus,
+  type ConnectorProduct,
+} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+
+const connectorPages = {
+  microsoft_365: '/admin-settings/connections/microsoft-365',
+} as const satisfies Record<ConnectorProduct, string>;
 
 export function ConnectionsSettingsPage() {
   const { t } = useTranslation('admin-settings-connections');
@@ -45,23 +53,27 @@ export function ConnectionsSettingsPage() {
               variant="outline"
               data-testid={`connections-connector-${connector.product}`}
               data-status={connector.status}
+              asChild
             >
-              <ItemContent>
-                <ItemTitle>
-                  {t(`connections.products.${connector.product}`)}
-                </ItemTitle>
-              </ItemContent>
-              <ItemActions>
-                <Badge
-                  variant={
-                    connector.status === ConnectorStatus.set_up
-                      ? 'default'
-                      : 'secondary'
-                  }
-                >
-                  {t(`connections.status.${connector.status}`)}
-                </Badge>
-              </ItemActions>
+              <Link to={connectorPages[connector.product]}>
+                <ItemContent>
+                  <ItemTitle>
+                    {t(`connections.products.${connector.product}`)}
+                  </ItemTitle>
+                </ItemContent>
+                <ItemActions>
+                  <Badge
+                    variant={
+                      connector.status === ConnectorStatus.set_up
+                        ? 'default'
+                        : 'secondary'
+                    }
+                  >
+                    {t(`connections.status.${connector.status}`)}
+                  </Badge>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </ItemActions>
+              </Link>
             </Item>
           ))}
         </div>

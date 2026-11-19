@@ -10,5 +10,44 @@
     },
     "loadError": "The connections could not be loaded.",
     "retry": "Retry"
+  },
+  "microsoft365": {
+    "loadError": "The Microsoft 365 connection could not be loaded.",
+    "setup": {
+      "title": "Entra app",
+      "tenantId": "Directory (tenant) ID",
+      "clientId": "Application (client) ID",
+      "clientSecret": "Client secret value",
+      "clientSecretKept": "Leave empty to keep the stored secret."
+    },
+    "save": {
+      "button": "Save",
+      "saving": "Saving…",
+      "success": "Microsoft 365 connection saved.",
+      "error": "The Microsoft 365 connection could not be saved."
+    },
+    "remove": {
+      "button": "Remove connection",
+      "title": "Remove Microsoft 365 connection?",
+      "description": "The tenant ID, client ID and client secret are deleted. You can set up the connection again at any time.",
+      "confirm": "Remove",
+      "cancel": "Cancel",
+      "success": "Microsoft 365 connection removed.",
+      "error": "The Microsoft 365 connection could not be removed."
+    },
+    "validation": {
+      "tenantId": {
+        "matches": "Enter the directory (tenant) ID as a GUID, e.g. 6f1c2c4e-3c1a-4f4e-9a59-2f1f0b8a7d11."
+      },
+      "clientId": {
+        "matches": "Enter the application (client) ID as a GUID, e.g. 0b8a7d11-2f1f-4f4e-9a59-6f1c2c4e3c1a."
+      },
+      "clientSecret": {
+        "required": "Enter the client secret value.",
+        "isNotEmpty": "Enter the client secret value.",
+        "maxLength": "The client secret value must be 1024 characters or fewer."
+      },
+      "invalid": "Invalid input"
+    }
   }
 }
