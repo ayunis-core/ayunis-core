@@ -16,6 +16,8 @@ import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-proc
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { StorageUnavailableError } from 'src/domain/storage/application/storage.errors';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
+import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
+import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { PauseSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.use-case';
 import { ProviderServerError } from 'src/common/errors/provider.errors';
@@ -656,6 +658,28 @@ describe('SyncedFileProcessingConsumer', () => {
 
     expect(harness.filesOf()).toEqual([]);
     expect(harness.knowledgeBase.documents.size).toBe(0);
+  });
+
+  it('skips a file found encrypted when it is read, removing its document instead of failing it', async () => {
+    const harness = createProcessingHarness();
+    const id = harness.system.add('Personalakte.docx');
+    harness.system.add('Hundesteuer.pdf');
+    await syncAndProcess(harness);
+    harness.system.edit(id);
+    harness.system.encrypted.add(id);
+
+    await syncAndProcess(harness);
+
+    expect(fileAt(harness, 'Personalakte.docx')).toMatchObject({
+      state: SyncedFileState.SKIPPED,
+      skipReason: SyncedFileSkipReason.ENCRYPTED,
+      sourceId: null,
+    });
+    expect(harness.searchable()).toEqual([
+      expect.stringContaining('Hundesteuer.pdf'),
+    ]);
+    await syncAndProcess(harness);
+    expect(harness.jobs).toEqual([]);
   });
 
   it('delays the job until the source system allows it again, failing nothing', async () => {

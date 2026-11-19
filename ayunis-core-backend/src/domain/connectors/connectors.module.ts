@@ -17,6 +17,13 @@ import { ConnectorSyncAccessService } from './application/services/connector-syn
 import { ListConnectorChangesUseCase } from './application/use-cases/list-connector-changes/list-connector-changes.use-case';
 import { FetchConnectorItemContentUseCase } from './application/use-cases/fetch-connector-item-content/fetch-connector-item-content.use-case';
 import { FindSetUpConnectorUseCase } from './application/use-cases/find-set-up-connector/find-set-up-connector.use-case';
+import { MicrosoftGraphPort } from './application/ports/microsoft-graph.port';
+import { MicrosoftGraphClient } from './infrastructure/microsoft-graph/microsoft-graph.client';
+import { Microsoft365GraphTokensService } from './application/services/microsoft-365-graph-tokens.service';
+import { SharePointLocationResolver } from './application/services/sharepoint/sharepoint-location-resolver.service';
+import { SharePointListing } from './application/services/sharepoint/sharepoint-listing.service';
+import { SharePointSyncAdapter } from './application/services/sharepoint/sharepoint-sync.adapter';
+import { ResolveSharePointLocationUseCase } from './application/use-cases/resolve-sharepoint-location/resolve-sharepoint-location.use-case';
 
 @Module({
   imports: [LocalConnectorsRepositoryModule],
@@ -34,11 +41,18 @@ import { FindSetUpConnectorUseCase } from './application/use-cases/find-set-up-c
     SaveMicrosoft365ConnectorUseCase,
     RemoveConnectionUseCase,
     TestMicrosoft365ConnectionUseCase,
-    // No product syncs yet; Microsoft 365 adds its adapter here (AYC-1636).
+    { provide: MicrosoftGraphPort, useClass: MicrosoftGraphClient },
+    Microsoft365GraphTokensService,
+    SharePointLocationResolver,
+    SharePointListing,
+    SharePointSyncAdapter,
     {
       provide: ConnectorSyncAdapterRegistry,
-      useFactory: () => new ConnectorSyncAdapterRegistry([]),
+      useFactory: (sharePoint: SharePointSyncAdapter) =>
+        new ConnectorSyncAdapterRegistry([sharePoint]),
+      inject: [SharePointSyncAdapter],
     },
+    ResolveSharePointLocationUseCase,
     ConnectorSyncAccessService,
     ListConnectorChangesUseCase,
     FetchConnectorItemContentUseCase,
@@ -48,6 +62,7 @@ import { FindSetUpConnectorUseCase } from './application/use-cases/find-set-up-c
     ListConnectorChangesUseCase,
     FetchConnectorItemContentUseCase,
     FindSetUpConnectorUseCase,
+    ResolveSharePointLocationUseCase,
   ],
 })
 export class ConnectorsModule {}
