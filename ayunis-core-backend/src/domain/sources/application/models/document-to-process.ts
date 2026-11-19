@@ -23,4 +23,21 @@ export interface DocumentToProcess {
    * segments and indexed in chunks that know their time range.
    */
   keepTranscriptSegments?: boolean;
+  /**
+   * True when the caller backs off from provider outages itself: the
+   * pipeline then hands such a failure back as a {@link ProcessingDeferredError}
+   * instead of retrying or failing the source.
+   */
+  deferProviderOutages?: boolean;
+}
+
+/**
+ * A provider outage stopped the pipeline; the source is still PROCESSING
+ * with its saved results, for the caller to process again later.
+ */
+export class ProcessingDeferredError extends Error {
+  constructor(readonly outage: unknown) {
+    super('Processing deferred for a provider outage', { cause: outage });
+    this.name = 'ProcessingDeferredError';
+  }
 }

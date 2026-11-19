@@ -10,6 +10,7 @@ import {
   SyncedLocationNotFoundError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { SyncedFileJobsPort } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
@@ -18,8 +19,8 @@ import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/d
 import { RemoveSyncedLocationCommand } from './remove-synced-location.command';
 
 /**
- * Removes a location with its documents and their index entries, and the
- * queued processing of its files. Stays available with connectors switched
+ * Removes a location with its documents and their index entries, and its
+ * queued sync with the queued processing of its files. Stays available with connectors switched
  * off, so content can always be removed.
  */
 @Injectable()
@@ -32,6 +33,7 @@ export class RemoveSyncedLocationUseCase {
     private readonly writeAccess: AssertKnowledgeBaseWriteAccessUseCase,
     private readonly deleteSources: DeleteSourcesUseCase,
     private readonly jobs: SyncedFileJobsPort,
+    private readonly runs: SyncRunsPort,
     private readonly contextService: ContextService,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
@@ -60,6 +62,7 @@ export class RemoveSyncedLocationUseCase {
       await this.repository.delete(location.id);
       return locked.files;
     });
+    await this.runs.remove(location.id);
     await this.jobs.remove(
       files.flatMap(({ sourceId, version }) =>
         sourceId ? [{ sourceId, version }] : [],

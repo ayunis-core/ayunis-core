@@ -14,19 +14,21 @@ import type {
 } from 'src/domain/connectors/domain/sync/connector-item';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
-import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import type { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncReconciler } from 'src/domain/knowledge-base-sync/application/services/sync-reconciler.service';
 import { SyncPlanApplier } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
+import { InMemorySyncedLocationsRepository } from './in-memory-synced-locations.fixtures';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
+import { NextSyncedFileBatchQuery } from 'src/domain/knowledge-base-sync/application/use-cases/next-synced-file-batch/next-synced-file-batch.query';
+import { NextSyncedFileBatchUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/next-synced-file-batch/next-synced-file-batch.use-case';
+import { SyncLocationOutcome } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location/sync-location.result';
 import { SyncLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location/sync-location.use-case';
-import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
-import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
-import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
-import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { CheckSourceFileAcceptanceUseCase } from 'src/domain/sources/application/use-cases/check-source-file-acceptance/check-source-file-acceptance.use-case';
 import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
+
+export { InMemorySyncedLocationsRepository };
 
 export const ORG_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 export const KNOWLEDGE_BASE_ID = '22222222-2222-4222-8222-222222222222' as UUID;
@@ -130,7 +132,11 @@ export class FakeSourceSystem {
     return `${item.name} at ${item.version}`;
   }
 
+  /** How often the location was listed. */
+  listings = 0;
+
   async listChanges(cursor: string | null): Promise<ConnectorChangesResult> {
+    this.listings++;
     const listing = this.list(cursor);
     const held = this.held;
     this.held = null;
@@ -141,6 +147,11 @@ export class FakeSourceSystem {
   private list(cursor: string | null): ConnectorChangesResult {
     if (!this.accessGranted)
       return { outcome: ConnectorSyncOutcome.ACCESS_LOST };
+    if (this.throttledUntil)
+      return {
+        outcome: ConnectorSyncOutcome.THROTTLED,
+        retryAt: this.throttledUntil,
+      };
     const next = String(this.log.length);
     if (cursor === null || this.resyncDemanded) {
       this.resyncDemanded = false;
@@ -268,112 +279,6 @@ export class FakeKnowledgeBase {
   }
 }
 
-export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository {
-  readonly locations = new Map<UUID, SyncedLocation>();
-  readonly files = new Map<UUID, SyncedFile>();
-
-  create(location: SyncedLocation): Promise<boolean> {
-    const duplicate = [...this.locations.values()].some(
-      (existing) =>
-        existing.knowledgeBaseId === location.knowledgeBaseId &&
-        existing.connectorId === location.connectorId &&
-        existing.location === location.location,
-    );
-    if (!duplicate) this.locations.set(location.id, location);
-    return Promise.resolve(!duplicate);
-  }
-
-  findById(id: UUID): Promise<SyncedLocation | null> {
-    return Promise.resolve(this.locations.get(id) ?? null);
-  }
-
-  lockById(id: UUID): Promise<SyncedLocation | null> {
-    return this.findById(id);
-  }
-
-  markNoLongerAccessible(id: UUID, lastSyncedAt: Date | null): Promise<void> {
-    if (this.locations.get(id)?.lastSyncedAt === lastSyncedAt)
-      this.update(id, { state: SyncedLocationState.NO_LONGER_ACCESSIBLE });
-    return Promise.resolve();
-  }
-
-  recordSync(id: UUID, cursor: string, syncedAt: Date): Promise<void> {
-    this.update(id, {
-      cursor,
-      lastSyncedAt: syncedAt,
-      state: SyncedLocationState.ACTIVE,
-    });
-    return Promise.resolve();
-  }
-
-  delete(id: UUID): Promise<void> {
-    this.locations.delete(id);
-    for (const file of this.files.values())
-      if (file.locationId === id) this.files.delete(file.id);
-    return Promise.resolve();
-  }
-
-  findFileSourceIds(locationId: UUID): Promise<UUID[]> {
-    return Promise.resolve(
-      [...this.files.values()].flatMap((file) =>
-        file.locationId === locationId && file.sourceId ? [file.sourceId] : [],
-      ),
-    );
-  }
-
-  lockFiles(locationId: UUID): Promise<SyncedFile[]> {
-    return Promise.resolve(
-      [...this.files.values()]
-        .filter((file) => file.locationId === locationId)
-        .map((file) => new SyncedFile({ ...file })),
-    );
-  }
-
-  findFileById(id: UUID): Promise<SyncedFile | null> {
-    const file = this.files.get(id);
-    return Promise.resolve(file ? new SyncedFile({ ...file }) : null);
-  }
-
-  lockFile(id: UUID): Promise<SyncedFile | null> {
-    return this.findFileById(id);
-  }
-
-  skipRemovedAfterFailure(sourceIds: UUID[]): Promise<void> {
-    for (const file of this.files.values())
-      if (
-        file.lastSourceId &&
-        sourceIds.includes(file.lastSourceId) &&
-        file.sourceId === null &&
-        file.state === SyncedFileState.IMPORTED &&
-        file.documentVersion === file.version
-      )
-        file.skip(SyncedFileSkipReason.REMOVED_AFTER_FAILURE);
-    return Promise.resolve();
-  }
-
-  saveFiles(files: SyncedFile[]): Promise<void> {
-    for (const file of files) this.files.set(file.id, new SyncedFile(file));
-    return Promise.resolve();
-  }
-
-  deleteFiles(fileIds: UUID[]): Promise<void> {
-    for (const id of fileIds) this.files.delete(id);
-    return Promise.resolve();
-  }
-
-  clearSources(sourceIds: UUID[]): void {
-    for (const file of this.files.values())
-      if (file.sourceId && sourceIds.includes(file.sourceId))
-        file.sourceId = null;
-  }
-
-  private update(id: UUID, changes: Partial<SyncedLocation>): void {
-    const location = this.locations.get(id);
-    if (location)
-      this.locations.set(id, new SyncedLocation({ ...location, ...changes }));
-  }
-}
-
 export const inlineTransactions = {
   withTransaction: <T>(operation: () => Promise<T>) => operation(),
 } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
@@ -402,7 +307,7 @@ function syncLocationUseCase(
   repository: InMemorySyncedLocationsRepository,
   knowledgeBase: FakeKnowledgeBase,
   system: FakeSourceSystem,
-  options: { connectorsEnabled: boolean; queue: FakeQueue },
+  connectorsEnabled: boolean,
 ): SyncLocationUseCase {
   return new SyncLocationUseCase(
     repository,
@@ -423,26 +328,36 @@ function syncLocationUseCase(
       knowledgeBase.deleteSources as never,
       inlineTransactions,
     ),
-    {
-      enqueue: (_orgId: UUID, enqueued: SyncedFileJobData[]) => {
-        if (options.queue.failing)
-          return Promise.reject(new Error('Redis unavailable'));
-        // Like BullMQ with the producer's job IDs: one job per document version.
-        for (const job of enqueued)
-          if (
-            !options.queue.jobs.some(
-              (queued) =>
-                queued.sourceId === job.sourceId &&
-                queued.version === job.version,
-            )
-          )
-            options.queue.jobs.push(job);
-        return Promise.resolve();
-      },
-      remove: () => Promise.resolve(),
-    },
-    featureConfig(options.connectorsEnabled),
+    featureConfig(connectorsEnabled),
   );
+}
+
+/**
+ * A run's feeding without waiting for the batches: every file it feeds is
+ * queued, once per document version as with the producer's job IDs.
+ */
+async function feedAll(
+  nextBatch: NextSyncedFileBatchUseCase,
+  locationId: UUID,
+  queue: FakeQueue,
+): Promise<void> {
+  let afterFileId: UUID | null = null;
+  for (;;) {
+    const batch = await nextBatch.execute(
+      new NextSyncedFileBatchQuery(locationId, afterFileId),
+    );
+    if (batch.length === 0) return;
+    if (queue.failing) throw new Error('Redis unavailable');
+    for (const job of batch)
+      if (
+        !queue.jobs.some(
+          (queued) =>
+            queued.sourceId === job.sourceId && queued.version === job.version,
+        )
+      )
+        queue.jobs.push(job);
+    afterFileId = batch.at(-1)!.syncedFileId;
+  }
 }
 
 /** The sync engine around one location, with a fake provider and store. */
@@ -460,10 +375,17 @@ export function createSyncHarness(
     location: 'https://municipality.sharepoint.com/sites/bauamt/Dokumente',
   });
   void repository.create(location);
-  const syncLocation = syncLocationUseCase(repository, knowledgeBase, system, {
-    connectorsEnabled: options.connectorsEnabled ?? true,
-    queue,
-  });
+  const connectorsEnabled = options.connectorsEnabled ?? true;
+  const syncLocation = syncLocationUseCase(
+    repository,
+    knowledgeBase,
+    system,
+    connectorsEnabled,
+  );
+  const nextBatch = new NextSyncedFileBatchUseCase(
+    repository,
+    featureConfig(connectorsEnabled),
+  );
   return {
     repository,
     knowledgeBase,
@@ -471,10 +393,21 @@ export function createSyncHarness(
     queue,
     jobs: queue.jobs,
     location,
+    syncLocation,
+    nextBatch,
     filesOf: () =>
       [...repository.files.values()].filter(
         (file) => file.locationId === location.id,
       ),
-    sync: () => syncLocation.execute({ locationId: location.id }),
+    /** A run: lists the changes and feeds the files that need processing. */
+    async sync() {
+      const result = await syncLocation.execute({ locationId: location.id });
+      if (
+        result.outcome === SyncLocationOutcome.SYNCED ||
+        result.outcome === SyncLocationOutcome.SUPERSEDED
+      )
+        await feedAll(nextBatch, location.id, queue);
+      return result;
+    },
   };
 }

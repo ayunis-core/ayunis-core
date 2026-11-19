@@ -20,6 +20,9 @@ import { SyncedFileDocuments } from 'src/domain/knowledge-base-sync/application/
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { throttlePauseEnd } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
+import { PauseSourceProcessingCommand } from 'src/domain/sources/application/use-cases/pause-source-processing/pause-source-processing.command';
+import { PauseSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/pause-source-processing/pause-source-processing.use-case';
 import { CreateReplacementSourceCommand } from 'src/domain/sources/application/use-cases/create-replacement-source/create-replacement-source.command';
 import { CreateReplacementSourceUseCase } from 'src/domain/sources/application/use-cases/create-replacement-source/create-replacement-source.use-case';
 import { GetSourcesByIdsQuery } from 'src/domain/sources/application/use-cases/get-sources-by-ids/get-sources-by-ids.query';
@@ -39,7 +42,8 @@ import {
  * Prepares a queued version of a synced file for the document pipeline: its
  * content is read through the connector and stored as the original of a new
  * hidden replacement of the file's document, which the pipeline then
- * processes. The document stays as it is until the replacement is settled
+ * processes. Waits while the location is paused, and pauses it while the
+ * source system throttles. The document stays as it is until the replacement is settled
  * (`CompleteSyncedFileProcessingUseCase`). Runs without a user.
  */
 @Injectable()
@@ -54,6 +58,7 @@ export class StartSyncedFileProcessingUseCase {
     private readonly getSources: GetSourcesByIdsUseCase,
     private readonly getObjectInfo: GetObjectInfoUseCase,
     private readonly documents: SyncedFileDocuments,
+    private readonly pauseSourceProcessing: PauseSourceProcessingUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -70,6 +75,18 @@ export class StartSyncedFileProcessingUseCase {
       return { outcome: StartSyncedFileProcessingOutcome.DISABLED };
     const current = await this.currentFile(job);
     if (!current) return { outcome: StartSyncedFileProcessingOutcome.SKIPPED };
+    const pausedUntil = current.location.pausedAt(new Date());
+    if (pausedUntil) {
+      // A replacement an earlier attempt left processing waits too; the
+      // stale-processing cleanup would otherwise fail it during a long pause.
+      await this.pauseSourceProcessing.execute(
+        new PauseSourceProcessingCommand(replacementIdOf(job)),
+      );
+      return {
+        outcome: StartSyncedFileProcessingOutcome.PAUSED,
+        retryAt: pausedUntil,
+      };
+    }
     return (
       (await this.resumeReplacement(job, current.file)) ??
       this.readReplacement(job, current.file, current.location)
@@ -133,11 +150,11 @@ export class StartSyncedFileProcessingUseCase {
           location.lastSyncedAt,
         );
         return { outcome: StartSyncedFileProcessingOutcome.ACCESS_LOST };
-      case ConnectorSyncOutcome.THROTTLED:
-        return {
-          outcome: StartSyncedFileProcessingOutcome.THROTTLED,
-          retryAt: content.retryAt,
-        };
+      case ConnectorSyncOutcome.THROTTLED: {
+        const retryAt = throttlePauseEnd(content.retryAt, new Date());
+        await this.repository.pause(location.id, retryAt);
+        return { outcome: StartSyncedFileProcessingOutcome.THROTTLED, retryAt };
+      }
       case ConnectorSyncOutcome.GONE:
         await this.documents.remove(job);
         return { outcome: StartSyncedFileProcessingOutcome.GONE };

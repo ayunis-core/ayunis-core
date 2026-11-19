@@ -23,8 +23,10 @@ describe('RemoveSyncedLocationUseCase', () => {
   }
 
   let removedJobs: { sourceId: UUID; version: string }[] = [];
+  let removedRuns: UUID[] = [];
   beforeEach(() => {
     removedJobs = [];
+    removedRuns = [];
   });
 
   function removal(
@@ -47,6 +49,12 @@ describe('RemoveSyncedLocationUseCase', () => {
           return Promise.resolve();
         },
       } as never,
+      {
+        remove: (locationId: UUID) => {
+          removedRuns.push(locationId);
+          return Promise.resolve();
+        },
+      } as never,
       createMockContextService(
         aUserContext({ orgId: options.orgId ?? ORG_ID }),
       ),
@@ -64,11 +72,12 @@ describe('RemoveSyncedLocationUseCase', () => {
     expect(harness.knowledgeBase.names()).toEqual(['Upload 0.pdf']);
   });
 
-  it('removes the queued processing of its files', async () => {
+  it('removes its queued sync and the queued processing of its files', async () => {
     const harness = await syncedHarness();
 
     await removal(harness).execute({ locationId: harness.location.id });
 
+    expect(removedRuns).toEqual([harness.location.id]);
     expect(removedJobs).toEqual(
       expect.arrayContaining(
         harness.jobs.map(({ sourceId, version }) => ({ sourceId, version })),
