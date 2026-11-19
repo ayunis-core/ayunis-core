@@ -5,8 +5,12 @@ import {
   useMcpIntegrationsControllerCreateCustom,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreateCustomIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
+import type {
+  CreateCustomIntegrationFormData,
+  McpIntegration,
+} from '@/pages/admin-settings/integrations-settings/model/types';
 import type { CreateCustomIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { upsertIntegration } from '@/pages/admin-settings/integrations-settings/lib/integration-pages';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 import type { UseFormReturn } from 'react-hook-form';
@@ -14,7 +18,7 @@ import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 
 export function useCreateCustomIntegration(
   form: UseFormReturn<CreateCustomIntegrationFormData>,
-  onSuccess?: () => void,
+  onSuccess?: (integration: McpIntegration) => void,
 ) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-integrations');
@@ -23,11 +27,17 @@ export function useCreateCustomIntegration(
     mutation: {
       onSuccess: (integration) => {
         trackProbedIntegrationConnection(integration);
+        // Put the saved integration in the list before the page jumps to it;
+        // otherwise the out-of-range page clamp fires before the refetch lands.
+        queryClient.setQueryData<McpIntegration[]>(
+          getMcpIntegrationsControllerListQueryKey(),
+          (current) => current && upsertIntegration(current, integration),
+        );
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
         showSuccess(t('integrations.createCustomIntegration.success'));
-        onSuccess?.();
+        onSuccess?.(integration);
       },
       onError: (error: unknown) => {
         try {

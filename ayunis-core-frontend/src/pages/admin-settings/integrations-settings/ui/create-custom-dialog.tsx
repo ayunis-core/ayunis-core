@@ -11,7 +11,10 @@ import {
 } from '@ayunis/ui/components/dialog';
 import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
-import type { CreateCustomIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
+import type {
+  CreateCustomIntegrationFormData,
+  McpIntegration,
+} from '@/pages/admin-settings/integrations-settings/model/types';
 import { useCreateCustomIntegration } from '@/pages/admin-settings/integrations-settings/api/useCreateCustomIntegration';
 import { buildCustomIntegrationPayload } from '@/pages/admin-settings/integrations-settings/lib/build-custom-integration-payload';
 import {
@@ -26,6 +29,7 @@ import { IntegrationInstructionsField } from './integration-instructions-field';
 interface CreateCustomDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved?: (integration: McpIntegration) => void;
 }
 
 const DEFAULT_VALUES: CreateCustomIntegrationFormData = {
@@ -43,6 +47,7 @@ const DEFAULT_VALUES: CreateCustomIntegrationFormData = {
 export function CreateCustomDialog({
   open,
   onOpenChange,
+  onSaved,
 }: Readonly<CreateCustomDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreateCustomIntegrationFormData>({
@@ -54,9 +59,10 @@ export function CreateCustomDialog({
   });
   const { createCustomIntegration, isCreating } = useCreateCustomIntegration(
     form,
-    () => {
+    (integration) => {
       onOpenChange(false);
       form.reset(DEFAULT_VALUES);
+      onSaved?.(integration);
     },
   );
 

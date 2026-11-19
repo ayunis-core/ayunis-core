@@ -84,7 +84,7 @@ beforeEach(() => {
 });
 
 it('offers custom integration creation on cloud deployments', () => {
-  render(<McpIntegrationsPage isCloud />);
+  render(<McpIntegrationsPage isCloud page={1} />);
 
   fireEvent.click(
     screen.getByRole('button', { name: 'integrations.page.addCustom' }),
@@ -95,7 +95,7 @@ it('offers custom integration creation on cloud deployments', () => {
 
 it('shows admins the Outlook add-in manifest URL while the add-in is enabled', () => {
   outlookAddinEnabled.current = true;
-  render(<McpIntegrationsPage isCloud />);
+  render(<McpIntegrationsPage isCloud page={1} />);
 
   expect(screen.getByTestId('outlook-addin-manifest-url').textContent).toMatch(
     /^https?:\/\/[^/]+\/.*office-addins\/outlook\/manifest\.xml$/,
@@ -103,7 +103,7 @@ it('shows admins the Outlook add-in manifest URL while the add-in is enabled', (
 });
 
 it('leaves the Outlook add-in out while it is disabled', () => {
-  render(<McpIntegrationsPage isCloud />);
+  render(<McpIntegrationsPage isCloud page={1} />);
 
   expect(screen.queryByTestId('outlook-addin-section')).toBeNull();
 });
@@ -112,7 +112,7 @@ it('leaves the Outlook add-in out while it is disabled', () => {
 it('keeps the Outlook add-in instructions when the MCP integrations fail to load', () => {
   outlookAddinEnabled.current = true;
   mcpQuery.error = new Error('MCP down');
-  render(<McpIntegrationsPage isCloud />);
+  render(<McpIntegrationsPage isCloud page={1} />);
 
   expect(screen.getByTestId('outlook-addin-section')).toBeTruthy();
 });

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Plug } from 'lucide-react';
 import { SettingsLayout } from '@/pages/settings/settings-layout';
@@ -24,8 +25,14 @@ import {
   canDisconnectOAuth,
   resolveIntegrationOAuthAction,
 } from '@/pages/settings/integrations-settings/lib/resolve-integration-oauth-action';
+import { PaginationWidget } from '@/widgets/pagination';
+import { paginateItems } from '@/shared/lib/paginate-items';
 
-export default function IntegrationsSettingsPage() {
+const INTEGRATIONS_PAGE_SIZE = 10;
+
+export default function IntegrationsSettingsPage({
+  page,
+}: Readonly<{ page: number }>) {
   const { t } = useTranslation('settings');
   const { integrations, isLoading, isError, refetch } = useUserIntegrations();
   const [activeIntegration, setActiveIntegration] =
@@ -59,6 +66,7 @@ export default function IntegrationsSettingsPage() {
           isLoading={isLoading}
           isError={isError}
           integrations={integrations}
+          page={page}
           onRetry={() => void refetch()}
           onAuthorize={connect}
           onDisconnect={(integration) => disconnectOAuth.mutate(integration.id)}
@@ -81,6 +89,7 @@ function IntegrationsContent({
   isLoading,
   isError,
   integrations,
+  page,
   onRetry,
   onAuthorize,
   onDisconnect,
@@ -89,6 +98,7 @@ function IntegrationsContent({
   isLoading: boolean;
   isError: boolean;
   integrations: McpIntegrationResponseDto[];
+  page: number;
   onRetry: () => void;
   onAuthorize: (integration: McpIntegrationResponseDto) => void;
   onDisconnect: (integration: McpIntegrationResponseDto) => void;
@@ -128,8 +138,46 @@ function IntegrationsContent({
   }
 
   return (
+    <PaginatedIntegrations
+      integrations={integrations}
+      page={page}
+      onAuthorize={onAuthorize}
+      onDisconnect={onDisconnect}
+      isOAuthPending={isOAuthPending}
+    />
+  );
+}
+
+// Mounted only once data has loaded, so the empty list during loading can't reset the page.
+function PaginatedIntegrations({
+  integrations,
+  page,
+  onAuthorize,
+  onDisconnect,
+  isOAuthPending,
+}: Readonly<{
+  integrations: McpIntegrationResponseDto[];
+  page: number;
+  onAuthorize: (integration: McpIntegrationResponseDto) => void;
+  onDisconnect: (integration: McpIntegrationResponseDto) => void;
+  isOAuthPending: boolean;
+}>) {
+  const navigate = useNavigate({ from: '/settings/integrations' });
+  const { pageItems, currentPage, totalPages } = paginateItems(
+    integrations,
+    page,
+    INTEGRATIONS_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    if (currentPage !== page) {
+      void navigate({ search: { page: currentPage }, replace: true });
+    }
+  }, [currentPage, page, navigate]);
+
+  return (
     <div className="space-y-3">
-      {integrations.map((integration) => (
+      {pageItems.map((integration) => (
         <IntegrationRow
           key={integration.id}
           integration={integration}
@@ -138,6 +186,12 @@ function IntegrationsContent({
           isOAuthPending={isOAuthPending}
         />
       ))}
+      <PaginationWidget
+        currentPage={currentPage}
+        totalPages={totalPages}
+        to="/settings/integrations"
+        buildSearchParams={(targetPage) => ({ page: targetPage })}
+      />
     </div>
   );
 }

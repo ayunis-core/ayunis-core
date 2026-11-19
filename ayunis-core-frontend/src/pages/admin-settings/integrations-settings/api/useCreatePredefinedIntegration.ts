@@ -6,10 +6,14 @@ import {
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { CreatePredefinedIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
+import { upsertIntegration } from '@/pages/admin-settings/integrations-settings/lib/integration-pages';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 
-export function useCreatePredefinedIntegration(onSuccess?: () => void) {
+export function useCreatePredefinedIntegration(
+  onSuccess?: (integration: McpIntegration) => void,
+) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-integrations');
 
@@ -17,11 +21,17 @@ export function useCreatePredefinedIntegration(onSuccess?: () => void) {
     mutation: {
       onSuccess: (integration) => {
         trackProbedIntegrationConnection(integration);
+        // Put the saved integration in the list before the page jumps to it;
+        // otherwise the out-of-range page clamp fires before the refetch lands.
+        queryClient.setQueryData<McpIntegration[]>(
+          getMcpIntegrationsControllerListQueryKey(),
+          (current) => current && upsertIntegration(current, integration),
+        );
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
         showSuccess(t('integrations.createPredefinedIntegration.success'));
-        onSuccess?.();
+        onSuccess?.(integration);
       },
       onError: (error: unknown) => {
         console.error('Create predefined integration failed:', error);
