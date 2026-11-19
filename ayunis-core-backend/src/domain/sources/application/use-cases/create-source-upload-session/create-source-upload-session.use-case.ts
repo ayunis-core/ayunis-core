@@ -10,12 +10,13 @@ import {
   detectFileType,
   getCanonicalMimeType,
   isAudioFile,
-  isCSVFile,
-  isDocumentSourceFile,
-  isSpreadsheetFile,
   SUPPORTED_AUDIO_FILE_TYPES,
   SUPPORTED_FILE_TYPES,
 } from 'src/common/util/file-type';
+import {
+  isDocumentPipelineFile,
+  maxSourceFileBytes,
+} from 'src/domain/sources/application/util/source-file-limits.helper';
 import { EmbeddingReadinessService } from 'src/domain/sources/application/services/embedding-readiness.service';
 import { SourceUploadSessionRepository } from 'src/domain/sources/application/ports/source-upload-session.repository';
 import {
@@ -111,10 +112,9 @@ export class CreateSourceUploadSessionUseCase {
   private resolveFileType(command: CreateSourceUploadSessionCommand): string {
     const detected = detectFileType(command.mimeType, command.fileName);
     const recording = command.targetType === SourceUploadTargetType.RECORDING;
-    const isTable = isCSVFile(detected) || isSpreadsheetFile(detected);
     const accepted = recording
       ? isAudioFile(detected)
-      : isDocumentSourceFile(detected) || isTable;
+      : isDocumentPipelineFile(detected);
     if (!accepted) {
       throw new UnsupportedFileTypeError(
         detected === 'unknown' ? command.fileName : detected,
@@ -136,15 +136,14 @@ export class CreateSourceUploadSessionUseCase {
     }
   }
 
-  // Two types do not follow the document limit the target passes in.
-  // Recordings (AUDIO_MAX_UPLOAD_BYTES) are sent to the transcription provider
-  // whole, so their cap follows what one request may carry. PDFs
-  // (PDF_MAX_UPLOAD_BYTES) are processed from disk, so their size no longer
-  // drives memory use (AYC-1729).
   private maxBytesFor(command: CreateSourceUploadSessionCommand): number {
-    const detected = detectFileType(command.mimeType, command.fileName);
-    if (isAudioFile(detected)) return this.transcription.maxUploadBytes;
-    if (detected === 'pdf') return this.sourceUpload.pdfMaxBytes;
-    return command.maxFileSizeBytes;
+    return maxSourceFileBytes(
+      detectFileType(command.mimeType, command.fileName),
+      {
+        documentMaxBytes: command.maxFileSizeBytes,
+        pdfMaxBytes: this.sourceUpload.pdfMaxBytes,
+        audioMaxBytes: this.transcription.maxUploadBytes,
+      },
+    );
   }
 }

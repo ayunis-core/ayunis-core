@@ -1,0 +1,78 @@
+import { randomUUID } from 'crypto';
+import { createMockContextService } from 'src/common/context/testing/context.fixtures';
+import { aUserContext } from 'src/common/context/testing/context.fixtures';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { SyncedLocationNotFoundError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import {
+  createSyncHarness,
+  inlineTransactions,
+  KNOWLEDGE_BASE_ID,
+  ORG_ID,
+  syncedLocationLocks,
+} from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
+import { RemoveSyncedLocationUseCase } from './remove-synced-location.use-case';
+
+describe('RemoveSyncedLocationUseCase', () => {
+  async function syncedHarness() {
+    const harness = createSyncHarness();
+    harness.system.add('Hundesteuer.pdf');
+    harness.system.add('Gebühren.pdf');
+    harness.knowledgeBase.upload(1);
+    await harness.sync();
+    return harness;
+  }
+
+  function removal(
+    harness: Awaited<ReturnType<typeof syncedHarness>>,
+    options: { orgId?: typeof ORG_ID; writable?: boolean } = {},
+  ) {
+    return new RemoveSyncedLocationUseCase(
+      harness.repository,
+      syncedLocationLocks(harness.repository),
+      {
+        execute: () =>
+          options.writable === false
+            ? Promise.reject(new KnowledgeBaseNotFoundError(KNOWLEDGE_BASE_ID))
+            : Promise.resolve(),
+      } as never,
+      harness.knowledgeBase.deleteSources as never,
+      createMockContextService(
+        aUserContext({ orgId: options.orgId ?? ORG_ID }),
+      ),
+      inlineTransactions,
+    );
+  }
+
+  it("removes the location with its files and documents, leaving the knowledge base's other documents", async () => {
+    const harness = await syncedHarness();
+
+    await removal(harness).execute({ locationId: harness.location.id });
+
+    expect(harness.repository.locations.size).toBe(0);
+    expect(harness.repository.files.size).toBe(0);
+    expect(harness.knowledgeBase.names()).toEqual(['Upload 0.pdf']);
+  });
+
+  it('removes nothing for a user who may not change the knowledge base', async () => {
+    const harness = await syncedHarness();
+
+    await expect(
+      removal(harness, { writable: false }).execute({
+        locationId: harness.location.id,
+      }),
+    ).rejects.toThrow(KnowledgeBaseNotFoundError);
+    expect(harness.repository.locations.size).toBe(1);
+    expect(harness.knowledgeBase.documents.size).toBe(3);
+  });
+
+  it("reports another organization's location as not found", async () => {
+    const harness = await syncedHarness();
+
+    await expect(
+      removal(harness, { orgId: randomUUID() }).execute({
+        locationId: harness.location.id,
+      }),
+    ).rejects.toThrow(SyncedLocationNotFoundError);
+    expect(harness.knowledgeBase.documents.size).toBe(3);
+  });
+});

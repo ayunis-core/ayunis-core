@@ -8,6 +8,8 @@ import type { ConnectorProduct } from 'src/domain/connectors/domain/connector-pr
 export abstract class ConnectorsRepository {
   abstract findAllByOrgId(orgId: UUID): Promise<Connector[]>;
 
+  abstract findById(id: UUID): Promise<Connector | null>;
+
   abstract findByOrgIdAndProduct(
     orgId: UUID,
     product: ConnectorProduct,
