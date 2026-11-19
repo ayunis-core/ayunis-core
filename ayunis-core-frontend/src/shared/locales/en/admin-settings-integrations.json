@@ -211,14 +211,14 @@
       "title": "Microsoft Outlook",
       "description": "With the Ayunis add-in, your staff use Ayunis right inside Outlook. It is deployed in the Microsoft 365 admin center by someone with Microsoft 365 or Exchange admin rights.",
       "manifestUrl": "Manifest URL",
-      "openAdminCenter": "Open Microsoft 365 admin center",
+      "openIntegratedApps": "Open Integrated apps",
       "downloadManifest": "Download manifest",
       "steps": {
         "title": "How to deploy the add-in",
-        "openAdminCenter": "In the Microsoft 365 admin center, open Settings → Integrated apps → Add-ins.",
-        "deployAddin": "Select Deploy Add-in and choose to upload a custom add-in.",
-        "provideUrl": "Provide the manifest URL.",
-        "assign": "Choose who gets the add-in and finish the deployment."
+        "openAddins": "Sign in to the Microsoft 365 admin center and select the Add-ins link near the top of the Integrated apps page.",
+        "deployAddin": "Select Deploy Add-in, then Next, and choose to upload a custom add-in.",
+        "provideUrl": "Under Choose how to upload app, choose to provide a URL, paste the manifest URL above, and select Upload.",
+        "assign": "Select Everyone, Specific users/groups or Just me, then select Deploy."
       }
     }
   }

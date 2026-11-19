@@ -12,10 +12,11 @@ import config from '@/shared/config';
 import { CopyButton } from '@/shared/ui/copy-button';
 import { outlookManifestUrl } from '@/pages/admin-settings/integrations-settings/lib/outlook-manifest-url';
 
-// Microsoft's link to the Microsoft 365 admin center, from its deployment docs.
-const M365_ADMIN_CENTER_URL =
-  'https://go.microsoft.com/fwlink/p/?linkid=2024339';
-const DEPLOY_STEPS = ['openAdminCenter', 'deployAddin', 'provideUrl', 'assign'];
+// The Microsoft 365 admin center page where add-ins are deployed; the admin
+// center's home doesn't lead there obviously.
+const INTEGRATED_APPS_URL =
+  'https://admin.microsoft.com/#/Settings/IntegratedApps';
+const DEPLOY_STEPS = ['openAddins', 'deployAddin', 'provideUrl', 'assign'];
 
 /**
  * How an organisation installs the Outlook add-in. Microsoft's install flows
@@ -59,12 +60,12 @@ export function OutlookAddinSection() {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" asChild>
             <a
-              href={M365_ADMIN_CENTER_URL}
+              href={INTEGRATED_APPS_URL}
               target="_blank"
               rel="noopener noreferrer"
             >
               <ExternalLink className="h-4 w-4" />
-              {t('integrations.outlook.openAdminCenter')}
+              {t('integrations.outlook.openIntegratedApps')}
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>

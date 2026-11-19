@@ -2,7 +2,7 @@ import { outlookAddinId } from './outlook-addin-id';
 
 // Outlook and the Microsoft 365 admin center only apply a manifest update
 // whose version is higher than the installed one: bump on every change.
-export const OUTLOOK_MANIFEST_VERSION = '1.0.0';
+export const OUTLOOK_MANIFEST_VERSION = '1.0.1';
 
 // Served by the frontend build (ayunis-core-frontend/outlook and
 // public/outlook). Outlook on the web shows the task pane in an iframe, so
@@ -44,7 +44,7 @@ export function renderOutlookManifest(frontendBaseUrl: string): string {
   <Version>${OUTLOOK_MANIFEST_VERSION}</Version>
   <ProviderName>Ayunis</ProviderName>
   <DefaultLocale>de-DE</DefaultLocale>
-  <DisplayName DefaultValue="Ayunis"/>
+  <DisplayName DefaultValue="Ayunis Outlook"/>
   <Description DefaultValue="Ihr KI-Assistent Ayunis direkt in Outlook.">
     <Override Locale="en-US" Value="Your Ayunis AI assistant, right inside Outlook."/>
   </Description>
@@ -166,8 +166,8 @@ ${indent(images, 4)}
 ${indent(taskpanes, 4)}
   </bt:Urls>
   <bt:ShortStrings>
-    <bt:String id="Group.Label" DefaultValue="Ayunis"/>
-    <bt:String id="Button.Label" DefaultValue="Ayunis"/>
+    <bt:String id="Group.Label" DefaultValue="Ayunis Outlook"/>
+    <bt:String id="Button.Label" DefaultValue="Ayunis Outlook"/>
     <bt:String id="Button.Title" DefaultValue="Ayunis öffnen">
       <bt:Override Locale="en-US" Value="Open Ayunis"/>
     </bt:String>
