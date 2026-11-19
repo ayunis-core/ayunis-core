@@ -6,6 +6,7 @@ export type {
   AgentRunUnit,
   AgentRunBlock,
   TimelineStep,
+  SourceProcessingTimelineStep,
   ToolTimelineStep,
 } from './model/types';
 export {

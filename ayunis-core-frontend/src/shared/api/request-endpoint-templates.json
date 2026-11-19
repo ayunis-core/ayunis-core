@@ -282,6 +282,7 @@
   "/threads/{id}/pii-masks/{maskId}/unmask",
   "/threads/{id}/sources",
   "/threads/{id}/sources/file",
+  "/threads/{id}/sources/progress",
   "/threads/{id}/sources/{sourceId}",
   "/threads/{id}/title",
   "/threads/{id}/uploads",

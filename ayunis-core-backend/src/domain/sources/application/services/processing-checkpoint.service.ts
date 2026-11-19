@@ -29,7 +29,10 @@ export class ProcessingCheckpointService {
   create(
     orgId: UUID,
     sourceId: UUID,
-    progress: (completed: number) => Promise<void> = () => Promise.resolve(),
+    progress: (
+      completed: number,
+      unit?: 'pages' | 'parts',
+    ) => Promise<void> = () => Promise.resolve(),
     onPagesExtracted?: (texts: readonly string[]) => void,
   ): ProcessingContext {
     const context: ProcessingContext = {

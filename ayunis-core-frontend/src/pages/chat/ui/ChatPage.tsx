@@ -16,8 +16,10 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import {
   cancelDeferredThreadRun,
+  deferThreadRun,
   useDeleteThread,
   useIsThreadRunActive,
+  useIsThreadRunDeferred,
 } from '@/features/thread-run';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
@@ -31,11 +33,9 @@ import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
 import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
+import { useChatFiles } from '@/pages/chat/api/useChatFiles';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
-import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
-import type { PendingSourceUpload } from '@/shared/lib/source-upload';
-import { useDeleteFileSource } from '@/pages/chat/api/useDeleteFileSource';
 import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient } from '@tanstack/react-query';
@@ -65,17 +65,6 @@ interface ChatPageProps {
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
   readonly initialArtifactId?: string;
-}
-
-/** A file still in transfer, shown as a chip beside the thread's sources. */
-function toPendingSource(upload: PendingSourceUpload) {
-  return {
-    id: upload.id,
-    name: upload.fileName,
-    type: 'text' as const,
-    status: 'processing' as const,
-    uploadProgress: upload.progress,
-  };
 }
 
 export default function ChatPage({
@@ -158,20 +147,8 @@ export default function ChatPage({
   });
 
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
-  const {
-    createFileSource,
-    isLoading: isCreatingFileSource,
-    uploads: pendingUploads,
-  } = useCreateFileSource({
-    threadId: thread.id,
-  });
-  const sourcesWithUploads = useMemo(
-    () => [...thread.sources, ...pendingUploads.map(toPendingSource)],
-    [thread.sources, pendingUploads],
-  );
-  const { deleteFileSource } = useDeleteFileSource({
-    threadId: thread.id,
-  });
+  const isDeferred = useIsThreadRunDeferred(thread.id);
+  const chatFiles = useChatFiles(thread, hasProcessingSources);
 
   const { addKnowledgeBase, removeKnowledgeBase } = useKnowledgeBaseAttachment({
     threadId: thread.id,
@@ -198,9 +175,6 @@ export default function ChatPage({
     },
     [confirm, t, unmaskPiiMask],
   );
-
-  const handleFileUpload = (files: File[]) =>
-    files.forEach((file) => createFileSource({ file }));
 
   const handleError = useRunErrorHandler(thread.id);
 
@@ -274,17 +248,12 @@ export default function ChatPage({
 
   usePendingMessage({
     threadId: thread.id,
-    hasLoadedMessages: thread.messages.length > 0,
+    loadedMessageCount: thread.messages.length,
     hasProcessingSources,
     sendTextMessage,
   });
 
-  // Send is gated while a fresh upload is in flight or while server-side
-  // processing of an attached source hasn't finished — both are reasons we
-  // want the user to wait before they can submit a message. The academy gate
-  // adds a third: the org requires a certificate this user does not hold.
-  const isSendDisabled =
-    isCreatingFileSource || hasProcessingSources || isAcademyGated;
+  const isSendDisabled = chatFiles.isUploading || isAcademyGated;
 
   async function handleSend(
     message: string,
@@ -297,6 +266,16 @@ export default function ChatPage({
         images: imageFiles?.map((img) => img.file),
       });
       chatInputRef.current?.setMessage('');
+      if (hasProcessingSources) {
+        deferThreadRun({
+          threadId: thread.id,
+          text: message,
+          images: imageFiles ?? [],
+          voiceInput,
+          messageCountBeforeSend: thread.messages.length,
+        });
+        return;
+      }
 
       const images: PendingImage[] | undefined =
         imageFiles && imageFiles.length > 0
@@ -388,7 +367,10 @@ export default function ChatPage({
               />
             )
           }
-          showLoadingPlaceholder={showLoadingPlaceholder}
+          processingSteps={chatFiles.processingSteps}
+          showLoadingPlaceholder={
+            showLoadingPlaceholder && !hasProcessingSources
+          }
           onOpenArtifact={sidePanelTransitions.openArtifactPanel}
         />
       </OutlookToolBridgeContext.Provider>
@@ -419,7 +401,7 @@ export default function ChatPage({
         }
         isModelChangeDisabled={true}
         isAnonymousChangeDisabled={true}
-        sources={sourcesWithUploads}
+        sources={chatFiles.files}
         knowledgeBases={thread.knowledgeBases}
         mcpIntegrations={thread.mcpIntegrations}
         isAnonymous={thread.isAnonymous}
@@ -429,8 +411,8 @@ export default function ChatPage({
         )}
         isSendDisabled={isSendDisabled}
         onModelChange={() => {}}
-        onFileUpload={handleFileUpload}
-        onRemoveSource={deleteFileSource}
+        onFileUpload={chatFiles.upload}
+        onRemoveSource={chatFiles.remove}
         onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
         onRemoveKnowledgeBase={removeKnowledgeBase}
         onAddIntegration={(integration) => addIntegration(integration.id)}
@@ -439,7 +421,7 @@ export default function ChatPage({
           void handleSend(m, imageFiles, voiceInput)
         }
         onCancel={handleSendCancelled}
-        isCancelDisabled={!isRunCancellable}
+        isCancelDisabled={!isRunCancellable && !isDeferred}
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isVisionEnabled={isVisionEnabled}
       />

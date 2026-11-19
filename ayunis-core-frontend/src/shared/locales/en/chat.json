@@ -463,5 +463,21 @@
       "prepareReply": "Prepare reply",
       "summarizeEmail": "Summarize email"
     }
+  },
+  "attachments": {
+    "pages_one": "{{count}} page read.",
+    "pages_other": "{{count}} pages read.",
+    "parts_one": "{{count}} part read.",
+    "parts_other": "{{count}} parts read.",
+    "timeline": {
+      "queued": "Waiting to process {{name}}",
+      "preparing": "Preparing {{name}}",
+      "extracting": "Reading {{name}}",
+      "transcribing": "Transcribing {{name}}",
+      "indexing": "Making {{name}} available for search",
+      "retrying": "Retrying {{name}}",
+      "ready": "Processed {{name}}",
+      "failed": "Could not process {{name}}"
+    }
   }
 }

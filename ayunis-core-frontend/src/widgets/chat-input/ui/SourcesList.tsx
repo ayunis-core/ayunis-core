@@ -143,8 +143,6 @@ export function SourcesList({
       ))}
       {visibleSources.map((source) => {
         const isUploading = source.uploadProgress !== undefined;
-        const isProcessing =
-          !isUploading && source.status === SourceResponseDtoStatus.processing;
         const isFailed = source.status === SourceResponseDtoStatus.failed;
         const isReindexing =
           source.status === SourceResponseDtoStatus.reindexing;
@@ -163,12 +161,11 @@ export function SourcesList({
               isFailed && 'bg-destructive/10 text-destructive',
             )}
           >
-            {(isUploading || isProcessing || isReindexing) && (
+            {(isUploading || isReindexing) && (
               <Loader2 className="h-3 w-3 animate-spin" />
             )}
             {isFailed && <AlertCircle className="h-3 w-3" />}
             {!isUploading &&
-              !isProcessing &&
               !isReindexing &&
               !isFailed &&
               getSourceIcon(source)}
@@ -180,7 +177,7 @@ export function SourcesList({
                 })}
               </span>
             )}
-            {!isUploading && !isProcessing && (
+            {!isUploading && (
               <button
                 type="button"
                 data-testid="chat-source-remove"

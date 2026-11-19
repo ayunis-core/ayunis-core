@@ -91,7 +91,7 @@ function useChat(initialMessages: Message[] = []) {
   // A new chat's first message, sent by the new-chat page before this page.
   usePendingMessage({
     threadId,
-    hasLoadedMessages: initialMessages.length > 0,
+    loadedMessageCount: initialMessages.length,
     hasProcessingSources: false,
     sendTextMessage: send.sendTextMessage,
   });

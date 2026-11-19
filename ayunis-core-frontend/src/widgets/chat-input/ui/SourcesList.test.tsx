@@ -110,6 +110,47 @@ describe('SourcesList', () => {
       expect(tooltip.textContent).not.toContain('secret');
     },
   );
+  it('shows a file that is being processed as a plain, removable badge, since that progress belongs to the chat', () => {
+    const onRemove = vi.fn();
+    const { container } = render(
+      <SourcesList
+        sources={[
+          {
+            id: 'minutes',
+            name: 'Protokoll.pdf',
+            type: 'text',
+            status: 'processing',
+          },
+        ]}
+        onRemove={onRemove}
+      />,
+    );
+
+    expect(container.querySelector('.animate-spin')).toBeNull();
+    fireEvent.click(screen.getByTestId('chat-source-remove'));
+    expect(onRemove).toHaveBeenCalledWith('minutes');
+  });
+
+  it('shows the upload percentage on the badge and no remove control while a file uploads', () => {
+    const { container } = render(
+      <SourcesList
+        sources={[
+          {
+            id: 'minutes',
+            name: 'Protokoll.pdf',
+            type: 'text',
+            status: 'processing',
+            uploadProgress: 0.4,
+          },
+        ]}
+        onRemove={() => undefined}
+      />,
+    );
+
+    expect(container.querySelector('.animate-spin')).not.toBeNull();
+    expect(screen.queryByTestId('chat-source-remove')).toBeNull();
+  });
+
   it('renders a source name with combining characters in one text element', () => {
     render(
       <SourcesList

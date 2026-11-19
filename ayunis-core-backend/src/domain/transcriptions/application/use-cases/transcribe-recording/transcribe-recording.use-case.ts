@@ -91,7 +91,7 @@ export class TranscribeRecordingUseCase {
       const result = await this.transcribePart(command, segment, identity);
       lines.push(...formatTranscript(result, segment));
       segments.push(...toRecordingSegments(result, segment));
-      await command.processingContext?.progress(++completed);
+      await command.processingContext?.progress(++completed, 'parts');
     }
     if (lines.length === 0)
       throw new InvalidAudioFileError(

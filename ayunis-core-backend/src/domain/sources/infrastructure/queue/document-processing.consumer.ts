@@ -118,7 +118,6 @@ export class DocumentProcessingConsumer extends WorkerHost {
     // only legacy staged files are the consumer's to remove.
     const cleanupPath = job.data.retainFile ? null : minioPath;
 
-    // Set up CLS context so downstream use cases (Mistral, etc.) work
     await this.contextService.run(async () => {
       setJobContext(this.contextService, orgId, userId);
       if (!(await this.isAdmitted(job))) return;
@@ -179,6 +178,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
       return;
     }
     const { chunks, precomputedEmbeddings } = content;
+    await job.updateProgress({ stage: 'indexing' });
     await processingStage('document.indexing', () =>
       this.helper.index(sourceId, orgId, chunks, precomputedEmbeddings),
     );
@@ -248,8 +248,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
     job: Job<DocumentProcessingJobData>,
   ): Promise<ExtractedContent> {
     const { fileName, fileType, orgId, sourceId } = job.data;
-    const progress = (completed: number) =>
-      job.updateProgress({ stage: 'extraction', completed });
+    await job.updateProgress({ stage: 'preparing' });
+    const progress = (completed: number, unit?: 'pages' | 'parts') =>
+      job.updateProgress({ stage: 'extracting', completed, unit });
     // A kept transcript is chunked by speaker turn, not by the text splitter
     // the early embeddings are computed for.
     if (job.data.keepTranscriptSegments)
@@ -328,6 +329,7 @@ export class DocumentProcessingConsumer extends WorkerHost {
         ? this.storedFiles.readRetained(minioPath, expectedSize, expectedETag)
         : this.storedFiles.read(minioPath, expectedSize, expectedETag),
     );
+    await job.updateProgress({ stage: 'extracting' });
     return processingStage('document.extraction', () =>
       this.extractText(fileBuffer, fileName, fileType, context),
     );
@@ -348,7 +350,9 @@ export class DocumentProcessingConsumer extends WorkerHost {
     root: string,
     use: (localFile: LocalFile) => Promise<T>,
   ): Promise<T> {
-    return withStagedJobFile(this.storedFiles, job.data, root, use);
+    return withStagedJobFile(this.storedFiles, job.data, root, use, () =>
+      job.updateProgress({ stage: 'extracting' }),
+    );
   }
 
   private async retrieveText(

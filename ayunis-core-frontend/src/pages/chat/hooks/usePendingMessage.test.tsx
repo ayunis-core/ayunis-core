@@ -40,7 +40,7 @@ function renderPendingMessage(options?: {
     () =>
       usePendingMessage({
         threadId,
-        hasLoadedMessages: options?.hasLoadedMessages ?? false,
+        loadedMessageCount: options?.hasLoadedMessages ? 1 : 0,
         hasProcessingSources: false,
         sendTextMessage,
       }),
@@ -150,7 +150,7 @@ describe('first message of a new chat started with a file', () => {
         );
         usePendingMessage({
           threadId,
-          hasLoadedMessages: thread.messages.length > 0,
+          loadedMessageCount: thread.messages.length,
           hasProcessingSources,
           sendTextMessage,
         });
