@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.78.0](https://github.com/ayunis-core/ayunis-core/compare/v2.77.0...v2.78.0) (2026-11-19)
+
+
+### Features
+
+* **chat:** send without waiting for files and show their processing progress (AYC-1823) ([#2353](https://github.com/ayunis-core/ayunis-core/issues/2353)) ([6274639](https://github.com/ayunis-core/ayunis-core/commit/62746395eeabbce9237b11c03ee96e92c82c5b6c))
+* **documents:** configure organization and letterhead typography (AYC-1316) ([#2429](https://github.com/ayunis-core/ayunis-core/issues/2429)) ([d452d39](https://github.com/ayunis-core/ayunis-core/commit/d452d399a25ce9619e7d7b71dbb1264a33eb33c7))
+* **documents:** preview letterhead PDFs and export editable Word letters (AYC-1223) ([#2431](https://github.com/ayunis-core/ayunis-core/issues/2431)) ([9262560](https://github.com/ayunis-core/ayunis-core/commit/9262560beda44db91038f5668d895c27a6079ee8))
+* **integrations:** paginate the integrations settings pages (AYC-1969) ([#2426](https://github.com/ayunis-core/ayunis-core/issues/2426)) ([826e94f](https://github.com/ayunis-core/ayunis-core/commit/826e94f68633a9bc31666d5235d4082f3873b371))
+* **letterheads:** preview sample letters in settings (AYC-1976) ([#2441](https://github.com/ayunis-core/ayunis-core/issues/2441)) ([0bfec08](https://github.com/ayunis-core/ayunis-core/commit/0bfec0800b11f131045a22693527e12d5af7bb87))
+
+
+### Bug Fixes
+
+* **outlook:** insert drafts into the open reply (AYC-1975) ([#2430](https://github.com/ayunis-core/ayunis-core/issues/2430)) ([d5a8aa1](https://github.com/ayunis-core/ayunis-core/commit/d5a8aa15f94d9bfed0d31f97e3ea64ee39be5a71))
+* **outlook:** link admins to integrated apps and name the add-in ayunis outlook (AYC-1968) ([#2425](https://github.com/ayunis-core/ayunis-core/issues/2425)) ([1fe027e](https://github.com/ayunis-core/ayunis-core/commit/1fe027ea7336aac13fbca54e04e6cd01bab6035d))
+* **outlook:** resolve pane and composer races (AYC-1963) ([#2424](https://github.com/ayunis-core/ayunis-core/issues/2424)) ([1f2eb6b](https://github.com/ayunis-core/ayunis-core/commit/1f2eb6b8d3ab33c2fb1f7c699b240377ede05f16))
+
+
+### Performance Improvements
+
+* **usage:** use indexes for the per-user usage report (AYC-1480) ([#2442](https://github.com/ayunis-core/ayunis-core/issues/2442)) ([d05c77e](https://github.com/ayunis-core/ayunis-core/commit/d05c77ef7dbe1decde5674c1274e62db1a1f3991))
+
+
+### CI/CD
+
+* **deploy:** only start staging deploy runs for main builds (AYC-000) ([#2440](https://github.com/ayunis-core/ayunis-core/issues/2440)) ([cc32c2c](https://github.com/ayunis-core/ayunis-core/commit/cc32c2c6579966bcce959c9baeeafdf1e414678c))
+* **images:** upload sourcemaps in parallel so staging deploys sooner (AYC-000) ([#2428](https://github.com/ayunis-core/ayunis-core/issues/2428)) ([74d0990](https://github.com/ayunis-core/ayunis-core/commit/74d09905dee89a39a9fdc9df76a73ab8472f8fbb))
+
 ## [2.77.0](https://github.com/ayunis-core/ayunis-core/compare/v2.76.2...v2.77.0) (2026-11-18)
 
 
