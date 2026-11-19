@@ -190,7 +190,7 @@ export default function NewChatPage({
   }
 
   function handleSkillRemove() {
-    setSelectedSkill(undefined);
+    if (!isCreating) setSelectedSkill(undefined);
   }
 
   function handleWorkspaceChange(id: string | null) {
@@ -418,6 +418,7 @@ export default function NewChatPage({
               settleMs={900}
             >
               <PinnedSkills
+                isSubmitting={isCreating}
                 workspaceId={workspaceId}
                 onSkillSelect={handleSkillSelect}
                 selectedSkillId={selectedSkillId}

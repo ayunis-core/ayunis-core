@@ -62,7 +62,7 @@ export interface UseMessageSendParams {
   onMasksEvent?: (data: RunMasksResponseDto) => void;
   onErrorEvent?: (data: RunErrorResponseDto) => void;
   onError?: (error: Error) => void;
-  onComplete?: (failed: boolean) => void;
+  onComplete?: (failed: boolean, reason?: 'reattach-failed') => void;
 }
 
 const mountedParamsByThread = new Map<string, UseMessageSendParams>();
@@ -162,6 +162,7 @@ export function useMessageSend(params: UseMessageSendParams) {
       let requestController: AbortController | null = null;
       let wasAborted = false;
       let hadError = false;
+      let reattachFailed = false;
       let sessionExpired = false;
       const requestThreadId = payload.threadId;
       const requestParams = currentParamsRef.current;
@@ -325,7 +326,10 @@ export function useMessageSend(params: UseMessageSendParams) {
 
         hadError = true;
 
-        if (payload.isAttach) throw error;
+        if (payload.isAttach) {
+          reattachFailed = true;
+          throw error;
+        }
 
         if (error instanceof Error) {
           // Handle specific error status codes
@@ -372,7 +376,11 @@ export function useMessageSend(params: UseMessageSendParams) {
         // with the backend's async save operation
         if (!wasAborted) {
           if (!hadError) runFunnel.trackDelivered();
-          requestParams.onComplete?.(hadError);
+          if (reattachFailed) {
+            requestParams.onComplete?.(true, 'reattach-failed');
+          } else {
+            requestParams.onComplete?.(hadError);
+          }
           if (!sessionExpired) {
             // Await the post-save server state unless navigation is already
             // handing an expired session back to login.

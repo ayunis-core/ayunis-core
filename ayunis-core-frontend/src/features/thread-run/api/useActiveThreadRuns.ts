@@ -30,18 +30,20 @@ export function expectActiveThreadRun(queryClient: QueryClient): void {
 }
 
 export function useActiveThreadRuns() {
-  const { data, dataUpdatedAt } = useActiveRunsControllerFindActive({
-    query: {
-      queryKey: getActiveRunsControllerFindActiveQueryKey(),
-      staleTime: 0,
-      refetchInterval: (query) => {
-        if (isThreadRunExpected()) return POLL_WHILE_EXPECTED_MS;
-        return (query.state.data?.length ?? 0) > 0
-          ? POLL_WHILE_RUNNING_MS
-          : POLL_WHILE_IDLE_MS;
+  const { data, dataUpdatedAt, isFetching } = useActiveRunsControllerFindActive(
+    {
+      query: {
+        queryKey: getActiveRunsControllerFindActiveQueryKey(),
+        staleTime: 0,
+        refetchInterval: (query) => {
+          if (isThreadRunExpected()) return POLL_WHILE_EXPECTED_MS;
+          return (query.state.data?.length ?? 0) > 0
+            ? POLL_WHILE_RUNNING_MS
+            : POLL_WHILE_IDLE_MS;
+        },
       },
     },
-  });
+  );
   const runs = data ?? NO_RUNS;
   const runsByThreadId = useMemo(
     () => new Map(runs.map((run) => [run.threadId, run])),
@@ -50,5 +52,5 @@ export function useActiveThreadRuns() {
   useEffect(() => {
     if (data) forgetStoppedThreadRunsExcept(new Set(runsByThreadId.keys()));
   }, [data, runsByThreadId]);
-  return { runsByThreadId, dataUpdatedAt };
+  return { runsByThreadId, dataUpdatedAt, isFetching };
 }

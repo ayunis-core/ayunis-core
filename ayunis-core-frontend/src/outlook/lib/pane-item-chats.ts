@@ -46,26 +46,34 @@ const CREATE_THREAD = getThreadsControllerCreateMutationKey()[0];
 // The chat app creates a chat with the generated create-thread mutation.
 function watchNewChats(
   queryClient: QueryClient,
-  onStart: () => (threadId: string) => void,
+  onStart: () => (threadId?: string) => void,
 ): () => void {
   const pending = new WeakMap<
     Mutation<unknown, unknown, unknown, unknown>,
-    (threadId: string) => void
+    (threadId?: string) => void
   >();
   return queryClient.getMutationCache().subscribe((event) => {
     if (event.type !== 'updated') return;
     if (event.mutation.options.mutationKey?.[0] !== CREATE_THREAD) return;
     if (event.action.type === 'pending') {
+      if (pending.has(event.mutation)) return;
       // The chat page's tools act on the email the chat was started on.
       const itemKey = currentOutlookItemKey();
       const started = onStart();
       pending.set(event.mutation, (threadId) => {
-        rememberChatItem(threadId, itemKey);
+        if (threadId !== undefined) rememberChatItem(threadId, itemKey);
         started(threadId);
       });
-    } else if (event.action.type === 'success') {
-      pending.get(event.mutation)?.(
-        (event.action.data as GetThreadResponseDto).id,
+    } else if (
+      event.action.type === 'success' ||
+      event.action.type === 'error'
+    ) {
+      const settled = pending.get(event.mutation);
+      pending.delete(event.mutation);
+      settled?.(
+        event.action.type === 'success'
+          ? (event.action.data as GetThreadResponseDto).id
+          : undefined,
       );
     }
   });

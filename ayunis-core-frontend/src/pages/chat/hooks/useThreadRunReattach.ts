@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { isThreadRunStopped, useActiveThreadRuns } from '@/features/thread-run';
+import {
+  isThreadRunActive,
+  isThreadRunStopped,
+  useActiveThreadRuns,
+} from '@/features/thread-run';
 
 interface UseThreadRunReattachParams {
   threadId: string;
@@ -26,7 +30,7 @@ export function useThreadRunReattach({
   isStreaming,
   attach,
 }: UseThreadRunReattachParams) {
-  const { runsByThreadId, dataUpdatedAt } = useActiveThreadRuns();
+  const { runsByThreadId, dataUpdatedAt, isFetching } = useActiveThreadRuns();
   const run = runsByThreadId.get(threadId);
   const stateRef = useRef<ThreadRunState>(freshState(threadId, isStreaming));
   // The chat page stays mounted when switching chats, so what it remembers
@@ -55,7 +59,12 @@ export function useThreadRunReattach({
       state.attachFailed = false;
       return;
     }
-    if (isStreaming || state.attachFailed || isThreadRunStopped(threadId)) {
+    if (
+      isStreaming ||
+      isThreadRunActive(threadId) ||
+      state.attachFailed ||
+      isThreadRunStopped(threadId)
+    ) {
       return;
     }
     if (dataUpdatedAt <= state.localRunEndedAt) return;
@@ -65,7 +74,10 @@ export function useThreadRunReattach({
     });
   }, [threadId, run, isStreaming, dataUpdatedAt, attach, stateFor]);
 
-  return { isRunCancellable: run?.cancellable ?? true };
+  return {
+    isRunCancellable: run?.cancellable ?? true,
+    isCheckingForRun: isFetching,
+  };
 }
 
 function freshState(threadId: string, isStreaming: boolean): ThreadRunState {

@@ -6,6 +6,7 @@ import {
 } from '@/pages/chat/api/useMessageSend';
 import { useOutlookToolBridge } from '@/pages/chat/hooks/useOutlookToolBridge';
 import type { Message } from '@/pages/chat/model/openapi';
+import { useThreadRunReattach } from './useThreadRunReattach';
 
 interface UseMessageSendWithOutlookToolsParams extends UseMessageSendParams {
   messages: readonly Message[];
@@ -15,7 +16,7 @@ interface UseMessageSendWithOutlookToolsParams extends UseMessageSendParams {
 
 /**
  * `useMessageSend`, plus the Outlook pane's tools for the runs it sends. On
- * the web the bridge is inert and this is `useMessageSend` unchanged.
+ * the web the bridge is inert.
  */
 export function useMessageSendWithOutlookTools({
   messages,
@@ -25,15 +26,22 @@ export function useMessageSendWithOutlookTools({
 }: UseMessageSendWithOutlookToolsParams) {
   const messageSend = useMessageSend({
     ...params,
-    onComplete: (failed) => {
-      params.onComplete?.(failed);
-      outlookTools.runEnded(failed);
+    onComplete: (failed, reason) => {
+      params.onComplete?.(failed, reason);
+      outlookTools.runEnded(failed, reason);
     },
+  });
+  // Let reattach register its stream before the bridge considers a reopened read.
+  const { isRunCancellable, isCheckingForRun } = useThreadRunReattach({
+    threadId: params.threadId,
+    isStreaming,
+    attach: messageSend.attach,
   });
   const outlookTools = useOutlookToolBridge({
     threadId: params.threadId,
     messages,
     isStreaming,
+    isCheckingForRun,
     piiMasks,
     sendToolResult: messageSend.sendToolResult,
   });
@@ -49,6 +57,7 @@ export function useMessageSendWithOutlookTools({
 
   return {
     ...messageSend,
+    isRunCancellable,
     sendTextMessage: sendTextMessageWithOutlookTools,
     outlookToolBridge: outlookTools.bridge,
   };

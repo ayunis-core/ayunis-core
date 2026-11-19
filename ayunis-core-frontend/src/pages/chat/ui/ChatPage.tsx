@@ -31,7 +31,6 @@ import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
 import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
-import { useThreadRunReattach } from '@/pages/chat/hooks/useThreadRunReattach';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useCreateFileSource } from '@/pages/chat/api/useCreateFileSource';
@@ -248,7 +247,7 @@ export default function ChatPage({
   const {
     sendTextMessage,
     sendToolCallDecisions,
-    attach,
+    isRunCancellable,
     abort,
     outlookToolBridge,
   } = useMessageSendWithOutlookTools({
@@ -271,12 +270,6 @@ export default function ChatPage({
     messages,
     isStreaming,
     sendDecisions: sendToolCallDecisions,
-  });
-
-  const { isRunCancellable } = useThreadRunReattach({
-    threadId: thread.id,
-    isStreaming,
-    attach,
   });
 
   usePendingMessage({
