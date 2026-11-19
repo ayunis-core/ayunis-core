@@ -31,10 +31,6 @@ function statusKey(state: OutlookToolState | undefined): string | null {
   }
 }
 
-/**
- * A reply draft the model wrote for Outlook. In the Outlook pane's read view
- * the user opens a reply with it; elsewhere it is only shown.
- */
 export default function OutlookDraftWidget({
   content,
   isStreaming = false,
@@ -46,6 +42,8 @@ export default function OutlookDraftWidget({
   const body = typeof params.body === 'string' ? params.body : '';
   const state = bridge?.stateFor(content.id);
   const status = statusKey(state);
+  const call = { id: content.id, name: content.name as OutlookToolName };
+  const action = bridge?.draftAction(call);
 
   return (
     <Item
@@ -73,21 +71,17 @@ export default function OutlookDraftWidget({
           </ItemDescription>
         )}
       </ItemContent>
-      {bridge?.canOpenReply({
-        id: content.id,
-        name: content.name as OutlookToolName,
-      }) && (
+      {action === 'openReply' && !isStreaming && (
+        <ItemFooter>
+          <ItemDescription>{t('chat.outlookDraft.openReply')}</ItemDescription>
+        </ItemFooter>
+      )}
+      {action === 'insert' && state?.status !== 'done' && (
         <ItemFooter>
           <Button
             size="sm"
             disabled={isStreaming || state?.status === 'running'}
-            onClick={() =>
-              bridge.openReply({
-                id: content.id,
-                name: content.name as OutlookToolName,
-                params,
-              })
-            }
+            onClick={() => bridge?.insertDraft({ ...call, params })}
             data-testid="outlook-draft-insert"
           >
             {t('chat.outlookDraft.insert')}

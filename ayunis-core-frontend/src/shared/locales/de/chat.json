@@ -385,15 +385,16 @@
     "errorModeUnavailable": "Für diesen Modus ist gerade kein Modell verfügbar. Bitte wählen Sie ein Modell unter „Weitere Modelle“.",
     "fromNotification": "Benachrichtigung",
     "outlookDraft": {
-      "insert": "In Outlook-Antwort einfügen",
+      "insert": "In offene Antwort einfügen",
+      "openReply": "Wählen Sie in Outlook „Antworten“ und öffnen Sie Ayunis in der Antwort, um den Entwurf einzufügen.",
       "status": {
         "running": "Arbeitet in Outlook …",
         "inserted": "In Ihre Antwort eingefügt",
         "replaced": "Vorherigen Entwurf ersetzt",
-        "replyOpened": "Antwort geöffnet",
         "saved": "Als Entwurf gespeichert",
         "failed": {
           "noItem": "Es ist keine E-Mail geöffnet.",
+          "noComposeItem": "Öffnen Sie eine Antwort in Outlook, um den Entwurf einzufügen.",
           "nothingToSave": "Nur eine E-Mail, die Sie gerade schreiben, kann gespeichert werden.",
           "officeFailed": "Outlook konnte das nicht ausführen.",
           "itemChanged": "Die geöffnete E-Mail hat gewechselt, daher wurde das nicht ausgeführt."

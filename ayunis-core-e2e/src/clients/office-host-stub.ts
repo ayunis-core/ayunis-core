@@ -17,6 +17,7 @@ export interface OfficeStubAddress {
 
 /** A mail being composed, the item the pane's tools read and write. */
 export interface OfficeStubComposeItem {
+  inReplyTo?: string;
   subject: string;
   body: string;
   from: OfficeStubAddress;
@@ -25,6 +26,7 @@ export interface OfficeStubComposeItem {
 
 /** A received mail open in the reading pane, identified by its item id. */
 export interface OfficeStubReadItem {
+  internetMessageId?: string;
   itemId: string;
   subject: string;
   body: string;
@@ -74,6 +76,7 @@ const officeStub = (
     getAsync: recorded(method, (callback) => succeed(callback, value())),
   });
   const composeItem = mail && {
+    inReplyTo: mail.inReplyTo,
     subject: {
       ...getter('subject.getAsync', () => mail.subject),
       setAsync: recorded('subject.setAsync', (subject, callback) => {
@@ -109,6 +112,7 @@ const officeStub = (
   };
   const readItemFrom = (read) => read && {
     itemId: read.itemId,
+    internetMessageId: read.internetMessageId,
     subject: read.subject,
     from: read.from,
     to: [],

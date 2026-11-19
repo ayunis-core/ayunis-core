@@ -16,6 +16,7 @@ interface AttachmentContentSource {
 // tools describe only what they use and feature-detect it at runtime.
 export interface ReadItem extends AttachmentContentSource {
   itemId?: string;
+  internetMessageId?: string;
   subject?: unknown;
   from?: Office.EmailAddressDetails;
   to?: Office.EmailAddressDetails[];
@@ -32,11 +33,6 @@ export interface ReadItem extends AttachmentContentSource {
       callback: Callback<string>,
     ) => void;
   };
-  displayReplyForm: (formData: Office.ReplyFormData) => void;
-  displayReplyFormAsync?: (
-    formData: Office.ReplyFormData,
-    callback: Callback<void>,
-  ) => void;
 }
 
 interface AsyncGetter<T> {
@@ -47,6 +43,7 @@ type BodyOptions = { coercionType: Office.CoercionType };
 
 export interface ComposeItem extends AttachmentContentSource {
   itemId?: string;
+  inReplyTo?: string | null;
   subject: AsyncGetter<string> & {
     setAsync: (subject: string, callback: Callback<void>) => void;
   };
@@ -97,7 +94,7 @@ function isComposeItem(item: object): item is ComposeItem {
   return !isReadItem(item);
 }
 
-function mailboxItem(): unknown {
+export function currentOutlookMailboxItem(): unknown {
   try {
     return Office.context.mailbox.item;
   } catch {
@@ -106,7 +103,7 @@ function mailboxItem(): unknown {
 }
 
 export function currentOutlookItem(): OutlookItem | undefined {
-  const item = mailboxItem();
+  const item = currentOutlookMailboxItem();
   if (typeof item !== 'object' || item === null) return undefined;
   if (isReadItem(item)) return { mode: 'read', item };
   if (isComposeItem(item)) return { mode: 'compose', item };
@@ -121,7 +118,40 @@ export function currentOutlookItem(): OutlookItem | undefined {
 export function currentOutlookItemKey(): string | null {
   const outlookItem = currentOutlookItem();
   if (!outlookItem) return null;
+  if (outlookItem.mode === 'read' && outlookItem.item.internetMessageId) {
+    return internetMessageKey(outlookItem.item.internetMessageId);
+  }
   return `${outlookItem.mode}:${outlookItem.item.itemId ?? ''}`;
+}
+
+function internetMessageKey(id: string): string {
+  return `read:internet:${id}`;
+}
+
+export function currentOutlookLegacyReadKey(): string | null {
+  const outlookItem = currentOutlookItem();
+  return outlookItem?.mode === 'read' && outlookItem.item.itemId
+    ? `read:${outlookItem.item.itemId}`
+    : null;
+}
+
+/** The original message of the reply that Outlook is currently editing. */
+export function currentOutlookReplySourceKey(): string | null {
+  const outlookItem = currentOutlookItem();
+  return outlookItem?.mode === 'compose' && outlookItem.item.inReplyTo
+    ? internetMessageKey(outlookItem.item.inReplyTo)
+    : null;
+}
+
+const itemChanges = new EventTarget();
+
+export function notifyOutlookItemChanged(): void {
+  itemChanges.dispatchEvent(new Event('itemChanged'));
+}
+
+export function subscribeToOutlookItem(listener: () => void): () => void {
+  itemChanges.addEventListener('itemChanged', listener);
+  return () => itemChanges.removeEventListener('itemChanged', listener);
 }
 
 /** Whether the mail a key identifies was being read, not written. */

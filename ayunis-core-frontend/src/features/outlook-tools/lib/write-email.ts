@@ -1,26 +1,22 @@
+import { officeAsync } from '@/features/outlook-tools/lib/office-async';
 import {
-  mailboxSupports,
-  officeAsync,
-} from '@/features/outlook-tools/lib/office-async';
-import {
-  currentOutlookItemKey,
+  currentOutlookMailboxItem,
   type ComposeItem,
   type OutlookItem,
-  type ReadItem,
 } from '@/features/outlook-tools/lib/outlook-item';
 
-export type OutlookWriteAction =
-  'inserted' | 'replaced' | 'replyOpened' | 'saved';
+export type OutlookWriteAction = 'inserted' | 'replaced' | 'saved';
 
 export class NothingToSaveError extends Error {}
+export class NoComposeItemError extends Error {}
 export class ItemChangedError extends Error {}
 
 /**
  * Writing takes several Office calls; the user may open another mail in a
  * pinned pane meanwhile, and the draft must not follow them there.
  */
-function ensureStillOpen(itemKey: string | null): void {
-  if (currentOutlookItemKey() !== itemKey) throw new ItemChangedError();
+function ensureStillOpen(item: ComposeItem): void {
+  if (currentOutlookMailboxItem() !== item) throw new ItemChangedError();
 }
 
 function textParam(value: unknown): string {
@@ -52,33 +48,23 @@ const bodyOptions = (
  */
 const draftBlockIds = new WeakMap<ComposeItem, string>();
 
-/**
- * Replies opened from the read view become mails being written, items the
- * pane only sees afterwards. Each takes its draft's id from here once a
- * revision finds that block in its body.
- * ponytail: ids of replies never revised stay for the page's lifetime;
- * a few strings per Insert.
- */
-const openedReplyBlockIds = new Set<string>();
-
-function draftBlock(html: string): { blockId: string; blockHtml: string } {
-  const blockId = `ayunis-draft-${crypto.randomUUID()}`;
-  return { blockId, blockHtml: `<div id="${blockId}">${html}</div>` };
+// A stable tool call ID lets a fresh pane recognize a draft already inserted
+// into this reply, including a draft the user has since edited.
+function draftBlockId(callId: string | undefined): string | undefined {
+  if (!callId) return undefined;
+  const encoded = Array.from(new TextEncoder().encode(callId), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+  return `ayunis-draft-${encoded}`;
 }
 
-async function openReply(item: ReadItem, body: string): Promise<'replyOpened'> {
-  const { blockId, blockHtml } = draftBlock(toHtml(body));
-  const formData = { htmlBody: blockHtml };
-  const replyAsync = item.displayReplyFormAsync;
-  if (mailboxSupports('1.9') && typeof replyAsync === 'function') {
-    await officeAsync<void>((callback) =>
-      replyAsync.call(item, formData, callback),
-    );
-  } else {
-    item.displayReplyForm(formData);
-  }
-  openedReplyBlockIds.add(blockId);
-  return 'replyOpened';
+function findDraftBlock(bodyHtml: string, blockId: string) {
+  return new RegExp(`<div\\b[^>]*\\sid="${blockId}"[^>]*>`, 'i').exec(bodyHtml);
+}
+
+function quotedThreadStart(bodyHtml: string): number {
+  const replyHeader = /<div\b[^>]*\bid="(?:appendonsend|divRplyFwdMsg)"/i;
+  return replyHeader.exec(bodyHtml)?.index ?? bodyHtml.length;
 }
 
 /**
@@ -93,11 +79,10 @@ function replaceDraftBlock(
   bodyHtml: string,
   blockId: string,
   html: string,
-  before = bodyHtml.length,
+  nextBlockId = blockId,
 ): string | null {
-  const opening = new RegExp(`<div\\b[^>]*\\bid="${blockId}"[^>]*>`, 'i');
-  const open = opening.exec(bodyHtml);
-  if (!open || open.index >= before) return null;
+  const open = findDraftBlock(bodyHtml, blockId);
+  if (!open) return null;
   const contentStart = open.index + open[0].length;
   const tags = /<(\/?)div\b[^>]*>/gi;
   tags.lastIndex = contentStart;
@@ -105,33 +90,17 @@ function replaceDraftBlock(
   for (let tag = tags.exec(bodyHtml); tag; tag = tags.exec(bodyHtml)) {
     depth += tag[1] ? -1 : 1;
     if (depth === 0) {
-      return bodyHtml.slice(0, contentStart) + html + bodyHtml.slice(tag.index);
+      const opening = open[0].replace(
+        new RegExp(`(\\sid=")${blockId}"`, 'i'),
+        `$1${nextBlockId}"`,
+      );
+      return (
+        bodyHtml.slice(0, open.index) +
+        opening +
+        html +
+        bodyHtml.slice(tag.index)
+      );
     }
-  }
-  return null;
-}
-
-/**
- * Where a reply's quoted thread starts: Outlook's reply header. A reply's
- * own draft is above it; a block below it is a quoted copy of an earlier
- * mail's draft, which may carry an id this pane is still waiting to see.
- * ponytail: the ids are Outlook on the web's (and the new Outlook's); in a
- * client without them the whole body counts as the reply's own.
- */
-function quotedThreadStart(bodyHtml: string): number {
-  const header = /<div\b[^>]*\bid="(?:appendonsend|divRplyFwdMsg)"/i;
-  return header.exec(bodyHtml)?.index ?? bodyHtml.length;
-}
-
-function reviseFirstFound(
-  bodyHtml: string,
-  blockIds: string[],
-  html: string,
-  before: number,
-): { blockId: string; revised: string } | null {
-  for (const blockId of blockIds) {
-    const revised = replaceDraftBlock(bodyHtml, blockId, html, before);
-    if (revised !== null) return { blockId, revised };
   }
   return null;
 }
@@ -139,13 +108,12 @@ function reviseFirstFound(
 async function prependDraftBlock(
   item: ComposeItem,
   html: string,
-  itemKey: string | null,
+  blockId = `ayunis-draft-${crypto.randomUUID()}`,
 ): Promise<'inserted'> {
-  ensureStillOpen(itemKey);
-  const { blockId, blockHtml } = draftBlock(html);
+  ensureStillOpen(item);
   await officeAsync<void>((callback) =>
     item.body.prependAsync(
-      blockHtml,
+      `<div id="${blockId}">${html}</div>`,
       bodyOptions(Office.CoercionType.Html),
       callback,
     ),
@@ -154,52 +122,68 @@ async function prependDraftBlock(
   return 'inserted';
 }
 
+async function prependTextDraft(
+  item: ComposeItem,
+  body: string,
+  callId?: string,
+): Promise<'inserted'> {
+  const text = Office.CoercionType.Text;
+  const draft = `${body}\n\n`;
+  if (callId !== undefined) {
+    const current = await officeAsync<string>((callback) =>
+      item.body.getAsync(text, callback),
+    );
+    if (
+      current.replace(/\r\n/g, '\n').startsWith(draft.replace(/\r\n/g, '\n'))
+    ) {
+      ensureStillOpen(item);
+      return 'inserted';
+    }
+  }
+  ensureStillOpen(item);
+  await officeAsync<void>((callback) =>
+    item.body.prependAsync(draft, bodyOptions(text), callback),
+  );
+  return 'inserted';
+}
+
 async function writeDraft(
   item: ComposeItem,
   body: string,
+  callId?: string,
 ): Promise<'inserted' | 'replaced'> {
-  const itemKey = currentOutlookItemKey();
   const type = await officeAsync<Office.CoercionType>((callback) =>
     item.body.getTypeAsync(callback),
   );
   const html = Office.CoercionType.Html;
-  // A plain-text mail cannot carry the marker, so a revision lands on top.
-  if (type !== html) {
-    ensureStillOpen(itemKey);
-    const text = Office.CoercionType.Text;
-    await officeAsync<void>((callback) =>
-      item.body.prependAsync(`${body}\n\n`, bodyOptions(text), callback),
-    );
-    return 'inserted';
-  }
-  const ownBlockId = draftBlockIds.get(item);
-  // Newest first: a reply can quote an earlier reply's unclaimed block.
-  const blockIds =
-    ownBlockId === undefined
-      ? [...openedReplyBlockIds].reverse()
-      : [ownBlockId];
-  if (blockIds.length === 0) {
-    return prependDraftBlock(item, toHtml(body), itemKey);
-  }
+  if (type !== html) return prependTextDraft(item, body, callId);
+
+  const previousBlockId = draftBlockIds.get(item);
+  const nextBlockId = draftBlockId(callId);
+  const escapedBody = toHtml(body);
+  if (!previousBlockId && !nextBlockId)
+    return prependDraftBlock(item, escapedBody);
+
   const current = await officeAsync<string>((callback) =>
     item.body.getAsync(html, callback),
   );
-  // An opened reply's block is only taken from above the quoted thread; a
-  // block this pane wrote into the mail itself cannot be a quoted copy.
-  const before =
-    ownBlockId === undefined ? quotedThreadStart(current) : current.length;
-  const found = reviseFirstFound(current, blockIds, toHtml(body), before);
-  if (!found) return prependDraftBlock(item, toHtml(body), itemKey);
-  ensureStillOpen(itemKey);
-  await officeAsync<void>((callback) =>
-    item.body.setAsync(found.revised, bodyOptions(html), callback),
-  );
-  // An opened reply's block is only taken by the mail it was written into;
-  // a refused or failed write leaves it for the reply's next revision.
-  if (ownBlockId === undefined) {
-    draftBlockIds.set(item, found.blockId);
-    openedReplyBlockIds.delete(found.blockId);
+  ensureStillOpen(item);
+  if (nextBlockId) {
+    const existing = findDraftBlock(current, nextBlockId);
+    if (existing && existing.index < quotedThreadStart(current)) {
+      draftBlockIds.set(item, nextBlockId);
+      return 'inserted';
+    }
   }
+  const revised = previousBlockId
+    ? replaceDraftBlock(current, previousBlockId, escapedBody, nextBlockId)
+    : null;
+  if (revised === null)
+    return prependDraftBlock(item, escapedBody, nextBlockId);
+  await officeAsync<void>((callback) =>
+    item.body.setAsync(revised, bodyOptions(html), callback),
+  );
+  if (nextBlockId) draftBlockIds.set(item, nextBlockId);
   return 'replaced';
 }
 
@@ -207,11 +191,11 @@ async function writeDraftAndSubject(
   item: ComposeItem,
   body: string,
   subject: string,
+  callId?: string,
 ): Promise<OutlookWriteAction> {
-  const itemKey = currentOutlookItemKey();
-  const action = await writeDraft(item, body);
+  const action = await writeDraft(item, body, callId);
   // The draft is written; a mail opened since must not get its subject.
-  if (subject !== '' && currentOutlookItemKey() === itemKey) {
+  if (subject !== '' && currentOutlookMailboxItem() === item) {
     await officeAsync<void>((callback) =>
       item.subject.setAsync(subject, callback),
     );
@@ -219,24 +203,27 @@ async function writeDraftAndSubject(
   return action;
 }
 
-export function draftEmail(
+export async function draftEmail(
   outlookItem: OutlookItem,
   params: Record<string, unknown>,
+  callId?: string,
 ): Promise<OutlookWriteAction> {
-  const body = textParam(params.body);
-  return outlookItem.mode === 'read'
-    ? openReply(outlookItem.item, body)
-    : writeDraftAndSubject(outlookItem.item, body, textParam(params.subject));
+  if (outlookItem.mode === 'read') throw new NoComposeItemError();
+  return writeDraftAndSubject(
+    outlookItem.item,
+    textParam(params.body),
+    textParam(params.subject),
+    callId,
+  );
 }
 
-export function moveEmailToComposer(
+export async function moveEmailToComposer(
   outlookItem: OutlookItem,
   params: Record<string, unknown>,
+  callId?: string,
 ): Promise<OutlookWriteAction> {
-  const body = textParam(params.body);
-  return outlookItem.mode === 'read'
-    ? openReply(outlookItem.item, body)
-    : writeDraft(outlookItem.item, body);
+  if (outlookItem.mode === 'read') throw new NoComposeItemError();
+  return writeDraft(outlookItem.item, textParam(params.body), callId);
 }
 
 export async function saveEmailToDraft(
