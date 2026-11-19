@@ -331,6 +331,7 @@ export default function ChatPage({
       isAnonymous={thread.isAnonymous}
       workspaceId={thread.workspaceId}
       sourceNotificationId={thread.sourceNotificationId}
+      sourceReleaseNoteId={thread.sourceReleaseNoteId}
       isArtifactPanelOpen={sidePanelState.isOpen}
       onToggleArtifactPanel={sidePanelTransitions.toggleArtifactPanel}
       onRename={handleRenameThread}

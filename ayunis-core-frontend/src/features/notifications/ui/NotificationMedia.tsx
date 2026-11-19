@@ -1,24 +1,30 @@
-import config from '@/shared/config';
 import {
   NotificationMediaType,
-  type NotificationResponseDto,
+  type NotificationMediaResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface NotificationMediaProps {
-  notification: NotificationResponseDto;
+  media: NotificationMediaResponseDto | null;
+  /** Where the image is served from when the media is an image. */
+  imageSrc: string;
+  title: string;
+  testIdPrefix: string;
 }
 
+/** The image or Loom video of a notification or a release note. */
 export function NotificationMedia({
-  notification,
+  media,
+  imageSrc,
+  title,
+  testIdPrefix,
 }: Readonly<NotificationMediaProps>) {
-  const { media } = notification;
   if (media?.type === NotificationMediaType.image) {
     return (
       <img
-        src={`${config.api.baseUrl}/notifications/${notification.id}/image`}
-        alt={notification.headline}
+        src={imageSrc}
+        alt={title}
         className="w-full rounded-lg border"
-        data-testid="notification-detail-image"
+        data-testid={`${testIdPrefix}-image`}
       />
     );
   }
@@ -26,12 +32,12 @@ export function NotificationMedia({
     return (
       <iframe
         src={media.url}
-        title={notification.headline}
+        title={title}
         className="aspect-video w-full rounded-lg border-0"
         allow="fullscreen; picture-in-picture"
         allowFullScreen
         loading="lazy"
-        data-testid="notification-detail-loom"
+        data-testid={`${testIdPrefix}-loom`}
       />
     );
   }

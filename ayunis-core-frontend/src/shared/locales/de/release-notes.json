@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "Neuigkeiten"
+  },
+  "bell": {
+    "label": "Neuigkeiten",
+    "unread": "Ungelesene Neuigkeiten"
+  },
+  "list": {
+    "kicker": "Produkt-Update · {{date}}",
+    "unread": "Ungelesen"
+  },
+  "emptyState": {
+    "title": "Noch keine Neuigkeiten",
+    "description": "Hier erscheinen Produkt-Updates von Ayunis."
+  },
+  "detail": {
+    "kicker": "Produkt-Update vom {{date}}",
+    "chatPlaceholder": "Frage zu diesem Update stellen"
+  }
+}

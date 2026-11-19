@@ -28,3 +28,13 @@ export function unreadNotificationItem(page: Page, headline: string) {
 export function sidebarInbox(page: Page) {
   return page.getByTestId('sidebar-inbox');
 }
+
+/** A product update in the Neuigkeiten list. */
+export function releaseNoteItem(page: Page, headline: string) {
+  // Headlines are written in Announcable, not translated copy.
+  return page.getByTestId('release-note-item').filter({
+    has: page
+      .getByTestId('release-note-item-headline')
+      .filter({ hasText: headline }),
+  });
+}

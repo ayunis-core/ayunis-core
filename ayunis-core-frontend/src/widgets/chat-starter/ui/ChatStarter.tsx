@@ -24,6 +24,7 @@ import type {
 interface ChatStarterProps {
   workspaceId?: string;
   sourceNotificationId?: string;
+  sourceReleaseNoteId?: string;
   placeholder?: string;
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
@@ -61,12 +62,13 @@ function applySourceStatus(
 
 /**
  * The full chat composer embedded in a page other than the new-chat page.
- * Sends through the same initiation flow, with the workspace and source
- * notification fixed, and lands directly in the created chat.
+ * Sends through the same initiation flow, with the workspace and the source
+ * notification or release note fixed, and lands directly in the created chat.
  */
 export function ChatStarter({
   workspaceId,
   sourceNotificationId,
+  sourceReleaseNoteId,
   placeholder,
   selectedModelId,
   isEmbeddingModelEnabled,
@@ -136,6 +138,7 @@ export function ChatStarter({
       isAnonymous,
       workspaceId,
       sourceNotificationId,
+      sourceReleaseNoteId,
       skillId,
       voiceInput,
       onSourceStatus: handleSourceStatus,

@@ -11,6 +11,7 @@ import {
   insertReleaseNoteNotification,
 } from "../clients/database.client";
 import type { ReleaseNoteMedia } from "../clients/database.client";
+import { insertReleaseNote } from "../clients/release-notes.database.client";
 import { createLargePng } from "./png.factory";
 
 export const LOOM_EMBED_URL =
@@ -52,6 +53,18 @@ export async function createReleaseNoteNotification(
   return insertReleaseNoteNotification({
     userId,
     orgId,
+    headline,
+    body: "Ayunis erledigt wiederkehrende Recherchen jetzt automatisch. [Mehr erfahren](https://ayunis.com/routinen)",
+    media,
+  });
+}
+
+/** One announced release note; every user who joined before sees it unread. */
+export function createReleaseNote(
+  headline: string,
+  media: ReleaseNoteMedia | null,
+): Promise<string> {
+  return insertReleaseNote({
     headline,
     body: "Ayunis erledigt wiederkehrende Recherchen jetzt automatisch. [Mehr erfahren](https://ayunis.com/routinen)",
     media,

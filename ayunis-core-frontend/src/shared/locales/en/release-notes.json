@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "What's new"
+  },
+  "bell": {
+    "label": "What's new",
+    "unread": "Unread product updates"
+  },
+  "list": {
+    "kicker": "Product update · {{date}}",
+    "unread": "Unread"
+  },
+  "emptyState": {
+    "title": "No product updates yet",
+    "description": "Product updates from Ayunis appear here."
+  },
+  "detail": {
+    "kicker": "Product update from {{date}}",
+    "chatPlaceholder": "Ask a question about this update"
+  }
+}

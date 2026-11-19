@@ -10,7 +10,7 @@ function databasePort(): number {
   return 5432 + (apiPort - 3000);
 }
 
-function createDatabaseClient(): Client {
+export function createDatabaseClient(): Client {
   return new Client({
     host: process.env.E2E_POSTGRES_HOST ?? "localhost",
     port: databasePort(),
