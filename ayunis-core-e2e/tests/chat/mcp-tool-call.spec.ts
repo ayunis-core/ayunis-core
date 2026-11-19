@@ -29,7 +29,7 @@ test('a chat runs an MCP tool only after the user confirms it', async ({
 
   const card = toolConfirmationCard(page);
   await expect(card).toHaveAttribute('data-state', 'pending');
-  await expect(card).toContainText('echo');
+  await expect(card).toContainText('Echo');
   await expect(card).toContainText(text);
   expect(echoMcpServer.calls).toEqual([]);
 

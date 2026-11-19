@@ -401,10 +401,10 @@
       }
     },
     "toolConfirmation": {
-      "confirm": "Bestätigen",
-      "reject": "Ablehnen",
       "alwaysAllow": "Immer erlauben",
-      "confirmed": "Bestätigt",
+      "allowOnce": "Nur dieses Mal",
+      "decline": "Ablehnen",
+      "confirmed": "Erlaubt",
       "rejected": "Abgelehnt"
     }
   },
