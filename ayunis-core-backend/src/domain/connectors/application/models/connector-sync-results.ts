@@ -1,5 +1,8 @@
 import type { Readable } from 'stream';
-import type { ConnectorItem } from 'src/domain/connectors/domain/sync/connector-item';
+import type {
+  ConnectorItem,
+  ConnectorItemUnprocessableReason,
+} from 'src/domain/connectors/domain/sync/connector-item';
 
 export enum ConnectorSyncOutcome {
   CHANGES = 'changes',
@@ -9,6 +12,8 @@ export enum ConnectorSyncOutcome {
   THROTTLED = 'throttled',
   /** The item no longer exists. */
   GONE = 'gone',
+  /** Reading the item showed that it cannot be processed. */
+  UNPROCESSABLE = 'unprocessable',
 }
 
 export interface ConnectorAccessLost {
@@ -48,11 +53,18 @@ export interface ConnectorItemGone {
   outcome: ConnectorSyncOutcome.GONE;
 }
 
+/** E.g. encrypted, which a provider may only know once it read the item. */
+export interface ConnectorItemUnprocessable {
+  outcome: ConnectorSyncOutcome.UNPROCESSABLE;
+  reason: ConnectorItemUnprocessableReason;
+}
+
 export type ConnectorChangesResult =
   ConnectorChanges | ConnectorAccessLost | ConnectorThrottled;
 
 export type ConnectorItemContentResult =
   | ConnectorItemContent
   | ConnectorItemGone
+  | ConnectorItemUnprocessable
   | ConnectorAccessLost
   | ConnectorThrottled;

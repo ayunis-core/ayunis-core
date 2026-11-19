@@ -5,6 +5,7 @@ import type { ConnectorProduct } from 'src/domain/connectors/domain/connector-pr
 export enum ConnectorErrorCode {
   CONNECTOR_CREDENTIALS_REQUIRED = 'CONNECTOR_CREDENTIALS_REQUIRED',
   CONNECTOR_NOT_SET_UP = 'CONNECTOR_NOT_SET_UP',
+  CONNECTOR_CONNECTION_FAILED = 'CONNECTOR_CONNECTION_FAILED',
   UNEXPECTED_CONNECTOR_ERROR = 'UNEXPECTED_CONNECTOR_ERROR',
 }
 
@@ -26,6 +27,18 @@ export class ConnectorNotSetUpError extends ApplicationError {
       'The connector is not set up',
       ConnectorErrorCode.CONNECTOR_NOT_SET_UP,
       404,
+      { product },
+    );
+  }
+}
+
+/** The product refused the stored credentials; testing the connection tells why. */
+export class ConnectorConnectionFailedError extends ApplicationError {
+  constructor(product: ConnectorProduct) {
+    super(
+      'The connector could not connect with its credentials',
+      ConnectorErrorCode.CONNECTOR_CONNECTION_FAILED,
+      422,
       { product },
     );
   }

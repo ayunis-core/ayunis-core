@@ -5,6 +5,7 @@ import type { UUID } from 'crypto';
 import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
+import type { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
@@ -103,6 +104,27 @@ export class SyncedFileDocuments {
           new DeleteSourcesCommand([file.sourceId], job.orgId),
         );
       await this.repository.deleteFiles([file.id]);
+    });
+  }
+
+  /**
+   * Skips the job's version of a file that turned out unprocessable when it
+   * was read, removing its document, as a sync does for a new version it
+   * knows cannot be processed.
+   */
+  async skip(
+    job: SyncedFileJobData,
+    reason: SyncedFileSkipReason,
+  ): Promise<void> {
+    await this.txHost.withTransaction(async () => {
+      const file = await this.lockedFile(job);
+      if (file?.sourceId !== job.sourceId || file.version !== job.version)
+        return;
+      await this.deleteSources.execute(
+        new DeleteSourcesCommand([job.sourceId], job.orgId),
+      );
+      file.skip(reason);
+      await this.repository.saveFiles([file]);
     });
   }
 

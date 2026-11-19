@@ -11,6 +11,11 @@ export enum StartSyncedFileProcessingOutcome {
   ACCESS_LOST = 'access_lost',
   /** The file no longer exists; it is removed with its document. */
   GONE = 'gone',
+  /**
+   * Reading the file showed it cannot be processed, e.g. encrypted; it is
+   * skipped and its document removed.
+   */
+  UNPROCESSABLE = 'unprocessable',
   /** The job is outdated: file, document or version moved on, or are gone. */
   SKIPPED = 'skipped',
   /** Connectors are switched off; nothing was done. */
@@ -32,6 +37,7 @@ export type StartSyncedFileProcessingResult =
       outcome:
         | StartSyncedFileProcessingOutcome.ACCESS_LOST
         | StartSyncedFileProcessingOutcome.GONE
+        | StartSyncedFileProcessingOutcome.UNPROCESSABLE
         | StartSyncedFileProcessingOutcome.SKIPPED
         | StartSyncedFileProcessingOutcome.DISABLED;
     };

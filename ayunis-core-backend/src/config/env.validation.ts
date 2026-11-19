@@ -276,6 +276,7 @@ export class EnvironmentVariables {
 
   // Connectors
   @IsOptionalHttpUrl() MICROSOFT_LOGIN_URL?: string;
+  @IsOptionalHttpUrl() MICROSOFT_GRAPH_URL?: string;
 }
 
 /**

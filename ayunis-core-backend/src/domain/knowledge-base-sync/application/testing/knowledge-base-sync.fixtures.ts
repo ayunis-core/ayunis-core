@@ -8,8 +8,8 @@ import {
   type ConnectorChangesResult,
   type ConnectorItemContentResult,
 } from 'src/domain/connectors/application/models/connector-sync-results';
-import type {
-  ConnectorItem,
+import {
+  type ConnectorItem,
   ConnectorItemUnprocessableReason,
 } from 'src/domain/connectors/domain/sync/connector-item';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
@@ -109,6 +109,9 @@ export class FakeSourceSystem {
   /** Set to have every call answered with "retry at". */
   throttledUntil: Date | null = null;
 
+  /** Items found encrypted once read, which the listing cannot tell. */
+  readonly encrypted = new Set<string>();
+
   fetch(id: string): Promise<ConnectorItemContentResult> {
     const item = this.items.get(id);
     if (!this.accessGranted)
@@ -119,6 +122,11 @@ export class FakeSourceSystem {
         retryAt: this.throttledUntil,
       });
     if (!item) return Promise.resolve({ outcome: ConnectorSyncOutcome.GONE });
+    if (this.encrypted.has(id))
+      return Promise.resolve({
+        outcome: ConnectorSyncOutcome.UNPROCESSABLE,
+        reason: ConnectorItemUnprocessableReason.ENCRYPTED,
+      });
     const text = FakeSourceSystem.contentOf(item);
     return Promise.resolve({
       outcome: ConnectorSyncOutcome.CONTENT,
