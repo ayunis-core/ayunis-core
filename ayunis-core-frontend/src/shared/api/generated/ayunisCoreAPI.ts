@@ -105,6 +105,7 @@ import type {
   DeleteAllPendingInvitesResponseDto,
   DeleteOrgRequestDto,
   DiscoverSsoDto,
+  DocumentTypographyDto,
   EmbeddingModelEnabledResponseDto,
   EmbeddingModelResponseDto,
   ErrorResponseDto,
@@ -305,6 +306,7 @@ import type {
   UpdateBillingInfoDto,
   UpdateChapterRequestDto,
   UpdateCourseModuleRequestDto,
+  UpdateDocumentDefaultsDto,
   UpdateEmbeddingModelRequestDto,
   UpdateImageGenerationModelRequestDto,
   UpdateIpAllowlistRequestDto,
@@ -25543,6 +25545,12 @@ export const letterheadsControllerCreate = (
 ) => {
 
       const formData = new FormData();
+if(createLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, createLetterheadDto.fontFamily);
+ }
+if(createLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, createLetterheadDto.fontSizePt);
+ }
 formData.append(`name`, createLetterheadDto.name);
 if(createLetterheadDto.description !== undefined) {
  formData.append(`description`, createLetterheadDto.description);
@@ -25805,6 +25813,12 @@ export const letterheadsControllerUpdate = (
 ) => {
 
       const formData = new FormData();
+if(updateLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, updateLetterheadDto.fontFamily);
+ }
+if(updateLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, updateLetterheadDto.fontSizePt);
+ }
 if(updateLetterheadDto.name !== undefined) {
  formData.append(`name`, updateLetterheadDto.name);
  }
@@ -26131,6 +26145,169 @@ export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awai
 
 
 
+
+/**
+ * Available to authenticated organization members.
+ * @summary Get the current organization’s document defaults
+ */
+export const documentDefaultsControllerFind = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DocumentTypographyDto>(
+      {url: `/document-defaults`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getDocumentDefaultsControllerFindQueryKey = () => {
+    return [
+    `/document-defaults`
+    ] as const;
+    }
+
+
+export const getDocumentDefaultsControllerFindQueryOptions = <TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDocumentDefaultsControllerFindQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof documentDefaultsControllerFind>>> = ({ signal }) => documentDefaultsControllerFind(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DocumentDefaultsControllerFindQueryResult = NonNullable<Awaited<ReturnType<typeof documentDefaultsControllerFind>>>
+export type DocumentDefaultsControllerFindQueryError = unknown
+
+
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>,
+          TError,
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>,
+          TError,
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current organization’s document defaults
+ */
+
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDocumentDefaultsControllerFindQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Omitted fields are preserved. Send null to reset a field.
+ * @summary Update the current organization’s document defaults
+ */
+export const documentDefaultsControllerUpdate = (
+    updateDocumentDefaultsDto: UpdateDocumentDefaultsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DocumentTypographyDto>(
+      {url: `/document-defaults`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDocumentDefaultsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getDocumentDefaultsControllerUpdateMutationKey = () => ['documentDefaultsControllerUpdate'] as const;
+
+export const getDocumentDefaultsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getDocumentDefaultsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, DocumentDefaultsControllerUpdateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  documentDefaultsControllerUpdate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DocumentDefaultsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>>
+    export type DocumentDefaultsControllerUpdateMutationBody = UpdateDocumentDefaultsDto
+    export type DocumentDefaultsControllerUpdateMutationError = void
+    export type DocumentDefaultsControllerUpdateMutationVariables = {data: UpdateDocumentDefaultsDto}
+
+    /**
+ * @summary Update the current organization’s document defaults
+ */
+export const useDocumentDefaultsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>,
+        TError,
+        DocumentDefaultsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDocumentDefaultsControllerUpdateMutationOptions(options), queryClient);
+    }
 
 /**
  * Returns every memory entry of the authenticated user. The reserved keys are always included, even when the assistant has not written them yet.

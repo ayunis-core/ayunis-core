@@ -66,5 +66,15 @@
       "presetFormA": "DIN 5008 Form A",
       "presetFormB": "DIN 5008 Form B"
     }
+  },
+  "typography": {
+    "title": "Document defaults",
+    "fontFamily": "Font family",
+    "fontSizePt": "Font size (pt)",
+    "organizationDefault": "Organization default",
+    "appDefault": "App default",
+    "loadError": "Could not load document defaults.",
+    "saveError": "Could not save document defaults.",
+    "saved": "Document defaults saved."
   }
 }

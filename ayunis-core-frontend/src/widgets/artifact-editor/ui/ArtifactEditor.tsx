@@ -28,6 +28,7 @@ import { LetterheadPicker } from './LetterheadPicker';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
+import { useDocumentTypography } from '@/widgets/artifact-editor/model/useDocumentTypography';
 
 interface ArtifactEditorProps {
   readonly artifact: ArtifactResponseDto;
@@ -60,6 +61,7 @@ export const ArtifactEditor = forwardRef<
 ) {
   const { t } = useTranslation('artifacts');
   const { confirm } = useConfirmation();
+  const typography = useDocumentTypography(artifact.letterheadId);
 
   const currentVersion = artifact.versions?.find(
     (v) => v.versionNumber === artifact.currentVersionNumber,
@@ -86,6 +88,7 @@ export const ArtifactEditor = forwardRef<
     content: currentVersion?.content ?? '',
     editorProps: {
       attributes: {
+        'data-testid': 'artifact-document-content',
         // A table with no header row is a letter's address and contact block,
         // not tabular data — render it borderless, as PDF export does.
         class:
@@ -182,7 +185,15 @@ export const ArtifactEditor = forwardRef<
 
       {/* Editor content */}
       <div className="flex-1 overflow-y-auto">
-        <EditorContent editor={editor} />
+        <EditorContent
+          editor={editor}
+          style={typography}
+          className={
+            typography.fontSize
+              ? '[&_.tiptap]:[font-size:inherit] [&_.tiptap_table]:[font-size:inherit]'
+              : undefined
+          }
+        />
       </div>
 
       {/* Version history */}

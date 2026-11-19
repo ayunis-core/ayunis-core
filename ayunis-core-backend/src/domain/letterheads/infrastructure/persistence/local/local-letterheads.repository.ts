@@ -60,6 +60,8 @@ export class LocalLetterheadsRepository extends LetterheadsRepository {
       { id: record.id, orgId: record.orgId, updatedAt: expectedUpdatedAt },
       {
         name: record.name,
+        fontFamily: record.fontFamily,
+        fontSizePt: record.fontSizePt,
         description: record.description,
         firstPageStoragePath: record.firstPageStoragePath,
         continuationPageStoragePath: record.continuationPageStoragePath,

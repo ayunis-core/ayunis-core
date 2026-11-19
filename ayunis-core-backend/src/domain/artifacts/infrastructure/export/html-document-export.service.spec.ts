@@ -191,6 +191,71 @@ describe('HtmlDocumentExportService', () => {
       expect(header).toBe('%PDF');
     });
 
+    it('renders organization typography in a plain PDF', async () => {
+      await service.exportToPdf('<p>Notice</p>', undefined, {
+        fontFamily: 'Times New Roman',
+        fontSizePt: 10,
+      });
+
+      expect(mockPage.setContent).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /font-family: "Times New Roman"[^;]*;\s*font-size: 10pt;/,
+        ),
+        { waitUntil: 'load' },
+      );
+    });
+
+    it('uses the same Arial font stack for the PDF default and explicit Arial', async () => {
+      await service.exportToPdf('<p>Notice</p>');
+      await service.exportToPdf('<p>Notice</p>', undefined, {
+        fontFamily: 'Arial',
+        fontSizePt: null,
+      });
+
+      const expectedContent = expect.stringContaining(
+        'font-family: Arial, Helvetica, "Liberation Sans", sans-serif;',
+      );
+      const options = { waitUntil: 'load' };
+      expect(mockPage.setContent).toHaveBeenNthCalledWith(
+        1,
+        expectedContent,
+        options,
+      );
+      expect(mockPage.setContent).toHaveBeenNthCalledWith(
+        2,
+        expectedContent,
+        options,
+      );
+    });
+
+    it.each([
+      ['Calibri', 'Carlito', 'Calibri, Carlito, sans-serif'],
+      ['Cambria', 'Caladea', 'Cambria, Caladea, serif'],
+      ['Georgia', 'Gelasio', 'Georgia, Gelasio, serif'],
+      ['Roboto', 'Roboto', '"Roboto", sans-serif'],
+      ['Open Sans', 'Open Sans', '"Open Sans", sans-serif'],
+      ['Lato', 'Lato', '"Lato", sans-serif'],
+      ['Montserrat', 'Montserrat', '"Montserrat", sans-serif'],
+      ['Inter', 'Inter', '"Inter", sans-serif'],
+      ['Noto Sans', 'Noto Sans', '"Noto Sans", sans-serif'],
+      ['Source Sans 3', 'Source Sans 3', '"Source Sans 3", sans-serif'],
+      ['Noto Serif', 'Noto Serif', '"Noto Serif", serif'],
+      ['Fira Sans', 'Fira Sans', '"Fira Sans", sans-serif'],
+    ] as const)(
+      'bundles local font files for %s',
+      async (fontFamily, face, stack) => {
+        await service.exportToPdf('<p>Notice</p>', undefined, {
+          fontFamily,
+          fontSizePt: 10,
+        });
+
+        const [[html]] = mockPage.setContent.mock.calls as [[string]];
+        expect(html).toContain(`font-family: '${face}'`);
+        expect(html).toContain('url(data:font/woff2;base64,');
+        expect(html).toContain(`font-family: ${stack}`);
+      },
+    );
+
     it('should render after document load without waiting for network idle', async () => {
       await service.exportToPdf('<p>Hello</p>');
 

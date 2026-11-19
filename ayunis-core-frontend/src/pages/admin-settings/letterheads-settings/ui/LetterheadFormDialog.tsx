@@ -34,6 +34,9 @@ import {
   type LetterheadFormValues,
 } from '@/pages/admin-settings/letterheads-settings/model/letterheadFormSchema';
 
+import { DocumentTypographyFields } from '@/shared/ui/document-typography-fields';
+import { EMPTY_DOCUMENT_TYPOGRAPHY } from '@/shared/lib/document-typography';
+
 interface LetterheadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,6 +70,7 @@ function LetterheadFormContent({
   onOpenChange,
   t,
 }: Readonly<LetterheadFormContentProps>) {
+  const [typography, setTypography] = useState(EMPTY_DOCUMENT_TYPOGRAPHY);
   const [firstPagePdf, setFirstPagePdf] = useState<File | null>(null);
   const [useDifferentFollowingPages, setUseDifferentFollowingPages] =
     useState(false);
@@ -89,6 +93,7 @@ function LetterheadFormContent({
 
   const resetForm = () => {
     form.reset();
+    setTypography(EMPTY_DOCUMENT_TYPOGRAPHY);
     setFirstPagePdf(null);
     setUseDifferentFollowingPages(false);
     setContinuationPagePdf(null);
@@ -106,6 +111,7 @@ function LetterheadFormContent({
   const onSubmit = (data: LetterheadFormValues) => {
     if (!firstPagePdf) return;
     createLetterhead({
+      ...typography,
       name: data.name,
       description: data.description,
       firstPagePdf,
@@ -176,6 +182,15 @@ function LetterheadFormContent({
             />
 
             {/* First Page PDF */}
+            <DocumentTypographyFields
+              scope="letterhead"
+              value={typography}
+              onChange={(patch) =>
+                setTypography((previous) => ({ ...previous, ...patch }))
+              }
+              disabled={isCreating}
+            />
+
             <div className="grid gap-2">
               <Label>{t('letterheads.createDialog.firstPagePdfLabel')}</Label>
               <Input

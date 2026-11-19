@@ -47,6 +47,10 @@ vi.mock('@/widgets/confirmation-modal', () => ({
   useConfirmation: () => ({ confirm: mocks.confirm }),
 }));
 
+vi.mock('@/widgets/artifact-editor/model/useDocumentTypography', () => ({
+  useDocumentTypography: () => ({}),
+}));
+
 vi.mock('./EditorToolbar', () => ({ EditorToolbar: () => null }));
 vi.mock('./ExportButtons', () => ({
   ExportButtons: (props: { onExport: (format: 'docx' | 'pdf') => void }) => {

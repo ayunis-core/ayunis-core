@@ -1,3 +1,5 @@
+import type { DocumentTypography } from 'src/domain/letterheads/domain/value-objects/document-typography';
+
 export interface LetterheadConfig {
   firstPagePdf: Buffer;
   continuationPagePdf?: Buffer;
@@ -20,5 +22,6 @@ export abstract class DocumentExportPort {
   abstract exportToPdf(
     html: string,
     letterhead?: LetterheadConfig,
+    typography?: DocumentTypography,
   ): Promise<Buffer>;
 }

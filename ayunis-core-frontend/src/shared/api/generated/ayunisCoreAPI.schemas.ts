@@ -5730,7 +5730,36 @@ export interface RevertArtifactDto {
   versionNumber: number;
 }
 
+/**
+ * Font family. Send an empty string to inherit the organization default.
+ */
+export type CreateLetterheadDtoFontFamily = typeof CreateLetterheadDtoFontFamily[keyof typeof CreateLetterheadDtoFontFamily];
+
+
+export const CreateLetterheadDtoFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+  '': '',
+} as const;
+
 export interface CreateLetterheadDto {
+  /** Font family. Send an empty string to inherit the organization default. */
+  fontFamily?: CreateLetterheadDtoFontFamily;
+  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
+  fontSizePt?: string;
   /** Name of the letterhead */
   name: string;
   /** Description of the letterhead (used by AI for context) */
@@ -5740,6 +5769,27 @@ export interface CreateLetterheadDto {
   /** JSON string of { top, bottom, left, right } margins in mm */
   continuationPageMargins: string;
 }
+
+export type DocumentFontFamily = typeof DocumentFontFamily[keyof typeof DocumentFontFamily];
+
+
+export const DocumentFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+} as const;
 
 export interface PageMarginsDto {
   /** Top margin in mm */
@@ -5753,6 +5803,13 @@ export interface PageMarginsDto {
 }
 
 export interface LetterheadResponseDto {
+  fontFamily: DocumentFontFamily | null;
+  /**
+     * @minimum 6
+     * @maximum 72
+     * @nullable
+     */
+  fontSizePt: number | null;
   /** Unique identifier of the letterhead */
   id: string;
   /** Name of the letterhead */
@@ -5774,7 +5831,36 @@ export interface LetterheadResponseDto {
   updatedAt: string;
 }
 
+/**
+ * Font family. Send an empty string to inherit the organization default.
+ */
+export type UpdateLetterheadDtoFontFamily = typeof UpdateLetterheadDtoFontFamily[keyof typeof UpdateLetterheadDtoFontFamily];
+
+
+export const UpdateLetterheadDtoFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+  '': '',
+} as const;
+
 export interface UpdateLetterheadDto {
+  /** Font family. Send an empty string to inherit the organization default. */
+  fontFamily?: UpdateLetterheadDtoFontFamily;
+  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
+  fontSizePt?: string;
   /** Name of the letterhead */
   name?: string;
   /** Description of the letterhead */
@@ -5785,6 +5871,26 @@ export interface UpdateLetterheadDto {
   continuationPageMargins?: string;
   /** Set to "true" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded. */
   removeContinuationPage?: string;
+}
+
+export interface DocumentTypographyDto {
+  fontFamily: DocumentFontFamily | null;
+  /**
+     * @minimum 6
+     * @maximum 72
+     * @nullable
+     */
+  fontSizePt: number | null;
+}
+
+export interface UpdateDocumentDefaultsDto {
+  fontFamily?: DocumentFontFamily | null;
+  /**
+     * @minimum 6
+     * @maximum 72
+     * @nullable
+     */
+  fontSizePt?: number | null;
 }
 
 export interface MemoryEntryResponseDto {

@@ -12612,6 +12612,62 @@
         "tags": ["letterheads"]
       }
     },
+    "/document-defaults": {
+      "get": {
+        "description": "Available to authenticated organization members.",
+        "operationId": "DocumentDefaultsController_find",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTypographyDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current organization’s document defaults",
+        "tags": ["document-defaults"]
+      },
+      "patch": {
+        "description": "Omitted fields are preserved. Send null to reset a field.",
+        "operationId": "DocumentDefaultsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentDefaultsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTypographyDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Update the current organization’s document defaults",
+        "tags": ["document-defaults"]
+      }
+    },
     "/memory": {
       "get": {
         "description": "Returns every memory entry of the authenticated user. The reserved keys are always included, even when the assistant has not written them yet.",
@@ -24685,6 +24741,32 @@
       "CreateLetterheadDto": {
         "type": "object",
         "properties": {
+          "fontFamily": {
+            "type": "string",
+            "enum": [
+              "Arial",
+              "Times New Roman",
+              "Courier New",
+              "Calibri",
+              "Cambria",
+              "Georgia",
+              "Roboto",
+              "Open Sans",
+              "Lato",
+              "Montserrat",
+              "Inter",
+              "Noto Sans",
+              "Source Sans 3",
+              "Noto Serif",
+              "Fira Sans",
+              ""
+            ],
+            "description": "Font family. Send an empty string to inherit the organization default."
+          },
+          "fontSizePt": {
+            "type": "string",
+            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
+          },
           "name": {
             "type": "string",
             "description": "Name of the letterhead",
@@ -24705,6 +24787,26 @@
           }
         },
         "required": ["name", "firstPageMargins", "continuationPageMargins"]
+      },
+      "DocumentFontFamily": {
+        "type": "string",
+        "enum": [
+          "Arial",
+          "Times New Roman",
+          "Courier New",
+          "Calibri",
+          "Cambria",
+          "Georgia",
+          "Roboto",
+          "Open Sans",
+          "Lato",
+          "Montserrat",
+          "Inter",
+          "Noto Sans",
+          "Source Sans 3",
+          "Noto Serif",
+          "Fira Sans"
+        ]
       },
       "PageMarginsDto": {
         "type": "object",
@@ -24735,6 +24837,20 @@
       "LetterheadResponseDto": {
         "type": "object",
         "properties": {
+          "fontFamily": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentFontFamily"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 72,
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier of the letterhead",
@@ -24783,6 +24899,8 @@
           }
         },
         "required": [
+          "fontFamily",
+          "fontSizePt",
           "id",
           "name",
           "firstPageMargins",
@@ -24795,6 +24913,32 @@
       "UpdateLetterheadDto": {
         "type": "object",
         "properties": {
+          "fontFamily": {
+            "type": "string",
+            "enum": [
+              "Arial",
+              "Times New Roman",
+              "Courier New",
+              "Calibri",
+              "Cambria",
+              "Georgia",
+              "Roboto",
+              "Open Sans",
+              "Lato",
+              "Montserrat",
+              "Inter",
+              "Noto Sans",
+              "Source Sans 3",
+              "Noto Serif",
+              "Fira Sans",
+              ""
+            ],
+            "description": "Font family. Send an empty string to inherit the organization default."
+          },
+          "fontSizePt": {
+            "type": "string",
+            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
+          },
           "name": {
             "type": "string",
             "description": "Name of the letterhead",
@@ -24816,6 +24960,45 @@
           "removeContinuationPage": {
             "type": "string",
             "description": "Set to \"true\" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded."
+          }
+        }
+      },
+      "DocumentTypographyDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentFontFamily"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 72,
+            "nullable": true
+          }
+        },
+        "required": ["fontFamily", "fontSizePt"]
+      },
+      "UpdateDocumentDefaultsDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentFontFamily"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 72,
+            "nullable": true
           }
         }
       },

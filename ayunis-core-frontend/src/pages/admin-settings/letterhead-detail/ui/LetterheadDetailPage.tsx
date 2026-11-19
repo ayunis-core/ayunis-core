@@ -23,6 +23,9 @@ import {
 } from '@/pages/admin-settings/letterhead-detail/lib/pdf-source';
 import type { LetterheadFormFields } from '@/pages/admin-settings/letterhead-detail/model/types';
 
+import { DocumentTypographyFields } from '@/shared/ui/document-typography-fields';
+import type { DocumentTypography } from '@/shared/lib/document-typography';
+
 interface LetterheadDetailPageProps {
   letterhead: LetterheadResponseDto;
 }
@@ -41,6 +44,7 @@ export function LetterheadDetailPage({
     [letterhead],
   );
 
+  const [typography, setTypography] = useState<Partial<DocumentTypography>>({});
   const [firstPagePdf, setFirstPagePdf] = useState<File | null>(null);
   const [useDifferentFollowingPages, setUseDifferentFollowingPages] = useState(
     letterhead.hasContinuationPage,
@@ -54,7 +58,9 @@ export function LetterheadDetailPage({
   const [continuationPageMargins, setContinuationPageMargins] =
     useState<PageMargins>(initialMargins.continuationPage);
 
-  const { updateLetterhead, isUpdating } = useUpdateLetterhead();
+  const { updateLetterhead, isUpdating } = useUpdateLetterhead(() =>
+    setTypography({}),
+  );
 
   const {
     register,
@@ -72,6 +78,7 @@ export function LetterheadDetailPage({
 
   const onSubmit = (data: LetterheadFormFields) => {
     updateLetterhead({
+      ...typography,
       id: letterhead.id,
       name: data.name,
       description: data.description,
@@ -139,6 +146,18 @@ export function LetterheadDetailPage({
                 {...register('description')}
               />
             </div>
+            <DocumentTypographyFields
+              scope="letterhead"
+              value={{
+                fontFamily: letterhead.fontFamily ?? null,
+                fontSizePt: letterhead.fontSizePt ?? null,
+                ...typography,
+              }}
+              onChange={(patch) =>
+                setTypography((previous) => ({ ...previous, ...patch }))
+              }
+              disabled={isUpdating}
+            />
           </CardContent>
         </Card>
 

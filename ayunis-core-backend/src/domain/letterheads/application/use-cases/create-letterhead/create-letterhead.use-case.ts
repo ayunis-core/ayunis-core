@@ -93,6 +93,8 @@ export class CreateLetterheadUseCase {
         id: letterheadId,
         orgId,
         name: command.name,
+        fontFamily: command.fontFamily,
+        fontSizePt: command.fontSizePt,
         description: command.description,
         firstPageStoragePath: firstPagePath,
         continuationPageStoragePath: continuationPagePath,

@@ -143,24 +143,23 @@ export class LetterheadsController {
       throw new BadRequestException('First page PDF file is required');
     }
 
-    const firstPageMargins = parseMargins(
-      dto.firstPageMargins,
-      'firstPageMargins',
-    );
-    const continuationPageMargins = parseMargins(
-      dto.continuationPageMargins,
-      'continuationPageMargins',
-    );
-
     const letterhead = await this.createLetterheadUseCase.execute(
       new CreateLetterheadCommand({
         name: dto.name,
+        fontFamily: dto.fontFamily,
+        fontSizePt: dto.fontSizePt,
         description: dto.description,
         firstPagePdfBuffer: firstPageFile.buffer,
         continuationPagePdfBuffer:
           files.continuationPagePdf?.[0]?.buffer ?? null,
-        firstPageMargins,
-        continuationPageMargins,
+        firstPageMargins: parseMargins(
+          dto.firstPageMargins,
+          'firstPageMargins',
+        ),
+        continuationPageMargins: parseMargins(
+          dto.continuationPageMargins,
+          'continuationPageMargins',
+        ),
       }),
     );
     return this.letterheadDtoMapper.toDto(letterhead);
@@ -323,6 +322,8 @@ export class LetterheadsController {
     return new UpdateLetterheadCommand({
       letterheadId: id,
       name: dto.name,
+      fontFamily: dto.fontFamily,
+      fontSizePt: dto.fontSizePt,
       description: dto.description,
       firstPagePdfBuffer: files.firstPagePdf?.[0]?.buffer,
       continuationPagePdfBuffer: files.continuationPagePdf?.[0]?.buffer,

@@ -66,5 +66,15 @@
       "presetFormA": "DIN 5008 Form A",
       "presetFormB": "DIN 5008 Form B"
     }
+  },
+  "typography": {
+    "title": "Dokument-Standardeinstellungen",
+    "fontFamily": "Schriftart",
+    "fontSizePt": "Schriftgröße (pt)",
+    "organizationDefault": "Organisationsstandard",
+    "appDefault": "App-Standard",
+    "loadError": "Dokument-Standardeinstellungen konnten nicht geladen werden.",
+    "saveError": "Dokument-Standardeinstellungen konnten nicht gespeichert werden.",
+    "saved": "Dokument-Standardeinstellungen gespeichert."
   }
 }
