@@ -1,5 +1,12 @@
 {
   "letterheads": {
+    "samplePreview": {
+      "close": "Close",
+      "open": "Preview sample letter",
+      "description": "See how a sample letter looks with your current settings.",
+      "loading": "Rendering sample letter…",
+      "failed": "The sample letter could not be rendered. Check the PDF files and margins, then try again."
+    },
     "title": "Letterheads",
     "add": "Add",
     "empty": "No letterheads yet. Create a letterhead to use as a background on documents.",

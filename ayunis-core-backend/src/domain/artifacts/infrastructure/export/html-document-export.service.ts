@@ -41,6 +41,7 @@ function documentPdfCss(typography?: DocumentTypography): string {
   const fontSizePt = typography?.fontSizePt ?? 12;
   return `
   ${bundledDocumentFontCss(family)}
+  section.pdf-continuation { break-before: page; }
   body {
     font-family: ${fontFamily};
     font-size: ${fontSizePt}pt;
@@ -176,10 +177,16 @@ export class HtmlDocumentExportService
     html: string,
     letterhead?: LetterheadConfig,
     typography?: DocumentTypography,
+    continuationPageHtml?: string,
   ): Promise<Buffer> {
     this.logger.log('Exporting HTML to PDF');
 
-    const wrappedHtml = this.wrapHtmlForPdf(html, letterhead, typography);
+    const wrappedHtml = this.wrapHtmlForPdf(
+      html,
+      letterhead,
+      typography,
+      continuationPageHtml,
+    );
     const browser = await this.chromium.get();
     const page = await browser.newPage();
 
@@ -246,8 +253,12 @@ export class HtmlDocumentExportService
     unsafeHtml: string,
     letterhead?: LetterheadConfig,
     typography?: DocumentTypography,
+    continuationPageHtml?: string,
   ): string {
     const sanitized = sanitizeHtmlContent(unsafeHtml);
+    const continuation = continuationPageHtml
+      ? `<section class="pdf-continuation">${sanitizeHtmlContent(continuationPageHtml)}</section>`
+      : '';
     // Only letters carry a head block, and `markLayoutTables` must run after
     // sanitization or the marker class is stripped again.
     const html = letterhead ? markLayoutTables(sanitized) : sanitized;
@@ -259,7 +270,7 @@ export class HtmlDocumentExportService
   <meta charset="utf-8">
   <style>${documentPdfCss(typography)}${letterheadCss}</style>
 </head>
-<body>${html}</body>
+<body>${html}${continuation}</body>
 </html>`;
   }
 

@@ -27,5 +27,6 @@ export abstract class DocumentExportPort {
     html: string,
     letterhead?: LetterheadConfig,
     typography?: DocumentTypography,
+    continuationPageHtml?: string,
   ): Promise<Buffer>;
 }

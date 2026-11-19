@@ -75,6 +75,7 @@
   "/knowledge-bases/{id}/uploads/{uploadId}/complete",
   "/knowledge-bases/{id}/urls",
   "/letterheads",
+  "/letterheads/preview",
   "/letterheads/{id}",
   "/letterheads/{id}/continuation-page-pdf",
   "/letterheads/{id}/first-page-pdf",

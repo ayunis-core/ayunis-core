@@ -190,6 +190,7 @@ import type {
   PiiMaskResponseDto,
   PiiWhitelistResponseDto,
   PredefinedConfigResponseDto,
+  PreviewLetterheadDto,
   PriceResponseDto,
   PromoteToSuperAdminDto,
   ProviderUsageChartResponseDto,
@@ -25803,6 +25804,99 @@ export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeo
 
 
 
+
+/**
+ * @summary Render a sample letter with the draft letterhead
+ */
+export const letterheadsControllerPreview = (
+    previewLetterheadDto: PreviewLetterheadDto,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+if(previewLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, previewLetterheadDto.fontFamily);
+ }
+if(previewLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, previewLetterheadDto.fontSizePt);
+ }
+if(previewLetterheadDto.letterheadId !== undefined) {
+ formData.append(`letterheadId`, previewLetterheadDto.letterheadId);
+ }
+if(previewLetterheadDto.firstPagePdf !== undefined) {
+ formData.append(`firstPagePdf`, previewLetterheadDto.firstPagePdf);
+ }
+if(previewLetterheadDto.continuationPagePdf !== undefined) {
+ formData.append(`continuationPagePdf`, previewLetterheadDto.continuationPagePdf);
+ }
+formData.append(`firstPageMargins`, previewLetterheadDto.firstPageMargins);
+formData.append(`continuationPageMargins`, previewLetterheadDto.continuationPageMargins);
+if(previewLetterheadDto.removeContinuationPage !== undefined) {
+ formData.append(`removeContinuationPage`, previewLetterheadDto.removeContinuationPage);
+ }
+if(previewLetterheadDto.language !== undefined) {
+ formData.append(`language`, previewLetterheadDto.language);
+ }
+
+      return customAxiosInstance<Blob>(
+      {url: `/letterheads/preview`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData,
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerPreviewMutationKey = () => ['letterheadsControllerPreview'] as const;
+
+export const getLetterheadsControllerPreviewMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext> => {
+
+const mutationKey = getLetterheadsControllerPreviewMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerPreview>>, LetterheadsControllerPreviewMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  letterheadsControllerPreview(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerPreview>>>
+    export type LetterheadsControllerPreviewMutationBody = PreviewLetterheadDto
+    export type LetterheadsControllerPreviewMutationError = void
+    export type LetterheadsControllerPreviewMutationVariables = {data: PreviewLetterheadDto}
+
+    /**
+ * @summary Render a sample letter with the draft letterhead
+ */
+export const useLetterheadsControllerPreview = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerPreview>>,
+        TError,
+        LetterheadsControllerPreviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLetterheadsControllerPreviewMutationOptions(options), queryClient);
+    }
 
 /**
  * @summary Get a letterhead by ID

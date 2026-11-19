@@ -5866,6 +5866,62 @@ export interface LetterheadResponseDto {
 /**
  * Font family. Send an empty string to inherit the organization default.
  */
+export type PreviewLetterheadDtoFontFamily = typeof PreviewLetterheadDtoFontFamily[keyof typeof PreviewLetterheadDtoFontFamily];
+
+
+export const PreviewLetterheadDtoFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+  '': '',
+} as const;
+
+export type PreviewLetterheadDtoRemoveContinuationPage = typeof PreviewLetterheadDtoRemoveContinuationPage[keyof typeof PreviewLetterheadDtoRemoveContinuationPage];
+
+
+export const PreviewLetterheadDtoRemoveContinuationPage = {
+  true: 'true',
+} as const;
+
+export type PreviewLetterheadDtoLanguage = typeof PreviewLetterheadDtoLanguage[keyof typeof PreviewLetterheadDtoLanguage];
+
+
+export const PreviewLetterheadDtoLanguage = {
+  de: 'de',
+  en: 'en',
+} as const;
+
+export interface PreviewLetterheadDto {
+  /** Font family. Send an empty string to inherit the organization default. */
+  fontFamily?: PreviewLetterheadDtoFontFamily;
+  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
+  fontSizePt?: string;
+  letterheadId?: string;
+  firstPagePdf?: Blob;
+  continuationPagePdf?: Blob;
+  /** First-page margins in millimeters, as a JSON string */
+  firstPageMargins: string;
+  /** Continuation margins in millimeters, as a JSON string */
+  continuationPageMargins: string;
+  removeContinuationPage?: PreviewLetterheadDtoRemoveContinuationPage;
+  language?: PreviewLetterheadDtoLanguage;
+}
+
+/**
+ * Font family. Send an empty string to inherit the organization default.
+ */
 export type UpdateLetterheadDtoFontFamily = typeof UpdateLetterheadDtoFontFamily[keyof typeof UpdateLetterheadDtoFontFamily];
 
 
