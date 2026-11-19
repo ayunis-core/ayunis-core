@@ -401,11 +401,11 @@
       }
     },
     "toolConfirmation": {
-      "confirm": "Confirm",
-      "reject": "Reject",
+      "confirm": "Only this time",
+      "reject": "Decline",
       "alwaysAllow": "Always allow",
-      "confirmed": "Confirmed",
-      "rejected": "Rejected"
+      "confirmed": "Allowed",
+      "rejected": "Declined"
     }
   },
   "newChat": {

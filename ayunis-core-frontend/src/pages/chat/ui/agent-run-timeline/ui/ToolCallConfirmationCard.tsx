@@ -1,10 +1,7 @@
-import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plug } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
-import { Checkbox } from '@ayunis/ui/components/checkbox';
-import { Label } from '@ayunis/ui/components/label';
 import {
   Item,
   ItemActions,
@@ -16,7 +13,7 @@ import {
 } from '@ayunis/ui/components/item';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import type { ToolCallDecision } from '@/shared/api';
-import { upstreamToolName } from '@/pages/chat/lib/format-tool-name';
+import { formatToolName } from '@/pages/chat/lib/format-tool-name';
 import { useToolCallConfirmation } from '@/pages/chat/ui/agent-run-timeline/model/tool-call-confirmation';
 
 interface ToolCallConfirmationCardProps {
@@ -59,9 +56,7 @@ export default function ToolCallConfirmationCard({
       </ItemMedia>
       <ItemContent className="min-w-0">
         {integration && <ItemDescription>{integration.name}</ItemDescription>}
-        <ItemTitle className="font-mono">
-          {upstreamToolName(toolUse.name)}
-        </ItemTitle>
+        <ItemTitle>{formatToolName(toolUse.name)}</ItemTitle>
       </ItemContent>
       {shownDecision && (
         <ItemActions>
@@ -93,25 +88,31 @@ function DecisionBadge({ decision }: Readonly<{ decision: ToolCallDecision }>) {
 function DecisionActions({ toolCallId }: Readonly<{ toolCallId: string }>) {
   const { t } = useTranslation('chat');
   const { decide } = useToolCallConfirmation();
-  const [alwaysAllow, setAlwaysAllow] = useState(false);
-  const checkboxId = useId();
 
   return (
-    <ItemFooter className="flex-wrap">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={checkboxId}
-          checked={alwaysAllow}
-          onCheckedChange={(checked) => setAlwaysAllow(checked === true)}
-          data-testid="tool-confirmation-always-allow"
-        />
-        <Label htmlFor={checkboxId}>
-          {t('chat.toolConfirmation.alwaysAllow')}
-        </Label>
-      </div>
-      <div className="flex items-center gap-2">
+    <ItemFooter>
+      <div className="flex flex-wrap items-center gap-2">
         <Button
-          variant="outline"
+          size="sm"
+          onClick={() =>
+            decide({ toolCallId, approved: true, alwaysAllow: true })
+          }
+          data-testid="tool-confirmation-always-allow"
+        >
+          {t('chat.toolConfirmation.alwaysAllow')}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() =>
+            decide({ toolCallId, approved: true, alwaysAllow: false })
+          }
+          data-testid="tool-confirmation-confirm"
+        >
+          {t('chat.toolConfirmation.confirm')}
+        </Button>
+        <Button
+          variant="ghost"
           size="sm"
           onClick={() =>
             decide({ toolCallId, approved: false, alwaysAllow: false })
@@ -119,13 +120,6 @@ function DecisionActions({ toolCallId }: Readonly<{ toolCallId: string }>) {
           data-testid="tool-confirmation-reject"
         >
           {t('chat.toolConfirmation.reject')}
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => decide({ toolCallId, approved: true, alwaysAllow })}
-          data-testid="tool-confirmation-confirm"
-        >
-          {t('chat.toolConfirmation.confirm')}
         </Button>
       </div>
     </ItemFooter>
