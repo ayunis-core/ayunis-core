@@ -36,6 +36,7 @@ export class CreateProcessingFileSourcesUseCase {
           fileType: fileTypeFromName(name),
           type: TextType.FILE,
           knowledgeBaseId: command.knowledgeBaseId,
+          syncedLocationId: command.syncedLocationId,
           status: SourceStatus.PROCESSING,
           // Armed once a worker picks up the file, like a crawl's root, so
           // the stale-processing cleanup leaves queued files alone.

@@ -8,6 +8,7 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
@@ -60,6 +61,9 @@ export function ConnectionsSection() {
                 <ItemTitle>
                   {t(`connections.products.${connector.product}`)}
                 </ItemTitle>
+                <ItemDescription>
+                  {t(`connections.descriptions.${connector.product}`)}
+                </ItemDescription>
               </ItemContent>
               <ItemActions>
                 <Badge

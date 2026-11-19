@@ -85,6 +85,12 @@ export class KnowledgeBaseDocumentResponseDto {
     example: 'https://example.com/page',
   })
   url?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'The synced location the document is kept in sync with; it is listed under that location',
+  })
+  syncedLocationId?: string;
 }
 
 export class KnowledgeBaseDocumentListResponseDto {

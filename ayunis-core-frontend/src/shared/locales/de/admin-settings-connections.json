@@ -4,6 +4,9 @@
     "products": {
       "microsoft_365": "Microsoft 365"
     },
+    "descriptions": {
+      "microsoft_365": "Verbinden Sie SharePoint mit Ihren Wissenssammlungen."
+    },
     "status": {
       "set_up": "Eingerichtet",
       "not_set_up": "Nicht eingerichtet"

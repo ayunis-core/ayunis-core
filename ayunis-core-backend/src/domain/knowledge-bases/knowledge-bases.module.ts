@@ -46,6 +46,7 @@ import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/
 import { RemoveFailedDocumentsFromKnowledgeBaseUseCase } from './application/use-cases/remove-failed-documents-from-knowledge-base/remove-failed-documents-from-knowledge-base.use-case';
 import { AddSyncedDocumentsToKnowledgeBaseUseCase } from './application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.use-case';
 import { AssertKnowledgeBaseWriteAccessUseCase } from './application/use-cases/assert-knowledge-base-write-access/assert-knowledge-base-write-access.use-case';
+import { AssertKnowledgeBaseReadAccessUseCase } from './application/use-cases/assert-knowledge-base-read-access/assert-knowledge-base-read-access.use-case';
 import { LockKnowledgeBaseUseCase } from './application/use-cases/lock-knowledge-base/lock-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
@@ -99,6 +100,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     RemoveFailedDocumentsFromKnowledgeBaseUseCase,
     AddSyncedDocumentsToKnowledgeBaseUseCase,
     AssertKnowledgeBaseWriteAccessUseCase,
+    AssertKnowledgeBaseReadAccessUseCase,
     LockKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
@@ -145,6 +147,7 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     RemoveFailedDocumentsFromKnowledgeBaseUseCase,
     AddSyncedDocumentsToKnowledgeBaseUseCase,
     AssertKnowledgeBaseWriteAccessUseCase,
+    AssertKnowledgeBaseReadAccessUseCase,
     LockKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,

@@ -4,6 +4,9 @@
     "products": {
       "microsoft_365": "Microsoft 365"
     },
+    "descriptions": {
+      "microsoft_365": "Connect SharePoint to your knowledge bases."
+    },
     "status": {
       "set_up": "Set up",
       "not_set_up": "Not set up"

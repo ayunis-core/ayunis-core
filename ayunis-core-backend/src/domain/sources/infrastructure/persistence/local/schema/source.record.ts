@@ -24,6 +24,7 @@ import { DataSourceDetailsRecord } from './data-source-details.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { RecordingRecord } from 'src/domain/recordings/infrastructure/persistence/local/schema/recording.record';
 import { ModelRecord } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
+import { SyncedLocationRecord } from 'src/domain/knowledge-base-sync/infrastructure/persistence/local/schema/synced-location.record';
 
 @Entity('sources')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
@@ -95,6 +96,19 @@ export abstract class SourceRecord extends BaseRecord {
   @ManyToOne(() => SourceRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'replacesSourceId' })
   replaces: SourceRecord | null;
+
+  // The synced location a document is kept in sync with; a replacement takes
+  // it over when it is swapped in.
+  @Index()
+  @Column({ nullable: true })
+  syncedLocationId: UUID | null;
+
+  @ManyToOne(() => SyncedLocationRecord, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'syncedLocationId' })
+  syncedLocation: SyncedLocationRecord | null;
 }
 
 @ChildEntity(SourceType.TEXT)

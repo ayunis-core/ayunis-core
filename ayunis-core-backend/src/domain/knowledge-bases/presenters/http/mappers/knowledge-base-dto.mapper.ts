@@ -80,6 +80,9 @@ export class KnowledgeBaseDtoMapper {
     ) {
       dto.url = source.url ?? undefined;
     }
+    if (source instanceof FileSource && source.syncedLocationId) {
+      dto.syncedLocationId = source.syncedLocationId;
+    }
 
     return dto;
   }

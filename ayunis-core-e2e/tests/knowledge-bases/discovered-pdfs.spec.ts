@@ -91,9 +91,8 @@ test("discovers independent PDF files at depth zero and cites their original URL
     const grant = await grantCrawlDomain(org.orgId, new URL(pdfUrl).hostname);
     grantId = grant.id;
     await page.goto(`/knowledge-bases/${kb.id}`);
-    await page
-      .getByRole("button", { name: /URL hinzufügen|Add URL/, exact: true })
-      .click();
+    await page.getByTestId("knowledge-base-documents-add").click();
+    await page.getByTestId("knowledge-base-documents-add-url").click();
     await page
       .getByRole("textbox", { name: /Website-URL|Website URL/ })
       .fill(rootUrl);

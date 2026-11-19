@@ -37,6 +37,7 @@ import type {
   ActiveThreadRunResponseDto,
   AddGlobalPiiWhitelistWordsRequestDto,
   AddGlobalPiiWhitelistWordsResponseDto,
+  AddSyncedLocationDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
   AddWorkspaceMembersDto,
@@ -216,6 +217,7 @@ import type {
   ResendEmailConfirmationDto,
   ResendExpiredInvitesResponseDto,
   ResetPasswordDto,
+  ResolveSharePointLocationDto,
   ResolveSubscriptionOverlapDto,
   RetentionPolicyResponseDto,
   RevertArtifactDto,
@@ -253,6 +255,7 @@ import type {
   SetTeamDefaultModelDto,
   SetUserConfigDto,
   SetUserDefaultModelDto,
+  SharePointLocationResolutionResponseDto,
   ShareResponseDto,
   SharesControllerGetSharesParams,
   SignSourceUploadRequestDto,
@@ -293,6 +296,8 @@ import type {
   SuperAdminUserListControllerGetAllUsersParams,
   SuperAdminUserResponseDto,
   SuperAdminUsersControllerGetUsersByOrgIdParams,
+  SyncedLocationListResponseDto,
+  SyncedLocationResponseDto,
   SynthesizeSpeechDto,
   TeamCreditLimitItemDto,
   TeamCreditLimitResponseDto,
@@ -24304,6 +24309,306 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
     }
 
 /**
+ * Each location with its sync state and what its files amount to, and the products whose locations can be added.
+ * @summary List the synced locations of a knowledge base
+ */
+export const knowledgeBaseSyncedLocationsControllerList = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SyncedLocationListResponseDto>(
+      {url: `/knowledge-bases/${id}/synced-locations`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseSyncedLocationsControllerListQueryKey = (id: string,) => {
+    return [
+    `/knowledge-bases/${id}/synced-locations`
+    ] as const;
+    }
+
+
+export const getKnowledgeBaseSyncedLocationsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeBaseSyncedLocationsControllerListQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>> = ({ signal }) => knowledgeBaseSyncedLocationsControllerList(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeBaseSyncedLocationsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>>
+export type KnowledgeBaseSyncedLocationsControllerListQueryError = void
+
+
+export function useKnowledgeBaseSyncedLocationsControllerList<TData = Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseSyncedLocationsControllerList<TData = Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeBaseSyncedLocationsControllerList<TData = Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the synced locations of a knowledge base
+ */
+
+export function useKnowledgeBaseSyncedLocationsControllerList<TData = Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeBaseSyncedLocationsControllerListQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Every file below the location becomes a document of the knowledge base, within its document limit. The first sync starts right away.
+ * @summary Add a synced location to a knowledge base
+ */
+export const knowledgeBaseSyncedLocationsControllerAdd = (
+    id: string,
+    addSyncedLocationDto: AddSyncedLocationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SyncedLocationResponseDto>(
+      {url: `/knowledge-bases/${id}/synced-locations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addSyncedLocationDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseSyncedLocationsControllerAddMutationKey = () => ['knowledgeBaseSyncedLocationsControllerAdd'] as const;
+
+export const getKnowledgeBaseSyncedLocationsControllerAddMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAdd>>, TError,KnowledgeBaseSyncedLocationsControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAdd>>, TError,KnowledgeBaseSyncedLocationsControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseSyncedLocationsControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAdd>>, KnowledgeBaseSyncedLocationsControllerAddMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBaseSyncedLocationsControllerAdd(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseSyncedLocationsControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAdd>>>
+    export type KnowledgeBaseSyncedLocationsControllerAddMutationBody = AddSyncedLocationDto
+    export type KnowledgeBaseSyncedLocationsControllerAddMutationError = void
+    export type KnowledgeBaseSyncedLocationsControllerAddMutationVariables = {id: string;data: AddSyncedLocationDto}
+
+    /**
+ * @summary Add a synced location to a knowledge base
+ */
+export const useKnowledgeBaseSyncedLocationsControllerAdd = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAdd>>, TError,KnowledgeBaseSyncedLocationsControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAdd>>,
+        TError,
+        KnowledgeBaseSyncedLocationsControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseSyncedLocationsControllerAddMutationOptions(options), queryClient);
+    }
+
+/**
+ * Queues a sync unless one is queued or running; a paused location syncs once its pause ends.
+ * @summary Sync a location now
+ */
+export const knowledgeBaseSyncedLocationsControllerSyncNow = (
+    id: string,
+    locationId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/knowledge-bases/${id}/synced-locations/${locationId}/sync`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseSyncedLocationsControllerSyncNowMutationKey = () => ['knowledgeBaseSyncedLocationsControllerSyncNow'] as const;
+
+export const getKnowledgeBaseSyncedLocationsControllerSyncNowMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerSyncNow>>, TError,KnowledgeBaseSyncedLocationsControllerSyncNowMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerSyncNow>>, TError,KnowledgeBaseSyncedLocationsControllerSyncNowMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseSyncedLocationsControllerSyncNowMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerSyncNow>>, KnowledgeBaseSyncedLocationsControllerSyncNowMutationVariables> = (props) => {
+          const {id,locationId} = props ?? {};
+
+          return  knowledgeBaseSyncedLocationsControllerSyncNow(id,locationId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseSyncedLocationsControllerSyncNowMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerSyncNow>>>
+
+    export type KnowledgeBaseSyncedLocationsControllerSyncNowMutationError = void
+    export type KnowledgeBaseSyncedLocationsControllerSyncNowMutationVariables = {id: string;locationId: string}
+
+    /**
+ * @summary Sync a location now
+ */
+export const useKnowledgeBaseSyncedLocationsControllerSyncNow = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerSyncNow>>, TError,KnowledgeBaseSyncedLocationsControllerSyncNowMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerSyncNow>>,
+        TError,
+        KnowledgeBaseSyncedLocationsControllerSyncNowMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseSyncedLocationsControllerSyncNowMutationOptions(options), queryClient);
+    }
+
+/**
+ * Removes the location and every document synced from it.
+ * @summary Remove a synced location
+ */
+export const knowledgeBaseSyncedLocationsControllerRemove = (
+    id: string,
+    locationId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/knowledge-bases/${id}/synced-locations/${locationId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseSyncedLocationsControllerRemoveMutationKey = () => ['knowledgeBaseSyncedLocationsControllerRemove'] as const;
+
+export const getKnowledgeBaseSyncedLocationsControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerRemove>>, TError,KnowledgeBaseSyncedLocationsControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerRemove>>, TError,KnowledgeBaseSyncedLocationsControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseSyncedLocationsControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerRemove>>, KnowledgeBaseSyncedLocationsControllerRemoveMutationVariables> = (props) => {
+          const {id,locationId} = props ?? {};
+
+          return  knowledgeBaseSyncedLocationsControllerRemove(id,locationId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseSyncedLocationsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerRemove>>>
+
+    export type KnowledgeBaseSyncedLocationsControllerRemoveMutationError = void
+    export type KnowledgeBaseSyncedLocationsControllerRemoveMutationVariables = {id: string;locationId: string}
+
+    /**
+ * @summary Remove a synced location
+ */
+export const useKnowledgeBaseSyncedLocationsControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerRemove>>, TError,KnowledgeBaseSyncedLocationsControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerRemove>>,
+        TError,
+        KnowledgeBaseSyncedLocationsControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseSyncedLocationsControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
  * Returns every available product with whether the organization has set it up. Credentials are never returned.
  * @summary List the available connectors of the organization
  */
@@ -24692,6 +24997,75 @@ export const useConnectorsControllerTestMicrosoft365 = <TError = unknown,
         TContext
       > => {
       return useMutation(getConnectorsControllerTestMicrosoft365MutationOptions(options), queryClient);
+    }
+
+/**
+ * Resolves a site, library or folder URL through the organization's Microsoft 365 connection. When it is not granted to Ayunis, returns the command that grants it, for the Microsoft 365 admin.
+ * @summary Check a SharePoint URL before adding it to a knowledge base
+ */
+export const sharePointLocationsControllerResolve = (
+    resolveSharePointLocationDto: ResolveSharePointLocationDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SharePointLocationResolutionResponseDto>(
+      {url: `/connectors/microsoft-365/sharepoint-locations/resolve`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resolveSharePointLocationDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSharePointLocationsControllerResolveMutationKey = () => ['sharePointLocationsControllerResolve'] as const;
+
+export const getSharePointLocationsControllerResolveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharePointLocationsControllerResolve>>, TError,SharePointLocationsControllerResolveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof sharePointLocationsControllerResolve>>, TError,SharePointLocationsControllerResolveMutationVariables, TContext> => {
+
+const mutationKey = getSharePointLocationsControllerResolveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sharePointLocationsControllerResolve>>, SharePointLocationsControllerResolveMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  sharePointLocationsControllerResolve(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SharePointLocationsControllerResolveMutationResult = NonNullable<Awaited<ReturnType<typeof sharePointLocationsControllerResolve>>>
+    export type SharePointLocationsControllerResolveMutationBody = ResolveSharePointLocationDto
+    export type SharePointLocationsControllerResolveMutationError = void
+    export type SharePointLocationsControllerResolveMutationVariables = {data: ResolveSharePointLocationDto}
+
+    /**
+ * @summary Check a SharePoint URL before adding it to a knowledge base
+ */
+export const useSharePointLocationsControllerResolve = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sharePointLocationsControllerResolve>>, TError,SharePointLocationsControllerResolveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sharePointLocationsControllerResolve>>,
+        TError,
+        SharePointLocationsControllerResolveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSharePointLocationsControllerResolveMutationOptions(options), queryClient);
     }
 
 /**

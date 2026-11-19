@@ -34,11 +34,14 @@ export abstract class TextSource extends Source {
 export class FileSource extends TextSource {
   fileType: FileType;
   url: string | null;
+  /** The synced location the file comes from; null for uploads and crawled PDFs. */
+  syncedLocationId: UUID | null;
 
   constructor(params: {
     id?: UUID;
     fileType: FileType;
     url?: string | null;
+    syncedLocationId?: UUID | null;
     name: string;
     type: TextType;
     knowledgeBaseId?: UUID | null;
@@ -54,6 +57,7 @@ export class FileSource extends TextSource {
     super({ ...params, type: TextType.FILE });
     this.fileType = params.fileType;
     this.url = params.url ?? null;
+    this.syncedLocationId = params.syncedLocationId ?? null;
   }
 }
 

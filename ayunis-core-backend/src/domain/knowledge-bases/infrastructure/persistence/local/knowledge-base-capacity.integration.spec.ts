@@ -286,6 +286,7 @@ describe('Knowledge-base capacity across source writers', () => {
       new AddSyncedDocumentsToKnowledgeBaseCommand(
         knowledgeBaseId,
         Array.from({ length: 20 }, (_, index) => `Plan ${index}.pdf`),
+        randomUUID(),
       ),
     );
     try {

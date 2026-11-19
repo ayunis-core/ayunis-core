@@ -17,6 +17,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
 import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import { KnowledgeBaseDocumentsCard } from '@/widgets/knowledge-base-documents-card';
+import { useSyncedSources } from '@/widgets/knowledge-base-synced-locations';
 import type {
   KnowledgeBaseDocumentListResponseDto,
   KnowledgeBaseResponseDto,
@@ -48,6 +49,7 @@ export function WorkspaceKnowledgeBaseDetailPage({
     updateKnowledgeBase,
   } = useWorkspaceKnowledgeBaseActions(workspace.id);
   const { canManage } = getWorkspaceAccess(workspace);
+  const synced = useSyncedSources(knowledgeBase.id, !canManage);
 
   return (
     <AppLayout>
@@ -138,6 +140,7 @@ export function WorkspaceKnowledgeBaseDetailPage({
             />
             <KnowledgeBaseDocumentsCard
               controller={documentsController}
+              synced={synced}
               disabled={!canManage}
             />
           </div>

@@ -42,6 +42,7 @@ export async function insertCrawledFileSources(
       textType: file.textType,
       fileType: file.fileType,
       url: file.url,
+      syncedLocationId: file.syncedLocationId,
     })),
   );
   await manager.getRepository(FileSourceDetailsRecord).insert(

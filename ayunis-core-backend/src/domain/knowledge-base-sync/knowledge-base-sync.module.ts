@@ -20,6 +20,8 @@ import { NextSyncedFileBatchUseCase } from './application/use-cases/next-synced-
 import { FinishLocationSyncUseCase } from './application/use-cases/finish-location-sync/finish-location-sync.use-case';
 import { PauseSyncedLocationUseCase } from './application/use-cases/pause-synced-location/pause-synced-location.use-case';
 import { SyncLocationNowUseCase } from './application/use-cases/sync-location-now/sync-location-now.use-case';
+import { ListSyncedLocationsUseCase } from './application/use-cases/list-synced-locations/list-synced-locations.use-case';
+import { KnowledgeBaseSyncedLocationsController } from './presenters/http/knowledge-base-synced-locations.controller';
 import { SyncDueLocationsUseCase } from './application/use-cases/sync-due-locations/sync-due-locations.use-case';
 import { LocalSyncedLocationsRepositoryModule } from './infrastructure/persistence/local/local-synced-locations-repository.module';
 import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-base-sync-queue.module';
@@ -35,6 +37,7 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     OrgsModule,
     ContextModule,
   ],
+  controllers: [KnowledgeBaseSyncedLocationsController],
   providers: [
     SyncReconciler,
     SyncPlanApplier,
@@ -49,6 +52,7 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     PauseSyncedLocationUseCase,
     SyncLocationNowUseCase,
     SyncDueLocationsUseCase,
+    ListSyncedLocationsUseCase,
     StartSyncedFileProcessingUseCase,
     CompleteSyncedFileProcessingUseCase,
     FailSyncedFileProcessingUseCase,

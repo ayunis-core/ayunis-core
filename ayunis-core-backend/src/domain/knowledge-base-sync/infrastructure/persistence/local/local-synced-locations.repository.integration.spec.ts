@@ -18,6 +18,7 @@ import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/sync
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
+import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { LockSourcesUseCase } from 'src/domain/sources/application/use-cases/lock-sources/lock-sources.use-case';
 import { LocalSourceBatchWriteRepository } from 'src/domain/sources/infrastructure/persistence/local/local-source-batch-write.repository';
 import { LocalSyncedLocationsRepository } from './local-synced-locations.repository';
@@ -177,6 +178,82 @@ describe('LocalSyncedLocationsRepository', () => {
     await repository.saveFiles([file]);
     return file;
   }
+
+  it("summarizes each location's files, with its first skipped files by path", async () => {
+    const location = await aLocation();
+    const other = await aLocation();
+    const fileAt = (path: string, state: SyncedFileState) =>
+      new SyncedFile({
+        locationId: location.id,
+        externalId: `01ABC${randomUUID()}`,
+        name: path.split('/').at(-1)!,
+        path,
+        version: '"{1},1"',
+        size: 1024,
+        state,
+      });
+    const failed = await anImportedFile(location);
+    failed.recordProcessed(
+      failed.version,
+      SourceProcessingErrorCode.DOCUMENT_UNREADABLE,
+    );
+    const encrypted = fileAt('Intern/Gehälter.xlsx', SyncedFileState.SKIPPED);
+    encrypted.skip(SyncedFileSkipReason.ENCRYPTED);
+    const photo = fileAt('Bilder/Ortsplan.jpg', SyncedFileState.SKIPPED);
+    photo.skip(SyncedFileSkipReason.UNSUPPORTED_TYPE);
+    const archive = fileAt('Archiv/Pläne.zip', SyncedFileState.SKIPPED);
+    archive.skip(SyncedFileSkipReason.UNSUPPORTED_TYPE);
+    await anImportedFile(location);
+    await anImportedFile(other);
+    await repository.saveFiles([
+      failed,
+      encrypted,
+      photo,
+      archive,
+      fileAt('Satzungen/Neu.pdf', SyncedFileState.AWAITING_CAPACITY),
+    ]);
+
+    const summaries = await repository.summarizeFiles(
+      [location.id, other.id, randomUUID()],
+      2,
+    );
+
+    expect(summaries).toEqual(
+      new Map([
+        [
+          location.id,
+          {
+            documents: 2,
+            failed: 1,
+            awaitingCapacity: 1,
+            skippedCount: 3,
+            skipped: [
+              {
+                name: 'Pläne.zip',
+                path: 'Archiv/Pläne.zip',
+                reason: SyncedFileSkipReason.UNSUPPORTED_TYPE,
+              },
+              {
+                name: 'Ortsplan.jpg',
+                path: 'Bilder/Ortsplan.jpg',
+                reason: SyncedFileSkipReason.UNSUPPORTED_TYPE,
+              },
+            ],
+          },
+        ],
+        [
+          other.id,
+          {
+            documents: 1,
+            failed: 0,
+            awaitingCapacity: 0,
+            skippedCount: 0,
+            skipped: [],
+          },
+        ],
+      ]),
+    );
+  });
 
   it('keeps one location per knowledge base, connector and URL', async () => {
     const location = await aLocation();
