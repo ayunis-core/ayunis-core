@@ -22,6 +22,7 @@ import { FindArtifactWithVersionsUseCase } from './application/use-cases/find-ar
 import { RevertArtifactUseCase } from './application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from './application/use-cases/export-artifact/export-artifact.use-case';
 import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
+import { UserContentMaskingService } from './application/services/user-content-masking.service';
 
 @Module({
   imports: [
@@ -52,6 +53,8 @@ import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits
     FindArtifactWithVersionsUseCase,
     RevertArtifactUseCase,
     ExportArtifactUseCase,
+    // Services
+    UserContentMaskingService,
     // Mappers
     ArtifactDtoMapper,
   ],

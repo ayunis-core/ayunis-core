@@ -48,6 +48,7 @@ thread-pii-masks/
 ## Consumers
 
 - `runs` — anonymizes user input and PII-returning tool results, streams new masks to the client as `masks` SSE events, and reveals unmasked tokens in the LLM-bound history (`UnmaskedTermsService`).
+- `artifacts` — masks what a user saves into an artifact of an anonymous thread before it is stored, and resolves tokens on export.
 - `threads` — embeds the dictionary in the thread GET response for anonymous threads and hosts the unmask endpoint.
 
 The thread anonymization command carries optional caller metadata for the temporary AYC-1434 reuse study. The common detector receives explicit tenant context and distinguishes user input from PII-returning tool results; whitelist and mask behavior is unchanged.

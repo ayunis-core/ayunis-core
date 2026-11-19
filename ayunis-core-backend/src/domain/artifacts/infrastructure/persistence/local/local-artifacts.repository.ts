@@ -145,6 +145,16 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     return record ? this.artifactMapper.toDomain(record) : null;
   }
 
+  async findVersion(
+    artifactId: UUID,
+    versionNumber: number,
+  ): Promise<ArtifactVersion | null> {
+    const record = await this.versionRepo.findOne({
+      where: { artifactId, versionNumber },
+    });
+    return record ? this.versionMapper.toDomain(record) : null;
+  }
+
   async addVersion(version: ArtifactVersion): Promise<ArtifactVersion> {
     this.logger.log(
       {

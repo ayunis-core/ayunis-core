@@ -23,6 +23,15 @@ import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/ad
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
+import { FindThreadsByIdsUseCase } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
+import { FindThreadsByIdsQuery } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.query';
+
+interface ContentWriteContext {
+  userId: UUID;
+  orgId: UUID;
+  authorType: AuthorType;
+}
 
 @Injectable()
 export class UpdateArtifactUseCase {
@@ -32,6 +41,8 @@ export class UpdateArtifactUseCase {
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
+    private readonly findThreadsByIdsUseCase: FindThreadsByIdsUseCase,
+    private readonly userContentMaskingService: UserContentMaskingService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
@@ -40,7 +51,7 @@ export class UpdateArtifactUseCase {
   ): Promise<ArtifactVersion | void> {
     this.logger.log({ artifactId: command.artifactId }, 'Updating artifact');
 
-    const userId = this.resolveUserId();
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
 
     if (command.letterheadId) {
       await this.findLetterheadUseCase.execute(
@@ -63,14 +74,44 @@ export class UpdateArtifactUseCase {
       return await this.updateLetterheadOnly(command);
     }
 
-    const content = prepareContentForWrite(artifact.type, command.content);
-    this.validateContentLength(content);
+    const content = await this.prepareContent(command.content, artifact, {
+      userId,
+      orgId,
+      authorType: command.authorType ?? AuthorType.USER,
+    });
     return await this.addContentVersion(command, userId, content);
   }
 
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
+  private async prepareContent(
+    rawContent: string,
+    artifact: Artifact,
+    context: ContentWriteContext,
+  ): Promise<string> {
+    const content = prepareContentForWrite(artifact.type, rawContent);
+    this.validateContentLength(content);
+    if (context.authorType !== AuthorType.USER) {
+      return content;
+    }
+    const masked = await this.userContentMaskingService.mask({
+      thread: await this.findArtifactThread(artifact, context.userId),
+      orgId: context.orgId,
+      type: artifact.type,
+      content,
+      currentArtifact: artifact,
+    });
+    this.validateContentLength(masked);
+    return masked;
+  }
+
+  private async findArtifactThread(artifact: Artifact, userId: UUID) {
+    const threads = await this.findThreadsByIdsUseCase.execute(
+      new FindThreadsByIdsQuery(userId, [artifact.threadId]),
+    );
+    const thread = threads.at(0);
+    if (!thread) {
+      throw new ArtifactNotFoundError(artifact.id);
+    }
+    return thread;
   }
 
   private validateContentLength(content: string): void {

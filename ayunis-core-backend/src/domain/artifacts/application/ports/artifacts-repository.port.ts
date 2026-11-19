@@ -24,6 +24,10 @@ export abstract class ArtifactsRepository {
     id: UUID,
     userId: UUID,
   ): Promise<Artifact | null>;
+  abstract findVersion(
+    artifactId: UUID,
+    versionNumber: number,
+  ): Promise<ArtifactVersion | null>;
   abstract addVersion(version: ArtifactVersion): Promise<ArtifactVersion>;
   abstract updateCurrentVersionNumber(
     artifactId: UUID,
