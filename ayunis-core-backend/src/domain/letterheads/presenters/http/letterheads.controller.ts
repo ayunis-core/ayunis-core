@@ -20,6 +20,7 @@ import {
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiParam,
@@ -44,11 +45,19 @@ import { UpdateLetterheadCommand } from 'src/domain/letterheads/application/use-
 import { DeleteLetterheadCommand } from 'src/domain/letterheads/application/use-cases/delete-letterhead/delete-letterhead.command';
 import { CreateLetterheadDto } from './dtos/create-letterhead.dto';
 import { UpdateLetterheadDto } from './dtos/update-letterhead.dto';
+import { PreviewLetterheadDto } from './dtos/preview-letterhead.dto';
+import { PreviewLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/preview-letterhead/preview-letterhead.use-case';
 import { LetterheadResponseDto } from './dtos/letterhead-response.dto';
 import { LetterheadDtoMapper } from './mappers/letterhead-dto.mapper';
 import type { PageMargins } from 'src/domain/letterheads/domain/value-objects/page-margins';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const LetterheadPdfFilesInterceptor = FileFieldsInterceptor(
+  [
+    { name: 'firstPagePdf', maxCount: 1 },
+    { name: 'continuationPagePdf', maxCount: 1 },
+  ],
+  { limits: { fileSize: 5 * 1024 * 1024 } },
+);
 
 interface UploadedFileFields {
   firstPagePdf?: Express.Multer.File[];
@@ -74,22 +83,28 @@ function parseMargins(value: unknown, label: string): PageMargins {
     return { top: 20, bottom: 20, left: 20, right: 20 };
   }
 
-  let parsed: MarginsInput;
+  let parsed: unknown;
   try {
-    parsed =
-      typeof value === 'string' ? (JSON.parse(value) as MarginsInput) : value;
+    parsed = typeof value === 'string' ? (JSON.parse(value) as unknown) : value;
   } catch {
     throw new BadRequestException(
       `Invalid ${label}: must be a JSON object with top, bottom, left, right`,
     );
   }
 
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new BadRequestException(
+      `Invalid ${label}: must be a JSON object with top, bottom, left, right`,
+    );
+  }
+
+  const values = parsed as MarginsInput;
   const margins: Record<string, number> = {};
   for (const key of MARGIN_KEYS) {
-    const num = Number(parsed[key]);
+    const num = Number(values[key]);
     if (!Number.isFinite(num) || num < 0) {
       throw new BadRequestException(
-        `Invalid ${label}: '${key}' must be a finite non-negative number, got '${String(parsed[key])}'`,
+        `Invalid ${label}: '${key}' must be a finite non-negative number, got '${String(values[key])}'`,
       );
     }
     margins[key] = num;
@@ -111,19 +126,12 @@ export class LetterheadsController {
     private readonly deleteLetterheadUseCase: DeleteLetterheadUseCase,
     private readonly letterheadDtoMapper: LetterheadDtoMapper,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
+    private readonly previewLetterheadUseCase: PreviewLetterheadUseCase,
   ) {}
 
   @Post()
   @Roles(UserRole.ADMIN)
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'firstPagePdf', maxCount: 1 },
-        { name: 'continuationPagePdf', maxCount: 1 },
-      ],
-      { limits: { fileSize: MAX_FILE_SIZE } },
-    ),
-  )
+  @UseInterceptors(LetterheadPdfFilesInterceptor)
   @ApiOperation({ summary: 'Create a new letterhead' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
@@ -163,6 +171,48 @@ export class LetterheadsController {
       }),
     );
     return this.letterheadDtoMapper.toDto(letterhead);
+  }
+
+  @Post('preview')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(LetterheadPdfFilesInterceptor)
+  @ApiOperation({ summary: 'Render a sample letter with the draft letterhead' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: PreviewLetterheadDto })
+  @ApiProduces('application/pdf')
+  @ApiResponse({
+    status: 200,
+    description: 'The rendered sample letter',
+    content: {
+      'application/pdf': { schema: { type: 'string', format: 'binary' } },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid PDF or page margins' })
+  @ApiResponse({
+    status: 403,
+    description: 'Organization administrator required',
+  })
+  @ApiResponse({ status: 404, description: 'Letterhead not found' })
+  async preview(
+    @Body() dto: PreviewLetterheadDto,
+    @UploadedFiles() files: UploadedFileFields,
+  ): Promise<StreamableFile> {
+    const sample = await this.previewLetterheadUseCase.execute({
+      letterheadId: dto.letterheadId,
+      firstPagePdf: files.firstPagePdf?.[0]?.buffer,
+      continuationPagePdf: files.continuationPagePdf?.[0]?.buffer,
+      removeContinuationPage: dto.removeContinuationPage === 'true',
+      firstPageMargins: parseMargins(dto.firstPageMargins, 'firstPageMargins'),
+      continuationPageMargins: parseMargins(
+        dto.continuationPageMargins,
+        'continuationPageMargins',
+      ),
+      fontFamily: dto.fontFamily,
+      fontSizePt: dto.fontSizePt,
+      language: dto.language ?? 'de',
+    });
+    return new StreamableFile(sample, { type: 'application/pdf' });
   }
 
   @Get()
@@ -272,15 +322,7 @@ export class LetterheadsController {
 
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'firstPagePdf', maxCount: 1 },
-        { name: 'continuationPagePdf', maxCount: 1 },
-      ],
-      { limits: { fileSize: MAX_FILE_SIZE } },
-    ),
-  )
+  @UseInterceptors(LetterheadPdfFilesInterceptor)
   @ApiOperation({ summary: 'Update a letterhead' })
   @ApiConsumes('multipart/form-data')
   @ApiParam({

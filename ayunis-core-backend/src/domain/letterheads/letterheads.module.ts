@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { DocumentExportModule } from 'src/domain/artifacts/document-export.module';
+import { PreviewLetterheadUseCase } from './application/use-cases/preview-letterhead/preview-letterhead.use-case';
 import { LetterheadsRepository } from './application/ports/letterheads-repository.port';
 import { LocalLetterheadsRepositoryModule } from './infrastructure/persistence/local/local-letterheads-repository.module';
 import { LocalLetterheadsRepository } from './infrastructure/persistence/local/local-letterheads.repository';
@@ -19,7 +21,11 @@ import { UpdateDocumentDefaultsUseCase } from './application/use-cases/update-do
 import { DocumentDefaultsController } from './presenters/http/document-defaults.controller';
 
 @Module({
-  imports: [LocalLetterheadsRepositoryModule, StorageModule],
+  imports: [
+    LocalLetterheadsRepositoryModule,
+    StorageModule,
+    DocumentExportModule,
+  ],
   controllers: [LetterheadsController, DocumentDefaultsController],
   providers: [
     {
@@ -33,6 +39,7 @@ import { DocumentDefaultsController } from './presenters/http/document-defaults.
     GetDocumentDefaultsUseCase,
     UpdateDocumentDefaultsUseCase,
     LetterheadPdfService,
+    PreviewLetterheadUseCase,
     CreateLetterheadUseCase,
     FindAllLetterheadsUseCase,
     FindLetterheadUseCase,

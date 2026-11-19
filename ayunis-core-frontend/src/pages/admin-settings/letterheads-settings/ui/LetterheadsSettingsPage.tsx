@@ -45,7 +45,11 @@ export function LetterheadsSettingsPage() {
   });
 
   const headerActions = (
-    <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+    <Button
+      size="sm"
+      data-testid="letterheads-create"
+      onClick={() => setCreateDialogOpen(true)}
+    >
       {t('letterheads.add')}
     </Button>
   );

@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
+import { LetterheadSamplePreview } from '@/features/letterhead-sample-preview';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { MarginEditor, useDinLetterPresets } from '@/widgets/margin-editor';
 import type { PdfSource } from '@/widgets/margin-editor';
@@ -76,23 +77,23 @@ export function LetterheadDetailPage({
   const shouldRemoveContinuation =
     !useDifferentFollowingPages && letterhead.hasContinuationPage;
 
+  const draft = {
+    ...typography,
+    letterheadId: letterhead.id,
+    firstPagePdf: firstPagePdf ?? undefined,
+    continuationPagePdf:
+      useDifferentFollowingPages && continuationPagePdf
+        ? continuationPagePdf
+        : undefined,
+    firstPageMargins,
+    continuationPageMargins: useDifferentFollowingPages
+      ? continuationPageMargins
+      : firstPageMargins,
+    removeContinuationPage: shouldRemoveContinuation || undefined,
+  };
+
   const onSubmit = (data: LetterheadFormFields) => {
-    updateLetterhead({
-      ...typography,
-      id: letterhead.id,
-      name: data.name,
-      description: data.description,
-      firstPagePdf: firstPagePdf ?? undefined,
-      continuationPagePdf:
-        useDifferentFollowingPages && continuationPagePdf
-          ? continuationPagePdf
-          : undefined,
-      firstPageMargins,
-      continuationPageMargins: useDifferentFollowingPages
-        ? continuationPageMargins
-        : firstPageMargins,
-      removeContinuationPage: shouldRemoveContinuation || undefined,
-    });
+    updateLetterhead({ ...draft, ...data, id: letterhead.id });
   };
 
   // Use newly selected file if available, otherwise fall back to the existing PDF URL
@@ -171,6 +172,7 @@ export function LetterheadDetailPage({
               <Input
                 type="file"
                 accept="application/pdf"
+                data-testid="letterhead-first-page-file"
                 onChange={(e) => setFirstPagePdf(e.target.files?.[0] ?? null)}
               />
             </div>
@@ -210,6 +212,7 @@ export function LetterheadDetailPage({
                   <Input
                     type="file"
                     accept="application/pdf"
+                    data-testid="letterhead-continuation-page-file"
                     onChange={(e) =>
                       setContinuationPagePdf(e.target.files?.[0] ?? null)
                     }
@@ -229,7 +232,8 @@ export function LetterheadDetailPage({
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <LetterheadSamplePreview draft={draft} disabled={isUpdating} />
           <Button type="submit" disabled={isUpdating}>
             {isUpdating
               ? t('letterheads.editDialog.saving')

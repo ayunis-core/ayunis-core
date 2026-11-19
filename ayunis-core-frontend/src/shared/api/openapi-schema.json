@@ -12491,6 +12491,46 @@
         "tags": ["letterheads"]
       }
     },
+    "/letterheads/preview": {
+      "post": {
+        "operationId": "LetterheadsController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The rendered sample letter",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid PDF or page margins"
+          },
+          "403": {
+            "description": "Organization administrator required"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Render a sample letter with the draft letterhead",
+        "tags": ["letterheads"]
+      }
+    },
     "/letterheads/{id}": {
       "get": {
         "operationId": "LetterheadsController_findOne",
@@ -24981,6 +25021,66 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "PreviewLetterheadDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "type": "string",
+            "enum": [
+              "Arial",
+              "Times New Roman",
+              "Courier New",
+              "Calibri",
+              "Cambria",
+              "Georgia",
+              "Roboto",
+              "Open Sans",
+              "Lato",
+              "Montserrat",
+              "Inter",
+              "Noto Sans",
+              "Source Sans 3",
+              "Noto Serif",
+              "Fira Sans",
+              ""
+            ],
+            "description": "Font family. Send an empty string to inherit the organization default."
+          },
+          "fontSizePt": {
+            "type": "string",
+            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
+          },
+          "letterheadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstPagePdf": {
+            "type": "string",
+            "format": "binary"
+          },
+          "continuationPagePdf": {
+            "type": "string",
+            "format": "binary"
+          },
+          "firstPageMargins": {
+            "type": "string",
+            "description": "First-page margins in millimeters, as a JSON string"
+          },
+          "continuationPageMargins": {
+            "type": "string",
+            "description": "Continuation margins in millimeters, as a JSON string"
+          },
+          "removeContinuationPage": {
+            "type": "string",
+            "enum": ["true"]
+          },
+          "language": {
+            "type": "string",
+            "enum": ["de", "en"]
+          }
+        },
+        "required": ["firstPageMargins", "continuationPageMargins"]
       },
       "UpdateLetterheadDto": {
         "type": "object",

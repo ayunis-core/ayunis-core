@@ -1,5 +1,12 @@
 {
   "letterheads": {
+    "samplePreview": {
+      "close": "Schließen",
+      "open": "Musterbrief ansehen",
+      "description": "Sehen Sie, wie ein Musterbrief mit Ihren aktuellen Einstellungen aussieht.",
+      "loading": "Musterbrief wird erstellt…",
+      "failed": "Der Musterbrief konnte nicht erstellt werden. Prüfen Sie die PDF-Dateien und Seitenränder und versuchen Sie es erneut."
+    },
     "title": "Briefpapier",
     "add": "Hinzufügen",
     "empty": "Noch kein Briefpapier vorhanden. Erstellen Sie ein Briefpapier, um es bei Dokumenten als Hintergrund zu verwenden.",

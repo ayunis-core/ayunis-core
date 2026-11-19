@@ -22,6 +22,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
 import { Switch } from '@ayunis/ui/components/switch';
+import { LetterheadSamplePreview } from '@/features/letterhead-sample-preview';
 import { MarginEditor, useDinLetterPresets } from '@/widgets/margin-editor';
 import { useCreateLetterhead } from '@/pages/admin-settings/letterheads-settings/api/useCreateLetterhead';
 import type { PageMargins } from '@/pages/admin-settings/letterheads-settings/model/types';
@@ -108,22 +109,22 @@ function LetterheadFormContent({
 
   const { createLetterhead, isCreating } = useCreateLetterhead(handleClose);
 
+  const draft = {
+    ...typography,
+    firstPagePdf: firstPagePdf ?? undefined,
+    continuationPagePdf:
+      useDifferentFollowingPages && continuationPagePdf
+        ? continuationPagePdf
+        : undefined,
+    firstPageMargins,
+    continuationPageMargins: useDifferentFollowingPages
+      ? continuationPageMargins
+      : firstPageMargins,
+  };
+
   const onSubmit = (data: LetterheadFormValues) => {
     if (!firstPagePdf) return;
-    createLetterhead({
-      ...typography,
-      name: data.name,
-      description: data.description,
-      firstPagePdf,
-      continuationPagePdf:
-        useDifferentFollowingPages && continuationPagePdf
-          ? continuationPagePdf
-          : undefined,
-      firstPageMargins,
-      continuationPageMargins: useDifferentFollowingPages
-        ? continuationPageMargins
-        : firstPageMargins,
-    });
+    createLetterhead({ ...draft, ...data, firstPagePdf });
   };
 
   return (
@@ -196,6 +197,7 @@ function LetterheadFormContent({
               <Input
                 type="file"
                 accept="application/pdf"
+                data-testid="letterhead-first-page-file"
                 disabled={isCreating}
                 onChange={(e) => setFirstPagePdf(e.target.files?.[0] ?? null)}
               />
@@ -233,6 +235,7 @@ function LetterheadFormContent({
                   <Input
                     type="file"
                     accept="application/pdf"
+                    data-testid="letterhead-continuation-page-file"
                     disabled={isCreating}
                     onChange={(e) =>
                       setContinuationPagePdf(e.target.files?.[0] ?? null)
@@ -253,6 +256,7 @@ function LetterheadFormContent({
             )}
           </div>
           <DialogFooter>
+            <LetterheadSamplePreview draft={draft} disabled={isCreating} />
             <Button
               type="button"
               variant="outline"

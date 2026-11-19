@@ -1,16 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { artifactsControllerExport } from '@/shared/api';
-import {
-  getDocument,
-  GlobalWorkerOptions,
-  type PDFDocumentProxy,
-} from 'pdfjs-dist';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
-
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+import type { PDFDocumentProxy } from 'pdfjs-dist';
+import { usePdfDocument, usePdfPageCanvas } from '@/shared/lib/pdf-preview';
 
 interface PdfPreviewViewerProps {
   readonly artifactId: string;
@@ -22,38 +16,16 @@ export default function PdfPreviewViewer({
   versionNumber,
 }: PdfPreviewViewerProps) {
   const { t } = useTranslation('artifacts');
-  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
-    let task: ReturnType<typeof getDocument> | undefined;
-
-    async function loadPdf() {
-      try {
-        const blob = await artifactsControllerExport(
-          artifactId,
-          { format: 'pdf', versionNumber },
-          signal,
-        );
-        const data = await blob.arrayBuffer();
-        signal.throwIfAborted();
-        task = getDocument({ data });
-        const document = await task.promise;
-        signal.throwIfAborted();
-        setPdf(document);
-      } catch {
-        if (!signal.aborted) setFailed(true);
-      }
-    }
-
-    void loadPdf();
-    return () => {
-      controller.abort();
-      void task?.destroy();
-    };
-  }, [artifactId, versionNumber]);
+  const load = useCallback(
+    (signal: AbortSignal) =>
+      artifactsControllerExport(
+        artifactId,
+        { format: 'pdf', versionNumber },
+        signal,
+      ),
+    [artifactId, versionNumber],
+  );
+  const { pdf, failed } = usePdfDocument(load);
 
   if (failed) return <p role="alert">{t('preview.failed')}</p>;
   if (!pdf) return <p role="status">{t('preview.loading')}</p>;
@@ -127,44 +99,4 @@ function PdfPreviewPage({
       />
     </div>
   );
-}
-
-function usePdfPageCanvas(pdf: PDFDocumentProxy, pageNumber: number) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(
-    'loading',
-  );
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const controller = new AbortController();
-    const { signal } = controller;
-    let cancelRender: (() => void) | undefined;
-
-    async function renderPage(target: HTMLCanvasElement) {
-      try {
-        const page = await pdf.getPage(pageNumber);
-        signal.throwIfAborted();
-        const viewport = page.getViewport({ scale: 1.5 });
-        target.width = Math.ceil(viewport.width);
-        target.height = Math.ceil(viewport.height);
-        const render = page.render({ canvas: target, viewport });
-        cancelRender = () => render.cancel();
-        await render.promise;
-        signal.throwIfAborted();
-        setStatus('ready');
-      } catch {
-        if (!signal.aborted) setStatus('error');
-      }
-    }
-
-    void renderPage(canvas);
-    return () => {
-      controller.abort();
-      cancelRender?.();
-    };
-  }, [pageNumber, pdf]);
-
-  return { canvasRef, status };
 }
