@@ -6085,17 +6085,6 @@ export interface UpdateSkillTemplateDto {
   defaultPinned?: boolean;
 }
 
-/**
- * Who authored this version
- */
-export type CreateArtifactDtoAuthorType = typeof CreateArtifactDtoAuthorType[keyof typeof CreateArtifactDtoAuthorType];
-
-
-export const CreateArtifactDtoAuthorType = {
-  USER: 'USER',
-  ASSISTANT: 'ASSISTANT',
-} as const;
-
 export interface CreateArtifactDto {
   /** Title of the document */
   title: string;
@@ -6103,8 +6092,6 @@ export interface CreateArtifactDto {
   content: string;
   /** The thread this artifact belongs to */
   threadId: string;
-  /** Who authored this version */
-  authorType: CreateArtifactDtoAuthorType;
   /** Optional letterhead to apply to this artifact */
   letterheadId?: string;
 }
@@ -6184,22 +6171,9 @@ export interface ArtifactResponseDto {
   updatedAt: string;
 }
 
-/**
- * Who authored this version. Required when content is provided.
- */
-export type UpdateArtifactDtoAuthorType = typeof UpdateArtifactDtoAuthorType[keyof typeof UpdateArtifactDtoAuthorType];
-
-
-export const UpdateArtifactDtoAuthorType = {
-  USER: 'USER',
-  ASSISTANT: 'ASSISTANT',
-} as const;
-
 export interface UpdateArtifactDto {
   /** Updated HTML content of the document. When omitted, no new version is created. */
   content?: string;
-  /** Who authored this version. Required when content is provided. */
-  authorType?: UpdateArtifactDtoAuthorType;
   /**
      * Optional letterhead to apply to this artifact (null to remove)
      * @nullable

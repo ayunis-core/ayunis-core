@@ -4,10 +4,9 @@ import {
   getArtifactsControllerFindByThreadQueryKey,
   getArtifactsControllerFindByWorkspaceQueryKey,
 } from '@/shared/api';
-import {
-  UpdateArtifactDtoAuthorType,
-  type ArtifactResponseDtoType,
-  type UpdateArtifactDto,
+import type {
+  ArtifactResponseDtoType,
+  UpdateArtifactDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { trackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,7 +36,6 @@ export function useUpdateArtifact({
     onSuccess: (_, variables) => {
       if (
         variables.content !== undefined &&
-        variables.authorType === UpdateArtifactDtoAuthorType.USER &&
         (artifactType === 'document' || artifactType === 'spreadsheet')
       ) {
         trackProductiveOutcome(queryClient, threadId, {

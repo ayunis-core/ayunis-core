@@ -51,10 +51,7 @@ describe('useUpdateArtifact', () => {
     );
 
     await act(async () => {
-      await result.current.updateArtifactAsync({
-        content: 'updated content',
-        authorType: 'USER',
-      });
+      await result.current.updateArtifactAsync({ content: 'updated content' });
     });
 
     expect(invalidateQueries).toHaveBeenCalledWith({
@@ -85,10 +82,7 @@ describe('useUpdateArtifact', () => {
       const result = renderUpdate('spreadsheet');
 
       await act(async () => {
-        await result.current.updateArtifactAsync({
-          content: 'a,b',
-          authorType: 'USER',
-        });
+        await result.current.updateArtifactAsync({ content: 'a,b' });
       });
 
       expect(client.track.mock.calls).toEqual([
@@ -99,14 +93,10 @@ describe('useUpdateArtifact', () => {
       ]);
     });
 
-    it('is not sent for an AI-authored version or a letterhead change', async () => {
+    it('is not sent for a letterhead change', async () => {
       const result = renderUpdate('document');
 
       await act(async () => {
-        await result.current.updateArtifactAsync({
-          content: '<p>AI</p>',
-          authorType: 'ASSISTANT',
-        });
         await result.current.updateArtifactAsync({ letterheadId: null });
       });
 
@@ -119,7 +109,7 @@ describe('useUpdateArtifact', () => {
 
       await act(async () => {
         await result.current
-          .updateArtifactAsync({ content: '<p>Edit</p>', authorType: 'USER' })
+          .updateArtifactAsync({ content: '<p>Edit</p>' })
           .catch(() => undefined);
       });
 

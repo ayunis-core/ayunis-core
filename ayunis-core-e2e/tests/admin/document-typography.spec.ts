@@ -53,7 +53,6 @@ async function createDocument(api: APIRequestContext, letterheadId?: string) {
   const thread = await createEmptyThread(api, model.id);
   const artifact = await generatedApi.artifactsControllerCreate(
     {
-      authorType: "ASSISTANT",
       content: "<p>Municipal notice text</p>",
       threadId: thread.id,
       title: "Municipal notice",

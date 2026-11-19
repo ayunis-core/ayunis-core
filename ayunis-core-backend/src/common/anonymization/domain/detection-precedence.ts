@@ -1,5 +1,8 @@
 import type { PiiDetection } from './pii-detection';
 import { PiiCategory } from './pii-category.enum';
+import { findPiiTokenRanges } from './deanonymize-text';
+
+type Range = Pick<PiiDetection, 'start' | 'end'>;
 
 /**
  * Categories whose spans come from a language model and routinely swallow
@@ -23,7 +26,9 @@ const NAME_LIKE_CATEGORIES = new Set<PiiCategory>([
  * detection is then carved around every structured detection it touches and
  * trimmed to its words, so an email keeps its exact range and a name next to
  * it does not absorb it. Disjoint detections are what mask replacement and
- * de-anonymisation rely on.
+ * de-anonymisation rely on. Placeholders already in the text are carved out
+ * of every detection last: they stand for a masked value, and re-masking one
+ * would nest tokens.
  */
 export function resolveDetectionOverlaps(
   detections: readonly PiiDetection[],
@@ -41,7 +46,24 @@ export function resolveDetectionOverlaps(
     .flatMap((d) => carve(d, structured, text))
     .map((d) => trimWhitespace(d, text))
     .filter((d) => d.start < d.end);
-  return [...structured, ...carved].sort((a, b) => a.start - b.start);
+  return excludePiiTokens([...structured, ...carved], text).sort(
+    (a, b) => a.start - b.start,
+  );
+}
+
+function excludePiiTokens(
+  detections: PiiDetection[],
+  text: string,
+): PiiDetection[] {
+  const tokens = findPiiTokenRanges(text);
+  if (tokens.length === 0) return detections;
+  return detections.flatMap((detection) => {
+    const pieces = carve(detection, tokens, text);
+    if (pieces.length === 1 && pieces[0] === detection) return pieces;
+    return pieces
+      .map((piece) => trimWhitespace(piece, text))
+      .filter((piece) => /[\p{L}\p{N}]/u.test(piece.text));
+  });
 }
 
 function collapse(
@@ -70,7 +92,7 @@ function collapse(
 
 function carve(
   detection: PiiDetection,
-  blockers: readonly PiiDetection[],
+  blockers: readonly Range[],
   text: string,
 ): PiiDetection[] {
   const pieces: PiiDetection[] = [];

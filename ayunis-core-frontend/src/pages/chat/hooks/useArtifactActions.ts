@@ -5,7 +5,6 @@ import { useUpdateArtifact } from '@/pages/chat/api/useUpdateArtifact';
 import { useRevertArtifact } from '@/pages/chat/api/useRevertArtifact';
 import { useExportArtifact } from '@/pages/chat/api/useExportArtifact';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
 
 export function useArtifactActions(
@@ -45,10 +44,7 @@ export function useArtifactActions(
 
   const handleSaveArtifact = useCallback(
     async (content: string) => {
-      await saveArtifactAsync({
-        content,
-        authorType: UpdateArtifactDtoAuthorType.USER,
-      });
+      await saveArtifactAsync({ content });
     },
     [saveArtifactAsync],
   );
@@ -68,10 +64,7 @@ export function useArtifactActions(
     ) => {
       const doExport = async () => {
         if (unsavedContent !== undefined) {
-          await saveArtifactAsync({
-            content: unsavedContent,
-            authorType: UpdateArtifactDtoAuthorType.USER,
-          });
+          await saveArtifactAsync({ content: unsavedContent });
         }
         await exportArtifact(format, versionNumber);
       };

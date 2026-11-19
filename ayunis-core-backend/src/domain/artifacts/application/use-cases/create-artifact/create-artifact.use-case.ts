@@ -25,6 +25,8 @@ import {
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from 'src/domain/artifacts/application/artifacts.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 @Injectable()
 export class CreateArtifactUseCase {
@@ -35,18 +37,23 @@ export class CreateArtifactUseCase {
     private readonly contextService: ContextService,
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
+    private readonly userContentMaskingService: UserContentMaskingService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
-  @Transactional()
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
     this.logger.log({ type: command.type }, 'Creating artifact');
 
-    const userId = this.resolveUserId();
-    const content = prepareContentForWrite(command.type, command.content);
-    this.validateContentLength(content);
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
+    const preparedContent = prepareContentForWrite(
+      command.type,
+      command.content,
+    );
+    this.validateContentLength(preparedContent);
 
-    await this.findThreadUseCase.execute(new FindThreadQuery(command.threadId));
+    const { thread } = await this.findThreadUseCase.execute(
+      new FindThreadQuery(command.threadId),
+    );
 
     if (command.type === ArtifactType.DOCUMENT && command.letterheadId) {
       await this.findLetterheadUseCase.execute(
@@ -54,6 +61,23 @@ export class CreateArtifactUseCase {
       );
     }
 
+    const content = await this.maskUserContent(
+      command,
+      thread,
+      orgId,
+      preparedContent,
+    );
+    return await this.persistArtifact(command, userId, content);
+  }
+
+  // Masking calls the anonymize service, so it runs before the transaction
+  // instead of holding a connection open while it waits.
+  @Transactional()
+  private async persistArtifact(
+    command: CreateArtifactCommand,
+    userId: UUID,
+    content: string,
+  ): Promise<Artifact> {
     const createdArtifact = await this.artifactsRepository.create(
       this.buildArtifact(command, userId),
     );
@@ -71,9 +95,23 @@ export class CreateArtifactUseCase {
     return this.withVersion(createdArtifact, version);
   }
 
-  private resolveUserId(): UUID {
-    const { userId } = getRequiredUserContext(this.contextService);
-    return userId;
+  private async maskUserContent(
+    command: CreateArtifactCommand,
+    thread: Thread,
+    orgId: UUID,
+    content: string,
+  ): Promise<string> {
+    if (command.authorType !== AuthorType.USER) {
+      return content;
+    }
+    const masked = await this.userContentMaskingService.mask({
+      thread,
+      orgId,
+      type: command.type,
+      content,
+    });
+    this.validateContentLength(masked);
+    return masked;
   }
 
   private validateContentLength(content: string): void {

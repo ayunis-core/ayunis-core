@@ -1,6 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -9,7 +8,6 @@ import {
   ValidateIf,
 } from 'class-validator';
 import type { UUID } from 'crypto';
-import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ARTIFACT_MAX_CONTENT_LENGTH } from 'src/domain/artifacts/application/artifacts.errors';
 
 export class UpdateArtifactDto {
@@ -23,16 +21,6 @@ export class UpdateArtifactDto {
   @IsNotEmpty()
   @MaxLength(ARTIFACT_MAX_CONTENT_LENGTH)
   content?: string;
-
-  @ApiPropertyOptional({
-    description:
-      'Who authored this version. Required when content is provided.',
-    enum: AuthorType,
-    example: AuthorType.USER,
-  })
-  @ValidateIf((o: UpdateArtifactDto) => o.content !== undefined)
-  @IsEnum(AuthorType)
-  authorType?: AuthorType;
 
   @ApiPropertyOptional({
     description:
