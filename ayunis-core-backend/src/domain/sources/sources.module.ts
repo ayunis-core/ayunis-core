@@ -34,6 +34,7 @@ import { GetTextSourceByIdUseCase } from './application/use-cases/get-text-sourc
 import { GetSourceByIdUseCase } from './application/use-cases/get-source-by-id/get-source-by-id.use-case';
 import { DeleteSourceUseCase } from './application/use-cases/delete-source/delete-source.use-case';
 import { DeleteSourcesUseCase } from './application/use-cases/delete-sources/delete-sources.use-case';
+import { DeleteFailedKnowledgeBaseSourcesUseCase } from './application/use-cases/delete-failed-knowledge-base-sources/delete-failed-knowledge-base-sources.use-case';
 import { CleanupSourceProcessingUseCase } from './application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
 import { CreateTextSourceUseCase } from './application/use-cases/create-text-source/create-text-source.use-case';
 import { QueryTextSourceUseCase } from './application/use-cases/query-text-source/query-text-source.use-case';
@@ -127,6 +128,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
     DeleteSourcesUseCase,
+    DeleteFailedKnowledgeBaseSourcesUseCase,
     CleanupSourceProcessingUseCase,
     CreateTextSourceUseCase,
     CreateDataSourceUseCase,
@@ -159,6 +161,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     GetSourceByIdUseCase,
     DeleteSourceUseCase,
     DeleteSourcesUseCase,
+    DeleteFailedKnowledgeBaseSourcesUseCase,
     CleanupSourceProcessingUseCase,
     CreateTextSourceUseCase,
     CreateDataSourceUseCase,

@@ -51,6 +51,8 @@ import { AddUrlToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/applica
 import { AddUrlToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
+import { RemoveFailedDocumentsFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/remove-failed-documents-from-knowledge-base/remove-failed-documents-from-knowledge-base.use-case';
+import { RemoveFailedDocumentsFromKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/remove-failed-documents-from-knowledge-base/remove-failed-documents-from-knowledge-base.command';
 import { ListKnowledgeBaseDocumentsUseCase } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { ListKnowledgeBaseDocumentsQuery } from 'src/domain/knowledge-bases/application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.query';
 import { MissingFileError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
@@ -116,6 +118,7 @@ export class KnowledgeBasesController {
     private readonly addDocumentUseCase: AddDocumentToKnowledgeBaseUseCase,
     private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
+    private readonly removeFailedDocumentsUseCase: RemoveFailedDocumentsFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
     private readonly knowledgeBaseDtoMapper: KnowledgeBaseDtoMapper,
   ) {}
@@ -452,6 +455,26 @@ export class KnowledgeBasesController {
         knowledgeBaseId: id,
         documentId,
       }),
+    );
+  }
+
+  @Delete(':id/failed-documents')
+  @ApiOperation({
+    summary: 'Remove all failed documents from a knowledge base',
+  })
+  @ApiParam(KB_ID_PARAM)
+  @ApiResponse({
+    status: 204,
+    description: 'The failed documents have been removed',
+  })
+  @ApiResponse({ status: 404, description: 'Knowledge base not found' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeFailedDocuments(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<void> {
+    this.logger.log({ knowledgeBaseId: id }, 'removeFailedDocuments');
+    await this.removeFailedDocumentsUseCase.execute(
+      new RemoveFailedDocumentsFromKnowledgeBaseCommand(id),
     );
   }
 

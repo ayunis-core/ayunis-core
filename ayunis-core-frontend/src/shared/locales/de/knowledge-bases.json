@@ -163,6 +163,16 @@
       "removeSuccess": "Dokument erfolgreich entfernt!",
       "removeError": "Dokument konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
       "removeNotFound": "Das Dokument wurde bereits aus dieser Wissenssammlung entfernt.",
+      "removeFailed": "Alle fehlgeschlagenen entfernen",
+      "confirmRemoveFailed": {
+        "title": "Fehlgeschlagene Dokumente entfernen",
+        "description_one": "{{count}} Dokument konnte nicht verarbeitet werden. Es wird aus dieser Wissenssammlung entfernt. Dies kann nicht rückgängig gemacht werden.",
+        "description_other": "{{count}} Dokumente konnten nicht verarbeitet werden. Sie werden aus dieser Wissenssammlung entfernt. Dies kann nicht rückgängig gemacht werden.",
+        "confirmText": "Entfernen",
+        "cancelText": "Abbrechen"
+      },
+      "removeFailedSuccess": "Fehlgeschlagene Dokumente entfernt.",
+      "removeFailedError": "Fehlgeschlagene Dokumente konnten nicht entfernt werden. Bitte versuchen Sie es erneut.",
       "urlDialogCancel": "Abbrechen",
       "processingErrors": {
         "failed": "Die Datei konnte nicht verarbeitet werden. Laden Sie sie erneut hoch. Falls der Fehler weiterhin auftritt, wenden Sie sich an den Support.",
