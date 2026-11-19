@@ -4,6 +4,8 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum ReleaseNoteErrorCode {
   ANNOUNCABLE_REQUEST_REJECTED = 'ANNOUNCABLE_REQUEST_REJECTED',
   ANNOUNCABLE_FEED_INVALID = 'ANNOUNCABLE_FEED_INVALID',
+  RELEASE_NOTE_NOT_FOUND = 'RELEASE_NOTE_NOT_FOUND',
+  RELEASE_NOTE_IMAGE_NOT_FOUND = 'RELEASE_NOTE_IMAGE_NOT_FOUND',
   UNEXPECTED_RELEASE_NOTE_ERROR = 'UNEXPECTED_RELEASE_NOTE_ERROR',
 }
 
@@ -37,6 +39,28 @@ export class AnnouncableFeedInvalidError extends ReleaseNoteError {
       ReleaseNoteErrorCode.ANNOUNCABLE_FEED_INVALID,
       502,
       { reason },
+    );
+  }
+}
+
+export class ReleaseNoteNotFoundError extends ReleaseNoteError {
+  constructor(releaseNoteId: string) {
+    super(
+      `Release note with ID '${releaseNoteId}' not found`,
+      ReleaseNoteErrorCode.RELEASE_NOTE_NOT_FOUND,
+      404,
+      { releaseNoteId },
+    );
+  }
+}
+
+export class ReleaseNoteImageNotFoundError extends ReleaseNoteError {
+  constructor(releaseNoteId: string) {
+    super(
+      `Release note with ID '${releaseNoteId}' has no image`,
+      ReleaseNoteErrorCode.RELEASE_NOTE_IMAGE_NOT_FOUND,
+      404,
+      { releaseNoteId },
     );
   }
 }

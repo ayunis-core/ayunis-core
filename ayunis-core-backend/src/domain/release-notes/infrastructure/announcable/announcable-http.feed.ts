@@ -128,6 +128,7 @@ function toReleaseNote(item: unknown): AnnouncableReleaseNote {
     id: requiredText(note, 'id'),
     title: textField(note, 'title'),
     text: optionalText(note.text),
+    date: optionalText(note.date),
     imageSrc: optionalText(note.imageSrc),
     mediaLink: optionalText(note.media_link),
     lastUpdateOn: requiredText(note, 'last_update_on'),

@@ -29,6 +29,7 @@ describe('ReleaseNoteMapper', () => {
       }),
     ],
     ['no media', aReleaseNote()],
+    ['an announcement', aReleaseNote({ announced: true })],
   ])('keeps every field of a note with %s', (_label, note) => {
     expect(mapper.toDomain(mapper.toRecord(note))).toEqual(note);
   });

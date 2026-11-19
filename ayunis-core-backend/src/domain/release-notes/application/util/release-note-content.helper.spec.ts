@@ -5,6 +5,7 @@ import {
 } from 'src/domain/release-notes/application/testing/release-note.fixtures';
 import {
   imageSourcePath,
+  publishedOn,
   releaseNoteText,
 } from './release-note-content.helper';
 
@@ -96,4 +97,19 @@ describe('imageSourcePath', () => {
   it('has no path for a value that is not a URL', () => {
     expect(imageSourcePath('cb6b6d9a/ba4574f9.webp')).toBeNull();
   });
+});
+
+describe('publishedOn', () => {
+  it("reads Announcable's day.month.year date", () => {
+    expect(publishedOn(anAnnouncableNote({ date: '05.11.2026' }))).toBe(
+      '2026-11-05',
+    );
+  });
+
+  it.each(['', '2026-11-05', '5.11.2026', '45.13.2026', '31.02.2026'])(
+    'is null for %j',
+    (date) => {
+      expect(publishedOn(anAnnouncableNote({ date }))).toBeNull();
+    },
+  );
 });

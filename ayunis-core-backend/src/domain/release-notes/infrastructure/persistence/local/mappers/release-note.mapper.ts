@@ -15,6 +15,9 @@ export class ReleaseNoteMapper {
       media: mediaToDomain(record),
       imageSourcePath: record.imageSourcePath,
       lastUpdateOn: record.lastUpdateOn,
+      announced: record.announced,
+      createdAt: record.createdAt,
+      publishedOn: record.publishedOn,
     });
   }
 
@@ -34,6 +37,10 @@ export class ReleaseNoteMapper {
       media?.type === NotificationMediaType.IMAGE ? media.contentType : null;
     record.imageSourcePath = domain.imageSourcePath;
     record.lastUpdateOn = domain.lastUpdateOn;
+    // Written by the app like a user's, which it is compared with.
+    record.createdAt = domain.createdAt;
+    record.announced = domain.announced;
+    record.publishedOn = domain.publishedOn;
     return record;
   }
 }

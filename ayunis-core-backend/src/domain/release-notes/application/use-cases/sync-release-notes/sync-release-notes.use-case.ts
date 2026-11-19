@@ -15,7 +15,10 @@ import {
   UnexpectedReleaseNoteError,
 } from 'src/domain/release-notes/application/release-notes.errors';
 import { ReleaseNoteMediaService } from 'src/domain/release-notes/application/services/release-note-media.service';
-import { releaseNoteText } from 'src/domain/release-notes/application/util/release-note-content.helper';
+import {
+  publishedOn,
+  releaseNoteText,
+} from 'src/domain/release-notes/application/util/release-note-content.helper';
 import { ReleaseNote } from 'src/domain/release-notes/domain/release-note.entity';
 
 export interface ReleaseNoteSyncResult {
@@ -80,9 +83,10 @@ export class SyncReleaseNotesUseCase {
         `no notes while ${stored.length} are stored`,
       );
     }
-    const changes = await this.prepareChanges(feedNotes, stored);
     // Without stored notes this is the first sync: the feed is old news.
-    const notified = await this.applyChanges(changes, stored.length > 0);
+    const announce = stored.length > 0;
+    const changes = await this.prepareChanges(feedNotes, stored, announce);
+    const notified = await this.applyChanges(changes, announce);
     await this.mediaService.removeUnusedImages(changes.kept);
     const result: ReleaseNoteSyncResult = {
       inserted: changes.inserts.length,
@@ -99,6 +103,7 @@ export class SyncReleaseNotesUseCase {
   private async prepareChanges(
     feedNotes: AnnouncableReleaseNote[],
     stored: ReleaseNote[],
+    announce: boolean,
   ): Promise<ReleaseNoteChanges> {
     const storedById = new Map(stored.map((n) => [n.announcableId, n]));
     const feedIds = new Set(feedNotes.map((note) => note.id));
@@ -112,12 +117,16 @@ export class SyncReleaseNotesUseCase {
     };
     for (const feedNote of feedNotes) {
       const existing = storedById.get(feedNote.id) ?? null;
-      if (existing?.lastUpdateOn === feedNote.lastUpdateOn) {
+      // Notes stored before their date was kept get it on the next sync.
+      if (
+        existing?.lastUpdateOn === feedNote.lastUpdateOn &&
+        existing.publishedOn === publishedOn(feedNote)
+      ) {
         changes.unchanged++;
         changes.kept.push(existing);
         continue;
       }
-      const next = await this.toReleaseNote(feedNote, existing);
+      const next = await this.toReleaseNote(feedNote, existing, announce);
       if (!next) {
         changes.skipped++;
         if (existing) changes.kept.push(existing);
@@ -132,6 +141,7 @@ export class SyncReleaseNotesUseCase {
   private async toReleaseNote(
     feedNote: AnnouncableReleaseNote,
     existing: ReleaseNote | null,
+    announce: boolean,
   ): Promise<ReleaseNote | null> {
     const text = releaseNoteText(feedNote);
     if ('violation' in text) {
@@ -153,6 +163,10 @@ export class SyncReleaseNotesUseCase {
       media,
       imageSourcePath,
       lastUpdateOn: feedNote.lastUpdateOn,
+      // An edited note stays read for those who have read it.
+      announced: existing ? existing.announced : announce,
+      createdAt: existing?.createdAt,
+      publishedOn: publishedOn(feedNote),
     });
   }
 

@@ -6735,6 +6735,32 @@ export interface UpdateCourseModuleRequestDto {
   loomUrl: string;
 }
 
+export interface ReleaseNoteMediaResponseDto {
+  type: NotificationMediaType;
+  /**
+     * The Loom embed URL of a Loom video; null for an image, which `GET /release-notes/{id}/image` serves
+     * @nullable
+     */
+  url: string | null;
+}
+
+export interface ReleaseNoteResponseDto {
+  id: string;
+  headline: string;
+  /** Markdown; may contain links */
+  body: string;
+  /** @nullable */
+  media: ReleaseNoteMediaResponseDto | null;
+  /** Announced after the current user joined and not opened by them yet */
+  unread: boolean;
+  /** The day the release note is dated */
+  date: string;
+}
+
+export interface UnreadReleaseNoteCountResponseDto {
+  count: number;
+}
+
 /**
  * Current UI language, used when the language of the text is unidentifiable; defaults to English
  */

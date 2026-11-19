@@ -6,6 +6,8 @@ export interface AnnouncableReleaseNote {
   readonly id: string;
   readonly title: string;
   readonly text: string;
+  /** The day the note is dated, as `DD.MM.YYYY`. */
+  readonly date: string;
   /** A signed URL that expires after 24 hours. */
   readonly imageSrc: string;
   /** A Loom embed URL. */
