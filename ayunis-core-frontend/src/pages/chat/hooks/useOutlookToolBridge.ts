@@ -5,18 +5,26 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import {
   addAttachmentAsSource,
   answeredToolCallIds,
   chatItemKey,
   currentOutlookItemKey,
+  currentOutlookMailboxItem,
+  currentOutlookReplySourceKey,
   executeOutlookTool,
   hasCallAwaitingConfirmation,
   isAwaitingResultTool,
+  isOutlookDraftTool,
+  outlookDraftSource,
   outlookToolCalls,
+  OUTLOOK_TOOL,
   rememberChatItem,
+  rememberOutlookDraftSource,
   waitsForUser,
+  subscribeToOutlookItem,
   type OutlookToolCall,
   type OutlookToolOutcome,
 } from '@/features/outlook-tools';
@@ -52,6 +60,15 @@ interface PiiMask {
 
 type Execute = (call: OutlookToolCall) => Promise<OutlookToolOutcome>;
 
+interface TrackedToolState {
+  state: OutlookToolState;
+  replyItem?: unknown;
+}
+
+function ignoreOutlookItem(): () => void {
+  return () => undefined;
+}
+
 /**
  * What goes into Outlook leaves the chat, so it carries the original values
  * of an anonymous chat's `{{pii:…}}` tokens, as a copied email does.
@@ -73,6 +90,12 @@ function callsOfLatestTurn(messages: readonly Message[]): OutlookToolCall[] {
     .map(({ role }) => role)
     .lastIndexOf('user');
   return outlookToolCalls(messages.slice(latestUserMessage + 1));
+}
+
+function latestDraftCallId(messages: readonly Message[]): string | undefined {
+  return outlookToolCalls(messages)
+    .reverse()
+    .find(({ name }) => isOutlookDraftTool(name))?.id;
 }
 
 /** The read calls of the latest turn the run still waits for. */
@@ -145,8 +168,12 @@ export function useOutlookToolBridge({
   sendToolResult,
 }: UseOutlookToolBridgeParams) {
   const embedded = useEmbedded();
+  const mailboxItem = useSyncExternalStore(
+    embedded ? subscribeToOutlookItem : ignoreOutlookItem,
+    currentOutlookMailboxItem,
+  );
   const [toolStates, setToolStates] = useState<
-    Record<string, OutlookToolState>
+    Partial<Record<string, TrackedToolState>>
   >({});
   const messagesRef = useRef(messages);
   const masksRef = useRef<ReadonlyMap<string, PiiMask>>(new Map());
@@ -155,7 +182,10 @@ export function useOutlookToolBridge({
   // The mail the run started on; the tools refuse to act on another. A run
   // the chat did not start, such as one reattached after a reload, belongs
   // to the mail the chat was opened next to.
-  const runItemKey = useRef<string | null>(null);
+  const runOrigin = useRef<{
+    itemKey: string | null;
+    observingFromReply: boolean;
+  }>({ itemKey: null, observingFromReply: false });
   const [endedRun, setEndedRun] = useState<{
     threadId: string;
     failed: boolean;
@@ -163,8 +193,8 @@ export function useOutlookToolBridge({
   } | null>(null);
   const settledRun = useRef<typeof endedRun>(null);
   const activeThreadId = useRef<string | null>(null);
-  // The mail each call of a run this page saw was made for. A draft opens a
-  // reply only there, and a draft without one is not offered at all.
+  // The mail each call was made for. A draft from read mode can only be
+  // inserted into a reply to that mail.
   const [callItemKeys, setCallItemKeys] = useState<
     Record<string, string | null>
   >({});
@@ -212,8 +242,13 @@ export function useOutlookToolBridge({
     if (openedThreadId.current !== threadId) {
       openedThreadId.current = threadId;
       const chatItem = chatItemKey(threadId);
-      runItemKey.current =
+      const itemKey =
         chatItem === undefined ? currentOutlookItemKey() : chatItem;
+      runOrigin.current = {
+        itemKey,
+        observingFromReply:
+          itemKey !== null && itemKey === currentOutlookReplySourceKey(),
+      };
       // A read the run still waits for, because the user left the chat
       // before it was answered, is answered on return to the same mail.
       // Drafts are never replayed.
@@ -237,11 +272,17 @@ export function useOutlookToolBridge({
   const execute = useCallback(
     async (
       call: OutlookToolCall,
-      options: { signal?: AbortSignal; expectedItemKey?: string | null } = {},
+      options: {
+        signal?: AbortSignal;
+        expectedItemKey?: string | null;
+        expectedReplySourceKey?: string;
+      } = {},
     ) => {
-      const setState = (state: OutlookToolState) =>
-        setToolStates((current) => ({ ...current, [call.id]: state }));
-      setState({ status: 'running' });
+      const running: TrackedToolState = { state: { status: 'running' } };
+      if (options.expectedReplySourceKey !== undefined) {
+        running.replyItem = currentOutlookMailboxItem();
+      }
+      setToolStates((current) => ({ ...current, [call.id]: running }));
       const params = resolveParams(call.params, masksRef.current);
       const outcome = await executeOutlookTool(call.name, params, {
         extractAttachmentText: (file) =>
@@ -252,8 +293,14 @@ export function useOutlookToolBridge({
             options.signal,
           ),
         expectedItemKey: options.expectedItemKey,
+        expectedReplySourceKey: options.expectedReplySourceKey,
+        draftId: call.id,
       });
-      setState(outcome);
+      setToolStates((current) =>
+        current[call.id] === running
+          ? { ...current, [call.id]: { ...running, state: outcome } }
+          : current,
+      );
       return outcome;
     },
     [threadId],
@@ -266,13 +313,22 @@ export function useOutlookToolBridge({
     // Reattach registers its stream before React can publish isStreaming.
     if (isThreadRunActive(threadId)) return;
     settledRun.current = endedRun;
+    const { itemKey: runItem, observingFromReply } = runOrigin.current;
+    // A separate compose pane observes the original run. The pane that
+    // started it must still return the item-changed result after a switch.
+    if (observingFromReply && runItem === currentOutlookReplySourceKey())
+      return;
     const candidates = endedRun.reopened
       ? waitingReads(messagesRef.current)
       : outlookToolCalls(messagesRef.current);
     const calls = candidates.filter(({ id }) => !handled.current.has(id));
     calls.forEach(({ id }) => handled.current.add(id));
     if (endedRun.failed || calls.length === 0) return;
-    const runItem = runItemKey.current;
+    const latestDraft = calls
+      .filter(({ name }) => isOutlookDraftTool(name))
+      .at(-1);
+    if (latestDraft)
+      rememberOutlookDraftSource(threadId, latestDraft.id, runItem);
     setCallItemKeys((current) => ({
       ...current,
       ...Object.fromEntries(calls.map(({ id }) => [id, runItem])),
@@ -316,43 +372,72 @@ export function useOutlookToolBridge({
           handled.current.delete(id),
         );
       }
-      runItemKey.current = itemKeyForRun(threadId, takesOverStartedRun);
+      runOrigin.current = {
+        itemKey: itemKeyForRun(threadId, takesOverStartedRun),
+        observingFromReply: false,
+      };
     },
     [embedded, threadId],
   );
 
-  // The mail a draft opens a reply on: the one its run was about. After a
-  // reload only the latest turn's drafts have one, the chat's mail, which is
-  // the mail open at the latest message; older drafts are not offered.
+  // A recorded draft keeps its own source across panes. For an older chat
+  // with no record, only the latest turn can use the chat's current email.
+  const latestDraftId = useMemo(() => latestDraftCallId(messages), [messages]);
   const replyItemKey = useCallback(
     (toolCallId: string): string | null => {
+      if (toolCallId !== latestDraftId) return null;
       if (toolCallId in callItemKeys) return callItemKeys[toolCallId];
-      const latestTurn = callsOfLatestTurn(messages).some(
+      const storedSource = outlookDraftSource(threadId, toolCallId);
+      if (storedSource !== undefined) return storedSource;
+      const belongsToLatestTurn = callsOfLatestTurn(messages).some(
         ({ id }) => id === toolCallId,
       );
-      return latestTurn ? (chatItemKey(threadId) ?? null) : null;
+      return belongsToLatestTurn ? (chatItemKey(threadId) ?? null) : null;
     },
-    [callItemKeys, messages, threadId],
+    [callItemKeys, latestDraftId, messages, threadId],
   );
 
-  const bridge = useMemo<OutlookToolBridge | null>(
-    () =>
-      embedded
-        ? {
-            stateFor: (toolCallId) => toolStates[toolCallId],
-            canOpenReply: ({ id, name }) =>
-              waitsForUser(name, replyItemKey(id)),
-            openReply: (call) => {
-              const itemKey = replyItemKey(call.id);
-              if (!itemKey || !waitsForUser(call.name, itemKey)) return;
-              // A click after the user moved to another mail must not reply
-              // there with a draft written for the mail it was made for.
-              void execute(call, { expectedItemKey: itemKey });
-            },
-          }
-        : null,
-    [embedded, toolStates, replyItemKey, execute],
-  );
+  const openItemKey = embedded ? currentOutlookItemKey() : null;
+  const replySourceKey = embedded ? currentOutlookReplySourceKey() : null;
+  const bridge = useMemo<OutlookToolBridge | null>(() => {
+    if (!embedded) return null;
+    return {
+      stateFor: (toolCallId) => {
+        const tracked = toolStates[toolCallId];
+        if (
+          tracked &&
+          'replyItem' in tracked &&
+          tracked.replyItem !== mailboxItem
+        ) {
+          return undefined;
+        }
+        return tracked?.state;
+      },
+      draftAction: ({ id, name }) => {
+        const source = replyItemKey(id);
+        if (!source || !waitsForUser(name, source)) return null;
+        if (source === replySourceKey) return 'insert';
+        return source === openItemKey ? 'openReply' : null;
+      },
+      insertDraft: (call) => {
+        if (call.id !== latestDraftCallId(messagesRef.current)) return;
+        const source = replyItemKey(call.id);
+        if (!source || !waitsForUser(call.name, source)) return;
+        void execute(
+          { ...call, name: OUTLOOK_TOOL.moveEmailToComposer },
+          { expectedReplySourceKey: source },
+        );
+      },
+    };
+  }, [
+    embedded,
+    openItemKey,
+    replySourceKey,
+    mailboxItem,
+    toolStates,
+    replyItemKey,
+    execute,
+  ]);
 
   return { bridge, beginRun, runEnded };
 }

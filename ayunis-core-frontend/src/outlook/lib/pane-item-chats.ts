@@ -3,7 +3,11 @@ import { AxiosError } from 'axios';
 import type { AppRouter } from '@/app/app-router';
 import {
   currentOutlookItemKey,
+  currentOutlookLegacyReadKey,
+  currentOutlookReplySourceKey,
+  isReadItemKey,
   rememberChatItem,
+  notifyOutlookItemChanged,
 } from '@/features/outlook-tools';
 import { followOutlookItem } from '@/outlook/lib/follow-outlook-item';
 import { createItemChats } from '@/outlook/lib/item-chats';
@@ -14,26 +18,19 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
-/**
- * Only an email being read has an id; a draft has none until saved. It is the
- * EWS id, which changes when the mail is moved to another folder, so a moved
- * mail starts a new chat and its earlier chat stays in the pane's history.
- * An immutable id would need a Graph call (translateExchangeIds).
- */
-function readItemKey(): string | null {
-  const key = currentOutlookItemKey();
-  return key?.startsWith('read:') && key !== 'read:' ? key : null;
-}
-
 function watchOutlookItem(listener: () => void): () => void {
   try {
     const { mailbox } = Office.context;
-    mailbox.addHandlerAsync(Office.EventType.ItemChanged, listener);
+    const event = Office.EventType.ItemChanged;
+    mailbox.addHandlerAsync(event, () => {
+      listener();
+      notifyOutlookItemChanged();
+    });
     return () => {
       try {
-        mailbox.removeHandlerAsync(Office.EventType.ItemChanged);
+        mailbox.removeHandlerAsync(event);
       } catch {
-        // the pane is closing
+        // The pane may be closing.
       }
     };
   } catch {
@@ -105,10 +102,19 @@ export function startPaneItemChats(
   void officeReady().then(
     () => {
       if (stopped) return;
+      const chats = createItemChats(userId);
       stop = followOutlookItem({
         router,
-        chats: createItemChats(userId),
-        currentItemKey: readItemKey,
+        chats,
+        currentItemKey: () => {
+          const key = currentOutlookItemKey();
+          if (isReadItemKey(key)) return key === 'read:' ? null : key;
+          const source = currentOutlookReplySourceKey();
+          return source && chats.chatFor(source) ? source : null;
+        },
+        legacyItemKey: currentOutlookLegacyReadKey,
+        canRememberChat: (itemKey) =>
+          currentOutlookReplySourceKey() !== itemKey,
         watchItem: watchOutlookItem,
         watchNewChats: (onStart) => watchNewChats(queryClient, onStart),
         chatExists: (threadId) => chatExists(queryClient, threadId),

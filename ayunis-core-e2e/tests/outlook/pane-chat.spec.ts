@@ -95,6 +95,57 @@ test('inserts a drafted reply into the email being composed', async ({
   });
 });
 
+test('inserts the reading-pane draft into the already open Outlook reply', async ({
+  page,
+  api,
+}) => {
+  const key = `outlook-inline-reply-${Date.now()}`;
+  const internetMessageId = `<${key}@e2e.local>`;
+  const item = composeItem(key);
+  await stubOfficeHost(page, {
+    readItem: {
+      itemId: key,
+      internetMessageId,
+      subject: item.subject,
+      body: item.body,
+      from: item.from,
+    },
+  });
+  await openSignedInPane(page, api);
+  await sendMessage(page, DRAFT_REPLY_PROMPT);
+  await expect(page.getByTestId('outlook-draft')).toContainText(
+    'E2E mock reply',
+  );
+  await expect(page.getByTestId('outlook-draft-insert')).toHaveCount(0);
+  expect(await officeItemCalls(page)).not.toContainEqual(
+    expect.objectContaining({ method: 'displayReplyForm' }),
+  );
+
+  // Outlook activates the compose pane separately once Reply is open.
+  const reply = await page.context().newPage();
+  await stubOfficeHost(reply, {
+    composeItem: { ...item, inReplyTo: internetMessageId },
+  });
+  await reply.goto('/outlook/taskpane.html?surface=messageCompose');
+  const insert = reply.getByTestId('outlook-draft-insert');
+  await expect(insert).toBeEnabled();
+  expect(await officeItemCalls(reply)).not.toContainEqual(
+    expect.objectContaining({ method: 'body.prependAsync' }),
+  );
+  await insert.click();
+  await expect(reply.getByTestId('outlook-draft')).toHaveAttribute(
+    'data-status',
+    'inserted',
+  );
+  expect(await officeItemCalls(reply)).toContainEqual({
+    method: 'body.prependAsync',
+    args: [
+      expect.stringContaining('>E2E mock reply</div>'),
+      { coercionType: 'html' },
+    ],
+  });
+});
+
 test('keeps pane chats out of the web app and web chats out of the pane', async ({
   page,
   browser,

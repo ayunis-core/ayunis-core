@@ -2,7 +2,10 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EmbeddedContext } from '@/shared/contexts/embedded/embeddedContext';
-import { rememberChatItem } from '@/features/outlook-tools';
+import {
+  notifyOutlookItemChanged,
+  rememberChatItem,
+} from '@/features/outlook-tools';
 import type { Message } from '@/pages/chat/model/openapi';
 import { useOutlookToolBridge } from './useOutlookToolBridge';
 
@@ -21,6 +24,13 @@ function stubOffice(item: object | undefined) {
       requirements: { isSetSupported: () => true },
       mailbox: { item },
     },
+  });
+}
+
+function changeOfficeItem(item: object | undefined) {
+  act(() => {
+    stubOffice(item);
+    notifyOutlookItemChanged();
   });
 }
 
@@ -283,46 +293,211 @@ describe(useOutlookToolBridge.name, () => {
     expect(item.body.prependAsync).not.toHaveBeenCalled();
   });
 
-  it('leaves opening a reply from the read view to the user', async () => {
-    const item = readItem();
+  it('inserts a read-mode draft only after the matching reply is open and the user clicks', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
     stubOffice(item);
-    const { result, run } = renderBridge(true);
-    const params = { body: 'Dear Bob' };
+    const { result, run, rerender } = renderBridge(true);
+    const params = { body: 'Dear {{pii:PERSON_NAME_1}}' };
+    const messages = turn('call-1', 'outlook__draft_email', params);
 
-    run(turn('call-1', 'outlook__draft_email', params));
+    run(messages);
     await act(() => Promise.resolve());
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('openReply');
     expect(item.displayReplyFormAsync).not.toHaveBeenCalled();
-    expect(result.current.bridge?.canOpenReply(draftCall)).toBe(true);
 
-    act(() =>
-      result.current.bridge?.openReply({
-        id: 'call-1',
-        name: 'outlook__draft_email',
-        params,
-      }),
-    );
+    const reply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    stubOffice(reply);
+    rerender({ messages, isStreaming: false });
+    expect(reply.body.prependAsync).not.toHaveBeenCalled();
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('insert');
+    act(() => result.current.bridge?.insertDraft({ ...draftCall, params }));
+
     await waitFor(() =>
-      expect(item.displayReplyFormAsync).toHaveBeenCalledWith(
-        {
-          htmlBody: expect.stringMatching(
-            /^<div id="ayunis-draft-[^"]+">Dear Bob<\/div>$/,
-          ) as string,
-        },
+      expect(reply.body.prependAsync).toHaveBeenCalledWith(
+        expect.stringContaining('>Dear Bob Becker</div>'),
+        { coercionType: 'html' },
         expect.any(Function),
       ),
     );
+    expect(reply.subject.setAsync).not.toHaveBeenCalled();
   });
 
-  it('refuses to open a reply with a draft once the user moved to another email', async () => {
-    const item = readItem();
+  it('offers Insert again after discarding a reply and opening another for the same email', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, run } = renderBridge(true);
+    const call = { ...draftCall, params: { body: 'Dear Bob' } };
+    run(turn(call.id, call.name, call.params));
+
+    const firstReply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    changeOfficeItem(firstReply);
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('insert');
+    act(() => result.current.bridge?.insertDraft(call));
+    await waitFor(() =>
+      expect(result.current.bridge?.stateFor(call.id)).toEqual({
+        status: 'done',
+        action: 'inserted',
+      }),
+    );
+    expect(firstReply.body.prependAsync).toHaveBeenCalledOnce();
+
+    changeOfficeItem(item);
+    const nextReply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    changeOfficeItem(nextReply);
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('insert');
+    expect(result.current.bridge?.stateFor(call.id)).toBeUndefined();
+    expect(nextReply.body.prependAsync).not.toHaveBeenCalled();
+
+    act(() => result.current.bridge?.insertDraft(call));
+    await waitFor(() =>
+      expect(result.current.bridge?.stateFor(call.id)).toEqual({
+        status: 'done',
+        action: 'inserted',
+      }),
+    );
+    expect(nextReply.body.prependAsync).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the new reply status when an earlier insert finishes late', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, run } = renderBridge(true);
+    const call = { ...draftCall, params: { body: 'Dear Bob' } };
+    run(turn(call.id, call.name, call.params));
+
+    const firstReply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    let finishFirst: Callback | undefined;
+    firstReply.body.prependAsync.mockImplementation((...args: unknown[]) => {
+      finishFirst = args.at(-1) as Callback;
+    });
+    changeOfficeItem(firstReply);
+    act(() => result.current.bridge?.insertDraft(call));
+    await waitFor(() =>
+      expect(firstReply.body.prependAsync).toHaveBeenCalledOnce(),
+    );
+
+    const nextReply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    changeOfficeItem(nextReply);
+    expect(result.current.bridge?.stateFor(call.id)).toBeUndefined();
+    act(() => result.current.bridge?.insertDraft(call));
+    await waitFor(() =>
+      expect(result.current.bridge?.stateFor(call.id)).toEqual({
+        status: 'done',
+        action: 'inserted',
+      }),
+    );
+
+    await act(async () => {
+      finishFirst?.({ status: 'succeeded' });
+    });
+    expect(result.current.bridge?.stateFor(call.id)).toEqual({
+      status: 'done',
+      action: 'inserted',
+    });
+  });
+
+  it('rejects an earlier Insert after a newer draft is written into the composer', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, run, rerender } = renderBridge(true);
+    const params = { body: 'First draft' };
+    const first = turn(draftCall.id, draftCall.name, params);
+    run(first);
+    await act(() => Promise.resolve());
+
+    const reply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    stubOffice(reply);
+    rerender({ messages: first, isStreaming: false });
+    const oldInsert = result.current.bridge?.insertDraft;
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('insert');
+
+    run([
+      ...first,
+      ...turn('new-call', draftCall.name, { body: 'Revised draft' }),
+    ]);
+    await waitFor(() => expect(reply.body.prependAsync).toHaveBeenCalledOnce());
+    expect(result.current.bridge?.draftAction(draftCall)).toBeNull();
+    act(() => oldInsert?.({ ...draftCall, params }));
+    await act(() => Promise.resolve());
+
+    expect(reply.body.prependAsync).toHaveBeenCalledOnce();
+    expect(reply.body.setAsync).not.toHaveBeenCalled();
+  });
+
+  it('keeps the current draft insertable after a follow-up with no new draft', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, run, rerender } = renderBridge(true);
+    const params = { body: 'First draft' };
+    const first = turn(draftCall.id, draftCall.name, params);
+    run(first);
+    await act(() => Promise.resolve());
+
+    const reply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    stubOffice(reply);
+    rerender({ messages: first, isStreaming: false });
+    run([...first, ...turn('follow-up', 'outlook__read_email')]);
+    await act(() => Promise.resolve());
+
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('insert');
+    act(() => result.current.bridge?.insertDraft({ ...draftCall, params }));
+    await waitFor(() => expect(reply.body.prependAsync).toHaveBeenCalledOnce());
+  });
+
+  it('keeps the draft insertable in a new reply pane after a follow-up in the reading pane', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const readPane = renderBridge(true);
+    const params = { body: 'First draft' };
+    const draft = turn(draftCall.id, draftCall.name, params);
+    readPane.run(draft);
+    await act(() => Promise.resolve());
+    const messages = [...draft, ...turn('follow-up', 'outlook__read_email')];
+    readPane.run(messages);
+    await act(() => Promise.resolve());
+    readPane.unmount();
+
+    const unrelatedId = '<mail-2@example.org>';
+    const unrelatedReply = { ...composeItem(), inReplyTo: unrelatedId };
+    stubOffice(unrelatedReply);
+    rememberChatItem(readPane.threadId, `read:internet:${unrelatedId}`);
+    const unrelatedPane = renderBridge(true, draft, readPane.threadId);
+    expect(
+      unrelatedPane.result.current.bridge?.draftAction(draftCall),
+    ).toBeNull();
+    unrelatedPane.unmount();
+
+    const matchingReply = {
+      ...composeItem(),
+      inReplyTo: item.internetMessageId,
+    };
+    stubOffice(matchingReply);
+    const replyPane = renderBridge(true, messages, readPane.threadId);
+    expect(replyPane.result.current.bridge?.draftAction(draftCall)).toBe(
+      'insert',
+    );
+    act(() =>
+      replyPane.result.current.bridge?.insertDraft({ ...draftCall, params }),
+    );
+    await waitFor(() =>
+      expect(matchingReply.body.prependAsync).toHaveBeenCalledOnce(),
+    );
+  });
+
+  it('refuses a stale Insert click after the user opens a reply to a different email', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
     stubOffice(item);
     const { result, run } = renderBridge(true);
     run(turn('call-1', 'outlook__draft_email', { body: 'Dear Bob' }));
     await act(() => Promise.resolve());
 
-    stubOffice({ ...readItem(), itemId: 'mail-2' });
+    const unrelatedReply = {
+      ...composeItem(),
+      inReplyTo: '<mail-2@example.org>',
+    };
+    stubOffice(unrelatedReply);
     act(() =>
-      result.current.bridge?.openReply({
+      result.current.bridge?.insertDraft({
         ...draftCall,
         params: { body: 'Dear Bob' },
       }),
@@ -334,7 +509,7 @@ describe(useOutlookToolBridge.name, () => {
         failure: 'itemChanged',
       }),
     );
-    expect(item.displayReplyFormAsync).not.toHaveBeenCalled();
+    expect(unrelatedReply.body.prependAsync).not.toHaveBeenCalled();
   });
 
   it('offers no reply for a draft from before the chat opened, which may be for another email', async () => {
@@ -346,9 +521,9 @@ describe(useOutlookToolBridge.name, () => {
     const { result } = renderBridge(true, history);
     await act(() => Promise.resolve());
 
-    expect(result.current.bridge?.canOpenReply(draftCall)).toBe(false);
+    expect(result.current.bridge?.draftAction(draftCall)).toBeNull();
     act(() =>
-      result.current.bridge?.openReply({
+      result.current.bridge?.insertDraft({
         ...draftCall,
         params: { body: 'Dear Bob' },
       }),
@@ -357,45 +532,23 @@ describe(useOutlookToolBridge.name, () => {
     expect(item.displayReplyFormAsync).not.toHaveBeenCalled();
   });
 
-  it("offers Insert after a reload only for the latest turn's drafts, on the chat's email", async () => {
-    const item = readItem();
-    stubOffice(item);
+  it("offers Insert after reopening in compose only for the latest turn's draft for that reply", async () => {
+    const messageId = '<mail-1@example.org>';
+    const reply = { ...composeItem(), inReplyTo: messageId };
+    stubOffice(reply);
     const threadId = `thread-${++chats}`;
-    rememberChatItem(threadId, 'read:mail-1');
+    rememberChatItem(threadId, `read:internet:${messageId}`);
     const reopened = [
       ...turn('old-call', 'outlook__draft_email', { body: 'Old' }),
       ...turn('call-1', 'outlook__draft_email', { body: 'Dear Bob' }),
     ];
     const { result } = renderBridge(true, reopened, threadId);
-    await act(() => Promise.resolve());
 
-    expect(result.current.bridge?.canOpenReply(draftCall)).toBe(true);
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('insert');
     expect(
-      result.current.bridge?.canOpenReply({ ...draftCall, id: 'old-call' }),
-    ).toBe(false);
-
-    stubOffice({ ...readItem(), itemId: 'mail-2' });
-    act(() =>
-      result.current.bridge?.openReply({
-        ...draftCall,
-        params: { body: 'Dear Bob' },
-      }),
-    );
-    await waitFor(() =>
-      expect(result.current.bridge?.stateFor('call-1')).toEqual({
-        status: 'failed',
-        failure: 'itemChanged',
-      }),
-    );
-
-    stubOffice(item);
-    act(() =>
-      result.current.bridge?.openReply({
-        ...draftCall,
-        params: { body: 'Dear Bob' },
-      }),
-    );
-    await waitFor(() => expect(item.displayReplyFormAsync).toHaveBeenCalled());
+      result.current.bridge?.draftAction({ ...draftCall, id: 'old-call' }),
+    ).toBeNull();
+    expect(reply.body.prependAsync).not.toHaveBeenCalled();
   });
 
   it('answers a read the run still waits for when its chat is reopened next to the same email', async () => {
@@ -412,6 +565,60 @@ describe(useOutlookToolBridge.name, () => {
       toolId: 'call-1',
       toolName: 'outlook__read_email',
     });
+  });
+
+  it('returns an item-changed result when a read from this pane arrives after opening its reply', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, rerender, sendToolResult } = renderBridge(true);
+    const waiting = turn('call-1', 'outlook__read_email');
+    act(() => result.current.beginRun());
+    rerender({ messages: waiting.slice(0, 1), isStreaming: true });
+
+    const reply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    changeOfficeItem(reply);
+    rerender({ messages: waiting, isStreaming: true });
+    act(() => result.current.runEnded(false));
+    rerender({ messages: waiting, isStreaming: false });
+
+    await waitFor(() =>
+      expect(sendToolResult).toHaveBeenCalledExactlyOnceWith({
+        toolId: 'call-1',
+        toolName: 'outlook__read_email',
+        result: JSON.stringify({
+          error: 'the open email changed since this request started',
+        }),
+      }),
+    );
+    expect(item.body.getAsync).not.toHaveBeenCalled();
+    expect(reply.body.getAsync).not.toHaveBeenCalled();
+  });
+
+  it('lets the original pane answer a read that streams in after its reply opens', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    const reply = { ...composeItem(), inReplyTo: item.internetMessageId };
+    stubOffice(reply);
+    const threadId = `thread-${++chats}`;
+    rememberChatItem(threadId, `read:internet:${item.internetMessageId}`);
+    const waiting = turn('call-1', 'outlook__read_email');
+    const { result, rerender, sendToolResult, unmount } = renderBridge(
+      true,
+      [],
+      threadId,
+    );
+
+    rerender({ messages: waiting, isStreaming: true });
+    act(() => result.current.runEnded(false));
+    rerender({ messages: waiting, isStreaming: false });
+    await act(() => Promise.resolve());
+    expect(sendToolResult).not.toHaveBeenCalled();
+    expect(reply.body.getAsync).not.toHaveBeenCalled();
+
+    unmount();
+    stubOffice(item);
+    const original = renderBridge(true, waiting, threadId);
+    await waitFor(() => expect(original.sendToolResult).toHaveBeenCalledOnce());
+    expect(item.body.getAsync).toHaveBeenCalledOnce();
   });
 
   it('leaves a waiting read alone when its chat is reopened next to another email, and never replays a draft', async () => {
@@ -473,7 +680,7 @@ describe(useOutlookToolBridge.name, () => {
         failure: 'itemChanged',
       }),
     );
-    expect(result.current.bridge?.canOpenReply(draftCall)).toBe(false);
+    expect(result.current.bridge?.draftAction(draftCall)).toBeNull();
     expect(received.displayReplyFormAsync).not.toHaveBeenCalled();
   });
 
@@ -507,9 +714,9 @@ describe(useOutlookToolBridge.name, () => {
     run(turn('call-1', 'outlook__draft_email', params));
     await waitFor(() => expect(item.body.prependAsync).toHaveBeenCalledOnce());
 
-    expect(result.current.bridge?.canOpenReply(draftCall)).toBe(false);
+    expect(result.current.bridge?.draftAction(draftCall)).toBeNull();
     act(() =>
-      result.current.bridge?.openReply({
+      result.current.bridge?.insertDraft({
         id: 'call-1',
         name: 'outlook__draft_email',
         params,

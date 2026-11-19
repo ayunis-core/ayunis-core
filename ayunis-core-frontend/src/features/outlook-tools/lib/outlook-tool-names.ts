@@ -25,3 +25,10 @@ export function isOutlookTool(name: string): name is OutlookToolName {
 export function isAwaitingResultTool(name: string): boolean {
   return AWAITING_RESULT_TOOLS.has(name);
 }
+
+export function isOutlookDraftTool(name: OutlookToolName): boolean {
+  return (
+    name === OUTLOOK_TOOL.draftEmail ||
+    name === OUTLOOK_TOOL.moveEmailToComposer
+  );
+}

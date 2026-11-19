@@ -385,15 +385,16 @@
     "errorModeUnavailable": "No model is currently available for this mode. Please choose a model under \"More models\".",
     "fromNotification": "Notification",
     "outlookDraft": {
-      "insert": "Insert into Outlook reply",
+      "insert": "Insert into open reply",
+      "openReply": "Choose Reply in Outlook and open Ayunis in the reply to insert this draft.",
       "status": {
         "running": "Working in Outlook …",
         "inserted": "Inserted into your reply",
         "replaced": "Replaced the previous draft",
-        "replyOpened": "Reply opened",
         "saved": "Saved as draft",
         "failed": {
           "noItem": "No email is open.",
+          "noComposeItem": "Open a reply in Outlook to insert the draft.",
           "nothingToSave": "Only an email you are writing can be saved.",
           "officeFailed": "Outlook could not do this.",
           "itemChanged": "The open email changed, so this was not done."

@@ -2,6 +2,7 @@ import { errorMessage } from '@/features/outlook-tools/lib/office-async';
 import {
   currentOutlookItem,
   currentOutlookItemKey,
+  currentOutlookReplySourceKey,
   isReadItemKey,
   type OutlookItem,
 } from '@/features/outlook-tools/lib/outlook-item';
@@ -15,17 +16,19 @@ import {
   draftEmail,
   ItemChangedError,
   moveEmailToComposer,
+  NoComposeItemError,
   NothingToSaveError,
   saveEmailToDraft,
   type OutlookWriteAction,
 } from '@/features/outlook-tools/lib/write-email';
 import {
   OUTLOOK_TOOL,
+  isOutlookDraftTool,
   type OutlookToolName,
 } from '@/features/outlook-tools/lib/outlook-tool-names';
 
 type OutlookWriteFailure =
-  'noItem' | 'nothingToSave' | 'officeFailed' | 'itemChanged';
+  'noItem' | 'noComposeItem' | 'nothingToSave' | 'officeFailed' | 'itemChanged';
 export type OutlookToolOutcome =
   | { status: 'result'; result: string }
   | { status: 'done'; action: OutlookWriteAction }
@@ -38,6 +41,9 @@ export interface OutlookToolDependencies {
    * to act on any other. Without it the tool acts on whatever is open.
    */
   expectedItemKey?: string | null;
+  /** The source of the open reply when inserting a draft from read mode. */
+  expectedReplySourceKey?: string;
+  draftId?: string;
 }
 
 type ReadToolName =
@@ -73,12 +79,13 @@ function writeAction(
   name: Exclude<OutlookToolName, ReadToolName>,
   outlookItem: OutlookItem,
   params: Record<string, unknown>,
+  draftId?: string,
 ): Promise<OutlookWriteAction> {
   switch (name) {
     case OUTLOOK_TOOL.draftEmail:
-      return draftEmail(outlookItem, params);
+      return draftEmail(outlookItem, params, draftId);
     case OUTLOOK_TOOL.moveEmailToComposer:
-      return moveEmailToComposer(outlookItem, params);
+      return moveEmailToComposer(outlookItem, params, draftId);
     case OUTLOOK_TOOL.saveEmailToDraft:
       return saveEmailToDraft(outlookItem);
   }
@@ -87,17 +94,21 @@ function writeAction(
 async function runWriteTool(
   name: Exclude<OutlookToolName, ReadToolName>,
   params: Record<string, unknown>,
+  draftId?: string,
 ): Promise<OutlookToolOutcome> {
   const outlookItem = currentOutlookItem();
   if (!outlookItem) return { status: 'failed', failure: 'noItem' };
   try {
     return {
       status: 'done',
-      action: await writeAction(name, outlookItem, params),
+      action: await writeAction(name, outlookItem, params, draftId),
     };
   } catch (error) {
     if (error instanceof NothingToSaveError) {
       return { status: 'failed', failure: 'nothingToSave' };
+    }
+    if (error instanceof NoComposeItemError) {
+      return { status: 'failed', failure: 'noComposeItem' };
     }
     if (error instanceof ItemChangedError) {
       return { status: 'failed', failure: 'itemChanged' };
@@ -121,7 +132,12 @@ export async function executeOutlookTool(
   params: Record<string, unknown>,
   dependencies: OutlookToolDependencies = {},
 ): Promise<OutlookToolOutcome> {
-  if (movedToAnotherItem(dependencies.expectedItemKey)) {
+  const { expectedItemKey, expectedReplySourceKey } = dependencies;
+  if (
+    movedToAnotherItem(expectedItemKey) ||
+    (expectedReplySourceKey !== undefined &&
+      currentOutlookReplySourceKey() !== expectedReplySourceKey)
+  ) {
     return isReadTool(name)
       ? {
           status: 'result',
@@ -137,21 +153,16 @@ export async function executeOutlookTool(
       result: await runReadTool(name, params, dependencies),
     };
   }
-  return runWriteTool(name, params);
+  return runWriteTool(name, params, dependencies.draftId);
 }
 
 /**
- * A draft for a mail being read opens Outlook's reply form, which only the
- * user starts; a run leaves it to them. Decided by the mail the run was
- * about, not the one open when it ends.
+ * A draft generated in read mode is only inserted on request in a reply.
+ * Use the mail the run started on even if the user has since switched items.
  */
 export function waitsForUser(
   name: OutlookToolName,
   itemKey: string | null,
 ): boolean {
-  return (
-    (name === OUTLOOK_TOOL.draftEmail ||
-      name === OUTLOOK_TOOL.moveEmailToComposer) &&
-    isReadItemKey(itemKey)
-  );
+  return isOutlookDraftTool(name) && isReadItemKey(itemKey);
 }

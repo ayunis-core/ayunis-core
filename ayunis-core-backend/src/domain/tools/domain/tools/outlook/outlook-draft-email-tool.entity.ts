@@ -27,7 +27,7 @@ export class OutlookDraftEmailTool extends Tool {
     super({
       name: ToolType.OUTLOOK_DRAFT_EMAIL,
       description:
-        'Put a reply draft into Outlook for the email that is currently open: while the user writes an email, the draft goes above their signature and the quoted email and replaces your previous draft there; while they read one, the chat shows the draft and the user opens an Outlook reply with it. Nothing is sent: the user reviews, edits and sends it in Outlook. Subject and body must be PLAIN TEXT only.',
+        'Put a reply draft into Outlook for the email that is currently open: while the user writes an email, the draft goes above their signature and the quoted email and replaces your previous draft there; while they read one, the chat shows the draft and the user can insert it after opening a reply in Outlook. Nothing is sent: the user reviews, edits and sends it in Outlook. Subject and body must be PLAIN TEXT only.',
       parameters: outlookDraftEmailToolParameters,
       type: ToolType.OUTLOOK_DRAFT_EMAIL,
     });

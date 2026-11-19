@@ -11,9 +11,11 @@ type Listener = (event: {
 }) => void;
 
 function setup({
+  legacyItemKey,
   existing = new Set(['thread-a', 'thread-b', 'thread-reply']),
   chatExists = (threadId: string) => Promise.resolve(existing.has(threadId)),
 }: {
+  legacyItemKey?: () => string | null;
   existing?: Set<string>;
   chatExists?: (threadId: string) => Promise<boolean>;
 } = {}) {
@@ -37,6 +39,7 @@ function setup({
       router: router as unknown as FollowedRouter,
       chats,
       currentItemKey: () => current,
+      legacyItemKey,
       watchItem: (listener) => {
         itemChanged = listener;
         return () => undefined;
@@ -74,6 +77,22 @@ function setup({
 
 describe('followOutlookItem', () => {
   beforeEach(() => window.localStorage.clear());
+
+  it('reopens an older EWS-keyed chat and makes it available to the matching reply pane', async () => {
+    const pane = setup({ legacyItemKey: () => 'read:ews-A' });
+    await pane.selectItem('read:internet:<A@example.org>');
+    pane.chats.remember('read:ews-A', 'thread-a');
+    pane.start();
+    await pane.flush();
+
+    expect(pane.router.navigate).toHaveBeenCalledWith({
+      to: '/chats/$threadId',
+      params: { threadId: 'thread-a' },
+    });
+    expect(pane.chats.chatFor('read:internet:<A@example.org>')).toBe(
+      'thread-a',
+    );
+  });
 
   it('opens a new chat for an email it has no chat for, and reopens the first email’s chat on return', async () => {
     const pane = setup();

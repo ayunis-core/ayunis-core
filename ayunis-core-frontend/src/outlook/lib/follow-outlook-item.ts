@@ -13,8 +13,12 @@ declare module '@tanstack/react-router' {
 interface FollowOutlookItemParams {
   router: FollowedRouter;
   chats: ItemChats;
-  /** The email the pane is on, or null for a draft or no selection. */
+  /** The selected email or the original email of a known reply. */
   currentItemKey: () => string | null;
+  /** Existing device mappings used the read item's EWS ID. */
+  legacyItemKey?: () => string | null;
+  /** A reply can reopen its original chat without reassigning that chat. */
+  canRememberChat?: (itemKey: string) => boolean;
   /** Calls the listener when the user selects another item; returns the unsubscribe. */
   watchItem: (listener: () => void) => () => void;
   /**
@@ -29,6 +33,7 @@ interface FollowOutlookItemParams {
 
 interface ChatOpening {
   itemKey: string;
+  legacyKey?: string | null;
   threadId: string | undefined;
   exists?: boolean;
   pendingCreates: number;
@@ -46,6 +51,8 @@ export function followOutlookItem({
   router,
   chats,
   currentItemKey,
+  legacyItemKey,
+  canRememberChat = () => true,
   watchItem,
   watchNewChats,
   chatExists,
@@ -53,31 +60,48 @@ export function followOutlookItem({
 }: FollowOutlookItemParams): () => void {
   let opening: ChatOpening | undefined;
 
+  function chatForItem(itemKey: string, legacyKey?: string | null) {
+    return (
+      chats.chatFor(itemKey) ??
+      (legacyKey ? chats.chatFor(legacyKey) : undefined)
+    );
+  }
+
   async function open(itemKey: string): Promise<void> {
-    const threadId = chats.chatFor(itemKey);
-    const attempt: ChatOpening = { itemKey, threadId, pendingCreates: 0 };
+    const legacyKey = legacyItemKey?.();
+    const threadId = chatForItem(itemKey, legacyKey);
+    const attempt: ChatOpening = {
+      itemKey,
+      legacyKey,
+      threadId,
+      pendingCreates: 0,
+    };
     opening = attempt;
     attempt.exists = threadId !== undefined && (await chatExists(threadId));
     showOpenedChat(attempt);
   }
 
   function showOpenedChat(attempt: ChatOpening): void {
-    const { itemKey, threadId, exists, pendingCreates } = attempt;
+    const { itemKey, legacyKey, threadId, exists, pendingCreates } = attempt;
     // A send started during the lookup gets first chance to open its chat.
     if (opening !== attempt || exists === undefined || pendingCreates > 0) {
       return;
     }
     opening = undefined;
-    // Another pane of the user remembered a newer chat for this email.
-    if (chats.chatFor(itemKey) !== threadId) return;
-    if (threadId !== undefined && !exists) chats.forget(itemKey);
-    // A reply started meanwhile still belongs to this email.
     if (contextItemKey() !== itemKey) return;
-    // The chat app's record does not survive a reload; the map does.
+    // Another pane of the user remembered a newer chat for this email.
+    if (chatForItem(itemKey, legacyKey) !== threadId) return;
     if (exists && threadId !== undefined) {
+      if (chats.chatFor(itemKey) !== threadId)
+        chats.remember(itemKey, threadId);
       rememberChatItem(threadId, itemKey);
       void router.navigate({ to: '/chats/$threadId', params: { threadId } });
       return;
+    }
+    if (threadId !== undefined) {
+      chats.forget(itemKey);
+      if (legacyKey && chats.chatFor(legacyKey) === threadId)
+        chats.forget(legacyKey);
     }
     // The email in the state makes each email's new chat its own location:
     // the router reuses the page for an identical one, and with it the text
@@ -124,7 +148,9 @@ export function followOutlookItem({
     const startedFor = startedChats.get(threadId);
     startedChats.delete(threadId);
     const itemKey = startedFor === undefined ? navigatedOn : startedFor;
-    if (itemKey) chats.remember(itemKey, threadId);
+    if (itemKey && (startedFor || canRememberChat(itemKey))) {
+      chats.remember(itemKey, threadId);
+    }
     // The chat app opens a chat it created even if the user selected another
     // email meanwhile; the pane goes back to that email's chat.
     const current = currentItemKey();
@@ -140,7 +166,7 @@ export function followOutlookItem({
     void open(itemKey);
   });
   const itemKey = currentItemKey();
-  if (itemKey && chats.chatFor(itemKey)) void open(itemKey);
+  if (itemKey && chatForItem(itemKey, legacyItemKey?.())) void open(itemKey);
 
   return () => {
     opening = undefined;
