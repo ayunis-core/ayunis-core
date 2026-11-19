@@ -381,6 +381,7 @@ function connectionRepository(connection = anEnabledSsoConnection()) {
     findByOrgIdWithDomainState: jest.fn(),
     findByEmailDomain: jest.fn(),
     findOwnerOrgIdsByEmailDomains: jest.fn(),
+    findZitadelOrgIds: jest.fn().mockResolvedValue([]),
     save: jest.fn(),
     updateConfigurationIfUnchanged: jest.fn(),
     setEnabled: jest.fn(),

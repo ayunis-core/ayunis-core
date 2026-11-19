@@ -33,6 +33,9 @@ describe(ProvisionOrgSsoUserUseCase.name, () => {
   const identities = {
     findByIssuerAndSubject: jest.fn(),
     existsByUserIdAndIssuer: jest.fn(),
+    findSubjectsByUserId: jest.fn().mockResolvedValue([]),
+    findSubjectsByOrgId: jest.fn().mockResolvedValue([]),
+    findLinkedSubjects: jest.fn().mockResolvedValue([]),
     create: jest.fn(),
   };
   const lock = { acquireIdentity: jest.fn(), acquireEmail: jest.fn() };

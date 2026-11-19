@@ -82,6 +82,7 @@ export function createMockOrgSsoConnectionsRepository(): jest.Mocked<OrgSsoConne
       }),
     findByEmailDomain: jest.fn().mockResolvedValue(null),
     findOwnerOrgIdsByEmailDomains: jest.fn().mockResolvedValue([]),
+    findZitadelOrgIds: jest.fn().mockResolvedValue([]),
     save: jest
       .fn()
       .mockImplementation((connection) => Promise.resolve(connection)),

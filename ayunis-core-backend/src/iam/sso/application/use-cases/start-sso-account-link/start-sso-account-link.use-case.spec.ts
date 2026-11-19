@@ -39,6 +39,9 @@ describe(StartSsoAccountLinkUseCase.name, () => {
         connections,
         {
           existsByUserIdAndIssuer: jest.fn().mockResolvedValue(false),
+          findSubjectsByUserId: jest.fn().mockResolvedValue([]),
+          findSubjectsByOrgId: jest.fn().mockResolvedValue([]),
+          findLinkedSubjects: jest.fn().mockResolvedValue([]),
           findByIssuerAndSubject: jest.fn(),
           create: jest.fn(),
         },
@@ -87,6 +90,9 @@ describe(StartSsoAccountLinkUseCase.name, () => {
         connections,
         {
           existsByUserIdAndIssuer: jest.fn().mockResolvedValue(false),
+          findSubjectsByUserId: jest.fn().mockResolvedValue([]),
+          findSubjectsByOrgId: jest.fn().mockResolvedValue([]),
+          findLinkedSubjects: jest.fn().mockResolvedValue([]),
           findByIssuerAndSubject: jest.fn(),
           create: jest.fn(),
         },
