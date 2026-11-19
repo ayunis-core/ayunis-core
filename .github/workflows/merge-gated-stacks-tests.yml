@@ -1,0 +1,31 @@
+name: Merge Gated Stacks Tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/merge-gated-stacks*'
+      - 'scripts/fixtures/merge-gated-stacks/**'
+      - '.github/workflows/merge-gated-stacks*.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/merge-gated-stacks*'
+      - 'scripts/fixtures/merge-gated-stacks/**'
+      - '.github/workflows/merge-gated-stacks*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+
+      - name: Test merge readiness and reporting
+        run: node --test scripts/merge-gated-stacks.test.mjs
