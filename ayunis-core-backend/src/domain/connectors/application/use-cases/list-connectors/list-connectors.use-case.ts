@@ -24,13 +24,17 @@ export class ListConnectorsUseCase {
     this.logger.log({ orgId }, 'execute');
 
     const connectors = await this.connectorsRepository.findAllByOrgId(orgId);
-    const statusByProduct = new Map(
-      connectors.map((connector) => [connector.product, connector.status]),
+    const byProduct = new Map(
+      connectors.map((connector) => [connector.product, connector]),
     );
 
-    return Object.values(ConnectorProduct).map((product) => ({
-      product,
-      status: statusByProduct.get(product) ?? ConnectorStatus.NOT_SET_UP,
-    }));
+    return Object.values(ConnectorProduct).map((product) => {
+      const connector = byProduct.get(product);
+      return {
+        product,
+        status: connector?.status ?? ConnectorStatus.NOT_SET_UP,
+        connectorId: connector?.id ?? null,
+      };
+    });
   }
 }

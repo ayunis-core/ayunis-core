@@ -11,14 +11,15 @@ import {
   SyncedLocationAlreadyExistsError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { AddSyncedLocationCommand } from './add-synced-location.command';
 
 /**
  * Adds a location to a knowledge base the current user may change, through
- * the organization's connector for the product. Nothing is listed yet; the
- * first sync does that.
+ * the organization's connector for the product, and queues its first sync,
+ * which lists it.
  */
 @Injectable()
 export class AddSyncedLocationUseCase {
@@ -28,6 +29,7 @@ export class AddSyncedLocationUseCase {
     private readonly repository: SyncedLocationsRepository,
     private readonly writeAccess: AssertKnowledgeBaseWriteAccessUseCase,
     private readonly findConnector: FindSetUpConnectorUseCase,
+    private readonly runs: SyncRunsPort,
     private readonly configService: ConfigService,
   ) {}
 
@@ -53,6 +55,15 @@ export class AddSyncedLocationUseCase {
     });
     if (!(await this.repository.create(location)))
       throw new SyncedLocationAlreadyExistsError(knowledgeBase.id);
+    await this.runs
+      .enqueue([{ orgId: location.orgId, locationId: location.id }])
+      .catch((error: unknown) =>
+        // The sweep syncs it within a minute all the same: it is due.
+        this.logger.warn(
+          { locationId: location.id, error },
+          'Could not queue the first sync',
+        ),
+      );
     return location;
   }
 }

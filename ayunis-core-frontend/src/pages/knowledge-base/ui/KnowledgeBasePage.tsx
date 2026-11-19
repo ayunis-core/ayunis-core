@@ -25,6 +25,7 @@ import { useCallback } from 'react';
 import { KnowledgeBasePropertiesCard } from '@/widgets/resource-properties-card';
 import KnowledgeBaseDocumentsCard from './KnowledgeBaseDocumentsCard';
 import { KnowledgeBaseActivationToggle } from '@/widgets/knowledge-base-activation-toggle';
+import { KnowledgeBaseSyncedLocationsCard } from '@/widgets/knowledge-base-synced-locations';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   knowledgeBasesControllerUpdate,
@@ -131,6 +132,10 @@ export function KnowledgeBasePage({
           );
           await router.invalidate();
         }}
+      />
+      <KnowledgeBaseSyncedLocationsCard
+        knowledgeBaseId={knowledgeBase.id}
+        disabled={isReadOnly || !canManageKb}
       />
       <OnboardingTourTarget name={TOUR_TARGET.addDocuments}>
         <KnowledgeBaseDocumentsCard

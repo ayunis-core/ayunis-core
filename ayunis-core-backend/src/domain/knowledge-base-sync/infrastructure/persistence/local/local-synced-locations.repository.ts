@@ -4,6 +4,10 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { EntityManager, In, IsNull, Not, Repository } from 'typeorm';
+import type {
+  SkippedSyncedFile,
+  SyncedFilesSummary,
+} from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
@@ -17,6 +21,21 @@ import { SyncedLocationRecord } from './schema/synced-location.record';
 
 // Each row binds 13 parameters; this keeps a batch far below Postgres' cap.
 const FILE_BATCH_SIZE = 1000;
+
+interface FileCountRow {
+  locationId: UUID;
+  documents: string;
+  failed: string;
+  awaitingCapacity: string;
+  skippedCount: string;
+}
+
+interface SkippedFileRow {
+  locationId: UUID;
+  name: string;
+  path: string;
+  skipReason: SyncedFileSkipReason;
+}
 
 @Injectable()
 export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
@@ -58,6 +77,102 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
   async findById(id: UUID): Promise<SyncedLocation | null> {
     const record = await this.locations.findOne({ where: { id } });
     return record ? this.locationMapper.toDomain(record) : null;
+  }
+
+  async findByKnowledgeBaseId(
+    knowledgeBaseId: UUID,
+  ): Promise<SyncedLocation[]> {
+    const records = await this.locations.find({
+      where: { knowledgeBaseId },
+      order: { createdAt: 'ASC', id: 'ASC' },
+    });
+    return records.map((record) => this.locationMapper.toDomain(record));
+  }
+
+  async summarizeFiles(
+    locationIds: UUID[],
+    skippedLimit: number,
+  ): Promise<Map<UUID, SyncedFilesSummary>> {
+    if (locationIds.length === 0) return new Map();
+    const [counts, skipped] = await Promise.all([
+      this.countFiles(locationIds),
+      this.findSkippedFiles(locationIds, skippedLimit),
+    ]);
+    return new Map(
+      counts.map((count) => [
+        count.locationId,
+        {
+          documents: Number(count.documents),
+          failed: Number(count.failed),
+          awaitingCapacity: Number(count.awaitingCapacity),
+          skippedCount: Number(count.skippedCount),
+          skipped: skipped.get(count.locationId) ?? [],
+        },
+      ]),
+    );
+  }
+
+  private countFiles(locationIds: UUID[]): Promise<FileCountRow[]> {
+    return this.files
+      .createQueryBuilder('file')
+      .select('file."locationId"', 'locationId')
+      .addSelect(
+        'COUNT(*) FILTER (WHERE file."sourceId" IS NOT NULL)',
+        'documents',
+      )
+      .addSelect(
+        'COUNT(*) FILTER (WHERE file."sourceId" IS NOT NULL AND file."processingErrorCode" IS NOT NULL)',
+        'failed',
+      )
+      .addSelect(
+        'COUNT(*) FILTER (WHERE file.state = :awaitingCapacity)',
+        'awaitingCapacity',
+      )
+      .addSelect(
+        'COUNT(*) FILTER (WHERE file.state = :skipped)',
+        'skippedCount',
+      )
+      .where({ locationId: In(locationIds) })
+      .groupBy('file."locationId"')
+      .setParameters({
+        awaitingCapacity: SyncedFileState.AWAITING_CAPACITY,
+        skipped: SyncedFileState.SKIPPED,
+      })
+      .getRawMany<FileCountRow>();
+  }
+
+  private async findSkippedFiles(
+    locationIds: UUID[],
+    limit: number,
+  ): Promise<Map<UUID, SkippedSyncedFile[]>> {
+    const ranked = this.files
+      .createQueryBuilder('file')
+      .select('file."locationId"', 'locationId')
+      .addSelect('file.name', 'name')
+      .addSelect('file.path', 'path')
+      .addSelect('file."skipReason"', 'skipReason')
+      .addSelect(
+        'ROW_NUMBER() OVER (PARTITION BY file."locationId" ORDER BY file.path, file.id)',
+        'rank',
+      )
+      .where('file."locationId" IN (:...locationIds)', { locationIds })
+      .andWhere('file.state = :skipped', { skipped: SyncedFileState.SKIPPED });
+    const rows = await this.manager
+      .createQueryBuilder()
+      .select(['ranked."locationId"', 'ranked.name', 'ranked.path'])
+      .addSelect('ranked."skipReason"')
+      .from(`(${ranked.getQuery()})`, 'ranked')
+      .where('ranked.rank <= :limit', { limit })
+      .orderBy('ranked.rank')
+      .setParameters(ranked.getParameters())
+      .getRawMany<SkippedFileRow>();
+    const byLocation = new Map<UUID, SkippedSyncedFile[]>();
+    for (const row of rows) {
+      const files = byLocation.get(row.locationId) ?? [];
+      files.push({ name: row.name, path: row.path, reason: row.skipReason });
+      byLocation.set(row.locationId, files);
+    }
+    return byLocation;
   }
 
   async lockById(id: UUID): Promise<SyncedLocation | null> {

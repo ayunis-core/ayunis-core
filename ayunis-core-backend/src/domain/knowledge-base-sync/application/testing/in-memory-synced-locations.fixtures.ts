@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { SyncedFilesSummary } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
@@ -24,6 +25,48 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
 
   findById(id: UUID): Promise<SyncedLocation | null> {
     return Promise.resolve(this.locations.get(id) ?? null);
+  }
+
+  findByKnowledgeBaseId(knowledgeBaseId: UUID): Promise<SyncedLocation[]> {
+    return Promise.resolve(
+      [...this.locations.values()]
+        .filter((location) => location.knowledgeBaseId === knowledgeBaseId)
+        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
+    );
+  }
+
+  summarizeFiles(
+    locationIds: UUID[],
+    skippedLimit: number,
+  ): Promise<Map<UUID, SyncedFilesSummary>> {
+    const summaries = new Map<UUID, SyncedFilesSummary>();
+    for (const locationId of locationIds) {
+      const files = [...this.files.values()].filter(
+        (file) => file.locationId === locationId,
+      );
+      if (files.length === 0) continue;
+      const skipped = files
+        .filter((file) => file.state === SyncedFileState.SKIPPED)
+        .sort((a, b) => a.path.localeCompare(b.path));
+      summaries.set(locationId, {
+        documents: files.filter((file) => file.sourceId).length,
+        failed: files.filter(
+          (file) => file.sourceId && file.processingErrorCode,
+        ).length,
+        awaitingCapacity: files.filter(
+          (file) => file.state === SyncedFileState.AWAITING_CAPACITY,
+        ).length,
+        skippedCount: skipped.length,
+        skipped: skipped
+          .slice(0, skippedLimit)
+          .map(({ name, path, skipReason }) => ({
+            name,
+            path,
+            reason: skipReason!,
+          })),
+      });
+    }
+    return Promise.resolve(summaries);
   }
 
   lockById(id: UUID): Promise<SyncedLocation | null> {

@@ -65,7 +65,10 @@ describe('RemoveSyncedLocationUseCase', () => {
   it("removes the location with its files and documents, leaving the knowledge base's other documents", async () => {
     const harness = await syncedHarness();
 
-    await removal(harness).execute({ locationId: harness.location.id });
+    await removal(harness).execute({
+      knowledgeBaseId: KNOWLEDGE_BASE_ID,
+      locationId: harness.location.id,
+    });
 
     expect(harness.repository.locations.size).toBe(0);
     expect(harness.repository.files.size).toBe(0);
@@ -75,7 +78,10 @@ describe('RemoveSyncedLocationUseCase', () => {
   it('removes its queued sync and the queued processing of its files', async () => {
     const harness = await syncedHarness();
 
-    await removal(harness).execute({ locationId: harness.location.id });
+    await removal(harness).execute({
+      knowledgeBaseId: KNOWLEDGE_BASE_ID,
+      locationId: harness.location.id,
+    });
 
     expect(removedRuns).toEqual([harness.location.id]);
     expect(removedJobs).toEqual(
@@ -91,6 +97,7 @@ describe('RemoveSyncedLocationUseCase', () => {
 
     await expect(
       removal(harness, { writable: false }).execute({
+        knowledgeBaseId: KNOWLEDGE_BASE_ID,
         locationId: harness.location.id,
       }),
     ).rejects.toThrow(KnowledgeBaseNotFoundError);
@@ -103,9 +110,22 @@ describe('RemoveSyncedLocationUseCase', () => {
 
     await expect(
       removal(harness, { orgId: randomUUID() }).execute({
+        knowledgeBaseId: KNOWLEDGE_BASE_ID,
         locationId: harness.location.id,
       }),
     ).rejects.toThrow(SyncedLocationNotFoundError);
     expect(harness.knowledgeBase.documents.size).toBe(3);
+  });
+
+  it('reports a location as not found through another knowledge base', async () => {
+    const harness = await syncedHarness();
+
+    await expect(
+      removal(harness).execute({
+        knowledgeBaseId: randomUUID(),
+        locationId: harness.location.id,
+      }),
+    ).rejects.toThrow(SyncedLocationNotFoundError);
+    expect(harness.repository.locations.size).toBe(1);
   });
 });

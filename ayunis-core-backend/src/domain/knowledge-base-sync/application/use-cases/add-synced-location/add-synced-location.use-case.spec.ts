@@ -12,6 +12,7 @@ import {
   KNOWLEDGE_BASE_ID,
   ORG_ID,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
+import type { SyncRunRequest } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { AddSyncedLocationCommand } from './add-synced-location.command';
 import { AddSyncedLocationUseCase } from './add-synced-location.use-case';
 
@@ -30,6 +31,7 @@ describe('AddSyncedLocationUseCase', () => {
     } = {},
   ) {
     const repository = new InMemorySyncedLocationsRepository();
+    const queued: SyncRunRequest[] = [];
     const useCase = new AddSyncedLocationUseCase(
       repository,
       {
@@ -46,13 +48,19 @@ describe('AddSyncedLocationUseCase', () => {
               )
             : Promise.resolve({ id: CONNECTOR_ID }),
       } as never,
+      {
+        enqueue: (runs: SyncRunRequest[]) => {
+          queued.push(...runs);
+          return Promise.resolve();
+        },
+      } as never,
       featureConfig(options.connectorsEnabled ?? true),
     );
-    return { repository, useCase };
+    return { repository, useCase, queued };
   }
 
-  it("adds the location through the organization's connector, once", async () => {
-    const { repository, useCase } = adding();
+  it("adds the location through the organization's connector, once, and queues its first sync", async () => {
+    const { repository, useCase, queued } = adding();
 
     const location = await useCase.execute(command);
 
@@ -67,6 +75,7 @@ describe('AddSyncedLocationUseCase', () => {
       SyncedLocationAlreadyExistsError,
     );
     expect(repository.locations.size).toBe(1);
+    expect(queued).toEqual([{ orgId: ORG_ID, locationId: location.id }]);
   });
 
   it.each([

@@ -184,6 +184,105 @@
         "spreadsheetTooLarge": "Die Tabelle ist zu groß. Entfernen Sie ungenutzte Zeilen und Spalten oder teilen Sie sie in kleinere Dateien auf und laden Sie sie erneut hoch.",
         "unavailable": "Der Dokumentenverarbeitungsdienst ist vorübergehend nicht verfügbar. Laden Sie die Datei später erneut hoch."
       }
+    },
+    "syncedLocations": {
+      "title": "Synchronisierte Quellen",
+      "description": "Dateien aus SharePoint, stündlich aktualisiert. Alle mit Zugriff auf diese Wissenssammlung sehen sie – gemäß ihrer Freigabe in Ayunis, nicht gemäß den Berechtigungen in SharePoint.",
+      "addSource": "Quelle hinzufügen",
+      "sharePoint": "SharePoint",
+      "empty": "Noch keine synchronisierten Quellen. Fügen Sie eine SharePoint-Website, -Bibliothek oder einen Ordner hinzu, um die Dateien darin in dieser Wissenssammlung aktuell zu halten.",
+      "loadError": "Synchronisierte Quellen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+      "retry": "Erneut versuchen",
+      "openInSharePoint": "In SharePoint öffnen",
+      "syncNow": "Jetzt synchronisieren",
+      "remove": "Entfernen",
+      "accessNote": "Alle mit Zugriff auf diese Wissenssammlung sehen die synchronisierten Dateien – gemäß ihrer Freigabe in Ayunis, nicht gemäß den Berechtigungen in SharePoint.",
+      "status": {
+        "syncing": "Wird synchronisiert …",
+        "waiting": "Wartet auf die erste Synchronisierung",
+        "synced": "Zuletzt synchronisiert {{time}}",
+        "paused": "Pausiert, weil ein Dienst nicht erreichbar war. Nächster Versuch {{time}}",
+        "noLongerAccessible": "Für Ayunis nicht mehr zugänglich. Die Dokumente bleiben, bis Sie die Quelle entfernen."
+      },
+      "documents_one": "{{count}} Dokument",
+      "documents_other": "{{count}} Dokumente",
+      "failed_one": "{{count}} konnte nicht verarbeitet werden",
+      "failed_other": "{{count}} konnten nicht verarbeitet werden",
+      "limitReached_one": "{{count}} Datei nicht synchronisiert, Limit erreicht",
+      "limitReached_other": "{{count}} Dateien nicht synchronisiert, Limit erreicht",
+      "skipped_one": "{{count}} Datei ausgelassen",
+      "skipped_other": "{{count}} Dateien ausgelassen",
+      "skippedMore_one": "und {{count}} weitere",
+      "skippedMore_other": "und {{count}} weitere",
+      "skipReasons": {
+        "unsupported_type": "Dateityp nicht unterstützt",
+        "too_large": "zu groß",
+        "encrypted": "mit einer Vertraulichkeitsbezeichnung verschlüsselt",
+        "removed_after_failure": "nach fehlgeschlagener Verarbeitung entfernt; wird erneut synchronisiert, sobald sie sich ändert"
+      },
+      "dialog": {
+        "title": "SharePoint-Quelle hinzufügen",
+        "description": "Fügen Sie den Link einer SharePoint-Website, Dokumentbibliothek oder eines Ordners ein. Alle Dateien darin werden in diese Wissenssammlung synchronisiert.",
+        "urlLabel": "SharePoint-Link",
+        "urlPlaceholder": "https://…sharepoint.com/sites/…",
+        "check": "Prüfen",
+        "add": "Hinzufügen",
+        "cancel": "Abbrechen"
+      },
+      "resolution": {
+        "found": {
+          "site": "Website „{{name}}“",
+          "library": "Bibliothek „{{name}}“",
+          "folder": "Ordner „{{name}}“",
+          "description": "Alle Dateien darin werden synchronisiert und aktuell gehalten."
+        },
+        "not_granted": {
+          "title": "Noch nicht für Ayunis freigegeben",
+          "description": "Leiten Sie diesen Befehl an Ihre Microsoft-365-Administration weiter. Sobald er ausgeführt wurde, prüfen Sie den Link erneut."
+        },
+        "not_found_or_not_granted": {
+          "title": "Nicht gefunden oder nicht für Ayunis freigegeben",
+          "description": "Prüfen Sie den Link. Wenn es den Speicherort gibt, leiten Sie diesen Befehl an Ihre Microsoft-365-Administration weiter und prüfen Sie den Link danach erneut."
+        },
+        "not_found": {
+          "title": "Nicht gefunden",
+          "description": "Diesen Speicherort gibt es in SharePoint nicht. Prüfen Sie den Link."
+        },
+        "unsupported_url": {
+          "title": "Keine SharePoint-Website, -Bibliothek und kein Ordner",
+          "description": "Kopieren Sie die Adresse einer Website, Dokumentbibliothek oder eines Ordners aus dem Browser. Links auf Dateien und Freigabelinks funktionieren nicht."
+        },
+        "commandLabel": "Befehl"
+      },
+      "validation": {
+        "url": {
+          "isNotEmpty": "Geben Sie einen SharePoint-Link ein",
+          "maxLength": "Der Link darf höchstens 2048 Zeichen lang sein",
+          "invalid": "Ungültiger Link"
+        },
+        "invalid": "Ungültige Eingabe"
+      },
+      "addSuccess": "SharePoint-Quelle hinzugefügt. Die Dateien werden synchronisiert.",
+      "syncNowSuccess": "Synchronisierung gestartet",
+      "removeSuccess": "Quelle entfernt",
+      "confirmRemove": {
+        "title": "Synchronisierte Quelle entfernen",
+        "description_one": "„{{name}}“ und das zugehörige Dokument werden aus dieser Wissenssammlung entfernt. In SharePoint ändert sich nichts.",
+        "description_other": "„{{name}}“ und die {{count}} zugehörigen Dokumente werden aus dieser Wissenssammlung entfernt. In SharePoint ändert sich nichts.",
+        "confirmText": "Entfernen",
+        "cancelText": "Abbrechen"
+      },
+      "errors": {
+        "resolve": "Der Link konnte nicht geprüft werden",
+        "notSetUp": "Microsoft 365 ist nicht verbunden. Bitten Sie Ihre Administration, es einzurichten.",
+        "connectionFailed": "Die Verbindung zu Microsoft 365 funktioniert nicht. Bitten Sie Ihre Administration, sie in den Einstellungen zu testen.",
+        "microsoftUnavailable": "Microsoft 365 ist gerade nicht erreichbar. Versuchen Sie es in einigen Minuten erneut.",
+        "alreadyExists": "Diese Wissenssammlung synchronisiert diese Quelle bereits",
+        "add": "Die Quelle konnte nicht hinzugefügt werden",
+        "syncNow": "Die Synchronisierung konnte nicht gestartet werden",
+        "remove": "Die Quelle konnte nicht entfernt werden",
+        "notFound": "Diese Quelle gibt es nicht mehr"
+      }
     }
   },
   "sources": {
