@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FailedSourcesDeletedEvent } from 'src/domain/sources/application/events/failed-sources-deleted.event';
 import { SourceRepository } from 'src/domain/sources/application/ports/source.repository';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
@@ -20,6 +22,7 @@ export class DeleteSourceUseCase {
     private readonly sourceRepository: SourceRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: DeleteSourceCommand): Promise<void> {
@@ -76,6 +79,11 @@ export class DeleteSourceUseCase {
       new DeleteContentCommand({ documentId: command.sourceId }),
     );
     await this.sourceRepository.delete(command.sourceId);
+    if (source?.status === SourceStatus.FAILED)
+      await this.eventEmitter.emitAsync(
+        FailedSourcesDeletedEvent.EVENT_NAME,
+        new FailedSourcesDeletedEvent([command.sourceId]),
+      );
     return source?.storageKey ?? null;
   }
 }

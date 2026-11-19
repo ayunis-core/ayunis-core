@@ -13,12 +13,16 @@ import { DataSourceProcessingConsumer } from 'src/domain/sources/infrastructure/
 import { UrlCrawlConsumer } from 'src/domain/sources/infrastructure/queue/url-crawl.consumer';
 import { SourceReindexModule } from 'src/domain/sources/infrastructure/queue/source-reindex.module';
 import { SourceReindexConsumer } from 'src/domain/sources/infrastructure/queue/source-reindex.consumer';
+import { KnowledgeBaseSyncModule } from 'src/domain/knowledge-base-sync/knowledge-base-sync.module';
+import { KnowledgeBaseSyncQueueModule } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync-queue.module';
+import { SyncedFileProcessingConsumer } from 'src/domain/knowledge-base-sync/infrastructure/queue/synced-file-processing.consumer';
 
 const CONSUMERS = [
   DocumentProcessingConsumer,
   DataSourceProcessingConsumer,
   UrlCrawlConsumer,
   SourceReindexConsumer,
+  SyncedFileProcessingConsumer,
 ];
 
 function metadata(module: object, key: 'providers' | 'imports'): unknown[] {
@@ -33,6 +37,8 @@ describe('ingestion consumer ownership', () => {
       UrlCrawlModule,
       SourceReindexModule,
       SourcesModule,
+      KnowledgeBaseSyncQueueModule,
+      KnowledgeBaseSyncModule,
     ]) {
       const providers = metadata(module, 'providers');
       expect(CONSUMERS.some((consumer) => providers.includes(consumer))).toBe(

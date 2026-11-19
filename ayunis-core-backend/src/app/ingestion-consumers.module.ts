@@ -24,6 +24,7 @@ import { DocumentProcessingModule } from 'src/domain/sources/infrastructure/queu
 import { DataSourceProcessingModule } from 'src/domain/sources/infrastructure/queue/data-source-processing.module';
 import { UrlCrawlModule } from 'src/domain/sources/infrastructure/queue/url-crawl.module';
 import { DocumentProcessingConsumer } from 'src/domain/sources/infrastructure/queue/document-processing.consumer';
+import { DocumentProcessingPipeline } from 'src/domain/sources/infrastructure/queue/document-processing.pipeline';
 import { DataSourceProcessingConsumer } from 'src/domain/sources/infrastructure/queue/data-source-processing.consumer';
 import { UrlCrawlConsumer } from 'src/domain/sources/infrastructure/queue/url-crawl.consumer';
 import { DOCUMENT_PROCESSING_QUEUE } from 'src/domain/sources/infrastructure/queue/document-processing.constants';
@@ -35,6 +36,9 @@ import { SOURCE_REINDEX_QUEUE } from 'src/domain/sources/infrastructure/queue/so
 import { SourceReindexScheduler } from 'src/domain/sources/application/services/source-reindex-scheduler.service';
 import { SourceReindexer } from 'src/domain/sources/application/services/source-reindexer.service';
 import { ModelsModule } from 'src/domain/models/models.module';
+import { KnowledgeBaseSyncModule } from 'src/domain/knowledge-base-sync/knowledge-base-sync.module';
+import { SyncedFileProcessingConsumer } from 'src/domain/knowledge-base-sync/infrastructure/queue/synced-file-processing.consumer';
+import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
 
 /** The queues this module's consumers serve; a worker's health check requires them all. */
 export const INGESTION_QUEUES = [
@@ -42,6 +46,7 @@ export const INGESTION_QUEUES = [
   DATA_SOURCE_PROCESSING_QUEUE,
   URL_CRAWL_QUEUE,
   SOURCE_REINDEX_QUEUE,
+  KNOWLEDGE_BASE_SYNC_QUEUE,
 ] as const;
 
 /**
@@ -70,6 +75,8 @@ export const INGESTION_QUEUES = [
     RecordingSummaryTriggerModule,
     // Completed sources are checked against the org's current embedding model.
     ModelsModule,
+    // Synced files are read through connectors and settled by the sync engine.
+    KnowledgeBaseSyncModule,
   ],
   providers: [
     StoredSourceFileService,
@@ -81,12 +88,14 @@ export const INGESTION_QUEUES = [
     MarkSourceFailedUseCase,
     SourceTranscriptContentService,
     RecordingTranscriptExtractor,
+    DocumentProcessingPipeline,
     DocumentProcessingConsumer,
     DataSourceProcessingConsumer,
     UrlCrawlConsumer,
     SourceReindexScheduler,
     SourceReindexer,
     SourceReindexConsumer,
+    SyncedFileProcessingConsumer,
   ],
 })
 export class IngestionConsumersModule {}

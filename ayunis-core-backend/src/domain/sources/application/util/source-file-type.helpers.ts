@@ -1,4 +1,9 @@
-import { MIME_TYPES } from 'src/common/util/file-type';
+import {
+  detectFileType,
+  getCanonicalMimeType,
+  MIME_TYPES,
+} from 'src/common/util/file-type';
+import { UnsupportedSourceFileTypeError } from 'src/domain/sources/application/sources.errors';
 import { FileType } from 'src/domain/sources/domain/source-type.enum';
 
 /**
@@ -32,4 +37,12 @@ const FILE_TYPE_BY_MIME_TYPE: Record<string, FileType> = {
 /** Returns undefined for MIME types that are not a text/file source. */
 export function fileTypeFromMimeType(mimeType: string): FileType | undefined {
   return FILE_TYPE_BY_MIME_TYPE[mimeType];
+}
+
+/** The {@link FileType} of a file known only by its name. */
+export function fileTypeFromName(name: string): FileType {
+  const mimeType = getCanonicalMimeType(detectFileType('', name));
+  const fileType = mimeType ? fileTypeFromMimeType(mimeType) : undefined;
+  if (!fileType) throw new UnsupportedSourceFileTypeError(name);
+  return fileType;
 }

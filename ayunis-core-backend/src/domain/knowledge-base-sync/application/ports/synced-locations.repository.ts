@@ -32,6 +32,18 @@ export abstract class SyncedLocationsRepository {
   /** Locks the location's files until the transaction ends. */
   abstract lockFiles(locationId: UUID): Promise<SyncedFile[]>;
 
+  abstract findFileById(id: UUID): Promise<SyncedFile | null>;
+
+  /** Locks one file until the transaction ends; `null` once removed. */
+  abstract lockFile(id: UUID): Promise<SyncedFile | null>;
+
+  /**
+   * Skips the files whose document, one of `sourceIds`, a user removed after
+   * it failed at their current version, until their version changes. Runs in
+   * the removal's transaction, after the document is gone.
+   */
+  abstract skipRemovedAfterFailure(sourceIds: UUID[]): Promise<void>;
+
   /** Inserts new files and overwrites existing ones. */
   abstract saveFiles(files: SyncedFile[]): Promise<void>;
 

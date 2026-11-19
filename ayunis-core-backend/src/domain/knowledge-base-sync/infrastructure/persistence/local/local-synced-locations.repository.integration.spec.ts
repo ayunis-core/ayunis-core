@@ -10,6 +10,7 @@ import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/Postgres
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { CreateKnowledgeBaseSyncTables1795019918718 } from 'src/db/migrations/1795019918718-CreateKnowledgeBaseSyncTables';
+import { AddSyncedFileProcessing1795033122250 } from 'src/db/migrations/1795033122250-AddSyncedFileProcessing';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
@@ -65,7 +66,9 @@ const fileSchema = new EntitySchema<SyncedFileRecord>({
     state: { type: String },
     skipReason: { type: String, nullable: true },
     sourceId: { type: String, nullable: true },
+    lastSourceId: { type: String, nullable: true },
     documentVersion: { type: String, nullable: true },
+    processingErrorCode: { type: String, nullable: true },
   },
 });
 
@@ -103,11 +106,13 @@ describe('LocalSyncedLocationsRepository', () => {
     await setup.query(
       `ALTER TABLE "sources" ADD "knowledgeBaseId" varchar REFERENCES "knowledge_bases" ON DELETE CASCADE`,
     );
-    // The migration names its enum types in "public"; keep them in the schema.
-    await new CreateKnowledgeBaseSyncTables1795019918718().up({
+    // The migrations name their enum types in "public"; keep them in the schema.
+    const inSchema = {
       query: (sql: string) =>
         setup.query(sql.replaceAll('"public".', `"${schema}".`)),
-    } as QueryRunner);
+    } as QueryRunner;
+    await new CreateKnowledgeBaseSyncTables1795019918718().up(inSchema);
+    await new AddSyncedFileProcessing1795033122250().up(inSchema);
     await setup.query('SET search_path TO public');
     await setup.release();
     repository = new LocalSyncedLocationsRepository(
@@ -210,6 +215,39 @@ describe('LocalSyncedLocationsRepository', () => {
         sourceId: null,
       }),
     ]);
+  });
+
+  it('skips a file whose failed document a user removed, but neither another file nor one with a newer version pending', async () => {
+    const location = await aLocation();
+    const failed = await anImportedFile(location);
+    const other = await anImportedFile(location);
+    const changed = await anImportedFile(location);
+    for (const file of [failed, other, changed]) {
+      file.lastSourceId = file.sourceId;
+      file.recordProcessed(file.version, null);
+    }
+    changed.version = '"{2},1"';
+    await repository.saveFiles([failed, other, changed]);
+    for (const file of [failed, other, changed])
+      await db.query(`DELETE FROM "${schema}"."sources" WHERE id = $1`, [
+        file.sourceId,
+      ]);
+
+    await repository.skipRemovedAfterFailure([
+      failed.lastSourceId!,
+      changed.lastSourceId!,
+    ]);
+
+    const states = new Map(
+      (await filesOf(location)).map((file) => [file.id, file.state]),
+    );
+    expect(states).toEqual(
+      new Map([
+        [failed.id, SyncedFileState.SKIPPED],
+        [other.id, SyncedFileState.IMPORTED],
+        [changed.id, SyncedFileState.IMPORTED],
+      ]),
+    );
   });
 
   it('rejects a skipped file without its reason', async () => {
@@ -326,12 +364,14 @@ describe('LocalSyncedLocationsRepository', () => {
     async function withLocked(
       location: SyncedLocation,
       work: (manager: EntityManager) => Promise<void>,
+      lock: (taken: SyncedLocationLocks) => Promise<unknown> = (taken) =>
+        taken.lock(location),
     ) {
       const runner = await begin();
       await commit(
         runner,
         transactions.run(runner.manager, async () => {
-          await locks().lock(location);
+          await lock(locks());
           await work(runner.manager);
         }),
       );
@@ -349,6 +389,31 @@ describe('LocalSyncedLocationsRepository', () => {
         ]));
         await manager.query(deleteDocument, [file.sourceId]);
       });
+
+      await expect(userDeletion).resolves.toBeUndefined();
+    });
+
+    it('lets a user delete a document while its replacement takes its place, without a deadlock', async () => {
+      const location = await aLocation();
+      const file = await anImportedFile(location);
+      const replacement = await insert('sources');
+      const deleteDocument = `DELETE FROM "sources" WHERE id = $1`;
+      let userDeletion: Promise<void> | undefined;
+
+      await withLocked(
+        location,
+        async (manager) => {
+          ({ done: userDeletion } = await waitingForALock(deleteDocument, [
+            file.sourceId,
+          ]));
+          await manager.query(deleteDocument, [file.sourceId]);
+          await manager.query(
+            `UPDATE "knowledge_base_synced_files" SET "sourceId" = $1 WHERE id = $2`,
+            [replacement, file.id],
+          );
+        },
+        (taken) => taken.lockFile(location, file.id, [replacement]),
+      );
 
       await expect(userDeletion).resolves.toBeUndefined();
     });

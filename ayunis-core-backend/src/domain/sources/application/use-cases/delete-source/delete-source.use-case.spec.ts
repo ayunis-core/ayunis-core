@@ -11,6 +11,8 @@ jest.mock('@nestjs-cls/transactional', () => ({
 
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FailedSourcesDeletedEvent } from 'src/domain/sources/application/events/failed-sources-deleted.event';
 import { DeleteSourceUseCase } from './delete-source.use-case';
 import { DeleteSourceCommand } from './delete-source.command';
 import { DeleteContentUseCase } from 'src/domain/rag/indexers/application/use-cases/delete-content/delete-content.use-case';
@@ -49,6 +51,7 @@ describe('DeleteSourceUseCase', () => {
   let mockCleanupSourceProcessingUseCase: Record<string, jest.Mock>;
   let mockDeleteContentUseCase: Record<string, jest.Mock>;
   const mockTxHost = { isTransactionActive: jest.fn().mockReturnValue(false) };
+  const mockEvents = { emitAsync: jest.fn().mockResolvedValue([]) };
 
   const orgId = '123e4567-e89b-12d3-a456-426614174099' as UUID;
 
@@ -74,6 +77,7 @@ describe('DeleteSourceUseCase', () => {
         },
         { provide: TransactionHost, useValue: mockTxHost },
         { provide: DeleteContentUseCase, useValue: mockDeleteContentUseCase },
+        { provide: EventEmitter2, useValue: mockEvents },
       ],
     }).compile();
 
@@ -113,6 +117,31 @@ describe('DeleteSourceUseCase', () => {
     await useCase.execute(new DeleteSourceCommand(sourceId, orgId));
 
     expect(mockCleanupSourceProcessingUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('tells listeners when the removed source had failed, and only then', async () => {
+    const failedId = randomUUID();
+    mockSourceRepository.findById.mockResolvedValueOnce(
+      new FileSource({
+        id: failedId,
+        name: 'doc.pdf',
+        type: TextType.FILE,
+        fileType: FileType.PDF,
+        status: SourceStatus.FAILED,
+      }),
+    );
+    await useCase.execute(new DeleteSourceCommand(failedId, orgId));
+    mockSourceRepository.findById.mockResolvedValueOnce(
+      makeReadySource(randomUUID()),
+    );
+    await useCase.execute(new DeleteSourceCommand(randomUUID(), orgId));
+
+    expect(mockEvents.emitAsync.mock.calls).toEqual([
+      [
+        FailedSourcesDeletedEvent.EVENT_NAME,
+        new FailedSourcesDeletedEvent([failedId]),
+      ],
+    ]);
   });
 
   it('should wrap repository errors into UnexpectedSourceError', async () => {

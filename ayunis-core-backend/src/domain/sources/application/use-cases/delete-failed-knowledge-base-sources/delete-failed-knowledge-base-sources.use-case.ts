@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FailedSourcesDeletedEvent } from 'src/domain/sources/application/events/failed-sources-deleted.event';
 import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
@@ -22,6 +24,7 @@ export class DeleteFailedKnowledgeBaseSourcesUseCase {
     private readonly sourceRepository: SourceRepository,
     private readonly cleanupSourceProcessingUseCase: CleanupSourceProcessingUseCase,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /** Returns the ids of the deleted sources. */
@@ -66,6 +69,10 @@ export class DeleteFailedKnowledgeBaseSourcesUseCase {
       for (const index of this.indexRegistry.getAll()) {
         await index.deleteMany(sourceIds);
       }
+      await this.eventEmitter.emitAsync(
+        FailedSourcesDeletedEvent.EVENT_NAME,
+        new FailedSourcesDeletedEvent(sourceIds),
+      );
     }
     return deleted;
   }

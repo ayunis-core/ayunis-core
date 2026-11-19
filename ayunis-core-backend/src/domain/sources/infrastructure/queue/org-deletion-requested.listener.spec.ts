@@ -76,6 +76,7 @@ it('scans stable key pages and removes only retained target payloads', async () 
     emptyQueue(),
     emptyQueue(),
     emptyQueue(),
+    emptyQueue(),
   );
   const event = new OrgDeletionRequestedEvent(orgId);
   await listener.handle(event);
@@ -108,6 +109,7 @@ it('finds an active job after other jobs change state between scan batches', asy
       emptyQueue(),
       emptyQueue(),
       emptyQueue(),
+      emptyQueue(),
     ).handle(event),
   ).rejects.toMatchObject({ code: 'ORG_PROCESSING_ACTIVE' });
   expect(owned.remove).not.toHaveBeenCalled();
@@ -134,6 +136,7 @@ it('waits for each removal batch before starting the next one', async () => {
     emptyQueue(),
     emptyQueue(),
     emptyQueue(),
+    emptyQueue(),
   ).handle(event);
 
   const cleanup = event.takeCleanupTasks()[0].run();
@@ -144,6 +147,29 @@ it('waits for each removal batch before starting the next one', async () => {
   releaseFirst();
   await cleanup;
   expect(jobs[100].remove).toHaveBeenCalled();
+});
+
+it('rejects deletion while a synced file of the organisation is processed and removes its queued ones', async () => {
+  const queued = createJob('synced-queued');
+  const running = createJob('synced-running', orgId, true);
+  const syncedFiles = (job: TestJob) =>
+    scannedQueue([[jobKey(job)]], new Map([[job.id, job]])).queue;
+  const listener = (queue: Queue) =>
+    new OrgProcessingDeletionListener(
+      emptyQueue(),
+      emptyQueue(),
+      emptyQueue(),
+      emptyQueue(),
+      queue,
+    );
+
+  await expect(
+    listener(syncedFiles(running)).handle(new OrgDeletionRequestedEvent(orgId)),
+  ).rejects.toMatchObject({ code: 'ORG_PROCESSING_ACTIVE' });
+  const event = new OrgDeletionRequestedEvent(orgId);
+  await listener(syncedFiles(queued)).handle(event);
+  await Promise.all(event.takeCleanupTasks().map((task) => task.run()));
+  expect(queued.remove).toHaveBeenCalledTimes(1);
 });
 
 it('retries removal when a job became active after the deletion preflight', async () => {
@@ -159,6 +185,7 @@ it('retries removal when a job became active after the deletion preflight', asyn
   const event = new OrgDeletionRequestedEvent(orgId);
   await new OrgProcessingDeletionListener(
     queue,
+    emptyQueue(),
     emptyQueue(),
     emptyQueue(),
     emptyQueue(),
@@ -185,6 +212,7 @@ it('retries removal when the job completes before its active-state check', async
     emptyQueue(),
     emptyQueue(),
     emptyQueue(),
+    emptyQueue(),
   ).handle(event);
 
   await expect(event.takeCleanupTasks()[0].run()).resolves.toBeUndefined();
@@ -199,6 +227,7 @@ import { DOCUMENT_PROCESSING_QUEUE } from './document-processing.constants';
 import { DATA_SOURCE_PROCESSING_QUEUE } from './data-source-processing.constants';
 import { URL_CRAWL_QUEUE } from './url-crawl.constants';
 import { SOURCE_REINDEX_QUEUE } from './source-reindex.constants';
+import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
 import { DeleteOrgUseCase } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.use-case';
 import { DeleteOrgCommand } from 'src/iam/orgs/application/use-cases/delete-org/delete-org.command';
 
@@ -217,6 +246,7 @@ it('rejects active processing through Nest event dispatch before deleting any ro
         DATA_SOURCE_PROCESSING_QUEUE,
         URL_CRAWL_QUEUE,
         SOURCE_REINDEX_QUEUE,
+        KNOWLEDGE_BASE_SYNC_QUEUE,
       ].map((name) => ({ provide: getQueueToken(name), useValue: queue })),
     ],
   }).compile();

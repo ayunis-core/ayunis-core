@@ -9,20 +9,28 @@ import {
   type SyncedFileJobData,
 } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
+import { chunk } from 'src/common/util/chunk';
+import { DOCUMENT_JOB_OPTIONS } from 'src/domain/sources/infrastructure/queue/bullmq-job.helpers';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from './knowledge-base-sync.constants';
 
+const REMOVAL_BATCH_SIZE = 100;
+
+// Retried like uploads, since they run the same document pipeline. A
+// completed job is removed at once: one that ended without processing its
+// version (access lost, the file changed meanwhile) must not keep the next
+// sync from queueing that version again under the same ID.
 const SYNCED_FILE_JOB_OPTIONS: JobsOptions = {
-  attempts: 3,
-  backoff: { type: 'exponential', delay: 5000 },
-  removeOnComplete: 100,
-  removeOnFail: { age: 7 * 24 * 60 * 60, count: 200 },
+  ...DOCUMENT_JOB_OPTIONS,
+  removeOnComplete: true,
 };
 
 /**
  * One job ID per document and version: queued twice, it is one job. Versions
  * are provider strings (and may contain the `:` BullMQ forbids), so hashed.
  */
-function syncedFileJobId(job: SyncedFileJobData): string {
+function syncedFileJobId(
+  job: Pick<SyncedFileJobData, 'sourceId' | 'version'>,
+): string {
   const version = createHash('sha256')
     .update(job.version)
     .digest('hex')
@@ -56,5 +64,23 @@ export class SyncedFileJobsProducer extends SyncedFileJobsPort {
         opts: { jobId: syncedFileJobId(data), ...SYNCED_FILE_JOB_OPTIONS },
       })),
     );
+  }
+
+  async remove(
+    jobs: Pick<SyncedFileJobData, 'sourceId' | 'version'>[],
+  ): Promise<void> {
+    for (const batch of chunk(jobs.map(syncedFileJobId), REMOVAL_BATCH_SIZE)) {
+      // BullMQ leaves a job a worker holds in place (and reports 0).
+      await Promise.all(
+        batch.map((jobId) =>
+          this.queue.remove(jobId).catch((error: unknown) => {
+            this.logger.warn(
+              { jobId, err: error as Error },
+              'Could not remove a synced file job',
+            );
+          }),
+        ),
+      );
+    }
   }
 }

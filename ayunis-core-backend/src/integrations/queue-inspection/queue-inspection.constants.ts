@@ -5,6 +5,7 @@ import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queu
 import { ROUTINE_SWEEP_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-sweep.constants';
 import { RECORDING_SUMMARY_QUEUE } from 'src/domain/recordings/infrastructure/queue/recording-summary.constants';
 import { RELEASE_NOTE_SYNC_QUEUE } from 'src/domain/release-notes/infrastructure/queue/release-note-sync.constants';
+import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
 
 export const BULL_BOARD_PATH = '/internal/queues';
 
@@ -16,4 +17,5 @@ export const QUEUE_INSPECTION_QUEUE_NAMES = [
   ROUTINE_SWEEP_QUEUE,
   RECORDING_SUMMARY_QUEUE,
   RELEASE_NOTE_SYNC_QUEUE,
+  KNOWLEDGE_BASE_SYNC_QUEUE,
 ] as const;
