@@ -17,6 +17,7 @@ import { UnexpectedKnowledgeBaseSyncError } from 'src/domain/knowledge-base-sync
 import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncedFileDocuments } from 'src/domain/knowledge-base-sync/application/services/synced-file-documents.service';
+import { skipReasonOf } from 'src/domain/knowledge-base-sync/domain/connector-skip-reason';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
@@ -158,6 +159,9 @@ export class StartSyncedFileProcessingUseCase {
       case ConnectorSyncOutcome.GONE:
         await this.documents.remove(job);
         return { outcome: StartSyncedFileProcessingOutcome.GONE };
+      case ConnectorSyncOutcome.UNPROCESSABLE:
+        await this.documents.skip(job, skipReasonOf(content.reason));
+        return { outcome: StartSyncedFileProcessingOutcome.UNPROCESSABLE };
       case ConnectorSyncOutcome.CONTENT:
         return this.storeReplacement(job, file, content);
     }
