@@ -29,6 +29,7 @@ import { Button } from '@ayunis/ui/components/button';
 import type {
   PredefinedConfig,
   CreatePredefinedIntegrationFormData,
+  McpIntegration,
 } from '@/pages/admin-settings/integrations-settings/model/types';
 import { useCreatePredefinedIntegration } from '@/pages/admin-settings/integrations-settings/api/useCreatePredefinedIntegration';
 import { buildInstructionsForCreate } from '@/pages/admin-settings/integrations-settings/lib/integration-instructions';
@@ -38,6 +39,7 @@ import type { ConfigValueDto } from '@/shared/api/generated/ayunisCoreAPI.schema
 interface CreatePredefinedDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved?: (integration: McpIntegration) => void;
   predefinedConfigs: PredefinedConfig[];
   isCloud: boolean;
 }
@@ -45,6 +47,7 @@ interface CreatePredefinedDialogProps {
 export function CreatePredefinedDialog({
   open,
   onOpenChange,
+  onSaved,
   predefinedConfigs,
   isCloud,
 }: Readonly<CreatePredefinedDialogProps>) {
@@ -57,9 +60,10 @@ export function CreatePredefinedDialog({
     },
   });
   const { createPredefinedIntegration, isCreating } =
-    useCreatePredefinedIntegration(() => {
+    useCreatePredefinedIntegration((integration) => {
       onOpenChange(false);
       form.reset();
+      onSaved?.(integration);
     });
 
   const selectedSlug = useWatch({

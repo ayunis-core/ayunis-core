@@ -42,6 +42,7 @@ interface EditIntegrationDialogProps {
   integration: McpIntegration | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved?: (integration: McpIntegration) => void;
 }
 
 function OptionalOAuthClientFields({
@@ -81,6 +82,7 @@ export function EditIntegrationDialog({
   integration,
   open,
   onOpenChange,
+  onSaved,
 }: Readonly<EditIntegrationDialogProps>) {
   if (integration?.type === 'custom') {
     return (
@@ -88,6 +90,7 @@ export function EditIntegrationDialog({
         integration={integration}
         open={open}
         onOpenChange={onOpenChange}
+        onSaved={onSaved}
       />
     );
   }
@@ -97,6 +100,7 @@ export function EditIntegrationDialog({
       integration={integration}
       open={open}
       onOpenChange={onOpenChange}
+      onSaved={onSaved}
     />
   );
 }
@@ -105,11 +109,13 @@ function LegacyEditIntegrationDialog({
   integration,
   open,
   onOpenChange,
+  onSaved,
 }: Readonly<EditIntegrationDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
-  const { updateIntegration, isUpdating } = useUpdateIntegration(() => {
-    onOpenChange(false);
-  });
+  const { updateIntegration, isUpdating } = useUpdateIntegration(
+    () => onOpenChange(false),
+    onSaved,
+  );
   const form = useForm<UpdateIntegrationFormData>({
     defaultValues: {
       name: '',

@@ -6,6 +6,7 @@ import {
   useMcpIntegrationsControllerInstallFromMarketplace,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
@@ -27,11 +28,22 @@ export function useInstallIntegrationFromMarketplace(
         });
         trackProbedIntegrationConnection(integration);
         showSuccess(t('success'));
+        // An already-cached list would otherwise render without the new
+        // integration, and the list page couldn't find its page.
+        queryClient.setQueryData<McpIntegrationResponseDto[]>(
+          getMcpIntegrationsControllerListQueryKey(),
+          (current) =>
+            current && [
+              ...current.filter(({ id }) => id !== integration.id),
+              integration,
+            ],
+        );
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
         void router.navigate({
           to: '/admin-settings/integrations',
+          search: { integration: integration.id },
         });
       },
       onError: (error) => {

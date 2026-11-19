@@ -37,12 +37,14 @@ interface EditCustomIntegrationDialogProps {
   integration: McpIntegration;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved?: (integration: McpIntegration) => void;
 }
 
 export function EditCustomIntegrationDialog({
   integration,
   open,
   onOpenChange,
+  onSaved,
 }: Readonly<EditCustomIntegrationDialogProps>) {
   const { t } = useTranslation('admin-settings-integrations');
   const form = useForm<CreateCustomIntegrationFormData>({
@@ -52,9 +54,10 @@ export function EditCustomIntegrationDialog({
     control: form.control,
     name: 'fields',
   });
-  const { updateIntegration, isUpdating } = useUpdateIntegration(() => {
-    onOpenChange(false);
-  });
+  const { updateIntegration, isUpdating } = useUpdateIntegration(
+    () => onOpenChange(false),
+    onSaved,
+  );
   const serverUrl = useWatch({ control: form.control, name: 'serverUrl' });
 
   useEffect(() => {

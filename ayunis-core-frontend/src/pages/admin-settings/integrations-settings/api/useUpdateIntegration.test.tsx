@@ -4,6 +4,7 @@ import { useUpdateIntegration } from './useUpdateIntegration';
 
 const mocks = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
+  setQueryData: vi.fn(),
   mutate: vi.fn(),
   mutationOptions: undefined as
     | {
@@ -34,7 +35,10 @@ vi.mock('@/shared/lib/openpanel', () => ({
 }));
 
 vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: mocks.invalidateQueries }),
+  useQueryClient: () => ({
+    invalidateQueries: mocks.invalidateQueries,
+    setQueryData: mocks.setQueryData,
+  }),
 }));
 vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   getMcpIntegrationsControllerListQueryKey: () => ['integrations'],

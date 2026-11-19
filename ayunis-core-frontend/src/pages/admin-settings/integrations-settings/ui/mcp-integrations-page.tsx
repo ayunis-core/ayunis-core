@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
@@ -31,7 +32,9 @@ import { OutlookAddinSection } from './outlook-addin-section';
 
 export function McpIntegrationsPage({
   isCloud,
-}: Readonly<{ isCloud: boolean }>) {
+  page,
+  integrationId,
+}: Readonly<{ isCloud: boolean; page: number; integrationId?: string }>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { t: tLayout } = useTranslation('admin-settings-layout');
 
@@ -45,6 +48,7 @@ export function McpIntegrationsPage({
     useState<McpIntegration | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const isOutlookAddinEnabled = useIsFeatureEnabled('outlookAddinEnabled');
+  const navigate = useNavigate({ from: '/admin-settings/integrations' });
 
   // Queries
   const {
@@ -65,6 +69,10 @@ export function McpIntegrationsPage({
       </h2>
     </>
   ) : null;
+
+  const showSavedIntegration = (saved: McpIntegration) => {
+    void navigate({ search: { integration: saved.id } });
+  };
 
   const handleOpenCreatePredefined = () => {
     if (!predefinedConfigs.length) {
@@ -139,6 +147,8 @@ export function McpIntegrationsPage({
         {outlookSection}
         <IntegrationsList
           integrations={integrations}
+          page={page}
+          integrationId={integrationId}
           onEdit={setEditIntegration}
           onDelete={setDeleteIntegration}
         />
@@ -146,6 +156,7 @@ export function McpIntegrationsPage({
         <CreatePredefinedDialog
           open={createPredefinedOpen}
           onOpenChange={setCreatePredefinedOpen}
+          onSaved={showSavedIntegration}
           predefinedConfigs={predefinedConfigs}
           isCloud={isCloud}
         />
@@ -153,12 +164,14 @@ export function McpIntegrationsPage({
         <CreateCustomDialog
           open={createCustomOpen}
           onOpenChange={setCreateCustomOpen}
+          onSaved={showSavedIntegration}
         />
 
         <EditIntegrationDialog
           integration={editIntegration}
           open={!!editIntegration}
           onOpenChange={(open) => !open && setEditIntegration(null)}
+          onSaved={showSavedIntegration}
         />
 
         <DeleteConfirmationDialog

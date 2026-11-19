@@ -5,21 +5,37 @@ import {
   useMcpIntegrationsControllerUpdate,
   getMcpIntegrationsControllerListQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpdateIntegrationFormData } from '@/pages/admin-settings/integrations-settings/model/types';
+import type {
+  McpIntegration,
+  UpdateIntegrationFormData,
+} from '@/pages/admin-settings/integrations-settings/model/types';
+import { upsertIntegration } from '@/pages/admin-settings/integrations-settings/lib/integration-pages';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';
 
-export function useUpdateIntegration(onSuccess?: () => void) {
+// onSaved fires whenever the save went through, including when the connection
+// test then failed; onSuccess only when the dialog can close.
+export function useUpdateIntegration(
+  onSuccess?: () => void,
+  onSaved?: (integration: McpIntegration) => void,
+) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-integrations');
 
   const mutation = useMcpIntegrationsControllerUpdate({
     mutation: {
       onSuccess: (integration, variables) => {
+        // Put the saved integration in the list before the page jumps to it;
+        // otherwise the out-of-range page clamp fires before the refetch lands.
+        queryClient.setQueryData<McpIntegration[]>(
+          getMcpIntegrationsControllerListQueryKey(),
+          (current) => current && upsertIntegration(current, integration),
+        );
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListQueryKey(),
         });
+        onSaved?.(integration);
         const configSchema = integration.configSchema as Parameters<
           typeof hasOAuthConfiguration
         >[0];
