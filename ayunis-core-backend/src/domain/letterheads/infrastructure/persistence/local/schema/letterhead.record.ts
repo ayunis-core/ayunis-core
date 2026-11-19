@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
+import type { DocumentFontFamily } from 'src/domain/letterheads/domain/value-objects/document-typography';
 import type { PageMargins } from 'src/domain/letterheads/domain/value-objects/page-margins';
 
 @Entity({ name: 'letterheads' })
@@ -25,6 +26,12 @@ export class LetterheadRecord extends BaseRecord {
 
   @Column({ type: 'varchar', nullable: true })
   continuationPageStoragePath: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  fontFamily: DocumentFontFamily | null;
+
+  @Column({ type: 'integer', nullable: true })
+  fontSizePt: number | null;
 
   @Column({ type: 'simple-json' })
   firstPageMargins: PageMargins;

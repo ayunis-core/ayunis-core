@@ -22,6 +22,8 @@ import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/hel
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
+import { GetDocumentDefaultsUseCase } from 'src/domain/letterheads/application/use-cases/get-document-defaults/get-document-defaults.use-case';
+import type { DocumentTypography } from 'src/domain/letterheads/domain/value-objects/document-typography';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
@@ -43,6 +45,8 @@ describe('ExportArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let documentExportPort: jest.Mocked<DocumentExportPort>;
   let spreadsheetExportPort: jest.Mocked<SpreadsheetExportPort>;
+  let getDocumentDefaults: jest.Mocked<GetDocumentDefaultsUseCase>;
+  const unspecifiedTypography = { fontFamily: null, fontSizePt: null };
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
   let downloadObjectUseCase: jest.Mocked<DownloadObjectUseCase>;
   let getThreadPiiMasksUseCase: jest.Mocked<GetThreadPiiMasksUseCase>;
@@ -100,6 +104,12 @@ describe('ExportArtifactUseCase', () => {
         { provide: SpreadsheetExportPort, useValue: mockSpreadsheetExportPort },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindLetterheadUseCase, useValue: mockFindLetterhead },
+        {
+          provide: GetDocumentDefaultsUseCase,
+          useValue: {
+            execute: jest.fn().mockResolvedValue(unspecifiedTypography),
+          },
+        },
         { provide: DownloadObjectUseCase, useValue: mockDownloadObject },
         { provide: GetThreadPiiMasksUseCase, useValue: mockGetThreadPiiMasks },
       ],
@@ -110,6 +120,7 @@ describe('ExportArtifactUseCase', () => {
     documentExportPort = module.get(DocumentExportPort);
     spreadsheetExportPort = module.get(SpreadsheetExportPort);
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
+    getDocumentDefaults = module.get(GetDocumentDefaultsUseCase);
     downloadObjectUseCase = module.get(DownloadObjectUseCase);
     getThreadPiiMasksUseCase = module.get(GetThreadPiiMasksUseCase);
   });
@@ -140,11 +151,14 @@ describe('ExportArtifactUseCase', () => {
     });
   }
 
-  function createLetterhead(): Letterhead {
+  function createLetterhead(
+    typography?: Partial<DocumentTypography>,
+  ): Letterhead {
     return new Letterhead({
       id: mockLetterheadId,
       orgId: mockOrgId,
       name: 'Stadtbriefpapier',
+      ...typography,
       firstPageStoragePath: 'letterheads/org1/lh1/first-page.pdf',
       continuationPageStoragePath: 'letterheads/org1/lh1/continuation.pdf',
       firstPageMargins: { top: 55, right: 15, bottom: 20, left: 15 },
@@ -201,6 +215,11 @@ describe('ExportArtifactUseCase', () => {
 
   it('should export the current version as PDF without letterhead', async () => {
     const artifact = createArtifact();
+    const defaults = {
+      fontFamily: 'Times New Roman',
+      fontSizePt: 10,
+    } satisfies DocumentTypography;
+    getDocumentDefaults.execute.mockResolvedValue(defaults);
     const pdfBuffer = Buffer.from('fake-pdf-content');
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
     documentExportPort.exportToPdf.mockResolvedValue(pdfBuffer);
@@ -218,12 +237,17 @@ describe('ExportArtifactUseCase', () => {
     expect(documentExportPort.exportToPdf).toHaveBeenCalledWith(
       '<p>Meeting notes content</p>',
       undefined,
+      defaults,
     );
   });
 
   it('should export PDF with letterhead when artifact has letterheadId', async () => {
     const artifact = createArtifact({ letterheadId: mockLetterheadId });
-    const letterhead = createLetterhead();
+    const letterhead = createLetterhead({ fontFamily: 'Courier New' });
+    getDocumentDefaults.execute.mockResolvedValue({
+      fontFamily: 'Times New Roman',
+      fontSizePt: 10,
+    });
     const pdfBuffer = Buffer.from('fake-composited-pdf');
     const firstPageBuf = Buffer.from('%PDF-first');
     const contPageBuf = Buffer.from('%PDF-continuation');
@@ -261,6 +285,7 @@ describe('ExportArtifactUseCase', () => {
         firstPageMargins: { top: 55, right: 15, bottom: 20, left: 15 },
         continuationPageMargins: { top: 20, right: 15, bottom: 20, left: 15 },
       }),
+      { fontFamily: 'Courier New', fontSizePt: 10 },
     );
   });
 
@@ -312,13 +337,18 @@ describe('ExportArtifactUseCase', () => {
     expect(documentExportPort.exportToPdf).toHaveBeenCalledWith(
       '<p>Meeting notes content</p>',
       undefined,
+      unspecifiedTypography,
     );
     expect(downloadObjectUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should gracefully degrade when letterhead PDF download fails', async () => {
+  it('preserves effective typography when the letterhead PDF download fails', async () => {
     const artifact = createArtifact({ letterheadId: mockLetterheadId });
-    const letterhead = createLetterhead();
+    const letterhead = createLetterhead({ fontFamily: 'Courier New' });
+    getDocumentDefaults.execute.mockResolvedValue({
+      fontFamily: 'Times New Roman',
+      fontSizePt: 10,
+    });
     const pdfBuffer = Buffer.from('fake-pdf-no-letterhead');
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
@@ -339,6 +369,7 @@ describe('ExportArtifactUseCase', () => {
     expect(documentExportPort.exportToPdf).toHaveBeenCalledWith(
       '<p>Meeting notes content</p>',
       undefined,
+      { fontFamily: 'Courier New', fontSizePt: 10 },
     );
   });
 
@@ -425,6 +456,7 @@ describe('ExportArtifactUseCase', () => {
         { provide: SpreadsheetExportPort, useValue: spreadsheetExportPort },
         { provide: ContextService, useValue: mockContextService },
         { provide: FindLetterheadUseCase, useValue: findLetterheadUseCase },
+        { provide: GetDocumentDefaultsUseCase, useValue: getDocumentDefaults },
         { provide: DownloadObjectUseCase, useValue: downloadObjectUseCase },
         {
           provide: GetThreadPiiMasksUseCase,
@@ -544,6 +576,7 @@ describe('ExportArtifactUseCase', () => {
         firstPagePdf: firstPageBuf,
         continuationPagePdf: undefined,
       }),
+      unspecifiedTypography,
     );
   });
 

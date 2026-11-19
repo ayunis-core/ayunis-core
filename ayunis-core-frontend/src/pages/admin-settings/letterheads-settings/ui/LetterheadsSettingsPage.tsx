@@ -28,6 +28,7 @@ import {
 } from '@ayunis/ui/components/alert-dialog';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { LetterheadFormDialog } from './LetterheadFormDialog';
+import { DocumentDefaultsCard } from './DocumentDefaultsCard';
 import { useLetterheads } from '@/pages/admin-settings/letterheads-settings/api/useLetterheads';
 import { useDeleteLetterhead } from '@/pages/admin-settings/letterheads-settings/api/useDeleteLetterhead';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
@@ -51,6 +52,9 @@ export function LetterheadsSettingsPage() {
 
   return (
     <SettingsLayout action={headerActions} title={t('letterheads.title')}>
+      <div className="mb-6">
+        <DocumentDefaultsCard />
+      </div>
       {isLoading && (
         <div className="space-y-3">
           <Skeleton className="h-16 w-full" />

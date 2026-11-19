@@ -1,7 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class UpdateLetterheadDto {
+import { MultipartDocumentTypographyDto } from './multipart-document-typography.dto';
+
+export class UpdateLetterheadDto extends MultipartDocumentTypographyDto {
   @ApiPropertyOptional({
     description: 'Name of the letterhead',
     example: 'Stadtverwaltung Musterstadt — Neues Design',

@@ -6,6 +6,7 @@ import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/Postgres
 import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
+import type { DocumentTypography } from 'src/domain/letterheads/domain/value-objects/document-typography';
 import { LocalLetterheadsRepository } from './local-letterheads.repository';
 import { LetterheadMapper } from './mappers/letterhead.mapper';
 import { LetterheadRecord } from './schema/letterhead.record';
@@ -19,6 +20,8 @@ const letterheadSchema = new EntitySchema<LetterheadRecord>({
     orgId: { type: 'uuid' },
     name: { type: String },
     description: { type: String, nullable: true },
+    fontFamily: { type: String, nullable: true },
+    fontSizePt: { type: 'integer', nullable: true },
     firstPageStoragePath: { type: String },
     continuationPageStoragePath: { type: String, nullable: true },
     firstPageMargins: { type: 'simple-json' },
@@ -72,8 +75,14 @@ describe('LocalLetterheadsRepository concurrent updates', () => {
     expect(staleReader).not.toBeNull();
     if (!firstReader || !staleReader) return;
 
-    const winner = replacement(firstReader, 'winner.pdf');
-    const stale = replacement(staleReader, 'stale.pdf');
+    const winner = replacement(firstReader, 'winner.pdf', {
+      fontFamily: 'Times New Roman',
+      fontSizePt: 10,
+    });
+    const stale = replacement(staleReader, 'stale.pdf', {
+      fontFamily: 'Courier New',
+      fontSizePt: 11,
+    });
 
     await expect(
       repository.updateIfUnchanged(winner, firstReader.updatedAt),
@@ -83,7 +92,11 @@ describe('LocalLetterheadsRepository concurrent updates', () => {
     ).resolves.toBeNull();
     await expect(
       repository.findById(original.orgId, original.id),
-    ).resolves.toMatchObject({ firstPageStoragePath: 'winner.pdf' });
+    ).resolves.toMatchObject({
+      firstPageStoragePath: 'winner.pdf',
+      fontFamily: 'Times New Roman',
+      fontSizePt: 10,
+    });
   });
 });
 
@@ -116,9 +129,14 @@ function letterhead(): Letterhead {
   });
 }
 
-function replacement(current: Letterhead, path: string): Letterhead {
+function replacement(
+  current: Letterhead,
+  path: string,
+  typography: DocumentTypography,
+): Letterhead {
   return new Letterhead({
     ...current,
+    ...typography,
     firstPageStoragePath: path,
     updatedAt: new Date(current.updatedAt.getTime() + 1),
   });

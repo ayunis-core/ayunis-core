@@ -60,8 +60,9 @@ RUN pnpm --filter=core-backend --prod --legacy deploy /prod/backend
 FROM node:26.12.1-alpine AS production
 
 # Chromium for Puppeteer PDF export, ffmpeg for recordings, qpdf to split
-# PDFs into OCR batches on disk
-RUN apk add --no-cache chromium ffmpeg qpdf
+# PDFs into OCR batches on disk. Liberation provides metric-compatible
+# fonts for the document typography options.
+RUN apk add --no-cache chromium ffmpeg qpdf font-liberation
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app

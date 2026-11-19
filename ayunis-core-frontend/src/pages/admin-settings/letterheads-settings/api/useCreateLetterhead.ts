@@ -7,7 +7,12 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { PageMargins } from '@/pages/admin-settings/letterheads-settings/model/types';
 
-interface CreateLetterheadParams {
+import {
+  appendLetterheadTypography,
+  type DocumentTypography,
+} from '@/shared/lib/document-typography';
+
+interface CreateLetterheadParams extends Partial<DocumentTypography> {
   name: string;
   description?: string;
   firstPagePdf: File;
@@ -23,6 +28,7 @@ export function useCreateLetterhead(onSuccess?: () => void) {
   const mutation = useMutation({
     mutationFn: (params: CreateLetterheadParams) => {
       const formData = new FormData();
+      appendLetterheadTypography(formData, params);
       formData.append('name', params.name);
       if (params.description) {
         formData.append('description', params.description);

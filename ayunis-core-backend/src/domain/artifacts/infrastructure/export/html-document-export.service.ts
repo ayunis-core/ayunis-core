@@ -6,16 +6,43 @@ import {
 import { convertHtmlToDocx } from './html-to-docx-converter';
 import { PdfLetterheadCompositor } from './pdf-letterhead-compositor';
 import { markLayoutTables } from './letter-layout-tables';
+import { bundledDocumentFontCss } from './bundled-document-fonts';
 import { LazyChromiumBrowser } from 'src/common/puppeteer/lazy-chromium-browser';
 import { sanitizeHtmlContent } from 'src/domain/artifacts/application/helpers/sanitize-html-content';
 import { TimeoutError } from 'puppeteer-core';
 import { ArtifactExportTimeoutError } from 'src/domain/artifacts/application/artifacts.errors';
+import type {
+  DocumentFontFamily,
+  DocumentTypography,
+} from 'src/domain/letterheads/domain/value-objects/document-typography';
 
-/** CSS for PDF export (Puppeteer supports full <style> blocks). */
-const PDF_CSS = `
+const PDF_FONT_STACKS: Record<DocumentFontFamily, string> = {
+  Arial: 'Arial, Helvetica, "Liberation Sans", sans-serif',
+  'Times New Roman': '"Times New Roman", "Liberation Serif", serif',
+  'Courier New': '"Courier New", "Liberation Mono", monospace',
+  Calibri: 'Calibri, Carlito, sans-serif',
+  Cambria: 'Cambria, Caladea, serif',
+  Georgia: 'Georgia, Gelasio, serif',
+  Roboto: '"Roboto", sans-serif',
+  'Open Sans': '"Open Sans", sans-serif',
+  Lato: '"Lato", sans-serif',
+  Montserrat: '"Montserrat", sans-serif',
+  Inter: '"Inter", sans-serif',
+  'Noto Sans': '"Noto Sans", sans-serif',
+  'Source Sans 3': '"Source Sans 3", sans-serif',
+  'Noto Serif': '"Noto Serif", serif',
+  'Fira Sans': '"Fira Sans", sans-serif',
+};
+
+function documentPdfCss(typography?: DocumentTypography): string {
+  const family = typography?.fontFamily ?? 'Arial';
+  const fontFamily = PDF_FONT_STACKS[family];
+  const fontSizePt = typography?.fontSizePt ?? 12;
+  return `
+  ${bundledDocumentFontCss(family)}
   body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 12pt;
+    font-family: ${fontFamily};
+    font-size: ${fontSizePt}pt;
     line-height: 1.6;
     color: #333;
     max-width: 100%;
@@ -47,6 +74,7 @@ const PDF_CSS = `
   th { background-color: #f5f5f5; font-weight: bold; }
   a { color: #1a73e8; }
 `;
+}
 
 /**
  * DIN 5008 head block, applied only to letterhead exports.
@@ -128,10 +156,11 @@ export class HtmlDocumentExportService
   async exportToPdf(
     html: string,
     letterhead?: LetterheadConfig,
+    typography?: DocumentTypography,
   ): Promise<Buffer> {
     this.logger.log('Exporting HTML to PDF');
 
-    const wrappedHtml = this.wrapHtmlForPdf(html, letterhead);
+    const wrappedHtml = this.wrapHtmlForPdf(html, letterhead, typography);
     const browser = await this.chromium.get();
     const page = await browser.newPage();
 
@@ -197,6 +226,7 @@ export class HtmlDocumentExportService
   private wrapHtmlForPdf(
     unsafeHtml: string,
     letterhead?: LetterheadConfig,
+    typography?: DocumentTypography,
   ): string {
     const sanitized = sanitizeHtmlContent(unsafeHtml);
     // Only letters carry a head block, and `markLayoutTables` must run after
@@ -208,7 +238,7 @@ export class HtmlDocumentExportService
 <html>
 <head>
   <meta charset="utf-8">
-  <style>${PDF_CSS}${letterheadCss}</style>
+  <style>${documentPdfCss(typography)}${letterheadCss}</style>
 </head>
 <body>${html}</body>
 </html>`;

@@ -216,6 +216,14 @@ export class UpdateLetterheadUseCase {
       id: existing.id,
       orgId: existing.orgId,
       name: command.name ?? existing.name,
+      fontFamily:
+        command.fontFamily === undefined
+          ? existing.fontFamily
+          : command.fontFamily,
+      fontSizePt:
+        command.fontSizePt === undefined
+          ? existing.fontSizePt
+          : command.fontSizePt,
       description:
         command.description !== undefined
           ? command.description

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
-import { LetterheadRecord } from '../schema/letterhead.record';
+import { LetterheadRecord } from 'src/domain/letterheads/infrastructure/persistence/local/schema/letterhead.record';
 
 @Injectable()
 export class LetterheadMapper {
@@ -9,6 +9,8 @@ export class LetterheadMapper {
       id: record.id,
       orgId: record.orgId,
       name: record.name,
+      fontFamily: record.fontFamily,
+      fontSizePt: record.fontSizePt,
       description: record.description,
       firstPageStoragePath: record.firstPageStoragePath,
       continuationPageStoragePath: record.continuationPageStoragePath,
@@ -24,6 +26,8 @@ export class LetterheadMapper {
     record.id = domain.id;
     record.orgId = domain.orgId;
     record.name = domain.name;
+    record.fontFamily = domain.fontFamily;
+    record.fontSizePt = domain.fontSizePt;
     record.description = domain.description;
     record.firstPageStoragePath = domain.firstPageStoragePath;
     record.continuationPageStoragePath = domain.continuationPageStoragePath;

@@ -37,6 +37,7 @@ import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-ca
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
+import { GetDocumentDefaultsUseCase } from 'src/domain/letterheads/application/use-cases/get-document-defaults/get-document-defaults.use-case';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
@@ -59,6 +60,7 @@ export class ExportArtifactUseCase {
     private readonly spreadsheetExportPort: SpreadsheetExportPort,
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
+    private readonly getDocumentDefaultsUseCase: GetDocumentDefaultsUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
     private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
@@ -242,13 +244,24 @@ export class ExportArtifactUseCase {
     content: string,
     safeTitle: string,
   ): Promise<ExportResult> {
-    const letterheadConfig = await this.resolveLetterhead(artifact);
+    const [defaults, letterhead] = await Promise.all([
+      this.getDocumentDefaultsUseCase.execute(),
+      this.resolveLetterhead(artifact.letterheadId),
+    ]);
+    const typography = {
+      fontFamily: letterhead?.fontFamily ?? defaults.fontFamily,
+      fontSizePt: letterhead?.fontSizePt ?? defaults.fontSizePt,
+    };
+    const letterheadConfig = letterhead
+      ? await this.downloadLetterheadPdfs(letterhead)
+      : undefined;
 
     let buffer: Buffer;
     try {
       buffer = await this.documentExportPort.exportToPdf(
         content,
         letterheadConfig,
+        typography,
       );
     } catch (error) {
       if (error instanceof ArtifactExportTimeoutError || !letterheadConfig) {
@@ -258,7 +271,11 @@ export class ExportArtifactUseCase {
         { err: error as Error },
         'Letterhead compositing failed, exporting without letterhead',
       );
-      buffer = await this.documentExportPort.exportToPdf(content);
+      buffer = await this.documentExportPort.exportToPdf(
+        content,
+        undefined,
+        typography,
+      );
     }
     return {
       buffer,
@@ -267,21 +284,18 @@ export class ExportArtifactUseCase {
     };
   }
 
-  private async resolveLetterhead(artifact: {
-    letterheadId: UUID | null;
-  }): Promise<LetterheadConfig | undefined> {
-    if (!artifact.letterheadId) {
-      return undefined;
-    }
+  private async resolveLetterhead(
+    letterheadId: UUID | null,
+  ): Promise<Letterhead | undefined> {
+    if (!letterheadId) return undefined;
 
     try {
-      const letterhead = await this.findLetterheadUseCase.execute(
-        new FindLetterheadQuery({ letterheadId: artifact.letterheadId }),
+      return await this.findLetterheadUseCase.execute(
+        new FindLetterheadQuery({ letterheadId }),
       );
-      return await this.downloadLetterheadPdfs(letterhead);
     } catch (error) {
       this.logger.warn(
-        { err: error as Error, letterheadId: artifact.letterheadId },
+        { err: error as Error, letterheadId },
         'Failed to resolve letterhead, exporting without background',
       );
       return undefined;
@@ -290,20 +304,28 @@ export class ExportArtifactUseCase {
 
   private async downloadLetterheadPdfs(
     letterhead: Letterhead,
-  ): Promise<LetterheadConfig> {
-    const [firstPagePdf, continuationPagePdf] = await Promise.all([
-      this.downloadPdf(letterhead.firstPageStoragePath),
-      letterhead.continuationPageStoragePath
-        ? this.downloadPdf(letterhead.continuationPageStoragePath)
-        : undefined,
-    ]);
+  ): Promise<LetterheadConfig | undefined> {
+    try {
+      const [firstPagePdf, continuationPagePdf] = await Promise.all([
+        this.downloadPdf(letterhead.firstPageStoragePath),
+        letterhead.continuationPageStoragePath
+          ? this.downloadPdf(letterhead.continuationPageStoragePath)
+          : undefined,
+      ]);
 
-    return {
-      firstPagePdf,
-      continuationPagePdf,
-      firstPageMargins: letterhead.firstPageMargins,
-      continuationPageMargins: letterhead.continuationPageMargins,
-    };
+      return {
+        firstPagePdf,
+        continuationPagePdf,
+        firstPageMargins: letterhead.firstPageMargins,
+        continuationPageMargins: letterhead.continuationPageMargins,
+      };
+    } catch (error) {
+      this.logger.warn(
+        { err: error as Error, letterheadId: letterhead.id },
+        'Failed to download letterhead, exporting without background',
+      );
+      return undefined;
+    }
   }
 
   private async downloadPdf(storagePath: string): Promise<Buffer> {

@@ -11,7 +11,12 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';
 
-interface UpdateLetterheadParams {
+import {
+  appendLetterheadTypography,
+  type DocumentTypography,
+} from '@/shared/lib/document-typography';
+
+interface UpdateLetterheadParams extends Partial<DocumentTypography> {
   id: string;
   name?: string;
   description?: string;
@@ -22,7 +27,7 @@ interface UpdateLetterheadParams {
   removeContinuationPage?: boolean;
 }
 
-export function useUpdateLetterhead() {
+export function useUpdateLetterhead(onSuccess?: () => void) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-letterheads');
   const router = useRouter();
@@ -30,6 +35,7 @@ export function useUpdateLetterhead() {
   const mutation = useMutation({
     mutationFn: (params: UpdateLetterheadParams) => {
       const formData = new FormData();
+      appendLetterheadTypography(formData, params);
       if (params.name !== undefined) {
         formData.append('name', params.name);
       }
@@ -65,15 +71,20 @@ export function useUpdateLetterhead() {
         data: formData,
       });
     },
-    onSuccess: (_data, params) => {
+    onSuccess: async (data, params) => {
+      queryClient.setQueryData(
+        getLetterheadsControllerFindOneQueryKey(params.id),
+        data,
+      );
       void queryClient.invalidateQueries({
         queryKey: getLetterheadsControllerFindAllQueryKey(),
       });
       void queryClient.invalidateQueries({
         queryKey: getLetterheadsControllerFindOneQueryKey(params.id),
       });
-      void router.invalidate();
+      await router.invalidate({ sync: true });
       showSuccess(t('letterheads.editDialog.success'));
+      onSuccess?.();
     },
     onError: (error) => {
       try {

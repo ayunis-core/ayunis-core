@@ -49,6 +49,7 @@
   "/credit-limits/users",
   "/credit-limits/users/usage",
   "/credit-limits/users/{userId}",
+  "/document-defaults",
   "/favorites",
   "/favorites/reorder",
   "/favorites/toggle",

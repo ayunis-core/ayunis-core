@@ -1,7 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PageMarginsDto } from './page-margins.dto';
 
-export class LetterheadResponseDto {
+import { DocumentTypographyDto } from './document-typography.dto';
+
+export class LetterheadResponseDto extends DocumentTypographyDto {
   @ApiProperty({
     description: 'Unique identifier of the letterhead',
     example: '123e4567-e89b-12d3-a456-426614174000',
