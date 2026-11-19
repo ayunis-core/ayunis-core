@@ -20,6 +20,8 @@ import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/applicat
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
 import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
+import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
+import { FindReleaseNoteQuery } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.query';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -32,6 +34,7 @@ export class CreateThreadUseCase {
     private readonly resolveModelModesUseCase: ResolveModelModesUseCase,
     private readonly workspaceReadAccess: AssertWorkspaceReadAccessUseCase,
     private readonly findNotificationUseCase: FindNotificationUseCase,
+    private readonly findReleaseNoteUseCase: FindReleaseNoteUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -45,19 +48,7 @@ export class CreateThreadUseCase {
     const model = await this.resolveModel(command, userId);
     const isAnonymous = model.anonymousOnly || (command.isAnonymous ?? false);
 
-    // Throws WorkspaceNotFoundError for an id the caller does not own.
-    if (command.workspaceId) {
-      await this.workspaceReadAccess.execute({
-        workspaceId: command.workspaceId,
-      });
-    }
-
-    // Throws NotificationNotFoundError for an id the caller does not own.
-    if (command.sourceNotificationId) {
-      await this.findNotificationUseCase.execute(
-        new FindNotificationQuery(command.sourceNotificationId),
-      );
-    }
+    await this.assertLinksReadable(command);
 
     try {
       const thread = new Thread({
@@ -70,6 +61,7 @@ export class CreateThreadUseCase {
         type: command.routineId ? ThreadType.ROUTINE : ThreadType.CHAT,
         routineId: command.routineId,
         sourceNotificationId: command.sourceNotificationId,
+        sourceReleaseNoteId: command.sourceReleaseNoteId,
         client: this.contextService.get('client') ?? null,
         messages: [],
       });
@@ -86,6 +78,31 @@ export class CreateThreadUseCase {
         'Failed to create thread',
       );
       throw new ThreadCreationError(error as Error, userId);
+    }
+  }
+
+  private async assertLinksReadable(
+    command: CreateThreadCommand,
+  ): Promise<void> {
+    // Throws WorkspaceNotFoundError for an id the caller does not own.
+    if (command.workspaceId) {
+      await this.workspaceReadAccess.execute({
+        workspaceId: command.workspaceId,
+      });
+    }
+
+    // Throws NotificationNotFoundError for an id the caller does not own.
+    if (command.sourceNotificationId) {
+      await this.findNotificationUseCase.execute(
+        new FindNotificationQuery(command.sourceNotificationId),
+      );
+    }
+
+    // Throws ReleaseNoteNotFoundError for a release note that does not exist.
+    if (command.sourceReleaseNoteId) {
+      await this.findReleaseNoteUseCase.execute(
+        new FindReleaseNoteQuery(command.sourceReleaseNoteId),
+      );
     }
   }
 

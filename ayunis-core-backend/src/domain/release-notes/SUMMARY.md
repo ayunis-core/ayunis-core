@@ -21,8 +21,10 @@ A note is **unread** for a user when it is `announced`, was created after the us
 | ------ | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | GET    | `/release-notes`              | `FindMyReleaseNotesUseCase` — the newest 100 notes, newest first, each with `unread` for the current user; not paged             |
 | GET    | `/release-notes/unread-count` | `CountUnreadReleaseNotesUseCase` — for the bell's dot; counts within the same newest 100 the list shows                          |
-| GET    | `/release-notes/:id`          | `FindReleaseNoteUseCase` — 404 `RELEASE_NOTE_NOT_FOUND`                                                                          |
+| GET    | `/release-notes/:id`          | `FindReleaseNoteUseCase` (exported) — 404 `RELEASE_NOTE_NOT_FOUND`                                                               |
 | GET    | `/release-notes/:id/image`    | `DownloadReleaseNoteImageUseCase` — streams the stored image with `nosniff`; without an image 404 `RELEASE_NOTE_IMAGE_NOT_FOUND` |
 | POST   | `/release-notes/:id/read`     | `MarkReleaseNoteReadUseCase` — one `INSERT … SELECT … ON CONFLICT DO NOTHING`, so a second read or a deleted note writes nothing |
 
 The read state is independent of the read state of the note's notifications until release notes leave the inbox.
+
+Consumers of `FindReleaseNoteUseCase`: **threads** (`CreateThreadUseCase` checks a `sourceReleaseNoteId`) and **runs** (`ReleaseNoteContextCapability` reads the note a chat is about).

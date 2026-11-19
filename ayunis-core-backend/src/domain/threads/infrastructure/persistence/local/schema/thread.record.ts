@@ -17,6 +17,7 @@ import { ThreadKnowledgeBaseAssignmentRecord } from './thread-knowledge-base-ass
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
+import { ReleaseNoteRecord } from 'src/domain/release-notes/infrastructure/persistence/local/schema/release-note.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 import { NotificationRecord } from 'src/domain/notifications/infrastructure/persistence/local/schema/notification.record';
 import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
@@ -89,6 +90,18 @@ export class ThreadRecord extends BaseRecord {
   @ManyToOne(() => NotificationRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'sourceNotificationId' })
   sourceNotification?: NotificationRecord;
+
+  /**
+   * The release note this chat was started about. Deleting the release note
+   * keeps the chat; only the link goes.
+   */
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  sourceReleaseNoteId: UUID | null;
+
+  @ManyToOne(() => ReleaseNoteRecord, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'sourceReleaseNoteId' })
+  sourceReleaseNote?: ReleaseNoteRecord;
 
   /**
    * The token client the chat was started from. A varchar, not an enum, so a

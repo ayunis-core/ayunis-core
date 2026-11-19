@@ -34,6 +34,7 @@ export class ThreadMapper {
     record.type = thread.type;
     record.routineId = thread.routineId;
     record.sourceNotificationId = thread.sourceNotificationId;
+    record.sourceReleaseNoteId = thread.sourceReleaseNoteId;
     record.client = thread.client;
     record.messages = thread.messages.map((message) =>
       this.messageMapper.toRecord(message),
@@ -70,6 +71,7 @@ export class ThreadMapper {
       type: threadEntity.type,
       routineId: threadEntity.routineId,
       sourceNotificationId: threadEntity.sourceNotificationId,
+      sourceReleaseNoteId: threadEntity.sourceReleaseNoteId,
       client: threadEntity.client,
       messages: this.mapMessages(threadEntity),
       lastActivityAt: threadEntity.lastActivityAt ?? threadEntity.createdAt,

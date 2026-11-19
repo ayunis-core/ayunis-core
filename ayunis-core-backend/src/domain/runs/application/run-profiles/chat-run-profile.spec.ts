@@ -30,6 +30,7 @@ import { AnonymizationExceptionCapability } from 'src/domain/runs/application/ru
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
@@ -115,6 +116,10 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     new RecordingsCapability(assembleTool, { get: () => true } as never),
     new NotificationContextCapability(
       resolved(notification) as never,
+      { get: () => true } as never,
+    ),
+    new ReleaseNoteContextCapability(
+      resolved(null) as never,
       { get: () => true } as never,
     ),
     new WorkspaceInstructionsCapability(),

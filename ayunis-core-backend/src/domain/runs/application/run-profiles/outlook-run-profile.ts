@@ -10,6 +10,7 @@ import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabi
 import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
+import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
@@ -52,6 +53,7 @@ export class OutlookRunProfile implements RunProfile {
     knowledgeBases: KnowledgeBasesCapability,
     recordings: RecordingsCapability,
     notificationContext: NotificationContextCapability,
+    releaseNoteContext: ReleaseNoteContextCapability,
     workspaceInstructions: WorkspaceInstructionsCapability,
     mcp: McpCapability,
   ) {
@@ -68,6 +70,7 @@ export class OutlookRunProfile implements RunProfile {
       knowledgeBases,
       recordings,
       notificationContext,
+      releaseNoteContext,
       workspaceInstructions,
       mcp,
     ];
