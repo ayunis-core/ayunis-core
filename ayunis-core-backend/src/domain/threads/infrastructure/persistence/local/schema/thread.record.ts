@@ -1,6 +1,7 @@
 import { UUID } from 'crypto';
 import { MessageRecord } from 'src/domain/messages/infrastructure/persistence/local/schema/message.record';
 import {
+  Check,
   Column,
   Entity,
   OneToMany,
@@ -20,12 +21,15 @@ import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistenc
 import { ReleaseNoteRecord } from 'src/domain/release-notes/infrastructure/persistence/local/schema/release-note.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 import { NotificationRecord } from 'src/domain/notifications/infrastructure/persistence/local/schema/notification.record';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 @Entity({ name: 'threads' })
+@Check(`"routineId" IS NULL OR "origin" = 'routine'`)
+@Check(`"sourceNotificationId" IS NULL OR "origin" = 'notification'`)
+@Check(`"sourceReleaseNoteId" IS NULL OR "origin" = 'release_note'`)
 export class ThreadRecord extends BaseRecord {
   @Column()
   @Index()
@@ -64,12 +68,20 @@ export class ThreadRecord extends BaseRecord {
   @JoinColumn({ name: 'workspaceId' })
   workspace?: WorkspaceRecord;
 
-  @Column({ type: 'enum', enum: ThreadType, default: ThreadType.CHAT })
-  type: ThreadType;
+  /**
+   * The kind of the thread's origin. Its details live in the columns below,
+   * each only set for its own kind.
+   */
+  @Column({
+    type: 'enum',
+    enum: ThreadOriginKind,
+    default: ThreadOriginKind.CHAT,
+  })
+  origin: ThreadOriginKind;
 
   /**
-   * The routine that created this thread. Deleting the routine keeps its
-   * threads as conversation history; only the link goes.
+   * The routine that created this routine thread. Deleting the routine keeps
+   * its threads as conversation history; only the link goes.
    */
   @Column({ type: 'varchar', nullable: true })
   @Index()
@@ -80,8 +92,8 @@ export class ThreadRecord extends BaseRecord {
   routine?: RoutineRecord;
 
   /**
-   * The notification this chat was started about ("Chat about this").
-   * Deleting the notification keeps the chat; only the link goes.
+   * The notification this notification chat was started about ("Chat about
+   * this"). Deleting the notification keeps the chat; only the link goes.
    */
   @Column({ type: 'varchar', nullable: true })
   @Index()

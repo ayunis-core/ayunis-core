@@ -11,7 +11,7 @@ import type {
   PastChatActivityRange,
   PastChatScope,
 } from 'src/domain/threads/domain/past-chat-scope';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import type { ThreadMapper } from 'src/domain/threads/infrastructure/persistence/local/mappers/thread.mapper';
 import type { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
@@ -68,7 +68,9 @@ export function pastChatsQuery(
     .where('thread.userId = :userId', { userId })
     .andWhere(personalOrMemberWorkspaceSql('thread.workspaceId', ':userId'))
     .andWhere('thread.isAnonymous = false')
-    .andWhere('thread.type = :chatType', { chatType: ThreadType.CHAT })
+    .andWhere('thread.origin <> :routineOrigin', {
+      routineOrigin: ThreadOriginKind.ROUTINE,
+    })
     .andWhere('thread.id <> :currentThreadId', {
       currentThreadId: scope.currentThreadId,
     });

@@ -9,6 +9,7 @@ import { getUserContext } from 'src/common/context/required-context';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { CreateThreadUseCase } from 'src/domain/threads/application/use-cases/create-thread/create-thread.use-case';
 import type { CreateThreadCommand } from 'src/domain/threads/application/use-cases/create-thread/create-thread.command';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { ExecuteUnattendedRunUseCase } from 'src/domain/runs/application/use-cases/execute-unattended-run/execute-unattended-run.use-case';
 import type { ExecuteUnattendedRunCommand } from 'src/domain/runs/application/use-cases/execute-unattended-run/execute-unattended-run.command';
 import { RunUserInput } from 'src/domain/runs/domain/run-input.entity';
@@ -130,7 +131,7 @@ describe('ExecuteRoutineUseCase', () => {
     const thread = createThread.execute.mock.calls[0][0] as CreateThreadCommand;
     expect(thread).toMatchObject({
       modelId: TEST_MODEL_ID,
-      routineId: TEST_ROUTINE_ID,
+      origin: { kind: ThreadOriginKind.ROUTINE, routineId: TEST_ROUTINE_ID },
     });
     expect(thread.title).toMatch(
       /^Verkündungsplattform – \d{2}\.\d{2}\.\d{4}$/,

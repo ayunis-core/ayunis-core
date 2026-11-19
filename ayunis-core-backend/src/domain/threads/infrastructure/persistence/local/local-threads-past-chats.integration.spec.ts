@@ -17,7 +17,7 @@ import {
   InvalidPastMessagePatternError,
   PastMessageSearchTimeoutError,
 } from 'src/domain/threads/application/threads.errors';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import type { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { LocalThreadsRepository } from './local-threads.repository';
 import type { ThreadMapper } from './mappers/thread.mapper';
@@ -35,7 +35,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     title: { type: String, nullable: true },
     workspaceId: { type: 'uuid', nullable: true },
     isAnonymous: { type: Boolean, default: false },
-    type: { type: String, default: ThreadType.CHAT },
+    origin: { type: String, default: ThreadOriginKind.CHAT },
     createdAt: { type: 'timestamp' },
     lastActivityAt: { type: 'timestamp', nullable: true },
   },
@@ -149,7 +149,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       userId?: UUID;
       workspaceId?: UUID;
       isAnonymous?: boolean;
-      type?: ThreadType;
+      origin?: ThreadOriginKind;
       createdAt?: string;
       /** Null for a chat from before activity was recorded. */
       lastActivity?: string | null;
@@ -163,7 +163,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       title: 'Hundesteuer',
       workspaceId: rest.workspaceId ?? null,
       isAnonymous: rest.isAnonymous ?? false,
-      type: rest.type ?? ThreadType.CHAT,
+      origin: rest.origin ?? ThreadOriginKind.CHAT,
       createdAt: at(rest.createdAt ?? '2026-10-01T08:00:00'),
       lastActivityAt: lastActivity === null ? () => 'NULL' : at(lastActivity),
     });
@@ -234,21 +234,26 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
     userId: UUID = owner,
   ) => (await repository.findPastChat({ userId, scope, threadId })) !== null;
 
-  it('offers only the user’s own chats, never anonymous or routine ones or the current chat', async () => {
+  it('offers only the user’s own chats, notification chats included, never anonymous or routine ones or the current chat', async () => {
     const own = await chat();
+    const aboutNotification = await chat({
+      origin: ThreadOriginKind.NOTIFICATION,
+      lastActivity: '2026-11-02T10:00:00',
+    });
     const excluded = [
       await chat({ id: currentChat }),
       await chat({ isAnonymous: true }),
-      await chat({ type: ThreadType.ROUTINE }),
+      await chat({ origin: ThreadOriginKind.ROUTINE }),
     ];
     const colleagues = await chat({ userId: colleague });
 
-    expect(await listed()).toEqual([own]);
+    expect(await listed()).toEqual([aboutNotification, own]);
     expect(await listed(everywhere, colleague)).toEqual([colleagues]);
     for (const id of [...excluded, colleagues]) {
       expect(await readable(id)).toBe(false);
     }
     expect(await readable(own)).toBe(true);
+    expect(await readable(aboutNotification)).toBe(true);
   });
 
   it('offers a workspace chat only that workspace’s chats, any other chat all of them', async () => {
@@ -558,7 +563,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       const excluded = [
         await chat({ id: currentChat }),
         await chat({ isAnonymous: true }),
-        await chat({ type: ThreadType.ROUTINE }),
+        await chat({ origin: ThreadOriginKind.ROUTINE }),
         await chat({ userId: colleague }),
         await chat({ userId: colleague, workspaceId: workspace }),
       ];

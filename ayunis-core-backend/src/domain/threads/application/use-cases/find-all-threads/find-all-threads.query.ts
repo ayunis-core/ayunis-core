@@ -1,7 +1,6 @@
 import type { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination/paginated.query';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
-import type { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export class FindAllThreadsQuery extends PaginatedQuery {
@@ -16,7 +15,8 @@ export class FindAllThreadsQuery extends PaginatedQuery {
     public readonly filters?: {
       search?: string;
       workspaceId?: UUID;
-      type?: ThreadType;
+      /** Only routine threads when true, every other thread when false. */
+      isRoutine?: boolean;
       routineId?: UUID;
       /** Threads of this client; without it, only threads of the web app. */
       client?: SessionClient;

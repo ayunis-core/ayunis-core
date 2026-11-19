@@ -6,7 +6,7 @@ import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mod
 import type { SourceAssignment } from './thread-source-assignment.entity';
 import type { KnowledgeBaseAssignment } from './thread-knowledge-base-assignment.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
-import { ThreadType } from './thread-type.enum';
+import { CHAT_ORIGIN, type ThreadOrigin } from './thread-origin';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export class Thread {
@@ -22,12 +22,7 @@ export class Thread {
   messages: Message[];
   isAnonymous: boolean;
   workspaceId: UUID | null;
-  type: ThreadType;
-  /** The routine whose execution created this thread; null once it is deleted. */
-  routineId: UUID | null;
-  /** The notification a "Chat about this" chat discusses; null once it is deleted. */
-  sourceNotificationId: UUID | null;
-  sourceReleaseNoteId: UUID | null;
+  origin: ThreadOrigin;
   /** The token client (e.g. the Outlook pane) the chat was started from; null for the web app. */
   client: SessionClient | null;
   lastActivityAt: Date;
@@ -46,10 +41,7 @@ export class Thread {
     messages: Message[];
     isAnonymous?: boolean;
     workspaceId?: UUID | null;
-    type?: ThreadType;
-    routineId?: UUID | null;
-    sourceNotificationId?: UUID | null;
-    sourceReleaseNoteId?: UUID | null;
+    origin?: ThreadOrigin;
     client?: SessionClient | null;
     lastActivityAt?: Date;
     createdAt?: Date;
@@ -66,10 +58,7 @@ export class Thread {
     this.messages = params.messages;
     this.isAnonymous = params.isAnonymous ?? false;
     this.workspaceId = params.workspaceId ?? null;
-    this.type = params.type ?? ThreadType.CHAT;
-    this.routineId = params.routineId ?? null;
-    this.sourceNotificationId = params.sourceNotificationId ?? null;
-    this.sourceReleaseNoteId = params.sourceReleaseNoteId ?? null;
+    this.origin = params.origin ?? CHAT_ORIGIN;
     this.client = params.client ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

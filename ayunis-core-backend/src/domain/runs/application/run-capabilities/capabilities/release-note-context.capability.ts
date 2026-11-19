@@ -13,6 +13,7 @@ import {
   type CapabilityContribution,
   type RunCapability,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 
 /**
  * The release note a chat started from a product update is about, escaped
@@ -28,14 +29,15 @@ export class ReleaseNoteContextCapability implements RunCapability {
   async contribute(
     context: RunCapabilityContext,
   ): Promise<CapabilityContribution> {
-    const releaseNoteId = context.thread.sourceReleaseNoteId;
+    const { origin } = context.thread;
     if (
-      !releaseNoteId ||
+      origin.kind !== ThreadOriginKind.RELEASE_NOTE ||
+      !origin.releaseNoteId ||
       !this.configService.get<boolean>(`features.${FeatureFlag.ReleaseNotes}`)
     ) {
       return {};
     }
-    const releaseNote = await this.findReleaseNote(releaseNoteId);
+    const releaseNote = await this.findReleaseNote(origin.releaseNoteId);
     if (!releaseNote) return {};
     return {
       sections: [

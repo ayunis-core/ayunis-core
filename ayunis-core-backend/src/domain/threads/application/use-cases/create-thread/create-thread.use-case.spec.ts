@@ -32,6 +32,7 @@ import { aNotification } from 'src/domain/notifications/application/testing/noti
 import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
 import { ReleaseNoteNotFoundError } from 'src/domain/release-notes/application/release-notes.errors';
 import { TEST_RELEASE_NOTE_ID } from 'src/domain/release-notes/application/testing/release-note.fixtures';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
@@ -456,6 +457,10 @@ describe('CreateThreadUseCase', () => {
 
   describe('about a notification', () => {
     const notification = aNotification();
+    const notificationOrigin = {
+      kind: ThreadOriginKind.NOTIFICATION,
+      notificationId: notification.id,
+    } as const;
     const standard = new PermittedLanguageModel({
       id: mockModelId,
       model: new LanguageModel({
@@ -486,18 +491,14 @@ describe('CreateThreadUseCase', () => {
       const thread = await useCase.execute(
         new CreateThreadCommand({
           modelId: mockModelId,
-          sourceNotificationId: notification.id,
+          origin: notificationOrigin,
         }),
       );
 
       expect(findNotification.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: notification.id }),
       );
-      expect(thread).toMatchObject({
-        sourceNotificationId: notification.id,
-        type: 'chat',
-        routineId: null,
-      });
+      expect(thread.origin).toEqual(notificationOrigin);
     });
 
     it("refuses another user's notification without creating a thread", async () => {
@@ -509,7 +510,7 @@ describe('CreateThreadUseCase', () => {
         useCase.execute(
           new CreateThreadCommand({
             modelId: mockModelId,
-            sourceNotificationId: notification.id,
+            origin: notificationOrigin,
           }),
         ),
       ).rejects.toThrow(NotificationNotFoundError);
@@ -523,27 +524,28 @@ describe('CreateThreadUseCase', () => {
 
       expect(findNotification.execute).not.toHaveBeenCalled();
       expect(findReleaseNote.execute).not.toHaveBeenCalled();
-      expect(thread.sourceNotificationId).toBeNull();
-      expect(thread.sourceReleaseNoteId).toBeNull();
+      expect(thread.origin).toEqual({ kind: ThreadOriginKind.CHAT });
     });
 
-    it('links a regular chat to a release note', async () => {
+    it('starts a chat about a release note', async () => {
       findReleaseNote.execute.mockResolvedValue({});
 
       const thread = await useCase.execute(
         new CreateThreadCommand({
           modelId: mockModelId,
-          sourceReleaseNoteId: TEST_RELEASE_NOTE_ID,
+          origin: {
+            kind: ThreadOriginKind.RELEASE_NOTE,
+            releaseNoteId: TEST_RELEASE_NOTE_ID,
+          },
         }),
       );
 
       expect(findReleaseNote.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: TEST_RELEASE_NOTE_ID }),
       );
-      expect(thread).toMatchObject({
-        sourceReleaseNoteId: TEST_RELEASE_NOTE_ID,
-        sourceNotificationId: null,
-        type: 'chat',
+      expect(thread.origin).toEqual({
+        kind: ThreadOriginKind.RELEASE_NOTE,
+        releaseNoteId: TEST_RELEASE_NOTE_ID,
       });
     });
 
@@ -556,7 +558,10 @@ describe('CreateThreadUseCase', () => {
         useCase.execute(
           new CreateThreadCommand({
             modelId: mockModelId,
-            sourceReleaseNoteId: TEST_RELEASE_NOTE_ID,
+            origin: {
+              kind: ThreadOriginKind.RELEASE_NOTE,
+              releaseNoteId: TEST_RELEASE_NOTE_ID,
+            },
           }),
         ),
       ).rejects.toThrow(ReleaseNoteNotFoundError);

@@ -6,6 +6,7 @@ import { NotificationNotFoundError } from 'src/domain/notifications/application/
 import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
 import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { escapeXml } from 'src/domain/runs/application/services/xml-escape';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
 import {
@@ -29,14 +30,15 @@ export class NotificationContextCapability implements RunCapability {
   async contribute(
     context: RunCapabilityContext,
   ): Promise<CapabilityContribution> {
-    const notificationId = context.thread.sourceNotificationId;
+    const { origin } = context.thread;
     if (
-      !notificationId ||
+      origin.kind !== ThreadOriginKind.NOTIFICATION ||
+      !origin.notificationId ||
       !this.configService.get<boolean>(`features.${FeatureFlag.Routines}`)
     ) {
       return {};
     }
-    const notification = await this.findNotification(notificationId);
+    const notification = await this.findNotification(origin.notificationId);
     if (!notification) return {};
     return {
       sections: [

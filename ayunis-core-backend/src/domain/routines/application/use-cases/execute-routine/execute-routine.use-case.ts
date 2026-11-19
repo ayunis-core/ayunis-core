@@ -6,6 +6,7 @@ import { UserContextRunner } from 'src/common/context/services/user-context-runn
 import { ApplicationError } from 'src/common/errors/base.error';
 import { CreateThreadUseCase } from 'src/domain/threads/application/use-cases/create-thread/create-thread.use-case';
 import { CreateThreadCommand } from 'src/domain/threads/application/use-cases/create-thread/create-thread.command';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { ExecuteUnattendedRunUseCase } from 'src/domain/runs/application/use-cases/execute-unattended-run/execute-unattended-run.use-case';
 import { ExecuteUnattendedRunCommand } from 'src/domain/runs/application/use-cases/execute-unattended-run/execute-unattended-run.command';
 import type { UnattendedRunResult } from 'src/domain/runs/application/use-cases/execute-unattended-run/unattended-run-result';
@@ -213,7 +214,7 @@ export class ExecuteRoutineUseCase {
       new CreateThreadCommand({
         modelId: await this.routineModelService.forRun(routine),
         title: routineThreadTitle(routine.name, new Date()),
-        routineId: routine.id,
+        origin: { kind: ThreadOriginKind.ROUTINE, routineId: routine.id },
       }),
     );
     attempt.routineThreadId = thread.id;
