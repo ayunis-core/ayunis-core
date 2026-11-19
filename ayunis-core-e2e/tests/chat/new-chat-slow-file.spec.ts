@@ -142,6 +142,55 @@ test('sends in an ongoing chat while its file is still processing and shows the 
   });
 });
 
+test('returns a waiting message to the input after a reload, without sending it', async ({
+  api,
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await permitEmbeddingModel(api);
+  const threadId = await startThread(page, 'Prepare to review a budget.');
+  await page.route(
+    (url) => THREAD_PATH.test(url.pathname),
+    async (route) => {
+      if (route.request().method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const thread = (await response.json()) as GetThreadResponseDto;
+      await route.fulfill({
+        response,
+        json: {
+          ...thread,
+          sources: thread.sources.map((source) => ({
+            ...source,
+            status: 'processing',
+          })),
+        },
+      });
+    },
+  );
+  await attachPdf(page, 'haushalt-2026.pdf');
+  await expect(page.getByTestId('chat-source')).toHaveAttribute(
+    'data-source-status',
+    'processing',
+  );
+  await page.getByTestId('input').fill('Review the budget after the reload.');
+  await page.getByTestId('send').click();
+  await expect(page.getByTestId('pending-user-message')).toBeVisible();
+
+  await page.reload();
+
+  await expect(page.getByTestId('input')).toHaveValue(
+    'Review the budget after the reload.',
+  );
+  await expect(page.getByTestId('pending-user-message')).toBeHidden();
+  const { messages } = await getThread(api, threadId);
+  expect(messages.filter((message) => message.role === 'user')).toHaveLength(
+    1,
+  );
+});
+
 async function permitEmbeddingModel(api: APIRequestContext): Promise<void> {
   const models = await generatedApi.modelsControllerGetAvailableEmbeddingModels(
     { api },

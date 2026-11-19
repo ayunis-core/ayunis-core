@@ -64,6 +64,28 @@ describe(useThreadSubmissionState.name, () => {
     },
   );
 
+  it('puts a message that was waiting before a reload back into the input, once', () => {
+    window.localStorage.setItem('waiting_message:thread-a', 'Message A');
+    const restoreFailedSubmission = vi.fn().mockReturnValue(true);
+    const mount = () =>
+      renderHook(() =>
+        useThreadSubmissionState({
+          threadId: threadA,
+          isStreaming: false,
+          restoreFailedSubmission,
+          onRestoreBlocked: vi.fn(),
+        }),
+      );
+
+    const { result, unmount } = mount();
+
+    expect(restoreFailedSubmission).toHaveBeenCalledWith({ text: 'Message A' });
+    expect(result.current.pendingSubmission).toBeNull();
+    unmount();
+    mount();
+    expect(restoreFailedSubmission).toHaveBeenCalledOnce();
+  });
+
   it('restores a failure after the originating chat remounts', () => {
     const staleRestore = vi.fn();
     const onRestoreBlocked = vi.fn();

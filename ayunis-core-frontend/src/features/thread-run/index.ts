@@ -29,5 +29,6 @@ export {
   deferThreadRun,
   getDeferredThreadRun,
   startDeferredThreadRun,
+  takeInterruptedThreadRunText,
   useIsThreadRunDeferred,
 } from './model/deferred-thread-run';
