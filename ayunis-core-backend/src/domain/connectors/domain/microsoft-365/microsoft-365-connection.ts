@@ -21,3 +21,15 @@ export function readMicrosoft365Setup(
   const { tenantId, clientId } = setup;
   return tenantId && clientId ? { tenantId, clientId } : null;
 }
+
+export function readMicrosoft365Credentials(
+  plaintext: string,
+): Microsoft365Credentials {
+  const { clientSecret } = JSON.parse(
+    plaintext,
+  ) as Partial<Microsoft365Credentials>;
+  if (typeof clientSecret !== 'string' || clientSecret === '') {
+    throw new Error('Microsoft 365 credentials without a client secret');
+  }
+  return { clientSecret };
+}

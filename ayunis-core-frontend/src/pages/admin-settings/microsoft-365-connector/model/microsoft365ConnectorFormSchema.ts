@@ -1,7 +1,7 @@
 import * as z from 'zod';
 
 /** Entra tenant and client IDs are GUIDs, whatever their UUID version. */
-const GUID_PATTERN =
+export const GUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const CLIENT_SECRET_MAX_LENGTH = 1024;

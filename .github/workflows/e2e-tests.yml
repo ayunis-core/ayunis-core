@@ -367,6 +367,9 @@ jobs:
 
           # Marketplace entry points on, served by the Marketplace stand-in.
           MARKETPLACE_SERVICE_URL=http://127.0.0.1:3197
+
+          # Microsoft 365 connection tests ask the Entra stand-in, never Microsoft.
+          MICROSOFT_LOGIN_URL=http://127.0.0.1:3196
           EOF
 
       - name: Start Mistral OCR and speech contract server
@@ -393,6 +396,12 @@ jobs:
           nohup node ayunis-core-e2e/src/servers/marketplace-mock.mjs > marketplace-mock.log 2>&1 &
           timeout 30 bash -c 'until curl -sf http://127.0.0.1:3197/health; do sleep 1; done' \
             || { cat marketplace-mock.log; exit 1; }
+
+      - name: Start Entra stand-in
+        run: |
+          nohup node ayunis-core-e2e/src/servers/entra-mock.mjs > entra-mock.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://127.0.0.1:3196/health; do sleep 1; done' \
+            || { cat entra-mock.log; exit 1; }
 
       - name: Run migrations
         working-directory: ayunis-core-backend

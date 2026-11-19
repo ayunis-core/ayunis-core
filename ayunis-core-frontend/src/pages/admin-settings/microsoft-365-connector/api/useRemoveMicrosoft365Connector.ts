@@ -7,13 +7,14 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
-export function useRemoveMicrosoft365Connector() {
+export function useRemoveMicrosoft365Connector(onRemoved: () => void) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-connections');
 
   return useConnectorsControllerRemoveMicrosoft365({
     mutation: {
       onSuccess: () => {
+        onRemoved();
         showSuccess(t('microsoft365.remove.success'));
       },
       onError: () => {
