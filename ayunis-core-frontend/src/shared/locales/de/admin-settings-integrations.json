@@ -212,14 +212,14 @@
       "title": "Microsoft Outlook",
       "description": "Mit dem Ayunis-Add-in nutzen Ihre Mitarbeitenden Ayunis direkt in Outlook. Bereitgestellt wird es im Microsoft 365 Admin Center, durch eine Person mit Microsoft-365- oder Exchange-Administratorrechten.",
       "manifestUrl": "Manifest-URL",
-      "openAdminCenter": "Microsoft 365 Admin Center öffnen",
+      "openIntegratedApps": "„Integrierte Apps“ öffnen",
       "downloadManifest": "Manifest herunterladen",
       "steps": {
         "title": "So stellen Sie das Add-in bereit",
-        "openAdminCenter": "Öffnen Sie im Microsoft 365 Admin Center „Einstellungen“ → „Integrierte Apps“ → „Add-Ins“.",
-        "deployAddin": "Wählen Sie „Add-In bereitstellen“ und laden Sie ein benutzerdefiniertes Add-In hoch.",
-        "provideUrl": "Geben Sie die Manifest-URL an.",
-        "assign": "Wählen Sie, wer das Add-in erhält, und schließen Sie die Bereitstellung ab."
+        "openAddins": "Melden Sie sich im Microsoft 365 Admin Center an und wählen Sie oben auf der Seite „Integrierte Apps“ den Link „Add-Ins“.",
+        "deployAddin": "Wählen Sie „Add-In bereitstellen“, dann „Weiter“, und entscheiden Sie sich, ein benutzerdefiniertes Add-In hochzuladen.",
+        "provideUrl": "Wählen Sie unter „App-Upload auswählen“ die Angabe einer URL, fügen Sie die Manifest-URL von oben ein und wählen Sie „Hochladen“.",
+        "assign": "Wählen Sie „Alle“, „Bestimmte Benutzer/Gruppen“ oder „Nur ich“ und dann „Bereitstellen“."
       }
     }
   }
