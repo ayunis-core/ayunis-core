@@ -101,7 +101,7 @@ export class ExportArtifactUseCase {
     );
 
     if (command.format === 'docx') {
-      return await this.exportDocx(content, safeTitle);
+      return await this.exportDocx(artifact, content, safeTitle);
     }
 
     return await this.exportPdf(artifact, content, safeTitle);
@@ -202,16 +202,32 @@ export class ExportArtifactUseCase {
   }
 
   private async exportDocx(
+    artifact: DocumentArtifact,
     content: string,
     safeTitle: string,
   ): Promise<ExportResult> {
-    const buffer = await this.documentExportPort.exportToDocx(content);
+    const buffer = artifact.letterheadId
+      ? await this.exportDocxWithLetterhead(artifact, content)
+      : await this.documentExportPort.exportToDocx(content);
     return {
       buffer,
       fileName: `${safeTitle}.docx`,
       mimeType:
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     };
+  }
+
+  private async exportDocxWithLetterhead(
+    artifact: DocumentArtifact,
+    content: string,
+  ): Promise<Buffer> {
+    const { typography, letterheadConfig } =
+      await this.resolvePageLayout(artifact);
+    return this.documentExportPort.exportToDocx(
+      content,
+      letterheadConfig,
+      typography,
+    );
   }
 
   private async exportXlsx(
@@ -244,17 +260,8 @@ export class ExportArtifactUseCase {
     content: string,
     safeTitle: string,
   ): Promise<ExportResult> {
-    const [defaults, letterhead] = await Promise.all([
-      this.getDocumentDefaultsUseCase.execute(),
-      this.resolveLetterhead(artifact.letterheadId),
-    ]);
-    const typography = {
-      fontFamily: letterhead?.fontFamily ?? defaults.fontFamily,
-      fontSizePt: letterhead?.fontSizePt ?? defaults.fontSizePt,
-    };
-    const letterheadConfig = letterhead
-      ? await this.downloadLetterheadPdfs(letterhead)
-      : undefined;
+    const { typography, letterheadConfig } =
+      await this.resolvePageLayout(artifact);
 
     let buffer: Buffer;
     try {
@@ -281,6 +288,22 @@ export class ExportArtifactUseCase {
       buffer,
       fileName: `${safeTitle}.pdf`,
       mimeType: 'application/pdf',
+    };
+  }
+
+  private async resolvePageLayout(artifact: DocumentArtifact) {
+    const [defaults, letterhead] = await Promise.all([
+      this.getDocumentDefaultsUseCase.execute(),
+      this.resolveLetterhead(artifact.letterheadId),
+    ]);
+    return {
+      typography: {
+        fontFamily: letterhead?.fontFamily ?? defaults.fontFamily,
+        fontSizePt: letterhead?.fontSizePt ?? defaults.fontSizePt,
+      },
+      letterheadConfig: letterhead
+        ? await this.downloadLetterheadPdfs(letterhead)
+        : undefined,
     };
   }
 

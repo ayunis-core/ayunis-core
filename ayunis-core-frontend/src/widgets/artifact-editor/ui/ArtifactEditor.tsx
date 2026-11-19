@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { EditorToolbar } from './EditorToolbar';
 import { VersionHistory } from './VersionHistory';
 import { ExportButtons } from './ExportButtons';
+import { ArtifactPdfPreview } from './ArtifactPdfPreview';
 import { LetterheadPicker } from './LetterheadPicker';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
@@ -157,6 +158,13 @@ export const ArtifactEditor = forwardRef<
         }
         actions={
           <>
+            {artifact.letterheadId && currentVersion && (
+              <ArtifactPdfPreview
+                key={`${artifact.letterheadId}:${currentVersion.versionNumber}`}
+                artifactId={artifact.id}
+                versionNumber={currentVersion.versionNumber}
+              />
+            )}
             <ExportButtons onExport={handleExport} isExporting={isExporting} />
             {onLetterheadChange && (
               <LetterheadPicker

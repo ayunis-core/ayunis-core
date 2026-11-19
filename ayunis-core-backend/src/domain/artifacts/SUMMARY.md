@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Manages versioned artifacts (documents, diagrams, and spreadsheets) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead that is applied during PDF export.
+Manages versioned artifacts (documents, diagrams, and spreadsheets) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead for DOCX and PDF exports.
 
 ## Domain Concepts
 
-- **Artifact** — A named, typed artifact belonging to a thread and user. Tracks the current version number; only document artifacts can have an optional `letterheadId` used for PDF export.
+- **Artifact** — A named, typed artifact belonging to a thread and user. Tracks the current version number; only document artifacts can have an optional `letterheadId` used for DOCX and PDF exports.
 - **DocumentArtifact** — An artifact whose version content is sanitized HTML and may be exported to DOCX or PDF.
 - **DiagramArtifact** — An artifact whose version content is stored without document HTML sanitization or spreadsheet normalization.
 - **SpreadsheetArtifact** — An artifact whose version content is validated and canonicalized `spreadsheet-v1` JSON.
@@ -58,6 +58,7 @@ artifacts/
 │       ├── paragraph-style-parser.ts
 │       ├── run-color-parser.ts
 │       ├── docx-document-config.ts
+│       ├── docx-letterhead.ts
 │       ├── docx-table-styles.ts
 │       ├── letter-layout-tables.ts
 │       ├── pdf-letterhead-compositor.ts
@@ -79,7 +80,7 @@ artifacts/
 ## Ports
 
 - **ArtifactsRepository** — CRUD for artifacts and versions
-- **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers, optionally compositing PDF output onto stored letterhead backgrounds with configured margins. Letterhead exports also render a header-less table as the DIN 5008 head block (recipient address left, sender information block right), tagged at render time by `letter-layout-tables.ts` because the editor schema would drop a stored marker
+- **DocumentExportPort** — Converts HTML content to DOCX/PDF buffers. PDF export composites stored letterhead backgrounds with configured margins. Word export rasterizes those backgrounds for first-page and continuation headers behind editable text. PDF letterhead exports render a header-less table as the DIN 5008 head block (recipient address left, sender information block right), tagged at render time by `letter-layout-tables.ts` because the editor schema would drop a stored marker
 - **SpreadsheetExportPort** — Converts validated spreadsheet content to XLSX or CSV buffers
 
 ## Key Behaviors
@@ -92,6 +93,7 @@ artifacts/
 - Reverting copies content from a target version into a new version (non-destructive)
 - Deleting a thread cascade-deletes all its artifacts and versions
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
+- DOCX export uses the same letterhead lookup and puts its artwork behind editable body text. The Word section uses the larger configured margin for each edge across the first and continuation pages, so text can reflow after editing.
 - Export delegates to `DocumentExportPort` for format conversion; PDF rendering blocks non-embedded resource requests, waits only for the document load event rather than generic network idleness, and reports renderer deadlines as `ARTIFACT_EXPORT_TIMEOUT` (504) without retrying the same timed-out content
 - Spreadsheet export delegates to `SpreadsheetExportPort`; XLSX preserves original formula-cell provenance through PII de-anonymization and emits live formulas only after successful local evaluation and dependency validation, while unsupported formulas remain text and CSV formula-like values are neutralized
 - Document HTML sanitization (XSS prevention) before storage and export

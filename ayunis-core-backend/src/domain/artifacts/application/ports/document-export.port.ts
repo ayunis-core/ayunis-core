@@ -18,7 +18,11 @@ export interface LetterheadConfig {
 }
 
 export abstract class DocumentExportPort {
-  abstract exportToDocx(html: string): Promise<Buffer>;
+  abstract exportToDocx(
+    html: string,
+    letterhead?: LetterheadConfig,
+    typography?: DocumentTypography,
+  ): Promise<Buffer>;
   abstract exportToPdf(
     html: string,
     letterhead?: LetterheadConfig,
