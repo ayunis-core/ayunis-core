@@ -101,63 +101,20 @@ export type ReleaseNoteMedia =
   | { type: "loom"; url: string };
 
 /**
- * Only the hourly Announcable sync creates release-note notifications, for
- * every user at once, so specs insert them for one user directly.
- */
-export async function insertReleaseNoteNotification(params: {
-  userId: string;
-  orgId: string;
-  headline: string;
-  body: string;
-  media: ReleaseNoteMedia | null;
-}): Promise<string> {
-  const id = randomUUID();
-  const { media } = params;
-  const client = createDatabaseClient();
-  await client.connect();
-  try {
-    await client.query(
-      `INSERT INTO notifications
-         (id, "userId", "orgId", type, headline, body,
-          "mediaType", "mediaUrl", "mediaStorageKey", "mediaContentType")
-       VALUES ($1, $2, $3, 'release_note', $4, $5, $6, $7, $8, $9)`,
-      [
-        id,
-        params.userId,
-        params.orgId,
-        params.headline,
-        params.body,
-        media?.type ?? null,
-        media?.type === "loom" ? media.url : null,
-        media?.type === "image" ? media.storageKey : null,
-        media?.type === "image" ? media.contentType : null,
-      ],
-    );
-    return id;
-  } finally {
-    await client.end();
-  }
-}
-
-/**
- * The release note the sync stored for an Announcable note, with how many
- * notifications it has; null while it is not stored.
+ * The release note the sync stored for an Announcable note, and whether it
+ * was announced; null while it is not stored.
  */
 export async function findSyncedReleaseNote(
   announcableId: string,
-): Promise<{ headline: string; notifications: number } | null> {
+): Promise<{ headline: string; announced: boolean } | null> {
   const client = createDatabaseClient();
   await client.connect();
   try {
     const result = await client.query<{
       headline: string;
-      notifications: number;
+      announced: boolean;
     }>(
-      `SELECT r.headline, COUNT(n.id)::int AS notifications
-       FROM release_notes r
-       LEFT JOIN notifications n ON n."releaseNoteId" = r.id
-       WHERE r."announcableId" = $1
-       GROUP BY r.id`,
+      `SELECT headline, announced FROM release_notes WHERE "announcableId" = $1`,
       [announcableId],
     );
     return result.rows[0] ?? null;

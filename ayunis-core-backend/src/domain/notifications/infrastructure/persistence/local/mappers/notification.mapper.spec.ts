@@ -1,6 +1,5 @@
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
-import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { NotificationMapper } from './notification.mapper';
 
 describe('NotificationMapper', () => {
@@ -21,7 +20,7 @@ describe('NotificationMapper', () => {
       'an image',
       {
         type: NotificationMediaType.IMAGE,
-        storageKey: 'release-notes/routinen-sind-da.png',
+        storageKey: 'notifications/routinen-sind-da.png',
         contentType: 'image/png',
       },
     ],
@@ -33,15 +32,13 @@ describe('NotificationMapper', () => {
       },
     ],
   ] as const)(
-    'keeps a release note without subheadline and with %s',
+    'keeps a notification without subheadline and with %s',
     (_label, media) => {
       const notification = aNotification({
-        type: NotificationType.RELEASE_NOTE,
         subheadline: null,
         media,
         routineId: null,
         routineThreadId: null,
-        releaseNoteId: '55555555-5555-4555-8555-555555555555',
       });
 
       expect(mapper.toDomain(mapper.toRecord(notification))).toEqual(

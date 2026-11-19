@@ -22,16 +22,10 @@ const searchSchema = z.object({
 // toggle checks run in beforeLoad, before the notification route loads.
 export const Route = createFileRoute('/_authenticated/inbox')({
   validateSearch: searchSchema,
-  beforeLoad: async ({ search: { type }, context: { queryClient } }) => {
+  beforeLoad: async ({ context: { queryClient } }) => {
     const toggles = await getFeatureToggles(queryClient);
     if (!toggles.routinesEnabled) {
       throw redirect({ to: '/chat' });
-    }
-    if (
-      type === NotificationType.release_note &&
-      !toggles.releaseNotesEnabled
-    ) {
-      throw redirect({ to: '/inbox' });
     }
   },
   loaderDeps: ({ search }) => search,

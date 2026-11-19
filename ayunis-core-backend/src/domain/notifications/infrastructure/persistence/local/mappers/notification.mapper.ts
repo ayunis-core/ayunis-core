@@ -18,7 +18,6 @@ export class NotificationMapper {
       media: mediaToDomain(record),
       routineId: record.routineId,
       routineThreadId: record.routineThreadId,
-      releaseNoteId: record.releaseNoteId,
       readAt: record.readAt,
       createdAt: record.createdAt,
     });
@@ -33,30 +32,29 @@ export class NotificationMapper {
     record.headline = domain.headline;
     record.subheadline = domain.subheadline;
     record.body = domain.body;
-    Object.assign(record, this.mediaToRecord(domain.media));
+    Object.assign(record, mediaToRecord(domain.media));
     record.routineId = domain.routineId;
     record.routineThreadId = domain.routineThreadId;
-    record.releaseNoteId = domain.releaseNoteId;
     record.readAt = domain.readAt;
     record.createdAt = domain.createdAt;
     return record;
   }
+}
 
-  mediaToRecord(
-    media: NotificationMedia | null,
-  ): Pick<
-    NotificationRecord,
-    'mediaType' | 'mediaUrl' | 'mediaStorageKey' | 'mediaContentType'
-  > {
-    return {
-      mediaType: media?.type ?? null,
-      mediaUrl: media?.type === NotificationMediaType.LOOM ? media.url : null,
-      mediaStorageKey:
-        media?.type === NotificationMediaType.IMAGE ? media.storageKey : null,
-      mediaContentType:
-        media?.type === NotificationMediaType.IMAGE ? media.contentType : null,
-    };
-  }
+function mediaToRecord(
+  media: NotificationMedia | null,
+): Pick<
+  NotificationRecord,
+  'mediaType' | 'mediaUrl' | 'mediaStorageKey' | 'mediaContentType'
+> {
+  return {
+    mediaType: media?.type ?? null,
+    mediaUrl: media?.type === NotificationMediaType.LOOM ? media.url : null,
+    mediaStorageKey:
+      media?.type === NotificationMediaType.IMAGE ? media.storageKey : null,
+    mediaContentType:
+      media?.type === NotificationMediaType.IMAGE ? media.contentType : null,
+  };
 }
 
 function mediaToDomain(record: NotificationRecord): NotificationMedia | null {

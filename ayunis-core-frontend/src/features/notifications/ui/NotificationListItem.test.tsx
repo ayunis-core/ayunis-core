@@ -82,7 +82,6 @@ describe('NotificationListItem', () => {
     render(
       <NotificationListItem
         notification={aNotification(null, {
-          type: 'release_note',
           subheadline: null,
         })}
       />,

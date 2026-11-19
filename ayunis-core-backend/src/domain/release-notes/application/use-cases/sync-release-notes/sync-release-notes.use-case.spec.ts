@@ -5,14 +5,12 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 import type { ConfigService } from '@nestjs/config';
 import type { UUID } from 'crypto';
-import { randomUUID } from 'crypto';
 import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
 import { AnnouncableFeedInvalidError } from 'src/domain/release-notes/application/release-notes.errors';
 import { ReleaseNoteMediaService } from 'src/domain/release-notes/application/services/release-note-media.service';
 import {
   anAnnouncableNote,
   createMockAnnouncableFeed,
-  InMemoryReleaseNoteInbox,
   InMemoryReleaseNotesRepository,
   TEST_ANNOUNCABLE_ID,
   TEST_ANNOUNCABLE_ORG_ID,
@@ -69,12 +67,6 @@ function setup({ releaseNotesEnabled = true } = {}) {
   const feed = createMockAnnouncableFeed();
   feed.downloadImage.mockResolvedValue({ status: 'downloaded', data: PNG });
   const repository = new InMemoryReleaseNotesRepository();
-  const inbox = new InMemoryReleaseNoteInbox();
-  const deleteByIds = repository.deleteByIds.bind(repository);
-  repository.deleteByIds = (ids) => {
-    inbox.releaseNotesDeleted(ids);
-    return deleteByIds(ids);
-  };
   const storage = objectStore();
   const useCase = new SyncReleaseNotesUseCase(
     { get: (key: string) => config[key] } as unknown as ConfigService,
@@ -86,10 +78,8 @@ function setup({ releaseNotesEnabled = true } = {}) {
       storage.list as unknown as ListObjectsUseCase,
       storage.remove as unknown as DeleteObjectUseCase,
     ),
-    inbox.notifyUsers,
-    inbox.updateNotifications,
   );
-  return { feed, repository, inbox, storage, useCase };
+  return { feed, repository, storage, useCase };
 }
 
 const imageNote = anAnnouncableNote({ imageSrc: TEST_IMAGE_SRC });
@@ -111,7 +101,7 @@ const videoNote = anAnnouncableNote({
 
 describe('SyncReleaseNotesUseCase', () => {
   it('makes no request to Announcable without release notes (no Announcable org ID or routines off)', async () => {
-    const { feed, repository, inbox, useCase } = setup({
+    const { feed, repository, useCase } = setup({
       releaseNotesEnabled: false,
     });
 
@@ -119,7 +109,6 @@ describe('SyncReleaseNotesUseCase', () => {
 
     expect(feed.fetchReleaseNotes).not.toHaveBeenCalled();
     expect(repository.notes.size).toBe(0);
-    expect(inbox.notifications).toHaveLength(0);
   });
 
   it('stores every note of the feed with headline, body, link and media', async () => {
@@ -248,7 +237,7 @@ describe('SyncReleaseNotesUseCase', () => {
     expect(storage.objects.size).toBe(0);
   });
 
-  it('skips a note that cannot become a notification and stores the others', async () => {
+  it('skips a note whose title is too long and stores the others', async () => {
     const { feed, repository, useCase } = setup();
     feed.fetchReleaseNotes.mockResolvedValue([
       anAnnouncableNote({ title: 'A'.repeat(201) }),
@@ -261,7 +250,7 @@ describe('SyncReleaseNotesUseCase', () => {
     expect(repository.byAnnouncableId(TEST_ANNOUNCABLE_ID)).toBeUndefined();
   });
 
-  it('keeps the stored version and its image when an edit cannot become a notification', async () => {
+  it('keeps the stored version and its image when an edit has no title', async () => {
     const { feed, repository, storage, useCase } = setup();
     feed.fetchReleaseNotes.mockResolvedValue([imageNote]);
     await useCase.execute();
@@ -334,8 +323,9 @@ describe('SyncReleaseNotesUseCase', () => {
       const { feed, repository, useCase } = setup();
       feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
 
-      await useCase.execute();
+      await expect(useCase.execute()).resolves.toMatchObject({ inserted: 2 });
 
+      expect(repository.notes.size).toBe(2);
       await expect(repository.countUnread(READER)).resolves.toBe(0);
     });
 
@@ -345,7 +335,7 @@ describe('SyncReleaseNotesUseCase', () => {
       await useCase.execute();
       feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
 
-      await useCase.execute();
+      await expect(useCase.execute()).resolves.toMatchObject({ inserted: 1 });
 
       expect(repository.byAnnouncableId(TEST_ANNOUNCABLE_ID)?.announced).toBe(
         true,
@@ -363,83 +353,9 @@ describe('SyncReleaseNotesUseCase', () => {
       const noteId = repository.byAnnouncableId(VIDEO_ID)?.id as UUID;
       await repository.markRead(READER, noteId);
       feed.fetchReleaseNotes.mockResolvedValue([
-        { ...videoNote, lastUpdateOn: '2026-11-06 09:00:00 +0000 UTC' },
-        webinarNote,
-      ]);
-
-      await expect(useCase.execute()).resolves.toMatchObject({ updated: 1 });
-
-      await expect(
-        repository.findOneForUser(READER, noteId),
-      ).resolves.toMatchObject({ unread: false, note: { announced: true } });
-    });
-  });
-
-  describe('notifications', () => {
-    it('records the notes of the first sync without notifying anyone', async () => {
-      const { feed, repository, inbox, useCase } = setup();
-      feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
-
-      const result = await useCase.execute();
-
-      expect(result).toMatchObject({ inserted: 2, notified: 0 });
-      expect(repository.notes.size).toBe(2);
-      expect(inbox.notifications).toHaveLength(0);
-    });
-
-    it('sends a new note to every user, with its headline, body and media', async () => {
-      const { feed, repository, inbox, useCase } = setup();
-      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
-      await useCase.execute();
-      feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
-
-      const result = await useCase.execute();
-
-      expect(result).toMatchObject({ inserted: 1, notified: 2 });
-      const note = repository.byAnnouncableId(TEST_ANNOUNCABLE_ID);
-      expect(inbox.notifications).toEqual(
-        inbox.users.map((userId) => ({
-          userId,
-          releaseNoteId: note?.id,
-          headline: imageNote.title,
-          body: imageNote.text,
-          media: note?.media,
-          readAt: null,
-        })),
-      );
-      expect(note?.media).toMatchObject({ type: NotificationMediaType.IMAGE });
-    });
-
-    it('sends a note once, and not to users who joined after it arrived', async () => {
-      const { feed, inbox, useCase } = setup();
-      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
-      await useCase.execute();
-      feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
-      await useCase.execute();
-      const laterUser = randomUUID();
-      inbox.users.push(laterUser);
-
-      const result = await useCase.execute();
-
-      expect(result).toMatchObject({ unchanged: 2, notified: 0 });
-      expect(inbox.notifications).toHaveLength(2);
-      expect(inbox.notifications.map((n) => n.userId)).not.toContain(laterUser);
-    });
-
-    it('shows an edit in the notes already sent, without sending it again or changing read state', async () => {
-      const { feed, repository, inbox, useCase } = setup();
-      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
-      await useCase.execute();
-      feed.fetchReleaseNotes.mockResolvedValue([videoNote, webinarNote]);
-      await useCase.execute();
-      const noteId = repository.byAnnouncableId(VIDEO_ID)?.id as UUID;
-      const readAt = new Date('2026-11-07T09:00:00.000Z');
-      inbox.of(noteId)[0].readAt = readAt;
-      feed.fetchReleaseNotes.mockResolvedValue([
         {
           ...videoNote,
           title: 'Fähigkeiten verbessern – jetzt mit Vorschau',
-          text: 'Die Vorschau zeigt die Änderung vor dem Speichern.',
           mediaLink: '',
           imageSrc: TEST_IMAGE_SRC,
           lastUpdateOn: '2026-11-06 09:00:00 +0000 UTC',
@@ -447,44 +363,35 @@ describe('SyncReleaseNotesUseCase', () => {
         webinarNote,
       ]);
 
-      const result = await useCase.execute();
+      await expect(useCase.execute()).resolves.toMatchObject({ updated: 1 });
 
-      expect(result).toMatchObject({ updated: 1, notified: 0 });
-      const media = repository.byAnnouncableId(VIDEO_ID)?.media;
-      expect(media).toMatchObject({ type: NotificationMediaType.IMAGE });
-      expect(inbox.of(noteId)).toEqual([
-        expect.objectContaining({
+      await expect(
+        repository.findOneForUser(READER, noteId),
+      ).resolves.toMatchObject({
+        unread: false,
+        note: {
           headline: 'Fähigkeiten verbessern – jetzt mit Vorschau',
-          body: 'Die Vorschau zeigt die Änderung vor dem Speichern.',
-          media,
-          readAt,
-        }),
-        expect.objectContaining({
-          headline: 'Fähigkeiten verbessern – jetzt mit Vorschau',
-          media,
-          readAt: null,
-        }),
-      ]);
-      expect(inbox.notifications).toHaveLength(2);
+          announced: true,
+          media: { type: NotificationMediaType.IMAGE },
+        },
+      });
     });
 
-    it('removes the notifications of a note Announcable no longer has', async () => {
-      const { feed, inbox, useCase } = setup();
+    it('keeps an old-news note unannounced when it is edited', async () => {
+      const { feed, repository, useCase } = setup();
       feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
       await useCase.execute();
-      feed.fetchReleaseNotes.mockResolvedValue([videoNote, webinarNote]);
-      await useCase.execute();
-      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
+      feed.fetchReleaseNotes.mockResolvedValue([
+        { ...webinarNote, lastUpdateOn: '2026-11-06 09:00:00 +0000 UTC' },
+      ]);
 
-      await useCase.execute();
+      await expect(useCase.execute()).resolves.toMatchObject({ updated: 1 });
 
-      expect(inbox.notifications).toHaveLength(0);
+      await expect(repository.countUnread(READER)).resolves.toBe(0);
     });
 
     it('changes nothing when the feed is empty while notes are stored', async () => {
-      const { feed, repository, inbox, useCase } = setup();
-      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
-      await useCase.execute();
+      const { feed, repository, useCase } = setup();
       feed.fetchReleaseNotes.mockResolvedValue([videoNote, webinarNote]);
       await useCase.execute();
       feed.fetchReleaseNotes.mockResolvedValue([]);
@@ -494,7 +401,6 @@ describe('SyncReleaseNotesUseCase', () => {
       );
 
       expect(repository.notes.size).toBe(2);
-      expect(inbox.notifications).toHaveLength(2);
     });
 
     it('accepts an empty feed while no notes are stored', async () => {

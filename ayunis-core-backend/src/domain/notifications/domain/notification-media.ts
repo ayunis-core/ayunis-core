@@ -25,9 +25,8 @@ export interface NotificationLoomVideo {
 export type NotificationMedia = NotificationImage | NotificationLoomVideo;
 
 /**
- * Why a notification may not carry this media, or null when it may. Also
- * applied by writers that store notification media without
- * `CreateNotificationUseCase` (the release-note sync).
+ * Why a notification may not carry this media, or null when it may. The
+ * release-note sync applies the same rules to a release note's media.
  */
 export function notificationMediaViolation(
   media: NotificationMedia,

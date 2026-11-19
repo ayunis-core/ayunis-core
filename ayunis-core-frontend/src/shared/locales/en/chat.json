@@ -456,8 +456,7 @@
     "unreadNotifications": {
       "tabs": {
         "routine_error": "Needs attention",
-        "routine": "Routines",
-        "release_note": "Release notes"
+        "routine": "Routines"
       },
       "viewAll": "View all in inbox"
     },

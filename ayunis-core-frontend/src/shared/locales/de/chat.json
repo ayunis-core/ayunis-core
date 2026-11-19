@@ -456,8 +456,7 @@
     "unreadNotifications": {
       "tabs": {
         "routine_error": "Zu prüfen",
-        "routine": "Routinen",
-        "release_note": "Neuigkeiten"
+        "routine": "Routinen"
       },
       "viewAll": "Alle im Posteingang ansehen"
     },

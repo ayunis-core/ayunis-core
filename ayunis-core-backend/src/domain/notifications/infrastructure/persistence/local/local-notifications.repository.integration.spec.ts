@@ -137,13 +137,12 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
     });
   });
 
-  it('reads back a release note without subheadline and with its image', async () => {
+  it('reads back a notification without subheadline and with its image', async () => {
     const notification = await stored({
-      type: NotificationType.RELEASE_NOTE,
       subheadline: null,
       media: {
         type: NotificationMediaType.IMAGE,
-        storageKey: 'release-notes/routinen-sind-da.png',
+        storageKey: 'notifications/routinen-sind-da.png',
         contentType: 'image/png',
       },
       routineId: null,
@@ -156,7 +155,7 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
       subheadline: null,
       media: {
         type: NotificationMediaType.IMAGE,
-        storageKey: 'release-notes/routinen-sind-da.png',
+        storageKey: 'notifications/routinen-sind-da.png',
         contentType: 'image/png',
       },
     });

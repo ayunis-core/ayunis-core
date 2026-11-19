@@ -6,10 +6,7 @@ import {
   createEmptyThread,
   sendThreadMessageWithImage,
 } from "../clients/api/threads.client";
-import {
-  findUserMessageImage,
-  insertReleaseNoteNotification,
-} from "../clients/database.client";
+import { findUserMessageImage } from "../clients/database.client";
 import type { ReleaseNoteMedia } from "../clients/database.client";
 import { insertReleaseNote } from "../clients/release-notes.database.client";
 import { createLargePng } from "./png.factory";
@@ -41,22 +38,6 @@ export async function storeReleaseNoteImage(
     storageKey: `${orgId}/${thread.id}/${messageId}/0.png`,
     contentType,
   };
-}
-
-/** One release-note notification, without subheadline, for the user of `api`. */
-export async function createReleaseNoteNotification(
-  api: APIRequestContext,
-  headline: string,
-  media: ReleaseNoteMedia | null,
-): Promise<string> {
-  const { id: userId, orgId } = await getCurrentUser(api);
-  return insertReleaseNoteNotification({
-    userId,
-    orgId,
-    headline,
-    body: "Ayunis erledigt wiederkehrende Recherchen jetzt automatisch. [Mehr erfahren](https://ayunis.com/routinen)",
-    media,
-  });
 }
 
 /** One announced release note; every user who joined before sees it unread. */
