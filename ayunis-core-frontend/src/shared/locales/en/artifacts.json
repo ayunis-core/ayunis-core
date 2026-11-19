@@ -107,5 +107,14 @@
       "out": "Zoom out",
       "reset": "Reset view"
     }
+  },
+  "bpmn": {
+    "export": {
+      "bpmn": "BPMN",
+      "svg": "SVG",
+      "png": "PNG",
+      "failed": "Failed to export process model"
+    },
+    "renderFailed": "The process model could not be displayed"
   }
 }

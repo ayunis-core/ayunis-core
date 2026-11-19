@@ -20,7 +20,8 @@
       "type": {
         "document": "Document",
         "spreadsheet": "Table",
-        "diagram": "Diagram"
+        "diagram": "Diagram",
+        "bpmn": "Process model (BPMN)"
       },
       "loadErrorTitle": "Content could not be loaded",
       "loadErrorDescription": "The content could not be loaded. Please try again.",
@@ -112,6 +113,8 @@
         "read_document": "Read document",
         "create_diagram": "Created diagram",
         "update_diagram": "Updated diagram",
+        "create_bpmn": "Created process model",
+        "update_bpmn": "Updated process model",
         "create_spreadsheet": "Created spreadsheet",
         "update_spreadsheet": "Updated spreadsheet",
         "chart": "Created chart",
@@ -288,6 +291,20 @@
         "updating": "Updating diagram…",
         "generating": "Generating update…",
         "openInEditor": "Open diagram"
+      },
+      "create_bpmn": {
+        "title": "Process model",
+        "created": "Process model created",
+        "creating": "Creating process model…",
+        "generating": "Generating process model…",
+        "openInEditor": "Open process model"
+      },
+      "update_bpmn": {
+        "title": "Process model updated",
+        "updated": "Process model updated",
+        "updating": "Updating process model…",
+        "generating": "Generating update…",
+        "openInEditor": "Open process model"
       },
       "create_spreadsheet": {
         "title": "Spreadsheet",

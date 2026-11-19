@@ -15,6 +15,7 @@ import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { UpdateBpmnTool } from 'src/domain/tools/domain/tools/update-bpmn-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
 import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
@@ -107,6 +108,7 @@ describe('runtime tool policy', () => {
       ['edit_document', new EditDocumentTool()],
       ['update_diagram', new UpdateDiagramTool()],
       ['update_spreadsheet', new UpdateSpreadsheetTool()],
+      ['update_bpmn', new UpdateBpmnTool()],
     ])('runs %s apart from its sibling calls', (_, tool) => {
       expect(requiresExclusiveExecution(tool)).toBe(true);
     });

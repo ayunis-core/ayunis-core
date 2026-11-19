@@ -11,6 +11,7 @@ import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import {
   Artifact,
+  BpmnArtifact,
   DiagramArtifact,
   DocumentArtifact,
   SpreadsheetArtifact,
@@ -20,7 +21,7 @@ import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity
 import { buildLetterheadSuffix } from './letterhead-suffix.helper';
 
 /**
- * Assembles artifact-related tools (document + diagram + spreadsheet) for a
+ * Assembles artifact-related tools (document + diagram + spreadsheet + BPMN) for a
  * thread, used by `ArtifactsCapability`.
  */
 @Injectable()
@@ -72,6 +73,13 @@ export class ArtifactToolAssemblerService {
               : '';
           return `- ${a.id}: "${a.title}" (current version ${a.currentVersionNumber})${warning}`;
         },
+      )),
+      await this.assembleCreateTool(ToolType.CREATE_BPMN),
+      ...(await this.assembleUpdateToolForType(
+        threadArtifacts.filter((a) => a instanceof BpmnArtifact),
+        ToolType.UPDATE_BPMN,
+        'BPMN process models',
+        (a) => `- ${a.id}: "${a.title}"`,
       )),
     ];
   }

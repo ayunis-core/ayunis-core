@@ -43,7 +43,7 @@ describe('ArtifactsCapability', () => {
     );
 
     expect(contribution.tools).toBeUndefined();
-    expect(sectionsIn(contribution, PromptSlot.TOOL_USAGE)).toHaveLength(3);
+    expect(sectionsIn(contribution, PromptSlot.TOOL_USAGE)).toHaveLength(4);
     expect(assembleArtifactTools).not.toHaveBeenCalled();
   });
 });

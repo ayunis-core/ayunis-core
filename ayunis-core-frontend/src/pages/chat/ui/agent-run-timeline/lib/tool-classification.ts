@@ -8,6 +8,8 @@ const RICH_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   'read_document',
   'create_diagram',
   'update_diagram',
+  'create_bpmn',
+  'update_bpmn',
   'create_spreadsheet',
   'update_spreadsheet',
   'bar_chart',
@@ -61,6 +63,7 @@ const ARTIFACT_CREATION_TOOLS: ReadonlySet<string> = new Set<string>([
   'create_document',
   'create_spreadsheet',
   'create_diagram',
+  'create_bpmn',
   'create_file',
   'bar_chart',
   'line_chart',
@@ -93,10 +96,11 @@ const ARTIFACT_TARGET_TOOLS: ReadonlyMap<string, ArtifactFamily> = new Map([
   ['read_document', 'document'],
   ['update_document', 'document'],
   ['update_diagram', 'diagram'],
+  ['update_bpmn', 'bpmn'],
   ['update_spreadsheet', 'spreadsheet'],
 ]);
 
-export type ArtifactFamily = 'document' | 'diagram' | 'spreadsheet';
+export type ArtifactFamily = 'document' | 'diagram' | 'bpmn' | 'spreadsheet';
 
 export interface ArtifactToolTarget {
   family: ArtifactFamily;

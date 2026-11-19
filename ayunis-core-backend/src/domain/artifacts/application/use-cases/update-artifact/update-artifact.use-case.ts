@@ -63,7 +63,10 @@ export class UpdateArtifactUseCase {
       return await this.updateLetterheadOnly(command);
     }
 
-    const content = prepareContentForWrite(artifact.type, command.content);
+    const content = await prepareContentForWrite(
+      artifact.type,
+      command.content,
+    );
     this.validateContentLength(content);
     return await this.addContentVersion(command, userId, content);
   }

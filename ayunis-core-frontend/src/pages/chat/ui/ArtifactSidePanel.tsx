@@ -26,6 +26,12 @@ const LazyDiagramViewer = lazy(() =>
   })),
 );
 
+const LazyBpmnViewer = lazy(() =>
+  import('@/widgets/bpmn-viewer').then((m) => ({
+    default: m.BpmnViewer,
+  })),
+);
+
 const LazySpreadsheetEditor = lazy(() =>
   import('@/widgets/spreadsheet-editor').then((m) => ({
     default: m.SpreadsheetEditor,
@@ -160,6 +166,16 @@ export const ArtifactSidePanel = forwardRef<
       case 'diagram':
         return (
           <LazyDiagramViewer
+            key={artifact.id}
+            artifact={artifact}
+            onClose={onClose}
+            onBack={onBack}
+            showClose={showClose}
+          />
+        );
+      case 'bpmn':
+        return (
+          <LazyBpmnViewer
             key={artifact.id}
             artifact={artifact}
             onClose={onClose}

@@ -62,7 +62,7 @@ type ProductiveOutcome =
   | {
       outcome_type: 'visual_downloaded';
       output_type: 'diagram' | 'chart' | 'image';
-      format: 'png' | 'svg';
+      format: 'png' | 'svg' | 'bpmn';
     }
   | {
       outcome_type: 'email_handed_off';

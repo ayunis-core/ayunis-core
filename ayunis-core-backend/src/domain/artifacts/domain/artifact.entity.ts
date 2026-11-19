@@ -71,6 +71,21 @@ export class DiagramArtifact extends Artifact {
   }
 }
 
+export class BpmnArtifact extends Artifact {
+  constructor(params: {
+    id?: UUID;
+    threadId: UUID;
+    userId: UUID;
+    title: string;
+    currentVersionNumber?: number;
+    versions?: ArtifactVersion[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    super({ ...params, type: ArtifactType.BPMN });
+  }
+}
+
 export class SpreadsheetArtifact extends Artifact {
   constructor(params: {
     id?: UUID;

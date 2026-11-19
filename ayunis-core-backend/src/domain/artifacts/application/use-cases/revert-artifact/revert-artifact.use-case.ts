@@ -69,7 +69,7 @@ export class RevertArtifactUseCase {
       );
     }
 
-    const content = prepareContentForWrite(
+    const content = await prepareContentForWrite(
       artifact.type,
       targetVersion.content,
     );

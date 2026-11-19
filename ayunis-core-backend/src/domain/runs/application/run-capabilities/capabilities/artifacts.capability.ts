@@ -21,6 +21,12 @@ Use create_diagram when the user asks for a visual — a flowchart, sequence dia
 Prefer create_diagram over inline mermaid code blocks when the user explicitly asks for a diagram they want to view, iterate on, or export. For a quick sketch in the middle of a conversation, an inline mermaid code block is fine.
 </diagram_usage>`;
 
+const BPMN_USAGE = `<bpmn_usage>
+Use create_bpmn when the user asks for a business process model, a BPMN diagram, or process documentation in BPMN notation (e.g. "Prozessmodell", "BPMN", "Geschäftsprozess modellieren"). For other flowcharts and diagrams, use create_diagram with mermaid.
+
+Write only the semantic BPMN 2.0 XML; the layout is computed automatically. If the content is rejected, fix the reported problem and call the tool again.
+</bpmn_usage>`;
+
 const SPREADSHEET_USAGE = `<spreadsheet_usage>
 Use create_spreadsheet when the user asks for tabular data they intend to edit, extend, or export to Excel/CSV — for example a budget, inventory list, schedule, or dataset. For a quick illustrative table inside an answer, prefer an inline markdown table; the user can always ask to turn it into a spreadsheet.
 
@@ -42,9 +48,12 @@ export class ArtifactsCapability implements RunCapability {
   async contribute(
     context: RunCapabilityContext,
   ): Promise<CapabilityContribution> {
-    const sections = [DOCUMENT_USAGE, DIAGRAM_USAGE, SPREADSHEET_USAGE].map(
-      (content) => ({ slot: PromptSlot.TOOL_USAGE, content }),
-    );
+    const sections = [
+      DOCUMENT_USAGE,
+      DIAGRAM_USAGE,
+      BPMN_USAGE,
+      SPREADSHEET_USAGE,
+    ].map((content) => ({ slot: PromptSlot.TOOL_USAGE, content }));
     if (!context.model.canUseTools) return { sections };
     const tools = await this.artifactToolAssembler.assembleArtifactTools(
       context.thread,

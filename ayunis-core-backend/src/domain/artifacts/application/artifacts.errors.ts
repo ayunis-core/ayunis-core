@@ -19,6 +19,7 @@ export enum ArtifactErrorCode {
   ARTIFACT_LETTERHEAD_NOT_SUPPORTED = 'ARTIFACT_LETTERHEAD_NOT_SUPPORTED',
   ARTIFACT_NOT_EXPORTABLE = 'ARTIFACT_NOT_EXPORTABLE',
   ARTIFACT_INVALID_SPREADSHEET_CONTENT = 'ARTIFACT_INVALID_SPREADSHEET_CONTENT',
+  ARTIFACT_INVALID_BPMN_CONTENT = 'ARTIFACT_INVALID_BPMN_CONTENT',
   ARTIFACT_EXPORT_TIMEOUT = 'ARTIFACT_EXPORT_TIMEOUT',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
@@ -157,6 +158,17 @@ export class InvalidSpreadsheetContentError extends ArtifactError {
     super(
       `Invalid spreadsheet content: ${reason}`,
       ArtifactErrorCode.ARTIFACT_INVALID_SPREADSHEET_CONTENT,
+      400,
+      metadata,
+    );
+  }
+}
+
+export class InvalidBpmnContentError extends ArtifactError {
+  constructor(reason: string, metadata?: ErrorMetadata) {
+    super(
+      `Invalid BPMN content: ${reason}`,
+      ArtifactErrorCode.ARTIFACT_INVALID_BPMN_CONTENT,
       400,
       metadata,
     );
