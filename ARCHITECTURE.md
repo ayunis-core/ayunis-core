@@ -100,6 +100,7 @@ none of these packages implements the Agent Plugins standard.
 | [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine and release-note notifications with media, read state and "Chat about this"          |
 | [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)        | Release Notes  | Hourly copy of the Announcable release notes, sent to every user's inbox                                       |
 | [office-addins](ayunis-core-backend/src/domain/office-addins/SUMMARY.md)        | Office Add-ins | Outlook add-in manifest rendered for this deployment                                                           |
+| [connectors](ayunis-core-backend/src/domain/connectors/SUMMARY.md)              | Connections    | Per-org connections to external products (Microsoft 365) with encrypted credentials (behind a feature flag)    |
 
 ### IAM Modules — Identity & Access Management
 

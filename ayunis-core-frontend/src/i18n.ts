@@ -86,6 +86,8 @@ import enAdminSettingsRetention from './shared/locales/en/admin-settings-retenti
 import deAdminSettingsRetention from './shared/locales/de/admin-settings-retention.json';
 import enAdminSettingsLetterheads from './shared/locales/en/admin-settings-letterheads.json';
 import deAdminSettingsLetterheads from './shared/locales/de/admin-settings-letterheads.json';
+import enAdminSettingsConnections from './shared/locales/en/admin-settings-connections.json';
+import deAdminSettingsConnections from './shared/locales/de/admin-settings-connections.json';
 import enAdminSettingsApiKeys from './shared/locales/en/admin-settings-api-keys.json';
 import deAdminSettingsApiKeys from './shared/locales/de/admin-settings-api-keys.json';
 import enMcpUserConfig from './shared/locales/en/mcp-user-config.json';
@@ -140,6 +142,7 @@ const resources = {
     'admin-settings-roles': enAdminSettingsRoles,
     'admin-settings-retention': enAdminSettingsRetention,
     'admin-settings-letterheads': enAdminSettingsLetterheads,
+    'admin-settings-connections': enAdminSettingsConnections,
     'admin-settings-api-keys': enAdminSettingsApiKeys,
     'mcp-user-config': enMcpUserConfig,
     'admin-settings-instructions': enAdminSettingsInstructions,
@@ -188,6 +191,7 @@ const resources = {
     'admin-settings-roles': deAdminSettingsRoles,
     'admin-settings-retention': deAdminSettingsRetention,
     'admin-settings-letterheads': deAdminSettingsLetterheads,
+    'admin-settings-connections': deAdminSettingsConnections,
     'admin-settings-api-keys': deAdminSettingsApiKeys,
     'mcp-user-config': deMcpUserConfig,
     'admin-settings-instructions': deAdminSettingsInstructions,

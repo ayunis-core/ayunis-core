@@ -13,6 +13,7 @@ import {
   MessageSquareText,
   Trash2,
   GraduationCap,
+  Cable,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,6 +21,7 @@ import {
   type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsAcademyAddonActive } from '@/features/academy';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { useHasCreditBudget } from '@/features/credit-limits';
 import { MeResponseDtoRole } from '@/shared/api';
 import {
@@ -30,6 +32,7 @@ import {
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const academyAddonActive = useIsAcademyAddonActive();
+  const connectorsEnabled = useIsFeatureEnabled('connectorsEnabled');
   const authorization = useAuthorization();
   const hasCreditBudget = useHasCreditBudget(
     authorization.hasRole(MeResponseDtoRole.admin),
@@ -62,6 +65,16 @@ export function AdminSettingsSidebar() {
           icon: <Key />,
           label: t('layout.apiKeys'),
         },
+        ...(connectorsEnabled
+          ? [
+              {
+                to: '/admin-settings/connections' as const,
+                icon: <Cable />,
+                label: t('layout.connections'),
+                testId: 'admin-settings-nav-connections',
+              },
+            ]
+          : []),
       ],
     },
     {
