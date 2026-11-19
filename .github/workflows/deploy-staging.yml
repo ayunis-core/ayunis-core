@@ -8,6 +8,8 @@ on:
   workflow_run:
     workflows: ["Build & Publish Images"]
     types: [completed]
+    # Stops PR and tag builds from spawning a skipped deploy run each.
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
