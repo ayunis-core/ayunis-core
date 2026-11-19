@@ -44,13 +44,13 @@ The sync engine (`domain/knowledge-base-sync`) sees only these outcomes, never t
 
 ## Use Cases
 
-- **`ListConnectorsUseCase`** — Every available product with its status for the organization of the current user; a product without a connector is not set up
+- **`ListConnectorsUseCase`** (exported) — Every available product with its status and connector ID (`null` without a connector) for the organization of the current user; a product without a connector is not set up. The sync engine reads from it which product a location's connector is and which products may be added.
 - **`GetMicrosoft365ConnectorUseCase`** — Status, tenant ID and client ID of the organization's Microsoft 365 connector (`Microsoft365ConnectorOverview`, never credentials)
 - **`SaveMicrosoft365ConnectorUseCase`** — Sets up or changes the connection. With a client secret, it replaces setup and credentials (`{ clientSecret }` encrypted as one value). Without one, it changes the setup and keeps the stored secret; while the connector is not set up, that fails with `ConnectorCredentialsRequiredError` (`CONNECTOR_CREDENTIALS_REQUIRED`, 400). Then it tests the saved connection and returns the result with the overview. The secret is never logged.
 - **`TestMicrosoft365ConnectionUseCase`** — Tests the organization's Microsoft 365 connection; `ConnectorNotSetUpError` (`CONNECTOR_NOT_SET_UP`, 404) while it is not set up
 - **`ListConnectorChangesUseCase`** / **`FetchConnectorItemContentUseCase`** (exported) — The changes below a location since a cursor, and one item's content, with the organization's own connector access. Run without a user (sync jobs), so the organization comes with the command; `access_lost` whenever `ConnectorSyncAccessService` resolves nothing.
 - **`FindSetUpConnectorUseCase`** (exported) — The ID of the current user's organization's set-up connector for a product, for referencing it; `ConnectorNotSetUpError` otherwise.
-- **`ResolveSharePointLocationUseCase`** (exported) — Checks a pasted SharePoint URL through the current user's organization's Microsoft 365 connector before it is added as a location: `found` with `kind` (`site`, `library`, `folder`), `name` and `location` (SharePoint's own URL of it, to add), `not_granted` or `not_found_or_not_granted` with the `grant` (`scope` `site` or `folder`, `command`), `not_found`, or `unsupported_url` (not a site, library or folder URL of SharePoint Online). `CONNECTOR_NOT_SET_UP` (404) while not set up, `CONNECTOR_CONNECTION_FAILED` (422) while Entra rejects the credentials, `PROVIDER_UNAVAILABLE_REJECTED_MICROSOFT_GRAPH` while Graph throttles. No HTTP endpoint yet (AYC-1637).
+- **`ResolveSharePointLocationUseCase`** (exported) — Checks a pasted SharePoint URL through the current user's organization's Microsoft 365 connector before it is added as a location: `found` with `kind` (`site`, `library`, `folder`), `name` and `location` (SharePoint's own URL of it, to add), `not_granted` or `not_found_or_not_granted` with the `grant` (`scope` `site` or `folder`, `command`), `not_found`, or `unsupported_url` (not a site, library or folder URL of SharePoint Online). `CONNECTOR_NOT_SET_UP` (404) while not set up, `CONNECTOR_CONNECTION_FAILED` (422) while Entra rejects the credentials, `PROVIDER_UNAVAILABLE_REJECTED_MICROSOFT_GRAPH` while Graph throttles. Exposed to every member through `SharePointLocationsController`.
 - **`RemoveConnectionUseCase`** — Clears setup and credentials of a product's connector and keeps the connector; changes nothing while it is not set up
 
 ## Infrastructure
@@ -64,6 +64,8 @@ The sync engine (`domain/knowledge-base-sync`) sees only these outcomes, never t
 
 Controller: `ConnectorsController`, base path `/connectors`, tag `connectors`. Org admins only (`@Roles(ADMIN)`), scoped to the admin's organization. Every route answers 404 while the flag is off.
 
+`SharePointLocationsController` (base path `/connectors/microsoft-365/sharepoint-locations`, every member of the organization, 404 while the flag is off): `POST /resolve` with `{ url }` checks a pasted SharePoint URL before it is added to a knowledge base and returns `outcome`, `kind`, `name`, `location` (to add) and `grant` (`scope`, `command`), `null` where they do not apply. Members may resolve because whoever may edit a knowledge base may add SharePoint to it, and IT decides what is reachable.
+
 | Method | Path                             | Description                                                                                                                                                             |
 | ------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GET    | `/connectors`                    | Every available product with its status, never its setup or credentials                                                                                                 |
@@ -75,4 +77,5 @@ Controller: `ConnectorsController`, base path `/connectors`, tag `connectors`. O
 ## Consumers
 
 - `domain/knowledge-base-sync`: synced knowledge base locations reference a connector by ID and sync through the exported use cases.
+- Frontend: the knowledge base detail pages' synced sources card ("Add source → SharePoint") resolves URLs through `SharePointLocationsController`.
 - Frontend: admin settings → **Connections** (`/admin-settings/connections`, "Members & Access" group) and its Microsoft 365 page (`/admin-settings/connections/microsoft-365`), which shows the connection test after saving and runs it again on request.

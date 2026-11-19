@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { SyncedFilesSummary } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 
@@ -7,6 +8,20 @@ export abstract class SyncedLocationsRepository {
   abstract create(location: SyncedLocation): Promise<boolean>;
 
   abstract findById(id: UUID): Promise<SyncedLocation | null>;
+
+  /** The knowledge base's locations, in the order they were added. */
+  abstract findByKnowledgeBaseId(
+    knowledgeBaseId: UUID,
+  ): Promise<SyncedLocation[]>;
+
+  /**
+   * What the files of each location amount to, with up to `skippedLimit`
+   * of its skipped files; a location without files is missing.
+   */
+  abstract summarizeFiles(
+    locationIds: UUID[],
+    skippedLimit: number,
+  ): Promise<Map<UUID, SyncedFilesSummary>>;
 
   /** Locks the location until the transaction ends; `null` once removed. */
   abstract lockById(id: UUID): Promise<SyncedLocation | null>;

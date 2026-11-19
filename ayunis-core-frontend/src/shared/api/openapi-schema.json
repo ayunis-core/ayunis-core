@@ -11502,6 +11502,163 @@
         "tags": ["Super Admin Trials"]
       }
     },
+    "/knowledge-bases/{id}/synced-locations": {
+      "get": {
+        "description": "Each location with its sync state and what its files amount to, and the products whose locations can be added.",
+        "operationId": "KnowledgeBaseSyncedLocationsController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncedLocationListResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found"
+          }
+        },
+        "summary": "List the synced locations of a knowledge base",
+        "tags": ["knowledge-bases"]
+      },
+      "post": {
+        "description": "Every file below the location becomes a document of the knowledge base, within its document limit. The first sync starts right away.",
+        "operationId": "KnowledgeBaseSyncedLocationsController_add",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSyncedLocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncedLocationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Knowledge base not found, or the product is not set up (CONNECTOR_NOT_SET_UP)"
+          },
+          "409": {
+            "description": "The knowledge base already syncs the location (SYNCED_LOCATION_ALREADY_EXISTS)"
+          }
+        },
+        "summary": "Add a synced location to a knowledge base",
+        "tags": ["knowledge-bases"]
+      }
+    },
+    "/knowledge-bases/{id}/synced-locations/{locationId}/sync": {
+      "post": {
+        "description": "Queues a sync unless one is queued or running; a paused location syncs once its pause ends.",
+        "operationId": "KnowledgeBaseSyncedLocationsController_syncNow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the synced location",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          },
+          "404": {
+            "description": "Synced location not found"
+          }
+        },
+        "summary": "Sync a location now",
+        "tags": ["knowledge-bases"]
+      }
+    },
+    "/knowledge-bases/{id}/synced-locations/{locationId}": {
+      "delete": {
+        "description": "Removes the location and every document synced from it.",
+        "operationId": "KnowledgeBaseSyncedLocationsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the synced location",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "Synced location not found"
+          }
+        },
+        "summary": "Remove a synced location",
+        "tags": ["knowledge-bases"]
+      }
+    },
     "/connectors": {
       "get": {
         "description": "Returns every available product with whether the organization has set it up. Credentials are never returned.",
@@ -11606,6 +11763,43 @@
           }
         },
         "summary": "Test the Microsoft 365 connection",
+        "tags": ["connectors"]
+      }
+    },
+    "/connectors/microsoft-365/sharepoint-locations/resolve": {
+      "post": {
+        "description": "Resolves a site, library or folder URL through the organization's Microsoft 365 connection. When it is not granted to Ayunis, returns the command that grants it, for the Microsoft 365 admin.",
+        "operationId": "SharePointLocationsController_resolve",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveSharePointLocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharePointLocationResolutionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Microsoft 365 is not set up (CONNECTOR_NOT_SET_UP)"
+          },
+          "422": {
+            "description": "Microsoft Entra rejects the stored connection (CONNECTOR_CONNECTION_FAILED)"
+          }
+        },
+        "summary": "Check a SharePoint URL before adding it to a knowledge base",
         "tags": ["connectors"]
       }
     },
@@ -24216,8 +24410,174 @@
       },
       "ConnectorProduct": {
         "type": "string",
-        "enum": ["microsoft_365"],
-        "description": "The product this connector connects to"
+        "enum": ["microsoft_365"]
+      },
+      "SyncedLocationState": {
+        "type": "string",
+        "enum": ["active", "no_longer_accessible"],
+        "description": "Whether the connector still reaches the location; its documents stay when it does not"
+      },
+      "SyncedFileSkipReason": {
+        "type": "string",
+        "enum": [
+          "unsupported_type",
+          "too_large",
+          "encrypted",
+          "removed_after_failure"
+        ],
+        "description": "Why the file is set aside"
+      },
+      "SkippedSyncedFileResponseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ortsplan.jpg"
+          },
+          "path": {
+            "type": "string",
+            "description": "Below the location, including the name",
+            "example": "Bilder/Ortsplan.jpg"
+          },
+          "reason": {
+            "description": "Why the file is set aside",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SyncedFileSkipReason"
+              }
+            ]
+          }
+        },
+        "required": ["name", "path", "reason"]
+      },
+      "SyncedLocationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorProduct"
+              }
+            ]
+          },
+          "location": {
+            "type": "string",
+            "description": "The URL that is synced",
+            "example": "https://contoso.sharepoint.com/sites/bauamt"
+          },
+          "state": {
+            "description": "Whether the connector still reaches the location; its documents stay when it does not",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SyncedLocationState"
+              }
+            ]
+          },
+          "lastSyncedAt": {
+            "type": "string",
+            "description": "When the location was last synced; null before its first sync",
+            "format": "date-time",
+            "nullable": true
+          },
+          "syncingSince": {
+            "type": "string",
+            "description": "Since when a sync runs, until its files are processed; null between syncs",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pausedUntil": {
+            "type": "string",
+            "description": "While syncing is paused after the provider was unavailable: the next attempt",
+            "format": "date-time",
+            "nullable": true
+          },
+          "nextSyncAt": {
+            "type": "string",
+            "description": "When the next scheduled sync is due",
+            "format": "date-time"
+          },
+          "documentCount": {
+            "type": "number",
+            "description": "Files synced as documents"
+          },
+          "failedCount": {
+            "type": "number",
+            "description": "Synced files whose latest version failed to process"
+          },
+          "notSyncedLimitReachedCount": {
+            "type": "number",
+            "description": "Files not synced because the knowledge base's document limit is reached"
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Files set aside, e.g. unsupported or encrypted"
+          },
+          "skippedFiles": {
+            "description": "The first files set aside, by path",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkippedSyncedFileResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "product",
+          "location",
+          "state",
+          "lastSyncedAt",
+          "syncingSince",
+          "pausedUntil",
+          "nextSyncAt",
+          "documentCount",
+          "failedCount",
+          "notSyncedLimitReachedCount",
+          "skippedCount",
+          "skippedFiles"
+        ]
+      },
+      "SyncedLocationListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncedLocationResponseDto"
+            }
+          },
+          "availableProducts": {
+            "type": "array",
+            "description": "The products whose locations can be added: those the organization has set up",
+            "items": {
+              "$ref": "#/components/schemas/ConnectorProduct"
+            }
+          }
+        },
+        "required": ["data", "availableProducts"]
+      },
+      "AddSyncedLocationDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "description": "The product whose connector syncs the location",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorProduct"
+              }
+            ]
+          },
+          "location": {
+            "type": "string",
+            "description": "The URL of the location, as the product resolved it (for SharePoint the `location` of a found resolution)",
+            "example": "https://contoso.sharepoint.com/sites/bauamt/Freigegebene%20Dokumente/Satzungen",
+            "maxLength": 2048
+          }
+        },
+        "required": ["product", "location"]
       },
       "ConnectorStatus": {
         "type": "string",
@@ -24397,6 +24757,101 @@
           }
         },
         "required": ["status", "tenantId", "clientId", "connectionTest"]
+      },
+      "ResolveSharePointLocationDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "A URL copied from SharePoint Online: a site, a document library or a folder",
+            "example": "https://contoso.sharepoint.com/sites/bauamt/Freigegebene%20Dokumente/Satzungen",
+            "maxLength": 2048
+          }
+        },
+        "required": ["url"]
+      },
+      "SharePointResolutionOutcome": {
+        "type": "string",
+        "enum": [
+          "found",
+          "not_granted",
+          "not_found_or_not_granted",
+          "not_found",
+          "unsupported_url"
+        ],
+        "description": "Found, not granted to Ayunis, not found or not granted (where Microsoft Graph cannot tell), not found, or not a URL of a site, library or folder"
+      },
+      "SharePointLocationKind": {
+        "type": "string",
+        "enum": ["site", "library", "folder"],
+        "description": "What was found"
+      },
+      "SharePointGrantScope": {
+        "type": "string",
+        "enum": ["site", "folder"],
+        "description": "What the grant covers: the whole site (Sites.Selected) or one folder (Files.SelectedOperations.Selected)"
+      },
+      "SharePointGrantResponseDto": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "description": "What the grant covers: the whole site (Sites.Selected) or one folder (Files.SelectedOperations.Selected)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SharePointGrantScope"
+              }
+            ]
+          },
+          "command": {
+            "type": "string",
+            "description": "Microsoft Graph PowerShell commands that grant the organization’s app read access, for the Microsoft 365 admin"
+          }
+        },
+        "required": ["scope", "command"]
+      },
+      "SharePointLocationResolutionResponseDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "description": "Found, not granted to Ayunis, not found or not granted (where Microsoft Graph cannot tell), not found, or not a URL of a site, library or folder",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SharePointResolutionOutcome"
+              }
+            ]
+          },
+          "kind": {
+            "description": "What was found",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SharePointLocationKind"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of what was found",
+            "nullable": true,
+            "example": "Satzungen"
+          },
+          "location": {
+            "type": "string",
+            "description": "SharePoint’s own URL of what was found, to add as the synced location",
+            "nullable": true
+          },
+          "grant": {
+            "description": "How to grant it, when it is not (or may not be) granted",
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SharePointGrantResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["outcome", "kind", "name", "location", "grant"]
       },
       "CreateRecordingDto": {
         "type": "object",

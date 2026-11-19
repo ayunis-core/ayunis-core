@@ -27,6 +27,7 @@ describe('SyncLocationNowUseCase', () => {
   function syncNow(
     options: {
       orgId?: UUID;
+      knowledgeBaseId?: UUID;
       writable?: boolean;
       connectorsEnabled?: boolean;
     } = {},
@@ -49,7 +50,10 @@ describe('SyncLocationNowUseCase', () => {
         aUserContext({ orgId: options.orgId ?? ORG_ID }),
       ),
       featureConfig(options.connectorsEnabled ?? true),
-    ).execute({ locationId: harness.location.id });
+    ).execute({
+      knowledgeBaseId: options.knowledgeBaseId ?? KNOWLEDGE_BASE_ID,
+      locationId: harness.location.id,
+    });
   }
 
   it('queues a sync of the location for a user who may change its knowledge base', async () => {
@@ -71,6 +75,13 @@ describe('SyncLocationNowUseCase', () => {
     await expect(syncNow({ orgId: randomUUID() })).rejects.toBeInstanceOf(
       SyncedLocationNotFoundError,
     );
+    expect(queued).toEqual([]);
+  });
+
+  it('does not reveal a location through another knowledge base', async () => {
+    await expect(
+      syncNow({ knowledgeBaseId: randomUUID() }),
+    ).rejects.toBeInstanceOf(SyncedLocationNotFoundError);
     expect(queued).toEqual([]);
   });
 

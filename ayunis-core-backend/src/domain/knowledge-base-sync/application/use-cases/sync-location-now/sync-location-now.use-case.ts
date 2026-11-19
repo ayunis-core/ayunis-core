@@ -40,7 +40,10 @@ export class SyncLocationNowUseCase {
     if (!this.configService.get<boolean>(`features.${FeatureFlag.Connectors}`))
       throw new KnowledgeBaseSyncDisabledError();
     const location = await this.repository.findById(command.locationId);
-    if (location?.orgId !== orgId)
+    if (
+      location?.orgId !== orgId ||
+      location.knowledgeBaseId !== command.knowledgeBaseId
+    )
       throw new SyncedLocationNotFoundError(command.locationId);
     await this.writeAccess.execute(
       new AssertKnowledgeBaseWriteAccessQuery(location.knowledgeBaseId),

@@ -12,6 +12,7 @@ import { SaveMicrosoft365ConnectorUseCase } from './application/use-cases/save-m
 import { RemoveConnectionUseCase } from './application/use-cases/remove-connection/remove-connection.use-case';
 import { TestMicrosoft365ConnectionUseCase } from './application/use-cases/test-microsoft-365-connection/test-microsoft-365-connection.use-case';
 import { ConnectorsController } from './presenters/http/connectors.controller';
+import { SharePointLocationsController } from './presenters/http/sharepoint-locations.controller';
 import { ConnectorSyncAdapterRegistry } from './application/connector-sync-adapter.registry';
 import { ConnectorSyncAccessService } from './application/services/connector-sync-access.service';
 import { ListConnectorChangesUseCase } from './application/use-cases/list-connector-changes/list-connector-changes.use-case';
@@ -27,7 +28,7 @@ import { ResolveSharePointLocationUseCase } from './application/use-cases/resolv
 
 @Module({
   imports: [LocalConnectorsRepositoryModule],
-  controllers: [ConnectorsController],
+  controllers: [ConnectorsController, SharePointLocationsController],
   providers: [
     {
       provide: ConnectorCredentialEncryptionPort,
@@ -59,6 +60,7 @@ import { ResolveSharePointLocationUseCase } from './application/use-cases/resolv
     FindSetUpConnectorUseCase,
   ],
   exports: [
+    ListConnectorsUseCase,
     ListConnectorChangesUseCase,
     FetchConnectorItemContentUseCase,
     FindSetUpConnectorUseCase,

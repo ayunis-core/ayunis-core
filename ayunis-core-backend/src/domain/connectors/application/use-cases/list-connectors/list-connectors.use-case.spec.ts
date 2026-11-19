@@ -37,21 +37,26 @@ describe('ListConnectorsUseCase', () => {
       {
         product: ConnectorProduct.MICROSOFT_365,
         status: ConnectorStatus.NOT_SET_UP,
+        connectorId: null,
       },
     ]);
   });
 
   it('shows a connector as set up only while it has credentials', async () => {
-    await expect(listWith([microsoft365('c2VhbGVk')])).resolves.toEqual([
+    const setUp = microsoft365('c2VhbGVk');
+    await expect(listWith([setUp])).resolves.toEqual([
       {
         product: ConnectorProduct.MICROSOFT_365,
         status: ConnectorStatus.SET_UP,
+        connectorId: setUp.id,
       },
     ]);
-    await expect(listWith([microsoft365(null)])).resolves.toEqual([
+    const removed = microsoft365(null);
+    await expect(listWith([removed])).resolves.toEqual([
       {
         product: ConnectorProduct.MICROSOFT_365,
         status: ConnectorStatus.NOT_SET_UP,
+        connectorId: removed.id,
       },
     ]);
   });
