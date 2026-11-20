@@ -135,7 +135,7 @@
         "website_content": "Fetched website",
         "source_query": "Searched files",
         "knowledge_query": "Searched knowledge base",
-        "recording_search": "Searched recordings",
+        "recording_search": "Searched meetings",
         "code_execution": "Calculated",
         "http": "Made HTTP request",
         "use_tool": "Used {{tool}}",
@@ -354,7 +354,7 @@
         "summary": "From the summary",
         "timeRange": "{{start}}–{{end}}",
         "speaker": "Speaker {{number}}",
-        "open": "Open recording"
+        "open": "Open meeting"
       }
     },
     "piiMask": {

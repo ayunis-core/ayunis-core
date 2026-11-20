@@ -1,21 +1,21 @@
 {
   "page": {
-    "title": "Recordings"
+    "title": "Meetings"
   },
   "emptyState": {
-    "title": "No recordings yet",
-    "description": "Create a recording for a meeting. It belongs to you, one of your teams or the organisation.",
-    "noAccessDescription": "Recordings of your teams and organisation will appear here. Ask an admin for permission to create your own."
+    "title": "No meetings yet",
+    "description": "Create a meeting and add its audio. It belongs to you, one of your teams or the organisation.",
+    "noAccessDescription": "Meetings of your teams and organisation will appear here. Ask an admin for permission to create your own."
   },
   "listItem": {
     "created": "Created {{date}}",
     "createdBy": "Created {{date}} by {{name}}"
   },
   "createDialog": {
-    "buttonText": "Add Recording",
-    "buttonTextFirst": "Create your first recording",
-    "title": "Create New Recording",
-    "description": "Create a recording, choose who it belongs to and add its audio.",
+    "buttonText": "Add Meeting",
+    "buttonTextFirst": "Create your first meeting",
+    "title": "Create New Meeting",
+    "description": "Create a meeting, choose who it belongs to and add its audio.",
     "form": {
       "nameLabel": "Name",
       "namePlaceholder": "e.g. Council meeting 12 November",
@@ -24,7 +24,7 @@
     },
     "validation": {
       "nameRequired": "Name is required",
-      "fileRequired": "Choose the audio file of the recording",
+      "fileRequired": "Choose the audio file of the meeting",
       "fileNotAudio": "Choose an MP3, M4A, WAV or WebM file"
     },
     "buttons": {
@@ -34,19 +34,19 @@
     }
   },
   "create": {
-    "success": "Recording created",
-    "error": "The recording could not be created. Please try again.",
+    "success": "Meeting created",
+    "error": "The meeting could not be created. Please try again.",
     "validationError": "Please check the name and try again.",
-    "noPermission": "You are not allowed to create a recording for this owner."
+    "noPermission": "You are not allowed to create a meeting for this owner."
   },
   "delete": {
-    "success": "Recording deleted",
-    "error": "The recording could not be deleted. Please try again.",
-    "notFound": "The recording no longer exists or you have lost access.",
-    "noPermission": "You are not allowed to delete this recording."
+    "success": "Meeting deleted",
+    "error": "The meeting could not be deleted. Please try again.",
+    "notFound": "The meeting no longer exists or you have lost access.",
+    "noPermission": "You are not allowed to delete this meeting."
   },
   "confirmDelete": {
-    "title": "Delete Recording",
+    "title": "Delete Meeting",
     "description": "Delete \"{{name}}\"? This cannot be undone.",
     "confirmText": "Delete",
     "cancelText": "Cancel"
@@ -60,7 +60,7 @@
     },
     "properties": {
       "title": "Properties",
-      "description": "Name and origin of the recording.",
+      "description": "Name and origin of the meeting.",
       "owner": "Owner",
       "workspaceOwner": "Workspace {{name}}",
       "creator": "Created by",
@@ -79,11 +79,11 @@
       "nameRequired": "Name is required"
     },
     "rename": {
-      "success": "Recording renamed",
-      "error": "The recording could not be renamed. Please try again.",
+      "success": "Meeting renamed",
+      "error": "The meeting could not be renamed. Please try again.",
       "validationError": "Please check the name and try again.",
-      "notFound": "The recording no longer exists or you have lost access.",
-      "noPermission": "You are not allowed to rename this recording."
+      "notFound": "The meeting no longer exists or you have lost access.",
+      "noPermission": "You are not allowed to rename this meeting."
     },
     "summary": {
       "title": "Summary",
@@ -92,15 +92,15 @@
       "summarizing": "The summary is being generated. This can take a few minutes.",
       "retry": "Try again",
       "retryError": "The summary could not be restarted. Please try again.",
-      "retryNotFound": "The recording no longer exists or you have lost access.",
+      "retryNotFound": "The meeting no longer exists or you have lost access.",
       "retryNotRetryable": "The summary is already being generated or is done.",
-      "retryNoPermission": "You are not allowed to manage this recording.",
+      "retryNoPermission": "You are not allowed to manage this meeting.",
       "failure": {
         "noModel": "The summary could not be generated: no language model is available for it. An admin can choose one in the model settings.",
         "creditBudget": "The summary could not be generated: the organization's credits for this month are used up.",
         "creditLimit": "The summary could not be generated: the monthly credit limit is reached.",
         "tooLong": "The summary could not be generated: the transcript is too long for the summary model.",
-        "empty": "The summary could not be generated: the recording contains no speech.",
+        "empty": "The summary could not be generated: the audio contains no speech.",
         "unavailable": "The summary could not be generated: the model provider is not available.",
         "failed": "The summary could not be generated."
       }
@@ -115,18 +115,18 @@
         "ready": "Ready",
         "failed": "Failed"
       },
-      "transcribing": "The recording is being transcribed. This can take a few minutes.",
+      "transcribing": "The audio is being transcribed. This can take a few minutes.",
       "speaker": "Speaker {{number}}",
       "unknownSpeaker": "Unknown speaker",
       "failure": {
-        "recordingTooLong": "The recording is too long to transcribe. Cut it into shorter parts and upload each as a new recording.",
-        "unreadable": "The audio file could not be read. Delete the recording and upload the file again.",
-        "empty": "No speech was found in the recording.",
-        "tooManyPages": "The recording could not be transcribed. Delete it and upload the file again.",
-        "spreadsheetTooLarge": "The recording could not be transcribed. Delete it and upload the file again.",
-        "timeout": "The transcription took too long. Delete the recording and upload the file again.",
-        "unavailable": "The transcription service is not available. Delete the recording and upload the file again later.",
-        "failed": "The recording could not be transcribed. Delete it and upload the file again. If the problem persists, contact support."
+        "recordingTooLong": "The audio is too long to transcribe. Cut it into shorter parts and upload each as a new meeting.",
+        "unreadable": "The audio file could not be read. Delete the meeting and upload the file again.",
+        "empty": "No speech was found in the audio.",
+        "tooManyPages": "The audio could not be transcribed. Delete the meeting and upload the file again.",
+        "spreadsheetTooLarge": "The audio could not be transcribed. Delete the meeting and upload the file again.",
+        "timeout": "The transcription took too long. Delete the meeting and upload the file again.",
+        "unavailable": "The transcription service is not available. Delete the meeting and upload the file again later.",
+        "failed": "The audio could not be transcribed. Delete the meeting and upload the file again. If the problem persists, contact support."
       }
     },
     "audio": {
@@ -137,8 +137,8 @@
     }
   },
   "audio": {
-    "alreadyUploaded": "This recording already has its audio. Create a new recording for another file.",
-    "uploadLimitReached": "Recording upload limit reached. Try again later.",
-    "uploadLimitReachedWithTime": "Recording upload limit reached. Try again in {{minutes}} minutes."
+    "alreadyUploaded": "This meeting already has its audio. Create a new meeting for another file.",
+    "uploadLimitReached": "Meeting upload limit reached. Try again later.",
+    "uploadLimitReachedWithTime": "Meeting upload limit reached. Try again in {{minutes}} minutes."
   }
 }

@@ -53,16 +53,16 @@
     }
   },
   "recordingFairUseLimit": {
-    "title": "Recording Upload Fair Use Limit",
-    "description": "How many recording uploads each user may start per window. Uploads that are abandoned or fail still count.",
+    "title": "Meeting Upload Fair Use Limit",
+    "description": "How many meeting uploads each user may start per window. Uploads that are abandoned or fail still count.",
     "loading": "Loading…",
-    "loadError": "Failed to load the recording upload fair-use limit.",
+    "loadError": "Failed to load the meeting upload fair-use limit.",
     "limit": "Uploads",
     "windowHours": "Window (hours)",
     "save": "Save",
     "cancel": "Cancel",
-    "updateSuccess": "Recording upload fair-use limit updated successfully.",
-    "updateError": "Failed to update the recording upload fair-use limit.",
+    "updateSuccess": "Meeting upload fair-use limit updated successfully.",
+    "updateError": "Failed to update the meeting upload fair-use limit.",
     "validationError": {
       "limit": "Uploads must be a positive integer.",
       "windowHours": "Window must be at least 0.01 hours."

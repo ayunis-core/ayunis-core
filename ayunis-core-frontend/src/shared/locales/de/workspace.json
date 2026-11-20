@@ -3,7 +3,7 @@
     "breadcrumb": "Arbeitsbereiche",
     "chatsTab": "Ihre Chats",
     "knowledgeTab": "Wissen",
-    "recordingsTab": "Aufzeichnungen",
+    "recordingsTab": "Besprechungen",
     "skillsTab": "Fähigkeiten",
     "instructionsTab": "Anweisungen",
     "artifactsTab": "Erstellte Inhalte",
@@ -92,9 +92,9 @@
       "activeTooltip": "Aktive Wissenssammlungen sind in jedem Chat dieses Arbeitsbereichs verfügbar. Inaktive Wissenssammlungen werden in Chats des Arbeitsbereichs nicht verwendet."
     },
     "recordings": {
-      "create": "Aufzeichnung erstellen",
-      "emptyTitle": "Keine Aufzeichnungen im Arbeitsbereich",
-      "empty": "In diesem Arbeitsbereich wurden noch keine Aufzeichnungen erstellt."
+      "create": "Besprechung erstellen",
+      "emptyTitle": "Keine Besprechungen im Arbeitsbereich",
+      "empty": "In diesem Arbeitsbereich wurden noch keine Besprechungen erstellt."
     },
     "documents": {
       "upload": "Datei hochladen",
