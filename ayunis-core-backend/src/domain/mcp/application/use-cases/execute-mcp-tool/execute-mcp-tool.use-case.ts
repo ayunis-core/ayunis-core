@@ -1,3 +1,5 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
+import type { McpVerificationFailure } from 'src/domain/mcp/application/mcp-credential-verification.error';
 import { Injectable, Logger } from '@nestjs/common';
 import { ExecuteMcpToolCommand } from './execute-mcp-tool.command';
 import { McpToolCall } from 'src/domain/mcp/application/ports/mcp-client.port';
@@ -16,6 +18,7 @@ import { ValidateIntegrationAccessService } from 'src/domain/mcp/application/ser
  * Result of tool execution
  */
 export interface ToolExecutionResult {
+  connectionFailure?: McpVerificationFailure;
   isError: boolean;
   content: unknown; // Tool response content (structure depends on tool)
   errorMessage?: string; // Error message if execution failed
@@ -192,6 +195,9 @@ export class ExecuteMcpToolUseCase {
       isError: true,
       content: null,
       errorMessage: errorMsg,
+      ...(toolError instanceof McpRuntimeConnectionError && {
+        connectionFailure: toolError.reason,
+      }),
     };
   }
 }

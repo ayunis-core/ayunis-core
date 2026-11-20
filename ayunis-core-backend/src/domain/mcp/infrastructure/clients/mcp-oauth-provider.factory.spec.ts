@@ -1,3 +1,6 @@
+import { McpConnectionHealthService } from 'src/domain/mcp/application/services/mcp-connection-health.service';
+import { mcpConnectionRevision } from 'src/domain/mcp/application/services/mcp-connection-revision';
+import { McpOAuthPendingSession } from 'src/domain/mcp/domain/mcp-oauth-pending-session.entity';
 import { createHash, randomUUID } from 'crypto';
 import {
   DurableMcpOAuthProvider,
@@ -5,10 +8,10 @@ import {
   type McpOAuthProviderContext,
 } from './mcp-oauth-provider.factory';
 import { auth } from '@modelcontextprotocol/client';
-import { MarketplaceMcpIntegration } from '../../domain/integrations/marketplace-mcp-integration.entity';
-import { NoAuthMcpIntegrationAuth } from '../../domain/auth/no-auth-mcp-integration-auth.entity';
-import { McpOAuthClientRegistration } from '../../domain/mcp-oauth-client-registration.entity';
-import { McpOAuthUserToken } from '../../domain/mcp-oauth-user-token.entity';
+import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
+import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
+import { McpOAuthClientRegistration } from 'src/domain/mcp/domain/mcp-oauth-client-registration.entity';
+import { McpOAuthUserToken } from 'src/domain/mcp/domain/mcp-oauth-user-token.entity';
 
 jest.mock('@modelcontextprotocol/client', () => ({
   auth: jest.fn(),
@@ -44,12 +47,16 @@ describe('DurableMcpOAuthProvider', () => {
   const tokens = {
     findByIntegrationAndUser: jest.fn(),
     save: jest.fn(),
+    saveIfCurrent: jest.fn().mockResolvedValue(true),
     delete: jest.fn(),
     withLockedToken: jest.fn(),
   };
   const pendingSessions = { save: jest.fn() };
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    tokens.saveIfCurrent.mockResolvedValue(true);
+  });
 
   it('binds a static client to the discovered issuer before returning it', async () => {
     const registration = new McpOAuthClientRegistration({
@@ -132,11 +139,12 @@ describe('DurableMcpOAuthProvider', () => {
       issuer: current.issuer,
     });
 
-    expect(tokens.save).toHaveBeenCalledWith(
+    expect(tokens.saveIfCurrent).toHaveBeenCalledWith(
       expect.objectContaining({
         encryptedAccessToken: 'encrypted:new-access',
         encryptedRefreshToken: 'encrypted:rotated-refresh',
       }),
+      current.grantRevision,
     );
   });
 
@@ -191,6 +199,128 @@ describe('DurableMcpOAuthProvider', () => {
     );
     expect(JSON.stringify(pendingSessions.save.mock.calls)).not.toContain(
       state,
+    );
+  });
+
+  it('does not overwrite a reconnected grant with an older runtime refresh', async () => {
+    const original = new McpOAuthUserToken({
+      integrationId: integration.id,
+      userId,
+      issuer: 'https://auth.example.com',
+      encryptedAccessToken: 'encrypted:old',
+    });
+    tokens.findByIntegrationAndUser.mockResolvedValue(original);
+    const provider = buildProvider();
+    await provider.tokens();
+    const replacement = new McpOAuthUserToken({
+      id: original.id,
+      integrationId: integration.id,
+      userId,
+      issuer: original.issuer,
+      encryptedAccessToken: 'encrypted:reconnected',
+    });
+    tokens.findByIntegrationAndUser.mockResolvedValue(replacement);
+    tokens.saveIfCurrent.mockResolvedValue(false);
+    await expect(
+      provider.saveTokens(
+        { access_token: 'late-refresh', token_type: 'Bearer' },
+        { issuer: original.issuer },
+      ),
+    ).rejects.toThrow('OAuth server');
+    expect(tokens.save).not.toHaveBeenCalled();
+    expect(tokens.saveIfCurrent).toHaveBeenCalledWith(
+      expect.objectContaining({ grantRevision: original.grantRevision }),
+      original.grantRevision,
+    );
+  });
+
+  it('keeps a post-refresh outage visible against the current OAuth authorization', async () => {
+    let stored = new McpOAuthUserToken({
+      integrationId: integration.id,
+      userId,
+      issuer: 'https://auth.example.com',
+      encryptedAccessToken: 'encrypted:expired',
+      encryptedRefreshToken: 'encrypted:refresh',
+      expiresAt: new Date(0),
+      updatedAt: new Date(0),
+    });
+    const revision = mcpConnectionRevision(integration, null, stored);
+    tokens.withLockedToken.mockImplementation(async (_id, _user, operation) =>
+      operation(stored, async (saved: McpOAuthUserToken) => {
+        stored = saved;
+        return saved;
+      }),
+    );
+    (auth as jest.Mock).mockImplementation(
+      async (provider: DurableMcpOAuthProvider) => {
+        await provider.saveTokens(
+          { access_token: 'refreshed', token_type: 'Bearer', expires_in: 3600 },
+          { issuer: stored.issuer },
+        );
+        return 'AUTHORIZED';
+      },
+    );
+    const factory = new McpOAuthProviderFactory(
+      buildConfig() as never,
+      encryption,
+      registrations as never,
+      tokens as never,
+      pendingSessions as never,
+      { fetch: jest.fn() },
+    );
+    const record = jest.fn().mockResolvedValue(undefined);
+    const health = new McpConnectionHealthService({
+      record,
+      findForUser: jest.fn(),
+    });
+    await expect(
+      health.observe(
+        {
+          serverUrl: integration.serverUrl,
+          connectionScope: { integrationId: integration.id, userId, orgId },
+          observationRevision: revision,
+        },
+        async () => {
+          await factory.prepareRuntime({ integration, userId, orgId });
+          throw Object.assign(new Error('Unavailable'), { status: 503 });
+        },
+      ),
+    ).rejects.toMatchObject({ reason: 'unavailable' });
+    expect(stored.encryptedAccessToken).toBe('encrypted:refreshed');
+    expect(record.mock.calls[0][0]).toMatchObject({
+      revision: mcpConnectionRevision(integration, null, stored),
+      failure: 'unavailable',
+    });
+  });
+
+  it('replaces health identity on successful interactive authorization while retaining the token row', async () => {
+    const original = new McpOAuthUserToken({
+      integrationId: integration.id,
+      userId,
+      issuer: 'https://auth.example.com',
+      encryptedAccessToken: 'encrypted:same',
+    });
+    tokens.findByIntegrationAndUser.mockResolvedValue(original);
+    const pendingSession = new McpOAuthPendingSession({
+      integrationId: integration.id,
+      userId,
+      orgId,
+      issuer: original.issuer,
+      stateHash: 'state',
+      encryptedCodeVerifier: 'pkce',
+      redirectUri: 'https://app.example.com/callback',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    await buildProvider({ pendingSession }).saveTokens(
+      { access_token: 'same', token_type: 'Bearer' },
+      { issuer: original.issuer },
+    );
+    const replacement = tokens.save.mock.calls[0][0] as McpOAuthUserToken;
+    expect(replacement.id).toBe(original.id);
+    expect(typeof replacement.grantRevision).toBe('string');
+    expect(replacement.grantRevision).not.toBe(original.grantRevision);
+    expect(mcpConnectionRevision(integration, null, replacement)).not.toBe(
+      mcpConnectionRevision(integration, null, original),
     );
   });
 

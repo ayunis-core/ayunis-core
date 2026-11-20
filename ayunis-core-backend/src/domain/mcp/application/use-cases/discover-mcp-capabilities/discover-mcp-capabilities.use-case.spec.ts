@@ -103,10 +103,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         {
           provide: McpClientService,
           useValue: {
-            listTools: jest.fn(),
-            listResources: jest.fn(),
-            listResourceTemplates: jest.fn(),
-            listPrompts: jest.fn(),
+            discoverCapabilities: jest.fn(),
           },
         },
         {
@@ -134,36 +131,38 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
   });
 
   const arrangeSuccessfulClientCalls = () => {
-    mcpClientService.listTools.mockResolvedValue([
-      {
-        name: 'test_tool',
-        description: 'Tool description',
-        inputSchema: { type: 'object', properties: {}, required: [] },
-      },
-    ]);
-    mcpClientService.listResources.mockResolvedValue([
-      {
-        uri: 'file://static.txt',
-        name: 'Static Resource',
-        description: 'Static description',
-        mimeType: 'text/plain',
-      },
-    ]);
-    mcpClientService.listResourceTemplates.mockResolvedValue([
-      {
-        uri: 'dynamic://{id}',
-        name: 'Dynamic Resource',
-        description: 'Dynamic description',
-        mimeType: 'application/json',
-      },
-    ]);
-    mcpClientService.listPrompts.mockResolvedValue([
-      {
-        name: 'test_prompt',
-        description: 'Prompt description',
-        arguments: [{ name: 'arg', required: true }],
-      },
-    ]);
+    mcpClientService.discoverCapabilities.mockResolvedValue({
+      tools: [
+        {
+          name: 'test_tool',
+          description: 'Tool description',
+          inputSchema: { type: 'object', properties: {}, required: [] },
+        },
+      ],
+      resources: [
+        {
+          uri: 'file://static.txt',
+          name: 'Static Resource',
+          description: 'Static description',
+          mimeType: 'text/plain',
+        },
+      ],
+      resourceTemplates: [
+        {
+          uri: 'dynamic://{id}',
+          name: 'Dynamic Resource',
+          description: 'Dynamic description',
+          mimeType: 'application/json',
+        },
+      ],
+      prompts: [
+        {
+          name: 'test_prompt',
+          description: 'Prompt description',
+          arguments: [{ name: 'arg', required: true }],
+        },
+      ],
+    });
   };
 
   describe('execute', () => {
@@ -187,12 +186,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         ),
       ).toBe(true);
 
-      expect(mcpClientService.listTools).toHaveBeenCalledWith(
-        integration,
-        mockUserId,
-        capabilityDiscoveryOptions,
-      );
-      expect(mcpClientService.listResourceTemplates).toHaveBeenCalledWith(
+      expect(mcpClientService.discoverCapabilities).toHaveBeenCalledWith(
         integration,
         mockUserId,
         capabilityDiscoveryOptions,
@@ -226,17 +220,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
       );
 
-      expect(mcpClientService.listTools).toHaveBeenCalledWith(
-        integration,
-        mockUserId,
-        capabilityDiscoveryOptions,
-      );
-      expect(mcpClientService.listResources).toHaveBeenCalledWith(
-        integration,
-        mockUserId,
-        capabilityDiscoveryOptions,
-      );
-      expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
+      expect(mcpClientService.discoverCapabilities).toHaveBeenCalledWith(
         integration,
         mockUserId,
         capabilityDiscoveryOptions,
@@ -251,7 +235,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
       ).rejects.toThrow(McpIntegrationNotFoundError);
 
-      expect(mcpClientService.listTools).not.toHaveBeenCalled();
+      expect(mcpClientService.discoverCapabilities).not.toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
     });
 
@@ -265,7 +249,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
       ).rejects.toThrow(McpIntegrationAccessDeniedError);
 
-      expect(mcpClientService.listTools).not.toHaveBeenCalled();
+      expect(mcpClientService.discoverCapabilities).not.toHaveBeenCalled();
     });
 
     it('throws McpIntegrationDisabledError when integration disabled', async () => {
@@ -278,7 +262,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
       ).rejects.toThrow(McpIntegrationDisabledError);
 
-      expect(mcpClientService.listTools).not.toHaveBeenCalled();
+      expect(mcpClientService.discoverCapabilities).not.toHaveBeenCalled();
     });
 
     it('throws UnauthorizedException when user not authenticated', async () => {
@@ -307,10 +291,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
 
       expect(second.tools).toHaveLength(first.tools.length);
       expect(second.resources).toHaveLength(first.resources.length);
-      expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
-      expect(mcpClientService.listResources).toHaveBeenCalledTimes(1);
-      expect(mcpClientService.listResourceTemplates).toHaveBeenCalledTimes(1);
-      expect(mcpClientService.listPrompts).toHaveBeenCalledTimes(1);
+      expect(mcpClientService.discoverCapabilities).toHaveBeenCalledTimes(1);
     });
 
     it('serves a cached discovery failure without re-contacting the server', async () => {
@@ -319,7 +300,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
 
       contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
-      mcpClientService.listTools.mockRejectedValue(
+      mcpClientService.discoverCapabilities.mockRejectedValue(
         new Error('This operation was aborted'),
       );
 
@@ -330,7 +311,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         useCase.execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId)),
       ).rejects.toThrow(UnexpectedMcpError);
 
-      expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
+      expect(mcpClientService.discoverCapabilities).toHaveBeenCalledTimes(1);
     });
 
     // A classified timeout must not be re-wrapped as UNEXPECTED_MCP_ERROR —
@@ -342,7 +323,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
 
       contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
-      mcpClientService.listTools.mockRejectedValue(
+      mcpClientService.discoverCapabilities.mockRejectedValue(
         new McpConnectionTimeoutError('https://mcp.example.com/mcp', 30000),
       );
 
@@ -369,12 +350,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
         new DiscoverMcpCapabilitiesQuery(mockIntegrationId),
       );
 
-      expect(mcpClientService.listTools).toHaveBeenCalledWith(
-        updatedIntegration,
-        mockUserId,
-        capabilityDiscoveryOptions,
-      );
-      expect(mcpClientService.listPrompts).toHaveBeenCalledWith(
+      expect(mcpClientService.discoverCapabilities).toHaveBeenCalledWith(
         updatedIntegration,
         mockUserId,
         capabilityDiscoveryOptions,
@@ -409,7 +385,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
 
       contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(integration);
-      mcpClientService.listTools.mockRejectedValue(unexpectedError);
+      mcpClientService.discoverCapabilities.mockRejectedValue(unexpectedError);
 
       const rejection = await useCase
         .execute(new DiscoverMcpCapabilitiesQuery(mockIntegrationId))
@@ -443,10 +419,16 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
     };
 
     const discoverTools = async (
-      tools: Awaited<ReturnType<McpClientService['listTools']>>,
+      tools: Awaited<
+        ReturnType<McpClientService['discoverCapabilities']>
+      >['tools'],
     ) => {
-      arrangeSuccessfulClientCalls();
-      mcpClientService.listTools.mockResolvedValue(tools);
+      mcpClientService.discoverCapabilities.mockResolvedValue({
+        tools,
+        resources: [],
+        resourceTemplates: [],
+        prompts: [],
+      });
       contextService.get.mockImplementation(mockContextGet);
       repository.findById.mockResolvedValue(buildCustomIntegration());
 
@@ -474,7 +456,7 @@ describe('DiscoverMcpCapabilitiesUseCase', () => {
       const discovered = await discoverTools(tools);
       const cached = await discoverTools(tools);
 
-      expect(mcpClientService.listTools).toHaveBeenCalledTimes(1);
+      expect(mcpClientService.discoverCapabilities).toHaveBeenCalledTimes(1);
       for (const result of [discovered, cached]) {
         expect(result.get('start_pdf_file')?.fileParams).toEqual(['file']);
         expect(result.get('start_pdf_file')?.inputSchema).toEqual(fileSchema);

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { abortActiveThreadRun } from '@/features/thread-run';
-import { showError } from '@/shared/lib/toast';
+import { showError, showInfo } from '@/shared/lib/toast';
 import type * as GeneratedApi from '@/shared/api/generated/ayunisCoreAPI';
 import { useMessageSend } from './useMessageSend';
 
@@ -11,7 +11,10 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
+vi.mock('@/shared/lib/toast', () => ({
+  showError: vi.fn(),
+  showInfo: vi.fn(),
+}));
 
 const { cancelRun } = vi.hoisted(() => ({
   cancelRun: vi.fn(() => Promise.resolve()),
@@ -70,6 +73,47 @@ describe('useMessageSend', () => {
     abortActiveThreadRun(otherThreadId);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it('shows integration warnings without treating the ongoing chat as a failed run', async () => {
+    const stream = createControlledSseResponse();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(stream.response));
+    const onErrorEvent = vi.fn();
+    const onMessageEvent = vi.fn();
+    const onComplete = vi.fn();
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(
+      () =>
+        useMessageSend({ threadId, onErrorEvent, onMessageEvent, onComplete }),
+      { wrapper },
+    );
+    stream.send({
+      type: 'integration_warning',
+      integrationId: 'integration',
+      integrationName: 'Fynn',
+      threadId,
+    });
+    stream.send({
+      type: 'message',
+      message: { id: 'continued-reply' },
+      threadId,
+    });
+    stream.send({ type: 'session', streaming: false, threadId });
+    stream.close();
+    await act(async () => {
+      await result.current.sendTextMessage({
+        text: 'Continue with available tools',
+      });
+    });
+    expect(showInfo).toHaveBeenCalled();
+    expect(onMessageEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ message: { id: 'continued-reply' } }),
+    );
+    expect(onErrorEvent).not.toHaveBeenCalled();
+    expect(onComplete).toHaveBeenCalledWith(false);
   });
 
   it('redirects to login when the session can no longer be renewed', async () => {

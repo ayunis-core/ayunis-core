@@ -1,3 +1,7 @@
+import { McpConnectionObservationRecord } from './infrastructure/persistence/postgres/schema/mcp-connection-observation.record';
+import { McpConnectionObservationRepository } from './infrastructure/persistence/postgres/mcp-connection-observation.repository';
+import { McpConnectionObservationRepositoryPort } from './application/ports/mcp-connection-observation.repository.port';
+import { McpConnectionHealthService } from './application/services/mcp-connection-health.service';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { McpCredentialEncryptionPort } from './application/ports/mcp-credential-encryption.port';
@@ -89,6 +93,7 @@ import { McpToolAllowanceResponseMapper } from './presenters/http/mappers/mcp-to
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      McpConnectionObservationRecord,
       McpIntegrationRecord,
       CustomMcpIntegrationRecord,
       PredefinedMcpIntegrationRecord,
@@ -113,6 +118,11 @@ import { McpToolAllowanceResponseMapper } from './presenters/http/mappers/mcp-to
     McpToolAllowancesController,
   ],
   providers: [
+    McpConnectionHealthService,
+    {
+      provide: McpConnectionObservationRepositoryPort,
+      useClass: McpConnectionObservationRepository,
+    },
     {
       provide: McpCredentialEncryptionPort,
       useClass: McpCredentialEncryptionService,

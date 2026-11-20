@@ -122,30 +122,11 @@ export class DiscoverMcpCapabilitiesUseCase {
       throw new McpIntegrationNotFoundError(integrationId);
     }
 
-    const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-      this.mcpClientService.listTools(
-        integration,
-        userId,
-        CAPABILITY_DISCOVERY_OPTIONS,
-      ),
-      this.mcpClientService.listResources(
-        integration,
-        userId,
-        CAPABILITY_DISCOVERY_OPTIONS,
-      ),
-      this.mcpClientService.listResourceTemplates(
-        integration,
-        userId,
-        CAPABILITY_DISCOVERY_OPTIONS,
-      ),
-      this.mcpClientService.listPrompts(
-        integration,
-        userId,
-        CAPABILITY_DISCOVERY_OPTIONS,
-      ),
-    ]);
-
-    return { tools, resources, resourceTemplates, prompts };
+    return this.mcpClientService.discoverCapabilities(
+      integration,
+      userId,
+      CAPABILITY_DISCOVERY_OPTIONS,
+    );
   }
 
   private buildResult(

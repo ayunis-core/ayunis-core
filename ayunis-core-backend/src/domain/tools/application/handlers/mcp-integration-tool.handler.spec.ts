@@ -110,6 +110,18 @@ describe('McpIntegrationToolHandler', () => {
     });
   });
 
+  it('surfaces a personal connection failure after file handover instead of returning empty content', async () => {
+    executeMcpTool.mockResolvedValueOnce({
+      isError: true,
+      content: null,
+      connectionFailure: 'rejected',
+    });
+    await expect(run({ file: 'source-a' })).rejects.toMatchObject({
+      reason: 'rejected',
+      code: 'MCP_RUNTIME_CONNECTION_FAILED',
+    });
+  });
+
   it('keeps the source IDs in the input the run persists', async () => {
     const input = { file: 'source-a', attachments: ['source-b'] };
 

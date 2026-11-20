@@ -51,6 +51,13 @@
       "removeSuccess": "Vor der Ausführung dieses Tools werden Sie wieder gefragt.",
       "removeError": "Das Tool konnte nicht entfernt werden. Bitte versuchen Sie es erneut.",
       "notFound": "Dieses Tool ist nicht mehr immer erlaubt."
+    },
+    "failure": {
+      "rejected": "Ihre Zugangsdaten wurden abgelehnt. Verbinden Sie diese Integration erneut.",
+      "forbidden": "Ihre Zugangsdaten haben nicht mehr die erforderlichen Rechte. Prüfen Sie die Berechtigungen und verbinden Sie die Integration erneut.",
+      "timeout": "Der Server hat nicht rechtzeitig geantwortet. Versuchen Sie es erneut oder verbinden Sie die Integration erneut.",
+      "unavailable": "Der Server ist nicht erreichbar. Versuchen Sie es erneut oder verbinden Sie die Integration erneut.",
+      "invalidResponse": "Der Server hat eine inkompatible Antwort geliefert. Prüfen Sie die Integration und verbinden Sie sie erneut."
     }
   },
   "account": {

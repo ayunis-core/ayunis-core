@@ -1,3 +1,4 @@
+import type { IntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import { Injectable } from '@nestjs/common';
 import { McpToolAssemblerService } from 'src/domain/runs/application/services/mcp-tool-assembler.service';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
@@ -24,13 +25,16 @@ export class McpCapability implements RunCapability {
     state: CapabilityAssemblyState,
   ): Promise<CapabilityContribution> {
     if (!context.model.canUseTools) return {};
+    const warnings: IntegrationWarning[] = [];
     const { tools, integrationInstructions } =
       await this.mcpToolAssembler.assemble(
         context.thread,
         state.reservedToolNames,
+        (warning) => warnings.push(warning),
       );
     return {
       tools,
+      warnings,
       sections: integrationInstructions.map(
         ({ integrationName, instructions }) => {
           const name = escapeXml(integrationName);

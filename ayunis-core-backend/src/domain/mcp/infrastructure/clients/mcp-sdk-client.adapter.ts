@@ -184,7 +184,9 @@ export class McpSdkClientAdapter extends McpClientPort {
             requestOptions,
           )
           .catch((error: unknown) => {
-            throw this.toToolTimeoutError(error, config) ?? error;
+            throw (
+              this.toExecutionTimeoutError(error, config, 'callTool') ?? error
+            );
           });
 
         return {
@@ -198,13 +200,15 @@ export class McpSdkClientAdapter extends McpClientPort {
   }
 
   /**
-   * Request and response timeouts normally mean the tool outlived its budget.
+   * Tools, resources and prompts share the execution-timeout category; only
+   * connection setup failures indicate an unavailable server.
    * A fresh HTTP request can still need a new socket, so explicit connection
    * timeouts fall through to the outage classifier (AYC-1120).
    */
-  private toToolTimeoutError(
+  private toExecutionTimeoutError(
     error: unknown,
     config: McpConnectionConfig,
+    operation: string,
   ): McpToolTimeoutError | undefined {
     const transport = classifyTransportError(error);
     if (
@@ -228,7 +232,7 @@ export class McpSdkClientAdapter extends McpClientPort {
         error,
         config,
         timeout,
-        'callTool',
+        operation,
         transport?.code,
       ),
     );
@@ -244,9 +248,15 @@ export class McpSdkClientAdapter extends McpClientPort {
       async (client) => {
         const request = parameters ? { uri, arguments: parameters } : { uri };
 
-        const result = await client.readResource(request, this.requestOptions);
+        const result = await client
+          .readResource(request, this.requestOptions)
+          .catch((error: unknown) => {
+            throw (
+              this.toExecutionTimeoutError(error, config, 'readResource') ??
+              error
+            );
+          });
 
-        // MCP resources can have text or blob content
         const firstContent = result.contents[0];
         const content =
           'text' in firstContent ? firstContent.text : firstContent.blob;
@@ -269,13 +279,19 @@ export class McpSdkClientAdapter extends McpClientPort {
     return this.withClient(
       config,
       async (client) => {
-        const result = await client.getPrompt(
-          {
-            name,
-            arguments: args,
-          },
-          this.requestOptions,
-        );
+        const result = await client
+          .getPrompt(
+            {
+              name,
+              arguments: args,
+            },
+            this.requestOptions,
+          )
+          .catch((error: unknown) => {
+            throw (
+              this.toExecutionTimeoutError(error, config, 'getPrompt') ?? error
+            );
+          });
 
         return {
           messages: result.messages,
@@ -423,9 +439,6 @@ export class McpSdkClientAdapter extends McpClientPort {
     config: McpConnectionConfig,
     requestOptions: { timeout: number },
   ): Promise<Client> {
-    // Create Streamable HTTP transport (MCP protocol 2024-11-05+)
-    // Only pass requestInit with headers when we have headers to add
-    // Otherwise, let the SDK handle the default headers (Accept, Content-Type, etc.)
     const hasHeaders = config.headers && Object.keys(config.headers).length > 0;
     const authProvider = await this.buildOAuthProvider(config);
     const cloudHosted =
@@ -445,13 +458,11 @@ export class McpSdkClientAdapter extends McpClientPort {
       transportOptions,
     );
 
-    // Create client with capabilities
     const client = new Client(
       { name: 'ayunis-core', version: '1.0.0' },
       { versionNegotiation: { mode: 'auto' } },
     );
 
-    // Connect to server (covers the initialize handshake with the same timeout)
     try {
       await client.connect(transport, requestOptions);
     } catch (error) {

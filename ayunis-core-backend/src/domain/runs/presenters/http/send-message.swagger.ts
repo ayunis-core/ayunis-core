@@ -5,6 +5,7 @@ import {
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
+  RunIntegrationWarningResponseDto,
 } from './dto/run-response.dto';
 
 export const SEND_MESSAGE_API_OPERATION = {
@@ -64,6 +65,7 @@ export const SEND_MESSAGE_SSE_RESPONSE = {
           { $ref: getSchemaPath(RunErrorResponseDto) },
           { $ref: getSchemaPath(RunThreadResponseDto) },
           { $ref: getSchemaPath(RunMasksResponseDto) },
+          { $ref: getSchemaPath(RunIntegrationWarningResponseDto) },
         ],
         discriminator: {
           propertyName: 'type',
@@ -73,6 +75,9 @@ export const SEND_MESSAGE_SSE_RESPONSE = {
             error: getSchemaPath(RunErrorResponseDto),
             thread: getSchemaPath(RunThreadResponseDto),
             masks: getSchemaPath(RunMasksResponseDto),
+            integration_warning: getSchemaPath(
+              RunIntegrationWarningResponseDto,
+            ),
           },
         },
       },

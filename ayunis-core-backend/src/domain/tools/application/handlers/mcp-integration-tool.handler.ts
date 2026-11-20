@@ -1,3 +1,4 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
 import {
   ToolExecutionContext,
   ToolExecutionHandler,
@@ -43,6 +44,8 @@ export class McpIntegrationToolHandler implements ToolExecutionHandler {
           context.signal,
         ),
       );
+      if (result.connectionFailure)
+        throw new McpRuntimeConnectionError(result.connectionFailure);
       return this.mcpFileHandoverService.redact(
         JSON.stringify(result.content),
         handover.files,

@@ -1,6 +1,6 @@
 import { useMcpIntegrationsControllerListAvailable } from '@/shared/api/generated/ayunisCoreAPI';
 import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { isUserIntegrationVisible } from '../lib/is-user-integration-visible';
+import { isUserIntegrationVisible } from '@/pages/settings/integrations-settings/lib/is-user-integration-visible';
 
 /**
  * Lists the enabled org integrations a user can personalize — i.e. those that
@@ -10,7 +10,13 @@ import { isUserIntegrationVisible } from '../lib/is-user-integration-visible';
  */
 export function useUserIntegrations() {
   const { data, isLoading, isError, refetch } =
-    useMcpIntegrationsControllerListAvailable();
+    useMcpIntegrationsControllerListAvailable({
+      query: {
+        // Health observations can commit after a chat's immediate cache refresh.
+        staleTime: 0,
+        refetchInterval: 5_000,
+      },
+    });
 
   const integrations: McpIntegrationResponseDto[] = (data ?? []).filter(
     isUserIntegrationVisible,

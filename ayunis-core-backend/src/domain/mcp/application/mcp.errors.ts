@@ -3,6 +3,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import type { McpOAuthRequestStage } from 'src/domain/mcp/application/util/mcp-oauth-response-observer.helper';
 
 export enum McpErrorCode {
+  MCP_RUNTIME_CONNECTION_FAILED = 'MCP_RUNTIME_CONNECTION_FAILED',
   MCP_CREDENTIALS_REJECTED = 'MCP_CREDENTIALS_REJECTED',
   MCP_CREDENTIALS_FORBIDDEN = 'MCP_CREDENTIALS_FORBIDDEN',
   MCP_VERIFICATION_TIMEOUT = 'MCP_VERIFICATION_TIMEOUT',

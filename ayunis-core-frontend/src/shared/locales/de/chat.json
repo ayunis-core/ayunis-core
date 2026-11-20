@@ -407,7 +407,8 @@
       "alwaysAllow": "Immer erlauben",
       "confirmed": "Bestätigt",
       "rejected": "Abgelehnt"
-    }
+    },
+    "integrationUnavailable": "{{name}} ist nicht verfügbar. Prüfen Sie die Verbindungseinstellungen oder wenden Sie sich an Ihre Administration. Ihr Chat kann mit den anderen verfügbaren Integrationen fortgesetzt werden."
   },
   "newChat": {
     "newChat": "Neuer Chat",

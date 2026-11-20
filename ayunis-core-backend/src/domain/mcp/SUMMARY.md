@@ -33,6 +33,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 
 - `McpClientService` — Handles authenticated server communication through the MCP SDK adapter and forwards caller-selected capability-list timeout budgets; classified transport failures retain privacy-safe integration, organization, server host, operation, timeout, and underlying error diagnostics
 - `McpClientPoolService` — Pools SDK connections per tenant, integration, user, configuration, and connection timeout budget; keeps at most 100 idle clients and invalidates sessions when integration or user credentials change
+- `McpConnectionHealthService` — Records sanitized per-user connection observations asynchronously against personal credential and OAuth authorization revisions (automatic token refresh preserves the revision; successful interactive authorization replaces it), without waiting on persistence before returning MCP results/errors; settings ignore stale observations after credential/schema changes
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes
 - `McpConfigService` — Validates schemas and merges, encrypts, and retains organization/user config values
 - `ConnectionValidationService` — Validates MCP server connectivity, used by `ValidateMcpIntegrationUseCase`
@@ -44,6 +45,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 **Ports:**
 
 - `McpIntegrationsRepository` — Persistence port for MCP integrations
+- `McpConnectionObservationRepositoryPort` — Orders per-user runtime health observations atomically and loads them in a batch for settings
 - `McpIntegrationUserConfigRepository` — Persistence port for per-user config values
 - `McpToolAllowanceRepositoryPort` — Per-user tool allowances; inserts ignore an existing (user, integration, tool name) entry, and reads and deletes are scoped to the user
 - `McpClientPort` — Abstract port for MCP server communication

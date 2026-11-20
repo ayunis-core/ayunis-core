@@ -1,3 +1,4 @@
+import type { RunIntegrationWarning } from './run-integration-warning';
 import type { Message } from 'src/domain/messages/domain/message.entity';
 import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 
@@ -10,4 +11,4 @@ export class RunPiiMasksUpdate {
   constructor(public readonly masks: ThreadPiiMask[]) {}
 }
 
-export type RunStreamItem = Message | RunPiiMasksUpdate;
+export type RunStreamItem = Message | RunPiiMasksUpdate | RunIntegrationWarning;

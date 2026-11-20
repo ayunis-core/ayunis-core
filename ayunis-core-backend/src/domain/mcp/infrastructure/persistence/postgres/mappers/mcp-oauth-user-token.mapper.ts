@@ -1,10 +1,11 @@
-import { McpOAuthUserToken } from '../../../../domain/mcp-oauth-user-token.entity';
-import { McpOAuthUserTokenRecord } from '../schema/mcp-oauth-user-token.record';
+import { McpOAuthUserToken } from 'src/domain/mcp/domain/mcp-oauth-user-token.entity';
+import { McpOAuthUserTokenRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-oauth-user-token.record';
 
 export class McpOAuthUserTokenMapper {
   static toRecord(entity: McpOAuthUserToken): McpOAuthUserTokenRecord {
     const record = new McpOAuthUserTokenRecord();
     record.id = entity.id;
+    record.grantRevision = entity.grantRevision;
     record.integrationId = entity.integrationId;
     record.userId = entity.userId;
     record.issuer = entity.issuer;
@@ -21,6 +22,7 @@ export class McpOAuthUserTokenMapper {
   static toDomain(record: McpOAuthUserTokenRecord): McpOAuthUserToken {
     return new McpOAuthUserToken({
       id: record.id,
+      grantRevision: record.grantRevision,
       integrationId: record.integrationId,
       userId: record.userId,
       issuer: record.issuer,

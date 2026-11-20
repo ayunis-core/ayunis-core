@@ -27,7 +27,8 @@ export interface EchoMcpServer {
   // The text of every echo call the server received, in order.
   calls: readonly string[];
   fileCalls: readonly EchoFileCall[];
-  setAcceptedToken(token: string): void;
+  setAcceptedToken(token: string | string[]): void;
+  setHtmlResponse(enabled: boolean): void;
   close(): Promise<void>;
 }
 
@@ -38,18 +39,19 @@ export interface EchoMcpServer {
 export async function startEchoMcpServer(): Promise<EchoMcpServer> {
   const calls: string[] = [];
   const fileCalls: EchoFileCall[] = [];
-  let acceptedToken: string | undefined;
+  let htmlResponse = false;
+  let acceptedToken: string[] | undefined;
   const handler = createMcpHandler(() => {
-    const server = new McpServer({ name: 'ayunis-e2e-echo', version: '1.0.0' });
+    const server = new McpServer({ name: "ayunis-e2e-echo", version: "1.0.0" });
     server.registerTool(
-      'echo',
+      "echo",
       {
-        description: 'Echoes the given text.',
+        description: "Echoes the given text.",
         inputSchema: z.object({ text: z.string() }),
       },
       ({ text }) => {
         calls.push(text);
-        return { content: [{ type: 'text', text: `echo::${text}` }] };
+        return { content: [{ type: "text", text: `echo::${text}` }] };
       },
     );
     server.registerTool(
@@ -98,23 +100,38 @@ export async function startEchoMcpServer(): Promise<EchoMcpServer> {
   });
   const nodeHandler = toNodeHandler(handler);
   const http = createServer((request, response) => {
-    if (acceptedToken !== undefined && request.headers.authorization !== `Bearer ${acceptedToken}`) {
-      response.writeHead(401, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ message: 'Invalid api token' }));
+    if (
+      acceptedToken !== undefined &&
+      !acceptedToken.some(
+        (token) => request.headers.authorization === `Bearer ${token}`,
+      )
+    ) {
+      response.writeHead(401, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "Invalid api token" }));
+      return;
+    }
+    if (htmlResponse) {
+      response.writeHead(200, { "Content-Type": "text/html" });
+      response.end("<html>private-upstream-response</html>");
       return;
     }
     void nodeHandler(request, response);
   });
   await new Promise<void>((resolve, reject) => {
-    http.once('error', reject);
-    http.listen(0, '127.0.0.1', resolve);
+    http.once("error", reject);
+    http.listen(0, "127.0.0.1", resolve);
   });
   const { port } = http.address() as AddressInfo;
   return {
     url: `http://127.0.0.1:${port}/mcp`,
     calls,
     fileCalls,
-    setAcceptedToken(token) { acceptedToken = token; },
+    setAcceptedToken(token) {
+      acceptedToken = Array.isArray(token) ? token : [token];
+    },
+    setHtmlResponse(enabled) {
+      htmlResponse = enabled;
+    },
     async close() {
       await handler.close();
       http.closeAllConnections();

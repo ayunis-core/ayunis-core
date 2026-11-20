@@ -16,6 +16,7 @@ export class RunEventReplay {
   private masks?: RunMasksEvent;
   private title?: RunThreadEvent;
   private readonly messages = new Map<string, RunMessageEvent>();
+  private readonly warnings = new Map<string, RunEvent>();
   private readonly endings: RunEvent[] = [];
 
   record(event: RunEvent): void {
@@ -33,6 +34,9 @@ export class RunEventReplay {
       case 'message':
         this.messages.set(event.message.id, event);
         return;
+      case 'integration_warning':
+        this.warnings.set(event.integrationId, event);
+        return;
       case 'error':
         this.endings.push(event);
         return;
@@ -45,6 +49,7 @@ export class RunEventReplay {
       ...(this.start ? [this.start] : []),
       ...(this.masks ? [this.masks] : []),
       ...(this.title ? [this.title] : []),
+      ...this.warnings.values(),
       ...this.messages.values(),
       ...this.endings,
     ];

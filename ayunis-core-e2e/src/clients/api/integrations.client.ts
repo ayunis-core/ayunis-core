@@ -74,3 +74,9 @@ export function completeIntegration(
     { api },
   );
 }
+
+export function listAvailableIntegrations(
+  api: APIRequestContext,
+): Promise<McpIntegrationResponseDto[]> {
+  return generatedApi.mcpIntegrationsControllerListAvailable({ api });
+}

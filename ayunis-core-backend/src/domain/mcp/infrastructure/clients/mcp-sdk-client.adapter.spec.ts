@@ -13,6 +13,7 @@ import {
 import { MarketplaceMcpIntegration } from 'src/domain/mcp/domain/integrations/marketplace-mcp-integration.entity';
 import { NoAuthMcpIntegrationAuth } from 'src/domain/mcp/domain/auth/no-auth-mcp-integration-auth.entity';
 import { randomUUID } from 'crypto';
+import { McpConnectionHealthService } from 'src/domain/mcp/application/services/mcp-connection-health.service';
 
 jest.mock('@modelcontextprotocol/client', () => ({
   Client: jest.fn(),
@@ -462,6 +463,71 @@ describe('McpSdkClientAdapter', () => {
 
     // A connected server whose tool outlives the budget is slow upstream,
     // not an outage (AYC-1120): it gets its own incident type.
+    describe.each(['readResource', 'getPrompt'] as const)(
+      '%s execution deadlines',
+      (operation) => {
+        const execute = (adapter: McpSdkClientAdapter): Promise<unknown> =>
+          operation === 'readResource'
+            ? adapter.readResource(
+                { ...config, observationRevision: 'snapshot' },
+                'fynn://guide',
+              )
+            : adapter.getPrompt(
+                { ...config, observationRevision: 'snapshot' },
+                'summarize',
+                {},
+              );
+
+        it.each([
+          new DOMException('Slow response', 'AbortError'),
+          Object.assign(new Error('Slow response'), {
+            code: 'REQUEST_TIMEOUT',
+          }),
+          Object.assign(new Error('Slow response'), { code: -32001 }),
+          buildFetchFailedError('UND_ERR_HEADERS_TIMEOUT', 'Slow response'),
+        ])(
+          'does not store an execution deadline as a broken connection (%s)',
+          async (error) => {
+            clientMock[operation].mockRejectedValue(error);
+            const record = jest.fn();
+            const health = new McpConnectionHealthService({
+              record,
+              findForUser: jest.fn(),
+            });
+            await expect(
+              health.observe(
+                { ...config, observationRevision: 'snapshot' },
+                () => execute(adapter),
+              ),
+            ).rejects.toBeInstanceOf(McpToolTimeoutError);
+            expect(record).not.toHaveBeenCalled();
+          },
+        );
+
+        it.each(['UND_ERR_CONNECT_TIMEOUT', 'ERR_SOCKET_CONNECTION_TIMEOUT'])(
+          'keeps %s as a real connection timeout',
+          async (code) => {
+            clientMock[operation].mockRejectedValue(
+              buildFetchFailedError(code, 'Connect timeout'),
+            );
+            await expect(execute(adapter)).rejects.toBeInstanceOf(
+              McpConnectionTimeoutError,
+            );
+          },
+        );
+
+        it('keeps an initialization deadline as a real connection timeout', async () => {
+          clientMock.connect.mockRejectedValue(
+            new DOMException('Connect timeout', 'AbortError'),
+          );
+          await expect(execute(adapter)).rejects.toBeInstanceOf(
+            McpConnectionTimeoutError,
+          );
+          expect(clientMock[operation]).not.toHaveBeenCalled();
+        });
+      },
+    );
+
     it('maps a tool call that outlives the budget to McpToolTimeoutError', async () => {
       clientMock.callTool.mockRejectedValue(
         new DOMException('This operation was aborted', 'AbortError'),

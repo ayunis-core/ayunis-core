@@ -238,9 +238,23 @@ export class RunMasksResponseDto {
 
 // Union type for TypeScript usage
 export type RunResponse =
+  | RunIntegrationWarningResponseDto
   | RunSessionResponseDto
   | RunMessageResponseDto
   | RunErrorResponseDto
   | RunThreadResponseDto
   | RunHeartbeatResponseDto
   | RunMasksResponseDto;
+
+export class RunIntegrationWarningResponseDto {
+  @ApiProperty({ enum: ['integration_warning'] })
+  type: 'integration_warning';
+  @ApiProperty()
+  threadId: string;
+  @ApiProperty()
+  timestamp: string;
+  @ApiProperty()
+  integrationId: string;
+  @ApiProperty()
+  integrationName: string;
+}

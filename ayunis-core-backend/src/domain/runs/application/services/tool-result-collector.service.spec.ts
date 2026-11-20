@@ -1,3 +1,4 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
 import { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
@@ -117,6 +118,19 @@ describe('ToolResultCollectorService', () => {
       { get: jest.fn().mockReturnValue(userId) } as unknown as ContextService,
       { emitAsync } as never,
     );
+  });
+
+  it('keeps a named warning when a confirmed MCP call loses its connection', async () => {
+    const tool = mcpTool('echo', 'Fynn');
+    executeTool.mockRejectedValue(new McpRuntimeConnectionError('rejected'));
+    const result = await collect(
+      service,
+      threadWith(toolUse('mcp-call', tool.name)),
+      [tool],
+    );
+    expect(result.integrationWarnings).toEqual([
+      { integrationId: tool.integrationId, integrationName: 'Fynn' },
+    ]);
   });
 
   it('acknowledges a chart without backend execution', async () => {

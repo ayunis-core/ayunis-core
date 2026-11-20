@@ -1,3 +1,5 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
+import type { IntegrationWarning } from 'src/domain/runs/domain/run-integration-warning';
 import { Injectable, Logger } from '@nestjs/common';
 import { UUID } from 'crypto';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
@@ -61,9 +63,12 @@ export class McpToolAssemblerService {
   async assemble(
     thread: Thread,
     reservedNames: ReadonlySet<string>,
+    onUnavailable?: (warning: IntegrationWarning) => void,
   ): Promise<McpAssembly> {
-    const { tools: mcpTools, integrationMetaMap } =
-      await this.assembleMcpTools(thread);
+    const { tools: mcpTools, integrationMetaMap } = await this.assembleMcpTools(
+      thread,
+      onUnavailable,
+    );
     const { unique, duplicates } = McpToolAssemblerService.filterDuplicateNames(
       mcpTools,
       reservedNames,
@@ -136,7 +141,10 @@ export class McpToolAssemblerService {
     return { unique, duplicates };
   }
 
-  private async assembleMcpTools(thread: Thread): Promise<{
+  private async assembleMcpTools(
+    thread: Thread,
+    onUnavailable?: (warning: IntegrationWarning) => void,
+  ): Promise<{
     tools: Tool[];
     integrationMetaMap: Map<UUID, McpIntegrationMeta>;
   }> {
@@ -166,6 +174,7 @@ export class McpToolAssemblerService {
       mcpResults,
       integrationIdList,
       integrationMetaMap,
+      onUnavailable,
     );
 
     return {
@@ -200,6 +209,7 @@ export class McpToolAssemblerService {
     mcpResults: PromiseSettledResult<McpCapability>[],
     integrationIdList: UUID[],
     integrationMetaMap: Map<UUID, McpIntegrationMeta>,
+    onUnavailable?: (warning: IntegrationWarning) => void,
   ): McpCapability[] {
     return mcpResults
       .map((result, index) => {
@@ -208,14 +218,15 @@ export class McpToolAssemblerService {
         }
         const failedId = integrationIdList[index];
         const meta = integrationMetaMap.get(failedId);
+        if (meta && result.reason instanceof McpRuntimeConnectionError)
+          onUnavailable?.({
+            integrationId: failedId,
+            integrationName: meta.name,
+          });
         this.logger.warn(
           {
             integrationId: failedId,
             integrationName: meta?.name,
-            error:
-              result.reason instanceof Error
-                ? result.reason.message
-                : 'Unknown error',
           },
           'MCP integration unavailable, skipping',
         );

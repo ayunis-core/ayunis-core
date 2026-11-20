@@ -10,20 +10,20 @@ import {
   type StoredOAuthClientInformation,
   type StoredOAuthTokens,
 } from '@modelcontextprotocol/client';
-import { McpCredentialEncryptionPort } from '../../application/ports/mcp-credential-encryption.port';
-import { McpOAuthClientRegistrationRepositoryPort } from '../../application/ports/mcp-oauth-client-registration.repository.port';
-import { McpOAuthPendingSessionRepositoryPort } from '../../application/ports/mcp-oauth-pending-session.repository.port';
-import { McpOAuthUserTokenRepositoryPort } from '../../application/ports/mcp-oauth-user-token.repository.port';
-import { McpOAuthClientRegistration } from '../../domain/mcp-oauth-client-registration.entity';
-import { McpOAuthPendingSession } from '../../domain/mcp-oauth-pending-session.entity';
-import { McpOAuthUserToken } from '../../domain/mcp-oauth-user-token.entity';
-import type { SchemaConfiguredMcpIntegration } from '../../domain/integrations/schema-configured-mcp-integration.entity';
+import { McpCredentialEncryptionPort } from 'src/domain/mcp/application/ports/mcp-credential-encryption.port';
+import { McpOAuthClientRegistrationRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-client-registration.repository.port';
+import { McpOAuthPendingSessionRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-pending-session.repository.port';
+import { McpOAuthUserTokenRepositoryPort } from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
+import { McpOAuthClientRegistration } from 'src/domain/mcp/domain/mcp-oauth-client-registration.entity';
+import { McpOAuthPendingSession } from 'src/domain/mcp/domain/mcp-oauth-pending-session.entity';
+import { McpOAuthUserToken } from 'src/domain/mcp/domain/mcp-oauth-user-token.entity';
+import type { SchemaConfiguredMcpIntegration } from 'src/domain/mcp/domain/integrations/schema-configured-mcp-integration.entity';
 import type {
   DeleteLockedMcpOAuthUserToken,
   SaveLockedMcpOAuthUserToken,
-} from '../../application/ports/mcp-oauth-user-token.repository.port';
-import { McpUserAuthorizationRequiredError } from '../../application/mcp.errors';
-import { McpOAuthFetchPort } from '../../application/ports/mcp-oauth-fetch.port';
+} from 'src/domain/mcp/application/ports/mcp-oauth-user-token.repository.port';
+import { McpUserAuthorizationRequiredError } from 'src/domain/mcp/application/mcp.errors';
+import { McpOAuthFetchPort } from 'src/domain/mcp/application/ports/mcp-oauth-fetch.port';
 
 export interface McpOAuthProviderContext {
   integration: SchemaConfiguredMcpIntegration;
@@ -132,6 +132,7 @@ export class DurableMcpOAuthProvider implements OAuthClientProvider {
   private authorizationUrl?: URL;
   private verifier?: string;
   private discovery?: OAuthDiscoveryState;
+  private observedGrantRevision?: UUID;
 
   constructor(
     private readonly context: McpOAuthProviderContext,
@@ -241,6 +242,7 @@ export class DurableMcpOAuthProvider implements OAuthClientProvider {
       ));
     if (!stored || (ctx?.issuer && stored.issuer !== ctx.issuer))
       return undefined;
+    this.captureGrantRevision(stored);
     const secondsRemaining = stored.expiresAt
       ? Math.max(
           0,
@@ -259,6 +261,10 @@ export class DurableMcpOAuthProvider implements OAuthClientProvider {
     };
   }
 
+  private captureGrantRevision(token: McpOAuthUserToken): void {
+    this.observedGrantRevision ??= token.grantRevision;
+  }
+
   async saveTokens(
     tokens: StoredOAuthTokens,
     ctx?: OAuthClientInformationContext,
@@ -266,11 +272,13 @@ export class DurableMcpOAuthProvider implements OAuthClientProvider {
     const issuer = ctx?.issuer ?? tokens.issuer;
     if (!issuer) throw new Error('OAuth token issuer is unavailable');
     const current = await this.currentTokenForSave();
+    const grantRevision = this.grantRevisionForSave(current);
     const encryptedRefreshToken =
       (await this.encryptOptional(tokens.refresh_token)) ??
       current?.encryptedRefreshToken;
     const token = new McpOAuthUserToken({
       id: current?.id,
+      grantRevision,
       integrationId: this.context.integration.id,
       userId: this.context.userId,
       issuer,
@@ -284,7 +292,14 @@ export class DurableMcpOAuthProvider implements OAuthClientProvider {
       scopes: tokens.scope?.split(/\s+/),
       createdAt: current?.createdAt,
     });
-    await this.persistToken(token);
+    await this.persistToken(token, grantRevision);
+  }
+
+  private grantRevisionForSave(
+    current: McpOAuthUserToken | null,
+  ): UUID | undefined {
+    if (this.context.pendingSession) return undefined;
+    return this.observedGrantRevision ?? current?.grantRevision;
   }
 
   async redirectToAuthorization(url: URL): Promise<void> {
@@ -387,9 +402,24 @@ export class DurableMcpOAuthProvider implements OAuthClientProvider {
     );
   }
 
-  private async persistToken(token: McpOAuthUserToken): Promise<void> {
+  private async persistToken(
+    token: McpOAuthUserToken,
+    grantRevision?: UUID,
+  ): Promise<void> {
     if (this.context.saveLockedToken) {
       await this.context.saveLockedToken(token);
+      return;
+    }
+    if (grantRevision) {
+      const saved = await this.tokenRepository.saveIfCurrent(
+        token,
+        grantRevision,
+      );
+      if (!saved)
+        throw new McpUserAuthorizationRequiredError(
+          this.context.integration.id,
+          this.context.integration.name,
+        );
       return;
     }
     await this.tokenRepository.save(token);

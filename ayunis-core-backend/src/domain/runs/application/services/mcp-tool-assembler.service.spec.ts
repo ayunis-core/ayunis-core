@@ -1,3 +1,4 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import { randomUUID } from 'crypto';
 import { setError } from '@appsignal/nodejs';
@@ -5,6 +6,7 @@ import { McpToolAssemblerService } from './mcp-tool-assembler.service';
 import {
   McpConnectionFailedError,
   McpConnectionTimeoutError,
+  McpUserAuthorizationRequiredError,
 } from 'src/domain/mcp/application/mcp.errors';
 import type { DiscoverMcpCapabilitiesUseCase } from 'src/domain/mcp/application/use-cases/discover-mcp-capabilities/discover-mcp-capabilities.use-case';
 import type { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
@@ -38,6 +40,25 @@ describe('McpToolAssemblerService — discovery outage reporting (AYC-616)', () 
   };
 
   const thread = { mcpIntegrationIds: [integrationId] } as unknown as Thread;
+
+  it.each([
+    [
+      new McpUserAuthorizationRequiredError(integrationId, 'Test Integration'),
+      false,
+    ],
+    [new Error('Invalid integration configuration'), false],
+    [new McpRuntimeConnectionError('rejected'), true],
+  ])(
+    'warns only for observed runtime failures (%s)',
+    async (error, expected) => {
+      const { service } = buildService(error);
+      const onUnavailable = jest.fn();
+      await expect(
+        service.assemble(thread, new Set(), onUnavailable),
+      ).resolves.toEqual({ tools: [], integrationInstructions: [] });
+      expect(onUnavailable).toHaveBeenCalledTimes(expected ? 1 : 0);
+    },
+  );
 
   it('reports a classified connection outage while still soft-skipping the integration', async () => {
     const outage = new McpConnectionFailedError(

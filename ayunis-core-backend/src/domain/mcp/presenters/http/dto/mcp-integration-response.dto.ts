@@ -7,6 +7,23 @@ import { McpAuthMethod } from 'src/domain/mcp/domain/value-objects/mcp-auth-meth
  * Note: Authentication credentials are NEVER exposed in responses.
  */
 export class McpIntegrationResponseDto {
+  @ApiPropertyOptional({
+    enum: [
+      'rejected',
+      'forbidden',
+      'timeout',
+      'unavailable',
+      'invalidResponse',
+    ],
+    description:
+      'Last connection failure for the current user and current configuration only',
+  })
+  userConnectionFailure?:
+    'rejected' | 'forbidden' | 'timeout' | 'unavailable' | 'invalidResponse';
+
+  @ApiPropertyOptional({ type: String, format: 'date-time' })
+  userConnectionCheckedAt?: string;
+
   @ApiProperty({
     description: 'Unique identifier of the integration',
     example: '123e4567-e89b-12d3-a456-426614174000',

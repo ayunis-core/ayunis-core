@@ -3796,6 +3796,20 @@ export interface SkillSourceResponseDto {
 }
 
 /**
+ * Last connection failure for the current user and current configuration only
+ */
+export type McpIntegrationResponseDtoUserConnectionFailure = typeof McpIntegrationResponseDtoUserConnectionFailure[keyof typeof McpIntegrationResponseDtoUserConnectionFailure];
+
+
+export const McpIntegrationResponseDtoUserConnectionFailure = {
+  rejected: 'rejected',
+  forbidden: 'forbidden',
+  timeout: 'timeout',
+  unavailable: 'unavailable',
+  invalidResponse: 'invalidResponse',
+} as const;
+
+/**
  * Type of integration
  */
 export type McpIntegrationResponseDtoType = typeof McpIntegrationResponseDtoType[keyof typeof McpIntegrationResponseDtoType];
@@ -3844,6 +3858,9 @@ export type McpIntegrationResponseDtoConfigSchema = { [key: string]: unknown };
 export type McpIntegrationResponseDtoOrgConfigValues = { [key: string]: unknown };
 
 export interface McpIntegrationResponseDto {
+  /** Last connection failure for the current user and current configuration only */
+  userConnectionFailure?: McpIntegrationResponseDtoUserConnectionFailure;
+  userConnectionCheckedAt?: string;
   /** Unique identifier of the integration */
   id: string;
   /** Name of the integration */
@@ -6164,6 +6181,21 @@ export interface RunMasksResponseDto {
   masks: PiiMaskResponseDto[];
   /** Event timestamp */
   timestamp: string;
+}
+
+export type RunIntegrationWarningResponseDtoType = typeof RunIntegrationWarningResponseDtoType[keyof typeof RunIntegrationWarningResponseDtoType];
+
+
+export const RunIntegrationWarningResponseDtoType = {
+  integration_warning: 'integration_warning',
+} as const;
+
+export interface RunIntegrationWarningResponseDto {
+  type: RunIntegrationWarningResponseDtoType;
+  threadId: string;
+  timestamp: string;
+  integrationId: string;
+  integrationName: string;
 }
 
 /**

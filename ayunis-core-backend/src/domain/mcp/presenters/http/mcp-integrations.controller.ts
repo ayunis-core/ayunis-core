@@ -246,9 +246,7 @@ export class McpIntegrationsController {
     const available = await this.listAvailableMcpIntegrationsUseCase.execute();
 
     return Promise.all(
-      available.map(({ integration, userAuthorized }) =>
-        this.responseMapper.toDto(integration, userAuthorized),
-      ),
+      available.map((value) => this.responseMapper.toAvailableDto(value)),
     );
   }
 

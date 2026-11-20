@@ -1,3 +1,4 @@
+import { McpRuntimeConnectionError } from 'src/domain/mcp/application/mcp-runtime-connection.error';
 import type { UUID } from 'crypto';
 import { McpToolAssemblerService } from 'src/domain/runs/application/services/mcp-tool-assembler.service';
 import {
@@ -45,6 +46,18 @@ const context = (canUseTools = true) =>
 const mcpName = `mcp__tool__notion.search__${integrationId.slice(0, 8)}`;
 
 describe('McpCapability', () => {
+  it('warns about an unavailable integration instead of silently dropping it', async () => {
+    const { capability, discover } = buildCapability([]);
+    discover.mockRejectedValue(new McpRuntimeConnectionError('unavailable'));
+    const result = await capability.contribute(context(), {
+      reservedToolNames: new Set(),
+    });
+    expect(result).toMatchObject({
+      tools: [],
+      warnings: [{ integrationId, integrationName: 'Notion' }],
+    });
+  });
+
   it("offers the thread's MCP integration tools", async () => {
     const { capability } = buildCapability(['Search Notion']);
 
@@ -159,6 +172,38 @@ describe('McpCapability', () => {
         }),
         { reservedToolNames },
       );
+
+    it('keeps working integration instructions while warning about a failed neighbor', async () => {
+      const capability = buildWithIntegrations([
+        {
+          id: registryId,
+          name: 'Citizen registry',
+          instructions: 'Search by surname first.',
+        },
+        {
+          id: archiveId,
+          name: 'Council archive',
+          instructions: 'Do not include unavailable instructions.',
+          discovery: new McpRuntimeConnectionError('unavailable'),
+        },
+      ]);
+      const result = await contribute(capability, [registryId, archiveId]);
+      expect(result.warnings).toEqual([
+        { integrationId: archiveId, integrationName: 'Council archive' },
+      ]);
+      expect(toolNames(result)).toEqual([
+        `mcp__tool__search__${registryId.slice(0, 8)}`,
+      ]);
+      expect(result.sections).toEqual([
+        {
+          slot: PromptSlot.RESOURCES,
+          content: expect.stringContaining('Search by surname first.'),
+        },
+      ]);
+      expect(JSON.stringify(result.sections)).not.toContain(
+        'Do not include unavailable instructions.',
+      );
+    });
 
     it('briefs the model with one section per active integration, ordered by integration id', async () => {
       const capability = buildWithIntegrations([

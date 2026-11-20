@@ -1,3 +1,6 @@
+import { MCP_CONNECTION_UNAVAILABLE_MESSAGE } from 'src/domain/mcp/application/mcp-runtime-connection.error';
+import { mcpIntegrationWarning } from 'src/domain/runs/application/helpers/mcp-integration-warning.helper';
+import { MCP_INTEGRATION_WARNING_EVENT } from 'src/domain/runs/domain/run-integration-warning';
 import type {
   JsonSchema,
   Tool as RuntimeTool,
@@ -123,7 +126,7 @@ export class BackendToolAdapter {
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
       signal: ctx.signal,
     };
-    const outcome = await this.runTool(tool, input, context);
+    const outcome = await this.runTool(tool, input, context, ctx);
     let result = outcome.result;
     if (context.isAnonymous && tool.returnsPii) {
       const limited = truncateAnonymousToolResult(result);
@@ -182,6 +185,7 @@ export class BackendToolAdapter {
     tool: BackendTool,
     input: Record<string, unknown>,
     context: ExecuteToolCommand['context'],
+    runtime: RuntimeToolContext,
   ): Promise<ToolExecutionOutcome> {
     try {
       const result = await this.executeToolUseCase.execute(
@@ -192,6 +196,14 @@ export class BackendToolAdapter {
       // The runtime reports a call as aborted only when it rejects with the
       // cancellation itself; handlers wrap it like any other failure.
       context.signal?.throwIfAborted();
+      const warning = mcpIntegrationWarning(error, tool);
+      if (warning) {
+        runtime.emit({ name: MCP_INTEGRATION_WARNING_EVENT, data: warning });
+        return {
+          result: MCP_CONNECTION_UNAVAILABLE_MESSAGE,
+          succeeded: false,
+        };
+      }
       if (error instanceof ToolExecutionFailedError && error.exposeToLLM) {
         return {
           result: `The tool didn't provide any result due to the following error in tool usage: ${error.message}`,

@@ -223,6 +223,13 @@ function IntegrationRow({
     <Item variant="outline">
       <ItemContent>
         <ItemTitle>{integration.name}</ItemTitle>
+        {integration.userConnectionFailure && (
+          <ItemDescription
+            data-testid={`integration-failure-${integration.id}`}
+          >
+            {t(`integrations.failure.${integration.userConnectionFailure}`)}
+          </ItemDescription>
+        )}
         {integration.description && (
           <ItemDescription>{integration.description}</ItemDescription>
         )}
@@ -261,6 +268,8 @@ function resolveStatus(integration: McpIntegrationResponseDto): {
   key: IntegrationStatusKey;
   badgeVariant: 'default' | 'destructive' | 'secondary';
 } {
+  if (integration.userConnectionFailure)
+    return { key: 'actionRequired', badgeVariant: 'destructive' };
   if (integration.userAuthorizationRequired !== true) {
     return { key: 'optional', badgeVariant: 'secondary' };
   }

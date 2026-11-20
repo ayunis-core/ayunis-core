@@ -1,5 +1,12 @@
 import type { UUID } from 'crypto';
-import { Column, Entity, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  Unique,
+} from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { McpIntegrationRecord } from './mcp-integration.record';
@@ -7,6 +14,10 @@ import { McpIntegrationRecord } from './mcp-integration.record';
 @Entity('mcp_oauth_user_tokens')
 @Unique(['integrationId', 'userId'])
 export class McpOAuthUserTokenRecord extends BaseRecord {
+  @Column({ name: 'grant_revision', type: 'uuid' })
+  @Generated('uuid')
+  grantRevision: UUID;
+
   @Column({ name: 'integration_id', type: 'varchar' })
   integrationId: UUID;
 
