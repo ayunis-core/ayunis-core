@@ -3,7 +3,6 @@ import { createUser } from '../../src/factories/user.factory';
 import { test, expect } from '../../src/fixtures/test';
 import { sendMessage, startThread } from '../../src/flows/chat.flow';
 import { login } from '../../src/clients/api/auth.client';
-import { skipChatPersonalization } from '../../src/clients/api/chat-settings.client';
 import { dismissWelcomeVideo } from '../../src/clients/api/onboarding.client';
 import { generatedApi } from '../../src/clients/api/generated-api';
 import { getThreadSourceCitationResponse } from '../../src/clients/api/threads.client';
@@ -102,7 +101,6 @@ test('opens citations from active knowledge bases and reauthorizes sharing', asy
   const memberApi = await request.newContext({ baseURL: config.apiURL });
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const memberContext = await browser.newContext({
     baseURL: config.baseURL,
     storageState: await memberApi.storageState(),
@@ -223,7 +221,6 @@ test('reauthorizes a skill source before and after sharing', async ({
   const memberApi = await request.newContext({ baseURL: config.apiURL });
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const memberContext = await browser.newContext({
     baseURL: config.baseURL,
     storageState: await memberApi.storageState(),

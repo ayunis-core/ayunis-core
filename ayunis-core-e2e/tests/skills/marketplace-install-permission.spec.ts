@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext, BrowserContext, Page } from "@playwright/test";
 import { login } from "../../src/clients/api/auth.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import { requestMarketplaceSkillInstall } from "../../src/clients/api/marketplace.client";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
 import {
@@ -33,7 +32,6 @@ async function signIn(
   const api = await createApiContext(emptySession);
   await login(api, user.email, user.password);
   await dismissWelcomeVideo(api);
-  await skipChatPersonalization(api);
   return api;
 }
 

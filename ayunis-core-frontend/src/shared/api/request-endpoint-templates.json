@@ -37,7 +37,6 @@
   "/auth/sso/oidc/callback",
   "/auth/sso/organizations/{orgId}/start",
   "/chat-settings/chat-start-defaults",
-  "/chat-settings/generate-personalized-system-prompt",
   "/chat-settings/org-chat-settings",
   "/chat-settings/org-system-prompt",
   "/chat-settings/system-prompt",

@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { login } from '../../src/clients/api/auth.client';
-import { skipChatPersonalization } from '../../src/clients/api/chat-settings.client';
 import { getEffectiveDefaultModel } from '../../src/clients/api/models.client';
 import { dismissWelcomeVideo } from '../../src/clients/api/onboarding.client';
 import {
@@ -55,7 +54,6 @@ test('another member of the organization can neither see, follow nor stop a user
   const memberApi = await createApiContext({ cookies: [], origins: [] });
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
 
   await sendMessageAndLeave(api, thread.id);
   await expect

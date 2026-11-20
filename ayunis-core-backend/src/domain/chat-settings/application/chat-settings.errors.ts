@@ -4,7 +4,6 @@ import { ApplicationError } from 'src/common/errors/base.error';
 export enum ChatSettingsErrorCode {
   USER_SYSTEM_PROMPT_NOT_FOUND = 'USER_SYSTEM_PROMPT_NOT_FOUND',
   UNEXPECTED_CHAT_SETTINGS_ERROR = 'UNEXPECTED_CHAT_SETTINGS_ERROR',
-  PERSONALIZED_SYSTEM_PROMPT_GENERATION_ERROR = 'PERSONALIZED_SYSTEM_PROMPT_GENERATION_ERROR',
 }
 
 export class ChatSettingsError extends ApplicationError {}
@@ -31,18 +30,5 @@ export class UnexpectedChatSettingsError extends ChatSettingsError {
         error,
       },
     );
-  }
-}
-
-export class PersonalizedSystemPromptGenerationError extends ChatSettingsError {
-  constructor(cause?: Error) {
-    super(
-      'Failed to generate personalized system prompt',
-      ChatSettingsErrorCode.PERSONALIZED_SYSTEM_PROMPT_GENERATION_ERROR,
-      500,
-    );
-    if (cause) {
-      this.cause = cause;
-    }
   }
 }

@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { login } from "../../src/clients/api/auth.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import {
   getNotification,
   listNotifications,
@@ -49,7 +48,6 @@ test("another member of the organization can neither see nor read a user's notif
   const memberApi = await createApiContext(emptySession);
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const memberModel = await getDefaultModelSelection(memberApi);
 
   expect((await listNotifications(memberApi)).map((n) => n.id)).not.toContain(

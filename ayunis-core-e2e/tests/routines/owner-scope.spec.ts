@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { login } from "../../src/clients/api/auth.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
 import {
   listRoutineNotifications,
@@ -36,7 +35,6 @@ test("another member of the organization can neither see nor change a user's rou
   const memberApi = await createApiContext(emptySession);
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
 
   expect((await listRoutines(memberApi)).map((r) => r.id)).not.toContain(
     routine.id,
@@ -90,7 +88,6 @@ test("another member of the organization gets none of a user's routine notificat
   const memberApi = await createApiContext(emptySession);
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
 
   expect((await requestRoutine(memberApi, routine.id)).status()).toBe(404);
   expect(await listRoutineNotifications(memberApi, routine.id)).toEqual([]);

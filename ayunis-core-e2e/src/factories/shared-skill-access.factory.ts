@@ -3,7 +3,6 @@ import type { APIRequestContext } from "@playwright/test";
 import { config } from "../config";
 import { acceptInvite, inviteUser } from "../clients/api/invites.client";
 import { login } from "../clients/api/auth.client";
-import { skipChatPersonalization } from "../clients/api/chat-settings.client";
 import { generatedApi } from "../clients/api/generated-api";
 import { dismissWelcomeVideo } from "../clients/api/onboarding.client";
 import { createOrgSkillShare } from "../clients/api/shares.client";
@@ -68,7 +67,6 @@ export async function createSharedSkillAccessFixture(
     });
     await login(memberApi, memberEmail, MEMBER_PASSWORD);
     await dismissWelcomeVideo(memberApi);
-    await skipChatPersonalization(memberApi);
     const workspace = await generatedApi.workspacesControllerCreate(
       {
         name: `Shared skill workspace ${suffix}`,

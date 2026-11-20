@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext, BrowserContext } from "@playwright/test";
 import { login } from "../../src/clients/api/auth.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import { getEffectiveDefaultModel } from "../../src/clients/api/models.client";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
 import {
@@ -113,7 +112,6 @@ test("offers the routine widgets only to members who may manage routines", async
   const memberApi = await createApiContext(emptySession);
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const contexts: BrowserContext[] = [];
   try {
     const defaults = await getUserRolePermissions(adminApi);
