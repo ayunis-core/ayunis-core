@@ -21,6 +21,7 @@ import { UpdateSkillUseCase } from './application/use-cases/update-skill/update-
 import { DeleteSkillUseCase } from './application/use-cases/delete-skill/delete-skill.use-case';
 import { FindOneSkillUseCase } from './application/use-cases/find-one-skill/find-one-skill.use-case';
 import { FindInstalledMarketplaceSkillUseCase } from './application/use-cases/find-installed-marketplace-skill/find-installed-marketplace-skill.use-case';
+import { HasPersonalSkillUseCase } from './application/use-cases/has-personal-skill/has-personal-skill.use-case';
 import { ListAccessibleSkillsUseCase } from './application/use-cases/list-accessible-skills/list-accessible-skills.use-case';
 import { SetSkillActivationUseCase } from './application/use-cases/set-skill-activation/set-skill-activation.use-case';
 import { SetSkillPinUseCase } from './application/use-cases/set-skill-pin/set-skill-pin.use-case';
@@ -146,6 +147,7 @@ import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/app
     DeleteSkillUseCase,
     FindOneSkillUseCase,
     FindInstalledMarketplaceSkillUseCase,
+    HasPersonalSkillUseCase,
     ListAccessibleSkillsUseCase,
     SetSkillActivationUseCase,
     SetSkillPinUseCase,
@@ -212,6 +214,7 @@ import { UnlinkKnowledgeBaseFromOtherOwnersUseCase } from 'src/domain/skills/app
     CreateSkillWithUniqueNameUseCase,
     CheckKnowledgeBaseSkillShareAccessUseCase,
     FindKnowledgeBaseIdsAccessibleViaSharedSkillsUseCase,
+    HasPersonalSkillUseCase,
   ],
 })
 export class SkillsModule {}

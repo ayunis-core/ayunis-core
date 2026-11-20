@@ -133,6 +133,7 @@
   "/notifications/{id}/image",
   "/notifications/{id}/read",
   "/onboarding",
+  "/onboarding/stage",
   "/onboarding/welcome-video-seen",
   "/openai-compat/v1/chat/completions",
   "/openai-compat/v1/models",

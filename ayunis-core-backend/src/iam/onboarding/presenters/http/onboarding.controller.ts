@@ -31,6 +31,8 @@ import { OnboardingResponseDto } from './dtos/onboarding-response.dto';
 import { OnboardingResponseDtoMapper } from './mappers/onboarding-response-dto.mapper';
 import { MarkWelcomeVideoSeenUseCase } from 'src/iam/onboarding/application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.use-case';
 import { MarkWelcomeVideoSeenCommand } from 'src/iam/onboarding/application/use-cases/mark-welcome-video-seen/mark-welcome-video-seen.command';
+import { GetOnboardingStageUseCase } from 'src/iam/onboarding/application/use-cases/get-onboarding-stage/get-onboarding-stage.use-case';
+import { OnboardingStageResponseDto } from './dtos/onboarding-stage-response.dto';
 
 @ApiTags('Onboarding')
 @Controller('onboarding')
@@ -42,6 +44,7 @@ export class OnboardingController {
     private readonly updateOnboardingUseCase: UpdateOnboardingUseCase,
     private readonly markWelcomeVideoSeenUseCase: MarkWelcomeVideoSeenUseCase,
     private readonly onboardingResponseDtoMapper: OnboardingResponseDtoMapper,
+    private readonly getOnboardingStageUseCase: GetOnboardingStageUseCase,
   ) {}
 
   @Get()
@@ -70,6 +73,29 @@ export class OnboardingController {
     );
 
     return this.onboardingResponseDtoMapper.toDto(onboarding);
+  }
+
+  @Get('stage')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get the onboarding stage',
+    description:
+      "Which onboarding hint to show the current user, if any, and the model a profile chat should use. Worked out from the user's memory, personal skills and models on every request; answers with no stage while memory is disabled.",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Onboarding stage',
+    type: OnboardingStageResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'User not authenticated' })
+  @ApiInternalServerErrorResponse({
+    description:
+      'Internal server error occurred while working out the onboarding stage',
+  })
+  async getOnboardingStage(): Promise<OnboardingStageResponseDto> {
+    this.logger.log('getOnboardingStage');
+    const { stage, modelId } = await this.getOnboardingStageUseCase.execute();
+    return { stage, modelId };
   }
 
   @Post('welcome-video-seen')

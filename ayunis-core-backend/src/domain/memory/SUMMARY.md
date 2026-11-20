@@ -41,13 +41,14 @@ Controller: `MemoryController`, base path `/memory`, tag `Memory`. Behind the `m
 
 ## Exports
 
-- `FindUserMemoryUseCase` — runs module: loads the snapshot for the system prompt; tools module: lists available keys on a `get_memory` miss
+- `FindUserMemoryUseCase` — runs module: loads the snapshot for the system prompt; tools module: lists available keys on a `get_memory` miss; onboarding module: whether `personal` has content (onboarding stage)
 - `GetMemoryEntryUseCase` — tools module: backs `get_memory`
 - `UpsertMemoryEntryUseCase` / `DeleteMemoryEntryUseCase` — tools module: back `set_memory` (empty content removes)
 
 ## Consumers
 
 - **`tools`** — `GetMemoryTool` / `SetMemoryTool` and their handlers
+- **`onboarding`** — `GetOnboardingStageUseCase` offers the profile onboarding chat while `personal` is empty
 - **`runs`** — `MemoryCapability` of the chat run profile loads memory, offers the tools, renders the `<memory>` block (`memory-prompt-section.ts`) and reminds the assistant to keep memory current on every fifth user message
 
 ## Boundaries

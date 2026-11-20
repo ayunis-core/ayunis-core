@@ -45,6 +45,7 @@ export abstract class SkillRepository {
   abstract delete(skillId: UUID): Promise<void>;
   abstract findOne(id: UUID, userId: UUID): Promise<PersonalSkill | null>;
   abstract findAllByOwner(userId: UUID): Promise<PersonalSkill[]>;
+  abstract existsPersonalByOwner(userId: UUID): Promise<boolean>;
   abstract findPersonalByMarketplaceIdentifier(
     userId: UUID,
     marketplaceIdentifier: string,

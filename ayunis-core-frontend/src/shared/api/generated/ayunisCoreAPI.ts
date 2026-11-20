@@ -170,6 +170,7 @@ import type {
   NotificationResponseDto,
   NotificationsControllerFindAllParams,
   OnboardingResponseDto,
+  OnboardingStageResponseDto,
   OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
   OrgErrorResponseDto,
@@ -32144,6 +32145,100 @@ export const useOnboardingControllerUpdateOnboarding = <TError = void,
       > => {
       return useMutation(getOnboardingControllerUpdateOnboardingMutationOptions(options), queryClient);
     }
+
+/**
+ * Which onboarding hint to show the current user, if any, and the model a profile chat should use. Worked out from the user's memory, personal skills and models on every request; answers with no stage while memory is disabled.
+ * @summary Get the onboarding stage
+ */
+export const onboardingControllerGetOnboardingStage = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OnboardingStageResponseDto>(
+      {url: `/onboarding/stage`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getOnboardingControllerGetOnboardingStageQueryKey = () => {
+    return [
+    `/onboarding/stage`
+    ] as const;
+    }
+
+
+export const getOnboardingControllerGetOnboardingStageQueryOptions = <TData = Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getOnboardingControllerGetOnboardingStageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>> = ({ signal }) => onboardingControllerGetOnboardingStage(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type OnboardingControllerGetOnboardingStageQueryResult = NonNullable<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>>
+export type OnboardingControllerGetOnboardingStageQueryError = void
+
+
+export function useOnboardingControllerGetOnboardingStage<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>,
+          TError,
+          Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOnboardingControllerGetOnboardingStage<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>,
+          TError,
+          Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOnboardingControllerGetOnboardingStage<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the onboarding stage
+ */
+
+export function useOnboardingControllerGetOnboardingStage<TData = Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof onboardingControllerGetOnboardingStage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getOnboardingControllerGetOnboardingStageQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 /**
  * Record when the current user first dismisses the welcome video.
