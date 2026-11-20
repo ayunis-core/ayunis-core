@@ -5,3 +5,5 @@
 export const RELEASE_NOTE_IMAGE_PREFIX = 'release-notes/';
 /** The link label when a note's call to action has none. */
 export const RELEASE_NOTE_DEFAULT_LINK_LABEL = 'Mehr erfahren';
+/** The product updates page shows the newest notes, unpaged. */
+export const RELEASE_NOTES_LIST_LIMIT = 100;

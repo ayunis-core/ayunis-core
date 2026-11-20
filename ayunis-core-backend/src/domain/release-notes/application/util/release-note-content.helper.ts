@@ -9,10 +9,7 @@ export type ReleaseNoteText =
   | { readonly headline: string; readonly body: string }
   | { readonly violation: string };
 
-/**
- * The headline and markdown body of a note. A note must fit a notification,
- * because its notifications copy them without `CreateNotificationUseCase`.
- */
+/** The headline and markdown body of a note, within the notification limits. */
 export function releaseNoteText(note: AnnouncableReleaseNote): ReleaseNoteText {
   const headline = note.title.trim();
   const body = [note.text.trim(), linkMarkdown(note)]
@@ -31,6 +28,19 @@ export function releaseNoteText(note: AnnouncableReleaseNote): ReleaseNoteText {
     };
   }
   return { headline, body };
+}
+
+/** The note's date as `YYYY-MM-DD`, or null when Announcable sends none. */
+export function publishedOn(note: AnnouncableReleaseNote): string | null {
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(note.date.trim());
+  if (!match) return null;
+  const [day, month, year] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  // Date rolls 31.02. over into March instead of rejecting it.
+  if (date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    return null;
+  }
+  return date.toISOString().slice(0, 10);
 }
 
 /** The image URL without its query, which carries the expiring signature. */

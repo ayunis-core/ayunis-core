@@ -68,6 +68,7 @@ describe('AnnouncableHttpFeed', () => {
           id: 'n1',
           title: 'Auto und Max Modus – Modellauswahl leicht gemacht',
           text: 'Neue Chats lassen sich jetzt noch einfacher starten.',
+          date: '05.11.2026',
           imageSrc: TEST_IMAGE_SRC,
           mediaLink: '',
           lastUpdateOn: '2026-11-05 14:13:59.695765 +0000 UTC',

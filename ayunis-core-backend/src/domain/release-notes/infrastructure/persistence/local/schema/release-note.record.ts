@@ -6,7 +6,6 @@ import {
   NOTIFICATION_MEDIA_URL_MAX_LENGTH,
 } from 'src/domain/notifications/domain/notifications.constants';
 
-/** The media columns mirror those of a notification, which copies them. */
 @Entity({ name: 'release_notes' })
 @Check(
   `("mediaType" IS NULL AND "mediaUrl" IS NULL AND "mediaStorageKey" IS NULL AND "mediaContentType" IS NULL) OR ("mediaType" = 'loom' AND "mediaUrl" IS NOT NULL AND "mediaStorageKey" IS NULL AND "mediaContentType" IS NULL) OR ("mediaType" = 'image' AND "mediaUrl" IS NULL AND "mediaStorageKey" IS NOT NULL AND "mediaContentType" IS NOT NULL)`,
@@ -42,4 +41,10 @@ export class ReleaseNoteRecord extends BaseRecord {
 
   @Column({ type: 'varchar' })
   lastUpdateOn: string;
+
+  @Column({ default: false })
+  announced: boolean;
+
+  @Column({ type: 'date', nullable: true })
+  publishedOn: string | null;
 }

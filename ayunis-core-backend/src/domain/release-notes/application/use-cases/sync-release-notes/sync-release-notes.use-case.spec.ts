@@ -302,6 +302,79 @@ describe('SyncReleaseNotesUseCase', () => {
     expect(repository.notes.size).toBe(0);
   });
 
+  it('keeps the date Announcable gives a note, and adds it to notes stored without one', async () => {
+    const { feed, repository, useCase } = setup();
+    feed.fetchReleaseNotes.mockResolvedValue([
+      { ...webinarNote, date: '' },
+      videoNote,
+    ]);
+    await useCase.execute();
+    expect(repository.byAnnouncableId(VIDEO_ID)?.date).toBe('2026-11-05');
+    expect(repository.byAnnouncableId(WEBINAR_ID)?.publishedOn).toBeNull();
+    feed.fetchReleaseNotes.mockResolvedValue([
+      { ...webinarNote, date: '27.10.2026' },
+      videoNote,
+    ]);
+
+    await expect(useCase.execute()).resolves.toMatchObject({
+      updated: 1,
+      unchanged: 1,
+    });
+
+    expect(repository.byAnnouncableId(WEBINAR_ID)).toMatchObject({
+      publishedOn: '2026-10-27',
+      announced: false,
+    });
+  });
+
+  describe('announcing', () => {
+    const READER = '11111111-1111-4111-8111-111111111111' as UUID;
+
+    it('records the notes of the first sync as old news, unread for nobody', async () => {
+      const { feed, repository, useCase } = setup();
+      feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
+
+      await useCase.execute();
+
+      await expect(repository.countUnread(READER)).resolves.toBe(0);
+    });
+
+    it('announces a note that arrives later, which is then unread', async () => {
+      const { feed, repository, useCase } = setup();
+      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
+      await useCase.execute();
+      feed.fetchReleaseNotes.mockResolvedValue([imageNote, webinarNote]);
+
+      await useCase.execute();
+
+      expect(repository.byAnnouncableId(TEST_ANNOUNCABLE_ID)?.announced).toBe(
+        true,
+      );
+      expect(repository.byAnnouncableId(WEBINAR_ID)?.announced).toBe(false);
+      await expect(repository.countUnread(READER)).resolves.toBe(1);
+    });
+
+    it('shows an edit without making the note unread again', async () => {
+      const { feed, repository, useCase } = setup();
+      feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
+      await useCase.execute();
+      feed.fetchReleaseNotes.mockResolvedValue([videoNote, webinarNote]);
+      await useCase.execute();
+      const noteId = repository.byAnnouncableId(VIDEO_ID)?.id as UUID;
+      await repository.markRead(READER, noteId);
+      feed.fetchReleaseNotes.mockResolvedValue([
+        { ...videoNote, lastUpdateOn: '2026-11-06 09:00:00 +0000 UTC' },
+        webinarNote,
+      ]);
+
+      await expect(useCase.execute()).resolves.toMatchObject({ updated: 1 });
+
+      await expect(
+        repository.findOneForUser(READER, noteId),
+      ).resolves.toMatchObject({ unread: false, note: { announced: true } });
+    });
+  });
+
   describe('notifications', () => {
     it('records the notes of the first sync without notifying anyone', async () => {
       const { feed, repository, inbox, useCase } = setup();

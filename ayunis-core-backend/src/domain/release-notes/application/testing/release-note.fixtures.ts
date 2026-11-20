@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import type { ReleaseNoteNotificationContent } from 'src/domain/notifications/application/models/release-note-notification-content';
 import type { NotifyUsersOfReleaseNoteUseCase } from 'src/domain/notifications/application/use-cases/notify-users-of-release-note/notify-users-of-release-note.use-case';
 import type { UpdateReleaseNoteNotificationsUseCase } from 'src/domain/notifications/application/use-cases/update-release-note-notifications/update-release-note-notifications.use-case';
+import type { UserReleaseNote } from 'src/domain/release-notes/application/models/user-release-note';
 import type { AnnouncableReleaseNote } from 'src/domain/release-notes/application/models/announcable-release-note';
 import type { AnnouncableFeed } from 'src/domain/release-notes/application/ports/announcable-feed.port';
 import { ReleaseNotesRepository } from 'src/domain/release-notes/application/ports/release-notes.repository';
@@ -26,6 +27,7 @@ export function anAnnouncableNote(
     id: TEST_ANNOUNCABLE_ID,
     title: 'Auto und Max Modus – Modellauswahl leicht gemacht',
     text: 'Neue Chats lassen sich jetzt noch einfacher starten.',
+    date: '05.11.2026',
     imageSrc: '',
     mediaLink: '',
     lastUpdateOn: '2026-11-05 14:13:59.695765 +0000 UTC',
@@ -51,6 +53,7 @@ export function aReleaseNote(
 /** Keeps notes in memory, so specs assert what is stored, not which calls ran. */
 export class InMemoryReleaseNotesRepository extends ReleaseNotesRepository {
   readonly notes = new Map<UUID, ReleaseNote>();
+  private readonly reads = new Set<string>();
 
   findAll(): Promise<ReleaseNote[]> {
     return Promise.resolve([...this.notes.values()]);
@@ -66,9 +69,47 @@ export class InMemoryReleaseNotesRepository extends ReleaseNotesRepository {
     return Promise.resolve();
   }
 
+  /** Deleting a note deletes its read marks, as the foreign key does. */
   deleteByIds(ids: UUID[]): Promise<void> {
-    for (const id of ids) this.notes.delete(id);
+    for (const id of ids) {
+      this.notes.delete(id);
+      for (const read of this.reads) {
+        if (read.endsWith(`:${id}`)) this.reads.delete(read);
+      }
+    }
     return Promise.resolve();
+  }
+
+  findNewestForUser(userId: UUID, limit: number): Promise<UserReleaseNote[]> {
+    const newestFirst = [...this.notes.values()].sort((a, b) =>
+      b.date.localeCompare(a.date),
+    );
+    return Promise.resolve(
+      newestFirst.slice(0, limit).map((note) => this.forUser(userId, note)),
+    );
+  }
+
+  findOneForUser(userId: UUID, id: UUID): Promise<UserReleaseNote | null> {
+    const note = this.notes.get(id);
+    return Promise.resolve(note ? this.forUser(userId, note) : null);
+  }
+
+  async countUnread(userId: UUID, limit = this.notes.size): Promise<number> {
+    const notes = await this.findNewestForUser(userId, limit);
+    return notes.filter((note) => note.unread).length;
+  }
+
+  markRead(userId: UUID, id: UUID): Promise<void> {
+    if (this.notes.has(id)) this.reads.add(`${userId}:${id}`);
+    return Promise.resolve();
+  }
+
+  /** Every reader joined before every note. */
+  private forUser(userId: UUID, note: ReleaseNote): UserReleaseNote {
+    return {
+      note,
+      unread: note.announced && !this.reads.has(`${userId}:${note.id}`),
+    };
   }
 
   byAnnouncableId(announcableId: string): ReleaseNote | undefined {

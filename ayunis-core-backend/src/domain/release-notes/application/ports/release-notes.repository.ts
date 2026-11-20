@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { UserReleaseNote } from 'src/domain/release-notes/application/models/user-release-note';
 import type { ReleaseNote } from 'src/domain/release-notes/domain/release-note.entity';
 
 export abstract class ReleaseNotesRepository {
@@ -11,4 +12,21 @@ export abstract class ReleaseNotesRepository {
   abstract update(note: ReleaseNote): Promise<void>;
 
   abstract deleteByIds(ids: UUID[]): Promise<void>;
+
+  /** Newest first, at most `limit`. */
+  abstract findNewestForUser(
+    userId: UUID,
+    limit: number,
+  ): Promise<UserReleaseNote[]>;
+
+  abstract findOneForUser(
+    userId: UUID,
+    id: UUID,
+  ): Promise<UserReleaseNote | null>;
+
+  /** Unread notes among the newest `limit`, the ones the list shows. */
+  abstract countUnread(userId: UUID, limit: number): Promise<number>;
+
+  /** Does nothing for a note the user has read before or that is gone. */
+  abstract markRead(userId: UUID, id: UUID): Promise<void>;
 }
