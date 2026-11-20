@@ -1,4 +1,5 @@
 {
+  "pageTitle": "Documents",
   "letterheads": {
     "samplePreview": {
       "close": "Close",
@@ -76,6 +77,7 @@
   },
   "typography": {
     "title": "Document defaults",
+    "description": "These settings apply to all documents in Ayunis Core – including documents without letterhead.",
     "fontFamily": "Font family",
     "fontSizePt": "Font size (pt)",
     "organizationDefault": "Organization default",

@@ -5,6 +5,7 @@ import { Button } from '@ayunis/ui/components/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
@@ -41,6 +42,7 @@ export function DocumentDefaultsCard() {
     <Card>
       <CardHeader>
         <CardTitle>{t('typography.title')}</CardTitle>
+        <CardDescription>{t('typography.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         {!defaults && isError && (

@@ -21,7 +21,9 @@ interface CreateLetterheadParams extends Partial<DocumentTypography> {
   continuationPageMargins: PageMargins;
 }
 
-export function useCreateLetterhead(onSuccess?: () => void) {
+export function useCreateLetterhead(
+  onSuccess?: (letterhead: LetterheadResponseDto) => void,
+) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-letterheads');
 
@@ -53,12 +55,12 @@ export function useCreateLetterhead(onSuccess?: () => void) {
         data: formData,
       });
     },
-    onSuccess: () => {
+    onSuccess: (letterhead) => {
       void queryClient.invalidateQueries({
         queryKey: getLetterheadsControllerFindAllQueryKey(),
       });
       showSuccess(t('letterheads.createDialog.success'));
-      onSuccess?.();
+      onSuccess?.(letterhead);
     },
     onError: (error) => {
       try {
