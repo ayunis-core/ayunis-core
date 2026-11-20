@@ -41,11 +41,13 @@ import { EMPTY_DOCUMENT_TYPOGRAPHY } from '@/shared/lib/document-typography';
 interface LetterheadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated: (id: string) => void;
 }
 
 export function LetterheadFormDialog({
   open,
   onOpenChange,
+  onCreated,
 }: Readonly<LetterheadFormDialogProps>) {
   const { t } = useTranslation('admin-settings-letterheads');
 
@@ -55,6 +57,7 @@ export function LetterheadFormDialog({
         <LetterheadFormContent
           key={String(open)}
           onOpenChange={onOpenChange}
+          onCreated={onCreated}
           t={t}
         />
       )}
@@ -62,13 +65,16 @@ export function LetterheadFormDialog({
   );
 }
 
-interface LetterheadFormContentProps {
-  onOpenChange: (open: boolean) => void;
+interface LetterheadFormContentProps extends Omit<
+  LetterheadFormDialogProps,
+  'open'
+> {
   t: (key: string) => string;
 }
 
 function LetterheadFormContent({
   onOpenChange,
+  onCreated,
   t,
 }: Readonly<LetterheadFormContentProps>) {
   const [typography, setTypography] = useState(EMPTY_DOCUMENT_TYPOGRAPHY);
@@ -107,7 +113,10 @@ function LetterheadFormContent({
     onOpenChange(false);
   };
 
-  const { createLetterhead, isCreating } = useCreateLetterhead(handleClose);
+  const { createLetterhead, isCreating } = useCreateLetterhead((letterhead) => {
+    handleClose();
+    onCreated(letterhead.id);
+  });
 
   const draft = {
     ...typography,

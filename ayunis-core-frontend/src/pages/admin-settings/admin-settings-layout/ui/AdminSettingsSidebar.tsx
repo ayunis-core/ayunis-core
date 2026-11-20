@@ -94,7 +94,7 @@ export function AdminSettingsSidebar() {
         {
           to: '/admin-settings/letterheads',
           icon: <FileText />,
-          label: t('layout.letterheads'),
+          label: t('layout.documents'),
         },
       ],
     },
