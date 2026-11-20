@@ -94,6 +94,7 @@ artifacts/
 - Deleting a thread cascade-deletes all its artifacts and versions
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
 - DOCX export uses the same letterhead lookup and puts its artwork behind editable body text. The Word section uses the larger configured margin for each edge across the first and continuation pages, so text can reflow after editing.
+- DOCX and PDF exports use organization typography defaults with or without a letterhead. A selected letterhead can override the font family and size independently.
 - Export delegates to `DocumentExportPort` for format conversion; PDF rendering blocks non-embedded resource requests, waits only for the document load event rather than generic network idleness, and reports renderer deadlines as `ARTIFACT_EXPORT_TIMEOUT` (504) without retrying the same timed-out content
 - Spreadsheet export delegates to `SpreadsheetExportPort`; XLSX preserves original formula-cell provenance through PII de-anonymization and emits live formulas only after successful local evaluation and dependency validation, while unsupported formulas remain text and CSV formula-like values are neutralized
 - Document HTML sanitization (XSS prevention) before storage and export

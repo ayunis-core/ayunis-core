@@ -206,28 +206,19 @@ export class ExportArtifactUseCase {
     content: string,
     safeTitle: string,
   ): Promise<ExportResult> {
-    const buffer = artifact.letterheadId
-      ? await this.exportDocxWithLetterhead(artifact, content)
-      : await this.documentExportPort.exportToDocx(content);
+    const { typography, letterheadConfig } =
+      await this.resolvePageLayout(artifact);
+    const buffer = await this.documentExportPort.exportToDocx(
+      content,
+      letterheadConfig,
+      typography,
+    );
     return {
       buffer,
       fileName: `${safeTitle}.docx`,
       mimeType:
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     };
-  }
-
-  private async exportDocxWithLetterhead(
-    artifact: DocumentArtifact,
-    content: string,
-  ): Promise<Buffer> {
-    const { typography, letterheadConfig } =
-      await this.resolvePageLayout(artifact);
-    return this.documentExportPort.exportToDocx(
-      content,
-      letterheadConfig,
-      typography,
-    );
   }
 
   private async exportXlsx(
