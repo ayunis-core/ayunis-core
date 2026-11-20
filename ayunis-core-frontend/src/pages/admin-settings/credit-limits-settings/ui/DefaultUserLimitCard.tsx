@@ -37,7 +37,9 @@ export function DefaultUserLimitCard({
         {defaultLimit === null
           ? t('defaultLimit.notSet')
           : t('defaultLimit.value', {
-              credits: defaultLimit.toLocaleString(i18n.language),
+              credits: defaultLimit.toLocaleString(i18n.language, {
+                maximumFractionDigits: 2,
+              }),
             })}
         {defaultLimit === 0 && (
           <span className="ml-2 text-muted-foreground">

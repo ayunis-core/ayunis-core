@@ -1,15 +1,19 @@
 import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CreditLimitsTable } from './CreditLimitsTable';
 
+const i18n = vi.hoisted(() => ({ language: 'en' }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: Record<string, unknown>) =>
       options ? `${key}:${JSON.stringify(options)}` : key,
-    i18n: { language: 'en' },
+    i18n,
   }),
 }));
+afterEach(() => {
+  i18n.language = 'en';
+});
 vi.mock('@/widgets/credit-limit-editor/ui/CreditLimitDialog', () => ({
   CreditLimitDialog: ({
     target,
@@ -95,6 +99,53 @@ describe('CreditLimitsTable', () => {
     );
     expect(screen.getByText('5,000')).toBeTruthy();
   });
+
+  it.each([
+    {
+      language: 'en',
+      thousands: '1.5K / 5,000',
+      millions: '1.8M / 5,000,000',
+      fractional: '10.5',
+    },
+    {
+      language: 'de',
+      thousands: '1500 / 5.000',
+      millions: '1,8 Mio. / 5.000.000',
+      fractional: '10,5',
+    },
+  ])(
+    'compacts consumption but keeps configured limits exact and grouped in $language',
+    ({ language, thousands, millions, fractional }) => {
+      i18n.language = language;
+      render(
+        <CreditLimitsTable
+          rows={[
+            {
+              id: 'small',
+              name: 'Small',
+              limit: { monthlyCredits: 5000, creditsUsed: 1500 },
+            },
+            {
+              id: 'large',
+              name: 'Large',
+              limit: { monthlyCredits: 5_000_000, creditsUsed: 1_782_589.592 },
+            },
+            {
+              id: 'fractional',
+              name: 'Fractional',
+              limit: { monthlyCredits: 10.5 },
+            },
+          ]}
+          filters={{ ...filters, tab: 'teams' }}
+          isPending={false}
+          isError={false}
+        />,
+      );
+      expect(screen.getByText(thousands)).toBeTruthy();
+      expect(screen.getByText(millions)).toBeTruthy();
+      expect(screen.getByText(fractional)).toBeTruthy();
+    },
+  );
 
   it('keeps the row compact with only the target, its limit and the action', () => {
     render(

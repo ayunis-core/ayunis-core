@@ -11,6 +11,7 @@ import {
 } from '@ayunis/ui/components/card';
 import { Button } from '@ayunis/ui/components/button';
 import { useTeamCreditLimits } from '@/pages/admin-settings/team-detail/api/useTeamCreditLimits';
+import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
 
 interface TeamCreditLimitCardProps {
   teamId: string;
@@ -28,8 +29,10 @@ export function TeamCreditLimitCard({
   let description = t('form.noLimit');
   if (limit)
     description = t('creditLimits.teamCard.current', {
-      used: limit.creditsUsed.toLocaleString(i18n.language),
-      limit: limit.monthlyCredits.toLocaleString(i18n.language),
+      used: formatCompactNumber(limit.creditsUsed, i18n.language),
+      limit: limit.monthlyCredits.toLocaleString(i18n.language, {
+        maximumFractionDigits: 2,
+      }),
     });
   if (isLoading) description = t('states.loading');
   if (isError) description = t('states.error');
