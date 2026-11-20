@@ -2,16 +2,17 @@
 
 ## Purpose
 
-Manages versioned artifacts (documents, diagrams, and spreadsheets) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead for DOCX and PDF exports.
+Manages versioned artifacts (documents, diagrams, BPMN process models, and spreadsheets) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead for DOCX and PDF exports.
 
 ## Domain Concepts
 
 - **Artifact** — A named, typed artifact belonging to a thread and user. Tracks the current version number; only document artifacts can have an optional `letterheadId` used for DOCX and PDF exports.
 - **DocumentArtifact** — An artifact whose version content is sanitized HTML and may be exported to DOCX or PDF.
 - **DiagramArtifact** — An artifact whose version content is stored without document HTML sanitization or spreadsheet normalization.
+- **BpmnArtifact** — An artifact whose version content is BPMN 2.0 XML with a server-computed layout.
 - **SpreadsheetArtifact** — An artifact whose version content is validated and canonicalized `spreadsheet-v1` JSON.
 - **ArtifactVersion** — An immutable snapshot of an artifact's serialized content at a specific version number. The content representation depends on the artifact type, and each version tracks who authored it (user or assistant).
-- **ArtifactType** — Enum distinguishing `DOCUMENT`, `DIAGRAM`, and `SPREADSHEET` artifacts.
+- **ArtifactType** — Enum distinguishing `DOCUMENT`, `DIAGRAM`, `SPREADSHEET`, and `BPMN` artifacts.
 - **AuthorType** — Enum distinguishing whether a version was created by a `USER` or `ASSISTANT`.
 
 ## Architecture
@@ -29,6 +30,7 @@ artifacts/
 │   ├── artifacts.errors.ts
 │   ├── helpers/
 │   │   ├── add-version-with-retry.ts
+│   │   ├── bpmn-content-format.ts
 │   │   ├── evaluate-spreadsheet.ts
 │   │   ├── prepare-content-for-write.ts
 │   │   ├── spreadsheet-content-format.ts
@@ -100,6 +102,7 @@ artifacts/
 - Document HTML sanitization (XSS prevention) before storage and export
 - Spreadsheet content uses the versioned `spreadsheet-v1` JSON format with shape, size, and formula-length validation plus row canonicalization; formulas remain inert until export
 - Diagram content is stored without document HTML or spreadsheet normalization
+- BPMN content is parsed with `bpmn-moddle` and rejected with `ARTIFACT_INVALID_BPMN_CONTENT` (400) when it is malformed, has parser warnings (e.g. non-ASCII IDs, unresolved references), contains no `bpmn:process`, or has a sequence flow without source or target. A surrounding markdown code fence is stripped, incoming/outgoing references are rebuilt from the sequence flows, and any submitted layout is replaced by one computed with `bpmn-auto-layout` (lanes, pools and message flows are kept in the XML but not laid out). Content normalization is async because of this step.
 - Content size validation (max ~512K characters) on create and update
 - Thread ownership verification when creating artifacts
 - Artifact lookups by id or by thread (detail, update, edits, revert, export, thread list) require, for an artifact in a workspace chat, that its creator is still a member of the workspace; they reuse the threads module's membership condition. Workspace listings check membership through `AssertWorkspaceReadAccessUseCase` before filtering by user

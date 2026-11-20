@@ -12435,7 +12435,7 @@
             "in": "query",
             "description": "Filter by type",
             "schema": {
-              "enum": ["document", "diagram", "spreadsheet"],
+              "enum": ["document", "diagram", "spreadsheet", "bpmn"],
               "type": "string"
             }
           },
@@ -24986,7 +24986,7 @@
           "type": {
             "type": "string",
             "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
-            "enum": ["document", "diagram", "spreadsheet"],
+            "enum": ["document", "diagram", "spreadsheet", "bpmn"],
             "example": "document"
           },
           "threadId": {

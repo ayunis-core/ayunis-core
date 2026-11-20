@@ -5755,6 +5755,7 @@ export const ArtifactResponseDtoType = {
   document: 'document',
   diagram: 'diagram',
   spreadsheet: 'spreadsheet',
+  bpmn: 'bpmn',
 } as const;
 
 export interface ArtifactResponseDto {
@@ -7716,6 +7717,7 @@ export const ArtifactsControllerFindByWorkspaceType = {
   document: 'document',
   diagram: 'diagram',
   spreadsheet: 'spreadsheet',
+  bpmn: 'bpmn',
 } as const;
 
 export type ArtifactsControllerExportParams = {

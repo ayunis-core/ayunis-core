@@ -1,4 +1,10 @@
-import { AlertTriangle, FileText, GitBranch, Table2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  FileText,
+  GitBranch,
+  Table2,
+  Workflow,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertTitle } from '@ayunis/ui/components/alert';
@@ -24,6 +30,7 @@ const artifactIcons: Record<ArtifactResponseDtoType, LucideIcon> = {
   document: FileText,
   spreadsheet: Table2,
   diagram: GitBranch,
+  bpmn: Workflow,
 };
 
 interface ArtifactListSidePanelProps {

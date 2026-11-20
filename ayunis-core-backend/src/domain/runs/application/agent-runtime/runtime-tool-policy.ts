@@ -22,6 +22,8 @@ import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.ent
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { CreateBpmnTool } from 'src/domain/tools/domain/tools/create-bpmn-tool.entity';
+import { UpdateBpmnTool } from 'src/domain/tools/domain/tools/update-bpmn-tool.entity';
 import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
 import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
 import { OutlookDraftEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-draft-email-tool.entity';
@@ -97,7 +99,9 @@ export function isHybridArtifactTool(tool: Tool): boolean {
     tool instanceof CreateDiagramTool ||
     tool instanceof UpdateDiagramTool ||
     tool instanceof CreateSpreadsheetTool ||
-    tool instanceof UpdateSpreadsheetTool
+    tool instanceof UpdateSpreadsheetTool ||
+    tool instanceof CreateBpmnTool ||
+    tool instanceof UpdateBpmnTool
   );
 }
 
@@ -112,7 +116,8 @@ export function requiresExclusiveExecution(tool: Tool): boolean {
     tool instanceof UpdateDocumentTool ||
     tool instanceof EditDocumentTool ||
     tool instanceof UpdateDiagramTool ||
-    tool instanceof UpdateSpreadsheetTool
+    tool instanceof UpdateSpreadsheetTool ||
+    tool instanceof UpdateBpmnTool
   );
 }
 

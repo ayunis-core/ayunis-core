@@ -7,6 +7,8 @@ import EditDocumentWidget from './EditDocumentWidget';
 import ReadDocumentWidget from './ReadDocumentWidget';
 import CreateDiagramWidget from './CreateDiagramWidget';
 import UpdateDiagramWidget from './UpdateDiagramWidget';
+import CreateBpmnWidget from './CreateBpmnWidget';
+import UpdateBpmnWidget from './UpdateBpmnWidget';
 import CreateSpreadsheetWidget from './CreateSpreadsheetWidget';
 import UpdateSpreadsheetWidget from './UpdateSpreadsheetWidget';
 
@@ -86,6 +88,25 @@ export function renderArtifactToolWidget(params: {
       return (
         <UpdateDiagramWidget
           key={`update-diagram-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'create_bpmn':
+      return (
+        <CreateBpmnWidget
+          key={`create-bpmn-${keySuffix}`}
+          content={content}
+          isStreaming={isStreaming}
+          threadId={threadId}
+          onOpenArtifact={onOpenArtifact}
+        />
+      );
+    case 'update_bpmn':
+      return (
+        <UpdateBpmnWidget
+          key={`update-bpmn-${keySuffix}`}
           content={content}
           isStreaming={isStreaming}
           onOpenArtifact={onOpenArtifact}

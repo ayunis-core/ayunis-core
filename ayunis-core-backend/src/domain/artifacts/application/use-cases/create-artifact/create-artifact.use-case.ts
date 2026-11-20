@@ -5,6 +5,7 @@ import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/arti
 import { CreateArtifactCommand } from './create-artifact.command';
 import {
   Artifact,
+  BpmnArtifact,
   DiagramArtifact,
   DocumentArtifact,
   SpreadsheetArtifact,
@@ -38,14 +39,24 @@ export class CreateArtifactUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
-  @Transactional()
   async execute(command: CreateArtifactCommand): Promise<Artifact> {
     this.logger.log({ type: command.type }, 'Creating artifact');
 
     const userId = this.resolveUserId();
-    const content = prepareContentForWrite(command.type, command.content);
+    // Normalization can be CPU-heavy (BPMN layout), so it runs before the
+    // transaction opens and holds a database connection.
+    const content = await prepareContentForWrite(command.type, command.content);
     this.validateContentLength(content);
 
+    return await this.persist(command, userId, content);
+  }
+
+  @Transactional()
+  private async persist(
+    command: CreateArtifactCommand,
+    userId: UUID,
+    content: string,
+  ): Promise<Artifact> {
     await this.findThreadUseCase.execute(new FindThreadQuery(command.threadId));
 
     if (command.type === ArtifactType.DOCUMENT && command.letterheadId) {
@@ -105,6 +116,8 @@ export class CreateArtifactUseCase {
         return new DiagramArtifact(base);
       case ArtifactType.SPREADSHEET:
         return new SpreadsheetArtifact(base);
+      case ArtifactType.BPMN:
+        return new BpmnArtifact(base);
     }
   }
 
@@ -127,6 +140,9 @@ export class CreateArtifactUseCase {
     }
     if (artifact instanceof SpreadsheetArtifact) {
       return new SpreadsheetArtifact(base);
+    }
+    if (artifact instanceof BpmnArtifact) {
+      return new BpmnArtifact(base);
     }
     return new DiagramArtifact(base);
   }

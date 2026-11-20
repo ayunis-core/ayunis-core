@@ -41,6 +41,7 @@
     "type": {
       "document": "Dokument",
       "diagram": "Diagramm",
+      "bpmn": "Prozessmodell (BPMN)",
       "spreadsheet": "Tabelle"
     }
   },

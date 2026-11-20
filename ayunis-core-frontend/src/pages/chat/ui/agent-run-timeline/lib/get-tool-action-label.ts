@@ -10,6 +10,20 @@ export interface ToolActionLabel {
 
 const MAX_TARGET_LENGTH = 80;
 
+const TITLED_ACTIONS: ReadonlySet<string> = new Set([
+  'create_document',
+  'update_document',
+  'edit_document',
+  'read_document',
+  'create_diagram',
+  'update_diagram',
+  'create_bpmn',
+  'update_bpmn',
+  'create_spreadsheet',
+  'update_spreadsheet',
+  'create_calendar_event',
+]);
+
 function truncate(value: string): string {
   return value.length > MAX_TARGET_LENGTH
     ? `${value.slice(0, MAX_TARGET_LENGTH).trimEnd()}…`
@@ -44,51 +58,18 @@ export function getToolActionLabel(
   const pastChatLabel = getPastChatActionLabel(name, params, t);
   if (pastChatLabel) return pastChatLabel;
 
+  if (TITLED_ACTIONS.has(name)) {
+    return {
+      verb: t(`chat.timeline.actions.${name}`),
+      target: asString(params.title),
+    };
+  }
+
   switch (name) {
     case 'create_file':
       return {
         verb: t('chat.timeline.actions.create_file'),
         target: asString(params.filename),
-      };
-    case 'create_document':
-      return {
-        verb: t('chat.timeline.actions.create_document'),
-        target: asString(params.title),
-      };
-    case 'update_document':
-      return {
-        verb: t('chat.timeline.actions.update_document'),
-        target: asString(params.title),
-      };
-    case 'edit_document':
-      return {
-        verb: t('chat.timeline.actions.edit_document'),
-        target: asString(params.title),
-      };
-    case 'read_document':
-      return {
-        verb: t('chat.timeline.actions.read_document'),
-        target: asString(params.title),
-      };
-    case 'create_diagram':
-      return {
-        verb: t('chat.timeline.actions.create_diagram'),
-        target: asString(params.title),
-      };
-    case 'update_diagram':
-      return {
-        verb: t('chat.timeline.actions.update_diagram'),
-        target: asString(params.title),
-      };
-    case 'create_spreadsheet':
-      return {
-        verb: t('chat.timeline.actions.create_spreadsheet'),
-        target: asString(params.title),
-      };
-    case 'update_spreadsheet':
-      return {
-        verb: t('chat.timeline.actions.update_spreadsheet'),
-        target: asString(params.title),
       };
     case 'bar_chart':
     case 'line_chart':
@@ -111,11 +92,6 @@ export function getToolActionLabel(
       return {
         verb: t('chat.timeline.actions.send_email'),
         target: asString(params.subject) ?? asString(params.to),
-      };
-    case 'create_calendar_event':
-      return {
-        verb: t('chat.timeline.actions.create_calendar_event'),
-        target: asString(params.title),
       };
     case 'create_skill':
       return {

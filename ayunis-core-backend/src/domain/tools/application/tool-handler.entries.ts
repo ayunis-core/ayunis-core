@@ -26,6 +26,8 @@ import { CreateDiagramToolHandler } from './handlers/create-diagram-tool.handler
 import { UpdateDiagramToolHandler } from './handlers/update-diagram-tool.handler';
 import { CreateSpreadsheetToolHandler } from './handlers/create-spreadsheet-tool.handler';
 import { UpdateSpreadsheetToolHandler } from './handlers/update-spreadsheet-tool.handler';
+import { CreateBpmnToolHandler } from './handlers/create-bpmn-tool.handler';
+import { UpdateBpmnToolHandler } from './handlers/update-bpmn-tool.handler';
 import { MarketplaceSearchToolHandler } from './handlers/marketplace-search-tool.handler';
 import { SendNotificationToolHandler } from './handlers/send-notification-tool.handler';
 import { AddAnonymizationExceptionToolHandler } from './handlers/add-anonymization-exception-tool.handler';
@@ -55,6 +57,8 @@ import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { CreateBpmnTool } from 'src/domain/tools/domain/tools/create-bpmn-tool.entity';
+import { UpdateBpmnTool } from 'src/domain/tools/domain/tools/update-bpmn-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { SendNotificationTool } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
 import { AddAnonymizationExceptionTool } from 'src/domain/tools/domain/tools/add-anonymization-exception-tool.entity';
@@ -91,6 +95,8 @@ const TOOL_HANDLER_PAIRS: readonly (readonly [
   [UpdateDiagramTool, UpdateDiagramToolHandler],
   [CreateSpreadsheetTool, CreateSpreadsheetToolHandler],
   [UpdateSpreadsheetTool, UpdateSpreadsheetToolHandler],
+  [CreateBpmnTool, CreateBpmnToolHandler],
+  [UpdateBpmnTool, UpdateBpmnToolHandler],
   [MarketplaceSearchTool, MarketplaceSearchToolHandler],
   [SendNotificationTool, SendNotificationToolHandler],
   [AddAnonymizationExceptionTool, AddAnonymizationExceptionToolHandler],

@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
   Artifact,
+  BpmnArtifact,
   DiagramArtifact,
   DocumentArtifact,
   SpreadsheetArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
-import { ArtifactRecord } from '../schema/artifact.record';
-import { DocumentArtifactRecord } from '../schema/document-artifact.record';
-import { DiagramArtifactRecord } from '../schema/diagram-artifact.record';
-import { SpreadsheetArtifactRecord } from '../schema/spreadsheet-artifact.record';
+import { ArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/artifact.record';
+import { DocumentArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/document-artifact.record';
+import { DiagramArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/diagram-artifact.record';
+import { SpreadsheetArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/spreadsheet-artifact.record';
+import { BpmnArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/bpmn-artifact.record';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
 
 @Injectable()
@@ -18,44 +20,24 @@ export class ArtifactMapper {
   toDomain(record: DocumentArtifactRecord): DocumentArtifact;
   toDomain(record: DiagramArtifactRecord): DiagramArtifact;
   toDomain(record: SpreadsheetArtifactRecord): SpreadsheetArtifact;
+  toDomain(record: BpmnArtifactRecord): BpmnArtifact;
   toDomain(record: ArtifactRecord): Artifact;
   toDomain(record: ArtifactRecord): Artifact {
+    const base = this.toDomainBase(record);
     if (record instanceof DocumentArtifactRecord) {
       return new DocumentArtifact({
-        id: record.id,
-        threadId: record.threadId,
-        userId: record.userId,
-        title: record.title,
+        ...base,
         letterheadId: record.letterheadId,
-        currentVersionNumber: record.currentVersionNumber,
-        versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
       });
     }
     if (record instanceof DiagramArtifactRecord) {
-      return new DiagramArtifact({
-        id: record.id,
-        threadId: record.threadId,
-        userId: record.userId,
-        title: record.title,
-        currentVersionNumber: record.currentVersionNumber,
-        versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      });
+      return new DiagramArtifact(base);
     }
     if (record instanceof SpreadsheetArtifactRecord) {
-      return new SpreadsheetArtifact({
-        id: record.id,
-        threadId: record.threadId,
-        userId: record.userId,
-        title: record.title,
-        currentVersionNumber: record.currentVersionNumber,
-        versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      });
+      return new SpreadsheetArtifact(base);
+    }
+    if (record instanceof BpmnArtifactRecord) {
+      return new BpmnArtifact(base);
     }
     throw new Error('Invalid artifact record type');
   }
@@ -63,45 +45,48 @@ export class ArtifactMapper {
   toRecord(domain: DocumentArtifact): DocumentArtifactRecord;
   toRecord(domain: DiagramArtifact): DiagramArtifactRecord;
   toRecord(domain: SpreadsheetArtifact): SpreadsheetArtifactRecord;
+  toRecord(domain: BpmnArtifact): BpmnArtifactRecord;
   toRecord(domain: Artifact): ArtifactRecord;
   toRecord(domain: Artifact): ArtifactRecord {
     if (domain instanceof DocumentArtifact) {
-      const record = new DocumentArtifactRecord();
-      record.id = domain.id;
-      record.threadId = domain.threadId;
-      record.userId = domain.userId;
-      record.title = domain.title;
+      const record = this.fillRecord(new DocumentArtifactRecord(), domain);
       record.letterheadId = domain.letterheadId;
-      record.currentVersionNumber = domain.currentVersionNumber;
-      record.versions = domain.versions.map((v) =>
-        this.versionMapper.toRecord(v),
-      );
       return record;
     }
     if (domain instanceof DiagramArtifact) {
-      const record = new DiagramArtifactRecord();
-      record.id = domain.id;
-      record.threadId = domain.threadId;
-      record.userId = domain.userId;
-      record.title = domain.title;
-      record.currentVersionNumber = domain.currentVersionNumber;
-      record.versions = domain.versions.map((v) =>
-        this.versionMapper.toRecord(v),
-      );
-      return record;
+      return this.fillRecord(new DiagramArtifactRecord(), domain);
     }
     if (domain instanceof SpreadsheetArtifact) {
-      const record = new SpreadsheetArtifactRecord();
-      record.id = domain.id;
-      record.threadId = domain.threadId;
-      record.userId = domain.userId;
-      record.title = domain.title;
-      record.currentVersionNumber = domain.currentVersionNumber;
-      record.versions = domain.versions.map((v) =>
-        this.versionMapper.toRecord(v),
-      );
-      return record;
+      return this.fillRecord(new SpreadsheetArtifactRecord(), domain);
+    }
+    if (domain instanceof BpmnArtifact) {
+      return this.fillRecord(new BpmnArtifactRecord(), domain);
     }
     throw new Error('Invalid artifact domain type');
+  }
+
+  private toDomainBase(record: ArtifactRecord) {
+    return {
+      id: record.id,
+      threadId: record.threadId,
+      userId: record.userId,
+      title: record.title,
+      currentVersionNumber: record.currentVersionNumber,
+      versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
+  }
+
+  private fillRecord<T extends ArtifactRecord>(record: T, domain: Artifact): T {
+    record.id = domain.id;
+    record.threadId = domain.threadId;
+    record.userId = domain.userId;
+    record.title = domain.title;
+    record.currentVersionNumber = domain.currentVersionNumber;
+    record.versions = domain.versions.map((v) =>
+      this.versionMapper.toRecord(v),
+    );
+    return record;
   }
 }

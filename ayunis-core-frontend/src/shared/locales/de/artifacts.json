@@ -107,5 +107,14 @@
       "out": "Verkleinern",
       "reset": "Ansicht zurücksetzen"
     }
+  },
+  "bpmn": {
+    "export": {
+      "bpmn": "BPMN",
+      "svg": "SVG",
+      "png": "PNG",
+      "failed": "Prozessmodell-Export fehlgeschlagen"
+    },
+    "renderFailed": "Das Prozessmodell konnte nicht angezeigt werden"
   }
 }

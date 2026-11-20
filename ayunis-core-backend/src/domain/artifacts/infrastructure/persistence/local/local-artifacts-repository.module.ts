@@ -4,6 +4,7 @@ import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { DiagramArtifactRecord } from './schema/diagram-artifact.record';
 import { SpreadsheetArtifactRecord } from './schema/spreadsheet-artifact.record';
+import { BpmnArtifactRecord } from './schema/bpmn-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { LocalArtifactsRepository } from './local-artifacts.repository';
 import { ArtifactMapper } from './mappers/artifact.mapper';
@@ -16,6 +17,7 @@ import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
       DocumentArtifactRecord,
       DiagramArtifactRecord,
       SpreadsheetArtifactRecord,
+      BpmnArtifactRecord,
       ArtifactVersionRecord,
     ]),
   ],

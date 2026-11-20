@@ -43,6 +43,8 @@ import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { CreateBpmnTool } from 'src/domain/tools/domain/tools/create-bpmn-tool.entity';
+import { UpdateBpmnTool } from 'src/domain/tools/domain/tools/update-bpmn-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
@@ -88,6 +90,8 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.UPDATE_DIAGRAM]: () => new UpdateDiagramTool(),
   [ToolType.CREATE_SPREADSHEET]: () => new CreateSpreadsheetTool(),
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
+  [ToolType.CREATE_BPMN]: () => new CreateBpmnTool(),
+  [ToolType.UPDATE_BPMN]: () => new UpdateBpmnTool(),
   [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
   [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
   [ToolType.GET_MEMORY]: () => new GetMemoryTool(),
