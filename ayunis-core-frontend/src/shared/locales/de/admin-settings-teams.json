@@ -69,7 +69,7 @@
       "title": "Mitglieder",
       "name": "Name",
       "email": "E-Mail",
-      "role": "Team-Rolle",
+      "role": "Teamrolle",
       "joinedAt": "Beigetreten",
       "emptyTitle": "Noch keine Mitglieder",
       "emptyDescription": "Fügen Sie Mitglieder zu diesem Team hinzu, um loszulegen."
@@ -91,7 +91,7 @@
           "share_skills_with_teams": "Fähigkeiten mit dem Team teilen",
           "share_knowledge_bases_with_teams": "Wissenssammlungen mit dem Team teilen",
           "manage_team_recordings": "Aufzeichnungen des Teams verwalten",
-          "manage_roles": "Team-Rollen ändern und Team-Administratoren entfernen"
+          "manage_roles": "Teamrollen ändern und Team-Administratoren entfernen"
         }
       },
       "confirmTitle": "Teamrolle ändern",
