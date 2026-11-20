@@ -53,16 +53,16 @@
     }
   },
   "recordingFairUseLimit": {
-    "title": "Fair-Use-Limit für das Hochladen von Aufzeichnungen",
-    "description": "Wie viele Aufzeichnungen jeder Nutzer pro Zeitfenster hochladen darf. Abgebrochene oder fehlgeschlagene Uploads zählen mit.",
+    "title": "Fair-Use-Limit für das Hochladen von Besprechungen",
+    "description": "Wie viele Besprechungen jeder Nutzer pro Zeitfenster hochladen darf. Abgebrochene oder fehlgeschlagene Uploads zählen mit.",
     "loading": "Wird geladen…",
-    "loadError": "Fair-Use-Limit für Aufzeichnungen konnte nicht geladen werden.",
+    "loadError": "Fair-Use-Limit für Besprechungen konnte nicht geladen werden.",
     "limit": "Uploads",
     "windowHours": "Zeitfenster (Stunden)",
     "save": "Speichern",
     "cancel": "Abbrechen",
-    "updateSuccess": "Fair-Use-Limit für Aufzeichnungen erfolgreich aktualisiert.",
-    "updateError": "Fair-Use-Limit für Aufzeichnungen konnte nicht aktualisiert werden.",
+    "updateSuccess": "Fair-Use-Limit für Besprechungen erfolgreich aktualisiert.",
+    "updateError": "Fair-Use-Limit für Besprechungen konnte nicht aktualisiert werden.",
     "validationError": {
       "limit": "Uploads müssen eine positive Ganzzahl sein.",
       "windowHours": "Zeitfenster muss mindestens 0,01 Stunden betragen."

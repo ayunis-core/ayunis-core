@@ -1,21 +1,21 @@
 {
   "page": {
-    "title": "Aufzeichnungen"
+    "title": "Besprechungen"
   },
   "emptyState": {
-    "title": "Noch keine Aufzeichnungen",
-    "description": "Erstellen Sie eine Aufzeichnung für eine Sitzung. Sie gehört Ihnen, einem Ihrer Teams oder der Organisation.",
-    "noAccessDescription": "Hier erscheinen die Aufzeichnungen Ihrer Teams und Ihrer Organisation. Bitten Sie einen Administrator um die Berechtigung, eigene zu erstellen."
+    "title": "Noch keine Besprechungen",
+    "description": "Erstellen Sie eine Besprechung und fügen Sie ihr Audio hinzu. Sie gehört Ihnen, einem Ihrer Teams oder der Organisation.",
+    "noAccessDescription": "Hier erscheinen die Besprechungen Ihrer Teams und Ihrer Organisation. Bitten Sie einen Administrator um die Berechtigung, eigene zu erstellen."
   },
   "listItem": {
     "created": "Erstellt am {{date}}",
     "createdBy": "Erstellt am {{date}} von {{name}}"
   },
   "createDialog": {
-    "buttonText": "Aufzeichnung hinzufügen",
-    "buttonTextFirst": "Erste Aufzeichnung erstellen",
-    "title": "Neue Aufzeichnung erstellen",
-    "description": "Erstellen Sie eine Aufzeichnung, wählen Sie, wem sie gehört, und fügen Sie das Audio hinzu.",
+    "buttonText": "Besprechung hinzufügen",
+    "buttonTextFirst": "Erste Besprechung erstellen",
+    "title": "Neue Besprechung erstellen",
+    "description": "Erstellen Sie eine Besprechung, wählen Sie, wem sie gehört, und fügen Sie das Audio hinzu.",
     "form": {
       "nameLabel": "Name",
       "namePlaceholder": "z. B. Stadtratssitzung 12. November",
@@ -24,7 +24,7 @@
     },
     "validation": {
       "nameRequired": "Name ist erforderlich",
-      "fileRequired": "Wählen Sie die Audiodatei der Aufzeichnung",
+      "fileRequired": "Wählen Sie die Audiodatei der Besprechung",
       "fileNotAudio": "Wählen Sie eine MP3-, M4A-, WAV- oder WebM-Datei"
     },
     "buttons": {
@@ -34,19 +34,19 @@
     }
   },
   "create": {
-    "success": "Aufzeichnung erstellt",
-    "error": "Die Aufzeichnung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "success": "Besprechung erstellt",
+    "error": "Die Besprechung konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
     "validationError": "Bitte prüfen Sie den Namen und versuchen Sie es erneut.",
-    "noPermission": "Sie dürfen für diesen Besitzer keine Aufzeichnung erstellen."
+    "noPermission": "Sie dürfen für diesen Besitzer keine Besprechung erstellen."
   },
   "delete": {
-    "success": "Aufzeichnung gelöscht",
-    "error": "Die Aufzeichnung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
-    "notFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
-    "noPermission": "Sie dürfen diese Aufzeichnung nicht löschen."
+    "success": "Besprechung gelöscht",
+    "error": "Die Besprechung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "notFound": "Die Besprechung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
+    "noPermission": "Sie dürfen diese Besprechung nicht löschen."
   },
   "confirmDelete": {
-    "title": "Aufzeichnung löschen",
+    "title": "Besprechung löschen",
     "description": "„{{name}}“ löschen? Das kann nicht rückgängig gemacht werden.",
     "confirmText": "Löschen",
     "cancelText": "Abbrechen"
@@ -60,7 +60,7 @@
     },
     "properties": {
       "title": "Eigenschaften",
-      "description": "Name und Herkunft der Aufzeichnung.",
+      "description": "Name und Herkunft der Besprechung.",
       "owner": "Besitzer",
       "workspaceOwner": "Arbeitsbereich {{name}}",
       "creator": "Erstellt von",
@@ -79,28 +79,28 @@
       "nameRequired": "Name ist erforderlich"
     },
     "rename": {
-      "success": "Aufzeichnung umbenannt",
-      "error": "Die Aufzeichnung konnte nicht umbenannt werden. Bitte versuchen Sie es erneut.",
+      "success": "Besprechung umbenannt",
+      "error": "Die Besprechung konnte nicht umbenannt werden. Bitte versuchen Sie es erneut.",
       "validationError": "Bitte prüfen Sie den Namen und versuchen Sie es erneut.",
-      "notFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
-      "noPermission": "Sie dürfen diese Aufzeichnung nicht umbenennen."
+      "notFound": "Die Besprechung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
+      "noPermission": "Sie dürfen diese Besprechung nicht umbenennen."
     },
     "summary": {
       "title": "Zusammenfassung",
-      "description": "Das Protokoll der Sitzung, erstellt aus dem Transkript.",
+      "description": "Das Protokoll der Besprechung, erstellt aus dem Transkript.",
       "generatedWith": "Erstellt mit {{model}} am {{date}}",
       "summarizing": "Die Zusammenfassung wird erstellt. Das kann einige Minuten dauern.",
       "retry": "Erneut versuchen",
       "retryError": "Die Zusammenfassung konnte nicht neu gestartet werden. Bitte versuchen Sie es erneut.",
-      "retryNotFound": "Die Aufzeichnung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
+      "retryNotFound": "Die Besprechung existiert nicht mehr oder Sie haben keinen Zugriff mehr.",
       "retryNotRetryable": "Die Zusammenfassung wird bereits erstellt oder ist fertig.",
-      "retryNoPermission": "Sie dürfen diese Aufzeichnung nicht verwalten.",
+      "retryNoPermission": "Sie dürfen diese Besprechung nicht verwalten.",
       "failure": {
         "noModel": "Die Zusammenfassung konnte nicht erstellt werden: Dafür ist kein Sprachmodell verfügbar. Administratoren können eines in den Modelleinstellungen auswählen.",
         "creditBudget": "Die Zusammenfassung konnte nicht erstellt werden: Die Credits der Organisation für diesen Monat sind aufgebraucht.",
         "creditLimit": "Die Zusammenfassung konnte nicht erstellt werden: Das monatliche Credit-Limit ist erreicht.",
         "tooLong": "Die Zusammenfassung konnte nicht erstellt werden: Das Transkript ist zu lang für das Modell.",
-        "empty": "Die Zusammenfassung konnte nicht erstellt werden: Die Aufzeichnung enthält keine Sprache.",
+        "empty": "Die Zusammenfassung konnte nicht erstellt werden: Das Audio enthält keine Sprache.",
         "unavailable": "Die Zusammenfassung konnte nicht erstellt werden: Der Modellanbieter ist nicht erreichbar.",
         "failed": "Die Zusammenfassung konnte nicht erstellt werden."
       }
@@ -115,18 +115,18 @@
         "ready": "Fertig",
         "failed": "Fehlgeschlagen"
       },
-      "transcribing": "Die Aufzeichnung wird transkribiert. Das kann einige Minuten dauern.",
+      "transcribing": "Das Audio wird transkribiert. Das kann einige Minuten dauern.",
       "speaker": "Sprecher {{number}}",
       "unknownSpeaker": "Unbekannter Sprecher",
       "failure": {
-        "recordingTooLong": "Die Aufzeichnung ist zu lang für die Transkription. Schneiden Sie sie in kürzere Teile und laden Sie jeden als neue Aufzeichnung hoch.",
-        "unreadable": "Die Audiodatei konnte nicht gelesen werden. Löschen Sie die Aufzeichnung und laden Sie die Datei erneut hoch.",
-        "empty": "In der Aufzeichnung wurde keine Sprache gefunden.",
-        "tooManyPages": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch.",
-        "spreadsheetTooLarge": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch.",
-        "timeout": "Die Transkription hat zu lange gedauert. Löschen Sie die Aufzeichnung und laden Sie die Datei erneut hoch.",
-        "unavailable": "Der Transkriptionsdienst ist nicht erreichbar. Löschen Sie die Aufzeichnung und laden Sie die Datei später erneut hoch.",
-        "failed": "Die Aufzeichnung konnte nicht transkribiert werden. Löschen Sie sie und laden Sie die Datei erneut hoch. Wenn das Problem bleibt, wenden Sie sich an den Support."
+        "recordingTooLong": "Das Audio ist zu lang für die Transkription. Schneiden Sie es in kürzere Teile und laden Sie jeden als neue Besprechung hoch.",
+        "unreadable": "Die Audiodatei konnte nicht gelesen werden. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch.",
+        "empty": "Im Audio wurde keine Sprache gefunden.",
+        "tooManyPages": "Das Audio konnte nicht transkribiert werden. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch.",
+        "spreadsheetTooLarge": "Das Audio konnte nicht transkribiert werden. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch.",
+        "timeout": "Die Transkription hat zu lange gedauert. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch.",
+        "unavailable": "Der Transkriptionsdienst ist nicht erreichbar. Löschen Sie die Besprechung und laden Sie die Datei später erneut hoch.",
+        "failed": "Das Audio konnte nicht transkribiert werden. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch. Wenn das Problem bleibt, wenden Sie sich an den Support."
       }
     },
     "audio": {
@@ -137,8 +137,8 @@
     }
   },
   "audio": {
-    "alreadyUploaded": "Diese Aufzeichnung hat bereits ihr Audio. Erstellen Sie für eine weitere Datei eine neue Aufzeichnung.",
-    "uploadLimitReached": "Upload-Limit für Aufzeichnungen erreicht. Versuchen Sie es später erneut.",
-    "uploadLimitReachedWithTime": "Upload-Limit für Aufzeichnungen erreicht. Versuchen Sie es in {{minutes}} Minuten erneut."
+    "alreadyUploaded": "Diese Besprechung hat bereits ihr Audio. Erstellen Sie für eine weitere Datei eine neue Besprechung.",
+    "uploadLimitReached": "Upload-Limit für Besprechungen erreicht. Versuchen Sie es später erneut.",
+    "uploadLimitReachedWithTime": "Upload-Limit für Besprechungen erreicht. Versuchen Sie es in {{minutes}} Minuten erneut."
   }
 }

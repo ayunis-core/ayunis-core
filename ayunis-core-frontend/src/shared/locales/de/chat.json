@@ -135,7 +135,7 @@
         "website_content": "Website abgerufen",
         "source_query": "Dateien durchsucht",
         "knowledge_query": "Wissenssammlung durchsucht",
-        "recording_search": "Aufzeichnungen durchsucht",
+        "recording_search": "Besprechungen durchsucht",
         "code_execution": "Berechnung ausgeführt",
         "http": "HTTP-Anfrage ausgeführt",
         "use_tool": "{{tool}} verwendet",
@@ -354,7 +354,7 @@
         "summary": "Aus der Zusammenfassung",
         "timeRange": "{{start}}–{{end}}",
         "speaker": "Sprecher {{number}}",
-        "open": "Aufzeichnung öffnen"
+        "open": "Besprechung öffnen"
       }
     },
     "piiMask": {
