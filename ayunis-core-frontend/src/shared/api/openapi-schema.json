@@ -19677,6 +19677,36 @@
         },
         "required": ["url", "expiresAt"]
       },
+      "NotificationThreadOriginDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["notification"]
+          },
+          "notificationId": {
+            "type": "string",
+            "description": "The user's notification to chat about; its content is given to the model",
+            "format": "uuid"
+          }
+        },
+        "required": ["kind", "notificationId"]
+      },
+      "ReleaseNoteThreadOriginDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["release_note"]
+          },
+          "releaseNoteId": {
+            "type": "string",
+            "description": "The release note to chat about; its content is given to the model",
+            "format": "uuid"
+          }
+        },
+        "required": ["kind", "releaseNoteId"]
+      },
       "CreateThreadDto": {
         "type": "object",
         "properties": {
@@ -19706,17 +19736,79 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
           },
-          "sourceNotificationId": {
-            "type": "string",
-            "description": "Start a chat about one of the user's notifications; its content is given to the model",
-            "format": "uuid"
-          },
-          "sourceReleaseNoteId": {
-            "type": "string",
-            "description": "Start a chat about a release note; its content is given to the model",
-            "format": "uuid"
+          "origin": {
+            "description": "Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NotificationThreadOriginDto"
+              },
+              {
+                "$ref": "#/components/schemas/ReleaseNoteThreadOriginDto"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "kind"
+            }
           }
         }
+      },
+      "ChatThreadOriginResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["chat"]
+          }
+        },
+        "required": ["kind"]
+      },
+      "RoutineThreadOriginResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["routine"]
+          },
+          "routineId": {
+            "type": "string",
+            "description": "The routine whose run created this thread; null once the routine is deleted",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": ["kind", "routineId"]
+      },
+      "NotificationThreadOriginResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["notification"]
+          },
+          "notificationId": {
+            "type": "string",
+            "description": "The notification this chat was started about; null once the notification is deleted",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": ["kind", "notificationId"]
+      },
+      "ReleaseNoteThreadOriginResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["release_note"]
+          },
+          "releaseNoteId": {
+            "type": "string",
+            "description": "The release note this chat was started about; null once the release note is deleted",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": ["kind", "releaseNoteId"]
       },
       "UserMessageResponseDto": {
         "type": "object",
@@ -20440,11 +20532,6 @@
           "data"
         ]
       },
-      "ThreadType": {
-        "type": "string",
-        "enum": ["chat", "routine"],
-        "description": "Whether a user started the thread or a routine run created it"
-      },
       "KnowledgeBaseSummaryResponseDto": {
         "type": "object",
         "properties": {
@@ -20569,31 +20656,25 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "nullable": true
           },
-          "type": {
-            "description": "Whether a user started the thread or a routine run created it",
-            "allOf": [
+          "origin": {
+            "description": "Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note",
+            "oneOf": [
               {
-                "$ref": "#/components/schemas/ThreadType"
+                "$ref": "#/components/schemas/ChatThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/RoutineThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/NotificationThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/ReleaseNoteThreadOriginResponseDto"
               }
-            ]
-          },
-          "routineId": {
-            "type": "string",
-            "description": "The routine whose run created this thread; null for chats and once the routine is deleted",
-            "format": "uuid",
-            "nullable": true
-          },
-          "sourceNotificationId": {
-            "type": "string",
-            "description": "The notification this chat was started about; null for other chats and once the notification is deleted",
-            "format": "uuid",
-            "nullable": true
-          },
-          "sourceReleaseNoteId": {
-            "type": "string",
-            "description": "The release note this chat was started about; null for other chats and once the release note is deleted",
-            "format": "uuid",
-            "nullable": true
+            ],
+            "discriminator": {
+              "propertyName": "kind"
+            }
           },
           "id": {
             "type": "string",
@@ -20680,10 +20761,7 @@
           "isAnonymous",
           "mode",
           "workspaceId",
-          "type",
-          "routineId",
-          "sourceNotificationId",
-          "sourceReleaseNoteId",
+          "origin",
           "id",
           "userId",
           "permittedModelId",
@@ -20728,31 +20806,25 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "nullable": true
           },
-          "type": {
-            "description": "Whether a user started the thread or a routine run created it",
-            "allOf": [
+          "origin": {
+            "description": "Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note",
+            "oneOf": [
               {
-                "$ref": "#/components/schemas/ThreadType"
+                "$ref": "#/components/schemas/ChatThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/RoutineThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/NotificationThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/ReleaseNoteThreadOriginResponseDto"
               }
-            ]
-          },
-          "routineId": {
-            "type": "string",
-            "description": "The routine whose run created this thread; null for chats and once the routine is deleted",
-            "format": "uuid",
-            "nullable": true
-          },
-          "sourceNotificationId": {
-            "type": "string",
-            "description": "The notification this chat was started about; null for other chats and once the notification is deleted",
-            "format": "uuid",
-            "nullable": true
-          },
-          "sourceReleaseNoteId": {
-            "type": "string",
-            "description": "The release note this chat was started about; null for other chats and once the release note is deleted",
-            "format": "uuid",
-            "nullable": true
+            ],
+            "discriminator": {
+              "propertyName": "kind"
+            }
           },
           "id": {
             "type": "string",
@@ -20771,12 +20843,13 @@
           "isAnonymous",
           "mode",
           "workspaceId",
-          "type",
-          "routineId",
-          "sourceNotificationId",
-          "sourceReleaseNoteId",
+          "origin",
           "id"
         ]
+      },
+      "ThreadType": {
+        "type": "string",
+        "enum": ["chat", "routine"]
       },
       "SessionClient": {
         "type": "string",

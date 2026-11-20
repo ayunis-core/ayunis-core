@@ -73,7 +73,7 @@ export default function ReleaseNotePage(props: Readonly<ReleaseNotePageProps>) {
             </Markdown>
             <div data-testid="release-note-chat-starter">
               <ChatStarter
-                sourceReleaseNoteId={releaseNote.id}
+                origin={{ kind: 'release_note', releaseNoteId: releaseNote.id }}
                 placeholder={t('detail.chatPlaceholder')}
                 selectedModelId={props.selectedModelId}
                 isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}

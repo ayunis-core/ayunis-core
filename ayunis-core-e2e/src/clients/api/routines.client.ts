@@ -81,7 +81,10 @@ export async function findRoutineThread(
     { api },
   );
   const thread = threads.data.find(
-    (candidate) => routine && candidate.routineId === routine.id,
+    (candidate) =>
+      routine &&
+      candidate.origin.kind === 'routine' &&
+      candidate.origin.routineId === routine.id,
   );
   if (!thread) throw new Error(`No routine thread for "${routineName}"`);
   return thread;

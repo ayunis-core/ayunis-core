@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { CreateThreadOrigin } from '@/features/chat-initiation';
 import type { NotificationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import NotificationPage from './NotificationPage';
 
@@ -41,7 +42,7 @@ vi.mock('@/features/permissions', () => ({
 }));
 vi.mock('@/widgets/chat-starter', () => ({
   ChatStarter: (props: {
-    sourceNotificationId?: string;
+    origin?: CreateThreadOrigin;
     workspaceId?: string;
     selectedModelId?: string;
   }) => <output data-testid="chat-starter">{JSON.stringify(props)}</output>,
@@ -86,7 +87,10 @@ describe('NotificationPage', () => {
     expect(
       JSON.parse(screen.getByTestId('chat-starter').textContent ?? ''),
     ).toMatchObject({
-      sourceNotificationId: '6f0e4a52-8c1b-4f7e-9a51-3d2c1b0a9e8f',
+      origin: {
+        kind: 'notification',
+        notificationId: '6f0e4a52-8c1b-4f7e-9a51-3d2c1b0a9e8f',
+      },
       selectedModelId: 'medium',
       isEmbeddingModelEnabled: false,
     });

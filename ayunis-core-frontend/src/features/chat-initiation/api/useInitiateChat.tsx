@@ -62,6 +62,8 @@ export type SourceUploadStatus =
 
 type PendingImageFile = { file: File; altText?: string };
 
+export type CreateThreadOrigin = NonNullable<CreateThreadDto['origin']>;
+
 interface InitiateChatParams {
   message: string;
   images: PendingImageFile[];
@@ -74,10 +76,8 @@ interface InitiateChatParams {
   isAnonymous: boolean;
   /** Files the new chat under a workspace ("Projekt"). */
   workspaceId?: string;
-  /** Starts a chat about this notification ("Chat about this"). */
-  sourceNotificationId?: string;
-  /** Starts a chat about this product update. */
-  sourceReleaseNoteId?: string;
+  /** Why the chat exists, e.g. a notification for "Chat about this"; a plain chat when omitted. */
+  origin?: CreateThreadOrigin;
   skillId?: string;
   /** The prompt contains text from a successful transcription. */
   voiceInput?: boolean;
@@ -276,8 +276,7 @@ export const useInitiateChat = (options?: {
       mcpIntegrations,
       isAnonymous,
       workspaceId,
-      sourceNotificationId,
-      sourceReleaseNoteId,
+      origin,
       onSourceStatus,
     } = params;
     if (isInitiatingChatRef.current) return;
@@ -295,8 +294,7 @@ export const useInitiateChat = (options?: {
         mode,
         isAnonymous,
         workspaceId,
-        sourceNotificationId,
-        sourceReleaseNoteId,
+        origin,
       };
       thread = await createThreadMutation.mutateAsync({
         data: createThreadData,

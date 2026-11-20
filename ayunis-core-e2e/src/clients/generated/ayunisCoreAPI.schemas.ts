@@ -2465,6 +2465,32 @@ export interface SignedUploadUrlResponseDto {
   expiresAt: string;
 }
 
+export type NotificationThreadOriginDtoKind = typeof NotificationThreadOriginDtoKind[keyof typeof NotificationThreadOriginDtoKind];
+
+
+export const NotificationThreadOriginDtoKind = {
+  notification: 'notification',
+} as const;
+
+export interface NotificationThreadOriginDto {
+  kind: NotificationThreadOriginDtoKind;
+  /** The user's notification to chat about; its content is given to the model */
+  notificationId: string;
+}
+
+export type ReleaseNoteThreadOriginDtoKind = typeof ReleaseNoteThreadOriginDtoKind[keyof typeof ReleaseNoteThreadOriginDtoKind];
+
+
+export const ReleaseNoteThreadOriginDtoKind = {
+  release_note: 'release_note',
+} as const;
+
+export interface ReleaseNoteThreadOriginDto {
+  kind: ReleaseNoteThreadOriginDtoKind;
+  /** The release note to chat about; its content is given to the model */
+  releaseNoteId: string;
+}
+
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
@@ -2474,10 +2500,67 @@ export interface CreateThreadDto {
   isAnonymous?: boolean;
   /** File the new thread under this workspace */
   workspaceId?: string;
-  /** Start a chat about one of the user's notifications; its content is given to the model */
-  sourceNotificationId?: string;
-  /** Start a chat about a release note; its content is given to the model */
-  sourceReleaseNoteId?: string;
+  /** Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs. */
+  origin?: NotificationThreadOriginDto | ReleaseNoteThreadOriginDto;
+}
+
+export type ChatThreadOriginResponseDtoKind = typeof ChatThreadOriginResponseDtoKind[keyof typeof ChatThreadOriginResponseDtoKind];
+
+
+export const ChatThreadOriginResponseDtoKind = {
+  chat: 'chat',
+} as const;
+
+export interface ChatThreadOriginResponseDto {
+  kind: ChatThreadOriginResponseDtoKind;
+}
+
+export type RoutineThreadOriginResponseDtoKind = typeof RoutineThreadOriginResponseDtoKind[keyof typeof RoutineThreadOriginResponseDtoKind];
+
+
+export const RoutineThreadOriginResponseDtoKind = {
+  routine: 'routine',
+} as const;
+
+export interface RoutineThreadOriginResponseDto {
+  kind: RoutineThreadOriginResponseDtoKind;
+  /**
+     * The routine whose run created this thread; null once the routine is deleted
+     * @nullable
+     */
+  routineId: string | null;
+}
+
+export type NotificationThreadOriginResponseDtoKind = typeof NotificationThreadOriginResponseDtoKind[keyof typeof NotificationThreadOriginResponseDtoKind];
+
+
+export const NotificationThreadOriginResponseDtoKind = {
+  notification: 'notification',
+} as const;
+
+export interface NotificationThreadOriginResponseDto {
+  kind: NotificationThreadOriginResponseDtoKind;
+  /**
+     * The notification this chat was started about; null once the notification is deleted
+     * @nullable
+     */
+  notificationId: string | null;
+}
+
+export type ReleaseNoteThreadOriginResponseDtoKind = typeof ReleaseNoteThreadOriginResponseDtoKind[keyof typeof ReleaseNoteThreadOriginResponseDtoKind];
+
+
+export const ReleaseNoteThreadOriginResponseDtoKind = {
+  release_note: 'release_note',
+} as const;
+
+export interface ReleaseNoteThreadOriginResponseDto {
+  kind: ReleaseNoteThreadOriginResponseDtoKind;
+  /**
+     * The release note this chat was started about; null once the release note is deleted
+     * @nullable
+     */
+  releaseNoteId: string | null;
 }
 
 /**
@@ -3110,17 +3193,6 @@ export interface CSVDataSourceResponseDto {
   data: CSVDataSourceResponseDtoData;
 }
 
-/**
- * Whether a user started the thread or a routine run created it
- */
-export type ThreadType = typeof ThreadType[keyof typeof ThreadType];
-
-
-export const ThreadType = {
-  chat: 'chat',
-  routine: 'routine',
-} as const;
-
 export interface KnowledgeBaseSummaryResponseDto {
   /** Unique identifier for the knowledge base */
   id: string;
@@ -3187,23 +3259,8 @@ export interface GetThreadResponseDto {
      * @nullable
      */
   workspaceId: string | null;
-  /** Whether a user started the thread or a routine run created it */
-  type: ThreadType;
-  /**
-     * The routine whose run created this thread; null for chats and once the routine is deleted
-     * @nullable
-     */
-  routineId: string | null;
-  /**
-     * The notification this chat was started about; null for other chats and once the notification is deleted
-     * @nullable
-     */
-  sourceNotificationId: string | null;
-  /**
-     * The release note this chat was started about; null for other chats and once the release note is deleted
-     * @nullable
-     */
-  sourceReleaseNoteId: string | null;
+  /** Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note */
+  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -3242,28 +3299,21 @@ export interface GetThreadsResponseDtoItem {
      * @nullable
      */
   workspaceId: string | null;
-  /** Whether a user started the thread or a routine run created it */
-  type: ThreadType;
-  /**
-     * The routine whose run created this thread; null for chats and once the routine is deleted
-     * @nullable
-     */
-  routineId: string | null;
-  /**
-     * The notification this chat was started about; null for other chats and once the notification is deleted
-     * @nullable
-     */
-  sourceNotificationId: string | null;
-  /**
-     * The release note this chat was started about; null for other chats and once the release note is deleted
-     * @nullable
-     */
-  sourceReleaseNoteId: string | null;
+  /** Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note */
+  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto;
   /** Unique identifier for the thread */
   id: string;
   /** Title of the thread */
   title?: string;
 }
+
+export type ThreadType = typeof ThreadType[keyof typeof ThreadType];
+
+
+export const ThreadType = {
+  chat: 'chat',
+  routine: 'routine',
+} as const;
 
 export type SessionClient = typeof SessionClient[keyof typeof SessionClient];
 

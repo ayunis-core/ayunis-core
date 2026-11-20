@@ -101,8 +101,7 @@ test("product updates sit behind the bell, not in the inbox: unread until opened
     await expect(page.getByTestId("chat-source-release-note")).toBeVisible();
     const threadId = /\/chats\/([0-9a-f-]+)/.exec(page.url())?.[1] ?? "";
     expect(await getThread(userApi, threadId)).toMatchObject({
-      sourceReleaseNoteId: imageNoteId,
-      sourceNotificationId: null,
+      origin: { kind: "release_note", releaseNoteId: imageNoteId },
     });
     await page.getByTestId("chat-source-release-note").click();
     await expect(page.getByTestId("release-note-detail-headline")).toHaveText(

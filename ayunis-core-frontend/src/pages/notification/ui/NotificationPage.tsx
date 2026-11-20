@@ -61,7 +61,7 @@ export default function NotificationPage(
       <NotificationActions notification={notification} />
       <div data-testid="notification-chat-starter">
         <ChatStarter
-          sourceNotificationId={notification.id}
+          origin={{ kind: 'notification', notificationId: notification.id }}
           placeholder={t('detail.chatPlaceholder')}
           selectedModelId={props.selectedModelId}
           isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}

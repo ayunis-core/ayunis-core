@@ -75,8 +75,7 @@ test("a routine's notification lands in the inbox, opens next to the list, links
   const chatId = /\/chats\/([0-9a-f-]+)/.exec(page.url())?.[1] ?? "";
   const chat = await getThread(api, chatId);
   expect(chat).toMatchObject({
-    type: "chat",
-    sourceNotificationId: notification.id,
+    origin: { kind: "notification", notificationId: notification.id },
     workspaceId: null,
   });
 

@@ -40,7 +40,7 @@ export function ChatListItem({
     >
       <ItemContent>
         <ItemTitle>
-          {chat.type === 'routine' ? (
+          {chat.origin.kind === 'routine' ? (
             <CalendarClock
               className="size-4 text-muted-foreground"
               data-testid="chat-routine-icon"
