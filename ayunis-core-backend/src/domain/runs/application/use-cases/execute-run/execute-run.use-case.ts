@@ -275,6 +275,7 @@ export class ExecuteRunUseCase {
       {
         integrations: prepared.toolIntegrations,
         models: started.models,
+        answeringModelName: started.answeringModelName,
         awaitingClientResultToolNames: prepared.awaitingClientResultToolNames,
       },
     );

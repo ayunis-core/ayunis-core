@@ -30,6 +30,7 @@ const PENDING_TOOL_RESULTS = Symbol('ayunis:pendingToolResults');
 interface PersistenceHookParams {
   thread: Thread;
   integrations: RuntimeToolIntegrationRegistry;
+  answeringModelName?: string;
   awaitingClientResultToolNames: ReadonlySet<string>;
   onMessagePersisted: (messageId: UUID) => void;
 }
@@ -110,7 +111,12 @@ export class PersistenceHookFactory {
   private async persistAssistantMessage(
     message: RuntimeAssistantMessage,
     id: UUID,
-    { thread, integrations, onMessagePersisted }: PersistenceHookParams,
+    {
+      thread,
+      integrations,
+      answeringModelName,
+      onMessagePersisted,
+    }: PersistenceHookParams,
   ): Promise<boolean> {
     if (message.content.length === 0) {
       return true;
@@ -120,6 +126,7 @@ export class PersistenceHookFactory {
       thread.id,
       id,
       integrations,
+      answeringModelName,
     );
     const saved = await this.saveAssistantMessageUseCase.execute(
       new SaveAssistantMessageCommand(backendMessage),

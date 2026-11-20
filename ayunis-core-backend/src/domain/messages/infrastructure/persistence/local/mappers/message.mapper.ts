@@ -26,6 +26,10 @@ export class MessageMapper {
     record.threadId = message.threadId;
     record.role = message.role;
     record.createdAt = message.createdAt;
+    record.answeringModelName =
+      message instanceof AssistantMessage
+        ? (message.answeringModelName ?? null)
+        : null;
     record.content = message.content.map((content) => contentToRecord(content));
     return record;
   }
@@ -46,6 +50,7 @@ export class MessageMapper {
       case MessageRole.ASSISTANT:
         return new AssistantMessage({
           ...base,
+          answeringModelName: messageEntity.answeringModelName ?? undefined,
           content: content.map((item) => assistantContentToDomain(item)),
         });
       case MessageRole.TOOL:
