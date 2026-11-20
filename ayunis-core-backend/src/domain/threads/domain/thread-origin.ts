@@ -1,10 +1,12 @@
 import type { UUID } from 'crypto';
+import type { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 
 export enum ThreadOriginKind {
   CHAT = 'chat',
   ROUTINE = 'routine',
   NOTIFICATION = 'notification',
   RELEASE_NOTE = 'release_note',
+  ONBOARDING = 'onboarding',
 }
 
 /**
@@ -22,6 +24,10 @@ export type ThreadOrigin =
   | {
       readonly kind: ThreadOriginKind.RELEASE_NOTE;
       readonly releaseNoteId: UUID | null;
+    }
+  | {
+      readonly kind: ThreadOriginKind.ONBOARDING;
+      readonly stage: OnboardingStage;
     };
 
 export const CHAT_ORIGIN: ThreadOrigin = { kind: ThreadOriginKind.CHAT };

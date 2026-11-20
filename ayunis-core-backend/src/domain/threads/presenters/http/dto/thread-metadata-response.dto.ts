@@ -4,6 +4,7 @@ import {
   ChatThreadOriginResponseDto,
   NotificationThreadOriginResponseDto,
   ReleaseNoteThreadOriginResponseDto,
+  OnboardingThreadOriginResponseDto,
   RoutineThreadOriginResponseDto,
   type ThreadOriginResponseDto,
 } from 'src/domain/threads/presenters/http/dto/thread-origin-response.dto';
@@ -17,6 +18,7 @@ import {
   RoutineThreadOriginResponseDto,
   NotificationThreadOriginResponseDto,
   ReleaseNoteThreadOriginResponseDto,
+  OnboardingThreadOriginResponseDto,
 )
 export class ThreadMetadataResponseDto {
   @ApiProperty({
@@ -57,12 +59,13 @@ export class ThreadMetadataResponseDto {
 
   @ApiProperty({
     description:
-      'Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note',
+      'Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat',
     oneOf: [
       { $ref: getSchemaPath(ChatThreadOriginResponseDto) },
       { $ref: getSchemaPath(RoutineThreadOriginResponseDto) },
       { $ref: getSchemaPath(NotificationThreadOriginResponseDto) },
       { $ref: getSchemaPath(ReleaseNoteThreadOriginResponseDto) },
+      { $ref: getSchemaPath(OnboardingThreadOriginResponseDto) },
     ],
     discriminator: { propertyName: 'kind' },
   })

@@ -31,6 +31,7 @@ import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabil
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
+import { OnboardingCapability } from 'src/domain/runs/application/run-capabilities/capabilities/onboarding.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
@@ -123,6 +124,7 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
       resolved(null) as never,
       { get: () => true } as never,
     ),
+    new OnboardingCapability({ get: () => true } as never),
     new WorkspaceInstructionsCapability(),
     new MemoryCapability(resolved(memory) as never, assembleTool),
     new ChatHistoryCapability(assembleTool),

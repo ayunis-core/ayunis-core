@@ -67,6 +67,7 @@ import { FinishRoutineCapability } from './application/run-capabilities/capabili
 import { NotificationsCapability } from './application/run-capabilities/capabilities/notifications.capability';
 import { NotificationContextCapability } from './application/run-capabilities/capabilities/notification-context.capability';
 import { ReleaseNoteContextCapability } from './application/run-capabilities/capabilities/release-note-context.capability';
+import { OnboardingCapability } from './application/run-capabilities/capabilities/onboarding.capability';
 import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
 import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
@@ -200,6 +201,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     WorkspaceInstructionsCapability,
     NotificationContextCapability,
     ReleaseNoteContextCapability,
+    OnboardingCapability,
     MemoryCapability,
     ChatHistoryCapability,
     RoutineContextCapability,

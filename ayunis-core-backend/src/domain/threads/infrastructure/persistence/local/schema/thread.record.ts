@@ -22,6 +22,7 @@ import { ReleaseNoteRecord } from 'src/domain/release-notes/infrastructure/persi
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 import { NotificationRecord } from 'src/domain/notifications/infrastructure/persistence/local/schema/notification.record';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
@@ -30,6 +31,7 @@ import type { SessionClient } from 'src/iam/sessions/domain/value-objects/sessio
 @Check(`"routineId" IS NULL OR "origin" = 'routine'`)
 @Check(`"sourceNotificationId" IS NULL OR "origin" = 'notification'`)
 @Check(`"sourceReleaseNoteId" IS NULL OR "origin" = 'release_note'`)
+@Check(`("onboardingStage" IS NOT NULL) = ("origin" = 'onboarding')`)
 export class ThreadRecord extends BaseRecord {
   @Column()
   @Index()
@@ -102,6 +104,10 @@ export class ThreadRecord extends BaseRecord {
   @ManyToOne(() => NotificationRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'sourceNotificationId' })
   sourceNotification?: NotificationRecord;
+
+  /** The onboarding stage an onboarding chat walks the user through; set exactly on onboarding threads. */
+  @Column({ type: 'enum', enum: OnboardingStage, nullable: true })
+  onboardingStage: OnboardingStage | null;
 
   /**
    * The release note this chat was started about. Deleting the release note

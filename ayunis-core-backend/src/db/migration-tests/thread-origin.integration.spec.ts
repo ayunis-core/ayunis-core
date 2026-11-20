@@ -9,6 +9,7 @@ import { ReplaceThreadTypeWithOrigin1795122030540 } from 'src/db/migrations/1795
 import { AddReleaseNoteThreadOrigin1795122030541 } from 'src/db/migrations/1795122030541-AddReleaseNoteThreadOrigin';
 import { BackfillReleaseNoteThreadOrigin1795122030542 } from 'src/db/migrations/1795122030542-BackfillReleaseNoteThreadOrigin';
 import { CheckReleaseNoteThreadOrigin1795122030543 } from 'src/db/migrations/1795122030543-CheckReleaseNoteThreadOrigin';
+import { AddOnboardingOriginToThreads1795162997413 } from 'src/db/migrations/1795162997413-AddOnboardingOriginToThreads';
 
 const migrations: MigrationInterface[] = [
   new AddOriginToThreads1795121973900(),
@@ -17,6 +18,7 @@ const migrations: MigrationInterface[] = [
   new AddReleaseNoteThreadOrigin1795122030541(),
   new BackfillReleaseNoteThreadOrigin1795122030542(),
   new CheckReleaseNoteThreadOrigin1795122030543(),
+  new AddOnboardingOriginToThreads1795162997413(),
 ];
 const liveRoutine = randomUUID();
 const deletedRoutine = randomUUID();
@@ -33,6 +35,7 @@ interface ThreadRow {
   routineId: string | null;
   sourceNotificationId: string | null;
   sourceReleaseNoteId: string | null;
+  onboardingStage?: string | null;
 }
 
 describe('thread origin migrations', () => {
@@ -411,6 +414,38 @@ describe('thread origin migrations', () => {
     ).toBeNull();
   });
 
+  it('rejects an onboarding stage outside an onboarding chat and an onboarding chat without one, with 23514', async () => {
+    await up();
+
+    for (const [id, columns] of [
+      ['chat-with-stage', { onboardingStage: 'profile' }],
+      [
+        'notification-with-stage',
+        {
+          origin: 'notification',
+          sourceNotificationId: liveNotification,
+          onboardingStage: 'profile',
+        },
+      ],
+      ['onboarding-without-stage', { origin: 'onboarding' }],
+    ] as const) {
+      expect(await errorCodeOf(() => insertThread(id, columns))).toBe('23514');
+    }
+    expect(
+      await errorCodeOf(() =>
+        insertThread('onboarding', {
+          origin: 'onboarding',
+          onboardingStage: 'first_skill',
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      await errorCodeOf(() =>
+        insertThread('routine', { origin: 'routine', routineId: liveRoutine }),
+      ),
+    ).toBeNull();
+  });
+
   it('keeps the release-note origin when the release note is deleted', async () => {
     await insertExistingThreads();
     await up();
@@ -430,5 +465,80 @@ describe('thread origin migrations', () => {
       sourceNotificationId: null,
       sourceReleaseNoteId: null,
     });
+  });
+
+  it('turns onboarding chats into plain chats when the onboarding origin is rolled back', async () => {
+    await insertExistingThreads();
+    await up();
+    await insertThread('onboarding', {
+      origin: 'onboarding',
+      onboardingStage: 'profile',
+    });
+
+    await migrations.at(-1)!.down(runner);
+
+    expect(await threads('origin')).toEqual([
+      {
+        id: 'chat',
+        origin: 'chat',
+        routineId: null,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: null,
+      },
+      {
+        id: 'notification-deleted',
+        origin: 'chat',
+        routineId: null,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: null,
+      },
+      {
+        id: 'notification-live',
+        origin: 'notification',
+        routineId: null,
+        sourceNotificationId: liveNotification,
+        sourceReleaseNoteId: null,
+      },
+      {
+        id: 'onboarding',
+        origin: 'chat',
+        routineId: null,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: null,
+      },
+      {
+        id: 'release-note-deleted',
+        origin: 'chat',
+        routineId: null,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: null,
+      },
+      {
+        id: 'release-note-live',
+        origin: 'release_note',
+        routineId: null,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: liveReleaseNote,
+      },
+      {
+        id: 'routine-deleted',
+        origin: 'routine',
+        routineId: null,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: null,
+      },
+      {
+        id: 'routine-live',
+        origin: 'routine',
+        routineId: liveRoutine,
+        sourceNotificationId: null,
+        sourceReleaseNoteId: null,
+      },
+    ]);
+    expect(
+      await errorCodeOf(() =>
+        insertThread('chat-with-routine', { routineId: liveRoutine }),
+      ),
+    ).toBe('23514');
   });
 });
