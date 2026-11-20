@@ -21,7 +21,10 @@ async function start(): Promise<void> {
       bufferLogs: true,
     });
     installNestLogger(app);
-    app.enableShutdownHooks();
+    // In the container Node is PID 1, which ignores the SIGTERM Nest re-raises
+    // after its shutdown hooks, so the process lingered until Docker killed it
+    // (AYC-1267). Exit explicitly instead.
+    app.enableShutdownHooks([], { useProcessExit: true });
     const port = await app
       .get(QueueWorkerRuntimeService)
       .startHealthServer(ingestionWorkerHealthPort(), INGESTION_QUEUES);
