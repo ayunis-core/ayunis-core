@@ -17,6 +17,7 @@ import type {
   CreditLimitTarget,
 } from '@/features/credit-limits/model/credit-limit-settings';
 import type { CreditLimitRow } from '@/pages/admin-settings/credit-limits-settings/model/types';
+import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
 
 interface Props {
   rows: CreditLimitRow[];
@@ -100,13 +101,17 @@ function CreditLimitTableRow({
   const { t, i18n } = useTranslation('admin-settings-credit-limits');
   const limit = row.limit;
   const effectiveCredits = limit?.monthlyCredits ?? defaultLimit;
+  const formatUsed = (value: number) =>
+    formatCompactNumber(value, i18n.language);
+  const formatLimit = (value: number) =>
+    value.toLocaleString(i18n.language, { maximumFractionDigits: 2 });
   const usagePrefix =
     limit?.creditsUsed === undefined
       ? ''
-      : `${limit.creditsUsed.toLocaleString(i18n.language)} / `;
+      : `${formatUsed(limit.creditsUsed)} / `;
   let limitLabel: string;
   if (limit !== null) {
-    limitLabel = `${usagePrefix}${limit.monthlyCredits.toLocaleString(i18n.language)}`;
+    limitLabel = `${usagePrefix}${formatLimit(limit.monthlyCredits)}`;
   } else if (defaultLimit !== null) {
     limitLabel = t(
       row.creditsUsed === undefined
@@ -115,8 +120,8 @@ function CreditLimitTableRow({
       {
         ...(row.creditsUsed === undefined
           ? {}
-          : { used: row.creditsUsed.toLocaleString(i18n.language) }),
-        credits: defaultLimit.toLocaleString(i18n.language),
+          : { used: formatUsed(row.creditsUsed) }),
+        credits: formatLimit(defaultLimit),
       },
     );
   } else {
