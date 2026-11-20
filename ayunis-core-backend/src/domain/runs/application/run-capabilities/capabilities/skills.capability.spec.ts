@@ -5,8 +5,14 @@ import {
   aCapabilityContext,
   createAssembleToolUseCase,
   sectionsIn,
+  TEST_ORG_ID,
+  TEST_USER_ID,
   toolNames,
 } from 'src/domain/runs/testing/run-capability.fixture';
+import type { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
+import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import {
   createSkillActivationHook,
   SkillsCapability,
@@ -32,8 +38,32 @@ const catalog: SkillCatalog = {
   ],
 };
 
+const userContext = {
+  get: (key: string) =>
+    ({
+      userId: TEST_USER_ID,
+      orgId: TEST_ORG_ID,
+      role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
+    })[key],
+};
+
+const buildCapability = (granted: Permission[] = [Permission.MANAGE_SKILLS]) =>
+  new SkillsCapability(
+    createAssembleToolUseCase(),
+    userContext as never,
+    {
+      execute: (query: HasPermissionQuery) =>
+        Promise.resolve(
+          query.orgId === TEST_ORG_ID &&
+            query.role === UserRole.USER &&
+            granted.includes(query.permission),
+        ),
+    } as never,
+  );
+
 describe('SkillsCapability', () => {
-  const capability = new SkillsCapability(createAssembleToolUseCase());
+  const capability = buildCapability();
   const withCatalog = (overrides: Partial<SkillCatalog> = {}) =>
     aCapabilityContext({
       skillCatalog: () => Promise.resolve({ ...catalog, ...overrides }),
@@ -52,6 +82,17 @@ describe('SkillsCapability', () => {
 
     expect(toolNames(contribution)).toEqual([ToolType.CREATE_SKILL]);
     expect(sectionsIn(contribution, PromptSlot.RESOURCES)).toEqual([]);
+  });
+
+  it('offers no skill creation to members whose role may not manage skills', async () => {
+    const contribution = await buildCapability([
+      Permission.INSTALL_MARKETPLACE_SKILLS,
+    ]).contribute(withCatalog());
+
+    expect(toolNames(contribution)).toEqual([
+      ToolType.EDIT_SKILL,
+      ToolType.ACTIVATE_SKILL,
+    ]);
   });
 
   it('lists the catalog by slug with escaped descriptions', async () => {

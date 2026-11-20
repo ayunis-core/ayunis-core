@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 const createSkillToolParameters = {
   type: 'object' as const,
@@ -36,7 +36,7 @@ export class CreateSkillTool extends Tool {
     super({
       name: ToolType.CREATE_SKILL,
       description:
-        'Display a skill creation widget. Use this when the user asks you to create a skill for them. Propose a name, short description, and detailed instructions based on what the user described. The user reviews and confirms the creation.',
+        'Display a skill creation widget. Use this when the user asks you to create a skill for them or accepts your offer to turn a task into a skill. Propose a name, short description, and detailed instructions based on what the user described. The user reviews and confirms the creation.',
       parameters: createSkillToolParameters,
       type: ToolType.CREATE_SKILL,
     });

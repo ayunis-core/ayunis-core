@@ -74,6 +74,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
 import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
 import { MemoryCapability } from './application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from './application/run-capabilities/capabilities/chat-history.capability';
+import { AdoptionCapability } from './application/run-capabilities/capabilities/adoption.capability';
 import { MemoryModule } from 'src/domain/memory/memory.module';
 import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
 import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
@@ -204,6 +205,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     OnboardingCapability,
     MemoryCapability,
     ChatHistoryCapability,
+    AdoptionCapability,
     RoutineContextCapability,
     RoutineInternetCapability,
     NotificationsCapability,

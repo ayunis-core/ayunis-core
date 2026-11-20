@@ -34,6 +34,7 @@ import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-ca
 import { OnboardingCapability } from 'src/domain/runs/application/run-capabilities/capabilities/onboarding.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
+import { AdoptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/adoption.capability';
 import { MemoryEntry } from 'src/domain/memory/domain/memory-entry.entity';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
 import {
@@ -46,8 +47,19 @@ import {
 import { ChatRunProfile } from './chat-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
+import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 const integrationId = '33333333-3333-4333-8333-333333333333' as UUID;
+const userContext = {
+  get: (key: string) =>
+    ({
+      userId: TEST_USER_ID,
+      orgId: TEST_ORG_ID,
+      role: UserRole.USER,
+      systemRole: SystemRole.CUSTOMER,
+    })[key],
+};
 const notification = aNotification({
   headline: 'Neue Verordnung zur Grundsteuer',
 });
@@ -96,7 +108,11 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     new EmailCalendarCapability(assembleTool),
     new FilesChartsMapCapability(assembleTool),
     new ArtifactsCapability(artifactTools),
-    new SkillsCapability(assembleTool),
+    new SkillsCapability(
+      assembleTool,
+      userContext as never,
+      resolved(true) as never,
+    ),
     new RoutinesCapability(assembleTool, resolved([]) as never),
     new AnonymizationExceptionCapability(assembleTool, {
       get: () => undefined,
@@ -126,6 +142,7 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     ),
     new OnboardingCapability({ get: () => true } as never),
     new WorkspaceInstructionsCapability(),
+    new AdoptionCapability(),
     new MemoryCapability(resolved(memory) as never, assembleTool),
     new ChatHistoryCapability(assembleTool),
     new McpCapability(mcpTools),
@@ -230,6 +247,14 @@ describe('ChatRunProfile', () => {
     );
   });
 
+  it('leads the user into the skills and routines the run was given', async () => {
+    const { instructions } = await assembleChat();
+
+    expect(instructions).toMatch(
+      /<feature_adoption>[\s\S]*create_skill[\s\S]*create_routine[\s\S]*<\/feature_adoption>/,
+    );
+  });
+
   it('adds no notification to an ordinary chat', async () => {
     const { instructions } = await assembleChat();
 
@@ -249,7 +274,7 @@ describe('ChatRunProfile', () => {
     const { instructions } = await assembleChat();
 
     expect(instructions).toMatch(
-      /<organization_instructions>[\s\S]*Antworten Sie stets auf Deutsch\.[\s\S]*<\/organization_instructions>\n\nYou are now ready to assist the user\.$/,
+      /<organization_instructions>[\s\S]*Antworten Sie stets auf Deutsch\.[\s\S]*<\/organization_instructions>\n\n<feature_adoption>[\s\S]*<\/feature_adoption>\n\nYou are now ready to assist the user\.$/,
     );
   });
 
@@ -265,7 +290,7 @@ describe('ChatRunProfile', () => {
     });
 
     expect(instructions).toMatch(
-      /<\/organization_instructions>\n\n<memory>[\s\S]*<personal>\nSachbearbeiterin im Bauamt\n<\/personal>[\s\S]*<\/memory>\n\nYou are now ready to assist the user\.$/,
+      /<\/organization_instructions>\n\n<feature_adoption>[\s\S]*<\/feature_adoption>\n\n<memory>[\s\S]*<personal>\nSachbearbeiterin im Bauamt\n<\/personal>[\s\S]*<\/memory>\n\nYou are now ready to assist the user\.$/,
     );
     expect(tools.map((tool) => tool.name).at(-2)).toBe(ToolType.SET_MEMORY);
   });
