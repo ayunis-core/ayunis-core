@@ -71,9 +71,11 @@ export default function OutlookDraftWidget({
           </ItemDescription>
         )}
       </ItemContent>
-      {action === 'openReply' && !isStreaming && (
+      {(action === 'autoReply' || action === 'openReply') && !isStreaming && (
         <ItemFooter>
-          <ItemDescription>{t('chat.outlookDraft.openReply')}</ItemDescription>
+          <ItemDescription data-testid="outlook-draft-instruction">
+            {t(`chat.outlookDraft.${action}`)}
+          </ItemDescription>
         </ItemFooter>
       )}
       {action === 'insert' && state?.status !== 'done' && (

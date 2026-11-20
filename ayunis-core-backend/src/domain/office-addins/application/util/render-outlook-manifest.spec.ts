@@ -40,6 +40,26 @@ describe('renderOutlookManifest', () => {
     expect(addinId(manifest)).toBe('99709215-2481-8df4-8101-31fd9f449a15');
   });
 
+  it('registers background draft insertion only in VersionOverrides 1.1', () => {
+    const manifest = renderOutlookManifest('https://app.ayunis.example');
+    const [legacy, current] = manifest.split('xsi:type="VersionOverridesV1_1"');
+
+    expect(legacy).not.toContain('OnNewMessageCompose');
+    expect(legacy).not.toContain('autoReply');
+    expect(current).toContain(
+      '<LaunchEvent Type="OnNewMessageCompose" FunctionName="insertOutlookReplyDraft"/>',
+    );
+    expect(current).toContain('<Runtime resid="ReplyEvent.Web">');
+    expect(current).toContain('<SourceLocation resid="ReplyEvent.Web"/>');
+    expect(current).toContain(
+      '<Override type="javascript" resid="ReplyEvent.Classic"/>',
+    );
+    expect(current).toContain('/outlook/reply-event.html');
+    expect(current).toContain(
+      '/outlook/taskpane.html?surface=messageRead&amp;autoReply=1',
+    );
+  });
+
   // Exchange Server (2016, 2019, SE) stops at Mailbox 1.5 and hides add-ins
   // that require more.
   it('stays installable on Exchange Server on-premises', () => {

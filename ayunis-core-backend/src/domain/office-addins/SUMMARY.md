@@ -21,15 +21,17 @@ returns the add-in-only XML manifest rendered for this deployment's
 - **Buttons**: one task pane button when reading and one when composing a
   message, both pinnable. Each opens `/outlook/taskpane.html?surface=<surface>`
   (`messageRead`, `messageCompose`), so the pane can serve both differently
-  without a manifest change.
+  without a manifest change. The event-enabled reading pane also receives
+  `autoReply=1`, so older installed manifests keep the manual flow.
 - **Requirement sets**: Mailbox 1.5 for the VersionOverrides 1.1 block, which
   pinning needs and Exchange Server (on-premises) still supports; 1.3 for the
   1.0 block read by older clients. `SupportsSharedFolders` only takes effect on
   clients with Mailbox 1.8 (shared folders) and 1.13 (shared mailboxes).
 - **Permissions** are `ReadWriteItem`: read and change the message the add-in
-  is opened on. Higher permissions, Microsoft Graph scopes and event-based
-  activation are not requested; adding any of them later needs every tenant
-  admin to consent again.
+  is opened on. The 1.1 block registers `OnNewMessageCompose` with a browser
+  runtime for inserting replies and a classic Windows runtime that completes
+  the event without editing the message. Automatic activation requires admin
+  deployment of the updated manifest. No Microsoft Graph scopes are requested.
 
 The `Outlook manifest` workflow renders the manifest with
 `pnpm --filter core-backend office-addins:outlook-manifest` and validates it

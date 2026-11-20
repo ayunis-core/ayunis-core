@@ -18,6 +18,7 @@ describe('serveFrontendOptions', () => {
     writeFileSync(join(rootPath, 'index.html'), '<div id="app"></div>');
     writeFileSync(join(rootPath, 'outlook', 'taskpane.html'), '<div></div>');
     writeFileSync(join(rootPath, 'outlook', 'dialog.html'), '<div></div>');
+    writeFileSync(join(rootPath, 'outlook', 'reply-event.html'), '<div></div>');
     writeFileSync(join(rootPath, 'assets', 'index-abc.js'), 'export {}');
 
     // serve-static picks its loader from the HTTP adapter when the module is
@@ -82,23 +83,27 @@ describe('serveFrontendOptions', () => {
       },
     );
 
-    it('lets the configured Outlook origins frame the task pane', async () => {
-      process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'true';
-      process.env.OUTLOOK_ADDIN_FRAME_ORIGINS =
-        'https://outlook.office.com, https://mail.customer.de';
+    it.each(['/outlook/taskpane.html', '/outlook/reply-event.html'])(
+      'lets the configured Outlook origins frame %s',
+      async (path) => {
+        process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'true';
+        process.env.OUTLOOK_ADDIN_FRAME_ORIGINS =
+          'https://outlook.office.com, https://mail.customer.de';
 
-      expect(await frameAncestors('/outlook/taskpane.html')).toBe(
-        "frame-ancestors 'self' https://outlook.office.com https://mail.customer.de",
-      );
-    });
+        expect(await frameAncestors(path)).toBe(
+          "frame-ancestors 'self' https://outlook.office.com https://mail.customer.de",
+        );
+      },
+    );
 
-    it('keeps every other origin from framing the task pane with the add-in off', async () => {
-      process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'false';
-      process.env.OUTLOOK_ADDIN_FRAME_ORIGINS = 'https://mail.customer.de';
+    it.each(['/outlook/taskpane.html', '/outlook/reply-event.html'])(
+      'blocks framing by Outlook at %s with the add-in off',
+      async (path) => {
+        process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'false';
+        process.env.OUTLOOK_ADDIN_FRAME_ORIGINS = 'https://mail.customer.de';
 
-      expect(await frameAncestors('/outlook/taskpane.html')).toBe(
-        "frame-ancestors 'self'",
-      );
-    });
+        expect(await frameAncestors(path)).toBe("frame-ancestors 'self'");
+      },
+    );
   });
 });

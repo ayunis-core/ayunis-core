@@ -90,9 +90,10 @@ export async function storeRefreshToken(
 export async function openSignedInPane(
   pane: Page,
   userApi: APIRequestContext,
+  path = '/outlook/taskpane.html',
 ): Promise<void> {
   const { refreshToken } = await handOffSessionToOutlook(userApi);
-  await pane.goto('/outlook/taskpane.html');
+  await pane.goto(path);
   await storeRefreshToken(pane, refreshToken);
   await pane.reload();
   await expect(pane.getByTestId('outlook-pane-signed-in')).toBeVisible();

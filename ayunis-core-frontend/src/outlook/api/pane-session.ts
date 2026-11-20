@@ -1,3 +1,4 @@
+import { clearPendingReplyDraft } from '@/features/outlook-tools';
 import config from '@/shared/config';
 import type { EmbeddedSession } from '@/shared/api/embedded-session';
 import type {
@@ -108,6 +109,7 @@ export function createPaneSession(
     accessToken = null;
     issuedTokens.clear();
     refreshTokens.remove();
+    clearPendingReplyDraft();
   }
 
   const endListeners = new Set<(reason: SessionEndReason) => void>();

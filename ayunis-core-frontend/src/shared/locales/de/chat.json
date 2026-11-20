@@ -387,6 +387,7 @@
     "fromReleaseNote": "Produkt-Update",
     "outlookDraft": {
       "insert": "In offene Antwort einfügen",
+      "autoReply": "Klicken Sie in Outlook auf „Antworten“, um diesen Entwurf einzufügen.",
       "openReply": "Wählen Sie in Outlook „Antworten“ und öffnen Sie Ayunis in der Antwort, um den Entwurf einzufügen.",
       "status": {
         "running": "Arbeitet in Outlook …",
