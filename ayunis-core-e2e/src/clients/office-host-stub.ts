@@ -69,6 +69,15 @@ const officeStub = (
   const state = { messages: [], calls: [], dialog: null };
   window.__officeStub = state;
   const mail = ${JSON.stringify(item)};
+  let officeReadyRequested = false;
+  let composeHandler;
+  // The Outlook web runtime dispatches only after the add-in calls onReady.
+  const exposeComposeEvent = () => {
+    if (officeReadyRequested && composeHandler) {
+      state.launchComposeEvent = () =>
+        new Promise((completed) => { composeHandler({ completed }); });
+    }
+  };
   const succeed = (callback, value) =>
     callback({ status: 'succeeded', value });
   const recorded = (method, run) => (...args) => {
@@ -162,8 +171,8 @@ const officeStub = (
     actions: {
       associate: (name, handler) => {
         if (name === 'insertOutlookReplyDraft') {
-          state.launchComposeEvent = () =>
-            new Promise((completed) => { handler({ completed }); });
+          composeHandler = handler;
+          exposeComposeEvent();
         }
       },
     },
@@ -176,7 +185,11 @@ const officeStub = (
         ICalendar: 'iCalendar',
       },
     },
-    onReady: () => Promise.resolve({ host: 'Outlook', platform: 'OfficeOnline' }),
+    onReady: () => {
+      officeReadyRequested = true;
+      exposeComposeEvent();
+      return Promise.resolve({ host: 'Outlook', platform: 'OfficeOnline' });
+    },
     context: {
       displayLanguage: 'en-US',
       requirements: {
