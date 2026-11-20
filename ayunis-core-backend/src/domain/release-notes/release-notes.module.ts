@@ -43,5 +43,6 @@ import { ReleaseNotesController } from './presenters/http/release-notes.controll
     DownloadReleaseNoteImageUseCase,
     ReleaseNoteDtoMapper,
   ],
+  exports: [FindReleaseNoteUseCase],
 })
 export class ReleaseNotesModule {}

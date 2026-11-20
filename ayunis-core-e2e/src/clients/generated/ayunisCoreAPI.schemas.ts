@@ -2476,6 +2476,8 @@ export interface CreateThreadDto {
   workspaceId?: string;
   /** Start a chat about one of the user's notifications; its content is given to the model */
   sourceNotificationId?: string;
+  /** Start a chat about a release note; its content is given to the model */
+  sourceReleaseNoteId?: string;
 }
 
 /**
@@ -3197,6 +3199,11 @@ export interface GetThreadResponseDto {
      * @nullable
      */
   sourceNotificationId: string | null;
+  /**
+     * The release note this chat was started about; null for other chats and once the release note is deleted
+     * @nullable
+     */
+  sourceReleaseNoteId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -3247,6 +3254,11 @@ export interface GetThreadsResponseDtoItem {
      * @nullable
      */
   sourceNotificationId: string | null;
+  /**
+     * The release note this chat was started about; null for other chats and once the release note is deleted
+     * @nullable
+     */
+  sourceReleaseNoteId: string | null;
   /** Unique identifier for the thread */
   id: string;
   /** Title of the thread */
@@ -4829,6 +4841,32 @@ export interface UnreadNotificationCountResponseDto {
   count: number;
   /** Unread notifications per type; only types with any */
   byType: UnreadNotificationTypeCountResponseDto[];
+}
+
+export interface ReleaseNoteMediaResponseDto {
+  type: NotificationMediaType;
+  /**
+     * The Loom embed URL of a Loom video; null for an image, which `GET /release-notes/{id}/image` serves
+     * @nullable
+     */
+  url: string | null;
+}
+
+export interface ReleaseNoteResponseDto {
+  id: string;
+  headline: string;
+  /** Markdown; may contain links */
+  body: string;
+  /** @nullable */
+  media: ReleaseNoteMediaResponseDto | null;
+  /** Announced after the current user joined and not opened by them yet */
+  unread: boolean;
+  /** The day the release note is dated */
+  date: string;
+}
+
+export interface UnreadReleaseNoteCountResponseDto {
+  count: number;
 }
 
 export interface CreditsPerEuroResponseDto {
@@ -6765,32 +6803,6 @@ export interface UpdateCourseModuleRequestDto {
      * @maxLength 500
      */
   loomUrl: string;
-}
-
-export interface ReleaseNoteMediaResponseDto {
-  type: NotificationMediaType;
-  /**
-     * The Loom embed URL of a Loom video; null for an image, which `GET /release-notes/{id}/image` serves
-     * @nullable
-     */
-  url: string | null;
-}
-
-export interface ReleaseNoteResponseDto {
-  id: string;
-  headline: string;
-  /** Markdown; may contain links */
-  body: string;
-  /** @nullable */
-  media: ReleaseNoteMediaResponseDto | null;
-  /** Announced after the current user joined and not opened by them yet */
-  unread: boolean;
-  /** The day the release note is dated */
-  date: string;
-}
-
-export interface UnreadReleaseNoteCountResponseDto {
-  count: number;
 }
 
 /**

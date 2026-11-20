@@ -17,6 +17,7 @@ import { RecordingsCapability } from 'src/domain/runs/application/run-capabiliti
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
 import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
@@ -96,6 +97,10 @@ function buildOutlookProfile(): OutlookRunProfile {
     new KnowledgeBasesCapability(assembleTool),
     new RecordingsCapability(assembleTool, { get: () => true } as never),
     new NotificationContextCapability(
+      resolved(null) as never,
+      { get: () => true } as never,
+    ),
+    new ReleaseNoteContextCapability(
       resolved(null) as never,
       { get: () => true } as never,
     ),

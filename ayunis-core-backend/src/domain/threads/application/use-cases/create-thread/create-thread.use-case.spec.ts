@@ -29,6 +29,9 @@ import {
 import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
 import { NotificationNotFoundError } from 'src/domain/notifications/application/notifications.errors';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
+import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
+import { ReleaseNoteNotFoundError } from 'src/domain/release-notes/application/release-notes.errors';
+import { TEST_RELEASE_NOTE_ID } from 'src/domain/release-notes/application/testing/release-note.fixtures';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
@@ -43,6 +46,7 @@ describe('CreateThreadUseCase', () => {
 
   const resolveModelModes = { execute: jest.fn() };
   const findNotification = { execute: jest.fn() };
+  const findReleaseNote = { execute: jest.fn() };
 
   beforeEach(async () => {
     logger = createLoggerMock();
@@ -84,6 +88,7 @@ describe('CreateThreadUseCase', () => {
           useValue: mockAssertWorkspaceReadAccessUseCase,
         },
         { provide: FindNotificationUseCase, useValue: findNotification },
+        { provide: FindReleaseNoteUseCase, useValue: findReleaseNote },
       ],
     }).compile();
 
@@ -517,7 +522,45 @@ describe('CreateThreadUseCase', () => {
       );
 
       expect(findNotification.execute).not.toHaveBeenCalled();
+      expect(findReleaseNote.execute).not.toHaveBeenCalled();
       expect(thread.sourceNotificationId).toBeNull();
+      expect(thread.sourceReleaseNoteId).toBeNull();
+    });
+
+    it('links a regular chat to a release note', async () => {
+      findReleaseNote.execute.mockResolvedValue({});
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({
+          modelId: mockModelId,
+          sourceReleaseNoteId: TEST_RELEASE_NOTE_ID,
+        }),
+      );
+
+      expect(findReleaseNote.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ id: TEST_RELEASE_NOTE_ID }),
+      );
+      expect(thread).toMatchObject({
+        sourceReleaseNoteId: TEST_RELEASE_NOTE_ID,
+        sourceNotificationId: null,
+        type: 'chat',
+      });
+    });
+
+    it('refuses a release note that does not exist without creating a thread', async () => {
+      findReleaseNote.execute.mockRejectedValue(
+        new ReleaseNoteNotFoundError(TEST_RELEASE_NOTE_ID),
+      );
+
+      await expect(
+        useCase.execute(
+          new CreateThreadCommand({
+            modelId: mockModelId,
+            sourceReleaseNoteId: TEST_RELEASE_NOTE_ID,
+          }),
+        ),
+      ).rejects.toThrow(ReleaseNoteNotFoundError);
+      expect(threadsRepository.create).not.toHaveBeenCalled();
     });
   });
 });

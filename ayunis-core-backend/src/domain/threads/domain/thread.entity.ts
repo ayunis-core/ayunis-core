@@ -27,6 +27,7 @@ export class Thread {
   routineId: UUID | null;
   /** The notification a "Chat about this" chat discusses; null once it is deleted. */
   sourceNotificationId: UUID | null;
+  sourceReleaseNoteId: UUID | null;
   /** The token client (e.g. the Outlook pane) the chat was started from; null for the web app. */
   client: SessionClient | null;
   lastActivityAt: Date;
@@ -48,6 +49,7 @@ export class Thread {
     type?: ThreadType;
     routineId?: UUID | null;
     sourceNotificationId?: UUID | null;
+    sourceReleaseNoteId?: UUID | null;
     client?: SessionClient | null;
     lastActivityAt?: Date;
     createdAt?: Date;
@@ -67,6 +69,7 @@ export class Thread {
     this.type = params.type ?? ThreadType.CHAT;
     this.routineId = params.routineId ?? null;
     this.sourceNotificationId = params.sourceNotificationId ?? null;
+    this.sourceReleaseNoteId = params.sourceReleaseNoteId ?? null;
     this.client = params.client ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();

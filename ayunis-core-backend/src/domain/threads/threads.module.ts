@@ -72,6 +72,7 @@ import { MessagesModule } from 'src/domain/messages/messages.module';
 import { SharesModule } from 'src/domain/shares/shares.module';
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
+import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     ThreadPiiMasksModule,
     McpModule,
     NotificationsModule,
+    ReleaseNotesModule,
   ],
   controllers: [
     ThreadsController,

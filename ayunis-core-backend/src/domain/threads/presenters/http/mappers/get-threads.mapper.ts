@@ -18,6 +18,7 @@ export class GetThreadsDtoMapper {
       type: thread.type,
       routineId: thread.routineId,
       sourceNotificationId: thread.sourceNotificationId,
+      sourceReleaseNoteId: thread.sourceReleaseNoteId,
     };
   }
 

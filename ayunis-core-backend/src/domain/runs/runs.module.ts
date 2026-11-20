@@ -66,7 +66,9 @@ import { RunCapabilityContextFactory } from './application/run-capabilities/run-
 import { FinishRoutineCapability } from './application/run-capabilities/capabilities/finish-routine.capability';
 import { NotificationsCapability } from './application/run-capabilities/capabilities/notifications.capability';
 import { NotificationContextCapability } from './application/run-capabilities/capabilities/notification-context.capability';
+import { ReleaseNoteContextCapability } from './application/run-capabilities/capabilities/release-note-context.capability';
 import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
+import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { RoutineContextCapability } from './application/run-capabilities/capabilities/routine-context.capability';
 import { MemoryCapability } from './application/run-capabilities/capabilities/memory.capability';
@@ -121,6 +123,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     KnowledgeBasesModule,
     RecordingsModule,
     NotificationsModule,
+    ReleaseNotesModule,
     MemoryModule,
     forwardRef(() => RoutinesModule), // Runs → Routines → Runs (circular)
     PermissionsModule,
@@ -196,6 +199,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     ThreadSourcesCapability,
     WorkspaceInstructionsCapability,
     NotificationContextCapability,
+    ReleaseNoteContextCapability,
     MemoryCapability,
     ChatHistoryCapability,
     RoutineContextCapability,

@@ -68,4 +68,13 @@ export class ThreadMetadataResponseDto {
     nullable: true,
   })
   sourceNotificationId: string | null;
+
+  @ApiProperty({
+    type: String,
+    description:
+      'The release note this chat was started about; null for other chats and once the release note is deleted',
+    format: 'uuid',
+    nullable: true,
+  })
+  sourceReleaseNoteId: string | null;
 }

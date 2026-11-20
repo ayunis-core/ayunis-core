@@ -21,6 +21,7 @@ import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities
 import { AnonymizationExceptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
+import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
@@ -62,6 +63,7 @@ export class ChatRunProfile implements RunProfile {
     private readonly knowledgeBases: KnowledgeBasesCapability,
     private readonly recordings: RecordingsCapability,
     private readonly notificationContext: NotificationContextCapability,
+    private readonly releaseNoteContext: ReleaseNoteContextCapability,
     private readonly workspaceInstructions: WorkspaceInstructionsCapability,
     private readonly memory: MemoryCapability,
     private readonly chatHistory: ChatHistoryCapability,
@@ -90,6 +92,7 @@ export class ChatRunProfile implements RunProfile {
       this.knowledgeBases,
       this.recordings,
       this.notificationContext,
+      this.releaseNoteContext,
       this.workspaceInstructions,
       this.memory,
       this.chatHistory,

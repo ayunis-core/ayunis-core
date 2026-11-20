@@ -19806,6 +19806,444 @@ export const useNotificationsControllerMarkRead = <TError = void,
     }
 
 /**
+ * @summary List the newest release notes, newest first
+ */
+export const releaseNotesControllerFindAll = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ReleaseNoteResponseDto[]>(
+      {url: `/release-notes`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerFindAllQueryKey = () => {
+    return [
+    `/release-notes`
+    ] as const;
+    }
+
+
+export const getReleaseNotesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerFindAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>> = ({ signal }) => releaseNotesControllerFindAll(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReleaseNotesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>>
+export type ReleaseNotesControllerFindAllQueryError = unknown
+
+
+export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the newest release notes, newest first
+ */
+
+export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReleaseNotesControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Count the current user's unread release notes
+ */
+export const releaseNotesControllerCountUnread = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<UnreadReleaseNoteCountResponseDto>(
+      {url: `/release-notes/unread-count`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerCountUnreadQueryKey = () => {
+    return [
+    `/release-notes/unread-count`
+    ] as const;
+    }
+
+
+export const getReleaseNotesControllerCountUnreadQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerCountUnreadQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>> = ({ signal }) => releaseNotesControllerCountUnread(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReleaseNotesControllerCountUnreadQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>>
+export type ReleaseNotesControllerCountUnreadQueryError = unknown
+
+
+export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Count the current user's unread release notes
+ */
+
+export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReleaseNotesControllerCountUnreadQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get one release note
+ */
+export const releaseNotesControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ReleaseNoteResponseDto>(
+      {url: `/release-notes/${id}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerFindOneQueryKey = (id: string,) => {
+    return [
+    `/release-notes/${id}`
+    ] as const;
+    }
+
+
+export const getReleaseNotesControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerFindOneQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>> = ({ signal }) => releaseNotesControllerFindOne(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReleaseNotesControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>>
+export type ReleaseNotesControllerFindOneQueryError = void
+
+
+export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get one release note
+ */
+
+export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReleaseNotesControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Download the image of a release note
+ */
+export const releaseNotesControllerDownloadImage = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/release-notes/${id}/image`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerDownloadImageQueryKey = (id: string,) => {
+    return [
+    `/release-notes/${id}/image`
+    ] as const;
+    }
+
+
+export const getReleaseNotesControllerDownloadImageQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerDownloadImageQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>> = ({ signal }) => releaseNotesControllerDownloadImage(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReleaseNotesControllerDownloadImageQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>>
+export type ReleaseNotesControllerDownloadImageQueryError = void
+
+
+export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the image of a release note
+ */
+
+export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReleaseNotesControllerDownloadImageQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Mark a release note read for the current user
+ */
+export const releaseNotesControllerMarkRead = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ReleaseNoteResponseDto>(
+      {url: `/release-notes/${id}/read`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerMarkReadMutationKey = () => ['releaseNotesControllerMarkRead'] as const;
+
+export const getReleaseNotesControllerMarkReadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, TError,ReleaseNotesControllerMarkReadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, TError,ReleaseNotesControllerMarkReadMutationVariables, TContext> => {
+
+const mutationKey = getReleaseNotesControllerMarkReadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, ReleaseNotesControllerMarkReadMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  releaseNotesControllerMarkRead(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReleaseNotesControllerMarkReadMutationResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>>
+
+    export type ReleaseNotesControllerMarkReadMutationError = void
+    export type ReleaseNotesControllerMarkReadMutationVariables = {id: string}
+
+    /**
+ * @summary Mark a release note read for the current user
+ */
+export const useReleaseNotesControllerMarkRead = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, TError,ReleaseNotesControllerMarkReadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>,
+        TError,
+        ReleaseNotesControllerMarkReadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReleaseNotesControllerMarkReadMutationOptions(options), queryClient);
+    }
+
+/**
  * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
  * @summary Get the current credits-per-euro configuration
  */
@@ -30500,444 +30938,6 @@ export const useSuperAdminAcademyCourseModulesControllerDeleteCourseModule = <TE
         TContext
       > => {
       return useMutation(getSuperAdminAcademyCourseModulesControllerDeleteCourseModuleMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary List the newest release notes, newest first
- */
-export const releaseNotesControllerFindAll = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ReleaseNoteResponseDto[]>(
-      {url: `/release-notes`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getReleaseNotesControllerFindAllQueryKey = () => {
-    return [
-    `/release-notes`
-    ] as const;
-    }
-
-
-export const getReleaseNotesControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerFindAllQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>> = ({ signal }) => releaseNotesControllerFindAll(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReleaseNotesControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>>
-export type ReleaseNotesControllerFindAllQueryError = unknown
-
-
-export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List the newest release notes, newest first
- */
-
-export function useReleaseNotesControllerFindAll<TData = Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReleaseNotesControllerFindAllQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Count the current user's unread release notes
- */
-export const releaseNotesControllerCountUnread = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<UnreadReleaseNoteCountResponseDto>(
-      {url: `/release-notes/unread-count`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getReleaseNotesControllerCountUnreadQueryKey = () => {
-    return [
-    `/release-notes/unread-count`
-    ] as const;
-    }
-
-
-export const getReleaseNotesControllerCountUnreadQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerCountUnreadQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>> = ({ signal }) => releaseNotesControllerCountUnread(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReleaseNotesControllerCountUnreadQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>>
-export type ReleaseNotesControllerCountUnreadQueryError = unknown
-
-
-export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Count the current user's unread release notes
- */
-
-export function useReleaseNotesControllerCountUnread<TData = Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerCountUnread>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReleaseNotesControllerCountUnreadQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get one release note
- */
-export const releaseNotesControllerFindOne = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ReleaseNoteResponseDto>(
-      {url: `/release-notes/${id}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getReleaseNotesControllerFindOneQueryKey = (id: string,) => {
-    return [
-    `/release-notes/${id}`
-    ] as const;
-    }
-
-
-export const getReleaseNotesControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerFindOneQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>> = ({ signal }) => releaseNotesControllerFindOne(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReleaseNotesControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>>
-export type ReleaseNotesControllerFindOneQueryError = void
-
-
-export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get one release note
- */
-
-export function useReleaseNotesControllerFindOne<TData = Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReleaseNotesControllerFindOneQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Download the image of a release note
- */
-export const releaseNotesControllerDownloadImage = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/release-notes/${id}/image`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getReleaseNotesControllerDownloadImageQueryKey = (id: string,) => {
-    return [
-    `/release-notes/${id}/image`
-    ] as const;
-    }
-
-
-export const getReleaseNotesControllerDownloadImageQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerDownloadImageQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>> = ({ signal }) => releaseNotesControllerDownloadImage(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReleaseNotesControllerDownloadImageQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>>
-export type ReleaseNotesControllerDownloadImageQueryError = void
-
-
-export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>,
-          TError,
-          Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Download the image of a release note
- */
-
-export function useReleaseNotesControllerDownloadImage<TData = Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerDownloadImage>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReleaseNotesControllerDownloadImageQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Mark a release note read for the current user
- */
-export const releaseNotesControllerMarkRead = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ReleaseNoteResponseDto>(
-      {url: `/release-notes/${id}/read`, method: 'POST', signal
-    },
-      );
-    }
-
-
-
-
-export const getReleaseNotesControllerMarkReadMutationKey = () => ['releaseNotesControllerMarkRead'] as const;
-
-export const getReleaseNotesControllerMarkReadMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, TError,ReleaseNotesControllerMarkReadMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, TError,ReleaseNotesControllerMarkReadMutationVariables, TContext> => {
-
-const mutationKey = getReleaseNotesControllerMarkReadMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, ReleaseNotesControllerMarkReadMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  releaseNotesControllerMarkRead(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReleaseNotesControllerMarkReadMutationResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>>
-
-    export type ReleaseNotesControllerMarkReadMutationError = void
-    export type ReleaseNotesControllerMarkReadMutationVariables = {id: string}
-
-    /**
- * @summary Mark a release note read for the current user
- */
-export const useReleaseNotesControllerMarkRead = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>, TError,ReleaseNotesControllerMarkReadMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof releaseNotesControllerMarkRead>>,
-        TError,
-        ReleaseNotesControllerMarkReadMutationVariables,
-        TContext
-      > => {
-      return useMutation(getReleaseNotesControllerMarkReadMutationOptions(options), queryClient);
     }
 
 /**

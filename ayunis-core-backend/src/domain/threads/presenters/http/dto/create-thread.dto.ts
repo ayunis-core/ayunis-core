@@ -53,4 +53,14 @@ export class CreateThreadDto {
   @IsUUID()
   @IsOptional()
   sourceNotificationId?: UUID;
+
+  @ApiPropertyOptional({
+    description:
+      'Start a chat about a release note; its content is given to the model',
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsUUID()
+  @IsOptional()
+  sourceReleaseNoteId?: UUID;
 }

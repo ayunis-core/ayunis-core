@@ -9716,6 +9716,144 @@
         "tags": ["notifications"]
       }
     },
+    "/release-notes": {
+      "get": {
+        "operationId": "ReleaseNotesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReleaseNoteResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the newest release notes, newest first",
+        "tags": ["release-notes"]
+      }
+    },
+    "/release-notes/unread-count": {
+      "get": {
+        "operationId": "ReleaseNotesController_countUnread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadReleaseNoteCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Count the current user's unread release notes",
+        "tags": ["release-notes"]
+      }
+    },
+    "/release-notes/{id}": {
+      "get": {
+        "operationId": "ReleaseNotesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the release note",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseNoteResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "summary": "Get one release note",
+        "tags": ["release-notes"]
+      }
+    },
+    "/release-notes/{id}/image": {
+      "get": {
+        "operationId": "ReleaseNotesController_downloadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the release note",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image streamed successfully"
+          },
+          "404": {
+            "description": "Not found or without an image"
+          }
+        },
+        "summary": "Download the image of a release note",
+        "tags": ["release-notes"]
+      }
+    },
+    "/release-notes/{id}/read": {
+      "post": {
+        "operationId": "ReleaseNotesController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the release note",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseNoteResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "summary": "Mark a release note read for the current user",
+        "tags": ["release-notes"]
+      }
+    },
     "/super-admin/platform-config/credits-per-euro": {
       "get": {
         "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
@@ -14510,144 +14648,6 @@
         },
         "summary": "Delete an academy module",
         "tags": ["Super Admin Academy"]
-      }
-    },
-    "/release-notes": {
-      "get": {
-        "operationId": "ReleaseNotesController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ReleaseNoteResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List the newest release notes, newest first",
-        "tags": ["release-notes"]
-      }
-    },
-    "/release-notes/unread-count": {
-      "get": {
-        "operationId": "ReleaseNotesController_countUnread",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnreadReleaseNoteCountResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Count the current user's unread release notes",
-        "tags": ["release-notes"]
-      }
-    },
-    "/release-notes/{id}": {
-      "get": {
-        "operationId": "ReleaseNotesController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the release note",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReleaseNoteResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "summary": "Get one release note",
-        "tags": ["release-notes"]
-      }
-    },
-    "/release-notes/{id}/image": {
-      "get": {
-        "operationId": "ReleaseNotesController_downloadImage",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the release note",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Image streamed successfully"
-          },
-          "404": {
-            "description": "Not found or without an image"
-          }
-        },
-        "summary": "Download the image of a release note",
-        "tags": ["release-notes"]
-      }
-    },
-    "/release-notes/{id}/read": {
-      "post": {
-        "operationId": "ReleaseNotesController_markRead",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the release note",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReleaseNoteResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found"
-          }
-        },
-        "summary": "Mark a release note read for the current user",
-        "tags": ["release-notes"]
       }
     },
     "/speech": {
@@ -19683,6 +19683,11 @@
             "type": "string",
             "description": "Start a chat about one of the user's notifications; its content is given to the model",
             "format": "uuid"
+          },
+          "sourceReleaseNoteId": {
+            "type": "string",
+            "description": "Start a chat about a release note; its content is given to the model",
+            "format": "uuid"
           }
         }
       },
@@ -20557,6 +20562,12 @@
             "format": "uuid",
             "nullable": true
           },
+          "sourceReleaseNoteId": {
+            "type": "string",
+            "description": "The release note this chat was started about; null for other chats and once the release note is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier for the thread",
@@ -20645,6 +20656,7 @@
           "type",
           "routineId",
           "sourceNotificationId",
+          "sourceReleaseNoteId",
           "id",
           "userId",
           "permittedModelId",
@@ -20709,6 +20721,12 @@
             "format": "uuid",
             "nullable": true
           },
+          "sourceReleaseNoteId": {
+            "type": "string",
+            "description": "The release note this chat was started about; null for other chats and once the release note is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "id": {
             "type": "string",
             "description": "Unique identifier for the thread",
@@ -20729,6 +20747,7 @@
           "type",
           "routineId",
           "sourceNotificationId",
+          "sourceReleaseNoteId",
           "id"
         ]
       },
@@ -23290,6 +23309,70 @@
           }
         },
         "required": ["count", "byType"]
+      },
+      "ReleaseNoteMediaResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationMediaType"
+              }
+            ]
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Loom embed URL of a Loom video; null for an image, which `GET /release-notes/{id}/image` serves"
+          }
+        },
+        "required": ["type", "url"]
+      },
+      "ReleaseNoteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "headline": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdown; may contain links"
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReleaseNoteMediaResponseDto"
+              }
+            ]
+          },
+          "unread": {
+            "type": "boolean",
+            "description": "Announced after the current user joined and not opened by them yet"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-11-05",
+            "description": "The day the release note is dated"
+          }
+        },
+        "required": ["id", "headline", "body", "media", "unread", "date"]
+      },
+      "UnreadReleaseNoteCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": ["count"]
       },
       "CreditsPerEuroResponseDto": {
         "type": "object",
@@ -26709,70 +26792,6 @@
           }
         },
         "required": ["title", "loomUrl"]
-      },
-      "ReleaseNoteMediaResponseDto": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/NotificationMediaType"
-              }
-            ]
-          },
-          "url": {
-            "type": "string",
-            "nullable": true,
-            "description": "The Loom embed URL of a Loom video; null for an image, which `GET /release-notes/{id}/image` serves"
-          }
-        },
-        "required": ["type", "url"]
-      },
-      "ReleaseNoteResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "headline": {
-            "type": "string"
-          },
-          "body": {
-            "type": "string",
-            "description": "Markdown; may contain links"
-          },
-          "media": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ReleaseNoteMediaResponseDto"
-              }
-            ]
-          },
-          "unread": {
-            "type": "boolean",
-            "description": "Announced after the current user joined and not opened by them yet"
-          },
-          "date": {
-            "type": "string",
-            "format": "date",
-            "example": "2026-11-05",
-            "description": "The day the release note is dated"
-          }
-        },
-        "required": ["id", "headline", "body", "media", "unread", "date"]
-      },
-      "UnreadReleaseNoteCountResponseDto": {
-        "type": "object",
-        "properties": {
-          "count": {
-            "type": "number",
-            "example": 1
-          }
-        },
-        "required": ["count"]
       },
       "SynthesizeSpeechDto": {
         "type": "object",
