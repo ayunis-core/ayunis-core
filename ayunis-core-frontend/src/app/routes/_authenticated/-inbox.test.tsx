@@ -56,30 +56,7 @@ describe('inbox route', () => {
     mocks.findNotifications.mockResolvedValue({ data: [], total: 0 });
   });
 
-  it('filters by release notes while release notes arrive', async () => {
-    mocks.featureToggles.mockResolvedValue({
-      routinesEnabled: true,
-      releaseNotesEnabled: true,
-    });
-
-    await expect(runRoute('release_note')).resolves.toEqual({
-      page: 1,
-      type: 'release_note',
-    });
-  });
-
-  it('offers no release-note filter without release notes', async () => {
-    mocks.featureToggles.mockResolvedValue({
-      routinesEnabled: true,
-      releaseNotesEnabled: false,
-    });
-
-    await expect(redirectOf(runRoute('release_note'))).resolves.toMatchObject({
-      to: '/inbox',
-    });
-  });
-
-  it('keeps the routine filters without release notes', async () => {
+  it('filters by a notification type', async () => {
     mocks.featureToggles.mockResolvedValue({
       routinesEnabled: true,
       releaseNotesEnabled: false,

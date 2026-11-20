@@ -15,15 +15,13 @@ import {
 } from 'src/domain/notifications/application/notifications.errors';
 import type { NotificationMedia } from 'src/domain/notifications/domain/notification-media';
 import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
-import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { DownloadNotificationImageQuery } from './download-notification-image.query';
 import { DownloadNotificationImageUseCase } from './download-notification-image.use-case';
 
-const STORAGE_KEY = 'release-notes/routinen-sind-da.png';
+const STORAGE_KEY = 'notifications/routinen-sind-da.png';
 
-function aReleaseNote(media: NotificationMedia | null) {
+function aNotificationWith(media: NotificationMedia | null) {
   return aNotification({
-    type: NotificationType.RELEASE_NOTE,
     subheadline: null,
     media,
     routineId: null,
@@ -51,7 +49,7 @@ describe('DownloadNotificationImageUseCase', () => {
     const { repository, downloadObjectUseCase, useCase } = setup();
     const stream = new Readable();
     repository.findById.mockResolvedValue(
-      aReleaseNote({
+      aNotificationWith({
         type: NotificationMediaType.IMAGE,
         storageKey: STORAGE_KEY,
         contentType: 'image/png',
@@ -95,7 +93,7 @@ describe('DownloadNotificationImageUseCase', () => {
       'an image type outside the allow-list',
       {
         type: NotificationMediaType.IMAGE,
-        storageKey: 'release-notes/a.svg',
+        storageKey: 'notifications/a.svg',
         contentType: 'image/svg+xml',
       },
     ],
@@ -103,7 +101,7 @@ describe('DownloadNotificationImageUseCase', () => {
     'answers a notification with %s with image not found',
     async (_label, media) => {
       const { repository, downloadObjectUseCase, useCase } = setup();
-      repository.findById.mockResolvedValue(aReleaseNote(media));
+      repository.findById.mockResolvedValue(aNotificationWith(media));
 
       await expect(useCase.execute(query())).rejects.toThrow(
         NotificationImageNotFoundError,
@@ -115,7 +113,7 @@ describe('DownloadNotificationImageUseCase', () => {
   it('answers an image missing from storage with image not found, without the storage key', async () => {
     const { repository, downloadObjectUseCase, useCase } = setup();
     repository.findById.mockResolvedValue(
-      aReleaseNote({
+      aNotificationWith({
         type: NotificationMediaType.IMAGE,
         storageKey: STORAGE_KEY,
         contentType: 'image/png',

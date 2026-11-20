@@ -139,17 +139,16 @@ describe('CreateNotificationUseCase', () => {
     });
   });
 
-  describe('release notes', () => {
+  describe('media', () => {
     const loomUrl =
       'https://www.loom.com/embed/4f7c2d9e1b8a4c6d9e2f1a3b5c7d9e0f?hide_owner=true';
 
-    function aReleaseNote(
+    function aCommandWithoutSubheadline(
       overrides: Partial<
         ConstructorParameters<typeof CreateNotificationCommand>[0]
       > = {},
     ) {
       return aCommand({
-        type: NotificationType.RELEASE_NOTE,
         headline: 'Routinen sind da',
         subheadline: undefined,
         body: 'Ayunis erledigt wiederkehrende Recherchen jetzt automatisch.',
@@ -159,13 +158,12 @@ describe('CreateNotificationUseCase', () => {
       });
     }
 
-    it('stores a release note without a subheadline', async () => {
+    it('stores a notification without a subheadline', async () => {
       const { useCase } = setup();
 
-      const created = await useCase.execute(aReleaseNote());
+      const created = await useCase.execute(aCommandWithoutSubheadline());
 
       expect(created).toMatchObject({
-        type: NotificationType.RELEASE_NOTE,
         subheadline: null,
         media: null,
       });
@@ -175,7 +173,7 @@ describe('CreateNotificationUseCase', () => {
       const { useCase } = setup();
 
       const created = await useCase.execute(
-        aReleaseNote({
+        aCommandWithoutSubheadline({
           media: { type: NotificationMediaType.LOOM, url: loomUrl },
         }),
       );
@@ -190,11 +188,13 @@ describe('CreateNotificationUseCase', () => {
       const { useCase } = setup();
       const image = {
         type: NotificationMediaType.IMAGE,
-        storageKey: 'release-notes/routinen-sind-da.png',
+        storageKey: 'notifications/routinen-sind-da.png',
         contentType: 'image/png',
       } as const;
 
-      const created = await useCase.execute(aReleaseNote({ media: image }));
+      const created = await useCase.execute(
+        aCommandWithoutSubheadline({ media: image }),
+      );
 
       expect(created.media).toEqual(image);
     });
@@ -214,7 +214,9 @@ describe('CreateNotificationUseCase', () => {
 
       await expect(
         useCase.execute(
-          aReleaseNote({ media: { type: NotificationMediaType.LOOM, url } }),
+          aCommandWithoutSubheadline({
+            media: { type: NotificationMediaType.LOOM, url },
+          }),
         ),
       ).rejects.toThrow(NotificationInvalidError);
       expect(repository.create).not.toHaveBeenCalled();
@@ -223,7 +225,7 @@ describe('CreateNotificationUseCase', () => {
     it.each([
       [
         'an SVG',
-        { storageKey: 'release-notes/a.svg', contentType: 'image/svg+xml' },
+        { storageKey: 'notifications/a.svg', contentType: 'image/svg+xml' },
       ],
       ['an empty storage key', { storageKey: ' ', contentType: 'image/png' }],
     ])('rejects %s as an image without writing', async (_label, image) => {
@@ -231,7 +233,7 @@ describe('CreateNotificationUseCase', () => {
 
       await expect(
         useCase.execute(
-          aReleaseNote({
+          aCommandWithoutSubheadline({
             media: { type: NotificationMediaType.IMAGE, ...image },
           }),
         ),

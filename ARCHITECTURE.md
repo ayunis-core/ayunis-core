@@ -97,8 +97,8 @@ none of these packages implements the Agent Plugins standard.
 | [memory](ayunis-core-backend/src/domain/memory/SUMMARY.md)                      | AI Context     | Per-user key/value memory the assistant reads in every chat and writes itself (behind a feature flag)          |
 | [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Member-owned project folders ("Projekte") grouping chats with scoped skills, knowledge bases and instructions  |
 | [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
-| [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine and release-note notifications with media, read state and "Chat about this"          |
-| [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)        | Release Notes  | Hourly copy of the Announcable release notes, sent to every user's inbox                                       |
+| [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine notifications with media, read state and "Chat about this"                           |
+| [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)        | Release Notes  | Hourly copy of the Announcable release notes, shown as product updates with read state                         |
 | [office-addins](ayunis-core-backend/src/domain/office-addins/SUMMARY.md)        | Office Add-ins | Outlook add-in manifest rendered for this deployment                                                           |
 
 ### IAM Modules — Identity & Access Management

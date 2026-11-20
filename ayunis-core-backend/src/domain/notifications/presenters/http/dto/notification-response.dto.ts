@@ -27,7 +27,7 @@ export class NotificationResponseDto {
     enum: NotificationType,
     enumName: 'NotificationType',
     description:
-      '`routine`: sent by a routine run; `routine_error`: a routine run failed; `release_note`: a release note of Ayunis',
+      '`routine`: sent by a routine run; `routine_error`: a routine run failed',
   })
   type: NotificationType;
 

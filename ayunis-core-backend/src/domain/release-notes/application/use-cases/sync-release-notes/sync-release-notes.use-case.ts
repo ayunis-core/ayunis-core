@@ -2,11 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import type { ReleaseNoteNotificationContent } from 'src/domain/notifications/application/models/release-note-notification-content';
-import { NotifyUsersOfReleaseNoteCommand } from 'src/domain/notifications/application/use-cases/notify-users-of-release-note/notify-users-of-release-note.command';
-import { NotifyUsersOfReleaseNoteUseCase } from 'src/domain/notifications/application/use-cases/notify-users-of-release-note/notify-users-of-release-note.use-case';
-import { UpdateReleaseNoteNotificationsCommand } from 'src/domain/notifications/application/use-cases/update-release-note-notifications/update-release-note-notifications.command';
-import { UpdateReleaseNoteNotificationsUseCase } from 'src/domain/notifications/application/use-cases/update-release-note-notifications/update-release-note-notifications.use-case';
 import type { AnnouncableReleaseNote } from 'src/domain/release-notes/application/models/announcable-release-note';
 import { AnnouncableFeed } from 'src/domain/release-notes/application/ports/announcable-feed.port';
 import { ReleaseNotesRepository } from 'src/domain/release-notes/application/ports/release-notes.repository';
@@ -26,10 +21,8 @@ export interface ReleaseNoteSyncResult {
   updated: number;
   deleted: number;
   unchanged: number;
-  /** Notes that cannot become a notification; an edited one stays as stored. */
+  /** Notes whose text breaks the rules; an edited one stays as stored. */
   skipped: number;
-  /** Notifications sent for the inserted notes. */
-  notified: number;
 }
 
 interface ReleaseNoteChanges {
@@ -43,11 +36,10 @@ interface ReleaseNoteChanges {
 }
 
 /**
- * Makes the stored release notes and their notifications match the
- * Announcable feed. Everything that talks to Announcable or object storage
- * happens before or after the one transaction that writes the notes and
- * notifications, so no connection is held across a request and a failed
- * download leaves both untouched.
+ * Makes the stored release notes match the Announcable feed. Everything that
+ * talks to Announcable or object storage happens before or after the one
+ * transaction that writes the notes, so no connection is held across a
+ * request and a failed download leaves them untouched.
  */
 @Injectable()
 export class SyncReleaseNotesUseCase {
@@ -58,8 +50,6 @@ export class SyncReleaseNotesUseCase {
     private readonly feed: AnnouncableFeed,
     private readonly releaseNotesRepository: ReleaseNotesRepository,
     private readonly mediaService: ReleaseNoteMediaService,
-    private readonly notifyUsersOfReleaseNote: NotifyUsersOfReleaseNoteUseCase,
-    private readonly updateReleaseNoteNotifications: UpdateReleaseNoteNotificationsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedReleaseNoteError)
@@ -86,7 +76,7 @@ export class SyncReleaseNotesUseCase {
     // Without stored notes this is the first sync: the feed is old news.
     const announce = stored.length > 0;
     const changes = await this.prepareChanges(feedNotes, stored, announce);
-    const notified = await this.applyChanges(changes, announce);
+    await this.applyChanges(changes);
     await this.mediaService.removeUnusedImages(changes.kept);
     const result: ReleaseNoteSyncResult = {
       inserted: changes.inserts.length,
@@ -94,7 +84,6 @@ export class SyncReleaseNotesUseCase {
       deleted: changes.deletes.length,
       unchanged: changes.unchanged,
       skipped: changes.skipped,
-      notified,
     };
     this.logger.log(result, 'Synced release notes');
     return result;
@@ -170,42 +159,15 @@ export class SyncReleaseNotesUseCase {
     });
   }
 
-  /**
-   * Deleting a note deletes its notifications (foreign key). Returns how
-   * many notifications were sent.
-   */
+  /** Deleting a note deletes its read marks (foreign key). */
   @Transactional()
-  private async applyChanges(
-    changes: ReleaseNoteChanges,
-    notifyUsers: boolean,
-  ): Promise<number> {
+  private async applyChanges(changes: ReleaseNoteChanges): Promise<void> {
     await this.releaseNotesRepository.insertMany(changes.inserts);
-    let notified = 0;
-    for (const note of notifyUsers ? changes.inserts : []) {
-      notified += await this.notifyUsersOfReleaseNote.execute(
-        new NotifyUsersOfReleaseNoteCommand(notificationContent(note)),
-      );
-    }
     for (const note of changes.updates) {
       await this.releaseNotesRepository.update(note);
-      await this.updateReleaseNoteNotifications.execute(
-        new UpdateReleaseNoteNotificationsCommand(notificationContent(note)),
-      );
     }
     await this.releaseNotesRepository.deleteByIds(
       changes.deletes.map((note) => note.id),
     );
-    return notified;
   }
-}
-
-function notificationContent(
-  note: ReleaseNote,
-): ReleaseNoteNotificationContent {
-  return {
-    releaseNoteId: note.id,
-    headline: note.headline,
-    body: note.body,
-    media: note.media,
-  };
 }

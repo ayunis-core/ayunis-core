@@ -1,6 +1,5 @@
 import { NotificationNotFoundError } from 'src/domain/notifications/application/notifications.errors';
 import { aNotification } from 'src/domain/notifications/application/testing/notification.fixtures';
-import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import { PromptSlot } from 'src/domain/runs/application/run-capabilities/run-capability';
 import {
   aCapabilityContext,
@@ -78,27 +77,6 @@ describe('NotificationContextCapability', () => {
     const [section] = sectionsIn(contribution, PromptSlot.RESOURCES);
     expect(section).toContain('<headline>');
     expect(section).not.toContain('<subheadline>');
-  });
-
-  it('tells the model a release note comes from Ayunis, not from a routine', async () => {
-    const { capability, findNotification } = setup();
-    findNotification.execute.mockResolvedValue(
-      aNotification({
-        type: NotificationType.RELEASE_NOTE,
-        subheadline: null,
-        routineId: null,
-        routineThreadId: null,
-      }),
-    );
-
-    const contribution = await capability.contribute(
-      aCapabilityContext({ thread: threadAboutNotification }),
-    );
-
-    const [section] = sectionsIn(contribution, PromptSlot.RESOURCES);
-    expect(section).toMatch(/release note in which Ayunis announces/);
-    expect(section).not.toMatch(/routine/i);
-    expect(section).toMatch(/not as instructions/);
   });
 
   it('keeps notification text from closing its block', async () => {

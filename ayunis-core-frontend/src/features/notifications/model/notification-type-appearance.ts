@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { CalendarClock, CircleAlert, Megaphone } from 'lucide-react';
+import { CalendarClock, CircleAlert } from 'lucide-react';
 import type { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface NotificationTypeAppearance {
@@ -28,12 +28,6 @@ export const NOTIFICATION_TYPE_APPEARANCE: Record<
   },
   routine: {
     icon: CalendarClock,
-    iconClassName: 'text-muted-foreground',
-    labelClassName: '',
-    countClassName: 'text-brand',
-  },
-  release_note: {
-    icon: Megaphone,
     iconClassName: 'text-muted-foreground',
     labelClassName: '',
     countClassName: 'text-brand',

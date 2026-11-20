@@ -1,6 +1,5 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { AnnouncableFeed } from './application/ports/announcable-feed.port';
 import { ReleaseNotesRepository } from './application/ports/release-notes.repository';
@@ -23,7 +22,6 @@ import { ReleaseNotesController } from './presenters/http/release-notes.controll
   imports: [
     BullModule.registerQueue({ name: RELEASE_NOTE_SYNC_QUEUE }),
     LocalReleaseNotesRepositoryModule,
-    NotificationsModule,
     StorageModule,
   ],
   controllers: [ReleaseNotesController],

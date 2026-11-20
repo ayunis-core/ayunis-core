@@ -23166,7 +23166,7 @@
       },
       "NotificationType": {
         "type": "string",
-        "enum": ["routine", "routine_error", "release_note"]
+        "enum": ["routine", "routine_error"]
       },
       "NotificationMediaType": {
         "type": "string",
@@ -23198,7 +23198,7 @@
             "format": "uuid"
           },
           "type": {
-            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed; `release_note`: a release note of Ayunis",
+            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed",
             "allOf": [
               {
                 "$ref": "#/components/schemas/NotificationType"

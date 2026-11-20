@@ -3,7 +3,6 @@ import type { UUID } from 'crypto';
 import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
-import { ReleaseNoteRecord } from 'src/domain/release-notes/infrastructure/persistence/local/schema/release-note.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
 import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
@@ -63,7 +62,7 @@ export class NotificationRecord extends BaseRecord {
   })
   mediaUrl: string | null;
 
-  /** The storage object of an image; shared by the notifications of one release note. */
+  /** The storage object of an image. */
   @Column({ type: 'varchar', nullable: true })
   mediaStorageKey: string | null;
 
@@ -87,15 +86,6 @@ export class NotificationRecord extends BaseRecord {
   @ManyToOne(() => ThreadRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'routineThreadId' })
   routineThread?: ThreadRecord;
-
-  /** Deleting the release note deletes its notifications. */
-  @Column({ type: 'varchar', nullable: true })
-  @Index()
-  releaseNoteId: UUID | null;
-
-  @ManyToOne(() => ReleaseNoteRecord, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'releaseNoteId' })
-  releaseNote?: ReleaseNoteRecord;
 
   @Column({ type: 'timestamptz', nullable: true })
   readAt: Date | null;
