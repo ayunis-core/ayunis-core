@@ -2,7 +2,7 @@ import { outlookAddinId } from './outlook-addin-id';
 
 // Outlook and the Microsoft 365 admin center only apply a manifest update
 // whose version is higher than the installed one: bump on every change.
-export const OUTLOOK_MANIFEST_VERSION = '1.0.1';
+export const OUTLOOK_MANIFEST_VERSION = '1.0.2';
 
 // Served by the frontend build (ayunis-core-frontend/outlook and
 // public/outlook). Outlook on the web shows the task pane in an iframe, so
@@ -28,7 +28,9 @@ const ICON_SIZES = [16, 32, 64, 80, 128];
 
 interface AddinUrls {
   icon(size: number): string;
-  taskpane(surface: CommandSurface): string;
+  taskpane(surface: CommandSurface, withReplyEvent?: boolean): string;
+  replyEvent: string;
+  classicReplyEvent: string;
 }
 
 export function renderOutlookManifest(frontendBaseUrl: string): string {
@@ -101,13 +103,24 @@ ${indent(resources(urls), 2)}
 ${indent(commandsRequirements('1.5'), 4)}
     <Hosts>
       <Host xsi:type="MailHost">
+        <Runtimes>
+          <Runtime resid="ReplyEvent.Web">
+            <Override type="javascript" resid="ReplyEvent.Classic"/>
+          </Runtime>
+        </Runtimes>
         <DesktopFormFactor>
           <SupportsSharedFolders>true</SupportsSharedFolders>
 ${indent(extensionPoints({ withPinning: true }), 10)}
+          <ExtensionPoint xsi:type="LaunchEvent">
+            <LaunchEvents>
+              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertOutlookReplyDraft"/>
+            </LaunchEvents>
+            <SourceLocation resid="ReplyEvent.Web"/>
+          </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
     </Hosts>
-${indent(resources(urls), 4)}
+${indent(resources(urls, true), 4)}
   </VersionOverrides>
 </VersionOverrides>`;
 }
@@ -150,20 +163,26 @@ function extensionPoints({ withPinning }: { withPinning: boolean }): string {
   }).join('\n');
 }
 
-function resources(urls: AddinUrls): string {
+function resources(urls: AddinUrls, withReplyEvent = false): string {
   const images = ICON_SIZES.map(
     (size) => `<bt:Image id="Icon.${size}" DefaultValue="${urls.icon(size)}"/>`,
   ).join('\n');
   const taskpanes = COMMAND_SURFACES.map(
     ({ surface }) =>
-      `<bt:Url id="Taskpane.${surface}" DefaultValue="${urls.taskpane(surface)}"/>`,
-  ).join('\n');
+      `<bt:Url id="Taskpane.${surface}" DefaultValue="${urls.taskpane(surface, withReplyEvent)}"/>`,
+  );
+  const replyEventUrls = withReplyEvent
+    ? [
+        `<bt:Url id="ReplyEvent.Web" DefaultValue="${urls.replyEvent}"/>`,
+        `<bt:Url id="ReplyEvent.Classic" DefaultValue="${urls.classicReplyEvent}"/>`,
+      ]
+    : [];
   return `<Resources>
   <bt:Images>
 ${indent(images, 4)}
   </bt:Images>
   <bt:Urls>
-${indent(taskpanes, 4)}
+${indent([...taskpanes, ...replyEventUrls].join('\n'), 4)}
   </bt:Urls>
   <bt:ShortStrings>
     <bt:String id="Group.Label" DefaultValue="Ayunis Outlook"/>
@@ -184,7 +203,13 @@ function addinUrls(baseUrl: string): AddinUrls {
   const addinBaseUrl = escapeXmlAttribute(`${baseUrl}${OUTLOOK_ADDIN_PATH}`);
   return {
     icon: (size) => `${addinBaseUrl}/assets/icon-${size}.png`,
-    taskpane: (surface) => `${addinBaseUrl}/taskpane.html?surface=${surface}`,
+    taskpane: (surface, withReplyEvent) => {
+      const autoReply =
+        withReplyEvent && surface === 'messageRead' ? '&amp;autoReply=1' : '';
+      return `${addinBaseUrl}/taskpane.html?surface=${surface}${autoReply}`;
+    },
+    replyEvent: `${addinBaseUrl}/reply-event.html`,
+    classicReplyEvent: `${addinBaseUrl}/reply-event-classic.js`,
   };
 }
 

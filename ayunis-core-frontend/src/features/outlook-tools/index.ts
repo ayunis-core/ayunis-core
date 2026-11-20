@@ -21,3 +21,11 @@ export {
   type AttachmentSource,
   type AttachmentSourceApi,
 } from '@/features/outlook-tools/lib/attachment-source';
+export {
+  clearPendingReplyDraft,
+  currentPendingReplyDraftId,
+  stagePendingReplyDraft,
+  subscribeToPendingReplyDraft,
+  takePendingReplyDraft,
+  withOutlookReplyDraftLock,
+} from '@/features/outlook-tools/lib/pending-reply-draft';

@@ -11,12 +11,15 @@ import { outlookFrameOrigins } from 'src/config/outlook-frame-origins';
 // every client route.
 //
 // Static files bypass SecurityHeadersMiddleware, so framing is limited here.
-// Only the task pane entry document may be framed by Outlook; the SPA fallback
-// stays 'self' so an add-in manifest pointed at an app route cannot frame it.
+// Only the add-in task pane and event runtime can be framed by Outlook. The
+// SPA fallback stays 'self' even if a manifest points at a client-side route.
 export function serveFrontendOptions(
   rootPath: string,
 ): ServeStaticModuleOptions {
-  const taskpanePath = join(rootPath, 'outlook', 'taskpane.html');
+  const outlookPaths = new Set([
+    join(rootPath, 'outlook', 'taskpane.html'),
+    join(rootPath, 'outlook', 'reply-event.html'),
+  ]);
   return {
     rootPath,
     serveStaticOptions: {
@@ -27,19 +30,19 @@ export function serveFrontendOptions(
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader(
           'Content-Security-Policy',
-          `frame-ancestors ${frameAncestors(path === taskpanePath).join(' ')}`,
+          `frame-ancestors ${frameAncestors(outlookPaths.has(path)).join(' ')}`,
         );
       },
     },
   };
 }
 
-function frameAncestors(isTaskpane: boolean): string[] {
+function frameAncestors(isOutlookPage: boolean): string[] {
   const outlookAddinEnabled = parseBooleanWithDefault(
     process.env.FEATURE_OUTLOOK_ADDIN_ENABLED,
     false,
   );
-  if (!isTaskpane || !outlookAddinEnabled) {
+  if (!isOutlookPage || !outlookAddinEnabled) {
     return ["'self'"];
   }
   return [

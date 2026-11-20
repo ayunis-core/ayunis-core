@@ -62,6 +62,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, "index.html"),
         outlookDialog: resolve(import.meta.dirname, "outlook/dialog.html"),
+        outlookReplyEvent: resolve(import.meta.dirname, "outlook/reply-event.html"),
       },
     },
     // Emit sourcemaps without referencing them from the bundles. The maps

@@ -18,6 +18,7 @@ export interface OfficeStubAddress {
 /** A mail being composed, the item the pane's tools read and write. */
 export interface OfficeStubComposeItem {
   inReplyTo?: string;
+  composeType?: 'newMail' | 'reply' | 'forward';
   subject: string;
   body: string;
   from: OfficeStubAddress;
@@ -41,6 +42,7 @@ export interface OfficeStubCall {
 export interface OfficeStubState {
   messages: string[];
   calls: OfficeStubCall[];
+  launchComposeEvent?: () => Promise<void>;
   dialog: {
     url: string;
     closed: boolean;
@@ -61,6 +63,7 @@ export type OfficeStubWindow = Window & { __officeStub: OfficeStubState };
 const officeStub = (
   item: OfficeStubComposeItem | null,
   readItem: OfficeStubReadItem | null,
+  account: string,
 ) => `(() => {
   const mailboxHandlers = {};
   const state = { messages: [], calls: [], dialog: null };
@@ -77,6 +80,12 @@ const officeStub = (
   });
   const composeItem = mail && {
     inReplyTo: mail.inReplyTo,
+    getComposeTypeAsync: recorded('getComposeTypeAsync', (callback) =>
+      succeed(callback, {
+        composeType: mail.composeType ?? (mail.inReplyTo ? 'reply' : 'newMail'),
+        coercionType: 'html',
+      }),
+    ),
     subject: {
       ...getter('subject.getAsync', () => mail.subject),
       setAsync: recorded('subject.setAsync', (subject, callback) => {
@@ -126,6 +135,8 @@ const officeStub = (
     displayReplyForm: recorded('displayReplyForm', () => undefined),
   };
   const mailbox = {
+    diagnostics: { hostName: 'OutlookWebApp' },
+    userProfile: { emailAddress: ${JSON.stringify(account)} },
     item: readItemFrom(${JSON.stringify(readItem)}) ?? composeItem ?? undefined,
     addHandlerAsync: (type, handler, callback) => {
       mailboxHandlers[type] = handler;
@@ -148,7 +159,16 @@ const officeStub = (
       DialogEventReceived: 'dialogEventReceived',
       ItemChanged: 'olkItemSelectedChanged',
     },
+    actions: {
+      associate: (name, handler) => {
+        if (name === 'insertOutlookReplyDraft') {
+          state.launchComposeEvent = () =>
+            new Promise((completed) => { handler({ completed }); });
+        }
+      },
+    },
     MailboxEnums: {
+      ComposeType: { Reply: 'reply' },
       AttachmentContentFormat: {
         Base64: 'base64',
         Url: 'url',
@@ -161,7 +181,7 @@ const officeStub = (
       displayLanguage: 'en-US',
       requirements: {
         isSetSupported: (name, version) =>
-          name === 'Mailbox' && Number(version.split('.')[1] ?? 0) <= 8,
+          name === 'Mailbox' && Number(version.split('.')[1] ?? 0) <= 14,
       },
       mailbox,
       ui: {
@@ -193,9 +213,14 @@ export async function stubOfficeHost(
   options: {
     composeItem?: OfficeStubComposeItem;
     readItem?: OfficeStubReadItem;
+    account?: string;
   } = {},
 ): Promise<void> {
-  const body = officeStub(options.composeItem ?? null, options.readItem ?? null);
+  const body = officeStub(
+    options.composeItem ?? null,
+    options.readItem ?? null,
+    options.account ?? 'alice@e2e.local',
+  );
   await target.route(OFFICE_JS_URL, (route) =>
     route.fulfill({ contentType: 'application/javascript', body }),
   );

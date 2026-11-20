@@ -10,7 +10,7 @@ export interface OutlookToolBridge {
   stateFor: (toolCallId: string) => OutlookToolState | undefined;
   draftAction: (
     call: Pick<OutlookToolCall, 'id' | 'name'>,
-  ) => 'openReply' | 'insert' | null;
+  ) => 'autoReply' | 'openReply' | 'insert' | null;
   insertDraft: (call: OutlookToolCall) => void;
 }
 
