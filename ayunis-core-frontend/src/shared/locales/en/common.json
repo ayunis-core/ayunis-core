@@ -1,5 +1,8 @@
 {
   "passwordPolicy": "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number.",
+  "markdown": {
+    "imagePlaceholder": "Image"
+  },
   "sidebar": {
     "appName": "Ayunis Core",
     "appTagline": "whoop whoop",

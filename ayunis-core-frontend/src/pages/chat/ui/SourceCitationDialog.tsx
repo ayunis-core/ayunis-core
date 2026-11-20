@@ -114,7 +114,12 @@ function CitationContent({
                 {citation.chunk.content}
               </p>
             ) : (
-              <Markdown renderImages={false}>{citation.chunk.content}</Markdown>
+              <Markdown
+                renderImages={false}
+                className="[&_:is(h1,h2,h3,h4,h5,h6)]:text-[length:inherit]!"
+              >
+                {citation.chunk.content}
+              </Markdown>
             )}
           </div>
         </section>

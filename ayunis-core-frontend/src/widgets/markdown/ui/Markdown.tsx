@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from 'react-i18next';
 import CodeBlock from './Codeblock';
 import PiiMaskInline from './PiiMaskInline';
 import SourceCitationInline from './SourceCitationInline';
@@ -149,7 +150,14 @@ function MarkdownCode({
 
 function MarkdownImage({ src, alt, title }: Readonly<ImageComponentProps>) {
   const renderImages = useContext(RenderImagesContext);
-  if (!renderImages) return alt ? <span>{alt}</span> : null;
+  const { t } = useTranslation('common');
+  if (!renderImages) {
+    return (
+      <span className="text-muted-foreground">
+        {t('markdown.imagePlaceholder')}
+      </span>
+    );
+  }
   return <img src={src} alt={alt ?? ''} title={title} />;
 }
 
