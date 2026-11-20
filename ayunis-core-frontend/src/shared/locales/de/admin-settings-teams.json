@@ -77,8 +77,8 @@
     "memberRole": {
       "roles": {
         "user": "Benutzer",
-        "manager": "Manager",
-        "admin": "Administrator"
+        "manager": "Team-Manager",
+        "admin": "Team-Administrator"
       },
       "card": {
         "intro": "In diesem Team dürfen sie:",
@@ -101,7 +101,7 @@
       "success": "Teamrolle aktualisiert",
       "error": "Teamrolle konnte nicht aktualisiert werden",
       "notFound": "Mitglied nicht gefunden",
-      "lastAdmin": "Ein Team braucht mindestens einen Administrator"
+      "lastAdmin": "Ein Team braucht mindestens einen Team-Administrator"
     },
     "addMember": {
       "button": "Mitglieder hinzufügen",
@@ -158,7 +158,7 @@
       "success": "Mitglied erfolgreich entfernt",
       "error": "Mitglied konnte nicht entfernt werden",
       "notFound": "Mitglied nicht gefunden",
-      "lastAdmin": "Ein Team braucht mindestens einen Administrator"
+      "lastAdmin": "Ein Team braucht mindestens einen Team-Administrator"
     }
   },
   "models": {
