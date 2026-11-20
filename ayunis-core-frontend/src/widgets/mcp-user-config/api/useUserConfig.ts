@@ -1,4 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
+import type { UserConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerGetUserConfig,
@@ -29,11 +30,8 @@ export function useSetUserConfig(
 
   const mutation = useMcpIntegrationsControllerSetUserConfig({
     mutation: {
-      onSuccess: () => {
-        void queryClient.invalidateQueries({
-          queryKey:
-            getMcpIntegrationsControllerGetUserConfigQueryKey(integrationId),
-        });
+      onSuccess: async (config) => {
+        await cacheUserConfig(queryClient, integrationId, config);
         // Refresh the available list so per-user authorization status badges update.
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
@@ -63,10 +61,10 @@ export function useDeleteUserConfig(
   const queryClient = useQueryClient();
   const mutation = useMcpIntegrationsControllerDeleteUserConfig({
     mutation: {
-      onSuccess: () => {
-        void queryClient.invalidateQueries({
-          queryKey:
-            getMcpIntegrationsControllerGetUserConfigQueryKey(integrationId),
+      onSuccess: async () => {
+        await cacheUserConfig(queryClient, integrationId, {
+          hasConfig: false,
+          configValues: {},
         });
         void queryClient.invalidateQueries({
           queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
@@ -81,6 +79,18 @@ export function useDeleteUserConfig(
     disconnect: () => mutation.mutate({ id: integrationId }),
     isDisconnecting: mutation.isPending,
   };
+}
+
+async function cacheUserConfig(
+  queryClient: QueryClient,
+  integrationId: string,
+  config: UserConfigResponseDto,
+): Promise<void> {
+  const queryKey =
+    getMcpIntegrationsControllerGetUserConfigQueryKey(integrationId);
+  // A read started before the mutation must not restore the old configuration.
+  await queryClient.cancelQueries({ queryKey, exact: true });
+  queryClient.setQueryData(queryKey, config);
 }
 
 function userConfigErrorKey(error: unknown): string {
