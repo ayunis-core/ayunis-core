@@ -62,3 +62,7 @@ Office.actions.associate(
     void insertOutlookReplyDraft(event);
   },
 );
+
+// Outlook on the web waits for the Office.js readiness handshake before it
+// dispatches the compose event. Register the handler before starting it.
+void Office.onReady();
