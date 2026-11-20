@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.79.0](https://github.com/ayunis-core/ayunis-core/compare/v2.78.0...v2.79.0) (2026-11-20)
+
+
+### Features
+
+* **chat:** keep a message waiting for its files across a reload (AYC-1980) ([#2437](https://github.com/ayunis-core/ayunis-core/issues/2437)) ([07c6133](https://github.com/ayunis-core/ayunis-core/commit/07c6133e32022794129b117211f6b9adc1b213c3))
+* **recordings:** call recordings meetings in the ui (AYC-2013) ([#2463](https://github.com/ayunis-core/ayunis-core/issues/2463)) ([5463ee7](https://github.com/ayunis-core/ayunis-core/commit/5463ee765a26e08099b7b5318db3dcdb815206d3))
+* **release-notes:** take product updates out of the inbox (AYC-1867) ([#2432](https://github.com/ayunis-core/ayunis-core/issues/2432)) ([67a5628](https://github.com/ayunis-core/ayunis-core/commit/67a56282d8d874874e2d711bdd4cb3bf0c0ca1a0))
+
+
+### Bug Fixes
+
+* **chat:** improve source citation excerpts (AYC-1715) ([#2457](https://github.com/ayunis-core/ayunis-core/issues/2457)) ([52c6c20](https://github.com/ayunis-core/ayunis-core/commit/52c6c2014af03abbb22906f421b35ced4ee0442a))
+* **credit-limits:** format credit values like user usage (AYC-1872) ([#2449](https://github.com/ayunis-core/ayunis-core/issues/2449)) ([df531b1](https://github.com/ayunis-core/ayunis-core/commit/df531b163beaf1ea513d227fef1924d01cb4961b))
+* **documents:** apply organization typography to plain Word exports (AYC-2007) ([#2454](https://github.com/ayunis-core/ayunis-core/issues/2454)) ([9637f97](https://github.com/ayunis-core/ayunis-core/commit/9637f9709972097c00c43a5ad4b4b837182e2a8b))
+* **mcp:** clear stale personal configuration after disconnect (AYC-1536) ([#2460](https://github.com/ayunis-core/ayunis-core/issues/2460)) ([8fb2bc4](https://github.com/ayunis-core/ayunis-core/commit/8fb2bc4df5c808c47e54a9f0207babf64a2493dd))
+* **mcp:** surface personal runtime connection failures (AYC-1536) ([#2362](https://github.com/ayunis-core/ayunis-core/issues/2362)) ([5c73bcb](https://github.com/ayunis-core/ayunis-core/commit/5c73bcbb699c9d18fe08c5f6511bab138f666dfd))
+* **outlook:** insert Ayunis draft when Outlook opens a reply (AYC-1975) ([#2461](https://github.com/ayunis-core/ayunis-core/issues/2461)) ([98b55b6](https://github.com/ayunis-core/ayunis-core/commit/98b55b6b6ea2aa834928dfdf1950f5acfbe48d86))
+* **outlook:** signal readiness for background reply insertion (AYC-1975) ([#2467](https://github.com/ayunis-core/ayunis-core/issues/2467)) ([ca9c9f5](https://github.com/ayunis-core/ayunis-core/commit/ca9c9f5983b606b96e83486c67597fa19bffb9e3))
+* **settings:** organize and paginate document settings (AYC-2008) ([#2451](https://github.com/ayunis-core/ayunis-core/issues/2451)) ([a11e9b4](https://github.com/ayunis-core/ayunis-core/commit/a11e9b4331e666a0fb21077009f6e42d41794591))
+* **teams:** label team roles as team-manager and team-administrator (AYC-1761) ([#2458](https://github.com/ayunis-core/ayunis-core/issues/2458)) ([3950df6](https://github.com/ayunis-core/ayunis-core/commit/3950df671200eeab0ff4b64c8118b5b10a2dbe88))
+* **teams:** use consistent german spelling for team roles (AYC-1762) ([#2456](https://github.com/ayunis-core/ayunis-core/issues/2456)) ([09c8e31](https://github.com/ayunis-core/ayunis-core/commit/09c8e31bf118a6b8950e927d5f554823b68c8f33))
+
 ## [2.78.0](https://github.com/ayunis-core/ayunis-core/compare/v2.77.0...v2.78.0) (2026-11-19)
 
 
