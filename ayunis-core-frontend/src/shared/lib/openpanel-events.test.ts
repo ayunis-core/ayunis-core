@@ -32,11 +32,11 @@ describe(trackOpenPanelEvent.name, () => {
   it('sends a catalogue event with its properties', () => {
     client.current = { track: vi.fn().mockResolvedValue(undefined) };
 
-    trackOpenPanelEvent('personalization_saved', { state: 'skipped' });
+    trackOpenPanelEvent('onboarding_chat_started', { stage: 'profile' });
     trackOpenPanelEvent('workspace_created');
 
     expect(client.current.track.mock.calls).toEqual([
-      ['personalization_saved', { state: 'skipped' }],
+      ['onboarding_chat_started', { stage: 'profile' }],
       ['workspace_created', undefined],
     ]);
   });
@@ -80,7 +80,7 @@ describe(trackOpenPanelEvent.name, () => {
       }),
     );
     // @ts-expect-error -- not a value of the property's enum
-    assertType(trackOpenPanelEvent('personalization_saved', { state: 'x' }));
+    assertType(trackOpenPanelEvent('onboarding_chat_started', { stage: 'x' }));
     assertType(
       trackOpenPanelEvent('productive_outcome', {
         outcome_type: 'artifact_exported',

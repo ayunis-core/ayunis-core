@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   extractErrorData: vi.fn(),
   getDefaultSelection: vi.fn(),
-  getSystemPrompt: vi.fn(),
+  getOnboardingStage: vi.fn(),
   getChatStartDefaults: vi.fn(),
   hasActiveSubscription: vi.fn(),
   isEmbeddingModelEnabled: vi.fn(),
@@ -13,14 +13,16 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/pages/new-chat', () => ({
   NewChatPage: () => null,
   NewChatPageNoModelError: () => null,
+  onboardingStageQueryOptions: () => ({
+    queryKey: ['onboarding-stage'],
+    queryFn: mocks.getOnboardingStage,
+  }),
 }));
 vi.mock('@/shared/api', () => ({
   orgChatSettingsControllerGetChatStartDefaults: mocks.getChatStartDefaults,
   getOrgChatSettingsControllerGetChatStartDefaultsQueryKey: () => [
     'chat-start-defaults',
   ],
-  chatSettingsControllerGetSystemPrompt: mocks.getSystemPrompt,
-  getChatSettingsControllerGetSystemPromptQueryKey: () => ['system-prompt'],
   getModelsControllerIsEmbeddingModelEnabledQueryKey: () => [
     'embedding-model-enabled',
   ],
@@ -69,7 +71,10 @@ describe('new chat route', () => {
       mode: null,
       permittedModelId: 'sol',
     });
-    mocks.getSystemPrompt.mockResolvedValue({});
+    mocks.getOnboardingStage.mockResolvedValue({
+      stage: 'first_skill',
+      modelId: null,
+    });
     mocks.getChatStartDefaults.mockResolvedValue({
       anonymousModeByDefault: false,
     });
@@ -92,6 +97,29 @@ describe('new chat route', () => {
 
     expect(result.selectedModelId).toBe('sol');
     expect(mocks.getDefaultSelection).toHaveBeenCalledOnce();
+  });
+
+  it('loads the current onboarding stage so a completed stage shows no hint on the next visit', async () => {
+    const queryClient = appQueryClient();
+    queryClient.setQueryData(['onboarding-stage'], {
+      stage: 'profile',
+      modelId: 'sol',
+    });
+
+    await runLoader(queryClient);
+
+    expect(queryClient.getQueryData(['onboarding-stage'])).toEqual({
+      stage: 'first_skill',
+      modelId: null,
+    });
+  });
+
+  it('opens the new chat when the onboarding stage cannot be loaded', async () => {
+    mocks.getOnboardingStage.mockRejectedValue(new Error('offline'));
+
+    const result = await runLoader(appQueryClient());
+
+    expect(result.selectedModelId).toBe('sol');
   });
 
   it('preselects a mode when the default is a mode', async () => {

@@ -1,6 +1,7 @@
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import {
   NO_MEMORY,
+  clearMemory,
   createChat,
   defaultModel,
   reportMemory,
@@ -11,6 +12,7 @@ import {
   setChatHistoryAccess,
   setMemoryAccess,
 } from '../../src/clients/api/models.client';
+import { getOnboardingStage } from '../../src/clients/api/onboarding.client';
 import {
   NO_PAST_CHATS,
   reportPastChats,
@@ -99,5 +101,32 @@ test('with memory disabled the model settings offer no memory or past-chat switc
   } finally {
     await setMemoryAccess(api, model.id, false);
     await setChatHistoryAccess(api, model.id, false);
+  }
+});
+
+test('with memory disabled the new chat page is the plain composer without an onboarding hint, even for a user the hint applies to', async ({
+  api,
+  page,
+}) => {
+  const model = await defaultModel(api);
+  await setMemoryAccess(api, model.id, true);
+  try {
+    await clearMemory(api);
+    expect(await getOnboardingStage(api)).toMatchObject({ stage: 'profile' });
+    expect(await getOnboardingStage(api, disabledApiUrl)).toEqual({
+      stage: null,
+      modelId: null,
+    });
+
+    const stageLoaded = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === '/api/onboarding/stage',
+    );
+    await page.goto(`${disabledBaseUrl}/chat`);
+    await stageLoaded;
+    await expect(page.getByTestId('input')).toBeVisible();
+    await expect(page.getByTestId('new-chat-onboarding-hint')).toHaveCount(0);
+  } finally {
+    await setMemoryAccess(api, model.id, false);
   }
 });

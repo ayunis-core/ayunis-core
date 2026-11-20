@@ -419,40 +419,18 @@
     "noModelDescription": "Bevor es losgehen kann, benötigen wir mindestens ein freigeschaltetes Modell. Bitte wenden Sie sich an Ihren Administrator und bitten Sie ihn, mindestens ein Modell zu aktivieren. Wenn Sie Administrator sind, können Sie ein Modell in den Einstellungen konfigurieren.",
     "configureModel": "Modell konfigurieren",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
-    "personalizedPromptSuccess": "Personalisierter System-Prompt erstellt",
-    "personalizedPromptError": "Personalisierter System-Prompt konnte nicht erstellt werden",
-    "systemPromptLoadError": "Personalisierungsstatus konnte nicht geladen werden. Die Personalisierung wurde möglicherweise übersprungen.",
-    "noDefaultModelError": "Kein Standardmodell konfiguriert. Bitte wenden Sie sich an Ihren Administrator.",
     "privacyHint": "Nur Sie sehen Ihre Chats.",
-    "personalization": {
-      "stepperName": "Name",
-      "stepperStyle": "Stil",
-      "stepperContext": "Kontext",
-      "nameTitle": "Wie möchtest du genannt werden?",
-      "nameDescription": "Damit ich dich persönlich ansprechen kann.",
-      "nameLabel": "Dein Name",
-      "namePlaceholder": "z.B. Anna, Herr Müller ...",
-      "styleTitle": "Wie soll ich kommunizieren?",
-      "styleDescription": "Wähle den Stil, der am besten zu dir passt.",
-      "styleCasual": "Locker & kurz",
-      "styleProfessional": "Professionell & ausführlich",
-      "styleFactual": "Sachlich & präzise",
-      "styleCustomLabel": "Eigene Ergänzung (optional)",
-      "styleCustomPlaceholder": "z.B. bitte immer in Stichpunkten antworten ...",
-      "contextTitle": "In welchem Bereich arbeitest du?",
-      "contextDescription": "Das hilft mir, passendere Antworten zu geben.",
-      "contextLabel": "Arbeitskontext",
-      "contextPlaceholder": "z.B. Bescheide im Sozialamt, Protokolle für den Gemeinderat ...",
-      "next": "Weiter",
-      "back": "Zurück",
-      "skip": "Später einrichten",
-      "submit": "Personalisierung starten",
-      "generating": "Dein persönlicher Assistent wird eingerichtet ...",
-      "errorMessage": "Leider ist ein Fehler aufgetreten. Bitte versuche es erneut.",
-      "errorTitle": "Fehler",
-      "skipError": "Personalisierung konnte nicht übersprungen werden. Bitte versuche es erneut.",
-      "retry": "Erneut versuchen",
-      "getStarted": "Los geht's"
+    "onboardingHint": {
+      "profile": {
+        "title": "Darf ich Sie kennenlernen?",
+        "description": "Erzählen Sie mir kurz von Ihrer Arbeit. Ich merke es mir für passendere Antworten.",
+        "message": "Lerne mich kennen"
+      },
+      "first_skill": {
+        "title": "Erstellen Sie Ihre erste Fähigkeit",
+        "description": "Machen wir aus einer wiederkehrenden Aufgabe eine Fähigkeit für jeden Chat.",
+        "message": "Hilf mir, meine erste Fähigkeit zu erstellen"
+      }
     },
     "unreadNotifications": {
       "tabs": {

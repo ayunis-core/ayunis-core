@@ -1,14 +1,16 @@
 import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
 import { createFileRoute, useRouterState } from '@tanstack/react-router';
-import { NewChatPage, NewChatPageNoModelError } from '@/pages/new-chat';
+import {
+  NewChatPage,
+  NewChatPageNoModelError,
+  onboardingStageQueryOptions,
+} from '@/pages/new-chat';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import {
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-  chatSettingsControllerGetSystemPrompt,
-  getChatSettingsControllerGetSystemPromptQueryKey,
 } from '@/shared/api';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
@@ -65,8 +67,8 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { isEmbeddingModelEnabled } = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    // The pane has no personalization card, and its token may not read
-    // billing or the system prompt.
+    // The pane has no onboarding hint, and its token may not read billing or
+    // the onboarding stage.
     if (embedded) {
       return {
         selectedModelId,
@@ -77,12 +79,10 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { hasActiveSubscription } = await queryClient.query(
       queryHasActiveSubscriptionOptions(),
     );
-    // Await system prompt status so PersonalizationCard doesn't flash
+    // A stage the user completed since the last visit must not show again,
+    // and a failed request only costs the hint.
     await queryClient
-      .query({
-        queryKey: getChatSettingsControllerGetSystemPromptQueryKey(),
-        queryFn: () => chatSettingsControllerGetSystemPrompt(),
-      })
+      .query({ ...onboardingStageQueryOptions(), staleTime: 0 })
       .catch(() => undefined);
     return {
       selectedModelId,

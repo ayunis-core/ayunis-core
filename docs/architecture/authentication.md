@@ -432,9 +432,10 @@ closed; the embedded app hides the controls that would call them.
 | Read-only settings | `GET /api/chat-settings/chat-start-defaults`, `GET /api/models/embedding/enabled`, `GET /api/academy-access/status` | Anonymisation default, file sources, academy gate |
 
 The embedded app never calls `GET /api/onboarding`,
-`GET /api/subscriptions/active`, `GET /api/chat-settings/system-prompt`,
+`GET /api/onboarding/stage`, `GET /api/subscriptions/active`,
+`GET /api/chat-settings/system-prompt`,
 `GET /api/threads/:id/ai-context`, `GET /api/workspaces/:id`, `GET /api/skills` or
-`POST /api/speech`: the welcome video, onboarding, personalization, context
+`POST /api/speech`: the welcome video, onboarding checklist and hint, context
 hint, skill picker and read-aloud controls are hidden there. Pane runs use the `outlook` run profile, which has no
 artifacts, image generation, skills or routines tools, so their routes stay
 closed too. The legacy multipart-form route `POST /api/threads/:id/sources/file`

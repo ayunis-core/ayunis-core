@@ -431,7 +431,13 @@ export const useInitiateChat = (options?: {
 
 function trackChatStarted(
   thread: GetThreadResponseDto,
-  { sources, knowledgeBases, mcpIntegrations, skillId }: InitiateChatParams,
+  {
+    sources,
+    knowledgeBases,
+    mcpIntegrations,
+    skillId,
+    origin,
+  }: InitiateChatParams,
 ): void {
   trackOpenPanelEvent('chat_started', {
     ...threadInteractionContext({
@@ -442,6 +448,9 @@ function trackChatStarted(
     }),
     has_skill: Boolean(skillId),
   });
+  if (origin?.kind === 'onboarding') {
+    trackOpenPanelEvent('onboarding_chat_started', { stage: origin.stage });
+  }
 }
 
 function threadCreationErrorKey(error: unknown): string {
