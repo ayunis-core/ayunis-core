@@ -1,6 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import { Test } from '@nestjs/testing';
+import * as JSZip from 'jszip';
 import { Readable } from 'stream';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { UUID } from 'crypto';
@@ -32,6 +33,8 @@ import { LetterheadNotFoundError } from 'src/domain/letterheads/application/lett
 import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import { HtmlDocumentExportService } from 'src/domain/artifacts/infrastructure/export/html-document-export.service';
+import { PdfLetterheadCompositor } from 'src/domain/artifacts/infrastructure/export/pdf-letterhead-compositor';
 
 function createBufferStream(buf: Buffer): NodeJS.ReadableStream {
   const readable = new Readable();
@@ -166,7 +169,7 @@ describe('ExportArtifactUseCase', () => {
     });
   }
 
-  it('should export the current version as DOCX', async () => {
+  it('exports the current DOCX version with organization typography without a letterhead', async () => {
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
@@ -190,9 +193,17 @@ describe('ExportArtifactUseCase', () => {
       ],
     });
 
-    const docxBuffer = Buffer.from('fake-docx-content');
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
-    documentExportPort.exportToDocx.mockResolvedValue(docxBuffer);
+    getDocumentDefaults.execute.mockResolvedValue({
+      fontFamily: 'Times New Roman',
+      fontSizePt: 10,
+    });
+    const exporter = new HtmlDocumentExportService(
+      new PdfLetterheadCompositor(),
+    );
+    documentExportPort.exportToDocx.mockImplementation(
+      exporter.exportToDocx.bind(exporter),
+    );
 
     const command = new ExportArtifactCommand({
       artifactId: mockArtifactId,
@@ -201,16 +212,21 @@ describe('ExportArtifactUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result.buffer).toBe(docxBuffer);
     expect(result.fileName).toBe('Annual Report 2026.docx');
     expect(result.mimeType).toContain('wordprocessingml');
-    expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
-      '<h1>Annual Report</h1><p>Current content</p>',
-    );
-    expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
-      mockArtifactId,
-      mockUserId,
-    );
+
+    const docx = await JSZip.loadAsync(result.buffer);
+    const documentXml = await docx.file('word/document.xml')?.async('text');
+    const stylesXml = await docx.file('word/styles.xml')?.async('text');
+    const defaultsXml = stylesXml?.match(
+      /<w:docDefaults>.*?<\/w:docDefaults>/,
+    )?.[0];
+
+    expect(documentXml).toContain('Current content');
+    expect(documentXml).not.toContain('Old content');
+    expect(defaultsXml).toContain('w:ascii="Times New Roman"');
+    expect(defaultsXml).toContain('<w:sz w:val="20"');
+    expect(docx.file(/^word\/header\d+\.xml$/)).toHaveLength(0);
   });
 
   it('exports the assigned letterhead and effective typography to Word', async () => {
@@ -559,6 +575,8 @@ describe('ExportArtifactUseCase', () => {
     );
     expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
       '<p>Kontaktieren Sie Max Mustermann unter max@example.de</p>',
+      undefined,
+      unspecifiedTypography,
     );
   });
 
@@ -574,6 +592,8 @@ describe('ExportArtifactUseCase', () => {
 
     expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
       '<p>Meeting notes content</p>',
+      undefined,
+      unspecifiedTypography,
     );
   });
 
