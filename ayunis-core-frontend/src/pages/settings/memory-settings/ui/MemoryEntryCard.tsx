@@ -11,6 +11,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import type { MemoryEntryResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useConfirmation } from '@/widgets/confirmation-modal';
 
 const MEMORY_CONTENT_MAX_LENGTH = 2000;
 const MEMORY_DESCRIPTION_MAX_LENGTH = 150;
@@ -33,6 +34,7 @@ export function MemoryEntryCard({
   onRemove,
 }: Readonly<MemoryEntryCardProps>) {
   const { t, i18n } = useTranslation('settings');
+  const { confirm } = useConfirmation();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(entry.content);
   const [descriptionDraft, setDescriptionDraft] = useState(
@@ -49,6 +51,18 @@ export function MemoryEntryCard({
     setDraft(entry.content);
     setDescriptionDraft(entry.description ?? '');
     setIsEditing(true);
+  }
+
+  function confirmRemove() {
+    const action = entry.isReserved ? 'clear' : 'delete';
+    confirm({
+      title: t(`memory.confirmRemove.${action}.title`, { name: title }),
+      description: t(`memory.confirmRemove.${action}.body`),
+      confirmText: t(`memory.confirmRemove.${action}.confirm`),
+      cancelText: t('memory.cancel'),
+      variant: 'destructive',
+      onConfirm: () => onRemove(entry.key),
+    });
   }
 
   async function save() {
@@ -150,9 +164,10 @@ export function MemoryEntryCard({
               <>
                 {entry.content && (
                   <Button
+                    data-testid="memory-entry-remove"
                     variant="ghost"
                     size="sm"
-                    onClick={() => onRemove(entry.key)}
+                    onClick={confirmRemove}
                     disabled={isSaving}
                   >
                     {entry.isReserved ? t('memory.clear') : t('memory.delete')}

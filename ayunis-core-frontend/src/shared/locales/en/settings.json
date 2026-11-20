@@ -193,6 +193,18 @@
       "cancel": "Cancel",
       "confirm": "Delete all"
     },
+    "confirmRemove": {
+      "delete": {
+        "title": "Delete “{{name}}”?",
+        "body": "The entry is deleted permanently. This cannot be undone.",
+        "confirm": "Delete"
+      },
+      "clear": {
+        "title": "Clear “{{name}}”?",
+        "body": "Its content is deleted permanently. This cannot be undone.",
+        "confirm": "Clear"
+      }
+    },
     "descriptionLabel": "When is this relevant?",
     "descriptionPlaceholder": "One line on when the assistant should use this, e.g. \"When drafting monthly council reports\""
   }

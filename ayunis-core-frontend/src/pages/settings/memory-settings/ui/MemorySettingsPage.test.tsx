@@ -9,6 +9,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ConfirmationProvider } from '@/widgets/confirmation-modal';
 import MemorySettingsPage from './MemorySettingsPage';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
@@ -64,7 +65,9 @@ describe('MemorySettingsPage', () => {
       .mockResolvedValue({ entries: cleared });
     render(
       <QueryClientProvider client={client}>
-        <MemorySettingsPage />
+        <ConfirmationProvider>
+          <MemorySettingsPage />
+        </ConfirmationProvider>
       </QueryClientProvider>,
     );
     const personalCard = await screen.findByTestId('memory-entry-personal');
