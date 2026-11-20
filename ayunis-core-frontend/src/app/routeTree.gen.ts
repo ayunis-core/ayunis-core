@@ -51,6 +51,8 @@ import { Route as AuthenticatedInboxIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedInboxNotificationIdRouteImport } from './routes/_authenticated/inbox.$notificationId'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
+import { Route as AuthenticatedNewsIndexRouteImport } from './routes/_authenticated/news.index'
+import { Route as AuthenticatedNewsReleaseNoteIdRouteImport } from './routes/_authenticated/news.$releaseNoteId'
 import { Route as AuthenticatedRecordingsIndexRouteImport } from './routes/_authenticated/recordings.index'
 import { Route as AuthenticatedRecordingsIdRouteImport } from './routes/_authenticated/recordings.$id'
 import { Route as AuthenticatedRoutinesIndexRouteImport } from './routes/_authenticated/routines.index'
@@ -321,6 +323,17 @@ const AuthenticatedKnowledgeBasesIdRoute =
     path: '/knowledge-bases/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedNewsIndexRoute = AuthenticatedNewsIndexRouteImport.update({
+  id: '/news/',
+  path: '/news/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNewsReleaseNoteIdRoute =
+  AuthenticatedNewsReleaseNoteIdRouteImport.update({
+    id: '/news/$releaseNoteId',
+    path: '/news/$releaseNoteId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRecordingsIndexRoute =
   AuthenticatedRecordingsIndexRouteImport.update({
     id: '/recordings/',
@@ -580,6 +593,7 @@ export interface FileRoutesByFullPath {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/news/$releaseNoteId': typeof AuthenticatedNewsReleaseNoteIdRoute
   '/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -596,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/inbox/': typeof AuthenticatedInboxIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/news/': typeof AuthenticatedNewsIndexRoute
   '/recordings/': typeof AuthenticatedRecordingsIndexRoute
   '/routines/': typeof AuthenticatedRoutinesIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -657,6 +672,7 @@ export interface FileRoutesByTo {
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/news/$releaseNoteId': typeof AuthenticatedNewsReleaseNoteIdRoute
   '/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -673,6 +689,7 @@ export interface FileRoutesByTo {
   '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/inbox': typeof AuthenticatedInboxIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/news': typeof AuthenticatedNewsIndexRoute
   '/recordings': typeof AuthenticatedRecordingsIndexRoute
   '/routines': typeof AuthenticatedRoutinesIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -739,6 +756,7 @@ export interface FileRoutesById {
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
+  '/_authenticated/news/$releaseNoteId': typeof AuthenticatedNewsReleaseNoteIdRoute
   '/_authenticated/recordings/$id': typeof AuthenticatedRecordingsIdRoute
   '/_authenticated/routines/$routineId': typeof AuthenticatedRoutinesRoutineIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -755,6 +773,7 @@ export interface FileRoutesById {
   '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/inbox/': typeof AuthenticatedInboxIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/_authenticated/news/': typeof AuthenticatedNewsIndexRoute
   '/_authenticated/recordings/': typeof AuthenticatedRecordingsIndexRoute
   '/_authenticated/routines/': typeof AuthenticatedRoutinesIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -821,6 +840,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/news/$releaseNoteId'
     | '/recordings/$id'
     | '/routines/$routineId'
     | '/settings/account'
@@ -837,6 +857,7 @@ export interface FileRouteTypes {
     | '/getting-started/'
     | '/inbox/'
     | '/knowledge-bases/'
+    | '/news/'
     | '/recordings/'
     | '/routines/'
     | '/settings/'
@@ -898,6 +919,7 @@ export interface FileRouteTypes {
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
+    | '/news/$releaseNoteId'
     | '/recordings/$id'
     | '/routines/$routineId'
     | '/settings/account'
@@ -914,6 +936,7 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/inbox'
     | '/knowledge-bases'
+    | '/news'
     | '/recordings'
     | '/routines'
     | '/settings'
@@ -979,6 +1002,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/inbox/$notificationId'
     | '/_authenticated/knowledge-bases/$id'
+    | '/_authenticated/news/$releaseNoteId'
     | '/_authenticated/recordings/$id'
     | '/_authenticated/routines/$routineId'
     | '/_authenticated/settings/account'
@@ -995,6 +1019,7 @@ export interface FileRouteTypes {
     | '/_authenticated/getting-started/'
     | '/_authenticated/inbox/'
     | '/_authenticated/knowledge-bases/'
+    | '/_authenticated/news/'
     | '/_authenticated/recordings/'
     | '/_authenticated/routines/'
     | '/_authenticated/settings/'
@@ -1339,6 +1364,20 @@ declare module '@tanstack/react-router' {
       path: '/knowledge-bases/$id'
       fullPath: '/knowledge-bases/$id'
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/news/': {
+      id: '/_authenticated/news/'
+      path: '/news'
+      fullPath: '/news/'
+      preLoaderRoute: typeof AuthenticatedNewsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/news/$releaseNoteId': {
+      id: '/_authenticated/news/$releaseNoteId'
+      path: '/news/$releaseNoteId'
+      fullPath: '/news/$releaseNoteId'
+      preLoaderRoute: typeof AuthenticatedNewsReleaseNoteIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/recordings/': {
@@ -1731,6 +1770,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
+  AuthenticatedNewsReleaseNoteIdRoute: typeof AuthenticatedNewsReleaseNoteIdRoute
   AuthenticatedRecordingsIdRoute: typeof AuthenticatedRecordingsIdRoute
   AuthenticatedRoutinesRoutineIdRoute: typeof AuthenticatedRoutinesRoutineIdRoute
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -1745,6 +1785,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
+  AuthenticatedNewsIndexRoute: typeof AuthenticatedNewsIndexRoute
   AuthenticatedRecordingsIndexRoute: typeof AuthenticatedRecordingsIndexRoute
   AuthenticatedRoutinesIndexRoute: typeof AuthenticatedRoutinesIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -1766,6 +1807,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
+  AuthenticatedNewsReleaseNoteIdRoute: AuthenticatedNewsReleaseNoteIdRoute,
   AuthenticatedRecordingsIdRoute: AuthenticatedRecordingsIdRoute,
   AuthenticatedRoutinesRoutineIdRoute: AuthenticatedRoutinesRoutineIdRoute,
   AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
@@ -1782,6 +1824,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
+  AuthenticatedNewsIndexRoute: AuthenticatedNewsIndexRoute,
   AuthenticatedRecordingsIndexRoute: AuthenticatedRecordingsIndexRoute,
   AuthenticatedRoutinesIndexRoute: AuthenticatedRoutinesIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,

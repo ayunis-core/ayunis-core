@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import {
   Inbox,
+  Megaphone,
   MoreVertical,
   PanelRight,
   Pencil,
@@ -39,6 +40,8 @@ interface ChatHeaderProps {
   readonly workspaceId?: string | null;
   /** The notification the chat was started about ("Chat about this"). */
   readonly sourceNotificationId?: string | null;
+  /** The product update the chat was started about. */
+  readonly sourceReleaseNoteId?: string | null;
   readonly isArtifactPanelOpen: boolean;
   readonly onToggleArtifactPanel: () => void;
   readonly onRename: () => void;
@@ -66,6 +69,7 @@ function WebChatHeader({
   isAnonymous,
   workspaceId,
   sourceNotificationId,
+  sourceReleaseNoteId,
   isArtifactPanelOpen,
   onToggleArtifactPanel,
   onRename,
@@ -78,7 +82,6 @@ function WebChatHeader({
   const { toggle: togglePinned } = useToggleFavorite();
   const { workspaces } = useWorkspaces();
   const isPinned = isFavorite(favorites, threadId, 'thread');
-  const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
 
   const displayTitle = threadTitle || t('chat.untitled');
   const workspace = workspaceId
@@ -99,27 +102,16 @@ function WebChatHeader({
 
   const anonymousBadge = isAnonymous ? <AnonymousBadge /> : undefined;
 
-  const notificationBadge =
-    routinesEnabled && sourceNotificationId ? (
-      <Badge variant="outline" asChild>
-        <Link
-          to="/inbox/$notificationId"
-          params={{ notificationId: sourceNotificationId }}
-          data-testid="chat-source-notification"
-        >
-          <Inbox className="h-3 w-3" />
-          {t('chat.fromNotification')}
-        </Link>
-      </Badge>
-    ) : undefined;
-
   return (
     <ContentAreaHeader
       breadcrumbs={breadcrumbs}
       badge={
         <>
           {anonymousBadge}
-          {notificationBadge}
+          <ChatSourceBadge
+            sourceNotificationId={sourceNotificationId}
+            sourceReleaseNoteId={sourceReleaseNoteId}
+          />
         </>
       }
       action={
@@ -227,4 +219,46 @@ function EmbeddedChatHeader({
       }
     />
   );
+}
+
+/** Leads back to the notification or product update a chat was started about. */
+function ChatSourceBadge({
+  sourceNotificationId,
+  sourceReleaseNoteId,
+}: Readonly<
+  Pick<ChatHeaderProps, 'sourceNotificationId' | 'sourceReleaseNoteId'>
+>) {
+  const { t } = useTranslation('chat');
+  const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
+  const releaseNotesEnabled = useIsFeatureEnabled('releaseNotesEnabled');
+
+  if (releaseNotesEnabled && sourceReleaseNoteId) {
+    return (
+      <Badge variant="outline" asChild>
+        <Link
+          to="/news/$releaseNoteId"
+          params={{ releaseNoteId: sourceReleaseNoteId }}
+          data-testid="chat-source-release-note"
+        >
+          <Megaphone className="h-3 w-3" />
+          {t('chat.fromReleaseNote')}
+        </Link>
+      </Badge>
+    );
+  }
+  if (routinesEnabled && sourceNotificationId) {
+    return (
+      <Badge variant="outline" asChild>
+        <Link
+          to="/inbox/$notificationId"
+          params={{ notificationId: sourceNotificationId }}
+          data-testid="chat-source-notification"
+        >
+          <Inbox className="h-3 w-3" />
+          {t('chat.fromNotification')}
+        </Link>
+      </Badge>
+    );
+  }
+  return null;
 }

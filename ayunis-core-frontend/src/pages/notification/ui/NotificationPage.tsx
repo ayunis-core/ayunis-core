@@ -7,6 +7,7 @@ import { Button } from '@ayunis/ui/components/button';
 import { Markdown } from '@/widgets/markdown';
 import { ChatStarter } from '@/widgets/chat-starter';
 import {
+  NotificationMedia,
   NotificationTypeIcon,
   useMarkNotificationRead,
 } from '@/features/notifications';
@@ -15,8 +16,8 @@ import {
   NotificationType,
   type NotificationResponseDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import config from '@/shared/config';
 import { useNotification } from '@/pages/notification/api/useNotification';
-import { NotificationMedia } from './NotificationMedia';
 
 interface NotificationProps {
   notification: NotificationResponseDto;
@@ -48,7 +49,12 @@ export default function NotificationPage(
       data-type={notification.type}
     >
       <NotificationHeading notification={notification} />
-      <NotificationMedia notification={notification} />
+      <NotificationMedia
+        media={notification.media}
+        imageSrc={`${config.api.baseUrl}/notifications/${notification.id}/image`}
+        title={notification.headline}
+        testIdPrefix="notification-detail"
+      />
       <Markdown renderImages={false} className="text-sm">
         {notification.body}
       </Markdown>

@@ -26,7 +26,10 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/widgets/markdown', () => ({
   Markdown: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
-vi.mock('@/features/notifications', () => ({
+vi.mock('@/features/notifications', async () => ({
+  NotificationMedia: (
+    await import('@/features/notifications/ui/NotificationMedia')
+  ).NotificationMedia,
   NotificationTypeIcon: () => null,
   useMarkNotificationRead: () => ({ mutate: vi.fn() }),
 }));
@@ -107,12 +110,11 @@ describe('NotificationPage', () => {
     expect(screen.queryByTestId('notification-open-routine')).toBeNull();
   });
 
-  describe('release notes', () => {
-    const renderReleaseNote = (
+  describe('media', () => {
+    const renderWithoutSubheadline = (
       overrides: Partial<NotificationResponseDto> = {},
     ) =>
       renderPage({
-        type: 'release_note',
         headline: 'Routinen sind da',
         subheadline: null,
         routineId: null,
@@ -120,7 +122,7 @@ describe('NotificationPage', () => {
       });
 
     it('leaves out the subheadline when there is none', () => {
-      renderReleaseNote();
+      renderWithoutSubheadline();
 
       expect(
         screen.getByTestId('notification-detail-headline').textContent,
@@ -131,7 +133,7 @@ describe('NotificationPage', () => {
     });
 
     it('shows the image from the notification image endpoint', () => {
-      renderReleaseNote({ media: { type: 'image', url: null } });
+      renderWithoutSubheadline({ media: { type: 'image', url: null } });
 
       const image = screen.getByTestId<HTMLImageElement>(
         'notification-detail-image',
@@ -144,7 +146,7 @@ describe('NotificationPage', () => {
 
     it('embeds a Loom video', () => {
       const url = 'https://www.loom.com/embed/4f7c2d9e1b8a4c6d9e2f1a3b5c7d9e0f';
-      renderReleaseNote({ media: { type: 'loom', url } });
+      renderWithoutSubheadline({ media: { type: 'loom', url } });
 
       const video = screen.getByTestId<HTMLIFrameElement>(
         'notification-detail-loom',
@@ -155,7 +157,7 @@ describe('NotificationPage', () => {
     });
 
     it('shows no media for a notification without any', () => {
-      renderReleaseNote();
+      renderWithoutSubheadline();
 
       expect(screen.queryByTestId('notification-detail-image')).toBeNull();
       expect(screen.queryByTestId('notification-detail-loom')).toBeNull();

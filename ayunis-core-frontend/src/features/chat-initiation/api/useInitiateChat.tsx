@@ -76,6 +76,8 @@ interface InitiateChatParams {
   workspaceId?: string;
   /** Starts a chat about this notification ("Chat about this"). */
   sourceNotificationId?: string;
+  /** Starts a chat about this product update. */
+  sourceReleaseNoteId?: string;
   skillId?: string;
   /** The prompt contains text from a successful transcription. */
   voiceInput?: boolean;
@@ -275,6 +277,7 @@ export const useInitiateChat = (options?: {
       isAnonymous,
       workspaceId,
       sourceNotificationId,
+      sourceReleaseNoteId,
       onSourceStatus,
     } = params;
     if (isInitiatingChatRef.current) return;
@@ -293,6 +296,7 @@ export const useInitiateChat = (options?: {
         isAnonymous,
         workspaceId,
         sourceNotificationId,
+        sourceReleaseNoteId,
       };
       thread = await createThreadMutation.mutateAsync({
         data: createThreadData,
