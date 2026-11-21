@@ -5,13 +5,20 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { OwnerSections } from '@/features/resource-ownership';
 import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import type { ChatStarterDefaults } from '@/widgets/chat-starter';
 import CreateRecordingDialog from './CreateRecordingDialog';
 import RecordingCard from './RecordingCard';
 import RecordingsEmptyState from './RecordingsEmptyState';
 
+interface RecordingsPageProps {
+  recordings: RecordingResponseDto[];
+  chatStarter: ChatStarterDefaults;
+}
+
 export default function RecordingsPage({
   recordings,
-}: Readonly<{ recordings: RecordingResponseDto[] }>) {
+  chatStarter,
+}: Readonly<RecordingsPageProps>) {
   const { t } = useTranslation('recordings');
   const header = (
     <ContentAreaHeader
@@ -24,7 +31,7 @@ export default function RecordingsPage({
     return (
       <AppLayout>
         <FullScreenMessageLayout header={header}>
-          <RecordingsEmptyState />
+          <RecordingsEmptyState chatStarter={chatStarter} />
         </FullScreenMessageLayout>
       </AppLayout>
     );

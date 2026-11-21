@@ -4,6 +4,7 @@ import CreateSkillMenu from './CreateSkillMenu';
 import SkillsEmptyState from './SkillsEmptyState';
 
 const MARKETPLACE_URL = 'https://marketplace.ayunis.com/';
+const CHAT_STARTER = { isEmbeddingModelEnabled: false };
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -33,6 +34,14 @@ vi.mock('@/shared/hooks/useDropdownDialogTransition', () => ({
 vi.mock('./CreateSkillDialog', () => ({
   default: ({ open }: { open?: boolean }) =>
     open ? <div data-testid="skill-editor-dialog" /> : null,
+}));
+
+vi.mock('@/shared/lib/help-center', () => ({
+  getHelpCenterUrl: (path: string) => `https://help.example/${path}`,
+}));
+
+vi.mock('@/widgets/chat-starter', () => ({
+  ChatStarter: () => null,
 }));
 
 vi.mock('react-i18next', () => ({
@@ -112,14 +121,14 @@ describe('CreateSkillMenu', () => {
   });
 
   it('is the first-skill action on the empty skills page', () => {
-    render(<SkillsEmptyState />);
+    render(<SkillsEmptyState chatStarter={CHAT_STARTER} />);
 
     expect(screen.getByTestId('create-skill-menu')).toBeTruthy();
   });
 
   it('offers the marketplace on the empty page to someone who may only install skills', () => {
     mocks.can = vi.fn((permission: string) => permission !== 'manage_skills');
-    render(<SkillsEmptyState />);
+    render(<SkillsEmptyState chatStarter={CHAT_STARTER} />);
 
     expect(screen.getByTestId('skills-empty-marketplace')).toBeTruthy();
     expect(screen.queryByTestId('create-skill-menu')).toBeNull();

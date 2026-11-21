@@ -23,6 +23,7 @@ import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/lo
 import { NotificationRecord } from 'src/domain/notifications/infrastructure/persistence/local/schema/notification.record';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
+import { GuideFeature } from 'src/domain/threads/domain/guide-feature.enum';
 
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
@@ -32,6 +33,7 @@ import type { SessionClient } from 'src/iam/sessions/domain/value-objects/sessio
 @Check(`"sourceNotificationId" IS NULL OR "origin" = 'notification'`)
 @Check(`"sourceReleaseNoteId" IS NULL OR "origin" = 'release_note'`)
 @Check(`("onboardingStage" IS NOT NULL) = ("origin" = 'onboarding')`)
+@Check(`("guideFeature" IS NOT NULL) = ("origin" = 'feature_guide')`)
 export class ThreadRecord extends BaseRecord {
   @Column()
   @Index()
@@ -108,6 +110,10 @@ export class ThreadRecord extends BaseRecord {
   /** The onboarding stage an onboarding chat walks the user through; set exactly on onboarding threads. */
   @Column({ type: 'enum', enum: OnboardingStage, nullable: true })
   onboardingStage: OnboardingStage | null;
+
+  /** The feature a feature-guide chat explains; set exactly on feature-guide threads. */
+  @Column({ type: 'enum', enum: GuideFeature, nullable: true })
+  guideFeature: GuideFeature | null;
 
   /**
    * The release note this chat was started about. Deleting the release note

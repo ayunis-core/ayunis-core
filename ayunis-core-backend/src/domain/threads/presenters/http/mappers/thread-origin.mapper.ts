@@ -20,6 +20,8 @@ export function toThreadOriginDto(
       return { kind: origin.kind, releaseNoteId: origin.releaseNoteId };
     case ThreadOriginKind.ONBOARDING:
       return { kind: origin.kind, stage: origin.stage };
+    case ThreadOriginKind.FEATURE_GUIDE:
+      return { kind: origin.kind, feature: origin.feature };
   }
 }
 
@@ -39,5 +41,7 @@ export function toCreateThreadOrigin(
       return { kind: origin.kind, releaseNoteId: origin.releaseNoteId };
     case ThreadOriginKind.ONBOARDING:
       return { kind: origin.kind, stage: origin.stage };
+    case ThreadOriginKind.FEATURE_GUIDE:
+      return { kind: origin.kind, feature: origin.feature };
   }
 }

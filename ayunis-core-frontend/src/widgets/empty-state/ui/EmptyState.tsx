@@ -1,21 +1,55 @@
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { cn } from '@ayunis/ui/lib/cn';
+import { EmptyStateGuide } from './EmptyStateGuide';
+import { EmptyStateHero } from './EmptyStateHero';
+import { EmptyStateSteps, type EmptyStateStep } from './EmptyStateSteps';
 
 interface EmptyStateProps {
   title: string;
   description: string;
   action?: ReactNode;
+  icon?: LucideIcon;
+  steps?: readonly EmptyStateStep[];
+  helpPath?: string;
+  guide?: ReactNode;
+  testId?: string;
 }
 
 export default function EmptyState({
   title,
   description,
   action,
+  icon,
+  steps,
+  helpPath,
+  guide,
+  testId,
 }: Readonly<EmptyStateProps>) {
+  const isExplained = Boolean(steps?.length) || Boolean(guide);
+
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center max-w-md mx-auto">
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="mb-6 text-muted-foreground">{description}</p>
-      {action}
+    <div
+      className={cn(
+        'mx-auto flex flex-col items-center justify-center px-4 text-center',
+        isExplained ? 'w-full max-w-2xl py-12' : 'max-w-md py-16',
+      )}
+      data-testid={testId}
+    >
+      {icon && <EmptyStateHero icon={icon} />}
+      <h3
+        className={cn(
+          'mb-2 font-semibold',
+          isExplained ? 'text-2xl tracking-tight' : 'text-lg',
+        )}
+      >
+        {title}
+      </h3>
+      <p className="mb-6 max-w-md text-balance text-muted-foreground">
+        {description}
+      </p>
+      {steps && steps.length > 0 && <EmptyStateSteps steps={steps} />}
+      <EmptyStateGuide action={action} helpPath={helpPath} guide={guide} />
     </div>
   );
 }

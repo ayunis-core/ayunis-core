@@ -11,10 +11,25 @@
     "description": "Durchsuchen Sie kuratierte Fähigkeiten und installieren Sie neue direkt aus dem Ayunis Core Marketplace."
   },
   "emptyState": {
-    "title": "Noch keine Fähigkeiten",
-    "description": "Erstellen Sie Ihre erste Fähigkeit. Fähigkeiten sind wiederverwendbare Wissens- und Integrationsbündel, die bei Bedarf während Gesprächen aktiviert werden können.",
+    "title": "Bringen Sie der KI Ihre wiederkehrenden Aufgaben bei",
+    "description": "Eine Fähigkeit bündelt Anweisungen, Wissen und Integrationen für eine Aufgabe. Ayunis Core setzt sie automatisch ein, sobald eine Anfrage dazu passt.",
     "noAccessDescription": "Bitten Sie einen Administrator, eine Fähigkeit mit Ihnen zu teilen oder Ihnen die Berechtigung zum Erstellen zu geben.",
-    "browseMarketplace": "Oder durchsuchen Sie den Ayunis Core Marketplace"
+    "browseMarketplace": "Oder durchsuchen Sie den Ayunis Core Marketplace",
+    "askPlaceholder": "Fragen Sie, wie Fähigkeiten funktionieren, oder lassen Sie sich bei der ersten helfen …",
+    "steps": {
+      "describe": {
+        "title": "Aufgabe beschreiben",
+        "description": "Benennen Sie die Fähigkeit, legen Sie fest, wann sie greift, und schreiben Sie die Anweisungen."
+      },
+      "enrich": {
+        "title": "Wissen ergänzen",
+        "description": "Verknüpfen Sie die Wissenssammlungen und Integrationen, die die Aufgabe braucht."
+      },
+      "use": {
+        "title": "Einfach fragen",
+        "description": "Beschreiben Sie die Aufgabe in einem Chat und die Fähigkeit wird automatisch genutzt."
+      }
+    }
   },
   "badge": {
     "active": "Aktiv",

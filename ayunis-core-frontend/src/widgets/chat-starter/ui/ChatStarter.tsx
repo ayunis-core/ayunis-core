@@ -22,12 +22,16 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 
-interface ChatStarterProps {
+/** What a route loads before the composer renders, so its model is preselected. */
+export interface ChatStarterDefaults {
+  selectedModelId?: string;
+  isEmbeddingModelEnabled: boolean;
+}
+
+interface ChatStarterProps extends ChatStarterDefaults {
   workspaceId?: string;
   origin?: CreateThreadOrigin;
   placeholder?: string;
-  selectedModelId?: string;
-  isEmbeddingModelEnabled: boolean;
 }
 
 type LocalSource = {

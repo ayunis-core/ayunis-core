@@ -281,5 +281,9 @@
       "warning": "Bewahren Sie diese Wiederherstellungscodes sicher auf. Jeder Code funktioniert nur einmal und wird nicht erneut angezeigt.",
       "copyAll": "Alle Codes kopieren"
     }
+  },
+  "emptyState": {
+    "learnMore": "Mehr erfahren",
+    "askHowItWorks": "Oder fragen Sie, wie es funktioniert"
   }
 }

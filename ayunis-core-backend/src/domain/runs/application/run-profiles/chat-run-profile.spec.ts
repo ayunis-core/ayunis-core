@@ -32,6 +32,7 @@ import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
 import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
 import { OnboardingCapability } from 'src/domain/runs/application/run-capabilities/capabilities/onboarding.capability';
+import { FeatureGuideCapability } from 'src/domain/runs/application/run-capabilities/capabilities/feature-guide.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
 import { AdoptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/adoption.capability';
@@ -48,6 +49,7 @@ import { ChatRunProfile } from './chat-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
+import { GuideFeature } from 'src/domain/threads/domain/guide-feature.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
@@ -142,6 +144,11 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
       { get: () => true } as never,
     ),
     new OnboardingCapability({ get: () => true } as never),
+    new FeatureGuideCapability(
+      { get: () => true } as never,
+      userContext as never,
+      resolved(true) as never,
+    ),
     new WorkspaceInstructionsCapability(),
     new AdoptionCapability(),
     new MemoryCapability(resolved(memory) as never, assembleTool),
@@ -269,6 +276,21 @@ describe('ChatRunProfile', () => {
 
     expect(instructions).toMatch(
       /<onboarding>[\s\S]*set_memory[\s\S]*create_skill[\s\S]*<\/onboarding>/,
+    );
+  });
+
+  it('offers create_skill in a skills feature-guide chat, which reads the tools of the skills capability', async () => {
+    const { instructions } = await assembleChat({
+      thread: aThread({
+        origin: {
+          kind: ThreadOriginKind.FEATURE_GUIDE,
+          feature: GuideFeature.SKILLS,
+        },
+      }),
+    });
+
+    expect(instructions).toMatch(
+      /<feature_guide>[\s\S]*<next_step>[^<]*create_skill[\s\S]*<\/feature_guide>/,
     );
   });
 

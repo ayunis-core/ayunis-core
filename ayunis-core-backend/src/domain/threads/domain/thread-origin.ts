@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
+import type { GuideFeature } from 'src/domain/threads/domain/guide-feature.enum';
 
 export enum ThreadOriginKind {
   CHAT = 'chat',
@@ -7,6 +8,7 @@ export enum ThreadOriginKind {
   NOTIFICATION = 'notification',
   RELEASE_NOTE = 'release_note',
   ONBOARDING = 'onboarding',
+  FEATURE_GUIDE = 'feature_guide',
 }
 
 /**
@@ -28,6 +30,10 @@ export type ThreadOrigin =
   | {
       readonly kind: ThreadOriginKind.ONBOARDING;
       readonly stage: OnboardingStage;
+    }
+  | {
+      readonly kind: ThreadOriginKind.FEATURE_GUIDE;
+      readonly feature: GuideFeature;
     };
 
 export const CHAT_ORIGIN: ThreadOrigin = { kind: ThreadOriginKind.CHAT };

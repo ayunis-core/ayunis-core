@@ -2,8 +2,8 @@
   "page": {
     "title": "Arbeitsbereiche",
     "addWorkspace": "Arbeitsbereich hinzufügen",
-    "emptyTitle": "Noch keine Arbeitsbereiche",
-    "emptyDescription": "Legen Sie einen Arbeitsbereich an, um Ihre Chats thematisch zu bündeln.",
+    "emptyTitle": "Alles zu einem Thema an einem Ort",
+    "emptyDescription": "Ein Arbeitsbereich bündelt Chats, Dokumente und Anweisungen zu einem Thema oder Projekt – auf Wunsch gemeinsam mit Ihren Kolleginnen und Kollegen.",
     "skillCount_one": "{{count}} Fähigkeit",
     "skillCount_other": "{{count}} Fähigkeiten",
     "knowledgeBaseCount_one": "{{count}} Wissenssammlung",
@@ -159,5 +159,22 @@
     "chatRemoved": "Chat aus dem Arbeitsbereich entfernt",
     "chatMoveError": "Der Chat konnte nicht verschoben werden",
     "chatNotFound": "Chat nicht gefunden"
+  },
+  "emptyState": {
+    "askPlaceholder": "Fragen Sie, wie Arbeitsbereiche funktionieren oder wie Sie Ihre Themen ordnen …",
+    "steps": {
+      "create": {
+        "title": "Arbeitsbereich anlegen",
+        "description": "Benennen Sie ihn nach einem Thema oder Projekt."
+      },
+      "context": {
+        "title": "Kontext hinzufügen",
+        "description": "Hinterlegen Sie Anweisungen, Wissen und Fähigkeiten, die jeder Chat darin nutzt."
+      },
+      "chat": {
+        "title": "Im Kontext chatten",
+        "description": "Starten Sie Chats im Arbeitsbereich und laden Sie Kolleginnen und Kollegen ein."
+      }
+    }
   }
 }

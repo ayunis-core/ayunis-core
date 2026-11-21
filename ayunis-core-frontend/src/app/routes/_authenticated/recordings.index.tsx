@@ -10,6 +10,7 @@ import {
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalRecordingListParams } from '@/shared/api/recording-scopes';
 import { requireRecordingsEnabled } from './-recordings-enabled';
+import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 
 export const Route = createFileRoute('/_authenticated/recordings/')({
   component: RouteComponent,
@@ -17,13 +18,14 @@ export const Route = createFileRoute('/_authenticated/recordings/')({
     await requireRecordingsEnabled(queryClient);
     // Teams and permissions decide which recordings the cards may delete, so
     // they are loaded before the first paint.
-    const [recordings] = await Promise.all([
+    const [recordings, chatStarter] = await Promise.all([
       queryClient.query({
         queryKey: getRecordingsControllerFindAllQueryKey(
           personalRecordingListParams,
         ),
         queryFn: () => recordingsControllerFindAll(personalRecordingListParams),
       }),
+      loadChatStarterDefaults(queryClient),
       queryClient.query({
         queryKey: getTeamsControllerListMyTeamsQueryKey(),
         queryFn: () => teamsControllerListMyTeams(),
@@ -33,11 +35,11 @@ export const Route = createFileRoute('/_authenticated/recordings/')({
         queryFn: () => myPermissionsControllerGetMine(),
       }),
     ]);
-    return { recordings: recordings.data };
+    return { recordings: recordings.data, chatStarter };
   },
 });
 
 function RouteComponent() {
-  const { recordings } = Route.useLoaderData();
-  return <RecordingsPage recordings={recordings} />;
+  const { recordings, chatStarter } = Route.useLoaderData();
+  return <RecordingsPage recordings={recordings} chatStarter={chatStarter} />;
 }

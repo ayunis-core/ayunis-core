@@ -11,10 +11,25 @@
     "description": "Browse curated skills and install new ones directly from the Ayunis Core Marketplace."
   },
   "emptyState": {
-    "title": "No skills yet",
-    "description": "Get started by creating your first skill. Skills are reusable knowledge and integration bundles that can be activated on-demand during conversations.",
+    "title": "Teach the AI your recurring tasks",
+    "description": "A skill bundles the instructions, knowledge and integrations for a task. Ayunis Core uses it automatically whenever a request matches.",
     "noAccessDescription": "Ask an admin to share a skill with you, or to give you permission to create your own.",
-    "browseMarketplace": "Or browse the Ayunis Core Marketplace"
+    "browseMarketplace": "Or browse the Ayunis Core Marketplace",
+    "askPlaceholder": "Ask how skills work or get help building your first one…",
+    "steps": {
+      "describe": {
+        "title": "Describe the task",
+        "description": "Name the skill, say when it applies and write its instructions."
+      },
+      "enrich": {
+        "title": "Add knowledge",
+        "description": "Link the knowledge bases and integrations the task needs."
+      },
+      "use": {
+        "title": "Just ask",
+        "description": "Describe the task in any chat and the skill is used automatically."
+      }
+    }
   },
   "badge": {
     "active": "Active",

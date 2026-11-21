@@ -10,8 +10,10 @@ export default function FullScreenMessageLayout({
   return (
     <div className="absolute inset-0 flex flex-col">
       {header && <div className="content-area-page-header">{header}</div>}
-      <div className="flex min-h-0 flex-1 w-full mx-auto items-center justify-center -translate-y-10">
-        {children}
+      <div className="flex min-h-0 w-full flex-1 overflow-y-auto">
+        <div className="m-auto flex w-full justify-center pb-20">
+          {children}
+        </div>
       </div>
     </div>
   );

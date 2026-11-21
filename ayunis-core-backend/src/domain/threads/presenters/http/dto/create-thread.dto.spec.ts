@@ -57,6 +57,34 @@ describe('CreateThreadDto origin', () => {
     expect(dto.origin).toEqual({ kind: 'onboarding', stage: 'first_skill' });
   });
 
+  it.each([
+    'knowledge_bases',
+    'skills',
+    'workspaces',
+    'routines',
+    'recordings',
+  ])(
+    'accepts a feature-guide chat for %s and keeps it for the use case',
+    async (feature) => {
+      const body = { origin: { kind: 'feature_guide', feature } };
+
+      expect(await errorsFor(body)).toEqual([]);
+      expect(plainToInstance(CreateThreadDto, body).origin).toEqual({
+        kind: 'feature_guide',
+        feature,
+      });
+    },
+  );
+
+  it.each([undefined, null, 'skill', 'SKILLS'])(
+    'rejects a feature-guide origin with the feature %p',
+    async (feature) => {
+      expect(
+        await errorsFor({ origin: { kind: 'feature_guide', feature } }),
+      ).toEqual(['origin']);
+    },
+  );
+
   it('accepts a thread without an origin', async () => {
     expect(await errorsFor({})).toEqual([]);
   });

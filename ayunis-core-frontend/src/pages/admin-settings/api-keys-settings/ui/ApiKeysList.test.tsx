@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiKeysList } from './ApiKeysList';
 
+vi.mock('@/shared/lib/help-center', () => ({
+  getHelpCenterUrl: (path: string) => `https://help.example/${path}`,
+}));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, values?: Record<string, unknown>) =>

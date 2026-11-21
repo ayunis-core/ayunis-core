@@ -6,6 +6,7 @@ import {
   workspacesControllerFindAll,
   getWorkspacesControllerFindAllQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
+import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 
 const searchSchema = z.object({
   page: z.number().min(1).optional().catch(1),
@@ -20,25 +21,30 @@ export const Route = createFileRoute('/_authenticated/workspaces/')({
       limit: WORKSPACES_PER_PAGE,
       offset: (page - 1) * WORKSPACES_PER_PAGE,
     };
-    const response = await queryClient.query({
-      queryKey: getWorkspacesControllerFindAllQueryKey(params),
-      queryFn: () => workspacesControllerFindAll(params),
-    });
+    const [response, chatStarter] = await Promise.all([
+      queryClient.query({
+        queryKey: getWorkspacesControllerFindAllQueryKey(params),
+        queryFn: () => workspacesControllerFindAll(params),
+      }),
+      loadChatStarterDefaults(queryClient),
+    ]);
     return {
       workspaces: response.data,
       pagination: response.pagination,
       page,
+      chatStarter,
     };
   },
 });
 
 function RouteComponent() {
-  const { workspaces, pagination, page } = Route.useLoaderData();
+  const { workspaces, pagination, page, chatStarter } = Route.useLoaderData();
   return (
     <WorkspacesPage
       workspaces={workspaces}
       pagination={pagination}
       currentPage={page}
+      chatStarter={chatStarter}
     />
   );
 }

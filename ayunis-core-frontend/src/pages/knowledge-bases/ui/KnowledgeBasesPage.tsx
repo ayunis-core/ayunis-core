@@ -10,13 +10,16 @@ import type { KnowledgeBase } from '@/pages/knowledge-bases/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { OwnerSections } from '@/features/resource-ownership';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import type { ChatStarterDefaults } from '@/widgets/chat-starter';
 
 interface KnowledgeBasesPageProps {
   knowledgeBases: KnowledgeBase[];
+  chatStarter: ChatStarterDefaults;
 }
 
 export default function KnowledgeBasesPage({
   knowledgeBases,
+  chatStarter,
 }: Readonly<KnowledgeBasesPageProps>) {
   const { t } = useTranslation('knowledge-bases');
   const headerAction = (
@@ -39,7 +42,7 @@ export default function KnowledgeBasesPage({
             />
           }
         >
-          <KnowledgeBasesEmptyState />
+          <KnowledgeBasesEmptyState chatStarter={chatStarter} />
         </FullScreenMessageLayout>
       </AppLayout>
     );

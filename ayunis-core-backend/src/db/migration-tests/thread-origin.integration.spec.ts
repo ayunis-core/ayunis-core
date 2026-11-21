@@ -10,6 +10,7 @@ import { AddReleaseNoteThreadOrigin1795122030541 } from 'src/db/migrations/17951
 import { BackfillReleaseNoteThreadOrigin1795122030542 } from 'src/db/migrations/1795122030542-BackfillReleaseNoteThreadOrigin';
 import { CheckReleaseNoteThreadOrigin1795122030543 } from 'src/db/migrations/1795122030543-CheckReleaseNoteThreadOrigin';
 import { AddOnboardingOriginToThreads1795162997413 } from 'src/db/migrations/1795162997413-AddOnboardingOriginToThreads';
+import { AddFeatureGuideOriginToThreads1795247743188 } from 'src/db/migrations/1795247743188-AddFeatureGuideOriginToThreads';
 
 const migrations: MigrationInterface[] = [
   new AddOriginToThreads1795121973900(),
@@ -19,6 +20,7 @@ const migrations: MigrationInterface[] = [
   new BackfillReleaseNoteThreadOrigin1795122030542(),
   new CheckReleaseNoteThreadOrigin1795122030543(),
   new AddOnboardingOriginToThreads1795162997413(),
+  new AddFeatureGuideOriginToThreads1795247743188(),
 ];
 const liveRoutine = randomUUID();
 const deletedRoutine = randomUUID();
@@ -36,6 +38,7 @@ interface ThreadRow {
   sourceNotificationId: string | null;
   sourceReleaseNoteId: string | null;
   onboardingStage?: string | null;
+  guideFeature?: string | null;
 }
 
 describe('thread origin migrations', () => {
@@ -475,7 +478,9 @@ describe('thread origin migrations', () => {
       onboardingStage: 'profile',
     });
 
-    await migrations.at(-1)!.down(runner);
+    for (const migration of migrations.slice(-2).reverse()) {
+      await migration.down(runner);
+    }
 
     expect(await threads('origin')).toEqual([
       {
@@ -538,6 +543,66 @@ describe('thread origin migrations', () => {
     expect(
       await errorCodeOf(() =>
         insertThread('chat-with-routine', { routineId: liveRoutine }),
+      ),
+    ).toBe('23514');
+  });
+
+  it('rejects a guide feature outside a feature-guide chat and a feature-guide chat without one, with 23514', async () => {
+    await up();
+
+    for (const [id, columns] of [
+      ['chat-with-feature', { guideFeature: 'skills' }],
+      [
+        'onboarding-with-feature',
+        {
+          origin: 'onboarding',
+          onboardingStage: 'profile',
+          guideFeature: 'skills',
+        },
+      ],
+      ['feature-guide-without-feature', { origin: 'feature_guide' }],
+    ] as const) {
+      expect(await errorCodeOf(() => insertThread(id, columns))).toBe('23514');
+    }
+    expect(
+      await errorCodeOf(() =>
+        insertThread('feature-guide', {
+          origin: 'feature_guide',
+          guideFeature: 'knowledge_bases',
+        }),
+      ),
+    ).toBeNull();
+    expect(
+      await errorCodeOf(() =>
+        insertThread('chat-with-routine', { routineId: liveRoutine }),
+      ),
+    ).toBe('23514');
+  });
+
+  it('turns feature-guide chats into plain chats and keeps the other origins when the feature-guide origin is rolled back', async () => {
+    await up();
+    await insertThread('feature-guide', {
+      origin: 'feature_guide',
+      guideFeature: 'routines',
+    });
+    await insertThread('onboarding', {
+      origin: 'onboarding',
+      onboardingStage: 'profile',
+    });
+
+    await migrations.at(-1)!.down(runner);
+
+    expect(
+      await runner.query(
+        'SELECT id, origin, "onboardingStage" FROM threads ORDER BY id',
+      ),
+    ).toEqual([
+      { id: 'feature-guide', origin: 'chat', onboardingStage: null },
+      { id: 'onboarding', origin: 'onboarding', onboardingStage: 'profile' },
+    ]);
+    expect(
+      await errorCodeOf(() =>
+        insertThread('chat-with-stage', { onboardingStage: 'profile' }),
       ),
     ).toBe('23514');
   });

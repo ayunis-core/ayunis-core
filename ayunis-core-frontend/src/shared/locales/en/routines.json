@@ -9,8 +9,23 @@
     "premade": "Premade"
   },
   "emptyState": {
-    "title": "No routines yet",
-    "description": "A routine runs a prompt on your behalf. Start from scratch or from a premade routine."
+    "title": "Let the AI handle recurring work",
+    "description": "A routine carries out a task for you every day at a set time and reports anything relevant to your inbox.",
+    "askPlaceholder": "Ask how routines work or what a routine could do for you…",
+    "steps": {
+      "describe": {
+        "title": "Describe the task",
+        "description": "Write what the routine should do, or start from a premade routine."
+      },
+      "schedule": {
+        "title": "Pick a time",
+        "description": "Choose when it runs each day and whether it may use the internet."
+      },
+      "results": {
+        "title": "Get the results",
+        "description": "Relevant findings arrive in your inbox."
+      }
+    }
   },
   "form": {
     "createTitle": "New routine",

@@ -281,5 +281,9 @@
       "warning": "Store these recovery codes somewhere safe. Each code works once, and they will not be shown again.",
       "copyAll": "Copy all codes"
     }
+  },
+  "emptyState": {
+    "learnMore": "Learn more",
+    "askHowItWorks": "Or ask how it works"
   }
 }

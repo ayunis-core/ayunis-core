@@ -19690,6 +19690,35 @@
         },
         "required": ["kind", "stage"]
       },
+      "GuideFeature": {
+        "type": "string",
+        "enum": [
+          "knowledge_bases",
+          "skills",
+          "workspaces",
+          "routines",
+          "recordings"
+        ],
+        "description": "The feature the chat explains to the user"
+      },
+      "FeatureGuideThreadOriginDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["feature_guide"]
+          },
+          "feature": {
+            "description": "The feature the chat explains to the user",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GuideFeature"
+              }
+            ]
+          }
+        },
+        "required": ["kind", "feature"]
+      },
       "CreateThreadDto": {
         "type": "object",
         "properties": {
@@ -19730,6 +19759,9 @@
               },
               {
                 "$ref": "#/components/schemas/OnboardingThreadOriginDto"
+              },
+              {
+                "$ref": "#/components/schemas/FeatureGuideThreadOriginDto"
               }
             ],
             "discriminator": {
@@ -19813,6 +19845,24 @@
           }
         },
         "required": ["kind", "stage"]
+      },
+      "FeatureGuideThreadOriginResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["feature_guide"]
+          },
+          "feature": {
+            "description": "The feature this chat explains to the user",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GuideFeature"
+              }
+            ]
+          }
+        },
+        "required": ["kind", "feature"]
       },
       "UserMessageResponseDto": {
         "type": "object",
@@ -20661,7 +20711,7 @@
             "nullable": true
           },
           "origin": {
-            "description": "Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat",
+            "description": "Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, an onboarding chat, or a chat explaining a feature",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ChatThreadOriginResponseDto"
@@ -20677,6 +20727,9 @@
               },
               {
                 "$ref": "#/components/schemas/OnboardingThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/FeatureGuideThreadOriginResponseDto"
               }
             ],
             "discriminator": {
@@ -20814,7 +20867,7 @@
             "nullable": true
           },
           "origin": {
-            "description": "Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat",
+            "description": "Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, an onboarding chat, or a chat explaining a feature",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ChatThreadOriginResponseDto"
@@ -20830,6 +20883,9 @@
               },
               {
                 "$ref": "#/components/schemas/OnboardingThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/FeatureGuideThreadOriginResponseDto"
               }
             ],
             "discriminator": {

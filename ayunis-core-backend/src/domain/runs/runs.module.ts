@@ -68,6 +68,7 @@ import { NotificationsCapability } from './application/run-capabilities/capabili
 import { NotificationContextCapability } from './application/run-capabilities/capabilities/notification-context.capability';
 import { ReleaseNoteContextCapability } from './application/run-capabilities/capabilities/release-note-context.capability';
 import { OnboardingCapability } from './application/run-capabilities/capabilities/onboarding.capability';
+import { FeatureGuideCapability } from 'src/domain/runs/application/run-capabilities/capabilities/feature-guide.capability';
 import { OutlookAddInCapability } from 'src/domain/runs/application/run-capabilities/capabilities/outlook-add-in.capability';
 import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
@@ -203,6 +204,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     NotificationContextCapability,
     ReleaseNoteContextCapability,
     OnboardingCapability,
+    FeatureGuideCapability,
     MemoryCapability,
     ChatHistoryCapability,
     AdoptionCapability,

@@ -1,1 +1,1 @@
-export { ChatStarter } from './ui/ChatStarter';
+export { ChatStarter, type ChatStarterDefaults } from './ui/ChatStarter';
