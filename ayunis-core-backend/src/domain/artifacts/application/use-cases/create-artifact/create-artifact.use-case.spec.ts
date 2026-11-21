@@ -34,12 +34,18 @@ import {
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
+import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { ProviderServerError } from 'src/common/errors/provider.errors';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
+  let anonymizeTextForThreadUseCase: { execute: jest.Mock };
   let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -53,6 +59,7 @@ describe('CreateArtifactUseCase', () => {
       findById: jest.fn(),
       findByThreadId: jest.fn(),
       findByIdWithVersions: jest.fn(),
+      findVersion: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       delete: jest.fn(),
@@ -72,6 +79,8 @@ describe('CreateArtifactUseCase', () => {
       execute: jest.fn().mockResolvedValue({}),
     };
 
+    anonymizeTextForThreadUseCase = { execute: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateArtifactUseCase,
@@ -81,6 +90,11 @@ describe('CreateArtifactUseCase', () => {
         {
           provide: FindLetterheadUseCase,
           useValue: mockFindLetterheadUseCase,
+        },
+        UserContentMaskingService,
+        {
+          provide: AnonymizeTextForThreadUseCase,
+          useValue: anonymizeTextForThreadUseCase,
         },
       ],
     }).compile();
@@ -169,6 +183,70 @@ describe('CreateArtifactUseCase', () => {
     expect(result.versions[0].authorId).toBe(mockUserId);
   });
 
+  it('stores real values a user typed into an artifact of an anonymous chat as placeholders', async () => {
+    findThreadUseCase.execute.mockResolvedValue({
+      thread: new Thread({
+        id: mockThreadId,
+        userId: mockUserId,
+        messages: [],
+        isAnonymous: true,
+      }),
+      isLongChat: false,
+    });
+    anonymizeTextForThreadUseCase.execute.mockImplementation(
+      (command: AnonymizeTextForThreadCommand) =>
+        Promise.resolve({
+          anonymizedText: command.text.replace(
+            'Max Mustermann',
+            '{{pii:PERSON_NAME_1}}',
+          ),
+        }),
+    );
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    artifactsRepository.addVersion.mockImplementation(
+      async (version) => version,
+    );
+
+    const result = await useCase.execute(
+      new CreateArtifactCommand({
+        threadId: mockThreadId,
+        title: 'Brief',
+        content: '<p>Max Mustermann</p>',
+        authorType: AuthorType.USER,
+      }),
+    );
+
+    expect(result.versions[0].content).toBe('<p>{{pii:PERSON_NAME_1}}</p>');
+  });
+
+  it('creates nothing when masking a user-created artifact of an anonymous chat fails', async () => {
+    findThreadUseCase.execute.mockResolvedValue({
+      thread: new Thread({
+        id: mockThreadId,
+        userId: mockUserId,
+        messages: [],
+        isAnonymous: true,
+      }),
+      isLongChat: false,
+    });
+    anonymizeTextForThreadUseCase.execute.mockRejectedValue(
+      new ProviderServerError({ provider: 'anonymize' }),
+    );
+
+    await expect(
+      useCase.execute(
+        new CreateArtifactCommand({
+          threadId: mockThreadId,
+          title: 'Brief',
+          content: '<p>Max Mustermann</p>',
+          authorType: AuthorType.USER,
+        }),
+      ),
+    ).rejects.toThrow(ProviderServerError);
+    expect(artifactsRepository.create).not.toHaveBeenCalled();
+    expect(artifactsRepository.addVersion).not.toHaveBeenCalled();
+  });
+
   it('should set authorId to null when author type is ASSISTANT', async () => {
     const command = new CreateArtifactCommand({
       threadId: mockThreadId,
@@ -202,6 +280,7 @@ describe('CreateArtifactUseCase', () => {
           provide: FindLetterheadUseCase,
           useValue: findLetterheadUseCase,
         },
+        { provide: UserContentMaskingService, useValue: {} },
       ],
     }).compile();
 

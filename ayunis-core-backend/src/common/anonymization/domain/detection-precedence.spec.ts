@@ -170,4 +170,55 @@ describe('resolveDetectionOverlaps', () => {
       place,
     ]);
   });
+
+  // Text that was masked before (an artifact the user saves again) already
+  // contains placeholders, and the engine detects them like any other word.
+  describe('existing placeholders', () => {
+    it('drops detections that lie inside a placeholder or only add punctuation to one', () => {
+      const text = 'Hallo {{pii:PERSON_NAME_1}}, IBAN {{pii:IBAN_1}}';
+      const tokenWithComma = detection(
+        text,
+        'PERSON',
+        PiiCategory.PERSON_NAME,
+        6,
+        28,
+      );
+      const tokenPart = detection(
+        text,
+        'IBAN_CODE',
+        PiiCategory.FINANCIAL_ACCOUNT,
+        40,
+        46,
+      );
+
+      expect(
+        resolveDetectionOverlaps([tokenWithComma, tokenPart], text),
+      ).toEqual([]);
+    });
+
+    it('keeps the part of a detection outside a placeholder', () => {
+      const text = 'Max {{pii:PERSON_NAME_1}} schreibt';
+      const name = detection(text, 'PERSON', PiiCategory.PERSON_NAME, 0, 25);
+
+      expect(resolveDetectionOverlaps([name], text)).toEqual([
+        { ...name, start: 0, end: 3, text: 'Max' },
+      ]);
+    });
+
+    it('keeps the part of a structured detection outside a placeholder', () => {
+      const text = 'an {{pii:EMAIL_ADDRESS_1}}max@example.org';
+      const email = detection(
+        text,
+        'EMAIL_ADDRESS',
+        PiiCategory.EMAIL_ADDRESS,
+        3,
+        41,
+        1,
+      );
+
+      expect(resolveDetectionOverlaps([email], text)).toEqual([
+        { ...email, start: 26, end: 41, text: 'max@example.org' },
+      ]);
+    });
+  });
 });

@@ -37,6 +37,8 @@ artifacts/
 │   │   ├── artifacts-repository.port.ts
 │   │   ├── document-export.port.ts
 │   │   └── spreadsheet-export.port.ts
+│   ├── services/
+│   │   └── user-content-masking.service.ts
 │   └── use-cases/
 │       ├── apply-edits-to-artifact/
 │       ├── create-artifact/
@@ -72,7 +74,8 @@ artifacts/
 
 ## Dependencies
 
-- **ThreadsModule** — Imported for thread ownership validation when creating artifacts
+- **ThreadsModule** — Imported for thread ownership validation when creating artifacts and for the chat's anonymous flag on user saves
+- **ThreadPiiMasksModule** — Imported to mask user saves in anonymous chats and to resolve placeholders on export
 - **WorkspacesModule** — Imported for workspace membership validation when listing artifacts
 - **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
 - **StorageModule** — Imported for downloading letterhead PDFs during export
@@ -89,6 +92,7 @@ artifacts/
 - Creating an artifact can optionally attach a validated `letterheadId`
 - Updating an artifact adds a new version and increments `currentVersionNumber`
 - Updating can also change or clear the letterhead without creating a new version when only the letterhead assignment changes
+- User-authored content (`AuthorType.USER` on create or update) of an artifact whose chat is anonymous is masked through the chat's mask dictionary (`AnonymizeTextForThreadUseCase`) before it is stored, so the model never reads a real value a user typed. Documents and diagrams are masked as a whole; spreadsheets per header and string cell, with formulas untouched and strings the current version already stores skipped. Existing `{{pii:…}}` placeholders are kept. If masking fails or the chat cannot be found, the save fails and no version is stored. Assistant writes already contain placeholders and are stored as is
 - Applying edits performs search-and-replace patches on the current content, creating a new version (errors on ambiguous or missing matches)
 - Reverting copies content from a target version into a new version (non-destructive)
 - Deleting a thread cascade-deletes all its artifacts and versions
