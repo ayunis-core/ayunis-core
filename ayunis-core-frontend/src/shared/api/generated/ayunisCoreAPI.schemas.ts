@@ -5238,7 +5238,7 @@ export interface ApiKeyUsageDto {
 }
 
 export interface ApiKeyUsageResponseDto {
-  /** Usage per API key of the organization, including revoked and expired keys */
+  /** Usage per API key of the organization; with a date range, keys inactive for the whole range are omitted */
   data: ApiKeyUsageDto[];
 }
 

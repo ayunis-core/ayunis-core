@@ -21598,7 +21598,7 @@ export function useUsageControllerGetProviderUsageChart<TData = Awaited<ReturnTy
 
 
 /**
- * Returns token, request and credit usage for every API key of the current organization, including revoked and expired keys. startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive. Without dates, all usage is returned.
+ * Returns token, request and credit usage per API key of the current organization. startDate and endDate must be provided together or not at all; startDate is inclusive, endDate is exclusive. Without dates, all usage is returned for every key, including revoked and expired keys. With dates, keys that did not exist yet or were already revoked or expired for the whole range are omitted unless they have usage in it.
  * @summary Get usage statistics by API key
  */
 export const apiKeyUsageControllerGetApiKeyUsage = (
