@@ -20,6 +20,7 @@ import {
 } from 'src/domain/runs/testing/run-capability.fixture';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { RoutineRunProfile } from './routine-run-profile';
+import { eager } from './run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
 const resolved = <T>(value: T) =>
@@ -69,7 +70,11 @@ function assembleRoutine(
   const profile = buildRoutineProfile(options.orgAllowsInternet);
   const capabilities = [
     ...profile.capabilities,
-    { contribute: () => ({ tools: options.extraTools ?? [] }) },
+    ...eager({
+      id: 'extra_tools',
+      description: 'Tools added by the test.',
+      contribute: () => ({ tools: options.extraTools ?? [] }),
+    }),
   ];
   return assembler.assemble(
     { ...profile, capabilities },

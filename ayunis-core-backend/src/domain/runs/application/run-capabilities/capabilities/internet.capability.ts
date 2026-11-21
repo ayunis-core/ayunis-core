@@ -16,6 +16,9 @@ import type {
  */
 @Injectable()
 export class InternetCapability implements RunCapability {
+  readonly id = 'internet';
+  readonly description = 'Search the web and read web pages.';
+
   private readonly logger = new Logger(InternetCapability.name);
 
   constructor(

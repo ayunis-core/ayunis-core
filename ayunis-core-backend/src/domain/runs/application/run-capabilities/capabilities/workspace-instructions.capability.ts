@@ -9,6 +9,9 @@ import {
 
 @Injectable()
 export class WorkspaceInstructionsCapability implements RunCapability {
+  readonly id = 'workspace_instructions';
+  readonly description = "The instructions of this chat's project.";
+
   contribute(context: RunCapabilityContext): CapabilityContribution {
     const instruction = context.workspaceContext?.instruction;
     if (!instruction) return {};

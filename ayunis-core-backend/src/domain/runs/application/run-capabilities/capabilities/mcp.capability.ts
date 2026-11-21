@@ -18,6 +18,9 @@ import {
  */
 @Injectable()
 export class McpCapability implements RunCapability {
+  readonly id = 'mcp';
+  readonly description = 'Tools of the integrations connected to this chat.';
+
   constructor(private readonly mcpToolAssembler: McpToolAssemblerService) {}
 
   async contribute(

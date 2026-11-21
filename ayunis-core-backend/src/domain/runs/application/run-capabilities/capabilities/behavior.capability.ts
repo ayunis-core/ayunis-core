@@ -115,6 +115,9 @@ For technical questions about the platform, configuration, or deployment, users 
 
 @Injectable()
 export class BehaviorCapability implements RunCapability {
+  readonly id = 'behavior';
+  readonly description = 'General rules for how to answer.';
+
   contribute(): CapabilityContribution {
     return {
       sections: [

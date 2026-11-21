@@ -37,6 +37,8 @@ export interface RunCapabilityContext extends RunCapabilityInput {
   readonly workspaceContext?: WorkspaceRunContext;
   /** Thread-attached sources, deduplicated by ID. */
   readonly threadSources: readonly Source[];
+  /** Ids of the capabilities the thread has loaded, as stored on it. */
+  readonly loadedCapabilityIds: ReadonlySet<string>;
   /** Thread, workspace and the user's active knowledge bases, merged by ID. */
   knowledgeBases(): Promise<KnowledgeBaseSummary[]>;
   skillCatalog(): Promise<SkillCatalog>;

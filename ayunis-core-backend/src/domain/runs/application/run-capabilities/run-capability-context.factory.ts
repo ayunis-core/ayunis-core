@@ -39,6 +39,7 @@ export class RunCapabilityContextFactory {
         [],
         input.thread.sourceAssignments?.map((a) => a.source) ?? [],
       ),
+      loadedCapabilityIds: new Set(input.thread.loadedCapabilityIds),
       knowledgeBases: memoize(async () =>
         mergeKnowledgeBases(
           input.thread.getUniqueKnowledgeBases(),

@@ -13,6 +13,9 @@ const ROUTINE_TIME_ZONE = 'Europe/Berlin';
 /** The routine's name, and the current date and time where routines are scheduled. */
 @Injectable()
 export class RoutineContextCapability implements RunCapability {
+  readonly id = 'routine_context';
+  readonly description = 'The routine being run and when it runs.';
+
   // The time of day goes into the run notes at the end of the prompt: every
   // nudge starts a new run with a new time, and only the prompt's end changes,
   // so providers that cache by prefix keep the rest.

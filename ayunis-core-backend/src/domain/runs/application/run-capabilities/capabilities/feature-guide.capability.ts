@@ -27,6 +27,10 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
  */
 @Injectable()
 export class FeatureGuideCapability implements RunCapability {
+  readonly id = 'feature_guide';
+  readonly description =
+    'Guidance for chats started from an empty feature page.';
+
   constructor(
     private readonly configService: ConfigService,
     private readonly contextService: ContextService,

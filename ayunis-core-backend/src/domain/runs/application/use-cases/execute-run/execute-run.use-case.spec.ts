@@ -96,6 +96,7 @@ import { createSkillActivationHook } from 'src/domain/runs/application/run-capab
 import { RunProfileAssembler } from 'src/domain/runs/application/run-profiles/run-profile-assembler.service';
 import {
   DONE_WHEN_MODEL_STOPS,
+  eager,
   type RunProfile,
 } from 'src/domain/runs/application/run-profiles/run-profile';
 import type { RunProfileRegistry } from 'src/domain/runs/application/run-profiles/run-profile.registry';
@@ -270,7 +271,11 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
   const profile: RunProfile = {
     id: 'chat',
     preamble: 'system prompt',
-    capabilities: [{ contribute: profileContribute }],
+    capabilities: eager({
+      id: 'test_capability',
+      description: 'Everything the test run needs.',
+      contribute: profileContribute,
+    }),
     completionPolicy: DONE_WHEN_MODEL_STOPS,
     maxIterations: 50,
     asksForToolConfirmation: true,
@@ -2636,7 +2641,7 @@ describe('ExecuteRunUseCase', () => {
       expect.objectContaining({
         thread: expect.objectContaining({ id: threadId }),
       }),
-      { reservedToolNames: new Set() },
+      { reservedToolNames: new Set(), loadableToolNames: new Set() },
     );
     expect(provider.requests[0].instructions).toBe('system prompt');
   });

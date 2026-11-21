@@ -21,6 +21,9 @@ import {
  */
 @Injectable()
 export class OnboardingCapability implements RunCapability {
+  readonly id = 'onboarding';
+  readonly description = 'Guidance for onboarding chats.';
+
   constructor(private readonly configService: ConfigService) {}
 
   contribute(

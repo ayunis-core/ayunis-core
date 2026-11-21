@@ -22,6 +22,9 @@ State example: {{legal:DE-BY/POG/art_1}}
 
 @Injectable()
 export class LegalReferencesCapability implements RunCapability {
+  readonly id = 'legal_references';
+  readonly description = 'Rules for citing legal references.';
+
   contribute(): CapabilityContribution {
     return {
       sections: [{ slot: PromptSlot.POLICIES, content: LEGAL_REFERENCES }],

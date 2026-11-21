@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { RunCapability } from 'src/domain/runs/application/run-capabilities/run-capability';
 import { AnonymizationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization.capability';
 import { ArtifactsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/artifacts.capability';
 import { BehaviorCapability } from 'src/domain/runs/application/run-capabilities/capabilities/behavior.capability';
@@ -31,6 +30,8 @@ import { AdoptionCapability } from 'src/domain/runs/application/run-capabilities
 import {
   AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
+  eager,
+  type ProfileCapability,
   type RunCompletionPolicy,
   type RunProfile,
 } from './run-profile';
@@ -76,8 +77,8 @@ export class ChatRunProfile implements RunProfile {
     private readonly mcp: McpCapability,
   ) {}
 
-  get capabilities(): readonly RunCapability[] {
-    return [
+  get capabilities(): readonly ProfileCapability[] {
+    return eager(
       this.dateTime,
       this.dataHandling,
       this.anonymization,
@@ -106,6 +107,6 @@ export class ChatRunProfile implements RunProfile {
       this.memory,
       this.chatHistory,
       this.mcp,
-    ];
+    );
   }
 }

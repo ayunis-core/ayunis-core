@@ -12,6 +12,10 @@ import type {
 
 @Injectable()
 export class CodeExecutionCapability implements RunCapability {
+  readonly id = 'code_execution';
+  readonly description =
+    'Run Python code to analyze data, calculate results or process attached data files.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

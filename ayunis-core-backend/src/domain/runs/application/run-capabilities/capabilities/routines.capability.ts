@@ -16,6 +16,10 @@ import type {
  */
 @Injectable()
 export class RoutinesCapability implements RunCapability {
+  readonly id = 'routine_management';
+  readonly description =
+    "Create and edit routines: tasks that run unattended every day and report to the user's inbox.";
+
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,
     private readonly findManageableRoutinesUseCase: FindManageableRoutinesUseCase,

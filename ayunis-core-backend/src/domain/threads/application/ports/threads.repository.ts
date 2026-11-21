@@ -77,6 +77,12 @@ export interface GrepPastMessagesParams {
   limit: number;
 }
 
+export interface AddLoadedCapabilityIdsParams {
+  threadId: UUID;
+  userId: UUID;
+  capabilityIds: readonly string[];
+}
+
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
   abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
@@ -145,6 +151,15 @@ export abstract class ThreadsRepository {
     threadId: UUID;
     lastActivityAt: Date;
   }): Promise<void>;
+  /**
+   * Appends the given ids the thread does not hold yet to its loaded
+   * capability ids, each once, in request order. One statement, so concurrent
+   * loads never drop each other's ids.
+   * Throws `ThreadNotFoundError` when the user cannot reach the thread.
+   */
+  abstract addLoadedCapabilityIds(
+    params: AddLoadedCapabilityIdsParams,
+  ): Promise<void>;
   abstract addSourceAssignment(params: {
     threadId: UUID;
     userId: UUID;

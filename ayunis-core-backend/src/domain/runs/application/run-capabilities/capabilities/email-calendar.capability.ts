@@ -10,6 +10,10 @@ import type {
 
 @Injectable()
 export class EmailCalendarCapability implements RunCapability {
+  readonly id = 'email_calendar';
+  readonly description =
+    'Prepare an email or a calendar event that the user reviews and sends.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

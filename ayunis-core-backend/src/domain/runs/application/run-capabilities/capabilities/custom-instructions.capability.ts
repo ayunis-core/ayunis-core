@@ -10,6 +10,10 @@ import {
 
 @Injectable()
 export class CustomInstructionsCapability implements RunCapability {
+  readonly id = 'custom_instructions';
+  readonly description =
+    "The organization's and the user's custom instructions.";
+
   constructor(
     private readonly getOrgSystemPromptUseCase: GetOrgSystemPromptUseCase,
     private readonly getUserSystemPromptUseCase: GetUserSystemPromptUseCase,
