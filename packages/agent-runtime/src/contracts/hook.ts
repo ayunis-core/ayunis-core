@@ -205,6 +205,11 @@ export interface BeforeToolCallContext extends HookApi {
   }): void;
 }
 
+export interface DescribeUnknownToolContext {
+  readonly iteration: number;
+  readonly toolCall: ToolCallSummary;
+}
+
 export type ToolCallOutcome = 'success' | 'error' | 'aborted';
 
 export interface AfterToolCallContext extends HookApi {
@@ -249,5 +254,13 @@ export interface Hook {
   modelCallInterrupted?(ctx: ModelCallInterruptedContext): void | Promise<void>;
   beforeToolCall?(ctx: BeforeToolCallContext): void | Promise<void>;
   afterToolCall?(ctx: AfterToolCallContext): void | Promise<void>;
+  /**
+   * The error result for a call to a tool that is not in the current tool
+   * set. The first hook returning a string wins; without one the call gets
+   * the runtime's generic not-found result.
+   */
+  describeUnknownTool?(
+    ctx: DescribeUnknownToolContext,
+  ): string | undefined | Promise<string | undefined>;
   runEnd?(ctx: RunEndContext): void | Promise<void>;
 }

@@ -58,7 +58,11 @@ export function aCapabilityContext(
 export function anAssemblyState(
   reserved: Iterable<string> = [],
 ): CapabilityAssemblyState {
-  return { reservedToolNames: new Set(reserved), loadableToolNames: new Set() };
+  return {
+    reservedToolNames: new Set(reserved),
+    loadableToolNames: new Set(),
+    capabilityCatalog: [],
+  };
 }
 
 export function anEmptySkillCatalog(): SkillCatalog {

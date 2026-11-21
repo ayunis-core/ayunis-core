@@ -513,6 +513,61 @@ describe('the agent loop', () => {
     expect(model.requests).toHaveLength(2);
   });
 
+  it('lets a hook describe a call to an unknown tool and keeps the generic result for others', async () => {
+    const model = new MockProvider([
+      [
+        {
+          toolCallDeltas: [
+            {
+              index: 0,
+              id: 'call-1',
+              name: 'edit_routine',
+              argumentsDelta: '{}',
+            },
+            {
+              index: 1,
+              id: 'call-2',
+              name: 'missing_tool',
+              argumentsDelta: '{}',
+            },
+          ],
+        },
+        { finishReason: 'tool_calls' },
+      ],
+      textTurn('Recovered'),
+    ]);
+    const events = await collectEvents(
+      baseInput(model, {
+        tools: [echoTool()],
+        hooks: [
+          { name: 'silent', describeUnknownTool: () => undefined },
+          {
+            name: 'tool-groups',
+            describeUnknownTool: ({ toolCall }) =>
+              toolCall.name === 'edit_routine'
+                ? 'Load routine_management first.'
+                : undefined,
+          },
+        ],
+      }),
+    );
+
+    const results = events.filter((e) => e.type === 'tool_result');
+    expect(results).toEqual([
+      expect.objectContaining({
+        toolCallId: 'call-1',
+        result: 'Load routine_management first.',
+        isError: true,
+      }),
+      expect.objectContaining({
+        toolCallId: 'call-2',
+        result: expect.stringContaining('was not found'),
+        isError: true,
+      }),
+    ]);
+    expect(model.requests).toHaveLength(2);
+  });
+
   it.each([
     {
       label: 'missing provider id',

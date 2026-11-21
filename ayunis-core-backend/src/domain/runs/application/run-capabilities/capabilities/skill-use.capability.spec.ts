@@ -107,7 +107,10 @@ describe('createSkillActivationHook', () => {
 
   it('does not inherit root thread state into child runs', () => {
     expect(
-      createSkillActivationHook({ refresh: jest.fn() }).inheritToChildRuns,
+      createSkillActivationHook({
+        refresh: jest.fn(),
+        capabilityCatalog: () => [],
+      }).inheritToChildRuns,
     ).toBe(false);
   });
 
@@ -115,7 +118,10 @@ describe('createSkillActivationHook', () => {
     const refresh = jest.fn().mockResolvedValue(undefined);
     const ctx = toolCtx('activate_skill');
 
-    await createSkillActivationHook({ refresh }).afterToolCall!(ctx as never);
+    await createSkillActivationHook({
+      refresh,
+      capabilityCatalog: () => [],
+    }).afterToolCall!(ctx as never);
 
     expect(refresh).toHaveBeenCalledWith(ctx);
   });
@@ -126,7 +132,10 @@ describe('createSkillActivationHook', () => {
   ])('ignores %s', async (_label, ctx) => {
     const refresh = jest.fn();
 
-    await createSkillActivationHook({ refresh }).afterToolCall!(ctx as never);
+    await createSkillActivationHook({
+      refresh,
+      capabilityCatalog: () => [],
+    }).afterToolCall!(ctx as never);
 
     expect(refresh).not.toHaveBeenCalled();
   });

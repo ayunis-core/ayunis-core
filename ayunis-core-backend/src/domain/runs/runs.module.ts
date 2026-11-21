@@ -57,6 +57,7 @@ import { RecordingsCapability } from './application/run-capabilities/capabilitie
 import { LegalReferencesCapability } from './application/run-capabilities/capabilities/legal-references.capability';
 import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
 import { SkillUseCapability } from './application/run-capabilities/capabilities/skill-use.capability';
+import { ToolLoaderCapability } from './application/run-capabilities/capabilities/tool-loader.capability';
 import { SkillManagementCapability } from './application/run-capabilities/capabilities/skill-management.capability';
 import { RoutinesCapability } from './application/run-capabilities/capabilities/routines.capability';
 import { AnonymizationExceptionCapability } from './application/run-capabilities/capabilities/anonymization-exception.capability';
@@ -196,6 +197,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     LegalReferencesCapability,
     McpCapability,
     SkillUseCapability,
+    ToolLoaderCapability,
     SkillManagementCapability,
     RoutinesCapability,
     AnonymizationExceptionCapability,
