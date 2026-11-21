@@ -5,18 +5,12 @@ import {
   aCapabilityContext,
   createAssembleToolUseCase,
   sectionsIn,
-  TEST_ORG_ID,
-  TEST_USER_ID,
   toolNames,
 } from 'src/domain/runs/testing/run-capability.fixture';
-import type { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
-import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
-import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import {
   createSkillActivationHook,
-  SkillsCapability,
-} from './skills.capability';
+  SkillUseCapability,
+} from './skill-use.capability';
 
 const catalog: SkillCatalog = {
   slugMap: new Map([
@@ -38,61 +32,25 @@ const catalog: SkillCatalog = {
   ],
 };
 
-const userContext = {
-  get: (key: string) =>
-    ({
-      userId: TEST_USER_ID,
-      orgId: TEST_ORG_ID,
-      role: UserRole.USER,
-      systemRole: SystemRole.CUSTOMER,
-    })[key],
-};
-
-const buildCapability = (granted: Permission[] = [Permission.MANAGE_SKILLS]) =>
-  new SkillsCapability(
-    createAssembleToolUseCase(),
-    userContext as never,
-    {
-      execute: (query: HasPermissionQuery) =>
-        Promise.resolve(
-          query.orgId === TEST_ORG_ID &&
-            query.role === UserRole.USER &&
-            granted.includes(query.permission),
-        ),
-    } as never,
-  );
-
-describe('SkillsCapability', () => {
-  const capability = buildCapability();
+describe('SkillUseCapability', () => {
+  const capability = new SkillUseCapability(createAssembleToolUseCase());
   const withCatalog = (overrides: Partial<SkillCatalog> = {}) =>
     aCapabilityContext({
       skillCatalog: () => Promise.resolve({ ...catalog, ...overrides }),
     });
 
-  it('offers skill creation, editing and activation for an advertised catalog', async () => {
-    expect(toolNames(await capability.contribute(withCatalog()))).toEqual([
-      ToolType.CREATE_SKILL,
-      ToolType.EDIT_SKILL,
-      ToolType.ACTIVATE_SKILL,
-    ]);
+  it('offers skill activation and the activation hook for an advertised catalog', async () => {
+    const contribution = await capability.contribute(withCatalog());
+
+    expect(toolNames(contribution)).toEqual([ToolType.ACTIVATE_SKILL]);
+    expect(contribution.hooks).toEqual([createSkillActivationHook]);
   });
 
-  it('offers only skill creation without advertised or editable skills', async () => {
+  it('offers no activation and no catalog without advertised skills', async () => {
     const contribution = await capability.contribute(aCapabilityContext());
 
-    expect(toolNames(contribution)).toEqual([ToolType.CREATE_SKILL]);
+    expect(toolNames(contribution)).toEqual([]);
     expect(sectionsIn(contribution, PromptSlot.RESOURCES)).toEqual([]);
-  });
-
-  it('offers no skill creation to members whose role may not manage skills', async () => {
-    const contribution = await buildCapability([
-      Permission.INSTALL_MARKETPLACE_SKILLS,
-    ]).contribute(withCatalog());
-
-    expect(toolNames(contribution)).toEqual([
-      ToolType.EDIT_SKILL,
-      ToolType.ACTIVATE_SKILL,
-    ]);
   });
 
   it('lists the catalog by slug with escaped descriptions', async () => {
@@ -118,6 +76,7 @@ describe('SkillsCapability', () => {
     );
 
     expect(contribution.tools).toBeUndefined();
+    expect(contribution.hooks).toBeUndefined();
     expect(sectionsIn(contribution, PromptSlot.RUN_NOTES)).toEqual([
       expect.stringContaining(
         'Skill "Legal Research" has already been activated on this thread.',

@@ -15,9 +15,9 @@ import {
 /**
  * What an onboarding chat is for, by its stage. It brings no tools: a profile
  * chat writes memory through `MemoryCapability`, skills are created through
- * `SkillsCapability`, so each stage only applies while the run actually has
- * those tools. It reads the tools contributed before it, so it must come after
- * the skills capability.
+ * `SkillManagementCapability`, so each stage only applies while the run
+ * actually has those tools. It reads the tools contributed before it, so it
+ * must come after the skill management capability.
  */
 @Injectable()
 export class OnboardingCapability implements RunCapability {

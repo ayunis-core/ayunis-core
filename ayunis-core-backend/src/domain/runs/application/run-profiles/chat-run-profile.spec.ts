@@ -22,9 +22,9 @@ import { InternetCapability } from 'src/domain/runs/application/run-capabilities
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
-import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
-import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
+import { SkillUseCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skill-use.capability';
+import { SkillManagementCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skill-management.capability';
 import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routines.capability';
 import { AnonymizationExceptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
@@ -111,7 +111,9 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     new EmailCalendarCapability(assembleTool),
     new FilesChartsMapCapability(assembleTool),
     new ArtifactsCapability(artifactTools),
-    new SkillsCapability(
+    new SkillUseCapability(assembleTool),
+    new SkillManagementCapability(
+      { enabled: false } as never,
       assembleTool,
       userContext as never,
       resolved(true) as never,
@@ -124,12 +126,6 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
       resolved({ internetSearchEnabled: true }) as never,
       { get: () => true } as never,
       assembleTool,
-    ),
-    new MarketplaceCapability(
-      { enabled: false } as never,
-      assembleTool,
-      {} as never,
-      {} as never,
     ),
     new ImageGenerationCapability(resolved({}) as never, assembleTool),
     new ThreadSourcesCapability(assembleTool),
@@ -279,7 +275,7 @@ describe('ChatRunProfile', () => {
     );
   });
 
-  it('offers create_skill in a skills feature-guide chat, which reads the tools of the skills capability', async () => {
+  it('offers create_skill in a skills feature-guide chat, which reads the tools of the skill management capability', async () => {
     const { instructions } = await assembleChat({
       thread: aThread({
         origin: {
