@@ -30,7 +30,7 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
 export class SkillManagementCapability implements RunCapability {
   readonly id = 'skill_management';
   readonly description =
-    'Create and edit skills, and search and install skills from the marketplace.';
+    'Create and edit skills (saved instructions for a recurring task), and search and install skills from the Ayunis marketplace, which only these tools can search. Load it right away, without asking first, when the user wants to save how a task is done as a skill, change a skill, or find a skill in the marketplace (Skill erstellen, Skill anpassen, Marktplatz).';
 
   constructor(
     @Inject(marketplaceConfig.KEY)

@@ -23,7 +23,7 @@ chat_list, chat_grep and chat_read give you the user's earlier chats with you; i
 export class ChatHistoryCapability implements RunCapability {
   readonly id = 'chat_history';
   readonly description =
-    "List, search and read the user's earlier chats when they refer to a previous conversation.";
+    "List, search and read the user's earlier chats, which you cannot see without these tools. Load it right away, without asking first, whenever the user refers to a previous conversation or to something discussed before (letzter Chat, neulich, wie besprochen, früheres Gespräch).";
 
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 

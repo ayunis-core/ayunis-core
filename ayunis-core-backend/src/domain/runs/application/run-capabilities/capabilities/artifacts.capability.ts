@@ -35,11 +35,19 @@ Use Excel formulas for totals and derived cells: a cell whose string value start
 export class ArtifactsCapability implements RunCapability {
   readonly id = 'artifacts';
   readonly description =
-    'Create, edit and read documents, diagrams and spreadsheets that the user views and edits next to the chat.';
+    'Create, edit and read documents (letters, reports, drafts to export as Word/PDF), mermaid diagrams (flowcharts, org charts, sequence diagrams) and spreadsheets (tables to edit or export to Excel) that the user views and edits next to the chat. Load it right away, without asking first, whenever the user asks you to write a letter, report or other document, or asks for a diagram or a table to edit (Dokument, Brief, Schreiben, Bericht, Vorlage, Entwurf, Ablaufdiagramm, Organigramm, Tabelle, Excel).';
 
   constructor(
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
   ) {}
+
+  /**
+   * A thread with artifacts keeps the tools that update them, also a thread
+   * from before artifacts were loaded on demand.
+   */
+  isRequiredBy(context: RunCapabilityContext): Promise<boolean> {
+    return this.artifactToolAssembler.threadHasArtifacts(context.thread);
+  }
 
   // The usage guidance is contributed even when the model cannot use tools;
   // the chat prompt has always carried it.

@@ -25,7 +25,7 @@ Use create_file for downloadable CSV, XML, JSON and plain-text (TXT) files, incl
 export class FilesChartsMapCapability implements RunCapability {
   readonly id = 'files_charts_map';
   readonly description =
-    'Create downloadable files, bar, line and pie charts, and maps.';
+    'Create downloadable files (CSV, JSON, XML, TXT), bar, line and pie charts, and maps with markers or areas. Load it when the user asks for a chart, a map or a file to download (Balkendiagramm, Liniendiagramm, Tortendiagramm, Grafik, Karte, Datei, Download).';
 
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 

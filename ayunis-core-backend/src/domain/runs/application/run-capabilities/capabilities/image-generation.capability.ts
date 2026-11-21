@@ -21,7 +21,8 @@ import type {
 @Injectable()
 export class ImageGenerationCapability implements RunCapability {
   readonly id = 'image_generation';
-  readonly description = 'Generate images or edit existing ones.';
+  readonly description =
+    'Generate an image from a description or edit an uploaded or generated image. Load it when the user asks for a picture, illustration, poster or a change to an image (Bild, Foto, Illustration, Plakat, Bild bearbeiten).';
 
   private readonly logger = new Logger(ImageGenerationCapability.name);
 

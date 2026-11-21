@@ -4,6 +4,7 @@ import type {
   ToolResultContent,
 } from '@ayunis/inference';
 import { mockTextResponse, mockToolCallResponse } from './mock-chunk-responses';
+import { mockLoadToolsFirst } from './mock-load-tools-response';
 
 const REPORT_PROMPT = 'E2E report past chats';
 const CALL_PROMPT = /^E2E past chats call (chat_\w+) (\{.*\})$/s;
@@ -20,11 +21,16 @@ export function mockPastChatsResponse(
   userText: string,
 ): AsyncIterable<ProviderChunk> | null {
   if (userText === REPORT_PROMPT) {
-    return mockTextResponse(pastChatsReport(request));
+    return (
+      mockLoadToolsFirst(request, 'chat_list') ??
+      mockTextResponse(pastChatsReport(request))
+    );
   }
   const call = CALL_PROMPT.exec(userText);
   if (!call) return null;
   const [, toolName, args] = call;
+  const loading = mockLoadToolsFirst(request, toolName);
+  if (loading) return loading;
   const result = resultSinceLastUserMessage(request);
   if (result) return mockTextResponse(`past-chats-result::${result.result}`);
   if (!request.tools.some((tool) => tool.name === toolName)) {
