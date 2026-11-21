@@ -79,6 +79,7 @@ export interface TextRunBlock {
   kind: 'text';
   key: string;
   content: TextMessageContent;
+  answeringModelName?: string;
 }
 
 export type AgentRunBlock =

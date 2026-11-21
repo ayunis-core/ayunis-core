@@ -219,6 +219,7 @@ function appendAssistantMessage(
         kind: 'text',
         key: `${message.id}-text-${index}`,
         content: block as TextMessageContent,
+        answeringModelName: message.answeringModelName,
       });
     }
   });

@@ -29,6 +29,7 @@ export function toBackendAssistantMessage(
   threadId: UUID,
   id: UUID = randomUUID(),
   integrations: RuntimeToolIntegrationRegistry = EMPTY_TOOL_INTEGRATIONS,
+  answeringModelName?: string,
 ): AssistantMessage {
   const awaitingConfirmation = integrations.callsAwaitingConfirmation(message);
   const content = message.content
@@ -36,7 +37,7 @@ export function toBackendAssistantMessage(
       toBackendAssistantContent(item, integrations, awaitingConfirmation),
     )
     .filter((c): c is BackendAssistantContent => c !== null);
-  return new AssistantMessage({ id, threadId, content });
+  return new AssistantMessage({ id, threadId, content, answeringModelName });
 }
 
 function toBackendAssistantContent(

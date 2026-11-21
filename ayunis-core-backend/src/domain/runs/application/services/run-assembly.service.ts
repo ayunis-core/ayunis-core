@@ -1,5 +1,10 @@
 import type { UUID } from 'crypto';
-import { run, RunContext, type Hook } from '@ayunis/agent-runtime';
+import {
+  run,
+  RunContext,
+  type Hook,
+  type ModelProvider,
+} from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
 import { UnmaskedTermsService } from 'src/domain/runs/application/services/unmasked-terms.service';
 import { ResolveModelProviderQuery } from 'src/domain/models/application/use-cases/resolve-model-provider/resolve-model-provider.query';
@@ -13,11 +18,13 @@ import { UsageHookFactory } from 'src/domain/runs/application/agent-runtime/hook
 import { RuntimeHistoryMaterializer } from 'src/domain/runs/application/agent-runtime/runtime-history-materializer';
 import { RuntimeModelRegistry } from 'src/domain/runs/application/agent-runtime/runtime-model.registry';
 import { RUN_RETRY_CONFIG } from 'src/domain/runs/application/agent-runtime/run-retry.config';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { PreparedRun } from './run-assembly.types';
 
 export interface AssembledRun {
   events: ReturnType<typeof run>;
   models: RuntimeModelRegistry;
+  answeringModelName?: string;
 }
 
 @Injectable()
@@ -58,6 +65,34 @@ export class RunAssemblyService {
         tokenEstimator: provider.tokenEstimator,
       },
     });
+    const { context, models, answeringModelName } = this.createRunContext(
+      prepared,
+      provider,
+    );
+    return {
+      events: run({
+        instructions: prepared.instructions,
+        model: provider,
+        messages,
+        tools: prepared.tools,
+        ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
+        hooks: this.buildHooks(
+          prepared,
+          models,
+          onMessagePersisted,
+          answeringModelName,
+        ),
+        context,
+        maxIterations: prepared.maxIterations,
+        retry: RUN_RETRY_CONFIG,
+        ...(signal ? { signal } : {}),
+      }),
+      models,
+      answeringModelName,
+    };
+  }
+
+  private createRunContext(prepared: PreparedRun, provider: ModelProvider) {
     const context = RunContext.create({
       orgId: prepared.orgId,
       userId: prepared.userId,
@@ -66,27 +101,18 @@ export class RunAssemblyService {
     });
     const models = RuntimeModelRegistry.attach(context);
     models.register(provider, prepared.model);
-    return {
-      events: run({
-        instructions: prepared.instructions,
-        model: provider,
-        messages,
-        tools: prepared.tools,
-        ...(prepared.tools.length > 0 ? { toolChoice: 'auto' as const } : {}),
-        hooks: this.buildHooks(prepared, models, onMessagePersisted),
-        context,
-        maxIterations: prepared.maxIterations,
-        retry: RUN_RETRY_CONFIG,
-        ...(signal ? { signal } : {}),
-      }),
-      models,
-    };
+    const answeringModelName =
+      prepared.thread.mode === ModelMode.AUTO
+        ? prepared.model.displayName
+        : undefined;
+    return { context, models, answeringModelName };
   }
 
   private buildHooks(
     prepared: PreparedRun,
     models: RuntimeModelRegistry,
     onMessagePersisted: (messageId: UUID) => void,
+    answeringModelName: string | undefined,
   ): Hook[] {
     // Core hooks cannot be removed by a profile. Usage must persist before retry
     // evaluation; profile hooks (e.g. the skill refresh) run before budgeting,
@@ -103,6 +129,7 @@ export class RunAssemblyService {
       this.persistenceHookFactory.create({
         onMessagePersisted,
         thread: prepared.thread,
+        answeringModelName,
         integrations: prepared.toolIntegrations,
         awaitingClientResultToolNames: prepared.awaitingClientResultToolNames,
       }),

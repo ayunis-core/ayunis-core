@@ -240,6 +240,13 @@ export class AssistantMessageResponseDto extends BaseMessageResponseDto {
   })
   declare role: MessageRole.ASSISTANT;
 
+  @ApiPropertyOptional({
+    type: String,
+    description:
+      'Display name of the model that generated this reply in Auto mode',
+  })
+  answeringModelName?: string;
+
   @ApiProperty({
     description:
       'Array of content items for assistant messages (text or tool use)',

@@ -2800,6 +2800,8 @@ export interface AssistantMessageResponseDto {
   createdAt: string;
   /** Role of the message sender */
   role: AssistantMessageResponseDtoRole;
+  /** Display name of the model that generated this reply in Auto mode */
+  answeringModelName?: string;
   /** Array of content items for assistant messages (text or tool use) */
   content: (TextMessageContentResponseDto | ToolUseMessageContentResponseDto | ThinkingMessageContentResponseDto)[];
 }
