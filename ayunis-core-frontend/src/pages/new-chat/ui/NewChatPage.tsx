@@ -30,12 +30,13 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 import { PinnedSkills } from './PinnedSkills';
-import { PersonalizationCard } from './PersonalizationCard';
-import { useUserSystemPromptStatus } from '@/pages/new-chat/api/useUserSystemPromptStatus';
-import { useSkipPersonalization } from '@/pages/new-chat/api/useSkipPersonalization';
-import { useQueryClient } from '@tanstack/react-query';
-import { getChatSettingsControllerGetSystemPromptQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import { useRouter } from '@tanstack/react-router';
+import { OnboardingHint } from './OnboardingHint';
+import { useOnboardingStage } from '@/pages/new-chat/api/useOnboardingStage';
+import {
+  composerChatModel,
+  onboardingChat,
+  type OnboardingChat,
+} from '@/pages/new-chat/lib/onboarding-chat';
 import { UnreadNotificationsPanel } from './UnreadNotificationsPanel';
 import {
   EmbeddedHistoryButton,
@@ -65,20 +66,7 @@ export default function NewChatPage({
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const {
-    hasSystemPrompt,
-    isLoading: isSystemPromptLoading,
-    isError: isSystemPromptError,
-  } = useUserSystemPromptStatus(!isEmbedded);
-  const { skip, isSkipping } = useSkipPersonalization();
-
-  useEffect(() => {
-    if (isSystemPromptError) {
-      showError(t('newChat.systemPromptLoadError'));
-    }
-  }, [isSystemPromptError, t]);
-  const queryClient = useQueryClient();
-  const router = useRouter();
+  const onboardingStage = useOnboardingStage(!isEmbedded);
   const chatInputRef = useRef<ChatInputRef>(null);
 
   useEffect(() => {
@@ -156,6 +144,12 @@ export default function NewChatPage({
   } = useSelectedModel(modelId, models, isAnonymous);
 
   const isVisionEnabled = selectedModel?.canVision ?? false;
+  const onboarding = onboardingStage
+    ? onboardingChat(onboardingStage, {
+        model: composerChatModel(resolvedModelId, selectedMode),
+        isAnonymous,
+      })
+    : null;
 
   function handleFileUpload(files: File[]) {
     const newSources: LocalSource[] = files.map((file) => ({
@@ -234,6 +228,24 @@ export default function NewChatPage({
     });
   }
 
+  function handleOnboardingStart({
+    stage,
+    model,
+    isAnonymous,
+  }: OnboardingChat) {
+    setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
+    void initiateChat({
+      message: t(`newChat.onboardingHint.${stage}.message`),
+      images: [],
+      ...model,
+      sources: [],
+      knowledgeBases: [],
+      mcpIntegrations: [],
+      isAnonymous,
+      origin: { kind: 'onboarding', stage },
+    });
+  }
+
   function handleCancel() {
     cancel();
     setSources((prev) =>
@@ -246,7 +258,6 @@ export default function NewChatPage({
     );
   }
 
-  // Before the personalization check: the Outlook pane has no onboarding.
   if (isEmbedded) {
     const isSendDisabled = isAcademyGated || !resolvedModelId;
     return (
@@ -297,26 +308,6 @@ export default function NewChatPage({
     );
   }
 
-  if (!isSystemPromptLoading && !isSystemPromptError && !hasSystemPrompt) {
-    return (
-      <NewChatPageLayout
-        header={
-          <ContentAreaHeader breadcrumbs={[{ label: t('newChat.newChat') }]} />
-        }
-      >
-        <PersonalizationCard
-          onSkip={skip}
-          isSkipping={isSkipping}
-          onComplete={async () => {
-            const queryKey = getChatSettingsControllerGetSystemPromptQueryKey();
-            await queryClient.invalidateQueries({ queryKey });
-            await router.invalidate();
-          }}
-        />
-      </NewChatPageLayout>
-    );
-  }
-
   return (
     <NewChatPageLayout
       isSettling={isCreating}
@@ -361,6 +352,15 @@ export default function NewChatPage({
             )}
 
             <AcademyGateNotice className="mb-2" />
+
+            {onboarding && !isCreating && (
+              <OnboardingHint
+                className="mb-2"
+                stage={onboarding.stage}
+                disabled={isAcademyGated}
+                onStart={() => handleOnboardingStart(onboarding)}
+              />
+            )}
 
             <ChatInput
               ref={chatInputRef}

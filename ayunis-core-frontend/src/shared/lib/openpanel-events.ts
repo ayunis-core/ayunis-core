@@ -3,6 +3,7 @@ import type {
   MeResponseDtoRole,
   MeResponseDtoSystemRole,
   ModelMode,
+  OnboardingStage,
   ToggleFavoriteDtoReferenceType,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { OpenPanel } from '@openpanel/web';
@@ -96,7 +97,7 @@ type OpenPanelEvents = {
   favorite_added: { resource_type: ToggleFavoriteDtoReferenceType };
   favorite_opened: { resource_type: ToggleFavoriteDtoReferenceType };
   welcome_video_seen: undefined;
-  personalization_saved: { state: 'completed' | 'skipped' };
+  onboarding_chat_started: { stage: OnboardingStage };
   /** `step_id` is a step `id` from `widgets/onboarding/config`. */
   onboarding_step_toggled: { step_id: string; checked: boolean };
   onboarding_hidden_changed: { hidden: boolean };

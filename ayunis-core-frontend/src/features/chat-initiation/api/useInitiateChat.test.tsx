@@ -326,11 +326,29 @@ describe('chat_started tracking', () => {
     );
   });
 
-  it('sends no chat_started when the thread cannot be created', async () => {
+  it('sends onboarding_chat_started with the stage after chat_started for an onboarding chat', async () => {
+    await startChat({
+      ...chatParams,
+      origin: { kind: 'onboarding', stage: 'first_skill' },
+    });
+
+    expect(mocks.track.mock.calls.map(([name]) => name)).toEqual([
+      'chat_started',
+      'onboarding_chat_started',
+    ]);
+    expect(mocks.track).toHaveBeenLastCalledWith('onboarding_chat_started', {
+      stage: 'first_skill',
+    });
+  });
+
+  it('sends no chat_started or onboarding_chat_started when the thread cannot be created', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     mocks.createThread.mockRejectedValue(new Error('server down'));
 
-    await startChat(chatParams);
+    await startChat({
+      ...chatParams,
+      origin: { kind: 'onboarding', stage: 'profile' },
+    });
 
     expect(mocks.track).not.toHaveBeenCalled();
   });
