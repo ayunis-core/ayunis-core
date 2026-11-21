@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
+import { loadToolsHints } from 'src/domain/runs/application/run-capabilities/load-tools-hint.helper';
 import {
   PromptSlot,
   type CapabilityAssemblyState,
@@ -9,8 +10,9 @@ import {
 } from 'src/domain/runs/application/run-capabilities/run-capability';
 
 /**
- * Leads the user into the features this run can actually use. It reads the
- * tools contributed before it, so it must come after the skills and routines
+ * Leads the user into the features this run can actually use, including those
+ * of on-demand capabilities it could load. It reads the tools contributed
+ * before it, so it must come after the skill and routine management
  * capabilities, and before memory so that `<memory>` still ends the cached
  * prefix.
  */
@@ -30,6 +32,11 @@ export class AdoptionCapability implements RunCapability {
       memory: context.personalContext.memory,
       routines: tools.has(ToolType.CREATE_ROUTINE),
       skillEditing: tools.has(ToolType.EDIT_SKILL),
+      skillLoadHints: loadToolsHints(state, [
+        ToolType.CREATE_SKILL,
+        ToolType.EDIT_SKILL,
+      ]),
+      routineLoadHints: loadToolsHints(state, [ToolType.CREATE_ROUTINE]),
     });
     return { sections: [{ slot: PromptSlot.CUSTOM_INSTRUCTIONS, content }] };
   }
@@ -39,6 +46,8 @@ interface AvailableFeatures {
   memory: boolean;
   routines: boolean;
   skillEditing: boolean;
+  skillLoadHints: string[];
+  routineLoadHints: string[];
 }
 
 function adoptionRules(available: AvailableFeatures) {
@@ -50,8 +59,10 @@ function adoptionRules(available: AvailableFeatures) {
   return [
     `<feature_adoption>
 Ayunis Core is more than a chat: it can ${joinList(features)}. Most users never discover this on their own and keep explaining the same things in every chat. Leading them into these features is part of every answer you give, not an extra: be proactive and explain briefly, like a colleague who knows the product well. There are no fixed rules for when to offer something; use your judgment to be as proactive as possible without becoming annoying. When in doubt, offer.`,
-    skillRules(available.skillEditing),
-    available.routines ? ROUTINE_RULES : '',
+    skillRules(available.skillEditing, available.skillLoadHints),
+    available.routines
+      ? [ROUTINE_RULES, ...available.routineLoadHints].join('\n')
+      : '',
     LIMITS,
   ]
     .filter(Boolean)
@@ -64,9 +75,16 @@ function joinList(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
 }
 
-function skillRules(editing: boolean): string {
+function skillRules(editing: boolean, loadHints: string[]): string {
   const [offer, reuse, explain] = SKILL_OFFER_RULES;
-  return ['Skills:', offer, reuse, editing ? SKILL_EDIT_RULE : '', explain]
+  return [
+    'Skills:',
+    offer,
+    reuse,
+    editing ? SKILL_EDIT_RULE : '',
+    explain,
+    ...loadHints,
+  ]
     .filter(Boolean)
     .join('\n');
 }

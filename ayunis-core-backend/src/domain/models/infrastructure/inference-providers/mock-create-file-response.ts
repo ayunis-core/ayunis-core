@@ -1,4 +1,5 @@
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
+import { mockLoadToolsFirst } from './mock-load-tools-response';
 
 export function mockCreateFileResponse(
   request: ProviderRequest,
@@ -6,6 +7,8 @@ export function mockCreateFileResponse(
 ): AsyncIterable<ProviderChunk> | null {
   const format = /^E2E create file (xml|json|txt|csv)$/.exec(userText)?.[1];
   if (!format) return null;
+  const loading = mockLoadToolsFirst(request, 'create_file');
+  if (loading) return loading;
   const acknowledged = request.messages.some(
     (message) =>
       message.role === 'tool_result' &&

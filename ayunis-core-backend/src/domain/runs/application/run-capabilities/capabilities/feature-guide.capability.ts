@@ -4,6 +4,7 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 import { ContextService } from 'src/common/context/services/context.service';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
+import { loadToolsHints } from 'src/domain/runs/application/run-capabilities/load-tools-hint.helper';
 import {
   PromptSlot,
   type CapabilityAssemblyState,
@@ -20,8 +21,8 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 /**
  * Explains the feature whose empty page a feature-guide chat was started from
  * and leads the user into setting it up. It offers only the tools contributed
- * before it, so it must come after the skill management and routines
- * capabilities. Those capabilities already withhold tools the user's role may
+ * before it, offered or loadable, so it must come after the skill management
+ * and routines capabilities. Those capabilities already withhold tools the user's role may
  * not use, so the create permission only decides what replaces the pointer to
  * the page's create button.
  */
@@ -46,10 +47,7 @@ export class FeatureGuideCapability implements RunCapability {
     const guide = FEATURE_GUIDES[origin.feature];
     if (!this.isEnabled(guide)) return {};
     const mayCreate = await this.mayCreate(context, guide);
-    const content = renderGuide(
-      guide,
-      nextStep(guide, mayCreate, state.reservedToolNames),
-    );
+    const content = renderGuide(guide, nextStep(guide, mayCreate, state));
     return { sections: [{ slot: PromptSlot.RESOURCES, content }] };
   }
 
@@ -79,11 +77,18 @@ export class FeatureGuideCapability implements RunCapability {
 function nextStep(
   guide: FeatureGuide,
   mayCreate: boolean,
-  tools: ReadonlySet<string>,
+  state: CapabilityAssemblyState,
 ): string {
-  const offers = guide.toolOffers
-    .filter(({ tool }) => tools.has(tool))
-    .map(({ offer }) => offer);
+  const usable = guide.toolOffers.filter(({ tool }) =>
+    state.reservedToolNames.has(tool),
+  );
+  const offers = [
+    ...usable.map(({ offer }) => offer),
+    ...loadToolsHints(
+      state,
+      usable.map(({ tool }) => tool),
+    ),
+  ];
   if (!mayCreate && guide.createPermission) {
     return [...offers, guide.createPermission.otherwise].join('\n');
   }

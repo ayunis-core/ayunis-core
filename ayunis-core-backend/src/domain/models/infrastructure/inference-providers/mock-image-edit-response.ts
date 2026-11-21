@@ -1,4 +1,5 @@
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
+import { mockLoadToolsFirst } from './mock-load-tools-response';
 
 export function mockImageEditResponse(
   request: ProviderRequest,
@@ -14,6 +15,8 @@ export function mockImageEditResponse(
     .join('\n');
   const reference = /\[image ref: ([^\]]+)\]/.exec(text ?? '')?.[1];
   if (!reference) return null;
+  const loading = mockLoadToolsFirst(request, 'generate_image');
+  if (loading) return loading;
   const acknowledged = request.messages.some(
     (message) =>
       message.role === 'tool_result' &&

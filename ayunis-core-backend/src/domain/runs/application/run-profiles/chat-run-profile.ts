@@ -31,6 +31,7 @@ import {
   AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
   eager,
+  onDemand,
   type ProfileCapability,
   type RunCompletionPolicy,
   type RunProfile,
@@ -77,36 +78,46 @@ export class ChatRunProfile implements RunProfile {
     private readonly mcp: McpCapability,
   ) {}
 
+  // Order still decides tool and section order: onboarding, the feature guide
+  // and adoption read the tools of skill and routine management before them,
+  // and MCP stays the last tool-contributing capability.
   get capabilities(): readonly ProfileCapability[] {
-    return eager(
-      this.dateTime,
-      this.dataHandling,
-      this.anonymization,
-      this.behavior,
-      this.legalReferences,
-      this.customInstructions,
-      this.codeExecution,
-      this.emailCalendar,
-      this.filesChartsMap,
-      this.artifacts,
-      this.skillUse,
-      this.skillManagement,
-      this.routines,
-      this.anonymizationException,
-      this.internet,
-      this.imageGeneration,
-      this.threadSources,
-      this.knowledgeBases,
-      this.recordings,
-      this.notificationContext,
-      this.releaseNoteContext,
-      this.onboarding,
-      this.featureGuide,
-      this.workspaceInstructions,
-      this.adoption,
-      this.memory,
-      this.chatHistory,
-      this.mcp,
-    );
+    return [
+      ...eager(
+        this.dateTime,
+        this.dataHandling,
+        this.anonymization,
+        this.behavior,
+        this.legalReferences,
+        this.customInstructions,
+      ),
+      ...onDemand(
+        this.codeExecution,
+        this.emailCalendar,
+        this.filesChartsMap,
+        this.artifacts,
+      ),
+      ...eager(this.skillUse),
+      ...onDemand(
+        this.skillManagement,
+        this.routines,
+        this.anonymizationException,
+      ),
+      ...eager(this.internet),
+      ...onDemand(this.imageGeneration),
+      ...eager(this.threadSources, this.knowledgeBases),
+      ...onDemand(this.recordings),
+      ...eager(
+        this.notificationContext,
+        this.releaseNoteContext,
+        this.onboarding,
+        this.featureGuide,
+        this.workspaceInstructions,
+        this.adoption,
+        this.memory,
+      ),
+      ...onDemand(this.chatHistory),
+      ...eager(this.mcp),
+    ];
   }
 }

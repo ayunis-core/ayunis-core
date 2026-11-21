@@ -1,4 +1,5 @@
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
+import { mockLoadToolsFirst } from './mock-load-tools-response';
 
 const PROMPT_PREFIX = 'E2E code execution sources: ';
 const TOOL_CALL_ID = 'mock-code-execution';
@@ -9,6 +10,8 @@ export function mockCodeExecutionResponse(
 ): AsyncIterable<ProviderChunk> | null {
   const sourceIds = parseSourceIds(userText);
   if (!sourceIds) return null;
+  const loading = mockLoadToolsFirst(request, 'code_execution');
+  if (loading) return loading;
   const result = findToolResult(request);
   return codeExecutionResponse(sourceIds, result);
 }

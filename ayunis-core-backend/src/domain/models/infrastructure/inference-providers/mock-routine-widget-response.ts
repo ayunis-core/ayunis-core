@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
+import { mockLoadToolsFirst } from './mock-load-tools-response';
 
 const CREATE_ROUTINE_PROMPT = 'E2E create routine: ';
 const EDIT_ROUTINE_PROMPT = 'E2E edit routine: ';
@@ -16,6 +17,8 @@ export function mockRoutineWidgetResponse(
 ): AsyncIterable<ProviderChunk> | null {
   const offered = new Set(request.tools.map((tool) => tool.name));
   if (userText.startsWith(CREATE_ROUTINE_PROMPT)) {
+    const loading = mockLoadToolsFirst(request, 'create_routine');
+    if (loading) return loading;
     if (!offered.has('create_routine')) return null;
     return toolCallResponse('create_routine', {
       name: userText.slice(CREATE_ROUTINE_PROMPT.length),
@@ -26,6 +29,8 @@ export function mockRoutineWidgetResponse(
     });
   }
   if (userText.startsWith(EDIT_ROUTINE_PROMPT)) {
+    const loading = mockLoadToolsFirst(request, 'edit_routine');
+    if (loading) return loading;
     if (!offered.has('edit_routine')) return null;
     return toolCallResponse('edit_routine', {
       routine_id: userText.slice(EDIT_ROUTINE_PROMPT.length),
