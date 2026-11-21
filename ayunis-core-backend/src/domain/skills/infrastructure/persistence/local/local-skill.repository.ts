@@ -169,6 +169,10 @@ export class LocalSkillRepository implements SkillRepository {
     return records.map((r) => this.skillMapper.toPersonal(r));
   }
 
+  existsPersonalByOwner(userId: UUID): Promise<boolean> {
+    return this.skillRepository.exists({ where: { userId } });
+  }
+
   async findPersonalByMarketplaceIdentifier(
     userId: UUID,
     marketplaceIdentifier: string,

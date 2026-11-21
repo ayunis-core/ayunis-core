@@ -7003,6 +7003,27 @@ export interface OnboardingResponseDto {
   welcomeVideoSeenAt: string | null;
 }
 
+/**
+ * The onboarding hint to show the user, or null when none applies (including while memory is disabled)
+ */
+export type OnboardingStage = typeof OnboardingStage[keyof typeof OnboardingStage];
+
+
+export const OnboardingStage = {
+  profile: 'profile',
+  first_skill: 'first_skill',
+} as const;
+
+export interface OnboardingStageResponseDto {
+  /** The onboarding hint to show the user, or null when none applies (including while memory is disabled) */
+  stage: OnboardingStage | null;
+  /**
+     * The permitted model a profile chat should use; null for every other stage
+     * @nullable
+     */
+  modelId: string | null;
+}
+
 export interface UpdateOnboardingDto {
   /** IDs of the onboarding steps the user has completed */
   completedStepIds: string[];

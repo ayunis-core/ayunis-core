@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FeatureFlag } from 'src/config/features.config';
-import type { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
+import {
+  isMemoryAvailable,
+  type PermittedLanguageModel,
+} from 'src/domain/models/domain/permitted-model.entity';
 import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/run-profile-input';
 
 /** What a run may know about its user from outside the current chat. */
@@ -16,8 +19,9 @@ export interface PersonalContextAccess {
  * ones (anonymization does not cover the system prompt, and stored memory
  * would hold `{{pii:…}}` placeholders that mean nothing outside the thread),
  * only with the feature on, and each part only when the effective grant of
- * the run's model allows it. Runs resolve it afresh, so a changed grant
- * applies from the next message.
+ * the run's model allows it. Memory follows `isMemoryAvailable`, which the
+ * onboarding stage also uses, so its hint and the run cannot disagree. Runs
+ * resolve it afresh, so a changed grant applies from the next message.
  */
 @Injectable()
 export class PersonalContextAccessService {
@@ -31,7 +35,7 @@ export class PersonalContextAccessService {
     const eligible =
       params.profile.id === 'chat' && !params.isAnonymous && this.isEnabled();
     return {
-      memory: eligible && params.permit.memoryAccess,
+      memory: eligible && isMemoryAvailable(params.permit),
       chatHistory: eligible && params.permit.chatHistoryAccess,
     };
   }

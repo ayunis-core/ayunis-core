@@ -120,7 +120,7 @@ none of these packages implements the Agent Plugins standard.
 | [invites](ayunis-core-backend/src/iam/invites/SUMMARY.md)                     | Onboarding         | User invitation flows                                                                 |
 | [trials](ayunis-core-backend/src/iam/trials/SUMMARY.md)                       | Trial Access       | Free trial management                                                                 |
 | [legal-acceptances](ayunis-core-backend/src/iam/legal-acceptances/SUMMARY.md) | Compliance         | Terms acceptance tracking                                                             |
-| [onboarding](ayunis-core-backend/src/iam/onboarding/SUMMARY.md)               | Onboarding         | Per-user onboarding progress                                                          |
+| [onboarding](ayunis-core-backend/src/iam/onboarding/SUMMARY.md)               | Onboarding         | Per-user onboarding progress and onboarding stage                                     |
 | [hashing](ayunis-core-backend/src/iam/hashing/SUMMARY.md)                     | Security           | Password hashing                                                                      |
 | [ip-allowlist](ayunis-core-backend/src/iam/ip-allowlist/SUMMARY.md)           | Network Security   | Per-organization IP allowlist enforcement                                             |
 | [sso](ayunis-core-backend/src/iam/sso/SUMMARY.md)                             | Federated Identity | Municipal SSO connections and broker identity mappings                                |

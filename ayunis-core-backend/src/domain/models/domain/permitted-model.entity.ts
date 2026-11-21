@@ -54,6 +54,15 @@ export class PermittedModel {
   }
 }
 
+/**
+ * Whether runs on this model may use the user's memory: the grant allows it
+ * and the model is not forced into anonymous mode, because anonymous runs
+ * never get personal context.
+ */
+export function isMemoryAvailable(permit: PermittedModel): boolean {
+  return permit.memoryAccess && !permit.anonymousOnly;
+}
+
 export class PermittedLanguageModel extends PermittedModel {
   public readonly model: LanguageModel;
   constructor(params: {

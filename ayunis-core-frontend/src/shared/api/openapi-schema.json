@@ -15215,6 +15215,33 @@
         "tags": ["Onboarding"]
       }
     },
+    "/onboarding/stage": {
+      "get": {
+        "description": "Which onboarding hint to show the current user, if any, and the model a profile chat should use. Worked out from the user's memory, personal skills and models on every request; answers with no stage while memory is disabled.",
+        "operationId": "OnboardingController_getOnboardingStage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Onboarding stage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingStageResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authenticated"
+          },
+          "500": {
+            "description": "Internal server error occurred while working out the onboarding stage"
+          }
+        },
+        "summary": "Get the onboarding stage",
+        "tags": ["Onboarding"]
+      }
+    },
     "/onboarding/welcome-video-seen": {
       "post": {
         "description": "Record when the current user first dismisses the welcome video.",
@@ -27102,6 +27129,34 @@
           }
         },
         "required": ["completedStepIds", "hidden", "welcomeVideoSeenAt"]
+      },
+      "OnboardingStage": {
+        "type": "string",
+        "enum": ["profile", "first_skill"],
+        "description": "The onboarding hint to show the user, or null when none applies (including while memory is disabled)"
+      },
+      "OnboardingStageResponseDto": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "description": "The onboarding hint to show the user, or null when none applies (including while memory is disabled)",
+            "nullable": true,
+            "example": "profile",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnboardingStage"
+              }
+            ]
+          },
+          "modelId": {
+            "type": "string",
+            "description": "The permitted model a profile chat should use; null for every other stage",
+            "format": "uuid",
+            "nullable": true,
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        },
+        "required": ["stage", "modelId"]
       },
       "UpdateOnboardingDto": {
         "type": "object",
