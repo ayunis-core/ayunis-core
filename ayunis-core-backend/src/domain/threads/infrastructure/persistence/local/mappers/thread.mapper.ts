@@ -13,6 +13,7 @@ import {
   ThreadOriginKind,
   type ThreadOrigin,
 } from 'src/domain/threads/domain/thread-origin';
+import type { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 
 @Injectable()
 export class ThreadMapper {
@@ -90,6 +91,8 @@ export class ThreadMapper {
       origin.kind === ThreadOriginKind.RELEASE_NOTE
         ? origin.releaseNoteId
         : null;
+    record.onboardingStage =
+      origin.kind === ThreadOriginKind.ONBOARDING ? origin.stage : null;
   }
 
   private mapOrigin(record: ThreadRecord): ThreadOrigin {
@@ -107,6 +110,12 @@ export class ThreadMapper {
         return {
           kind: ThreadOriginKind.RELEASE_NOTE,
           releaseNoteId: record.sourceReleaseNoteId,
+        };
+      case ThreadOriginKind.ONBOARDING:
+        return {
+          kind: ThreadOriginKind.ONBOARDING,
+          // The check constraint guarantees a stage on every onboarding thread.
+          stage: record.onboardingStage as OnboardingStage,
         };
     }
   }

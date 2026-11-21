@@ -19707,6 +19707,29 @@
         },
         "required": ["kind", "releaseNoteId"]
       },
+      "OnboardingStage": {
+        "type": "string",
+        "enum": ["profile", "first_skill"],
+        "description": "The onboarding stage the chat walks the user through"
+      },
+      "OnboardingThreadOriginDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["onboarding"]
+          },
+          "stage": {
+            "description": "The onboarding stage the chat walks the user through",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnboardingStage"
+              }
+            ]
+          }
+        },
+        "required": ["kind", "stage"]
+      },
       "CreateThreadDto": {
         "type": "object",
         "properties": {
@@ -19737,13 +19760,16 @@
             "format": "uuid"
           },
           "origin": {
-            "description": "Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs.",
+            "description": "Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs, and an onboarding stage is not checked against the user's current one.",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/NotificationThreadOriginDto"
               },
               {
                 "$ref": "#/components/schemas/ReleaseNoteThreadOriginDto"
+              },
+              {
+                "$ref": "#/components/schemas/OnboardingThreadOriginDto"
               }
             ],
             "discriminator": {
@@ -19809,6 +19835,24 @@
           }
         },
         "required": ["kind", "releaseNoteId"]
+      },
+      "OnboardingThreadOriginResponseDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["onboarding"]
+          },
+          "stage": {
+            "description": "The onboarding stage this chat walks the user through",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OnboardingStage"
+              }
+            ]
+          }
+        },
+        "required": ["kind", "stage"]
       },
       "UserMessageResponseDto": {
         "type": "object",
@@ -20657,7 +20701,7 @@
             "nullable": true
           },
           "origin": {
-            "description": "Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note",
+            "description": "Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ChatThreadOriginResponseDto"
@@ -20670,6 +20714,9 @@
               },
               {
                 "$ref": "#/components/schemas/ReleaseNoteThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/OnboardingThreadOriginResponseDto"
               }
             ],
             "discriminator": {
@@ -20807,7 +20854,7 @@
             "nullable": true
           },
           "origin": {
-            "description": "Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note",
+            "description": "Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ChatThreadOriginResponseDto"
@@ -20820,6 +20867,9 @@
               },
               {
                 "$ref": "#/components/schemas/ReleaseNoteThreadOriginResponseDto"
+              },
+              {
+                "$ref": "#/components/schemas/OnboardingThreadOriginResponseDto"
               }
             ],
             "discriminator": {
@@ -27202,11 +27252,6 @@
           }
         },
         "required": ["completedStepIds", "hidden", "welcomeVideoSeenAt"]
-      },
-      "OnboardingStage": {
-        "type": "string",
-        "enum": ["profile", "first_skill"],
-        "description": "The onboarding hint to show the user, or null when none applies (including while memory is disabled)"
       },
       "OnboardingStageResponseDto": {
         "type": "object",

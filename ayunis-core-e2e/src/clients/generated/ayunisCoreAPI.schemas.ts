@@ -2491,6 +2491,30 @@ export interface ReleaseNoteThreadOriginDto {
   releaseNoteId: string;
 }
 
+/**
+ * The onboarding stage the chat walks the user through
+ */
+export type OnboardingStage = typeof OnboardingStage[keyof typeof OnboardingStage];
+
+
+export const OnboardingStage = {
+  profile: 'profile',
+  first_skill: 'first_skill',
+} as const;
+
+export type OnboardingThreadOriginDtoKind = typeof OnboardingThreadOriginDtoKind[keyof typeof OnboardingThreadOriginDtoKind];
+
+
+export const OnboardingThreadOriginDtoKind = {
+  onboarding: 'onboarding',
+} as const;
+
+export interface OnboardingThreadOriginDto {
+  kind: OnboardingThreadOriginDtoKind;
+  /** The onboarding stage the chat walks the user through */
+  stage: OnboardingStage;
+}
+
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
@@ -2500,8 +2524,8 @@ export interface CreateThreadDto {
   isAnonymous?: boolean;
   /** File the new thread under this workspace */
   workspaceId?: string;
-  /** Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs. */
-  origin?: NotificationThreadOriginDto | ReleaseNoteThreadOriginDto;
+  /** Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs, and an onboarding stage is not checked against the user's current one. */
+  origin?: NotificationThreadOriginDto | ReleaseNoteThreadOriginDto | OnboardingThreadOriginDto;
 }
 
 export type ChatThreadOriginResponseDtoKind = typeof ChatThreadOriginResponseDtoKind[keyof typeof ChatThreadOriginResponseDtoKind];
@@ -2561,6 +2585,19 @@ export interface ReleaseNoteThreadOriginResponseDto {
      * @nullable
      */
   releaseNoteId: string | null;
+}
+
+export type OnboardingThreadOriginResponseDtoKind = typeof OnboardingThreadOriginResponseDtoKind[keyof typeof OnboardingThreadOriginResponseDtoKind];
+
+
+export const OnboardingThreadOriginResponseDtoKind = {
+  onboarding: 'onboarding',
+} as const;
+
+export interface OnboardingThreadOriginResponseDto {
+  kind: OnboardingThreadOriginResponseDtoKind;
+  /** The onboarding stage this chat walks the user through */
+  stage: OnboardingStage;
 }
 
 /**
@@ -3259,8 +3296,8 @@ export interface GetThreadResponseDto {
      * @nullable
      */
   workspaceId: string | null;
-  /** Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note */
-  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto;
+  /** Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat */
+  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto | OnboardingThreadOriginResponseDto;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -3299,8 +3336,8 @@ export interface GetThreadsResponseDtoItem {
      * @nullable
      */
   workspaceId: string | null;
-  /** Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note */
-  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto;
+  /** Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat */
+  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto | OnboardingThreadOriginResponseDto;
   /** Unique identifier for the thread */
   id: string;
   /** Title of the thread */
@@ -7052,17 +7089,6 @@ export interface OnboardingResponseDto {
      */
   welcomeVideoSeenAt: string | null;
 }
-
-/**
- * The onboarding hint to show the user, or null when none applies (including while memory is disabled)
- */
-export type OnboardingStage = typeof OnboardingStage[keyof typeof OnboardingStage];
-
-
-export const OnboardingStage = {
-  profile: 'profile',
-  first_skill: 'first_skill',
-} as const;
 
 export interface OnboardingStageResponseDto {
   /** The onboarding hint to show the user, or null when none applies (including while memory is disabled) */

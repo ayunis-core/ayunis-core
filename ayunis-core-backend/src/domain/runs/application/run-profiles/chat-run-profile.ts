@@ -23,6 +23,7 @@ import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabil
 import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/workspace-instructions.capability';
 import { ReleaseNoteContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/release-note-context.capability';
 import { NotificationContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notification-context.capability';
+import { OnboardingCapability } from 'src/domain/runs/application/run-capabilities/capabilities/onboarding.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
 import {
@@ -64,6 +65,7 @@ export class ChatRunProfile implements RunProfile {
     private readonly recordings: RecordingsCapability,
     private readonly notificationContext: NotificationContextCapability,
     private readonly releaseNoteContext: ReleaseNoteContextCapability,
+    private readonly onboarding: OnboardingCapability,
     private readonly workspaceInstructions: WorkspaceInstructionsCapability,
     private readonly memory: MemoryCapability,
     private readonly chatHistory: ChatHistoryCapability,
@@ -93,6 +95,7 @@ export class ChatRunProfile implements RunProfile {
       this.recordings,
       this.notificationContext,
       this.releaseNoteContext,
+      this.onboarding,
       this.workspaceInstructions,
       this.memory,
       this.chatHistory,

@@ -18,6 +18,8 @@ export function toThreadOriginDto(
       return { kind: origin.kind, notificationId: origin.notificationId };
     case ThreadOriginKind.RELEASE_NOTE:
       return { kind: origin.kind, releaseNoteId: origin.releaseNoteId };
+    case ThreadOriginKind.ONBOARDING:
+      return { kind: origin.kind, stage: origin.stage };
   }
 }
 
@@ -35,5 +37,7 @@ export function toCreateThreadOrigin(
       return { kind: origin.kind, notificationId: origin.notificationId };
     case ThreadOriginKind.RELEASE_NOTE:
       return { kind: origin.kind, releaseNoteId: origin.releaseNoteId };
+    case ThreadOriginKind.ONBOARDING:
+      return { kind: origin.kind, stage: origin.stage };
   }
 }

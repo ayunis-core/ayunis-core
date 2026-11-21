@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsUUID } from 'class-validator';
+import { IsEnum, IsIn, IsUUID } from 'class-validator';
 import type { UUID } from 'crypto';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 
 export class NotificationThreadOriginDto {
   @ApiProperty({ enum: [ThreadOriginKind.NOTIFICATION] })
@@ -31,16 +32,36 @@ export class ReleaseNoteThreadOriginDto {
   releaseNoteId: UUID;
 }
 
+export class OnboardingThreadOriginDto {
+  @ApiProperty({ enum: [ThreadOriginKind.ONBOARDING] })
+  @IsIn([ThreadOriginKind.ONBOARDING])
+  kind: ThreadOriginKind.ONBOARDING;
+
+  @ApiProperty({
+    description: 'The onboarding stage the chat walks the user through',
+    enum: OnboardingStage,
+    enumName: 'OnboardingStage',
+  })
+  @IsEnum(OnboardingStage)
+  stage: OnboardingStage;
+}
+
 /**
  * What an origin of any other kind is validated as. The validation pipe lets a
  * plain object without rules through, so without it the origin would be
  * stripped to `{}` instead of rejected.
  */
 export class UnsupportedThreadOriginDto {
-  @IsIn([ThreadOriginKind.NOTIFICATION, ThreadOriginKind.RELEASE_NOTE])
+  @IsIn([
+    ThreadOriginKind.NOTIFICATION,
+    ThreadOriginKind.RELEASE_NOTE,
+    ThreadOriginKind.ONBOARDING,
+  ])
   kind: unknown;
 }
 
 /** The origins a client may set; routine threads are only created by routine runs. */
 export type CreateThreadOriginDto =
-  NotificationThreadOriginDto | ReleaseNoteThreadOriginDto;
+  | NotificationThreadOriginDto
+  | ReleaseNoteThreadOriginDto
+  | OnboardingThreadOriginDto;

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 
 export class ChatThreadOriginResponseDto {
   @ApiProperty({ enum: [ThreadOriginKind.CHAT] })
@@ -48,8 +49,21 @@ export class ReleaseNoteThreadOriginResponseDto {
   releaseNoteId: string | null;
 }
 
+export class OnboardingThreadOriginResponseDto {
+  @ApiProperty({ enum: [ThreadOriginKind.ONBOARDING] })
+  kind: ThreadOriginKind.ONBOARDING;
+
+  @ApiProperty({
+    description: 'The onboarding stage this chat walks the user through',
+    enum: OnboardingStage,
+    enumName: 'OnboardingStage',
+  })
+  stage: OnboardingStage;
+}
+
 export type ThreadOriginResponseDto =
   | ChatThreadOriginResponseDto
   | RoutineThreadOriginResponseDto
   | NotificationThreadOriginResponseDto
-  | ReleaseNoteThreadOriginResponseDto;
+  | ReleaseNoteThreadOriginResponseDto
+  | OnboardingThreadOriginResponseDto;

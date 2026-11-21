@@ -18,11 +18,16 @@ import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import {
   NotificationThreadOriginDto,
   ReleaseNoteThreadOriginDto,
+  OnboardingThreadOriginDto,
   UnsupportedThreadOriginDto,
   type CreateThreadOriginDto,
 } from 'src/domain/threads/presenters/http/dto/create-thread-origin.dto';
 
-@ApiExtraModels(NotificationThreadOriginDto, ReleaseNoteThreadOriginDto)
+@ApiExtraModels(
+  NotificationThreadOriginDto,
+  ReleaseNoteThreadOriginDto,
+  OnboardingThreadOriginDto,
+)
 export class CreateThreadDto {
   @ApiPropertyOptional({
     description: 'The id of the model',
@@ -66,10 +71,11 @@ export class CreateThreadDto {
 
   @ApiPropertyOptional({
     description:
-      'Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs.',
+      "Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs, and an onboarding stage is not checked against the user's current one.",
     oneOf: [
       { $ref: getSchemaPath(NotificationThreadOriginDto) },
       { $ref: getSchemaPath(ReleaseNoteThreadOriginDto) },
+      { $ref: getSchemaPath(OnboardingThreadOriginDto) },
     ],
     discriminator: { propertyName: 'kind' },
   })
@@ -87,6 +93,7 @@ export class CreateThreadDto {
           value: ReleaseNoteThreadOriginDto,
           name: ThreadOriginKind.RELEASE_NOTE,
         },
+        { value: OnboardingThreadOriginDto, name: ThreadOriginKind.ONBOARDING },
       ],
     },
     keepDiscriminatorProperty: true,
