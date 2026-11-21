@@ -92,7 +92,7 @@ import {
   RunNoModelFoundError,
 } from 'src/domain/runs/application/runs.errors';
 import { RunCapabilityContextFactory } from 'src/domain/runs/application/run-capabilities/run-capability-context.factory';
-import { createSkillActivationHook } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
+import { createSkillActivationHook } from 'src/domain/runs/application/run-capabilities/capabilities/skill-use.capability';
 import { RunProfileAssembler } from 'src/domain/runs/application/run-profiles/run-profile-assembler.service';
 import {
   DONE_WHEN_MODEL_STOPS,

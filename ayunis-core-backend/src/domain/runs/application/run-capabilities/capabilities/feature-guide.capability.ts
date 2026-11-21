@@ -20,7 +20,7 @@ import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/
 /**
  * Explains the feature whose empty page a feature-guide chat was started from
  * and leads the user into setting it up. It offers only the tools contributed
- * before it, so it must come after the skills, routines and marketplace
+ * before it, so it must come after the skill management and routines
  * capabilities. Those capabilities already withhold tools the user's role may
  * not use, so the create permission only decides what replaces the pointer to
  * the page's create button.

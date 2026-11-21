@@ -55,9 +55,9 @@ import { InternetCapability } from './application/run-capabilities/capabilities/
 import { KnowledgeBasesCapability } from './application/run-capabilities/capabilities/knowledge-bases.capability';
 import { RecordingsCapability } from './application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from './application/run-capabilities/capabilities/legal-references.capability';
-import { MarketplaceCapability } from './application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
-import { SkillsCapability } from './application/run-capabilities/capabilities/skills.capability';
+import { SkillUseCapability } from './application/run-capabilities/capabilities/skill-use.capability';
+import { SkillManagementCapability } from './application/run-capabilities/capabilities/skill-management.capability';
 import { RoutinesCapability } from './application/run-capabilities/capabilities/routines.capability';
 import { AnonymizationExceptionCapability } from './application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from './application/run-capabilities/capabilities/thread-sources.capability';
@@ -194,9 +194,9 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     KnowledgeBasesCapability,
     RecordingsCapability,
     LegalReferencesCapability,
-    MarketplaceCapability,
     McpCapability,
-    SkillsCapability,
+    SkillUseCapability,
+    SkillManagementCapability,
     RoutinesCapability,
     AnonymizationExceptionCapability,
     ThreadSourcesCapability,

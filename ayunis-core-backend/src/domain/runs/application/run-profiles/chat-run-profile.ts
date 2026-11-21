@@ -14,9 +14,9 @@ import { InternetCapability } from 'src/domain/runs/application/run-capabilities
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
 import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
-import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
-import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
+import { SkillUseCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skill-use.capability';
+import { SkillManagementCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skill-management.capability';
 import { RoutinesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routines.capability';
 import { AnonymizationExceptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization-exception.capability';
 import { ThreadSourcesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/thread-sources.capability';
@@ -56,11 +56,11 @@ export class ChatRunProfile implements RunProfile {
     private readonly emailCalendar: EmailCalendarCapability,
     private readonly filesChartsMap: FilesChartsMapCapability,
     private readonly artifacts: ArtifactsCapability,
-    private readonly skills: SkillsCapability,
+    private readonly skillUse: SkillUseCapability,
+    private readonly skillManagement: SkillManagementCapability,
     private readonly routines: RoutinesCapability,
     private readonly anonymizationException: AnonymizationExceptionCapability,
     private readonly internet: InternetCapability,
-    private readonly marketplace: MarketplaceCapability,
     private readonly imageGeneration: ImageGenerationCapability,
     private readonly threadSources: ThreadSourcesCapability,
     private readonly knowledgeBases: KnowledgeBasesCapability,
@@ -88,11 +88,11 @@ export class ChatRunProfile implements RunProfile {
       this.emailCalendar,
       this.filesChartsMap,
       this.artifacts,
-      this.skills,
+      this.skillUse,
+      this.skillManagement,
       this.routines,
       this.anonymizationException,
       this.internet,
-      this.marketplace,
       this.imageGeneration,
       this.threadSources,
       this.knowledgeBases,

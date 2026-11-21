@@ -1,17 +1,11 @@
 import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
-import { getRequiredUserContext } from 'src/common/context/required-context';
-import { ContextService } from 'src/common/context/services/context.service';
 import type { SkillEntry } from 'src/common/util/skill-slug';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { assembleTools } from 'src/domain/runs/application/run-capabilities/assemble-tools.helper';
-import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { escapeXml } from 'src/domain/runs/application/services/xml-escape';
-import type {
-  RunCapabilityContext,
-  SkillCatalog,
-} from 'src/domain/runs/application/run-capabilities/run-capability-context';
+import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
 import {
   PromptSlot,
   type CapabilityContribution,
@@ -19,63 +13,33 @@ import {
   type RunCapability,
   type RunProfileHandle,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
-import { HasPermissionQuery } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.query';
-import { HasPermissionUseCase } from 'src/iam/permissions/application/use-cases/has-permission/has-permission.use-case';
-import { Permission } from 'src/iam/permissions/domain/value-objects/permission.enum';
 
 /**
- * On-demand skills: the skill catalog in the prompt, `activate_skill`, and the
- * create/edit skill widgets. Activating a skill copies its sources, MCP
- * integrations and knowledge bases onto the thread, so the activation hook
- * refreshes the run's tools and instructions before the next model call.
- * `create_skill` is offered only to users who may save a personal skill, so
- * neither the model nor the capabilities reading it offer a card that fails.
+ * On-demand skills: the skill catalog in the prompt and `activate_skill`.
+ * Activating a skill copies its sources, MCP integrations and knowledge bases
+ * onto the thread, so the activation hook refreshes the run's tools and
+ * instructions before the next model call.
  */
 @Injectable()
-export class SkillsCapability implements RunCapability {
-  constructor(
-    private readonly assembleToolUseCase: AssembleToolUseCase,
-    private readonly contextService: ContextService,
-    private readonly hasPermissionUseCase: HasPermissionUseCase,
-  ) {}
+export class SkillUseCapability implements RunCapability {
+  constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(
     context: RunCapabilityContext,
   ): Promise<CapabilityContribution> {
     const runNotes = buildActivatedSkillNotes(context.activatedSkillName);
     if (!context.model.canUseTools) return { sections: runNotes };
-    const [catalog, mayCreate] = await Promise.all([
-      context.skillCatalog(),
-      this.mayCreateSkills(context),
-    ]);
-    const tools = await this.assembleSkillTools(catalog, mayCreate);
+    const catalog = await context.skillCatalog();
+    const tools =
+      catalog.slugMap.size > 0
+        ? await assembleTools(
+            this.assembleToolUseCase,
+            [ToolType.ACTIVATE_SKILL],
+            catalog.slugMap,
+          )
+        : [];
     const sections = [...buildCatalogSections(catalog.entries), ...runNotes];
     return { tools, sections, hooks: [createSkillActivationHook] };
-  }
-
-  private mayCreateSkills(context: RunCapabilityContext): Promise<boolean> {
-    const { role } = getRequiredUserContext(this.contextService);
-    return this.hasPermissionUseCase.execute(
-      new HasPermissionQuery(context.orgId, role, Permission.MANAGE_SKILLS),
-    );
-  }
-
-  private async assembleSkillTools(
-    catalog: SkillCatalog,
-    mayCreate: boolean,
-  ): Promise<Tool[]> {
-    const assemble = (type: ToolType, toolContext?: unknown) =>
-      assembleTools(this.assembleToolUseCase, [type], toolContext);
-    const tools = mayCreate ? await assemble(ToolType.CREATE_SKILL) : [];
-    if (catalog.editableSkillIds.size > 0) {
-      tools.push(
-        ...(await assemble(ToolType.EDIT_SKILL, catalog.editableSkillIds)),
-      );
-    }
-    if (catalog.slugMap.size > 0) {
-      tools.push(...(await assemble(ToolType.ACTIVATE_SKILL, catalog.slugMap)));
-    }
-    return tools;
   }
 }
 
