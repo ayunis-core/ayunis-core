@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
-import { useThreadArtifacts } from '../../api/useThreadArtifacts';
-import { findLatestArtifactId } from '../../lib/find-latest-artifact-id';
+import { useCreatedArtifactId } from './useCreatedArtifactId';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 // eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
@@ -29,6 +28,7 @@ function getCreateStatusLabel(
 
 interface CreateDocumentWidgetProps {
   readonly content: ToolUseMessageContent;
+  readonly result?: string;
   readonly isStreaming?: boolean;
   readonly threadId: string;
   readonly onOpenArtifact?: (artifactId: string) => void;
@@ -36,6 +36,7 @@ interface CreateDocumentWidgetProps {
 
 export default function CreateDocumentWidget({
   content,
+  result,
   isStreaming = false,
   threadId,
   onOpenArtifact,
@@ -48,11 +49,12 @@ export default function CreateDocumentWidget({
     content?: string;
   };
 
-  // Artifact is created by the backend during the run.
-  // We look it up from the thread artifacts list by title.
-  // When multiple artifacts share the same title, prefer the most recently created one.
-  const { artifacts } = useThreadArtifacts(threadId);
-  const artifactId = findLatestArtifactId(artifacts, params.title, 'document');
+  const artifactId = useCreatedArtifactId({
+    threadId,
+    title: params.title,
+    type: 'document',
+    result,
+  });
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
