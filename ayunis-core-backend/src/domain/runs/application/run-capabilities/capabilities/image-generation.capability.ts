@@ -20,6 +20,9 @@ import type {
  */
 @Injectable()
 export class ImageGenerationCapability implements RunCapability {
+  readonly id = 'image_generation';
+  readonly description = 'Generate images or edit existing ones.';
+
   private readonly logger = new Logger(ImageGenerationCapability.name);
 
   constructor(

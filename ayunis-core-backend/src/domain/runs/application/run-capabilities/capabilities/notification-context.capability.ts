@@ -22,6 +22,9 @@ import {
  */
 @Injectable()
 export class NotificationContextCapability implements RunCapability {
+  readonly id = 'notification_context';
+  readonly description = 'The notification this chat is about.';
+
   constructor(
     private readonly findNotificationUseCase: FindNotificationUseCase,
     private readonly configService: ConfigService,

@@ -30,6 +30,9 @@ import {
  */
 @Injectable()
 export class ThreadSourcesCapability implements RunCapability {
+  readonly id = 'thread_sources';
+  readonly description = 'Search and read the files attached to this chat.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

@@ -25,6 +25,8 @@ export class Thread {
   origin: ThreadOrigin;
   /** The token client (e.g. the Outlook pane) the chat was started from; null for the web app. */
   client: SessionClient | null;
+  /** Ids of the run capabilities the chat loaded on demand; they stay loaded. */
+  loadedCapabilityIds: string[];
   lastActivityAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +45,7 @@ export class Thread {
     workspaceId?: UUID | null;
     origin?: ThreadOrigin;
     client?: SessionClient | null;
+    loadedCapabilityIds?: string[];
     lastActivityAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
@@ -60,6 +63,7 @@ export class Thread {
     this.workspaceId = params.workspaceId ?? null;
     this.origin = params.origin ?? CHAT_ORIGIN;
     this.client = params.client ?? null;
+    this.loadedCapabilityIds = params.loadedCapabilityIds ?? [];
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
     // A freshly created thread's last activity is its creation time; it is

@@ -22,6 +22,9 @@ import {
  */
 @Injectable()
 export class SkillUseCapability implements RunCapability {
+  readonly id = 'skill_use';
+  readonly description = 'The available skills and activating them.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

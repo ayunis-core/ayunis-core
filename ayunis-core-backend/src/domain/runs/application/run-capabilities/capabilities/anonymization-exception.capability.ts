@@ -17,6 +17,10 @@ import type {
  */
 @Injectable()
 export class AnonymizationExceptionCapability implements RunCapability {
+  readonly id = 'anonymization_exceptions';
+  readonly description =
+    'Exempt a term from anonymization when the user wants a word or name to stay readable in anonymous chats.';
+
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,
     private readonly contextService: ContextService,

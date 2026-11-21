@@ -13,6 +13,10 @@ import {
 
 @Injectable()
 export class KnowledgeBasesCapability implements RunCapability {
+  readonly id = 'knowledge_bases';
+  readonly description =
+    'Search and read the knowledge bases available in this chat.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

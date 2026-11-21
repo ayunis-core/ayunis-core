@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
-import type { RunCapability } from 'src/domain/runs/application/run-capabilities/run-capability';
 import { AnonymizationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization.capability';
 import { CustomInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/custom-instructions.capability';
 import { FinishRoutineCapability } from 'src/domain/runs/application/run-capabilities/capabilities/finish-routine.capability';
 import { RoutineContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-internet.capability';
 import { NotificationsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notifications.capability';
-import type { RunCompletionPolicy, RunProfile } from './run-profile';
+import {
+  eager,
+  type ProfileCapability,
+  type RunCompletionPolicy,
+  type RunProfile,
+} from './run-profile';
 import { routineCompletionPolicy } from './routine-completion.policy';
 
 const ROUTINE_PREAMBLE = `You are an AI assistant powered by Ayunis Core, an open-source AI gateway platform designed for public administrations. You are running a routine: a task the user scheduled to run on their behalf.
@@ -33,7 +37,7 @@ export class RoutineRunProfile implements RunProfile {
   // Per run, so with two nudges one routine execution has at most 60 iterations.
   readonly maxIterations = 20;
   readonly asksForToolConfirmation = false;
-  readonly capabilities: readonly RunCapability[];
+  readonly capabilities: readonly ProfileCapability[];
 
   constructor(
     routineContext: RoutineContextCapability,
@@ -43,13 +47,13 @@ export class RoutineRunProfile implements RunProfile {
     notifications: NotificationsCapability,
     finishRoutine: FinishRoutineCapability,
   ) {
-    this.capabilities = [
+    this.capabilities = eager(
       routineContext,
       anonymization,
       customInstructions,
       internet,
       notifications,
       finishRoutine,
-    ];
+    );
   }
 }

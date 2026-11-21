@@ -33,6 +33,10 @@ Use Excel formulas for totals and derived cells: a cell whose string value start
 
 @Injectable()
 export class ArtifactsCapability implements RunCapability {
+  readonly id = 'artifacts';
+  readonly description =
+    'Create, edit and read documents, diagrams and spreadsheets that the user views and edits next to the chat.';
+
   constructor(
     private readonly artifactToolAssembler: ArtifactToolAssemblerService,
   ) {}

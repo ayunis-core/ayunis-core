@@ -16,6 +16,10 @@ import {
  */
 @Injectable()
 export class AdoptionCapability implements RunCapability {
+  readonly id = 'feature_adoption';
+  readonly description =
+    'Guidance for leading the user into memory, skills and routines.';
+
   contribute(
     context: RunCapabilityContext,
     state: CapabilityAssemblyState,

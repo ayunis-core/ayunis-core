@@ -1,6 +1,7 @@
 import { PromptSlot } from 'src/domain/runs/application/run-capabilities/run-capability';
 import {
   aCapabilityContext,
+  anAssemblyState,
   aThread,
   sectionsIn,
   toolNames,
@@ -26,10 +27,8 @@ describe('OnboardingCapability', () => {
   const withMemory = { memory: true, chatHistory: false };
   const withoutMemory = { memory: false, chatHistory: false };
 
-  const withSkillCreation = {
-    reservedToolNames: new Set<string>([ToolType.CREATE_SKILL]),
-  };
-  const withoutSkillCreation = { reservedToolNames: new Set<string>() };
+  const withSkillCreation = anAssemblyState([ToolType.CREATE_SKILL]);
+  const withoutSkillCreation = anAssemblyState();
 
   function capability(options: { memoryEnabled?: boolean } = {}) {
     const onboarding = new OnboardingCapability({

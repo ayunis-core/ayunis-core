@@ -18,6 +18,10 @@ import type {
  */
 @Injectable()
 export class RecordingsCapability implements RunCapability {
+  readonly id = 'recordings';
+  readonly description =
+    'Search the transcripts and summaries of meeting recordings when the user asks about meetings or what was said in them.';
+
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,
     private readonly configService: ConfigService,

@@ -23,6 +23,10 @@ Use create_file for downloadable CSV, XML, JSON and plain-text (TXT) files, incl
 
 @Injectable()
 export class FilesChartsMapCapability implements RunCapability {
+  readonly id = 'files_charts_map';
+  readonly description =
+    'Create downloadable files, bar, line and pie charts, and maps.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   // The usage guidance is contributed even when the model cannot use tools;

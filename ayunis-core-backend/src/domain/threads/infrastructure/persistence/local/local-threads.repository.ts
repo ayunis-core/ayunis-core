@@ -4,6 +4,7 @@ import type { PastMessageMatch } from 'src/domain/threads/application/models/pas
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import {
+  AddLoadedCapabilityIdsParams,
   ExpiredThreadRef,
   FindExpiredThreadRefsParams,
   FindPastChatParams,
@@ -28,6 +29,7 @@ import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assign
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
 import { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
+import { addLoadedCapabilityIds } from './queries/add-loaded-capability-ids';
 import { findThreadCitationContext } from './queries/find-thread-citation-context';
 import { applyThreadListFilters } from './queries/apply-thread-list-filters';
 import { applyThreadListRelations } from './queries/apply-thread-list-relations';
@@ -289,11 +291,14 @@ export class LocalThreadsRepository extends ThreadsRepository {
     threadId: UUID;
     lastActivityAt: Date;
   }): Promise<void> {
-    // Best-effort, fire-and-forget driven: no throw if the thread is gone.
     await this.threadRepository.update(
       { id: params.threadId },
       { lastActivityAt: params.lastActivityAt },
     );
+  }
+
+  addLoadedCapabilityIds(params: AddLoadedCapabilityIdsParams): Promise<void> {
+    return addLoadedCapabilityIds(this.threadRepository, params);
   }
 
   async addSourceAssignment(params: {
