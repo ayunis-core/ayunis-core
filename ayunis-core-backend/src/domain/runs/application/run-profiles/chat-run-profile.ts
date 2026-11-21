@@ -26,6 +26,7 @@ import { NotificationContextCapability } from 'src/domain/runs/application/run-c
 import { OnboardingCapability } from 'src/domain/runs/application/run-capabilities/capabilities/onboarding.capability';
 import { MemoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/memory.capability';
 import { ChatHistoryCapability } from 'src/domain/runs/application/run-capabilities/capabilities/chat-history.capability';
+import { AdoptionCapability } from 'src/domain/runs/application/run-capabilities/capabilities/adoption.capability';
 import {
   AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
@@ -67,6 +68,7 @@ export class ChatRunProfile implements RunProfile {
     private readonly releaseNoteContext: ReleaseNoteContextCapability,
     private readonly onboarding: OnboardingCapability,
     private readonly workspaceInstructions: WorkspaceInstructionsCapability,
+    private readonly adoption: AdoptionCapability,
     private readonly memory: MemoryCapability,
     private readonly chatHistory: ChatHistoryCapability,
     private readonly mcp: McpCapability,
@@ -97,6 +99,7 @@ export class ChatRunProfile implements RunProfile {
       this.releaseNoteContext,
       this.onboarding,
       this.workspaceInstructions,
+      this.adoption,
       this.memory,
       this.chatHistory,
       this.mcp,
