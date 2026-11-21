@@ -14,6 +14,7 @@ import {
   type ThreadOrigin,
 } from 'src/domain/threads/domain/thread-origin';
 import type { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
+import type { GuideFeature } from 'src/domain/threads/domain/guide-feature.enum';
 
 @Injectable()
 export class ThreadMapper {
@@ -93,6 +94,8 @@ export class ThreadMapper {
         : null;
     record.onboardingStage =
       origin.kind === ThreadOriginKind.ONBOARDING ? origin.stage : null;
+    record.guideFeature =
+      origin.kind === ThreadOriginKind.FEATURE_GUIDE ? origin.feature : null;
   }
 
   private mapOrigin(record: ThreadRecord): ThreadOrigin {
@@ -116,6 +119,12 @@ export class ThreadMapper {
           kind: ThreadOriginKind.ONBOARDING,
           // The check constraint guarantees a stage on every onboarding thread.
           stage: record.onboardingStage as OnboardingStage,
+        };
+      case ThreadOriginKind.FEATURE_GUIDE:
+        return {
+          kind: ThreadOriginKind.FEATURE_GUIDE,
+          // The check constraint guarantees a feature on every feature-guide thread.
+          feature: record.guideFeature as GuideFeature,
         };
     }
   }

@@ -9,17 +9,19 @@ import {
   getMyPermissionsControllerGetMineQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
+import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 
 export const Route = createFileRoute('/_authenticated/skills/')({
   component: RouteComponent,
   loader: async ({ context: { queryClient } }) => {
     // Teams and permissions decide which team and organization skills the
     // cards may switch, pin or delete, so they are loaded before the first paint.
-    const [skills] = await Promise.all([
+    const [skills, chatStarter] = await Promise.all([
       queryClient.query({
         queryKey: getSkillsControllerFindAllQueryKey(personalSkillListParams),
         queryFn: () => skillsControllerFindAll(personalSkillListParams),
       }),
+      loadChatStarterDefaults(queryClient),
       queryClient.query({
         queryKey: getTeamsControllerListMyTeamsQueryKey(),
         queryFn: () => teamsControllerListMyTeams(),
@@ -29,11 +31,11 @@ export const Route = createFileRoute('/_authenticated/skills/')({
         queryFn: () => myPermissionsControllerGetMine(),
       }),
     ]);
-    return { skills: skills.data };
+    return { skills: skills.data, chatStarter };
   },
 });
 
 function RouteComponent() {
-  const { skills } = Route.useLoaderData();
-  return <SkillsPage skills={skills} />;
+  const { skills, chatStarter } = Route.useLoaderData();
+  return <SkillsPage skills={skills} chatStarter={chatStarter} />;
 }

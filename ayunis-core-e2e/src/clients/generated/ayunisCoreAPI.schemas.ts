@@ -2515,6 +2515,33 @@ export interface OnboardingThreadOriginDto {
   stage: OnboardingStage;
 }
 
+/**
+ * The feature the chat explains to the user
+ */
+export type GuideFeature = typeof GuideFeature[keyof typeof GuideFeature];
+
+
+export const GuideFeature = {
+  knowledge_bases: 'knowledge_bases',
+  skills: 'skills',
+  workspaces: 'workspaces',
+  routines: 'routines',
+  recordings: 'recordings',
+} as const;
+
+export type FeatureGuideThreadOriginDtoKind = typeof FeatureGuideThreadOriginDtoKind[keyof typeof FeatureGuideThreadOriginDtoKind];
+
+
+export const FeatureGuideThreadOriginDtoKind = {
+  feature_guide: 'feature_guide',
+} as const;
+
+export interface FeatureGuideThreadOriginDto {
+  kind: FeatureGuideThreadOriginDtoKind;
+  /** The feature the chat explains to the user */
+  feature: GuideFeature;
+}
+
 export interface CreateThreadDto {
   /** The id of the model */
   modelId?: string;
@@ -2525,7 +2552,7 @@ export interface CreateThreadDto {
   /** File the new thread under this workspace */
   workspaceId?: string;
   /** Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs, and an onboarding stage is not checked against the user's current one. */
-  origin?: NotificationThreadOriginDto | ReleaseNoteThreadOriginDto | OnboardingThreadOriginDto;
+  origin?: NotificationThreadOriginDto | ReleaseNoteThreadOriginDto | OnboardingThreadOriginDto | FeatureGuideThreadOriginDto;
 }
 
 export type ChatThreadOriginResponseDtoKind = typeof ChatThreadOriginResponseDtoKind[keyof typeof ChatThreadOriginResponseDtoKind];
@@ -2598,6 +2625,19 @@ export interface OnboardingThreadOriginResponseDto {
   kind: OnboardingThreadOriginResponseDtoKind;
   /** The onboarding stage this chat walks the user through */
   stage: OnboardingStage;
+}
+
+export type FeatureGuideThreadOriginResponseDtoKind = typeof FeatureGuideThreadOriginResponseDtoKind[keyof typeof FeatureGuideThreadOriginResponseDtoKind];
+
+
+export const FeatureGuideThreadOriginResponseDtoKind = {
+  feature_guide: 'feature_guide',
+} as const;
+
+export interface FeatureGuideThreadOriginResponseDto {
+  kind: FeatureGuideThreadOriginResponseDtoKind;
+  /** The feature this chat explains to the user */
+  feature: GuideFeature;
 }
 
 /**
@@ -3296,8 +3336,8 @@ export interface GetThreadResponseDto {
      * @nullable
      */
   workspaceId: string | null;
-  /** Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat */
-  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto | OnboardingThreadOriginResponseDto;
+  /** Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, an onboarding chat, or a chat explaining a feature */
+  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto | OnboardingThreadOriginResponseDto | FeatureGuideThreadOriginResponseDto;
   /** Unique identifier for the thread */
   id: string;
   /** User ID who owns this thread */
@@ -3336,8 +3376,8 @@ export interface GetThreadsResponseDtoItem {
      * @nullable
      */
   workspaceId: string | null;
-  /** Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, or an onboarding chat */
-  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto | OnboardingThreadOriginResponseDto;
+  /** Why the thread exists: a chat a user started, a routine run, a chat about a notification or a release note, an onboarding chat, or a chat explaining a feature */
+  origin: ChatThreadOriginResponseDto | RoutineThreadOriginResponseDto | NotificationThreadOriginResponseDto | ReleaseNoteThreadOriginResponseDto | OnboardingThreadOriginResponseDto | FeatureGuideThreadOriginResponseDto;
   /** Unique identifier for the thread */
   id: string;
   /** Title of the thread */

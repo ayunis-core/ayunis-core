@@ -6,6 +6,10 @@ import { getMyPermissionsControllerGetMineQueryKey } from '@/shared/api';
 import { TeamsSettingsPage } from './TeamsSettingsPage';
 import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 
+vi.mock('@/shared/lib/help-center', () => ({
+  getHelpCenterUrl: (path: string) => `https://help.example/${path}`,
+}));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,

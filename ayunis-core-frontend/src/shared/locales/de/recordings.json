@@ -3,9 +3,24 @@
     "title": "Besprechungen"
   },
   "emptyState": {
-    "title": "Noch keine Besprechungen",
-    "description": "Erstellen Sie eine Besprechung und fügen Sie ihr Audio hinzu. Sie gehört Ihnen, einem Ihrer Teams oder der Organisation.",
-    "noAccessDescription": "Hier erscheinen die Besprechungen Ihrer Teams und Ihrer Organisation. Bitten Sie einen Administrator um die Berechtigung, eigene zu erstellen."
+    "title": "Aus Besprechungen werden Protokolle",
+    "description": "Fügen Sie das Audio einer Besprechung hinzu und Ayunis Core erstellt Transkript und Protokoll, über die Sie anschließend chatten können.",
+    "noAccessDescription": "Hier erscheinen die Besprechungen Ihrer Teams und Ihrer Organisation. Bitten Sie einen Administrator um die Berechtigung, eigene zu erstellen.",
+    "askPlaceholder": "Fragen Sie, wie Besprechungen funktionieren oder was Sie damit tun können …",
+    "steps": {
+      "create": {
+        "title": "Besprechung anlegen",
+        "description": "Benennen Sie sie und wählen Sie, wem sie gehört."
+      },
+      "upload": {
+        "title": "Audio hinzufügen",
+        "description": "Laden Sie die Audiodatei der Besprechung hoch."
+      },
+      "use": {
+        "title": "Ergebnisse nutzen",
+        "description": "Lesen Sie Transkript und Protokoll oder fragen Sie in einem Chat danach."
+      }
+    }
   },
   "listItem": {
     "created": "Erstellt am {{date}}",

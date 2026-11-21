@@ -19,6 +19,7 @@ import {
   NotificationThreadOriginDto,
   ReleaseNoteThreadOriginDto,
   OnboardingThreadOriginDto,
+  FeatureGuideThreadOriginDto,
   UnsupportedThreadOriginDto,
   type CreateThreadOriginDto,
 } from 'src/domain/threads/presenters/http/dto/create-thread-origin.dto';
@@ -27,6 +28,7 @@ import {
   NotificationThreadOriginDto,
   ReleaseNoteThreadOriginDto,
   OnboardingThreadOriginDto,
+  FeatureGuideThreadOriginDto,
 )
 export class CreateThreadDto {
   @ApiPropertyOptional({
@@ -76,6 +78,7 @@ export class CreateThreadDto {
       { $ref: getSchemaPath(NotificationThreadOriginDto) },
       { $ref: getSchemaPath(ReleaseNoteThreadOriginDto) },
       { $ref: getSchemaPath(OnboardingThreadOriginDto) },
+      { $ref: getSchemaPath(FeatureGuideThreadOriginDto) },
     ],
     discriminator: { propertyName: 'kind' },
   })
@@ -94,6 +97,10 @@ export class CreateThreadDto {
           name: ThreadOriginKind.RELEASE_NOTE,
         },
         { value: OnboardingThreadOriginDto, name: ThreadOriginKind.ONBOARDING },
+        {
+          value: FeatureGuideThreadOriginDto,
+          name: ThreadOriginKind.FEATURE_GUIDE,
+        },
       ],
     },
     keepDiscriminatorProperty: true,

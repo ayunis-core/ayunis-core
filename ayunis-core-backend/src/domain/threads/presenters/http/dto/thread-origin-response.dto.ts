@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
+import { GuideFeature } from 'src/domain/threads/domain/guide-feature.enum';
 
 export class ChatThreadOriginResponseDto {
   @ApiProperty({ enum: [ThreadOriginKind.CHAT] })
@@ -61,9 +62,22 @@ export class OnboardingThreadOriginResponseDto {
   stage: OnboardingStage;
 }
 
+export class FeatureGuideThreadOriginResponseDto {
+  @ApiProperty({ enum: [ThreadOriginKind.FEATURE_GUIDE] })
+  kind: ThreadOriginKind.FEATURE_GUIDE;
+
+  @ApiProperty({
+    description: 'The feature this chat explains to the user',
+    enum: GuideFeature,
+    enumName: 'GuideFeature',
+  })
+  feature: GuideFeature;
+}
+
 export type ThreadOriginResponseDto =
   | ChatThreadOriginResponseDto
   | RoutineThreadOriginResponseDto
   | NotificationThreadOriginResponseDto
   | ReleaseNoteThreadOriginResponseDto
-  | OnboardingThreadOriginResponseDto;
+  | OnboardingThreadOriginResponseDto
+  | FeatureGuideThreadOriginResponseDto;

@@ -51,9 +51,24 @@
     }
   },
   "emptyState": {
-    "title": "No knowledge bases yet",
-    "description": "Create your first knowledge base. Upload documents and use them in your chats as context for the AI.",
-    "noAccessDescription": "Ask an admin to share a knowledge base with you, or to give you permission to create your own."
+    "title": "Answers from your own documents",
+    "description": "A knowledge base holds documents the AI can search. Use it in chats and skills so the AI works with your knowledge.",
+    "noAccessDescription": "Ask an admin to share a knowledge base with you, or to give you permission to create your own.",
+    "askPlaceholder": "Ask how knowledge bases work or what you could use one for…",
+    "steps": {
+      "upload": {
+        "title": "Upload documents",
+        "description": "Add your files, for example PDFs or Word documents."
+      },
+      "attach": {
+        "title": "Attach it",
+        "description": "Add the knowledge base to a chat via the + menu, or link it to a skill."
+      },
+      "ask": {
+        "title": "Ask questions",
+        "description": "The AI searches the documents and answers based on what they say."
+      }
+    }
   },
   "card": {
     "confirmDelete": {

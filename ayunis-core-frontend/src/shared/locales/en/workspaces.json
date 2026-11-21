@@ -2,8 +2,8 @@
   "page": {
     "title": "Workspaces",
     "addWorkspace": "Add workspace",
-    "emptyTitle": "No workspaces yet",
-    "emptyDescription": "Create a workspace to group your chats by topic.",
+    "emptyTitle": "Keep a topic's work together",
+    "emptyDescription": "A workspace collects the chats, documents and instructions for a topic or project, and you can share it with colleagues.",
     "skillCount_one": "{{count}} skill",
     "skillCount_other": "{{count}} skills",
     "knowledgeBaseCount_one": "{{count}} knowledge base",
@@ -159,5 +159,22 @@
     "chatRemoved": "Chat removed from the workspace",
     "chatMoveError": "The chat could not be moved",
     "chatNotFound": "Chat not found"
+  },
+  "emptyState": {
+    "askPlaceholder": "Ask how workspaces work or how to organise your topics…",
+    "steps": {
+      "create": {
+        "title": "Create a workspace",
+        "description": "Name it after a topic or project."
+      },
+      "context": {
+        "title": "Add context",
+        "description": "Add instructions, knowledge and skills that every chat in it uses."
+      },
+      "chat": {
+        "title": "Chat with context",
+        "description": "Start chats in the workspace and invite colleagues to join."
+      }
+    }
   }
 }

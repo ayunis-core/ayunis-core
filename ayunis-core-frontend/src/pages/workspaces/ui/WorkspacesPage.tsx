@@ -10,6 +10,7 @@ import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
 import { PaginationWidget } from '@/widgets/pagination';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
+import type { ChatStarterDefaults } from '@/widgets/chat-starter';
 import { WorkspacesContent } from './WorkspacesContent';
 import { WorkspacesEmptyState } from './WorkspacesEmptyState';
 
@@ -17,12 +18,14 @@ interface WorkspacesPageProps {
   workspaces: Workspace[];
   pagination: { total?: number; limit: number; offset: number };
   currentPage: number;
+  chatStarter: ChatStarterDefaults;
 }
 
 export default function WorkspacesPage({
   workspaces,
   pagination,
   currentPage,
+  chatStarter,
 }: Readonly<WorkspacesPageProps>) {
   const { t } = useTranslation('workspaces');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -61,7 +64,10 @@ export default function WorkspacesPage({
             />
           }
         >
-          <WorkspacesEmptyState action={spotlitCreateButton} />
+          <WorkspacesEmptyState
+            action={spotlitCreateButton}
+            chatStarter={chatStarter}
+          />
         </FullScreenMessageLayout>
         {createDialog}
       </AppLayout>

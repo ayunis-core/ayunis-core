@@ -9,8 +9,23 @@
     "premade": "Vorlagen"
   },
   "emptyState": {
-    "title": "Noch keine Routinen",
-    "description": "Eine Routine führt einen Prompt in Ihrem Namen aus. Beginnen Sie leer oder mit einer Vorlage."
+    "title": "Wiederkehrende Arbeit an die KI abgeben",
+    "description": "Eine Routine erledigt jeden Tag zu einer festen Uhrzeit eine Aufgabe für Sie und meldet Relevantes in Ihren Posteingang.",
+    "askPlaceholder": "Fragen Sie, wie Routinen funktionieren oder was eine Routine für Sie erledigen könnte …",
+    "steps": {
+      "describe": {
+        "title": "Aufgabe beschreiben",
+        "description": "Schreiben Sie, was die Routine tun soll, oder starten Sie mit einer Vorlage."
+      },
+      "schedule": {
+        "title": "Uhrzeit wählen",
+        "description": "Legen Sie fest, wann sie täglich läuft und ob sie das Internet nutzen darf."
+      },
+      "results": {
+        "title": "Ergebnisse erhalten",
+        "description": "Relevante Ergebnisse landen in Ihrem Posteingang."
+      }
+    }
   },
   "form": {
     "createTitle": "Neue Routine",

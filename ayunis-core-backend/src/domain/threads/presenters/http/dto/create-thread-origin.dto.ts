@@ -3,6 +3,7 @@ import { IsEnum, IsIn, IsUUID } from 'class-validator';
 import type { UUID } from 'crypto';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
+import { GuideFeature } from 'src/domain/threads/domain/guide-feature.enum';
 
 export class NotificationThreadOriginDto {
   @ApiProperty({ enum: [ThreadOriginKind.NOTIFICATION] })
@@ -46,6 +47,20 @@ export class OnboardingThreadOriginDto {
   stage: OnboardingStage;
 }
 
+export class FeatureGuideThreadOriginDto {
+  @ApiProperty({ enum: [ThreadOriginKind.FEATURE_GUIDE] })
+  @IsIn([ThreadOriginKind.FEATURE_GUIDE])
+  kind: ThreadOriginKind.FEATURE_GUIDE;
+
+  @ApiProperty({
+    description: 'The feature the chat explains to the user',
+    enum: GuideFeature,
+    enumName: 'GuideFeature',
+  })
+  @IsEnum(GuideFeature)
+  feature: GuideFeature;
+}
+
 /**
  * What an origin of any other kind is validated as. The validation pipe lets a
  * plain object without rules through, so without it the origin would be
@@ -56,6 +71,7 @@ export class UnsupportedThreadOriginDto {
     ThreadOriginKind.NOTIFICATION,
     ThreadOriginKind.RELEASE_NOTE,
     ThreadOriginKind.ONBOARDING,
+    ThreadOriginKind.FEATURE_GUIDE,
   ])
   kind: unknown;
 }
@@ -64,4 +80,5 @@ export class UnsupportedThreadOriginDto {
 export type CreateThreadOriginDto =
   | NotificationThreadOriginDto
   | ReleaseNoteThreadOriginDto
-  | OnboardingThreadOriginDto;
+  | OnboardingThreadOriginDto
+  | FeatureGuideThreadOriginDto;

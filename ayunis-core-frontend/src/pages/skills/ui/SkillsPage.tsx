@@ -11,12 +11,17 @@ import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/Ful
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OwnerSections } from '@/features/resource-ownership';
+import type { ChatStarterDefaults } from '@/widgets/chat-starter';
 
 interface SkillsPageProps {
   skills: Skill[];
+  chatStarter: ChatStarterDefaults;
 }
 
-export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
+export default function SkillsPage({
+  skills,
+  chatStarter,
+}: Readonly<SkillsPageProps>) {
   const { t } = useTranslation('skills');
   const personalSkills = skills
     .filter((skill) => skill.ownerType === 'personal' && !skill.isShared)
@@ -59,7 +64,7 @@ export default function SkillsPage({ skills }: Readonly<SkillsPageProps>) {
             />
           }
         >
-          <SkillsEmptyState />
+          <SkillsEmptyState chatStarter={chatStarter} />
         </FullScreenMessageLayout>
       </AppLayout>
     );

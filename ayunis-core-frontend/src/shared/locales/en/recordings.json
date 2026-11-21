@@ -3,9 +3,24 @@
     "title": "Meetings"
   },
   "emptyState": {
-    "title": "No meetings yet",
-    "description": "Create a meeting and add its audio. It belongs to you, one of your teams or the organisation.",
-    "noAccessDescription": "Meetings of your teams and organisation will appear here. Ask an admin for permission to create your own."
+    "title": "Turn meetings into minutes",
+    "description": "Add a meeting's audio and Ayunis Core writes the transcript and the minutes, which you can then chat about.",
+    "noAccessDescription": "Meetings of your teams and organisation will appear here. Ask an admin for permission to create your own.",
+    "askPlaceholder": "Ask how meetings work or what you can do with them…",
+    "steps": {
+      "create": {
+        "title": "Create a meeting",
+        "description": "Name it and choose who it belongs to."
+      },
+      "upload": {
+        "title": "Add the audio",
+        "description": "Upload the meeting's audio file."
+      },
+      "use": {
+        "title": "Use the results",
+        "description": "Read the transcript and minutes, or ask about them in a chat."
+      }
+    }
   },
   "listItem": {
     "created": "Created {{date}}",

@@ -1,12 +1,26 @@
 import CreateSkillMenu from './CreateSkillMenu';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, Store } from 'lucide-react';
+import {
+  BookOpen,
+  ExternalLink,
+  MessageSquareText,
+  PencilLine,
+  Sparkles,
+  Store,
+} from 'lucide-react';
 import { EmptyState } from '@/widgets/empty-state';
+import { ChatStarter, type ChatStarterDefaults } from '@/widgets/chat-starter';
 import { Button } from '@ayunis/ui/components/button';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { useMyPermissions } from '@/features/permissions';
 
-export default function SkillsEmptyState() {
+interface SkillsEmptyStateProps {
+  chatStarter: ChatStarterDefaults;
+}
+
+export default function SkillsEmptyState({
+  chatStarter,
+}: Readonly<SkillsEmptyStateProps>) {
   const { t } = useTranslation('skills');
   const marketplaceUrl = useSkillMarketplaceUrl();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
@@ -17,15 +31,35 @@ export default function SkillsEmptyState() {
 
   return (
     <EmptyState
+      testId="skills-empty-state"
+      icon={Sparkles}
       title={t('emptyState.title')}
       description={
         canCreate
           ? t('emptyState.description')
           : t('emptyState.noAccessDescription')
       }
+      steps={[
+        {
+          icon: PencilLine,
+          title: t('emptyState.steps.describe.title'),
+          description: t('emptyState.steps.describe.description'),
+        },
+        {
+          icon: BookOpen,
+          title: t('emptyState.steps.enrich.title'),
+          description: t('emptyState.steps.enrich.description'),
+        },
+        {
+          icon: MessageSquareText,
+          title: t('emptyState.steps.use.title'),
+          description: t('emptyState.steps.use.description'),
+        },
+      ]}
+      helpPath="skills/"
       action={
         canCreate || marketplaceUrl ? (
-          <div className="flex flex-col items-center gap-3">
+          <>
             {canCreate && (
               <CreateSkillMenu
                 buttonText={t('createDialog.buttonTextFirst')}
@@ -33,7 +67,7 @@ export default function SkillsEmptyState() {
               />
             )}
             {marketplaceUrl && (
-              <Button variant="ghost" size="sm" className="text-brand" asChild>
+              <Button variant="ghost" className="text-brand" asChild>
                 <a
                   href={marketplaceUrl}
                   target="_blank"
@@ -46,8 +80,15 @@ export default function SkillsEmptyState() {
                 </a>
               </Button>
             )}
-          </div>
+          </>
         ) : undefined
+      }
+      guide={
+        <ChatStarter
+          {...chatStarter}
+          origin={{ kind: 'feature_guide', feature: 'skills' }}
+          placeholder={t('emptyState.askPlaceholder')}
+        />
       }
     />
   );
