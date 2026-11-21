@@ -7,6 +7,7 @@ import {
   createAssembleToolUseCase,
   toolNames,
 } from 'src/domain/runs/testing/run-capability.fixture';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import type { SendNotificationTool } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { NotificationsCapability } from './notifications.capability';
@@ -18,7 +19,7 @@ describe('NotificationsCapability', () => {
       id: 'routine',
       routine: { name: 'Verkündungsplattform', internetEnabled: true },
     },
-    thread: aThread({ routineId }),
+    thread: aThread({ origin: { kind: ThreadOriginKind.ROUTINE, routineId } }),
   });
 
   function capability(routinesEnabled: boolean) {

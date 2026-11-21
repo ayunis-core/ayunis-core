@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import type { ThreadOrigin } from 'src/domain/threads/domain/thread-origin';
 
 export class CreateThreadCommand {
   modelId?: UUID;
@@ -8,11 +9,8 @@ export class CreateThreadCommand {
   instruction?: string;
   isAnonymous?: boolean;
   workspaceId?: UUID;
-  /** Makes this a routine thread created by that routine's execution. */
-  routineId?: UUID;
-  /** Starts a chat about one of the user's notifications ("Chat about this"). */
-  sourceNotificationId?: UUID;
-  sourceReleaseNoteId?: UUID;
+  /** A plain chat when omitted. */
+  origin?: ThreadOrigin;
 
   constructor(params: {
     modelId?: UUID;
@@ -21,9 +19,7 @@ export class CreateThreadCommand {
     instruction?: string;
     isAnonymous?: boolean;
     workspaceId?: UUID;
-    routineId?: UUID;
-    sourceNotificationId?: UUID;
-    sourceReleaseNoteId?: UUID;
+    origin?: ThreadOrigin;
   }) {
     this.modelId = params.modelId;
     this.mode = params.mode;
@@ -31,8 +27,6 @@ export class CreateThreadCommand {
     this.instruction = params.instruction;
     this.isAnonymous = params.isAnonymous;
     this.workspaceId = params.workspaceId;
-    this.routineId = params.routineId;
-    this.sourceNotificationId = params.sourceNotificationId;
-    this.sourceReleaseNoteId = params.sourceReleaseNoteId;
+    this.origin = params.origin;
   }
 }

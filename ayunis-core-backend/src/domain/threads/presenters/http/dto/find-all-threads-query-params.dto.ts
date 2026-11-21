@@ -10,7 +10,7 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { ThreadType } from 'src/domain/threads/presenters/http/dto/thread-type.enum';
 import {
   SESSION_CLIENTS,
   type SessionClient,

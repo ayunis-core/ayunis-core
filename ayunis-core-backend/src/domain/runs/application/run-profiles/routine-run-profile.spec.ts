@@ -18,6 +18,7 @@ import {
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/runs/testing/run-capability.fixture';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { RoutineRunProfile } from './routine-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
@@ -80,7 +81,12 @@ function assembleRoutine(
           internetEnabled: options.internetEnabled ?? true,
         },
       },
-      thread: aThread({ routineId: '44444444-4444-4444-8444-444444444444' }),
+      thread: aThread({
+        origin: {
+          kind: ThreadOriginKind.ROUTINE,
+          routineId: '44444444-4444-4444-8444-444444444444',
+        },
+      }),
       model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
         .model,
       userId: TEST_USER_ID,

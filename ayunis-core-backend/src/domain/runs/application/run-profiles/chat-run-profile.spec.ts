@@ -44,6 +44,7 @@ import {
 } from 'src/domain/runs/testing/run-capability.fixture';
 import { ChatRunProfile } from './chat-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 
 const integrationId = '33333333-3333-4333-8333-333333333333' as UUID;
 const notification = aNotification({
@@ -211,7 +212,12 @@ describe('ChatRunProfile', () => {
 
   it('gives a chat about a notification its content after the stable prompt prefix, without routine tools', async () => {
     const { tools, instructions } = await assembleChat({
-      thread: aThread({ sourceNotificationId: notification.id }),
+      thread: aThread({
+        origin: {
+          kind: ThreadOriginKind.NOTIFICATION,
+          notificationId: notification.id,
+        },
+      }),
     });
 
     expect(instructions).toMatch(

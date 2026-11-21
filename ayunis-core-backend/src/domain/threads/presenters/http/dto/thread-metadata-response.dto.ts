@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { ThreadType } from 'src/domain/threads/presenters/http/dto/thread-type.enum';
 
 /**
  * Thread fields that both the list and the single-thread response carry.

@@ -12,7 +12,7 @@ import { LocalThreadsRepository } from './local-threads.repository';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
 import type { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 
 const threadSchema = new EntitySchema<ThreadRecord>({
   name: 'ThreadRecord',
@@ -23,8 +23,9 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     userId: { type: 'uuid' },
     title: { type: String },
     workspaceId: { type: 'uuid', nullable: true },
-    type: { type: String, default: ThreadType.CHAT },
+    origin: { type: String, default: ThreadOriginKind.CHAT },
     routineId: { type: 'uuid', nullable: true },
+    sourceNotificationId: { type: 'uuid', nullable: true },
     client: { type: String, nullable: true },
     createdAt: { type: 'timestamp' },
   },
@@ -91,14 +92,14 @@ describe('Chat title and content search (PostgreSQL)', () => {
     title = 'Budget discussion',
     userId = ownerId,
     workspaceId?: ReturnType<typeof randomUUID>,
-    type = ThreadType.CHAT,
+    origin = ThreadOriginKind.CHAT,
   ) {
     const record = {
       id: randomUUID(),
       userId,
       title,
       workspaceId,
-      type,
+      origin,
       createdAt: new Date(),
     };
     await db.getRepository(ThreadRecord).insert(record);
@@ -218,7 +219,7 @@ describe('Chat title and content search (PostgreSQL)', () => {
       'Amtsblatt',
       ownerId,
       undefined,
-      ThreadType.ROUTINE,
+      ThreadOriginKind.ROUTINE,
     );
     await message(id, MessageRole.USER, [
       { type: MessageContentType.TEXT, text: 'Beschaffung', isNudge: true },
@@ -226,24 +227,34 @@ describe('Chat title and content search (PostgreSQL)', () => {
     expect((await search()).total).toBe(0);
   });
 
-  it('lists only chats when routine threads are filtered out', async () => {
+  it('keeps notification chats but not routine threads when routine threads are filtered out', async () => {
     const chat = await thread('Budget');
+    const notificationChat = await thread(
+      'Neue Ausschreibung',
+      ownerId,
+      undefined,
+      ThreadOriginKind.NOTIFICATION,
+    );
     const routineThread = await thread(
       'Amtsblatt – 07.11.2026',
       ownerId,
       undefined,
-      ThreadType.ROUTINE,
+      ThreadOriginKind.ROUTINE,
     );
     const all = await repository.findAll(ownerId);
-    const chatsOnly = await repository.findAll(ownerId, undefined, {
-      type: ThreadType.CHAT,
+    const withoutRoutines = await repository.findAll(ownerId, undefined, {
+      isRoutine: false,
     });
-    expect(all.data.map((item) => item.id)).toEqual(
-      expect.arrayContaining([chat, routineThread]),
+    const routinesOnly = await repository.findAll(ownerId, undefined, {
+      isRoutine: true,
+    });
+    expect(all.total).toBe(3);
+    expect(withoutRoutines.data.map((item) => item.id)).toEqual(
+      expect.arrayContaining([chat, notificationChat]),
     );
-    expect(all.total).toBe(2);
-    expect(chatsOnly.data.map((item) => item.id)).toEqual([chat]);
-    expect(chatsOnly.total).toBe(1);
+    expect(withoutRoutines.total).toBe(2);
+    expect(routinesOnly.data.map((item) => item.id)).toEqual([routineThread]);
+    expect(routinesOnly.total).toBe(1);
   });
 
   it("lists only the owner's threads of one routine, newest first, when filtered by it", async () => {
@@ -257,7 +268,7 @@ describe('Chat title and content search (PostgreSQL)', () => {
         id: randomUUID(),
         userId,
         title: `Amtsblatt – ${createdAt}`,
-        type: ThreadType.ROUTINE,
+        origin: ThreadOriginKind.ROUTINE,
         routineId: ofRoutine,
         createdAt: new Date(createdAt),
       };
@@ -283,7 +294,6 @@ describe('Chat title and content search (PostgreSQL)', () => {
         id: randomUUID(),
         userId,
         title: 'Antwort an Frau Muster',
-        type: ThreadType.CHAT,
         client: 'outlook' as const,
         createdAt: new Date(),
       };

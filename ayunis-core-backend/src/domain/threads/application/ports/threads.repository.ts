@@ -8,7 +8,6 @@ import type {
 } from 'src/domain/threads/domain/past-chat-scope';
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
-import type { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export interface ThreadsFindAllOptions {
@@ -21,7 +20,8 @@ export interface ThreadsFindAllOptions {
 export interface ThreadsFindAllFilters {
   search?: string;
   workspaceId?: UUID;
-  type?: ThreadType;
+  /** Only routine threads when true, every other thread when false. */
+  isRoutine?: boolean;
   routineId?: UUID;
   /** Threads of this client; without it, only threads of the web app. */
   client?: SessionClient;

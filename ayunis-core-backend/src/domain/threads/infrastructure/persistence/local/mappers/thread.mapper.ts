@@ -9,6 +9,10 @@ import { ThreadKnowledgeBaseAssignmentMapper } from './thread-knowledge-base-ass
 import { PermittedLanguageModel } from 'src/domain/models/domain/permitted-model.entity';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
+import {
+  ThreadOriginKind,
+  type ThreadOrigin,
+} from 'src/domain/threads/domain/thread-origin';
 
 @Injectable()
 export class ThreadMapper {
@@ -31,10 +35,7 @@ export class ThreadMapper {
     record.isAnonymous = thread.isAnonymous;
     record.mode = thread.mode;
     record.workspaceId = thread.workspaceId ?? null;
-    record.type = thread.type;
-    record.routineId = thread.routineId;
-    record.sourceNotificationId = thread.sourceNotificationId;
-    record.sourceReleaseNoteId = thread.sourceReleaseNoteId;
+    this.writeOrigin(record, thread.origin);
     record.client = thread.client;
     record.messages = thread.messages.map((message) =>
       this.messageMapper.toRecord(message),
@@ -68,16 +69,46 @@ export class ThreadMapper {
       isAnonymous: threadEntity.isAnonymous,
       mode: threadEntity.mode,
       workspaceId: threadEntity.workspaceId,
-      type: threadEntity.type,
-      routineId: threadEntity.routineId,
-      sourceNotificationId: threadEntity.sourceNotificationId,
-      sourceReleaseNoteId: threadEntity.sourceReleaseNoteId,
+      origin: this.mapOrigin(threadEntity),
       client: threadEntity.client,
       messages: this.mapMessages(threadEntity),
       lastActivityAt: threadEntity.lastActivityAt ?? threadEntity.createdAt,
       createdAt: threadEntity.createdAt,
       updatedAt: threadEntity.updatedAt,
     });
+  }
+
+  private writeOrigin(record: ThreadRecord, origin: ThreadOrigin): void {
+    record.origin = origin.kind;
+    record.routineId =
+      origin.kind === ThreadOriginKind.ROUTINE ? origin.routineId : null;
+    record.sourceNotificationId =
+      origin.kind === ThreadOriginKind.NOTIFICATION
+        ? origin.notificationId
+        : null;
+    record.sourceReleaseNoteId =
+      origin.kind === ThreadOriginKind.RELEASE_NOTE
+        ? origin.releaseNoteId
+        : null;
+  }
+
+  private mapOrigin(record: ThreadRecord): ThreadOrigin {
+    switch (record.origin) {
+      case ThreadOriginKind.CHAT:
+        return { kind: ThreadOriginKind.CHAT };
+      case ThreadOriginKind.ROUTINE:
+        return { kind: ThreadOriginKind.ROUTINE, routineId: record.routineId };
+      case ThreadOriginKind.NOTIFICATION:
+        return {
+          kind: ThreadOriginKind.NOTIFICATION,
+          notificationId: record.sourceNotificationId,
+        };
+      case ThreadOriginKind.RELEASE_NOTE:
+        return {
+          kind: ThreadOriginKind.RELEASE_NOTE,
+          releaseNoteId: record.sourceReleaseNoteId,
+        };
+    }
   }
 
   private mapModel(record: ThreadRecord): PermittedLanguageModel | undefined {

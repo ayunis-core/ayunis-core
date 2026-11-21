@@ -17,7 +17,10 @@ import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-
 import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { AssertWorkspaceReadAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-read-access/assert-workspace-read-access.use-case';
-import { ThreadType } from 'src/domain/threads/domain/thread-type.enum';
+import {
+  ThreadOriginKind,
+  type ThreadOrigin,
+} from 'src/domain/threads/domain/thread-origin';
 import { FindNotificationUseCase } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.use-case';
 import { FindNotificationQuery } from 'src/domain/notifications/application/use-cases/find-notification/find-notification.query';
 import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
@@ -58,10 +61,7 @@ export class CreateThreadUseCase {
         isAnonymous,
         workspaceId: command.workspaceId,
         title: command.title,
-        type: command.routineId ? ThreadType.ROUTINE : ThreadType.CHAT,
-        routineId: command.routineId,
-        sourceNotificationId: command.sourceNotificationId,
-        sourceReleaseNoteId: command.sourceReleaseNoteId,
+        origin: command.origin,
         client: this.contextService.get('client') ?? null,
         messages: [],
       });
@@ -90,18 +90,26 @@ export class CreateThreadUseCase {
         workspaceId: command.workspaceId,
       });
     }
+    await this.assertOriginReadable(command.origin);
+  }
 
+  private async assertOriginReadable(origin?: ThreadOrigin): Promise<void> {
     // Throws NotificationNotFoundError for an id the caller does not own.
-    if (command.sourceNotificationId) {
+    if (
+      origin?.kind === ThreadOriginKind.NOTIFICATION &&
+      origin.notificationId
+    ) {
       await this.findNotificationUseCase.execute(
-        new FindNotificationQuery(command.sourceNotificationId),
+        new FindNotificationQuery(origin.notificationId),
       );
     }
-
     // Throws ReleaseNoteNotFoundError for a release note that does not exist.
-    if (command.sourceReleaseNoteId) {
+    if (
+      origin?.kind === ThreadOriginKind.RELEASE_NOTE &&
+      origin.releaseNoteId
+    ) {
       await this.findReleaseNoteUseCase.execute(
-        new FindReleaseNoteQuery(command.sourceReleaseNoteId),
+        new FindReleaseNoteQuery(origin.releaseNoteId),
       );
     }
   }

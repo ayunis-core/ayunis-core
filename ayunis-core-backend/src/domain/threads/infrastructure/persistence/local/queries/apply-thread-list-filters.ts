@@ -3,6 +3,7 @@ import type { ThreadsFindAllFilters } from 'src/domain/threads/application/ports
 import type { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
 import { applyThreadSearch } from './apply-thread-search';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 
 export function applyThreadListFilters(
   queryBuilder: SelectQueryBuilder<ThreadRecord>,
@@ -18,10 +19,7 @@ export function applyThreadListFilters(
     });
   }
 
-  if (filters?.type) {
-    queryBuilder.andWhere('thread.type = :type', { type: filters.type });
-  }
-
+  applyRoutineThreadFilter(queryBuilder, filters?.isRoutine);
   applyThreadClientFilter(queryBuilder, filters?.client);
 
   if (filters?.routineId) {
@@ -29,6 +27,19 @@ export function applyThreadListFilters(
       routineId: filters.routineId,
     });
   }
+}
+
+function applyRoutineThreadFilter(
+  queryBuilder: SelectQueryBuilder<ThreadRecord>,
+  isRoutine?: boolean,
+): void {
+  if (isRoutine === undefined) return;
+  queryBuilder.andWhere(
+    isRoutine
+      ? 'thread.origin = :routineOrigin'
+      : 'thread.origin <> :routineOrigin',
+    { routineOrigin: ThreadOriginKind.ROUTINE },
+  );
 }
 
 // Chats from a token client (the Outlook pane) stay out of the web app's lists

@@ -48,6 +48,10 @@ import { GetThreadsResponseDto } from './dto/get-threads-response.dto';
 import { FindAllThreadsQueryParamsDto } from './dto/find-all-threads-query-params.dto';
 import { GetThreadDtoMapper } from './mappers/get-thread.mapper';
 import { GetThreadsDtoMapper } from './mappers/get-threads.mapper';
+import {
+  toCreateThreadOrigin,
+  toIsRoutineFilter,
+} from './mappers/thread-origin.mapper';
 import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
 import { UnmaskThreadPiiMaskUseCase } from 'src/domain/thread-pii-masks/application/use-cases/unmask-thread-pii-mask/unmask-thread-pii-mask.use-case';
@@ -107,8 +111,7 @@ export class ThreadsController {
         mode: createThreadDto.mode,
         isAnonymous: createThreadDto.isAnonymous,
         workspaceId: createThreadDto.workspaceId,
-        sourceNotificationId: createThreadDto.sourceNotificationId,
-        sourceReleaseNoteId: createThreadDto.sourceReleaseNoteId,
+        origin: toCreateThreadOrigin(createThreadDto),
       }),
     );
     // New threads are never long chats
@@ -156,7 +159,7 @@ export class ThreadsController {
         {
           search: queryParams.search,
           workspaceId: queryParams.workspaceId,
-          type: queryParams.type,
+          isRoutine: toIsRoutineFilter(queryParams.type),
           routineId: queryParams.routineId,
           client: queryParams.client,
         },
