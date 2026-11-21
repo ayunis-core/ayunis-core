@@ -39,6 +39,7 @@ export function renderArtifactToolWidget(params: {
         <CreateDocumentWidget
           key={`create-document-${keySuffix}`}
           content={content}
+          result={result}
           isStreaming={isStreaming}
           threadId={threadId}
           onOpenArtifact={onOpenArtifact}
@@ -77,6 +78,7 @@ export function renderArtifactToolWidget(params: {
         <CreateDiagramWidget
           key={`create-diagram-${keySuffix}`}
           content={content}
+          result={result}
           isStreaming={isStreaming}
           threadId={threadId}
           onOpenArtifact={onOpenArtifact}
@@ -96,6 +98,7 @@ export function renderArtifactToolWidget(params: {
         <CreateSpreadsheetWidget
           key={`create-spreadsheet-${keySuffix}`}
           content={content}
+          result={result}
           isStreaming={isStreaming}
           threadId={threadId}
           onOpenArtifact={onOpenArtifact}

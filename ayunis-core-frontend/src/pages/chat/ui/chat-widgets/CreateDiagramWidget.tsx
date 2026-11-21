@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check, Workflow } from 'lucide-react';
-import { useThreadArtifacts } from '../../api/useThreadArtifacts';
-import { findLatestArtifactId } from '../../lib/find-latest-artifact-id';
+import { useCreatedArtifactId } from './useCreatedArtifactId';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 // eslint-disable-next-line sonarjs/function-return-type -- intentional: returns JSX or string, both valid ReactNode
@@ -29,6 +28,7 @@ function getCreateStatusLabel(
 
 interface CreateDiagramWidgetProps {
   readonly content: ToolUseMessageContent;
+  readonly result?: string;
   readonly isStreaming?: boolean;
   readonly threadId: string;
   readonly onOpenArtifact?: (artifactId: string) => void;
@@ -36,6 +36,7 @@ interface CreateDiagramWidgetProps {
 
 export default function CreateDiagramWidget({
   content,
+  result,
   isStreaming = false,
   threadId,
   onOpenArtifact,
@@ -48,8 +49,12 @@ export default function CreateDiagramWidget({
     content?: string;
   };
 
-  const { artifacts } = useThreadArtifacts(threadId);
-  const artifactId = findLatestArtifactId(artifacts, params.title, 'diagram');
+  const artifactId = useCreatedArtifactId({
+    threadId,
+    title: params.title,
+    type: 'diagram',
+    result,
+  });
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {

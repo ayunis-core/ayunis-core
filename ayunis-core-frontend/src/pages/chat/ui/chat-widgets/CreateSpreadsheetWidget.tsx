@@ -1,12 +1,12 @@
-import type { ToolUseMessageContent } from '../../model/openapi';
+import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import { useTranslation } from 'react-i18next';
 import { Check, Table } from 'lucide-react';
-import { useThreadArtifacts } from '../../api/useThreadArtifacts';
-import { findLatestArtifactId } from '../../lib/find-latest-artifact-id';
+import { useCreatedArtifactId } from './useCreatedArtifactId';
 import { DocumentWidgetCard } from './DocumentWidgetCard';
 
 interface CreateSpreadsheetWidgetProps {
   readonly content: ToolUseMessageContent;
+  readonly result?: string;
   readonly isStreaming?: boolean;
   readonly threadId: string;
   readonly onOpenArtifact?: (artifactId: string) => void;
@@ -14,6 +14,7 @@ interface CreateSpreadsheetWidgetProps {
 
 export default function CreateSpreadsheetWidget({
   content,
+  result,
   isStreaming = false,
   threadId,
   onOpenArtifact,
@@ -24,8 +25,12 @@ export default function CreateSpreadsheetWidget({
   const params = content.params as { title?: string } | undefined;
   const title = params?.title;
 
-  const { artifacts } = useThreadArtifacts(threadId);
-  const artifactId = findLatestArtifactId(artifacts, title, 'spreadsheet');
+  const artifactId = useCreatedArtifactId({
+    threadId,
+    title,
+    type: 'spreadsheet',
+    result,
+  });
 
   const handleOpen = () => {
     if (artifactId && onOpenArtifact) {
