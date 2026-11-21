@@ -1,5 +1,4 @@
 import { dismissWelcomeVideo, dismissWelcomeVideoFromBrowserContext } from '../../src/clients/api/onboarding.client';
-import { skipChatPersonalization } from '../../src/clients/api/chat-settings.client';
 import { permitFirstLanguageModelAsDefault } from '../../src/clients/api/models.client';
 import { config } from '../../src/config';
 import { randomUUID } from 'node:crypto';
@@ -31,7 +30,6 @@ test.describe('SSO account linking', () => {
     await login(publicApi, email, password);
     await permitFirstLanguageModelAsDefault(publicApi);
     await dismissWelcomeVideo(publicApi);
-    await skipChatPersonalization(publicApi);
     const owner = await generatedApi.authenticationControllerMe({ api: publicApi });
     const ownerCookies = (await publicApi.storageState()).cookies;
     await page.context().clearCookies();

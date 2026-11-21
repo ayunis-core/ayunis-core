@@ -6,7 +6,6 @@ import { createUser } from "../../src/factories/user.factory";
 import { createOrg } from "../../src/factories/org.factory";
 import { login } from "../../src/clients/api/auth.client";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import { sendMessage } from "../../src/flows/chat.flow";
 
 test("admin default reaches members, preserves settings, and permits per-chat opt-out", async ({
@@ -29,7 +28,6 @@ test("admin default reaches members, preserves settings, and permits per-chat op
   const memberApi = await request.newContext({ baseURL: config.apiURL });
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const otherOrg = await createOrg(
     `anonymous-other-${Date.now()}`,
     testInfo.outputPath("other-org.json"),

@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext, Browser, BrowserContext } from "@playwright/test";
 import { login } from "../../src/clients/api/auth.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import { generatedApi } from "../../src/clients/api/generated-api";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
 import {
@@ -43,7 +42,6 @@ async function createSharingOrg(
   const memberApi = await createApiContext(emptySession);
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const team = await createTeam(adminApi, `Bauamt ${key}`);
   await addTeamMember(adminApi, team.id, member.id);
   return { adminApi, memberApi, teamId: team.id };

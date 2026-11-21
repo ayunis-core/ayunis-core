@@ -2,7 +2,6 @@ import { request } from '@playwright/test';
 import type { APIRequestContext } from '@playwright/test';
 import { config } from '../config';
 import { getAuthenticatedPrincipalId, login } from '../clients/api/auth.client';
-import { skipChatPersonalization } from '../clients/api/chat-settings.client';
 import { generatedApi } from '../clients/api/generated-api';
 import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
 import { addTeamMember, createTeam, deleteTeam } from '../clients/api/teams.client';
@@ -37,7 +36,6 @@ async function createPrincipal(
   const api = await request.newContext({ baseURL: config.apiURL });
   await login(api, user.email, user.password);
   await dismissWelcomeVideo(api);
-  await skipChatPersonalization(api);
   const id = await getAuthenticatedPrincipalId(api);
   return { id, api, storageState: await api.storageState() };
 }

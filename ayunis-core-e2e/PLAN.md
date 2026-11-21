@@ -269,7 +269,8 @@ Findings that shaped the suite:
    working delete path (non-viewed thread) is covered normally.
 2. **Fresh users get the personalization wizard** on /chat — the org factory
    skips it via `PUT /api/chat-settings/system-prompt` with the frontend's
-   `'-'` sentinel.
+   `'-'` sentinel. (The wizard and the sentinel were removed in AYC-1991;
+   factories no longer set a system prompt.)
 3. **Mock now streams multiple paced chunks** (40ms) — pulled forward from
    Phase 5; an instant single-chunk response is faster than any real
    provider and races client stream setup.

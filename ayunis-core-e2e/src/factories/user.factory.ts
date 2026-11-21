@@ -1,6 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
 import { login } from '../clients/api/auth.client';
-import { skipChatPersonalization } from '../clients/api/chat-settings.client';
 import { acceptInvite, inviteUser } from '../clients/api/invites.client';
 import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
 import { findUserByEmail } from '../clients/api/users.client';
@@ -52,6 +51,5 @@ export async function createMemberSession(
   const api = await createApiContext({ cookies: [], origins: [] });
   await login(api, member.email, member.password);
   await dismissWelcomeVideo(api);
-  await skipChatPersonalization(api);
   return { member, api };
 }

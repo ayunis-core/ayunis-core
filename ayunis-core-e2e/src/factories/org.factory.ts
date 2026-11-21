@@ -7,7 +7,6 @@ import {
   login,
   registerOrg,
 } from '../clients/api/auth.client';
-import { skipChatPersonalization } from '../clients/api/chat-settings.client';
 import { permitFirstLanguageModelAsDefault } from '../clients/api/models.client';
 import type { DefaultModel } from '../clients/api/models.client';
 import { dismissWelcomeVideo } from '../clients/api/onboarding.client';
@@ -62,7 +61,6 @@ export async function createOrg(
     await confirmEmailIfRequired(api, admin);
     const defaultModel = await permitFirstLanguageModelAsDefault(api);
     await dismissWelcomeVideo(api);
-    await skipChatPersonalization(api);
     const currentUser = await generatedApi.authenticationControllerMe({ api });
     await api.storageState({ path: storageStatePath });
     return {

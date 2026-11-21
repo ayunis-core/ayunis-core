@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext, BrowserContext } from "@playwright/test";
 import { login } from "../../src/clients/api/auth.client";
-import { skipChatPersonalization } from "../../src/clients/api/chat-settings.client";
 import { dismissWelcomeVideo } from "../../src/clients/api/onboarding.client";
 import {
   getRolePermissions,
@@ -81,7 +80,6 @@ test("an admin takes routine management away from users and gives it back", asyn
   const memberApi = await createApiContext(emptySession);
   await login(memberApi, member.email, member.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const contexts: BrowserContext[] = [];
   try {
     const defaults = await getUserRolePermissions(adminApi);

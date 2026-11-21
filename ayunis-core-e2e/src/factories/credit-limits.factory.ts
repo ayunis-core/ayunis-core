@@ -2,7 +2,6 @@ import { request } from '@playwright/test';
 import type { APIRequestContext } from '@playwright/test';
 import { config } from '../config';
 import { login } from '../clients/api/auth.client';
-import { skipChatPersonalization } from '../clients/api/chat-settings.client';
 import {
   deleteCreditLimitMember,
   ensureUsageSubscription,
@@ -29,7 +28,6 @@ export async function createCreditLimitsFixture(
   const memberApi = await request.newContext({ baseURL: config.apiURL });
   await login(memberApi, user.email, user.password);
   await dismissWelcomeVideo(memberApi);
-  await skipChatPersonalization(memberApi);
   const principal = await getAuthenticatedCreditPrincipal(memberApi);
   if (principal.id !== user.id || principal.role !== 'user') {
     throw new Error(

@@ -13,15 +13,12 @@ import { UpsertOrgSystemPromptUseCase } from './application/use-cases/upsert-org
 import { DeleteOrgSystemPromptUseCase } from './application/use-cases/delete-org-system-prompt/delete-org-system-prompt.use-case';
 import { GetOrgChatSettingsUseCase } from './application/use-cases/get-org-chat-settings/get-org-chat-settings.use-case';
 import { UpsertOrgChatSettingsUseCase } from './application/use-cases/upsert-org-chat-settings/upsert-org-chat-settings.use-case';
-import { GeneratePersonalizedSystemPromptUseCase } from './application/use-cases/generate-personalized-system-prompt/generate-personalized-system-prompt.use-case';
-import { ModelsModule } from '../models/models.module';
 
 @Module({
   imports: [
     LocalUserSystemPromptsRepositoryModule,
     LocalOrgSystemPromptsRepositoryModule,
     LocalOrgChatSettingsRepositoryModule,
-    ModelsModule,
   ],
   controllers: [
     ChatSettingsController,
@@ -37,7 +34,6 @@ import { ModelsModule } from '../models/models.module';
     DeleteOrgSystemPromptUseCase,
     GetOrgChatSettingsUseCase,
     UpsertOrgChatSettingsUseCase,
-    GeneratePersonalizedSystemPromptUseCase,
   ],
   exports: [
     GetUserSystemPromptUseCase,
