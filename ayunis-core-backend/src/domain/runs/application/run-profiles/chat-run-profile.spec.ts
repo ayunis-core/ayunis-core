@@ -47,6 +47,7 @@ import {
 import { ChatRunProfile } from './chat-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
@@ -252,6 +253,22 @@ describe('ChatRunProfile', () => {
 
     expect(instructions).toMatch(
       /<feature_adoption>[\s\S]*create_skill[\s\S]*create_routine[\s\S]*<\/feature_adoption>/,
+    );
+  });
+
+  it('leads a profile onboarding chat into the skills the run was given', async () => {
+    const { instructions } = await assembleChat({
+      thread: aThread({
+        origin: {
+          kind: ThreadOriginKind.ONBOARDING,
+          stage: OnboardingStage.PROFILE,
+        },
+      }),
+      memory: [],
+    });
+
+    expect(instructions).toMatch(
+      /<onboarding>[\s\S]*set_memory[\s\S]*create_skill[\s\S]*<\/onboarding>/,
     );
   });
 
