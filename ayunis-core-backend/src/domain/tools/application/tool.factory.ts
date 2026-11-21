@@ -25,6 +25,10 @@ import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.ent
 import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
 import { DataSource } from 'src/domain/sources/domain/sources/data-source.entity';
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import {
+  LoadableToolGroups,
+  LoadToolsTool,
+} from 'src/domain/tools/domain/tools/load-tools-tool.entity';
 import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
 import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
 import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
@@ -129,6 +133,8 @@ export class ToolFactory {
         new ActivateSkillTool(
           requireMapContext(p.context, ToolType.ACTIVATE_SKILL),
         ),
+      [ToolType.LOAD_TOOLS]: (p) =>
+        new LoadToolsTool(requireLoadableToolGroups(p.context)),
       [ToolType.EDIT_SKILL]: (p) =>
         new EditSkillTool(requireMapContext(p.context, ToolType.EDIT_SKILL)),
       [ToolType.EDIT_ROUTINE]: (p) =>
@@ -256,6 +262,14 @@ function requireRecordingSearchScope(context: unknown): RecordingSearchScope {
   if (context instanceof RecordingSearchScope) return context;
   throw new ToolInvalidContextError({
     toolType: ToolType.RECORDING_SEARCH,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requireLoadableToolGroups(context: unknown): LoadableToolGroups {
+  if (context instanceof LoadableToolGroups) return context;
+  throw new ToolInvalidContextError({
+    toolType: ToolType.LOAD_TOOLS,
     metadata: { contextType: contextTypeName(context) },
   });
 }

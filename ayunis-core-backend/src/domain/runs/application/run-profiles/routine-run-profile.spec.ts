@@ -1,3 +1,4 @@
+import { ToolLoaderCapability } from 'src/domain/runs/application/run-capabilities/capabilities/tool-loader.capability';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
@@ -66,6 +67,7 @@ function assembleRoutine(
     resolved({}),
     { toRuntimeTools: jest.fn() } as never,
     resolved([]),
+    new ToolLoaderCapability(createAssembleToolUseCase()),
   );
   const profile = buildRoutineProfile(options.orgAllowsInternet);
   const capabilities = [

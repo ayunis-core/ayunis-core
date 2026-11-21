@@ -25,6 +25,7 @@ export class CapabilityAssembly {
         ...this.loadableToolNames,
       ]),
       loadableToolNames: new Set(this.loadableToolNames),
+      capabilityCatalog: [...this.catalog],
     };
   }
 

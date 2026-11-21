@@ -14,6 +14,7 @@ import { CodeExecutionToolHandler } from './handlers/code-execution-tool.handler
 import { McpIntegrationToolHandler } from './handlers/mcp-integration-tool.handler';
 import { McpIntegrationResourceHandler } from './handlers/mcp-integration-resource.handler';
 import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler';
+import { LoadToolsToolHandler } from './handlers/load-tools-tool.handler';
 import { KnowledgeQueryToolHandler } from './handlers/knowledge-query-tool.handler';
 import { KnowledgeGetTextToolHandler } from './handlers/knowledge-get-text-tool.handler';
 import { RecordingSearchToolHandler } from './handlers/recording-search-tool.handler';
@@ -43,6 +44,7 @@ import { CodeExecutionTool } from 'src/domain/tools/domain/tools/code-execution-
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpIntegrationResource } from 'src/domain/tools/domain/tools/mcp-integration-resource.entity';
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
+import { LoadToolsTool } from 'src/domain/tools/domain/tools/load-tools-tool.entity';
 import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
 import { RecordingSearchTool } from 'src/domain/tools/domain/tools/recording-search-tool.entity';
@@ -79,6 +81,7 @@ const TOOL_HANDLER_PAIRS: readonly (readonly [
   [McpIntegrationTool, McpIntegrationToolHandler],
   [McpIntegrationResource, McpIntegrationResourceHandler],
   [ActivateSkillTool, ActivateSkillToolHandler],
+  [LoadToolsTool, LoadToolsToolHandler],
   [KnowledgeQueryTool, KnowledgeQueryToolHandler],
   [KnowledgeGetTextTool, KnowledgeGetTextToolHandler],
   [RecordingSearchTool, RecordingSearchToolHandler],

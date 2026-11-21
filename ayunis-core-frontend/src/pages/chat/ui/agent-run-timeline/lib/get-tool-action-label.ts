@@ -10,6 +10,12 @@ export interface ToolActionLabel {
 
 const MAX_TARGET_LENGTH = 80;
 
+const VERB_ONLY_TOOLS: ReadonlySet<string> = new Set([
+  'add_anonymization_exception',
+  'code_execution',
+  'load_tools',
+]);
+
 function truncate(value: string): string {
   return value.length > MAX_TARGET_LENGTH
     ? `${value.slice(0, MAX_TARGET_LENGTH).trimEnd()}…`
@@ -41,6 +47,9 @@ export function getToolActionLabel(
   const params = (toolUse.params as Record<string, unknown> | undefined) ?? {};
   const name = toolUse.name;
 
+  if (VERB_ONLY_TOOLS.has(name)) {
+    return { verb: t(`chat.timeline.actions.${name}`) };
+  }
   const pastChatLabel = getPastChatActionLabel(name, params, t);
   if (pastChatLabel) return pastChatLabel;
 
@@ -142,10 +151,6 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.install_marketplace_skill'),
         target: asString(params.name) ?? asString(params.identifier),
       };
-    case 'add_anonymization_exception':
-      return {
-        verb: t('chat.timeline.actions.add_anonymization_exception'),
-      };
     case 'activate_skill':
       return {
         verb: t('chat.timeline.actions.activate_skill'),
@@ -188,8 +193,6 @@ export function getToolActionLabel(
         verb: t('chat.timeline.actions.recording_search'),
         target: asStringList(params.queries),
       };
-    case 'code_execution':
-      return { verb: t('chat.timeline.actions.code_execution') };
     case 'http':
       return {
         verb: t('chat.timeline.actions.http'),

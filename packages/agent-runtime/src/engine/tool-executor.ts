@@ -131,9 +131,11 @@ async function* scheduleToolCall(
   yield* drainEmits(state);
   const tool = findTool(state, toolCall.name);
   if (tool?.exclusive) await phase.settle();
-  const outcome = phase.limiter.run(() =>
-    startToolCall(state, phase, tool, toolCall, emits),
-  );
+  const outcome = tool
+    ? phase.limiter.run(() =>
+        startToolCall(state, phase, tool, toolCall, emits),
+      )
+    : unknownToolOutcome(state, phase, iteration, toolCall);
   phase.scheduled.push({ toolCall, outcome, emits });
   if (tool?.exclusive) await outcome;
 }
@@ -141,7 +143,7 @@ async function* scheduleToolCall(
 const startToolCall = async (
   state: RunState,
   phase: ToolPhase,
-  tool: Tool | undefined,
+  tool: Tool,
   toolCall: ToolCallSummary,
   emits: EmitBuffer,
 ): Promise<ToolOutcome> => {
@@ -237,19 +239,32 @@ const findTool = (state: RunState, name: string): Tool | undefined => {
   return state.tools.find((tool) => tool.name === name);
 };
 
+const unknownToolOutcome = async (
+  state: RunState,
+  phase: ToolPhase,
+  iteration: number,
+  call: ToolCallSummary,
+): Promise<ToolOutcome> => {
+  if (phase.shouldSkip(state)) return abortedOutcome();
+  const description = await state.hookRunner.describeUnknownTool({
+    iteration,
+    toolCall: call,
+  });
+  return {
+    result:
+      description ??
+      `A tool with the name ${call.name} was not found. It might have been removed or renamed.`,
+    isError: true,
+  };
+};
+
 const runTool = async (
   state: RunState,
   phase: ToolPhase,
-  tool: Tool | undefined,
+  tool: Tool,
   call: ToolCallSummary,
   emits: EmitBuffer,
 ): Promise<ToolOutcome> => {
-  if (!tool) {
-    return {
-      result: `A tool with the name ${call.name} was not found. It might have been removed or renamed.`,
-      isError: true,
-    };
-  }
   const validationError = validateToolInput(tool, call.input);
   if (validationError !== null) {
     return { result: validationError, isError: true };
