@@ -32,16 +32,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
+import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 
 interface ChatHeaderProps {
   readonly threadId: string;
   readonly threadTitle?: string;
   readonly isAnonymous: boolean;
   readonly workspaceId?: string | null;
-  /** The notification the chat was started about ("Chat about this"). */
-  readonly sourceNotificationId?: string | null;
-  /** The product update the chat was started about. */
-  readonly sourceReleaseNoteId?: string | null;
+  readonly origin?: GetThreadResponseDto['origin'];
   readonly isArtifactPanelOpen: boolean;
   readonly onToggleArtifactPanel: () => void;
   readonly onRename: () => void;
@@ -68,8 +66,7 @@ function WebChatHeader({
   threadTitle,
   isAnonymous,
   workspaceId,
-  sourceNotificationId,
-  sourceReleaseNoteId,
+  origin,
   isArtifactPanelOpen,
   onToggleArtifactPanel,
   onRename,
@@ -108,10 +105,7 @@ function WebChatHeader({
       badge={
         <>
           {anonymousBadge}
-          <ChatSourceBadge
-            sourceNotificationId={sourceNotificationId}
-            sourceReleaseNoteId={sourceReleaseNoteId}
-          />
+          <ChatSourceBadge origin={origin} />
         </>
       }
       action={
@@ -223,14 +217,15 @@ function EmbeddedChatHeader({
 
 /** Leads back to the notification or product update a chat was started about. */
 function ChatSourceBadge({
-  sourceNotificationId,
-  sourceReleaseNoteId,
-}: Readonly<
-  Pick<ChatHeaderProps, 'sourceNotificationId' | 'sourceReleaseNoteId'>
->) {
+  origin,
+}: Readonly<Pick<ChatHeaderProps, 'origin'>>) {
   const { t } = useTranslation('chat');
   const routinesEnabled = useIsFeatureEnabled('routinesEnabled');
   const releaseNotesEnabled = useIsFeatureEnabled('releaseNotesEnabled');
+  const sourceReleaseNoteId =
+    origin?.kind === 'release_note' ? origin.releaseNoteId : null;
+  const sourceNotificationId =
+    origin?.kind === 'notification' ? origin.notificationId : null;
 
   if (releaseNotesEnabled && sourceReleaseNoteId) {
     return (

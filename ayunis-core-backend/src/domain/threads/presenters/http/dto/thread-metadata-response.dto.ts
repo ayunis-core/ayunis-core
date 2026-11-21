@@ -1,11 +1,23 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
-import { ThreadType } from 'src/domain/threads/presenters/http/dto/thread-type.enum';
+import {
+  ChatThreadOriginResponseDto,
+  NotificationThreadOriginResponseDto,
+  ReleaseNoteThreadOriginResponseDto,
+  RoutineThreadOriginResponseDto,
+  type ThreadOriginResponseDto,
+} from 'src/domain/threads/presenters/http/dto/thread-origin-response.dto';
 
 /**
  * Thread fields that both the list and the single-thread response carry.
  * Shared through inheritance so the two DTOs cannot drift apart.
  */
+@ApiExtraModels(
+  ChatThreadOriginResponseDto,
+  RoutineThreadOriginResponseDto,
+  NotificationThreadOriginResponseDto,
+  ReleaseNoteThreadOriginResponseDto,
+)
 export class ThreadMetadataResponseDto {
   @ApiProperty({
     description: 'Creation timestamp',
@@ -44,37 +56,15 @@ export class ThreadMetadataResponseDto {
   workspaceId: string | null;
 
   @ApiProperty({
-    enum: ThreadType,
-    enumName: 'ThreadType',
     description:
-      'Whether a user started the thread or a routine run created it',
+      'Why the thread exists: a chat a user started, a routine run, or a chat about a notification or a release note',
+    oneOf: [
+      { $ref: getSchemaPath(ChatThreadOriginResponseDto) },
+      { $ref: getSchemaPath(RoutineThreadOriginResponseDto) },
+      { $ref: getSchemaPath(NotificationThreadOriginResponseDto) },
+      { $ref: getSchemaPath(ReleaseNoteThreadOriginResponseDto) },
+    ],
+    discriminator: { propertyName: 'kind' },
   })
-  type: ThreadType;
-
-  @ApiProperty({
-    type: String,
-    description:
-      'The routine whose run created this thread; null for chats and once the routine is deleted',
-    format: 'uuid',
-    nullable: true,
-  })
-  routineId: string | null;
-
-  @ApiProperty({
-    type: String,
-    description:
-      'The notification this chat was started about; null for other chats and once the notification is deleted',
-    format: 'uuid',
-    nullable: true,
-  })
-  sourceNotificationId: string | null;
-
-  @ApiProperty({
-    type: String,
-    description:
-      'The release note this chat was started about; null for other chats and once the release note is deleted',
-    format: 'uuid',
-    nullable: true,
-  })
-  sourceReleaseNoteId: string | null;
+  origin: ThreadOriginResponseDto;
 }

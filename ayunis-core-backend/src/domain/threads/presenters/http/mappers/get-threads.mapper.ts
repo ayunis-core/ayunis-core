@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { toThreadOriginFields } from './thread-origin.mapper';
+import { toThreadOriginDto } from './thread-origin.mapper';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { GetThreadsResponseDtoItem } from 'src/domain/threads/presenters/http/dto/get-threads-response-item.dto';
 import { GetThreadsResponseDto } from 'src/domain/threads/presenters/http/dto/get-threads-response.dto';
@@ -16,7 +16,7 @@ export class GetThreadsDtoMapper {
       isAnonymous: thread.isAnonymous,
       mode: thread.mode,
       workspaceId: thread.workspaceId ?? null,
-      ...toThreadOriginFields(thread.origin),
+      origin: toThreadOriginDto(thread.origin),
     };
   }
 

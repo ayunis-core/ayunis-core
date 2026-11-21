@@ -34,7 +34,7 @@ vi.mock('@/widgets/markdown', () => ({
 }));
 vi.mock('@/widgets/chat-starter', () => ({
   ChatStarter: (props: {
-    sourceReleaseNoteId?: string;
+    origin?: { kind: string; releaseNoteId?: string };
     placeholder?: string;
   }) => <output data-testid="chat-starter">{JSON.stringify(props)}</output>,
 }));
@@ -117,7 +117,7 @@ describe('ReleaseNotePage', () => {
     expect(
       JSON.parse(screen.getByTestId('chat-starter').textContent),
     ).toMatchObject({
-      sourceReleaseNoteId: ID,
+      origin: { kind: 'release_note', releaseNoteId: ID },
       placeholder: 'detail.chatPlaceholder',
     });
   });

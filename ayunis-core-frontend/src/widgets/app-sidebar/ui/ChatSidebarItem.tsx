@@ -92,7 +92,7 @@ export function ChatSidebarItem({
           <Link to="/chats/$threadId" params={{ threadId: thread.id }}>
             <ChatIcon
               isRunning={isRunning}
-              isRoutine={thread.type === 'routine'}
+              isRoutine={thread.origin.kind === 'routine'}
             />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate">

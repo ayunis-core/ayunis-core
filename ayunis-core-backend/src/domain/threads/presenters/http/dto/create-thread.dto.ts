@@ -1,8 +1,28 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import {
+  ApiExtraModels,
+  ApiPropertyOptional,
+  getSchemaPath,
+} from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsObject,
+  IsOptional,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { UUID } from 'crypto';
+import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import {
+  NotificationThreadOriginDto,
+  ReleaseNoteThreadOriginDto,
+  UnsupportedThreadOriginDto,
+  type CreateThreadOriginDto,
+} from 'src/domain/threads/presenters/http/dto/create-thread-origin.dto';
 
+@ApiExtraModels(NotificationThreadOriginDto, ReleaseNoteThreadOriginDto)
 export class CreateThreadDto {
   @ApiPropertyOptional({
     description: 'The id of the model',
@@ -46,21 +66,31 @@ export class CreateThreadDto {
 
   @ApiPropertyOptional({
     description:
-      "Start a chat about one of the user's notifications; its content is given to the model",
-    type: 'string',
-    format: 'uuid',
+      'Why the thread exists; a plain chat when omitted. Routine threads are only created by routine runs.',
+    oneOf: [
+      { $ref: getSchemaPath(NotificationThreadOriginDto) },
+      { $ref: getSchemaPath(ReleaseNoteThreadOriginDto) },
+    ],
+    discriminator: { propertyName: 'kind' },
   })
-  @IsUUID()
-  @IsOptional()
-  sourceNotificationId?: UUID;
-
-  @ApiPropertyOptional({
-    description:
-      'Start a chat about a release note; its content is given to the model',
-    type: 'string',
-    format: 'uuid',
+  @IsObject()
+  @ValidateNested()
+  @Type(() => UnsupportedThreadOriginDto, {
+    discriminator: {
+      property: 'kind',
+      subTypes: [
+        {
+          value: NotificationThreadOriginDto,
+          name: ThreadOriginKind.NOTIFICATION,
+        },
+        {
+          value: ReleaseNoteThreadOriginDto,
+          name: ThreadOriginKind.RELEASE_NOTE,
+        },
+      ],
+    },
+    keepDiscriminatorProperty: true,
   })
-  @IsUUID()
   @IsOptional()
-  sourceReleaseNoteId?: UUID;
+  origin?: CreateThreadOriginDto;
 }

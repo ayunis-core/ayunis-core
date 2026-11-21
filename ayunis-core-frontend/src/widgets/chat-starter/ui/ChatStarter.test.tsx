@@ -65,7 +65,7 @@ describe('ChatStarter', () => {
         message: 'Hello',
         modelId: 'medium',
         workspaceId: 'workspace-id',
-        sourceNotificationId: undefined,
+        origin: undefined,
       }),
     );
   });
@@ -73,7 +73,7 @@ describe('ChatStarter', () => {
   it('starts a chat about the given notification outside any workspace', () => {
     render(
       <ChatStarter
-        sourceNotificationId="notification-id"
+        origin={{ kind: 'notification', notificationId: 'notification-id' }}
         selectedModelId="medium"
         isEmbeddingModelEnabled={false}
       />,
@@ -86,7 +86,7 @@ describe('ChatStarter', () => {
         message: 'Hello',
         modelId: 'medium',
         workspaceId: undefined,
-        sourceNotificationId: 'notification-id',
+        origin: { kind: 'notification', notificationId: 'notification-id' },
       }),
     );
   });

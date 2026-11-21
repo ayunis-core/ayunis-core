@@ -109,6 +109,6 @@ export function requestThreadAboutNotification(
   notificationId: string,
 ): Promise<APIResponse> {
   return api.post(`${config.apiURL}/api/threads`, {
-    data: { modelId, sourceNotificationId: notificationId },
+    data: { modelId, origin: { kind: 'notification', notificationId } },
   });
 }

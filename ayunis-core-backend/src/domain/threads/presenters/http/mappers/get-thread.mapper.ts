@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { toThreadOriginFields } from './thread-origin.mapper';
+import { toThreadOriginDto } from './thread-origin.mapper';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { GetThreadResponseDto } from 'src/domain/threads/presenters/http/dto/get-thread-response.dto';
 import { McpIntegrationSummaryResponseDto } from 'src/domain/threads/presenters/http/dto/mcp-integration-summary-response.dto';
@@ -42,7 +42,7 @@ export class GetThreadDtoMapper {
       isAnonymous: thread.isAnonymous,
       mode: thread.mode,
       workspaceId: thread.workspaceId ?? null,
-      ...toThreadOriginFields(thread.origin),
+      origin: toThreadOriginDto(thread.origin),
       isLongChat,
       knowledgeBases: thread.getUniqueKnowledgeBases(),
       piiMasks: this.piiMaskDtoMapper.toDtoArray(piiMasks),

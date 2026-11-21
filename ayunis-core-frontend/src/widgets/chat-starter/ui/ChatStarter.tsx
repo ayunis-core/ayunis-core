@@ -4,6 +4,7 @@ import ChatInput from '@/widgets/chat-input';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import {
   useInitiateChat,
+  type CreateThreadOrigin,
   type SourceUploadStatus,
 } from '@/features/chat-initiation';
 import { usePermittedModels } from '@/features/usePermittedModels';
@@ -23,8 +24,7 @@ import type {
 
 interface ChatStarterProps {
   workspaceId?: string;
-  sourceNotificationId?: string;
-  sourceReleaseNoteId?: string;
+  origin?: CreateThreadOrigin;
   placeholder?: string;
   selectedModelId?: string;
   isEmbeddingModelEnabled: boolean;
@@ -62,13 +62,12 @@ function applySourceStatus(
 
 /**
  * The full chat composer embedded in a page other than the new-chat page.
- * Sends through the same initiation flow, with the workspace and the source
- * notification or release note fixed, and lands directly in the created chat.
+ * Sends through the same initiation flow, with the workspace and origin
+ * fixed, and lands directly in the created chat.
  */
 export function ChatStarter({
   workspaceId,
-  sourceNotificationId,
-  sourceReleaseNoteId,
+  origin,
   placeholder,
   selectedModelId,
   isEmbeddingModelEnabled,
@@ -137,8 +136,7 @@ export function ChatStarter({
       mcpIntegrations: selectedIntegrations,
       isAnonymous,
       workspaceId,
-      sourceNotificationId,
-      sourceReleaseNoteId,
+      origin,
       skillId,
       voiceInput,
       onSourceStatus: handleSourceStatus,

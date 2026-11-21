@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import ChatHeader from './ChatHeader';
 
 vi.mock('react-i18next', () => ({
@@ -48,12 +49,12 @@ vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
   ),
 }));
 
-function renderHeader(sourceNotificationId: string | null) {
+function renderHeader(origin: GetThreadResponseDto['origin']) {
   return render(
     <ChatHeader
       threadId="thread-id"
       isAnonymous={false}
-      sourceNotificationId={sourceNotificationId}
+      origin={origin}
       isArtifactPanelOpen={false}
       onToggleArtifactPanel={vi.fn()}
       onRename={vi.fn()}
@@ -89,7 +90,7 @@ describe('ChatHeader', () => {
 
   it('links a chat started about a notification back to it', () => {
     routinesEnabled = true;
-    renderHeader('notification-id');
+    renderHeader({ kind: 'notification', notificationId: 'notification-id' });
 
     expect(
       screen.getByTestId('chat-source-notification').getAttribute('href'),
@@ -98,12 +99,12 @@ describe('ChatHeader', () => {
 
   it('shows no notification link for other chats or with routines off', () => {
     routinesEnabled = true;
-    const { unmount } = renderHeader(null);
+    const { unmount } = renderHeader({ kind: 'chat' });
     expect(screen.queryByTestId('chat-source-notification')).toBeNull();
     unmount();
 
     routinesEnabled = false;
-    renderHeader('notification-id');
+    renderHeader({ kind: 'notification', notificationId: 'notification-id' });
     expect(screen.queryByTestId('chat-source-notification')).toBeNull();
   });
 });
