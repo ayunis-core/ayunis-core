@@ -95,6 +95,8 @@ export interface NormalizeProviderErrorOptions {
   readonly timeoutSignal?: AbortSignal;
   /** Provider-specific recognition of an actionable rejection. */
   readonly classifyRejection?: ProviderRejectionClassifier;
+  /** Provider-side serving fault that may arrive as a 400; wins over status. */
+  readonly classifyServerFault?: (error: unknown) => boolean;
 }
 
 const CONNECTION_CODES = new Set([
@@ -233,6 +235,7 @@ function classifyFailure(
 
   const transport = classifyTransport(chain);
   if (transport) return withTimeoutSource(transport, options.timeoutSource);
+  if (options.classifyServerFault?.(error)) return { kind: 'server' };
 
   const statusKind = classifyStatus(status);
   if (statusKind) return { kind: statusKind };

@@ -54,6 +54,26 @@ describe('useRunErrorHandler', () => {
     );
   });
 
+  it.each([
+    'PROVIDER_UNAVAILABLE_SERVER_STACKIT',
+    'PROVIDER_UNAVAILABLE_REJECTED_AZURE',
+    'PROVIDER_UNAVAILABLE_TIMEOUT_MISTRAL',
+    'PROVIDER_UNAVAILABLE_CONNECTION_BEDROCK',
+  ])('shows the model provider outage explanation for %s', (code) => {
+    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const error: RunErrorResponseDto = {
+      type: 'error',
+      message: 'Internal server error',
+      threadId: 'thread-1',
+      timestamp: '2026-11-05T12:00:00.000Z',
+      code,
+    };
+
+    act(() => result.current(error));
+
+    expect(showError).toHaveBeenCalledWith('chat.errorProviderUnavailable');
+  });
+
   it('asks the user to retry while the previous answer is still stopping', () => {
     const { result } = renderHook(() => useRunErrorHandler('thread-1'));
     const error: RunErrorResponseDto = {
