@@ -4,6 +4,8 @@ import { History, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
+import { emailGreetings } from '@/pages/new-chat/model/email-greetings-data';
+import { useTimeBasedGreeting } from '@/pages/new-chat/model/useTimeBasedGreeting';
 
 export function EmbeddedHistoryButton() {
   const { t } = useTranslation('chat');
@@ -37,6 +39,7 @@ export function EmbeddedNewChatCompose({
   onStarterPrompt,
 }: Readonly<EmbeddedNewChatComposeProps>) {
   const { t } = useTranslation('chat');
+  const greeting = useTimeBasedGreeting(emailGreetings);
   // Starter prompts send their own label, as ordinary chat messages.
   const starterPrompts = [
     t('newChat.embedded.prepareReply'),
@@ -52,7 +55,7 @@ export function EmbeddedNewChatCompose({
         )}
         aria-hidden={isCreating}
       >
-        {t('newChat.embedded.heading')}
+        {greeting}
       </h1>
 
       {!isCreating && (

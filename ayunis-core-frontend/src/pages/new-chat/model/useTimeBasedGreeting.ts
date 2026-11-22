@@ -1,8 +1,13 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type Greeting, greetings } from './greetings-data';
+import {
+  type Greeting,
+  type GreetingSet,
+  type TimePeriod,
+  greetings,
+} from './greetings-data';
 
-function getTimePeriod(hour: number): keyof typeof greetings {
+function getTimePeriod(hour: number): TimePeriod {
   if (hour >= 6 && hour < 8) return 'earlyMorning';
   if (hour >= 8 && hour < 10) return 'morningStart';
   if (hour >= 10 && hour < 12) return 'lateMorning';
@@ -14,8 +19,8 @@ function getTimePeriod(hour: number): keyof typeof greetings {
   return 'night';
 }
 
-function getRandomGreeting(period: keyof typeof greetings): Greeting {
-  const periodGreetings = greetings[period];
+function getRandomGreeting(set: GreetingSet, period: TimePeriod): Greeting {
+  const periodGreetings = set[period];
   // eslint-disable-next-line sonarjs/pseudo-random -- Random greeting selection for UI variety, not security-sensitive
   const randomIndex = Math.floor(Math.random() * periodGreetings.length);
   return periodGreetings[randomIndex];
@@ -31,14 +36,14 @@ function getRandomGreeting(period: keyof typeof greetings): Greeting {
  * The greeting is memoized and only recalculated when the component mounts
  * (not on every render), so it stays consistent during the session.
  */
-export function useTimeBasedGreeting(): string {
+export function useTimeBasedGreeting(set: GreetingSet = greetings): string {
   const { i18n } = useTranslation();
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     const period = getTimePeriod(hour);
-    return getRandomGreeting(period);
-  }, []);
+    return getRandomGreeting(set, period);
+  }, [set]);
 
   // Return greeting in user's language (default to German if not English)
   return i18n.language === 'en' ? greeting.en : greeting.de;

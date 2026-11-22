@@ -440,7 +440,6 @@
       "viewAll": "View all in inbox"
     },
     "embedded": {
-      "heading": "How can Ayunis Core help with this email?",
       "prepareReply": "Prepare reply",
       "summarizeEmail": "Summarize email"
     }
