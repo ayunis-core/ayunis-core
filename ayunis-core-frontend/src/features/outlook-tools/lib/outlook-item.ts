@@ -70,9 +70,6 @@ export interface ComposeItem extends AttachmentContentSource {
   getAttachmentsAsync?: (
     callback: Callback<Office.AttachmentDetailsCompose[]>,
   ) => void;
-  getComposeTypeAsync?: (
-    callback: Callback<{ composeType: Office.MailboxEnums.ComposeType }>,
-  ) => void;
   saveAsync: (callback: Callback<string>) => void;
 }
 

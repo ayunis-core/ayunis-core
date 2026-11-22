@@ -18,7 +18,6 @@ export interface OfficeStubAddress {
 /** A mail being composed, the item the pane's tools read and write. */
 export interface OfficeStubComposeItem {
   inReplyTo?: string;
-  composeType?: 'newMail' | 'reply' | 'forward';
   subject: string;
   body: string;
   from: OfficeStubAddress;
@@ -42,7 +41,13 @@ export interface OfficeStubCall {
 export interface OfficeStubState {
   messages: string[];
   calls: OfficeStubCall[];
-  launchComposeEvent?: () => Promise<void>;
+  /**
+   * The launch-event handlers the page registered, once it has started the
+   * Office.js handshake Outlook waits for before it dispatches an event.
+   */
+  launchEventHandlers(): string[];
+  /** Dispatches a launch event; true if the handler completed it at once. */
+  dispatchLaunchEvent(functionName: string): boolean;
   dialog: {
     url: string;
     closed: boolean;
@@ -63,20 +68,19 @@ export type OfficeStubWindow = Window & { __officeStub: OfficeStubState };
 const officeStub = (
   item: OfficeStubComposeItem | null,
   readItem: OfficeStubReadItem | null,
-  account: string,
 ) => `(() => {
   const mailboxHandlers = {};
   const state = { messages: [], calls: [], dialog: null };
   window.__officeStub = state;
   const mail = ${JSON.stringify(item)};
   let officeReadyRequested = false;
-  let composeHandler;
-  // The Outlook web runtime dispatches only after the add-in calls onReady.
-  const exposeComposeEvent = () => {
-    if (officeReadyRequested && composeHandler) {
-      state.launchComposeEvent = () =>
-        new Promise((completed) => { composeHandler({ completed }); });
-    }
+  const launchEventHandlers = {};
+  state.launchEventHandlers = () =>
+    officeReadyRequested ? Object.keys(launchEventHandlers) : [];
+  state.dispatchLaunchEvent = (functionName) => {
+    let completed = false;
+    launchEventHandlers[functionName]({ completed: () => { completed = true; } });
+    return completed;
   };
   const succeed = (callback, value) =>
     callback({ status: 'succeeded', value });
@@ -89,12 +93,6 @@ const officeStub = (
   });
   const composeItem = mail && {
     inReplyTo: mail.inReplyTo,
-    getComposeTypeAsync: recorded('getComposeTypeAsync', (callback) =>
-      succeed(callback, {
-        composeType: mail.composeType ?? (mail.inReplyTo ? 'reply' : 'newMail'),
-        coercionType: 'html',
-      }),
-    ),
     subject: {
       ...getter('subject.getAsync', () => mail.subject),
       setAsync: recorded('subject.setAsync', (subject, callback) => {
@@ -144,8 +142,6 @@ const officeStub = (
     displayReplyForm: recorded('displayReplyForm', () => undefined),
   };
   const mailbox = {
-    diagnostics: { hostName: 'OutlookWebApp' },
-    userProfile: { emailAddress: ${JSON.stringify(account)} },
     item: readItemFrom(${JSON.stringify(readItem)}) ?? composeItem ?? undefined,
     addHandlerAsync: (type, handler, callback) => {
       mailboxHandlers[type] = handler;
@@ -170,14 +166,10 @@ const officeStub = (
     },
     actions: {
       associate: (name, handler) => {
-        if (name === 'insertOutlookReplyDraft') {
-          composeHandler = handler;
-          exposeComposeEvent();
-        }
+        launchEventHandlers[name] = handler;
       },
     },
     MailboxEnums: {
-      ComposeType: { Reply: 'reply' },
       AttachmentContentFormat: {
         Base64: 'base64',
         Url: 'url',
@@ -187,7 +179,6 @@ const officeStub = (
     },
     onReady: () => {
       officeReadyRequested = true;
-      exposeComposeEvent();
       return Promise.resolve({ host: 'Outlook', platform: 'OfficeOnline' });
     },
     context: {
@@ -226,13 +217,11 @@ export async function stubOfficeHost(
   options: {
     composeItem?: OfficeStubComposeItem;
     readItem?: OfficeStubReadItem;
-    account?: string;
   } = {},
 ): Promise<void> {
   const body = officeStub(
     options.composeItem ?? null,
     options.readItem ?? null,
-    options.account ?? 'alice@e2e.local',
   );
   await target.route(OFFICE_JS_URL, (route) =>
     route.fulfill({ contentType: 'application/javascript', body }),

@@ -18,7 +18,7 @@ describe('serveFrontendOptions', () => {
     writeFileSync(join(rootPath, 'index.html'), '<div id="app"></div>');
     writeFileSync(join(rootPath, 'outlook', 'taskpane.html'), '<div></div>');
     writeFileSync(join(rootPath, 'outlook', 'dialog.html'), '<div></div>');
-    writeFileSync(join(rootPath, 'outlook', 'reply-event.html'), '<div></div>');
+    writeFileSync(join(rootPath, 'outlook', 'events.html'), '<div></div>');
     writeFileSync(join(rootPath, 'assets', 'index-abc.js'), 'export {}');
 
     // serve-static picks its loader from the HTTP adapter when the module is
@@ -83,7 +83,7 @@ describe('serveFrontendOptions', () => {
       },
     );
 
-    it.each(['/outlook/taskpane.html', '/outlook/reply-event.html'])(
+    it.each(['/outlook/taskpane.html', '/outlook/events.html'])(
       'lets the configured Outlook origins frame %s',
       async (path) => {
         process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'true';
@@ -96,7 +96,7 @@ describe('serveFrontendOptions', () => {
       },
     );
 
-    it.each(['/outlook/taskpane.html', '/outlook/reply-event.html'])(
+    it.each(['/outlook/taskpane.html', '/outlook/events.html'])(
       'blocks framing by Outlook at %s with the add-in off',
       async (path) => {
         process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'false';

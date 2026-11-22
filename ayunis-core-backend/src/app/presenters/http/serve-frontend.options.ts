@@ -18,7 +18,7 @@ export function serveFrontendOptions(
 ): ServeStaticModuleOptions {
   const outlookPaths = new Set([
     join(rootPath, 'outlook', 'taskpane.html'),
-    join(rootPath, 'outlook', 'reply-event.html'),
+    join(rootPath, 'outlook', 'events.html'),
   ]);
   return {
     rootPath,

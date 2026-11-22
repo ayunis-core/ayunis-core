@@ -2,7 +2,6 @@ import type { APIRequestContext, Page } from '@playwright/test';
 import {
   stubOfficeHost,
   type OfficeStubComposeItem,
-  type OfficeStubWindow,
 } from '../../src/clients/office-host-stub';
 import type { MailcatcherClient } from '../../src/clients/mailcatcher.client';
 import { createMemberSession } from '../../src/factories/user.factory';
@@ -12,7 +11,12 @@ import {
   sidebarThreadItem,
   startThread,
 } from '../../src/flows/chat.flow';
-import { officeItemCalls, openSignedInPane } from '../../src/flows/outlook.flow';
+import {
+  dispatchLaunchEvent,
+  officeItemCalls,
+  openLaunchEventRuntime,
+  openSignedInPane,
+} from '../../src/flows/outlook.flow';
 
 // The pane runs the chat app, whose Outlook tools act on the stubbed mail
 // being composed; the mock model answers these two prompts with those tools.
@@ -117,16 +121,25 @@ test('inserts the reading-pane draft into the already open Outlook reply', async
   await expect(page.getByTestId('outlook-draft')).toContainText(
     'E2E mock reply',
   );
+  await expect(page.getByTestId('outlook-draft-instruction')).toBeVisible();
   await expect(page.getByTestId('outlook-draft-insert')).toHaveCount(0);
   expect(await officeItemCalls(page)).not.toContainEqual(
     expect.objectContaining({ method: 'displayReplyForm' }),
   );
 
+  // Opening Reply in Outlook fires the compose event, which leaves the
+  // reply as Outlook created it.
+  const replyItem = { ...item, inReplyTo: internetMessageId };
+  const runtime = await page.context().newPage();
+  await stubOfficeHost(runtime, { composeItem: replyItem });
+  await openLaunchEventRuntime(runtime);
+  expect(await dispatchLaunchEvent(runtime, 'onMessageCompose')).toBe(true);
+  expect(await officeItemCalls(runtime)).toEqual([]);
+  await runtime.close();
+
   // Outlook activates the compose pane separately once Reply is open.
   const reply = await page.context().newPage();
-  await stubOfficeHost(reply, {
-    composeItem: { ...item, inReplyTo: internetMessageId },
-  });
+  await stubOfficeHost(reply, { composeItem: replyItem });
   await reply.goto('/outlook/taskpane.html?surface=messageCompose');
   const insert = reply.getByTestId('outlook-draft-insert');
   await expect(insert).toBeEnabled();
@@ -145,106 +158,6 @@ test('inserts the reading-pane draft into the already open Outlook reply', async
       { coercionType: 'html' },
     ],
   });
-});
-
-test('inserts a reading-pane draft when Outlook opens the matching reply without Ayunis', async ({
-  page,
-  api,
-}) => {
-  const key = `outlook-compose-event-${Date.now()}`;
-  const internetMessageId = `<${key}@e2e.local>`;
-  const item = composeItem(key);
-  const context = page.context();
-  await stubOfficeHost(page, {
-    readItem: {
-      itemId: key,
-      internetMessageId,
-      subject: item.subject,
-      body: item.body,
-      from: item.from,
-    },
-  });
-  await openSignedInPane(
-    page,
-    api,
-    '/outlook/taskpane.html?surface=messageRead&autoReply=1',
-  );
-  await sendMessage(page, DRAFT_REPLY_PROMPT);
-  await expect(page.getByTestId('outlook-draft-instruction')).toHaveText(
-    'Click Reply in Outlook to insert this draft',
-  );
-  await page.close();
-
-  async function newCompose(
-    composeItem: OfficeStubComposeItem,
-    account?: string,
-  ) {
-    const event = await context.newPage();
-    await stubOfficeHost(event, { composeItem, account });
-    await event.goto('/outlook/reply-event.html');
-    await event.waitForFunction(
-      () =>
-        (window as unknown as OfficeStubWindow).__officeStub
-          ?.launchComposeEvent,
-    );
-    await event.evaluate(async () => {
-      const launch = (window as unknown as OfficeStubWindow).__officeStub
-        .launchComposeEvent;
-      await launch?.();
-    });
-    expect(await officeItemCalls(event)).not.toContainEqual(
-      expect.objectContaining({ method: 'subject.setAsync' }),
-    );
-    const writes = (await officeItemCalls(event)).filter(
-      ({ method }) =>
-        method === 'body.prependAsync' || method === 'body.setAsync',
-    );
-    await event.close();
-    return writes;
-  }
-
-  expect(await newCompose(item)).toEqual([]);
-  expect(await newCompose({ ...item, inReplyTo: '<other@e2e.local>' })).toEqual(
-    [],
-  );
-  expect(
-    await newCompose({
-      ...item,
-      inReplyTo: internetMessageId,
-      composeType: 'forward',
-    }),
-  ).toEqual([]);
-  const matchingReply = { ...item, inReplyTo: internetMessageId };
-  expect(await newCompose(matchingReply, 'other-account@e2e.local')).toEqual(
-    [],
-  );
-  expect(
-    await newCompose({
-      ...matchingReply,
-      from: { displayName: 'Delegate', emailAddress: 'delegate@e2e.local' },
-    }),
-  ).toEqual([]);
-
-  expect(await newCompose(matchingReply)).toEqual([
-    {
-      method: 'body.prependAsync',
-      args: [
-        expect.stringContaining('>E2E mock reply</div>'),
-        { coercionType: 'html' },
-      ],
-    },
-  ]);
-  expect(await newCompose(matchingReply)).toEqual([]);
-
-  // If the user discarded the first reply, the next reply can still insert manually.
-  const reply = await context.newPage();
-  await stubOfficeHost(reply, { composeItem: matchingReply });
-  await reply.goto('/outlook/taskpane.html?surface=messageCompose');
-  await reply.getByTestId('outlook-draft-insert').click();
-  await expect(reply.getByTestId('outlook-draft')).toHaveAttribute(
-    'data-status',
-    'inserted',
-  );
 });
 
 test('keeps pane chats out of the web app and web chats out of the pane', async ({

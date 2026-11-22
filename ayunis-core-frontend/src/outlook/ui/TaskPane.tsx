@@ -34,7 +34,7 @@ export function TaskPane({
 
   return (
     <main className="flex min-h-full flex-col items-center gap-6 px-6 py-10 text-center">
-      <img src={brandFullLight} alt="Ayunis" className="h-9" />
+      <img src={brandFullLight} alt="Ayunis Core" className="h-9" />
       {state.status === 'loading' && (
         <p className="text-sm text-muted-foreground">{t('pane.loading')}</p>
       )}

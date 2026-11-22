@@ -209,7 +209,7 @@
     },
     "outlook": {
       "title": "Microsoft Outlook",
-      "description": "With the Ayunis add-in, your staff use Ayunis right inside Outlook. It is deployed in the Microsoft 365 admin center by someone with Microsoft 365 or Exchange admin rights.",
+      "description": "With the Ayunis Core add-in, your staff use Ayunis Core right inside Outlook. It is deployed in the Microsoft 365 admin center by someone with Microsoft 365 or Exchange admin rights.",
       "manifestUrl": "Manifest URL",
       "openIntegratedApps": "Open Integrated apps",
       "downloadManifest": "Download manifest",

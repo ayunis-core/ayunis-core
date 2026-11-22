@@ -56,13 +56,14 @@ export default defineConfig({
     outlookTaskpanePage(),
   ],
   build: {
-    // The sign-in dialog's last page is a separate entry without the app;
-    // the task pane is written by outlookTaskpanePage.
+    // The sign-in dialog's last page and the launch-event runtime are
+    // separate entries without the app; the task pane is written by
+    // outlookTaskpanePage.
     rolldownOptions: {
       input: {
         main: resolve(import.meta.dirname, "index.html"),
         outlookDialog: resolve(import.meta.dirname, "outlook/dialog.html"),
-        outlookReplyEvent: resolve(import.meta.dirname, "outlook/reply-event.html"),
+        outlookEvents: resolve(import.meta.dirname, "outlook/events.html"),
       },
     },
     // Emit sourcemaps without referencing them from the bundles. The maps

@@ -2,7 +2,7 @@ import { outlookAddinId } from './outlook-addin-id';
 
 // Outlook and the Microsoft 365 admin center only apply a manifest update
 // whose version is higher than the installed one: bump on every change.
-export const OUTLOOK_MANIFEST_VERSION = '1.0.2';
+export const OUTLOOK_MANIFEST_VERSION = '1.0.3';
 
 // Served by the frontend build (ayunis-core-frontend/outlook and
 // public/outlook). Outlook on the web shows the task pane in an iframe, so
@@ -26,11 +26,29 @@ const COMMAND_SURFACES: { surface: CommandSurface; extensionPoint: string }[] =
 // Ribbon buttons use 16, 32 and 80; the add-in itself 64 and 128.
 const ICON_SIZES = [16, 32, 64, 80, 128];
 
+// Registered once, so later features can ship through the code served at our
+// URLs instead of a manifest every tenant admin must redeploy:
+// - Each handler is named after its event, not after the feature using it.
+//   The event runtime (frontend `src/outlook/events.ts` and
+//   `public/outlook/events-classic.js`) registers every name and completes
+//   the event at once unless a feature handles it.
+// - An event added here appears in the admin center's update wizard and
+//   takes effect only after an admin consents to the update.
+// - Send events (OnMessageSend, OnAppointmentSend) can block sending, so
+//   they are not registered without a deliberate decision.
+const LAUNCH_EVENTS = [
+  'OnMessageCompose',
+  'OnMessageRecipientsChanged',
+  'OnMessageAttachmentsChanged',
+  'OnMessageFromChanged',
+  'OnInfoBarDismissClicked',
+];
+
 interface AddinUrls {
   icon(size: number): string;
-  taskpane(surface: CommandSurface, withReplyEvent?: boolean): string;
-  replyEvent: string;
-  classicReplyEvent: string;
+  taskpane(surface: CommandSurface, withManifestVersion: boolean): string;
+  eventsRuntime: string;
+  classicEventsRuntime: string;
 }
 
 export function renderOutlookManifest(frontendBaseUrl: string): string {
@@ -46,9 +64,11 @@ export function renderOutlookManifest(frontendBaseUrl: string): string {
   <Version>${OUTLOOK_MANIFEST_VERSION}</Version>
   <ProviderName>Ayunis</ProviderName>
   <DefaultLocale>de-DE</DefaultLocale>
-  <DisplayName DefaultValue="Ayunis Outlook"/>
-  <Description DefaultValue="Ihr KI-Assistent Ayunis direkt in Outlook.">
-    <Override Locale="en-US" Value="Your Ayunis AI assistant, right inside Outlook."/>
+  <DisplayName DefaultValue="Ayunis Core für Outlook">
+    <Override Locale="en-US" Value="Ayunis Core for Outlook"/>
+  </DisplayName>
+  <Description DefaultValue="Ihr KI-Assistent Ayunis Core direkt in Outlook.">
+    <Override Locale="en-US" Value="Your Ayunis Core AI assistant, right inside Outlook."/>
   </Description>
   <IconUrl DefaultValue="${urls.icon(64)}"/>
   <HighResolutionIconUrl DefaultValue="${urls.icon(128)}"/>
@@ -71,7 +91,7 @@ function mailAppSettings(urls: AddinUrls): string {
 <FormSettings>
   <Form xsi:type="ItemRead">
     <DesktopSettings>
-      <SourceLocation DefaultValue="${urls.taskpane('messageRead')}"/>
+      <SourceLocation DefaultValue="${urls.taskpane('messageRead', false)}"/>
       <RequestedHeight>250</RequestedHeight>
     </DesktopSettings>
   </Form>
@@ -98,29 +118,24 @@ ${indent(extensionPoints({ withPinning: false }), 8)}
       </DesktopFormFactor>
     </Host>
   </Hosts>
-${indent(resources(urls), 2)}
+${indent(resources(urls, { current: false }), 2)}
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1" xsi:type="VersionOverridesV1_1">
 ${indent(commandsRequirements('1.5'), 4)}
     <Hosts>
       <Host xsi:type="MailHost">
         <Runtimes>
-          <Runtime resid="ReplyEvent.Web">
-            <Override type="javascript" resid="ReplyEvent.Classic"/>
+          <Runtime resid="Events.Web">
+            <Override type="javascript" resid="Events.Classic"/>
           </Runtime>
         </Runtimes>
         <DesktopFormFactor>
           <SupportsSharedFolders>true</SupportsSharedFolders>
 ${indent(extensionPoints({ withPinning: true }), 10)}
-          <ExtensionPoint xsi:type="LaunchEvent">
-            <LaunchEvents>
-              <LaunchEvent Type="OnNewMessageCompose" FunctionName="insertOutlookReplyDraft"/>
-            </LaunchEvents>
-            <SourceLocation resid="ReplyEvent.Web"/>
-          </ExtensionPoint>
+${indent(launchEvents(), 10)}
         </DesktopFormFactor>
       </Host>
     </Hosts>
-${indent(resources(urls, true), 4)}
+${indent(resources(urls, { current: true }), 4)}
   </VersionOverrides>
 </VersionOverrides>`;
 }
@@ -163,18 +178,38 @@ function extensionPoints({ withPinning }: { withPinning: boolean }): string {
   }).join('\n');
 }
 
-function resources(urls: AddinUrls, withReplyEvent = false): string {
+function launchEvents(): string {
+  const events = LAUNCH_EVENTS.map(
+    (type) =>
+      `<LaunchEvent Type="${type}" FunctionName="${handlerName(type)}"/>`,
+  ).join('\n');
+  return `<ExtensionPoint xsi:type="LaunchEvent">
+  <LaunchEvents>
+${indent(events, 4)}
+  </LaunchEvents>
+  <SourceLocation resid="Events.Web"/>
+</ExtensionPoint>`;
+}
+
+function handlerName(eventType: string): string {
+  return eventType.charAt(0).toLowerCase() + eventType.slice(1);
+}
+
+// Only clients that read VersionOverrides 1.1 can run the launch events, so
+// only its pane URLs carry the manifest version. Features check a minimum
+// version instead of each adding its own URL flag.
+function resources(urls: AddinUrls, { current }: { current: boolean }): string {
   const images = ICON_SIZES.map(
     (size) => `<bt:Image id="Icon.${size}" DefaultValue="${urls.icon(size)}"/>`,
   ).join('\n');
   const taskpanes = COMMAND_SURFACES.map(
     ({ surface }) =>
-      `<bt:Url id="Taskpane.${surface}" DefaultValue="${urls.taskpane(surface, withReplyEvent)}"/>`,
+      `<bt:Url id="Taskpane.${surface}" DefaultValue="${urls.taskpane(surface, current)}"/>`,
   );
-  const replyEventUrls = withReplyEvent
+  const eventsUrls = current
     ? [
-        `<bt:Url id="ReplyEvent.Web" DefaultValue="${urls.replyEvent}"/>`,
-        `<bt:Url id="ReplyEvent.Classic" DefaultValue="${urls.classicReplyEvent}"/>`,
+        `<bt:Url id="Events.Web" DefaultValue="${urls.eventsRuntime}"/>`,
+        `<bt:Url id="Events.Classic" DefaultValue="${urls.classicEventsRuntime}"/>`,
       ]
     : [];
   return `<Resources>
@@ -182,18 +217,18 @@ function resources(urls: AddinUrls, withReplyEvent = false): string {
 ${indent(images, 4)}
   </bt:Images>
   <bt:Urls>
-${indent([...taskpanes, ...replyEventUrls].join('\n'), 4)}
+${indent([...taskpanes, ...eventsUrls].join('\n'), 4)}
   </bt:Urls>
   <bt:ShortStrings>
-    <bt:String id="Group.Label" DefaultValue="Ayunis Outlook"/>
-    <bt:String id="Button.Label" DefaultValue="Ayunis Outlook"/>
-    <bt:String id="Button.Title" DefaultValue="Ayunis öffnen">
-      <bt:Override Locale="en-US" Value="Open Ayunis"/>
+    <bt:String id="Group.Label" DefaultValue="Ayunis Core"/>
+    <bt:String id="Button.Label" DefaultValue="Ayunis Core"/>
+    <bt:String id="Button.Title" DefaultValue="Ayunis Core öffnen">
+      <bt:Override Locale="en-US" Value="Open Ayunis Core"/>
     </bt:String>
   </bt:ShortStrings>
   <bt:LongStrings>
-    <bt:String id="Button.Description" DefaultValue="Öffnet Ayunis im Seitenbereich.">
-      <bt:Override Locale="en-US" Value="Opens Ayunis in the side pane."/>
+    <bt:String id="Button.Description" DefaultValue="Öffnet Ayunis Core im Seitenbereich.">
+      <bt:Override Locale="en-US" Value="Opens Ayunis Core in the side pane."/>
     </bt:String>
   </bt:LongStrings>
 </Resources>`;
@@ -203,13 +238,14 @@ function addinUrls(baseUrl: string): AddinUrls {
   const addinBaseUrl = escapeXmlAttribute(`${baseUrl}${OUTLOOK_ADDIN_PATH}`);
   return {
     icon: (size) => `${addinBaseUrl}/assets/icon-${size}.png`,
-    taskpane: (surface, withReplyEvent) => {
-      const autoReply =
-        withReplyEvent && surface === 'messageRead' ? '&amp;autoReply=1' : '';
-      return `${addinBaseUrl}/taskpane.html?surface=${surface}${autoReply}`;
+    taskpane: (surface, withManifestVersion) => {
+      const manifestVersion = withManifestVersion
+        ? `&amp;manifestVersion=${OUTLOOK_MANIFEST_VERSION}`
+        : '';
+      return `${addinBaseUrl}/taskpane.html?surface=${surface}${manifestVersion}`;
     },
-    replyEvent: `${addinBaseUrl}/reply-event.html`,
-    classicReplyEvent: `${addinBaseUrl}/reply-event-classic.js`,
+    eventsRuntime: `${addinBaseUrl}/events.html`,
+    classicEventsRuntime: `${addinBaseUrl}/events-classic.js`,
   };
 }
 
