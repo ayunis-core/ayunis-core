@@ -9,7 +9,7 @@ import { DeleteUnreferencedSourcesCommand } from 'src/domain/sources/application
 
 /**
  * Cleans up what the `threads.userId` FK cascade cannot reach when a user is
- * deleted. The thread rows themselves (and their messages, artifacts and
+ * deleted. The thread rows themselves (and their messages, artifact links and
  * generated-image records) go with the cascade; two things need explicit work:
  *
  * - Object-storage (MinIO) blobs under the thread prefixes

@@ -26,8 +26,8 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
 import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
-import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import type { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { ProviderServerError } from 'src/common/errors/provider.errors';
 import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
 import { ArtifactMaskAllocationLock } from 'src/domain/artifacts/application/services/artifact-mask-allocation-lock.service';
@@ -43,7 +43,7 @@ describe('UpdateArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
   let getThreadPiiMasksUseCase: { execute: jest.Mock };
-  let anonymizeTextForThreadUseCase: { execute: jest.Mock };
+  let anonymizeTextForOrgUseCase: { execute: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -78,7 +78,7 @@ describe('UpdateArtifactUseCase', () => {
     };
 
     getThreadPiiMasksUseCase = { execute: jest.fn().mockResolvedValue([]) };
-    anonymizeTextForThreadUseCase = { execute: jest.fn() };
+    anonymizeTextForOrgUseCase = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -91,8 +91,8 @@ describe('UpdateArtifactUseCase', () => {
         },
         UserContentMaskingService,
         {
-          provide: AnonymizeTextForThreadUseCase,
-          useValue: anonymizeTextForThreadUseCase,
+          provide: AnonymizeTextForOrgUseCase,
+          useValue: anonymizeTextForOrgUseCase,
         },
         ArtifactPlaceholdersService,
         ArtifactMaskAllocationLock,
@@ -125,8 +125,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should add a new version with incremented version number', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Budget Report',
       currentVersionNumber: 2,
     });
@@ -159,8 +159,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should call addVersionAndUpdateArtifact with the new version', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Policy Document',
       currentVersionNumber: 1,
     });
@@ -206,8 +206,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should set authorId to null for ASSISTANT-authored versions', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Auto-Generated Report',
       currentVersionNumber: 1,
     });
@@ -230,8 +230,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should sanitize HTML content by stripping script tags', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'XSS Update Test',
       currentVersionNumber: 1,
     });
@@ -255,8 +255,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should sanitize HTML content by stripping event handlers', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Event Handler Update Test',
       currentVersionNumber: 1,
     });
@@ -280,8 +280,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should preserve safe Tiptap HTML during update sanitization', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Safe Update Test',
       currentVersionNumber: 1,
     });
@@ -310,8 +310,8 @@ describe('UpdateArtifactUseCase', () => {
     artifactsRepository.findById.mockResolvedValue(
       new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Oversized Document',
         currentVersionNumber: 1,
       }),
@@ -336,8 +336,8 @@ describe('UpdateArtifactUseCase', () => {
 
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Maximum Size Update',
       currentVersionNumber: 1,
     });
@@ -362,8 +362,8 @@ describe('UpdateArtifactUseCase', () => {
 
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Official Letter',
       currentVersionNumber: 1,
     });
@@ -399,8 +399,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should leave letterheadId unchanged when not provided in command', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Regular Document',
       currentVersionNumber: 1,
     });
@@ -431,8 +431,8 @@ describe('UpdateArtifactUseCase', () => {
   it('should pass letterheadId as null to remove letterhead atomically', async () => {
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Letter with letterhead',
       letterheadId: '423e4567-e89b-12d3-a456-426614174000',
       currentVersionNumber: 1,
@@ -500,8 +500,8 @@ describe('UpdateArtifactUseCase', () => {
     it('should throw ArtifactExpectedVersionMismatchError when expected version does not match', async () => {
       const existingArtifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'User-Edited Report',
         currentVersionNumber: 5,
       });
@@ -523,8 +523,8 @@ describe('UpdateArtifactUseCase', () => {
     it('should succeed when expected version matches current version', async () => {
       const existingArtifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Current Report',
         currentVersionNumber: 3,
       });
@@ -549,8 +549,8 @@ describe('UpdateArtifactUseCase', () => {
     it('should skip version check when expectedVersionNumber is not provided', async () => {
       const existingArtifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'No Version Check Report',
         currentVersionNumber: 5,
       });
@@ -577,8 +577,8 @@ describe('UpdateArtifactUseCase', () => {
 
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Official Letter',
       currentVersionNumber: 1,
     });
@@ -655,8 +655,8 @@ describe('UpdateArtifactUseCase', () => {
 
     const existingArtifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Official Letter',
       currentVersionNumber: 1,
     });
@@ -684,16 +684,16 @@ describe('UpdateArtifactUseCase', () => {
     it('should retry and succeed when addVersionAndUpdateArtifact fails once with conflict', async () => {
       const artifactV2 = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Concurrent Budget Report',
         currentVersionNumber: 2,
       });
 
       const artifactV3 = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Concurrent Budget Report',
         currentVersionNumber: 3,
       });
@@ -726,8 +726,8 @@ describe('UpdateArtifactUseCase', () => {
     it('should throw ArtifactVersionConflictError after exhausting all retries', async () => {
       const artifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Heavily Contended Report',
         currentVersionNumber: 5,
       });
@@ -757,8 +757,8 @@ describe('UpdateArtifactUseCase', () => {
     it('should rethrow non-conflict errors without retrying', async () => {
       const artifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Connection Error Report',
         currentVersionNumber: 1,
       });
@@ -796,8 +796,8 @@ describe('UpdateArtifactUseCase', () => {
     const spreadsheetArtifact = () =>
       new SpreadsheetArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Budget Sheet',
         currentVersionNumber: 1,
       });
@@ -894,8 +894,8 @@ describe('UpdateArtifactUseCase', () => {
       'max@example.org': PiiCategory.EMAIL_ADDRESS,
     };
 
-    // Stands in for the chat's detection: finds the known real values.
-    const detectKnownValues = (command: AnonymizeTextForThreadCommand) =>
+    // Stands in for the org's detection: finds the known real values.
+    const detectKnownValues = (command: AnonymizeTextForOrgCommand) =>
       Promise.resolve({
         anonymizedText: command.text,
         replacements: Object.entries(categories).flatMap(
@@ -950,8 +950,8 @@ describe('UpdateArtifactUseCase', () => {
     const documentArtifact = (isAnonymous = true) =>
       new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Brief',
         isAnonymous,
         currentVersionNumber: 1,
@@ -960,9 +960,7 @@ describe('UpdateArtifactUseCase', () => {
     const run = { threadId: mockThreadId, isAnonymous: true };
 
     beforeEach(() => {
-      anonymizeTextForThreadUseCase.execute.mockImplementation(
-        detectKnownValues,
-      );
+      anonymizeTextForOrgUseCase.execute.mockImplementation(detectKnownValues);
     });
 
     it('stores real values a user typed as placeholders of the artifact’s own dictionary', async () => {
@@ -1015,7 +1013,7 @@ describe('UpdateArtifactUseCase', () => {
         mockUserId,
         { linkedThreadId: mockThreadId, isAnonymous: true },
       );
-      expect(anonymizeTextForThreadUseCase.execute).not.toHaveBeenCalled();
+      expect(anonymizeTextForOrgUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('rejects a run’s write with a placeholder the chat does not know and stores nothing', async () => {
@@ -1052,12 +1050,12 @@ describe('UpdateArtifactUseCase', () => {
       )) as ArtifactVersion;
 
       expect(result.content).toBe('<p>Max Mustermann</p>');
-      expect(anonymizeTextForThreadUseCase.execute).not.toHaveBeenCalled();
+      expect(anonymizeTextForOrgUseCase.execute).not.toHaveBeenCalled();
     });
 
     it('stores no version when masking fails, so content is never stored unmasked', async () => {
       givenArtifact(documentArtifact());
-      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
+      anonymizeTextForOrgUseCase.execute.mockRejectedValue(
         new ProviderServerError({ provider: 'anonymize' }),
       );
 
@@ -1079,8 +1077,8 @@ describe('UpdateArtifactUseCase', () => {
       givenArtifact(
         new SpreadsheetArtifact({
           id: mockArtifactId,
-          threadId: mockThreadId,
-          userId: mockUserId,
+          owner: { type: 'personal', userId: mockUserId },
+          creatorId: mockUserId,
           title: 'Kontakte',
           isAnonymous: true,
           currentVersionNumber: 1,
@@ -1117,8 +1115,8 @@ describe('UpdateArtifactUseCase', () => {
       givenArtifact(
         new SpreadsheetArtifact({
           id: mockArtifactId,
-          threadId: mockThreadId,
-          userId: mockUserId,
+          owner: { type: 'personal', userId: mockUserId },
+          creatorId: mockUserId,
           title: 'Kontakte',
           isAnonymous: true,
           currentVersionNumber: 4,
@@ -1155,8 +1153,8 @@ describe('UpdateArtifactUseCase', () => {
         4,
       );
       expect(
-        anonymizeTextForThreadUseCase.execute.mock.calls.map(
-          ([command]: [AnonymizeTextForThreadCommand]) => command.text,
+        anonymizeTextForOrgUseCase.execute.mock.calls.map(
+          ([command]: [AnonymizeTextForOrgCommand]) => command.text,
         ),
       ).toEqual(['Max Mustermann']);
     });

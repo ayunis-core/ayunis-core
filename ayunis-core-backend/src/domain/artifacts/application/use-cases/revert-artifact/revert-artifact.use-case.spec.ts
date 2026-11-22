@@ -25,7 +25,6 @@ describe('RevertArtifactUseCase', () => {
 
   const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
   const makeVersions = (currentVersionNumber: number) => [
     new ArtifactVersion({
@@ -100,8 +99,8 @@ describe('RevertArtifactUseCase', () => {
 
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Municipal Development Plan',
       currentVersionNumber: 2,
       versions,
@@ -148,8 +147,8 @@ describe('RevertArtifactUseCase', () => {
 
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Zoning Regulations',
       currentVersionNumber: 2,
       versions,
@@ -194,8 +193,8 @@ describe('RevertArtifactUseCase', () => {
   it('should throw ArtifactVersionNotFoundError when target version does not exist', async () => {
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Infrastructure Report',
       currentVersionNumber: 1,
       versions: [
@@ -241,8 +240,8 @@ describe('RevertArtifactUseCase', () => {
 
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Test DocumentArtifact',
       currentVersionNumber: 2,
       versions,
@@ -296,8 +295,8 @@ describe('RevertArtifactUseCase', () => {
     it('should retry and succeed when addVersionAndUpdateArtifact fails once with conflict', async () => {
       const artifactV2 = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Concurrent Revert Report',
         currentVersionNumber: 2,
         versions: makeVersions(2),
@@ -305,8 +304,8 @@ describe('RevertArtifactUseCase', () => {
 
       const artifactV3 = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Concurrent Revert Report',
         currentVersionNumber: 3,
         versions: [
@@ -347,8 +346,8 @@ describe('RevertArtifactUseCase', () => {
     it('should throw ArtifactVersionConflictError after exhausting all retries', async () => {
       const artifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Heavily Contended Revert',
         currentVersionNumber: 5,
         versions: makeVersions(5),
@@ -377,8 +376,8 @@ describe('RevertArtifactUseCase', () => {
     it('should rethrow non-conflict errors without retrying', async () => {
       const artifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Connection Error Revert',
         currentVersionNumber: 2,
         versions: makeVersions(2),

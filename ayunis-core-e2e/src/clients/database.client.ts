@@ -445,3 +445,32 @@ export async function markSourceProcessing(sourceId: string): Promise<void> {
     await client.end();
   }
 }
+
+export interface ArtifactOwnerRow {
+  id: string;
+  userId: string | null;
+  workspaceId: string | null;
+  creatorId: string | null;
+}
+
+/**
+ * The owner columns of those of the artifacts that still exist. The creator
+ * is not exposed through the API, and deleted users' artifacts cannot be
+ * looked up by anyone.
+ */
+export async function findArtifactOwners(
+  artifactIds: string[],
+): Promise<ArtifactOwnerRow[]> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<ArtifactOwnerRow>(
+      `SELECT id, "userId", "workspaceId", "creatorId" FROM artifacts
+       WHERE id = ANY($1::text[]) ORDER BY id`,
+      [artifactIds],
+    );
+    return result.rows;
+  } finally {
+    await client.end();
+  }
+}

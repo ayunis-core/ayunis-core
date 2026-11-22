@@ -82,7 +82,7 @@ describe('ArtifactPanel', () => {
         artifact={{
           id: 'artifact-id',
           type: 'document',
-          threadId: 'thread-id',
+          ownerType: 'personal',
           userId: 'user-id',
           title: 'Document',
           isAnonymous: false,
@@ -108,7 +108,7 @@ describe('ArtifactPanel', () => {
         artifact={{
           id: 'artifact-id',
           type: 'document',
-          threadId: 'thread-id',
+          ownerType: 'personal',
           userId: 'user-id',
           title: 'Document',
           isAnonymous: false,

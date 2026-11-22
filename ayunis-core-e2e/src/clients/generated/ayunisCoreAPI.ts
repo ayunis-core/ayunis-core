@@ -3806,6 +3806,294 @@ const releaseNotesControllerMarkRead = (
     }
 
 /**
+ * @summary Create a new artifact (document)
+ */
+const artifactsControllerCreate = (
+    createArtifactDto: CreateArtifactDto,
+ options?: SecondParameter<typeof playwrightApiClient<ArtifactResponseDto>>,) => {
+      return playwrightApiClient<ArtifactResponseDto>(
+      {url: `/artifacts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createArtifactDto
+    },
+      options);
+    }
+
+/**
+ * @summary Update an artifact (add a new version)
+ */
+const artifactsControllerUpdate = (
+    id: string,
+    updateArtifactDto: UpdateArtifactDto,
+ options?: SecondParameter<typeof playwrightApiClient<ArtifactVersionResponseDto | void>>,) => {
+      return playwrightApiClient<ArtifactVersionResponseDto | void>(
+      {url: `/artifacts/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateArtifactDto
+    },
+      options);
+    }
+
+/**
+ * @summary Get an artifact by ID with all versions
+ */
+const artifactsControllerFindOne = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<ArtifactResponseDto>>,) => {
+      return playwrightApiClient<ArtifactResponseDto>(
+      {url: `/artifacts/${id}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get all artifacts for a thread
+ */
+const artifactsControllerFindByThread = (
+    threadId: string,
+ options?: SecondParameter<typeof playwrightApiClient<ArtifactResponseDto[]>>,) => {
+      return playwrightApiClient<ArtifactResponseDto[]>(
+      {url: `/artifacts/thread/${threadId}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Get all artifacts in a workspace
+ */
+const artifactsControllerFindByWorkspace = (
+    workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams,
+ options?: SecondParameter<typeof playwrightApiClient<ArtifactListResponseDto>>,) => {
+      return playwrightApiClient<ArtifactListResponseDto>(
+      {url: `/artifacts/workspace/${workspaceId}`, method: 'GET',
+        params
+    },
+      options);
+    }
+
+/**
+ * @summary Revert an artifact to a specific version
+ */
+const artifactsControllerRevert = (
+    id: string,
+    revertArtifactDto: RevertArtifactDto,
+ options?: SecondParameter<typeof playwrightApiClient<ArtifactVersionResponseDto>>,) => {
+      return playwrightApiClient<ArtifactVersionResponseDto>(
+      {url: `/artifacts/${id}/revert`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: revertArtifactDto
+    },
+      options);
+    }
+
+/**
+ * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
+ */
+const artifactsControllerExport = (
+    id: string,
+    params: ArtifactsControllerExportParams,
+ options?: SecondParameter<typeof playwrightApiClient<Blob>>,) => {
+      return playwrightApiClient<Blob>(
+      {url: `/artifacts/${id}/export`, method: 'GET',
+        params,
+        responseType: 'blob'
+    },
+      options);
+    }
+
+/**
+ * @summary Create a new letterhead
+ */
+const letterheadsControllerCreate = (
+    createLetterheadDto: CreateLetterheadDto,
+ options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto>>,) => {const formData = new FormData();
+if(createLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, createLetterheadDto.fontFamily);
+ }
+if(createLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, createLetterheadDto.fontSizePt);
+ }
+formData.append(`name`, createLetterheadDto.name);
+if(createLetterheadDto.description !== undefined) {
+ formData.append(`description`, createLetterheadDto.description);
+ }
+formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins);
+formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins);
+
+      return playwrightApiClient<LetterheadResponseDto>(
+      {url: `/letterheads`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
+    },
+      options);
+    }
+
+/**
+ * @summary List all letterheads for the current org
+ */
+const letterheadsControllerFindAll = (
+
+ options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto[]>>,) => {
+      return playwrightApiClient<LetterheadResponseDto[]>(
+      {url: `/letterheads`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Render a sample letter with the draft letterhead
+ */
+const letterheadsControllerPreview = (
+    previewLetterheadDto: PreviewLetterheadDto,
+ options?: SecondParameter<typeof playwrightApiClient<Blob>>,) => {const formData = new FormData();
+if(previewLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, previewLetterheadDto.fontFamily);
+ }
+if(previewLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, previewLetterheadDto.fontSizePt);
+ }
+if(previewLetterheadDto.letterheadId !== undefined) {
+ formData.append(`letterheadId`, previewLetterheadDto.letterheadId);
+ }
+if(previewLetterheadDto.firstPagePdf !== undefined) {
+ formData.append(`firstPagePdf`, previewLetterheadDto.firstPagePdf);
+ }
+if(previewLetterheadDto.continuationPagePdf !== undefined) {
+ formData.append(`continuationPagePdf`, previewLetterheadDto.continuationPagePdf);
+ }
+formData.append(`firstPageMargins`, previewLetterheadDto.firstPageMargins);
+formData.append(`continuationPageMargins`, previewLetterheadDto.continuationPageMargins);
+if(previewLetterheadDto.removeContinuationPage !== undefined) {
+ formData.append(`removeContinuationPage`, previewLetterheadDto.removeContinuationPage);
+ }
+if(previewLetterheadDto.language !== undefined) {
+ formData.append(`language`, previewLetterheadDto.language);
+ }
+
+      return playwrightApiClient<Blob>(
+      {url: `/letterheads/preview`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData,
+        responseType: 'blob'
+    },
+      options);
+    }
+
+/**
+ * @summary Get a letterhead by ID
+ */
+const letterheadsControllerFindOne = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto>>,) => {
+      return playwrightApiClient<LetterheadResponseDto>(
+      {url: `/letterheads/${id}`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Update a letterhead
+ */
+const letterheadsControllerUpdate = (
+    id: string,
+    updateLetterheadDto: UpdateLetterheadDto,
+ options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto>>,) => {const formData = new FormData();
+if(updateLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, updateLetterheadDto.fontFamily);
+ }
+if(updateLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, updateLetterheadDto.fontSizePt);
+ }
+if(updateLetterheadDto.name !== undefined) {
+ formData.append(`name`, updateLetterheadDto.name);
+ }
+if(updateLetterheadDto.description !== undefined) {
+ formData.append(`description`, updateLetterheadDto.description);
+ }
+if(updateLetterheadDto.firstPageMargins !== undefined) {
+ formData.append(`firstPageMargins`, updateLetterheadDto.firstPageMargins);
+ }
+if(updateLetterheadDto.continuationPageMargins !== undefined) {
+ formData.append(`continuationPageMargins`, updateLetterheadDto.continuationPageMargins);
+ }
+if(updateLetterheadDto.removeContinuationPage !== undefined) {
+ formData.append(`removeContinuationPage`, updateLetterheadDto.removeContinuationPage);
+ }
+
+      return playwrightApiClient<LetterheadResponseDto>(
+      {url: `/letterheads/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData
+    },
+      options);
+    }
+
+/**
+ * @summary Delete a letterhead
+ */
+const letterheadsControllerRemove = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/letterheads/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+
+/**
+ * @summary Download the first-page PDF of a letterhead
+ */
+const letterheadsControllerDownloadFirstPagePdf = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * @summary Download the continuation-page PDF of a letterhead
+ */
+const letterheadsControllerDownloadContinuationPagePdf = (
+    id: string,
+ options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
+      return playwrightApiClient<void>(
+      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Available to authenticated organization members.
+ * @summary Get the current organization’s document defaults
+ */
+const documentDefaultsControllerFind = (
+
+ options?: SecondParameter<typeof playwrightApiClient<DocumentTypographyDto>>,) => {
+      return playwrightApiClient<DocumentTypographyDto>(
+      {url: `/document-defaults`, method: 'GET'
+    },
+      options);
+    }
+
+/**
+ * Omitted fields are preserved. Send null to reset a field.
+ * @summary Update the current organization’s document defaults
+ */
+const documentDefaultsControllerUpdate = (
+    updateDocumentDefaultsDto: UpdateDocumentDefaultsDto,
+ options?: SecondParameter<typeof playwrightApiClient<DocumentTypographyDto>>,) => {
+      return playwrightApiClient<DocumentTypographyDto>(
+      {url: `/document-defaults`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDocumentDefaultsDto
+    },
+      options);
+    }
+
+/**
  * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
  * @summary Get the current credits-per-euro configuration
  */
@@ -4800,294 +5088,6 @@ const superAdminSkillTemplatesControllerDelete = (
  options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
       return playwrightApiClient<void>(
       {url: `/super-admin/skill-templates/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Create a new artifact (document)
- */
-const artifactsControllerCreate = (
-    createArtifactDto: CreateArtifactDto,
- options?: SecondParameter<typeof playwrightApiClient<ArtifactResponseDto>>,) => {
-      return playwrightApiClient<ArtifactResponseDto>(
-      {url: `/artifacts`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createArtifactDto
-    },
-      options);
-    }
-
-/**
- * @summary Update an artifact (add a new version)
- */
-const artifactsControllerUpdate = (
-    id: string,
-    updateArtifactDto: UpdateArtifactDto,
- options?: SecondParameter<typeof playwrightApiClient<ArtifactVersionResponseDto | void>>,) => {
-      return playwrightApiClient<ArtifactVersionResponseDto | void>(
-      {url: `/artifacts/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateArtifactDto
-    },
-      options);
-    }
-
-/**
- * @summary Get an artifact by ID with all versions
- */
-const artifactsControllerFindOne = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<ArtifactResponseDto>>,) => {
-      return playwrightApiClient<ArtifactResponseDto>(
-      {url: `/artifacts/${id}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get all artifacts for a thread
- */
-const artifactsControllerFindByThread = (
-    threadId: string,
- options?: SecondParameter<typeof playwrightApiClient<ArtifactResponseDto[]>>,) => {
-      return playwrightApiClient<ArtifactResponseDto[]>(
-      {url: `/artifacts/thread/${threadId}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Get all artifacts in a workspace
- */
-const artifactsControllerFindByWorkspace = (
-    workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams,
- options?: SecondParameter<typeof playwrightApiClient<ArtifactListResponseDto>>,) => {
-      return playwrightApiClient<ArtifactListResponseDto>(
-      {url: `/artifacts/workspace/${workspaceId}`, method: 'GET',
-        params
-    },
-      options);
-    }
-
-/**
- * @summary Revert an artifact to a specific version
- */
-const artifactsControllerRevert = (
-    id: string,
-    revertArtifactDto: RevertArtifactDto,
- options?: SecondParameter<typeof playwrightApiClient<ArtifactVersionResponseDto>>,) => {
-      return playwrightApiClient<ArtifactVersionResponseDto>(
-      {url: `/artifacts/${id}/revert`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: revertArtifactDto
-    },
-      options);
-    }
-
-/**
- * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
- */
-const artifactsControllerExport = (
-    id: string,
-    params: ArtifactsControllerExportParams,
- options?: SecondParameter<typeof playwrightApiClient<Blob>>,) => {
-      return playwrightApiClient<Blob>(
-      {url: `/artifacts/${id}/export`, method: 'GET',
-        params,
-        responseType: 'blob'
-    },
-      options);
-    }
-
-/**
- * @summary Create a new letterhead
- */
-const letterheadsControllerCreate = (
-    createLetterheadDto: CreateLetterheadDto,
- options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto>>,) => {const formData = new FormData();
-if(createLetterheadDto.fontFamily !== undefined) {
- formData.append(`fontFamily`, createLetterheadDto.fontFamily);
- }
-if(createLetterheadDto.fontSizePt !== undefined) {
- formData.append(`fontSizePt`, createLetterheadDto.fontSizePt);
- }
-formData.append(`name`, createLetterheadDto.name);
-if(createLetterheadDto.description !== undefined) {
- formData.append(`description`, createLetterheadDto.description);
- }
-formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins);
-formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins);
-
-      return playwrightApiClient<LetterheadResponseDto>(
-      {url: `/letterheads`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-/**
- * @summary List all letterheads for the current org
- */
-const letterheadsControllerFindAll = (
-
- options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto[]>>,) => {
-      return playwrightApiClient<LetterheadResponseDto[]>(
-      {url: `/letterheads`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Render a sample letter with the draft letterhead
- */
-const letterheadsControllerPreview = (
-    previewLetterheadDto: PreviewLetterheadDto,
- options?: SecondParameter<typeof playwrightApiClient<Blob>>,) => {const formData = new FormData();
-if(previewLetterheadDto.fontFamily !== undefined) {
- formData.append(`fontFamily`, previewLetterheadDto.fontFamily);
- }
-if(previewLetterheadDto.fontSizePt !== undefined) {
- formData.append(`fontSizePt`, previewLetterheadDto.fontSizePt);
- }
-if(previewLetterheadDto.letterheadId !== undefined) {
- formData.append(`letterheadId`, previewLetterheadDto.letterheadId);
- }
-if(previewLetterheadDto.firstPagePdf !== undefined) {
- formData.append(`firstPagePdf`, previewLetterheadDto.firstPagePdf);
- }
-if(previewLetterheadDto.continuationPagePdf !== undefined) {
- formData.append(`continuationPagePdf`, previewLetterheadDto.continuationPagePdf);
- }
-formData.append(`firstPageMargins`, previewLetterheadDto.firstPageMargins);
-formData.append(`continuationPageMargins`, previewLetterheadDto.continuationPageMargins);
-if(previewLetterheadDto.removeContinuationPage !== undefined) {
- formData.append(`removeContinuationPage`, previewLetterheadDto.removeContinuationPage);
- }
-if(previewLetterheadDto.language !== undefined) {
- formData.append(`language`, previewLetterheadDto.language);
- }
-
-      return playwrightApiClient<Blob>(
-      {url: `/letterheads/preview`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData,
-        responseType: 'blob'
-    },
-      options);
-    }
-
-/**
- * @summary Get a letterhead by ID
- */
-const letterheadsControllerFindOne = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto>>,) => {
-      return playwrightApiClient<LetterheadResponseDto>(
-      {url: `/letterheads/${id}`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Update a letterhead
- */
-const letterheadsControllerUpdate = (
-    id: string,
-    updateLetterheadDto: UpdateLetterheadDto,
- options?: SecondParameter<typeof playwrightApiClient<LetterheadResponseDto>>,) => {const formData = new FormData();
-if(updateLetterheadDto.fontFamily !== undefined) {
- formData.append(`fontFamily`, updateLetterheadDto.fontFamily);
- }
-if(updateLetterheadDto.fontSizePt !== undefined) {
- formData.append(`fontSizePt`, updateLetterheadDto.fontSizePt);
- }
-if(updateLetterheadDto.name !== undefined) {
- formData.append(`name`, updateLetterheadDto.name);
- }
-if(updateLetterheadDto.description !== undefined) {
- formData.append(`description`, updateLetterheadDto.description);
- }
-if(updateLetterheadDto.firstPageMargins !== undefined) {
- formData.append(`firstPageMargins`, updateLetterheadDto.firstPageMargins);
- }
-if(updateLetterheadDto.continuationPageMargins !== undefined) {
- formData.append(`continuationPageMargins`, updateLetterheadDto.continuationPageMargins);
- }
-if(updateLetterheadDto.removeContinuationPage !== undefined) {
- formData.append(`removeContinuationPage`, updateLetterheadDto.removeContinuationPage);
- }
-
-      return playwrightApiClient<LetterheadResponseDto>(
-      {url: `/letterheads/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
-    }
-
-/**
- * @summary Delete a letterhead
- */
-const letterheadsControllerRemove = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/letterheads/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-
-/**
- * @summary Download the first-page PDF of a letterhead
- */
-const letterheadsControllerDownloadFirstPagePdf = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * @summary Download the continuation-page PDF of a letterhead
- */
-const letterheadsControllerDownloadContinuationPagePdf = (
-    id: string,
- options?: SecondParameter<typeof playwrightApiClient<void>>,) => {
-      return playwrightApiClient<void>(
-      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Available to authenticated organization members.
- * @summary Get the current organization’s document defaults
- */
-const documentDefaultsControllerFind = (
-
- options?: SecondParameter<typeof playwrightApiClient<DocumentTypographyDto>>,) => {
-      return playwrightApiClient<DocumentTypographyDto>(
-      {url: `/document-defaults`, method: 'GET'
-    },
-      options);
-    }
-
-/**
- * Omitted fields are preserved. Send null to reset a field.
- * @summary Update the current organization’s document defaults
- */
-const documentDefaultsControllerUpdate = (
-    updateDocumentDefaultsDto: UpdateDocumentDefaultsDto,
- options?: SecondParameter<typeof playwrightApiClient<DocumentTypographyDto>>,) => {
-      return playwrightApiClient<DocumentTypographyDto>(
-      {url: `/document-defaults`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateDocumentDefaultsDto
     },
       options);
     }
@@ -6327,7 +6327,7 @@ const logoutControllerLogout = (
       options);
     }
 
-return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminModelModesControllerGetEntries,superAdminModelModesControllerReplaceEntries,modelModesControllerGetModelModes,modelModeDefaultsControllerGetDefaultSelection,modelModeDefaultsControllerGetUserModeDefault,modelModeDefaultsControllerSetUserModeDefault,modelModeDefaultsControllerGetOrgModeDefault,modelModeDefaultsControllerSetOrgModeDefault,modelModeDefaultsControllerGetTeamModeDefault,modelModeDefaultsControllerSetTeamModeDefault,recordingSummaryModelControllerGetRecordingSummaryModel,recordingSummaryModelControllerSetRecordingSummaryModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,expiredInvitesControllerResendAll,superAdminInvitesControllerGetInvites,superAdminInvitesControllerDeleteAllPending,superAdminInvitesControllerDeleteInvite,superAdminInvitesControllerCreateBulk,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerGetTeamRolePermissions,teamMembersControllerListTeamMembers,teamMembersControllerAddTeamMember,teamMembersControllerBulkAddTeamMembers,teamMembersControllerRemoveTeamMember,teamMembersControllerUpdateTeamMemberRole,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,sourceUploadsControllerSign,sourceUploadsControllerAbort,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetProcessingProgress,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerCreateUpload,threadSourcesControllerCompleteUpload,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerDownload,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,knowledgeBasesControllerRemoveFailedDocuments,knowledgeBaseUploadsControllerCreateUpload,knowledgeBaseUploadsControllerCompleteUpload,knowledgeBaseOwnerControllerChangeOwner,knowledgeBaseOwnerControllerPreviewOwnerChange,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerChangeOwner,skillsControllerPreviewOwnerChange,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerCreateUpload,skillSourcesControllerCompleteUpload,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerDeleteUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,mcpToolAllowancesControllerList,mcpToolAllowancesControllerRemove,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspacesControllerGetRolePermissions,workspaceMembersControllerList,workspaceMembersControllerAdd,workspaceMembersControllerListCandidates,workspaceMembersControllerUpdateRole,workspaceMembersControllerRemove,workspaceMembersControllerLeave,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,notificationsControllerFindAll,notificationsControllerCountUnread,notificationsControllerMarkAllRead,notificationsControllerFindOne,notificationsControllerDownloadImage,notificationsControllerMarkRead,releaseNotesControllerFindAll,releaseNotesControllerCountUnread,releaseNotesControllerFindOne,releaseNotesControllerDownloadImage,releaseNotesControllerMarkRead,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetRecordingFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds,superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,apiKeyUsageControllerGetApiKeyUsage,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminUsageDataControllerGetApiKeyUsage,creditLimitsControllerGetDefaultUserLimit,creditLimitsControllerSetDefaultUserLimit,creditLimitsControllerRemoveDefaultUserLimit,creditLimitsControllerGetUserLimits,creditLimitsControllerGetUserUsage,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerUpdateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,knowledgeBaseSyncedLocationsControllerList,knowledgeBaseSyncedLocationsControllerAdd,knowledgeBaseSyncedLocationsControllerSyncNow,knowledgeBaseSyncedLocationsControllerRemove,connectorsControllerList,connectorsControllerGetMicrosoft365,connectorsControllerSaveMicrosoft365,connectorsControllerRemoveMicrosoft365,connectorsControllerTestMicrosoft365,sharePointLocationsControllerResolve,recordingsControllerCreate,recordingsControllerFindAll,recordingsControllerFindOne,recordingsControllerRename,recordingsControllerDelete,recordingsControllerTranscript,recordingsControllerChangeOwner,recordingUploadsControllerCreateUpload,recordingUploadsControllerCompleteUpload,recordingSummaryControllerSummary,recordingSummaryControllerRetry,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerPreview,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,documentDefaultsControllerFind,documentDefaultsControllerUpdate,memoryControllerFindAll,memoryControllerClear,memoryControllerUpsert,memoryControllerDelete,runsControllerSendMessage,activeRunsControllerFindActive,activeRunsControllerAttach,activeRunsControllerCancel,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,routinesControllerFindAll,routinesControllerCreate,routinesControllerFindOne,routinesControllerUpdate,routinesControllerDelete,routinesControllerRunNow,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,academyAccessControllerExportOrgCertificates,academyAccessControllerGetOrgMemberCertificate,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyProgressControllerRecordModuleHeartbeat,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,speechControllerSynthesize,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,sessionHandoffControllerHandoff,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerGetOnboardingStage,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,ssoAccountControllerGetStatus,logoutControllerLogout}};
+return {appControllerIsCloud,appControllerHealth,appControllerFeatureToggles,superAdminOrgsControllerCreateOrg,superAdminOrgsControllerGetAllOrgs,superAdminOrgsControllerGetOrgById,superAdminOrgsControllerUpdateOrg,superAdminOrgLifecycleControllerDeleteOrg,superAdminOrgLifecycleControllerSetOrgArchived,superAdminOrgUsageVisibilityControllerSetUsageVisibility,rolePermissionsControllerGet,rolePermissionsControllerUpdate,myPermissionsControllerGetMine,transcriptionsControllerTranscribe,superAdminCrawlDomainsControllerList,superAdminCrawlDomainsControllerGrant,superAdminCrawlDomainsControllerRevoke,modelsControllerGetAvailableLanguageModels,modelsControllerGetAvailableEmbeddingModels,modelsControllerGetAvailableImageGenerationModels,modelsControllerGetProviders,modelsControllerCreatePermittedModel,modelsControllerDeletePermittedModel,modelsControllerUpdatePermittedModel,modelsControllerGetPermittedLanguageModels,modelsControllerGetOrgPermittedLanguageModels,modelsControllerGetModelProviderInfo,modelsControllerIsEmbeddingModelEnabled,modelsDefaultsControllerGetEffectiveDefaultModel,modelsDefaultsControllerGetOrgSpecificDefaultModel,modelsDefaultsControllerManageOrgDefaultModel,modelsDefaultsControllerGetUserSpecificDefaultModel,modelsDefaultsControllerManageUserDefaultModel,modelsDefaultsControllerDeleteUserDefaultModel,teamPermittedModelsControllerListTeamPermittedModels,teamPermittedModelsControllerCreateTeamPermittedModel,teamPermittedModelsControllerListTeamImageGenerationModels,teamPermittedModelsControllerUpdateTeamPermittedModel,teamPermittedModelsControllerDeleteTeamPermittedModel,teamPermittedModelsControllerSetTeamDefaultModel,superAdminPermittedModelsControllerGetAvailableLanguageModels,superAdminPermittedModelsControllerGetAvailableEmbeddingModels,superAdminPermittedModelsControllerGetAvailableImageGenerationModels,superAdminPermittedModelsControllerManageOrgDefaultModel,superAdminPermittedModelsControllerGetPermittedModels,superAdminPermittedModelsControllerCreatePermittedModel,superAdminPermittedModelsControllerDeletePermittedModel,superAdminPermittedModelsControllerUpdatePermittedModel,superAdminCatalogModelsControllerGetAllCatalogModels,superAdminCatalogModelsControllerGetCatalogModelById,superAdminCatalogModelsControllerDeleteCatalogModel,superAdminModelModesControllerGetEntries,superAdminModelModesControllerReplaceEntries,modelModesControllerGetModelModes,modelModeDefaultsControllerGetDefaultSelection,modelModeDefaultsControllerGetUserModeDefault,modelModeDefaultsControllerSetUserModeDefault,modelModeDefaultsControllerGetOrgModeDefault,modelModeDefaultsControllerSetOrgModeDefault,modelModeDefaultsControllerGetTeamModeDefault,modelModeDefaultsControllerSetTeamModeDefault,recordingSummaryModelControllerGetRecordingSummaryModel,recordingSummaryModelControllerSetRecordingSummaryModel,superAdminLanguageCatalogModelsControllerCreateLanguageModel,superAdminLanguageCatalogModelsControllerUpdateLanguageModel,superAdminEmbeddingCatalogModelsControllerCreateEmbeddingModel,superAdminEmbeddingCatalogModelsControllerUpdateEmbeddingModel,superAdminImageGenerationCatalogModelsControllerCreateImageGenerationModel,superAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,userControllerGetUsersInOrganization,userControllerUpdateUserRole,userControllerUpdateUserName,userControllerUpdatePassword,userControllerConfirmEmail,userControllerResendEmailConfirmation,userControllerDeleteUser,adminUserControllerAdminUpdateUser,userPasswordResetControllerTriggerPasswordResetForUser,userPasswordResetControllerForgotPassword,userPasswordResetControllerResetPassword,userPasswordResetControllerValidateResetToken,superAdminUsersControllerGetUsersByOrgId,superAdminUsersControllerDeleteUser,superAdminUsersControllerUnlockUser,superAdminUsersControllerTriggerPasswordReset,superAdminUsersControllerCreateUser,superAdminUserListControllerGetAllUsers,superAdminUserExportsControllerExportUsers,superAdminManagementControllerListSuperAdmins,superAdminManagementControllerPromoteToSuperAdmin,superAdminManagementControllerDemoteFromSuperAdmin,adminUserAccountLockControllerUnlock,invitesControllerCreate,invitesControllerGetInvites,invitesControllerCreateBulk,invitesControllerGetInviteByToken,invitesControllerAcceptInvite,invitesControllerResendExpiredInvite,invitesControllerDeleteAllPending,invitesControllerDeleteInvite,expiredInvitesControllerResendAll,superAdminInvitesControllerGetInvites,superAdminInvitesControllerDeleteAllPending,superAdminInvitesControllerDeleteInvite,superAdminInvitesControllerCreateBulk,subscriptionsControllerHasActiveSubscription,subscriptionsControllerGetCurrentPrice,superAdminSubscriptionsControllerGetSubscriptionHistory,superAdminSubscriptionsControllerGetSubscription,superAdminSubscriptionsControllerCreateSubscription,superAdminSubscriptionsControllerCancelSubscription,superAdminSubscriptionsControllerChangeSubscription,superAdminSubscriptionsControllerUpdateSeats,superAdminSubscriptionsControllerUpdateMonthlyCredits,superAdminSubscriptionsControllerUpdateBillingInfo,superAdminSubscriptionsControllerUpdateStartDate,superAdminSubscriptionsControllerUncancelSubscription,superAdminSubscriptionOverlapControllerResolveSubscriptionOverlap,teamsControllerListTeams,teamsControllerCreateTeam,teamsControllerListMyTeams,teamsControllerGetTeam,teamsControllerUpdateTeam,teamsControllerDeleteTeam,teamsControllerGetTeamRolePermissions,teamMembersControllerListTeamMembers,teamMembersControllerAddTeamMember,teamMembersControllerBulkAddTeamMembers,teamMembersControllerRemoveTeamMember,teamMembersControllerUpdateTeamMemberRole,superAdminTeamsControllerGetTeams,superAdminTeamsControllerGetMembers,superAdminTeamsControllerCreateMember,superAdminTeamsControllerDeleteMember,superAdminTeamsControllerRemoveTeam,sourceUploadsControllerSign,sourceUploadsControllerAbort,threadsControllerCreate,threadsControllerFindAll,threadsControllerFindOne,threadsControllerDelete,threadsControllerUpdateTitle,threadsControllerUnmaskPiiMask,threadsControllerAssignWorkspace,threadSourcesControllerGetProcessingProgress,threadSourcesControllerGetThreadSources,threadSourcesControllerAddFileSource,threadSourcesControllerCreateUpload,threadSourcesControllerCompleteUpload,threadSourcesControllerRemoveSource,threadKnowledgeBasesControllerAddKnowledgeBase,threadKnowledgeBasesControllerRemoveKnowledgeBase,threadMcpIntegrationsControllerAddMcpIntegration,threadMcpIntegrationsControllerRemoveMcpIntegration,generatedImagesControllerDownload,messageImagesControllerDownload,knowledgeBasesControllerCreate,knowledgeBasesControllerFindAll,knowledgeBasesControllerFindOne,knowledgeBasesControllerUpdate,knowledgeBasesControllerDelete,knowledgeBasesControllerSetActivation,knowledgeBasesControllerListDocuments,knowledgeBasesControllerAddDocument,knowledgeBasesControllerAddUrl,knowledgeBasesControllerRemoveDocument,knowledgeBasesControllerRemoveFailedDocuments,knowledgeBaseUploadsControllerCreateUpload,knowledgeBaseUploadsControllerCompleteUpload,knowledgeBaseOwnerControllerChangeOwner,knowledgeBaseOwnerControllerPreviewOwnerChange,sharesControllerCreateSkillShare,sharesControllerCreateKnowledgeBaseShare,sharesControllerGetShares,sharesControllerDeleteShare,skillsControllerInstallFromMarketplace,skillsControllerImproveText,skillsControllerCreate,skillsControllerFindAll,skillsControllerFindInstalledFromMarketplace,skillsControllerFindOne,skillsControllerUpdate,skillsControllerDelete,skillsControllerChangeOwner,skillsControllerPreviewOwnerChange,skillsControllerActivate,skillsControllerPin,skillSourcesControllerGetSkillSources,skillSourcesControllerAddFileSource,skillSourcesControllerCreateUpload,skillSourcesControllerCompleteUpload,skillSourcesControllerRemoveSource,skillMcpIntegrationsControllerAssignMcpIntegration,skillMcpIntegrationsControllerUnassignMcpIntegration,skillMcpIntegrationsControllerListSkillMcpIntegrations,skillKnowledgeBasesControllerAssignKnowledgeBase,skillKnowledgeBasesControllerUnassignKnowledgeBase,skillKnowledgeBasesControllerListSkillKnowledgeBases,mcpIntegrationsControllerAuthorizeOAuth,mcpIntegrationsControllerCompleteOAuth,mcpIntegrationsControllerDisconnectOAuth,mcpIntegrationsControllerCreatePredefined,mcpIntegrationsControllerCreateCustom,mcpIntegrationsControllerList,mcpIntegrationsControllerListPredefinedConfigs,mcpIntegrationsControllerListAvailable,mcpIntegrationsControllerGetById,mcpIntegrationsControllerUpdate,mcpIntegrationsControllerDelete,mcpIntegrationsControllerEnable,mcpIntegrationsControllerDisable,mcpIntegrationsControllerInstallFromMarketplace,mcpIntegrationsControllerGetUserConfig,mcpIntegrationsControllerDeleteUserConfig,mcpIntegrationsControllerSetUserConfig,mcpIntegrationsControllerValidate,mcpOAuthMetadataControllerGetClientMetadata,mcpToolAllowancesControllerList,mcpToolAllowancesControllerRemove,marketplaceControllerGetConfig,marketplaceControllerGetSkill,marketplaceControllerGetIntegration,workspacesControllerCreate,workspacesControllerFindAll,workspacesControllerFindOne,workspacesControllerUpdate,workspacesControllerRemove,workspacesControllerGetRolePermissions,workspaceMembersControllerList,workspaceMembersControllerAdd,workspaceMembersControllerListCandidates,workspaceMembersControllerUpdateRole,workspaceMembersControllerRemove,workspaceMembersControllerLeave,workspaceContextControllerFindContext,workspaceContextControllerUpdateInstruction,favoritesControllerFindAll,favoritesControllerToggle,favoritesControllerReorder,anonymizationSettingsControllerGet,anonymizationSettingsControllerUpdate,superAdminAnonymizationWhitelistControllerList,superAdminAnonymizationWhitelistControllerAdd,superAdminAnonymizationWhitelistControllerRemove,notificationsControllerFindAll,notificationsControllerCountUnread,notificationsControllerMarkAllRead,notificationsControllerFindOne,notificationsControllerDownloadImage,notificationsControllerMarkRead,releaseNotesControllerFindAll,releaseNotesControllerCountUnread,releaseNotesControllerFindOne,releaseNotesControllerDownloadImage,releaseNotesControllerMarkRead,artifactsControllerCreate,artifactsControllerUpdate,artifactsControllerFindOne,artifactsControllerFindByThread,artifactsControllerFindByWorkspace,artifactsControllerRevert,artifactsControllerExport,letterheadsControllerCreate,letterheadsControllerFindAll,letterheadsControllerPreview,letterheadsControllerFindOne,letterheadsControllerUpdate,letterheadsControllerRemove,letterheadsControllerDownloadFirstPagePdf,letterheadsControllerDownloadContinuationPagePdf,documentDefaultsControllerFind,documentDefaultsControllerUpdate,superAdminPlatformConfigControllerGetCreditsPerEuro,superAdminPlatformConfigControllerSetCreditsPerEuro,superAdminPlatformConfigControllerGetFairUseLimits,superAdminPlatformConfigControllerSetFairUseLimit,superAdminPlatformConfigControllerSetImageFairUseLimit,superAdminPlatformConfigControllerSetRecordingFairUseLimit,superAdminPlatformConfigControllerSetAppAlert,superAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds,superAdminPlatformConfigControllerSetAcademyMinimumModuleSeconds,appAlertControllerGetAppAlert,usageControllerGetUsageConfig,usageControllerGetCreditUsage,usageControllerGetUserUsage,usageControllerGetUsageStats,usageControllerGetModelDistribution,usageControllerGetProviderUsageChart,apiKeyUsageControllerGetApiKeyUsage,superAdminUsageControllerGetUsageConfig,superAdminUsageControllerGetCreditUsage,superAdminUsageControllerGetUsageStats,superAdminUsageControllerGetModelDistribution,superAdminUsageDataControllerGetProviderUsage,superAdminUsageDataControllerGetProviderUsageChart,superAdminUsageDataControllerGetUserUsage,superAdminUsageDataControllerGetApiKeyUsage,creditLimitsControllerGetDefaultUserLimit,creditLimitsControllerSetDefaultUserLimit,creditLimitsControllerRemoveDefaultUserLimit,creditLimitsControllerGetUserLimits,creditLimitsControllerGetUserUsage,creditLimitsControllerGetTeamLimits,creditLimitsControllerGetApiKeyLimits,creditLimitsControllerSetUserLimit,creditLimitsControllerRemoveUserLimit,creditLimitsControllerSetTeamLimit,creditLimitsControllerRemoveTeamLimit,creditLimitsControllerSetApiKeyLimit,creditLimitsControllerRemoveApiKeyLimit,superAdminTeamCreditLimitsControllerGetTeamLimits,superAdminTeamCreditLimitsControllerSetTeamLimit,superAdminTeamCreditLimitsControllerRemoveTeamLimit,apiKeysControllerListApiKeys,apiKeysControllerCreateApiKey,apiKeysControllerUpdateApiKey,apiKeysControllerRevokeApiKey,superAdminTrialsControllerCreateTrial,superAdminTrialsControllerGetTrialByOrgId,superAdminTrialsControllerUpdateTrial,knowledgeBaseSyncedLocationsControllerList,knowledgeBaseSyncedLocationsControllerAdd,knowledgeBaseSyncedLocationsControllerSyncNow,knowledgeBaseSyncedLocationsControllerRemove,connectorsControllerList,connectorsControllerGetMicrosoft365,connectorsControllerSaveMicrosoft365,connectorsControllerRemoveMicrosoft365,connectorsControllerTestMicrosoft365,sharePointLocationsControllerResolve,recordingsControllerCreate,recordingsControllerFindAll,recordingsControllerFindOne,recordingsControllerRename,recordingsControllerDelete,recordingsControllerTranscript,recordingsControllerChangeOwner,recordingUploadsControllerCreateUpload,recordingUploadsControllerCompleteUpload,recordingSummaryControllerSummary,recordingSummaryControllerRetry,superAdminSkillTemplatesControllerCreate,superAdminSkillTemplatesControllerFindAll,superAdminSkillTemplatesControllerFindOne,superAdminSkillTemplatesControllerUpdate,superAdminSkillTemplatesControllerDelete,memoryControllerFindAll,memoryControllerClear,memoryControllerUpsert,memoryControllerDelete,runsControllerSendMessage,activeRunsControllerFindActive,activeRunsControllerAttach,activeRunsControllerCancel,threadAiContextControllerGetAiContext,threadSourceCitationsControllerGetSourceCitation,chatSettingsControllerGetSystemPrompt,chatSettingsControllerUpsertSystemPrompt,chatSettingsControllerDeleteSystemPrompt,orgSystemPromptControllerGetOrgSystemPrompt,orgSystemPromptControllerUpsertOrgSystemPrompt,orgSystemPromptControllerDeleteOrgSystemPrompt,orgChatSettingsControllerGetChatStartDefaults,orgChatSettingsControllerGetOrgChatSettings,orgChatSettingsControllerUpsertOrgChatSettings,routinesControllerFindAll,routinesControllerCreate,routinesControllerFindOne,routinesControllerUpdate,routinesControllerDelete,routinesControllerRunNow,academyAccessControllerGetStatus,academyAccessControllerGetOrgSettings,academyAccessControllerUpsertOrgSettings,academyAccessControllerListOrgCertificates,academyAccessControllerExportOrgCertificates,academyAccessControllerGetOrgMemberCertificate,superAdminAddonsControllerList,superAdminAddonsControllerActivate,superAdminAddonsControllerDeactivate,addonsControllerList,academyChaptersControllerGetChapters,academyChaptersControllerConfirmChapter,academyProgressControllerGetProgress,academyProgressControllerRecordModuleHeartbeat,academyCertificateControllerGetCertificate,superAdminAcademyChaptersControllerGetChapters,superAdminAcademyChaptersControllerCreateChapter,superAdminAcademyChaptersControllerReorderChapters,superAdminAcademyChaptersControllerUpdateChapter,superAdminAcademyChaptersControllerDeleteChapter,superAdminAcademyCourseModulesControllerCreateCourseModule,superAdminAcademyCourseModulesControllerReorderCourseModules,superAdminAcademyCourseModulesControllerUpdateCourseModule,superAdminAcademyCourseModulesControllerDeleteCourseModule,speechControllerSynthesize,retentionPoliciesControllerGet,retentionPoliciesControllerUpdate,chatCompletionsControllerCreate,modelsControllerList,modelsControllerRetrieve,authenticationControllerLogin,authenticationControllerRegister,authenticationControllerRefresh,authenticationControllerMe,mfaLoginControllerVerify,mfaLoginControllerSetup,mfaLoginControllerConfirmSetup,sessionHandoffControllerHandoff,onboardingControllerGetOnboarding,onboardingControllerUpdateOnboarding,onboardingControllerGetOnboardingStage,onboardingControllerMarkWelcomeVideoSeen,ipAllowlistControllerGet,ipAllowlistControllerUpdate,ipAllowlistControllerRemove,mfaControllerGetStatus,mfaControllerSetup,mfaControllerConfirm,mfaControllerDisable,mfaControllerGetOrgRequirement,mfaControllerUpdateOrgRequirement,mfaControllerResetUser,superAdminSsoConnectionsControllerGet,superAdminSsoConnectionsControllerConfigure,superAdminSsoConnectionsControllerSetEnabled,superAdminSsoConnectionsControllerSetJitProvisioning,superAdminSsoConnectionsControllerSetLocalPasswordLoginEnabled,superAdminSsoConnectionsControllerSetIdp,ssoLoginControllerDiscover,ssoLoginControllerStart,ssoLoginControllerStartLink,ssoLoginControllerCallback,ssoLoginControllerBackchannelLogout,ssoAccountControllerGetStatus,logoutControllerLogout}};
 export type AppControllerIsCloudResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerIsCloud']>>>
 export type AppControllerHealthResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerHealth']>>>
 export type AppControllerFeatureTogglesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['appControllerFeatureToggles']>>>
@@ -6583,6 +6583,23 @@ export type ReleaseNotesControllerCountUnreadResult = NonNullable<Awaited<Return
 export type ReleaseNotesControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['releaseNotesControllerFindOne']>>>
 export type ReleaseNotesControllerDownloadImageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['releaseNotesControllerDownloadImage']>>>
 export type ReleaseNotesControllerMarkReadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['releaseNotesControllerMarkRead']>>>
+export type ArtifactsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerCreate']>>>
+export type ArtifactsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerUpdate']>>>
+export type ArtifactsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerFindOne']>>>
+export type ArtifactsControllerFindByThreadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerFindByThread']>>>
+export type ArtifactsControllerFindByWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerFindByWorkspace']>>>
+export type ArtifactsControllerRevertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerRevert']>>>
+export type ArtifactsControllerExportResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerExport']>>>
+export type LetterheadsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerCreate']>>>
+export type LetterheadsControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerFindAll']>>>
+export type LetterheadsControllerPreviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerPreview']>>>
+export type LetterheadsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerFindOne']>>>
+export type LetterheadsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerUpdate']>>>
+export type LetterheadsControllerRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerRemove']>>>
+export type LetterheadsControllerDownloadFirstPagePdfResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerDownloadFirstPagePdf']>>>
+export type LetterheadsControllerDownloadContinuationPagePdfResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerDownloadContinuationPagePdf']>>>
+export type DocumentDefaultsControllerFindResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['documentDefaultsControllerFind']>>>
+export type DocumentDefaultsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['documentDefaultsControllerUpdate']>>>
 export type SuperAdminPlatformConfigControllerGetCreditsPerEuroResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerGetCreditsPerEuro']>>>
 export type SuperAdminPlatformConfigControllerSetCreditsPerEuroResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerSetCreditsPerEuro']>>>
 export type SuperAdminPlatformConfigControllerGetFairUseLimitsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminPlatformConfigControllerGetFairUseLimits']>>>
@@ -6657,23 +6674,6 @@ export type SuperAdminSkillTemplatesControllerFindAllResult = NonNullable<Awaite
 export type SuperAdminSkillTemplatesControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerFindOne']>>>
 export type SuperAdminSkillTemplatesControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerUpdate']>>>
 export type SuperAdminSkillTemplatesControllerDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['superAdminSkillTemplatesControllerDelete']>>>
-export type ArtifactsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerCreate']>>>
-export type ArtifactsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerUpdate']>>>
-export type ArtifactsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerFindOne']>>>
-export type ArtifactsControllerFindByThreadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerFindByThread']>>>
-export type ArtifactsControllerFindByWorkspaceResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerFindByWorkspace']>>>
-export type ArtifactsControllerRevertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerRevert']>>>
-export type ArtifactsControllerExportResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['artifactsControllerExport']>>>
-export type LetterheadsControllerCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerCreate']>>>
-export type LetterheadsControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerFindAll']>>>
-export type LetterheadsControllerPreviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerPreview']>>>
-export type LetterheadsControllerFindOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerFindOne']>>>
-export type LetterheadsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerUpdate']>>>
-export type LetterheadsControllerRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerRemove']>>>
-export type LetterheadsControllerDownloadFirstPagePdfResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerDownloadFirstPagePdf']>>>
-export type LetterheadsControllerDownloadContinuationPagePdfResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['letterheadsControllerDownloadContinuationPagePdf']>>>
-export type DocumentDefaultsControllerFindResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['documentDefaultsControllerFind']>>>
-export type DocumentDefaultsControllerUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['documentDefaultsControllerUpdate']>>>
 export type MemoryControllerFindAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['memoryControllerFindAll']>>>
 export type MemoryControllerClearResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['memoryControllerClear']>>>
 export type MemoryControllerUpsertResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAyunisCoreAPI>['memoryControllerUpsert']>>>

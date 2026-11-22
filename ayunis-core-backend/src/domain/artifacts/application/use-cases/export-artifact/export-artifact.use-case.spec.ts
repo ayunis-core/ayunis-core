@@ -55,7 +55,6 @@ describe('ExportArtifactUseCase', () => {
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockLetterheadId = '523e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
@@ -130,8 +129,8 @@ describe('ExportArtifactUseCase', () => {
   }): DocumentArtifact {
     return new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: overrides?.title ?? 'Council Meeting Notes',
       letterheadId: overrides?.letterheadId ?? null,
       currentVersionNumber: 1,
@@ -164,8 +163,8 @@ describe('ExportArtifactUseCase', () => {
   it('exports the current DOCX version with organization typography without a letterhead', async () => {
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Annual Report 2026',
       currentVersionNumber: 2,
       versions: [
@@ -522,8 +521,8 @@ describe('ExportArtifactUseCase', () => {
   it('should de-anonymize PII tokens in content and file name with the artifact’s own dictionary before DOCX export', async () => {
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Notiz {{pii:PERSON_NAME_1}}',
       isAnonymous: true,
       piiMasks: [
@@ -631,8 +630,8 @@ describe('ExportArtifactUseCase', () => {
     ): SpreadsheetArtifact {
       return new SpreadsheetArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Budget 2026',
         isAnonymous: piiMasks.length > 0,
         piiMasks,

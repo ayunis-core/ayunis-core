@@ -56,14 +56,14 @@ describe('FindArtifactsByThreadUseCase', () => {
   it('should return all artifacts for a given thread scoped by userId', async () => {
     const artifacts = [
       new DocumentArtifact({
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Budget Report 2026',
         currentVersionNumber: 3,
       }),
       new DocumentArtifact({
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Meeting Minutes - February',
         currentVersionNumber: 1,
       }),

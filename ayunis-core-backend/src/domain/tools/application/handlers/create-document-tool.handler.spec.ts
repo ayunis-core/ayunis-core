@@ -41,8 +41,8 @@ describe('CreateDocumentToolHandler', () => {
   function createMockArtifact(): DocumentArtifact {
     return new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: randomUUID(),
+      owner: { type: 'personal', userId: randomUUID() },
+      creatorId: randomUUID(),
       title: 'Municipal Budget Report 2026',
       currentVersionNumber: 1,
     });

@@ -12,7 +12,7 @@ import { WorkspaceDeletionRequestedEvent } from 'src/domain/workspaces/applicati
 /**
  * Cleans up object-storage (MinIO) assets owned by a workspace's threads when
  * the workspace is being deleted. The thread rows themselves (and their
- * messages, artifacts and generated-image records) are removed by the
+ * messages, artifact links and generated-image records) are removed by the
  * `threads.workspaceId` FK cascade; only the blobs and pinned-thread
  * favorite rows need explicit cleanup because favorites have no FK to threads.
  *

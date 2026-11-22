@@ -32,9 +32,9 @@ describe('Chats reach artifacts through their links (PostgreSQL)', () => {
   beforeEach(async () => {
     owner = randomUUID();
     firstChat = await insertChat(db, owner, null);
-    firstArtifact = await insertArtifact(db, owner, firstChat);
+    firstArtifact = await insertArtifact(db, firstChat);
     secondChat = await insertChat(db, owner, null);
-    secondArtifact = await insertArtifact(db, owner, secondChat);
+    secondArtifact = await insertArtifact(db, secondChat);
   }, 30_000);
 
   afterAll(async () => {
@@ -84,5 +84,64 @@ describe('Chats reach artifacts through their links (PostgreSQL)', () => {
     await artifacts.addThreadLink(colleagueChat, firstArtifact);
 
     expect(await findFromRun(colleague, colleagueChat)).toEqual(notFound);
+  });
+
+  it('lists a chat’s artifacts only for the chat’s user, even for a colleague who may read them', async () => {
+    const colleague = randomUUID();
+    const workspaceId = randomUUID();
+    await db.query(
+      `INSERT INTO workspace_members (id, "workspaceId", "userId")
+       VALUES ($1, $2, $4), ($3, $2, $5)`,
+      [randomUUID(), workspaceId, randomUUID(), owner, colleague],
+    );
+    const workspaceChat = await insertChat(db, owner, workspaceId);
+    const workspaceArtifact = await insertArtifact(db, workspaceChat);
+    const listed = async (userId: UUID) =>
+      (await artifacts.findByThreadId(workspaceChat, userId)).map((a) => a.id);
+
+    expect(await listed(owner)).toEqual([workspaceArtifact]);
+    expect(await listed(colleague)).toEqual([]);
+    expect(
+      await artifacts.findById(workspaceArtifact, colleague, {
+        linkedThreadId: workspaceChat,
+      }),
+    ).toBeNull();
+    expect(
+      await artifacts.findById(workspaceArtifact, colleague),
+    ).not.toBeNull();
+  });
+
+  it('keeps only the links to artifacts of the new owner when a chat moves, and keeps the artifacts', async () => {
+    const workspaceId = randomUUID();
+    await db.query(
+      `INSERT INTO workspace_members (id, "workspaceId", "userId")
+       VALUES ($1, $2, $3)`,
+      [randomUUID(), workspaceId, owner],
+    );
+    const movingChat = await insertChat(db, owner, workspaceId);
+    const workspaceArtifact = await insertArtifact(db, movingChat);
+    await artifacts.addThreadLink(movingChat, firstArtifact);
+    const listed = async () =>
+      (await artifacts.findByThreadId(movingChat, owner)).map((a) => a.id);
+    expect(await listed()).toEqual([workspaceArtifact, firstArtifact]);
+
+    await artifacts.deleteThreadLinksNotOwnedBy(movingChat, {
+      type: 'personal',
+      userId: owner,
+    });
+
+    expect(await listed()).toEqual([firstArtifact]);
+    expect(await artifacts.findById(workspaceArtifact, owner)).not.toBeNull();
+    expect(
+      (await artifacts.findByThreadId(firstChat, owner)).map((a) => a.id),
+    ).toEqual([firstArtifact]);
+
+    await artifacts.deleteThreadLinksNotOwnedBy(movingChat, {
+      type: 'workspace',
+      workspaceId,
+    });
+
+    expect(await listed()).toEqual([]);
+    expect(await artifacts.findById(firstArtifact, owner)).not.toBeNull();
   });
 });

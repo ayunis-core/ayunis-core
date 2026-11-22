@@ -29,6 +29,7 @@ import { UserContentMaskingService } from 'src/domain/artifacts/application/serv
 import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
 import { mapContentText } from 'src/domain/artifacts/application/helpers/map-content-text';
 import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
+import { artifactOwnerOfChat } from 'src/domain/artifacts/domain/artifact-owner';
 import type { PiiMask } from 'src/common/anonymization/domain/pii-mask';
 import {
   combineDrafts,
@@ -79,12 +80,12 @@ export class CreateArtifactUseCase {
     const written = isAnonymous
       ? await this.anonymize(command, orgId, preparedContent)
       : { title: command.title, content: preparedContent, newMasks: [] };
-    const artifact = this.buildArtifact(
-      command,
-      userId,
+    const artifact = this.buildArtifact(command, {
+      owner: artifactOwnerOfChat(thread),
+      creatorId: userId,
       isAnonymous,
-      written.title,
-    );
+      title: written.title,
+    });
     const piiMasks = written.newMasks.map((mask) =>
       ArtifactPiiMask.fromPiiMask(artifact.id, mask),
     );
@@ -137,13 +138,14 @@ export class CreateArtifactUseCase {
     orgId: UUID,
     content: string,
   ): Promise<WrittenArtifact> {
-    const chat = { threadId: command.threadId, orgId };
     const draft: PlaceholderDraft<[string, string]> =
       command.authorType === AuthorType.USER
         ? combineDrafts(
-            await this.userContentMaskingService.maskText(command.title, chat),
+            await this.userContentMaskingService.maskText(command.title, {
+              orgId,
+            }),
             await this.userContentMaskingService.mask({
-              ...chat,
+              orgId,
               type: command.type,
               content,
             }),
@@ -174,17 +176,9 @@ export class CreateArtifactUseCase {
 
   private buildArtifact(
     command: CreateArtifactCommand,
-    userId: UUID,
-    isAnonymous: boolean,
-    title: string,
+    fields: Pick<Artifact, 'owner' | 'creatorId' | 'isAnonymous' | 'title'>,
   ): Artifact {
-    const base = {
-      threadId: command.threadId,
-      userId,
-      title,
-      isAnonymous,
-      currentVersionNumber: 1,
-    };
+    const base = { ...fields, currentVersionNumber: 1 };
     switch (command.type) {
       case ArtifactType.DOCUMENT:
         return new DocumentArtifact({
@@ -205,8 +199,8 @@ export class CreateArtifactUseCase {
   ): Artifact {
     const base = {
       id: artifact.id,
-      threadId: artifact.threadId,
-      userId: artifact.userId,
+      owner: artifact.owner,
+      creatorId: artifact.creatorId,
       title: artifact.title,
       isAnonymous: artifact.isAnonymous,
       currentVersionNumber: artifact.currentVersionNumber,

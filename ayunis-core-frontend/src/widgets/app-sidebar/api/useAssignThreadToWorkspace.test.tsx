@@ -27,6 +27,11 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   ],
   getWorkspacesControllerFindAllQueryKey: () => ['workspaces'],
   getFavoritesControllerFindAllQueryKey: () => ['favorites'],
+  getArtifactsControllerFindByThreadQueryKey: (id: string) => [
+    'artifacts',
+    'thread',
+    id,
+  ],
 }));
 
 vi.mock('@/shared/lib/toast', () => ({
@@ -70,5 +75,24 @@ describe('useAssignThreadToWorkspace', () => {
     expect(queryClient.getQueryData(['threads', 'thread-id'])).toEqual(
       expect.objectContaining({ workspaceId: 'workspace-id' }),
     );
+  });
+
+  it('refreshes the moved chat’s artifact list, which no longer links the old scope’s artifacts', async () => {
+    const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useAssignThreadToWorkspace(), {
+      wrapper,
+    });
+
+    await act(() =>
+      result.current.mutateAsync({ threadId: 'thread-id', workspaceId: null }),
+    );
+
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['artifacts', 'thread', 'thread-id'],
+    });
   });
 });

@@ -76,7 +76,7 @@ function artifact(
   return {
     id: type,
     type,
-    threadId: 'thread-id',
+    ownerType: 'personal',
     userId: 'user-id',
     title,
     isAnonymous: false,

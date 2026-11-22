@@ -3,9 +3,10 @@ import { DeferredCleanupEvent } from 'src/common/events/deferred-cleanup.event';
 
 /**
  * Emitted synchronously *before* a workspace row is deleted. The workspace's
- * threads (and their messages and artifacts) go with it via the
- * `threads.workspaceId` ON DELETE CASCADE, but object-storage assets (MinIO)
- * live outside the cascade and need explicit cleanup.
+ * threads (with their messages) and artifacts go with it via the
+ * `threads.workspaceId` and `artifacts.workspaceId` ON DELETE CASCADE, but
+ * object-storage assets (MinIO) live outside the cascade and need explicit
+ * cleanup.
  *
  * Listeners resolve their cleanup targets while the rows still exist and
  * register the destructive work via `deferCleanup`; `WorkspaceDeletionService`

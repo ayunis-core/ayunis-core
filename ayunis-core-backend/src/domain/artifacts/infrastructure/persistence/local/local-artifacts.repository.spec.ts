@@ -45,11 +45,10 @@ describe('LocalArtifactsRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await repository.findByWorkspaceId(
-      '95da2ba4-7067-4326-9bcb-4c8a83f9fc17',
-      '0e8f87fd-c031-43bc-b149-679eb9d86192',
-      { limit: 20, offset: 0 },
-    );
+    await repository.findByWorkspaceId('95da2ba4-7067-4326-9bcb-4c8a83f9fc17', {
+      limit: 20,
+      offset: 0,
+    });
 
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'artifact.type IN (:...artifactTypes)',

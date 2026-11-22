@@ -59,8 +59,8 @@ describe('ReadSpreadsheetToolHandler', () => {
   ): SpreadsheetArtifact {
     return new SpreadsheetArtifact({
       id: artifactId,
-      threadId,
-      userId,
+      owner: { type: 'personal', userId },
+      creatorId: userId,
       title: 'Haushalt 2026',
       currentVersionNumber: versionNumber,
       versions: [
@@ -225,8 +225,8 @@ describe('ReadSpreadsheetToolHandler', () => {
       readInRun(
         new DiagramArtifact({
           id: artifactId,
-          threadId,
-          userId,
+          owner: { type: 'personal', userId },
+          creatorId: userId,
           title: 'Ablauf',
           versions: [
             new ArtifactVersion({

@@ -74,6 +74,7 @@ import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-mas
 import { McpModule } from 'src/domain/mcp/mcp.module';
 import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
+import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 @Module({
   imports: [
     LocalThreadsRepositoryModule,
@@ -92,6 +93,9 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     McpModule,
     NotificationsModule,
     ReleaseNotesModule,
+    // Artifacts look chats up through threads; moving a chat removes its
+    // links through artifacts.
+    forwardRef(() => ArtifactsModule),
   ],
   controllers: [
     ThreadsController,

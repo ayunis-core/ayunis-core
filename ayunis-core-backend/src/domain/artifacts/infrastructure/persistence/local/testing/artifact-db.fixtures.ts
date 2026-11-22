@@ -28,25 +28,25 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     workspaceId: { type: 'varchar', nullable: true },
   },
 });
-export const artifactSchema = new EntitySchema<ArtifactRecord>({
+export const artifactSchema = new EntitySchema<
+  ArtifactRecord & { type: string }
+>({
   name: 'ArtifactRecord',
   target: ArtifactRecord,
   tableName: 'artifacts',
   columns: {
     id,
-    threadId: { type: 'varchar' },
-    userId: { type: 'varchar' },
+    userId: { type: 'varchar', nullable: true },
+    workspaceId: { type: 'varchar', nullable: true },
+    creatorId: { type: 'varchar', nullable: true },
+    type: { type: 'varchar', default: 'document' },
     title: { type: 'varchar' },
     isAnonymous: { type: 'boolean', default: false },
     currentVersionNumber: { type: Number, default: 1 },
     createdAt: { type: 'timestamp', createDate: true },
+    updatedAt: { type: 'timestamp', updateDate: true },
   },
   relations: {
-    thread: {
-      type: 'many-to-one',
-      target: 'ThreadRecord',
-      joinColumn: { name: 'threadId' },
-    },
     versions: {
       type: 'one-to-many',
       target: 'ArtifactVersionRecord',
@@ -92,6 +92,11 @@ const threadLinkSchema = new EntitySchema<ThreadArtifactRecord>({
     createdAt: { type: 'timestamp', createDate: true },
   },
   relations: {
+    thread: {
+      type: 'many-to-one',
+      target: 'ThreadRecord',
+      joinColumn: { name: 'threadId' },
+    },
     artifact: {
       type: 'many-to-one',
       target: 'ArtifactRecord',
@@ -208,18 +213,24 @@ export async function insertChat(
   return chatId;
 }
 
-/** An artifact created in the chat, with version 1 and its link to the chat. */
+/**
+ * An artifact the chat's user created in the chat, owned by the chat's scope,
+ * with version 1 and its link to the chat.
+ */
 export async function insertArtifact(
   db: DataSource,
-  userId: UUID,
   threadId: UUID,
   isAnonymous = false,
 ): Promise<UUID> {
   const artifactId = randomUUID();
+  const chat = await db
+    .getRepository(ThreadRecord)
+    .findOneByOrFail({ id: threadId });
   await db.getRepository(artifactSchema).insert({
     id: artifactId,
-    threadId,
-    userId,
+    userId: chat.workspaceId ? null : chat.userId,
+    workspaceId: chat.workspaceId,
+    creatorId: chat.userId,
     title: 'Beschlussvorlage',
     isAnonymous,
   });

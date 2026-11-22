@@ -26,9 +26,10 @@ export const MAX_BATCHES_PER_ORG = 10_000;
  * Deletes conversation data that has aged past each org's retention window.
  * Opt-in: only orgs with an enabled policy are touched. Threads are deleted
  * one at a time through DeleteExpiredThreadUseCase (which also purges storage
- * objects and cascades messages/artifacts/images) rather than via bulk SQL. Failures
- * are isolated per thread so one bad thread can't abort the run. Inbox
- * notifications created before the same cutoff are deleted too.
+ * objects and cascades messages, artifact links and images; artifacts stay)
+ * rather than via bulk SQL. Failures are isolated per thread so one bad
+ * thread can't abort the run. Inbox notifications created before the same
+ * cutoff are deleted too.
  */
 @Injectable()
 export class EnforceRetentionUseCase {

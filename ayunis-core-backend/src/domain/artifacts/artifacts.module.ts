@@ -12,6 +12,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { ThreadPiiMasksModule } from 'src/domain/thread-pii-masks/thread-pii-masks.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
+import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/anonymization-settings.module';
 
 // Use cases
 import { CreateArtifactUseCase } from './application/use-cases/create-artifact/create-artifact.use-case';
@@ -24,6 +25,7 @@ import { ExportArtifactUseCase } from './application/use-cases/export-artifact/e
 import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
 import { ReadArtifactInRunUseCase } from './application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
 import { FindArtifactsForRunUseCase } from './application/use-cases/find-artifacts-for-run/find-artifacts-for-run.use-case';
+import { DeleteThreadLinksOutsideScopeUseCase } from './application/use-cases/delete-thread-links-outside-scope/delete-thread-links-outside-scope.use-case';
 import { UserContentMaskingService } from './application/services/user-content-masking.service';
 import { ArtifactPlaceholdersService } from './application/services/artifact-placeholders.service';
 import { ArtifactMaskAllocationLock } from './application/services/artifact-mask-allocation-lock.service';
@@ -36,6 +38,7 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     LetterheadsModule,
     StorageModule,
     ThreadPiiMasksModule,
+    AnonymizationSettingsModule,
     WorkspacesModule,
   ],
   controllers: [ArtifactsController],
@@ -59,6 +62,7 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     FindArtifactsForRunUseCase,
     RevertArtifactUseCase,
     ExportArtifactUseCase,
+    DeleteThreadLinksOutsideScopeUseCase,
     // Services
     UserContentMaskingService,
     ArtifactPlaceholdersService,
@@ -75,6 +79,7 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     CreateArtifactUseCase,
     UpdateArtifactUseCase,
     ApplyEditsToArtifactUseCase,
+    DeleteThreadLinksOutsideScopeUseCase,
   ],
 })
 export class ArtifactsModule {}

@@ -14,12 +14,11 @@ import {
 import type { PlaceholderDraft } from 'src/domain/artifacts/application/models/placeholder-draft';
 import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
-import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 
 interface DetectionParams {
-  /** The chat whose anonymization (whitelists and dictionary) detects values. */
-  threadId: UUID;
+  /** The org whose anonymization whitelists filter the detected values. */
   orgId: UUID;
 }
 
@@ -34,8 +33,8 @@ interface MaskUserContentParams extends DetectionParams {
 /**
  * Masks content a user saved into an anonymous artifact before it is stored,
  * so the model never reads a real value the user typed. Values are detected
- * through the chat's anonymization, as in a chat message, and replaced with
- * the artifact's own placeholders. Failures propagate: the content must not
+ * with the org's whitelists, as in a chat message, and replaced with the
+ * artifact's own placeholders. Failures propagate: the content must not
  * be stored unmasked.
  */
 @Injectable()
@@ -44,12 +43,12 @@ export class UserContentMaskingService {
 
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
-    private readonly anonymizeTextForThreadUseCase: AnonymizeTextForThreadUseCase,
+    private readonly anonymizeTextForOrgUseCase: AnonymizeTextForOrgUseCase,
   ) {}
 
   async mask(params: MaskUserContentParams): Promise<PlaceholderDraft> {
     this.logger.log(
-      { threadId: params.threadId, type: params.type },
+      { type: params.type },
       'Masking user content of an anonymous artifact',
     );
     if (params.type === ArtifactType.SPREADSHEET) {
@@ -126,7 +125,7 @@ export class UserContentMaskingService {
   }
 
   /**
-   * The chat's anonymization filters detections by the whitelists and keeps
+   * The org's anonymization filters detections by the whitelists and keeps
    * existing placeholders out of them; its own output is not used, only where
    * it found values.
    */
@@ -134,10 +133,8 @@ export class UserContentMaskingService {
     text: string,
     params: DetectionParams,
   ): Promise<PiiDetection[]> {
-    const result = await this.anonymizeTextForThreadUseCase.execute(
-      new AnonymizeTextForThreadCommand(text, params.orgId, params.threadId, {
-        source: 'other',
-      }),
+    const result = await this.anonymizeTextForOrgUseCase.execute(
+      new AnonymizeTextForOrgCommand(text, params.orgId),
     );
     return result.replacements.map((replacement) => ({
       entityType: replacement.entityType,

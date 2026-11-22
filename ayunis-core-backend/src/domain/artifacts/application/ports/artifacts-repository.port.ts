@@ -4,6 +4,7 @@ import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import type { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 import type { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+import type { ArtifactOwner } from 'src/domain/artifacts/domain/artifact-owner';
 
 export interface ArtifactsByWorkspaceListOptions {
   search?: string;
@@ -12,6 +13,11 @@ export interface ArtifactsByWorkspaceListOptions {
   offset: number;
 }
 
+/**
+ * Lookups by user find personal artifacts for their owner and workspace
+ * artifacts for the workspace's members; with `linkedThreadId`, only through
+ * a link to that chat of the user.
+ */
 export interface ArtifactLookupOptions {
   linkedThreadId?: UUID;
   isAnonymous?: boolean;
@@ -34,11 +40,15 @@ export abstract class ArtifactsRepository {
     userId: UUID,
     options?: Pick<ArtifactLookupOptions, 'isAnonymous'>,
   ): Promise<Artifact[]>;
+  /** Every artifact of the workspace; callers check membership first. */
   abstract findByWorkspaceId(
     workspaceId: UUID,
-    userId: UUID,
     options: ArtifactsByWorkspaceListOptions,
   ): Promise<Paginated<Artifact>>;
+  abstract deleteThreadLinksNotOwnedBy(
+    threadId: UUID,
+    owner: ArtifactOwner,
+  ): Promise<void>;
   /** Also loads the artifact's mask dictionary when it is anonymous. */
   abstract findByIdWithVersions(
     id: UUID,
