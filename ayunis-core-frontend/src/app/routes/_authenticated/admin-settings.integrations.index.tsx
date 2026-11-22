@@ -11,7 +11,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute(
-  '/_authenticated/admin-settings/integrations',
+  '/_authenticated/admin-settings/integrations/',
 )({
   validateSearch: searchSchema,
   component: RouteComponent,

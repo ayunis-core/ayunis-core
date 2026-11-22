@@ -1,4 +1,7 @@
-import { requestConnectors } from '../../src/clients/api/connectors.client';
+import {
+  requestConnectors,
+  requestMicrosoft365Connector,
+} from '../../src/clients/api/connectors.client';
 import { createCustomIntegration } from '../../src/clients/api/integrations.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import { config } from '../../src/config';
@@ -19,6 +22,12 @@ test('with connectors disabled the integrations have no Connections section and 
   const toggles = await requestFeatureToggles(api, disabledApiUrl);
   expect(await toggles.json()).toMatchObject({ connectorsEnabled: false });
   expect((await requestConnectors(api, disabledApiUrl)).status()).toBe(404);
+  expect(
+    (await requestMicrosoft365Connector.get(api, disabledApiUrl)).status(),
+  ).toBe(404);
+  expect(
+    (await requestMicrosoft365Connector.remove(api, disabledApiUrl)).status(),
+  ).toBe(404);
   const integration = await createCustomIntegration(api, {
     name: `Connectors off ${Date.now()}`,
     serverUrl: `${config.apiURL}/health`,
@@ -26,6 +35,10 @@ test('with connectors disabled the integrations have no Connections section and 
     orgConfigValues: {},
   });
 
+  await page.goto(
+    `${disabledBaseUrl}/admin-settings/integrations/microsoft-365`,
+  );
+  await expect(page).toHaveURL(/\/admin-settings\/integrations(\?|$)/);
   await page.goto(
     `${disabledBaseUrl}/admin-settings/integrations?integration=${integration.id}`,
   );

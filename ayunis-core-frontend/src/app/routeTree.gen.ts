@@ -37,7 +37,6 @@ import { Route as AuthenticatedAdminSettingsAcademyRouteImport } from './routes/
 import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
 import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
-import { Route as AuthenticatedAdminSettingsIntegrationsRouteImport } from './routes/_authenticated/admin-settings.integrations'
 import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './routes/_authenticated/admin-settings.retention'
 import { Route as AuthenticatedAdminSettingsRolesRouteImport } from './routes/_authenticated/admin-settings.roles'
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
@@ -70,6 +69,8 @@ import { Route as AuthenticatedWorkspacesIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedWorkspacesWorkspaceIdRouteImport } from './routes/_authenticated/workspaces.$workspaceId'
 import { Route as AuthenticatedAcademyChapterIdCompleteRouteImport } from './routes/_authenticated/academy.$chapterId_.complete'
 import { Route as AuthenticatedAdminSettingsCreditLimitsIndexRouteImport } from './routes/_authenticated/admin-settings.credit-limits.index'
+import { Route as AuthenticatedAdminSettingsIntegrationsIndexRouteImport } from './routes/_authenticated/admin-settings.integrations.index'
+import { Route as AuthenticatedAdminSettingsIntegrationsMicrosoft365RouteImport } from './routes/_authenticated/admin-settings.integrations.microsoft-365'
 import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 import { Route as AuthenticatedAdminSettingsModelsIndexRouteImport } from './routes/_authenticated/admin-settings.models.index'
@@ -240,12 +241,6 @@ const AuthenticatedAdminSettingsInstructionsRoute =
   AuthenticatedAdminSettingsInstructionsRouteImport.update({
     id: '/instructions',
     path: '/instructions',
-    getParentRoute: () => AuthenticatedAdminSettingsRoute,
-  } as any)
-const AuthenticatedAdminSettingsIntegrationsRoute =
-  AuthenticatedAdminSettingsIntegrationsRouteImport.update({
-    id: '/integrations',
-    path: '/integrations',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
 const AuthenticatedAdminSettingsRetentionRoute =
@@ -435,6 +430,18 @@ const AuthenticatedAdminSettingsCreditLimitsIndexRoute =
     path: '/credit-limits/',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
+const AuthenticatedAdminSettingsIntegrationsIndexRoute =
+  AuthenticatedAdminSettingsIntegrationsIndexRouteImport.update({
+    id: '/integrations/',
+    path: '/integrations/',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
+const AuthenticatedAdminSettingsIntegrationsMicrosoft365Route =
+  AuthenticatedAdminSettingsIntegrationsMicrosoft365RouteImport.update({
+    id: '/integrations/microsoft-365',
+    path: '/integrations/microsoft-365',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
 const AuthenticatedAdminSettingsLetterheadsIndexRoute =
   AuthenticatedAdminSettingsLetterheadsIndexRouteImport.update({
     id: '/letterheads/',
@@ -584,7 +591,6 @@ export interface FileRoutesByFullPath {
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
-  '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -618,11 +624,13 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/academy/$chapterId/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
+  '/admin-settings/integrations/microsoft-365': typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/workspaces/$workspaceId/members': typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   '/admin-settings/credit-limits/': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
+  '/admin-settings/integrations/': typeof AuthenticatedAdminSettingsIntegrationsIndexRoute
   '/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
@@ -663,7 +671,6 @@ export interface FileRoutesByTo {
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
-  '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -697,11 +704,13 @@ export interface FileRoutesByTo {
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/workspaces': typeof AuthenticatedWorkspacesIndexRoute
   '/academy/$chapterId/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
+  '/admin-settings/integrations/microsoft-365': typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/workspaces/$workspaceId/members': typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   '/admin-settings/credit-limits': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
+  '/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsIndexRoute
   '/admin-settings/letterheads': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
@@ -747,7 +756,6 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
-  '/_authenticated/admin-settings/integrations': typeof AuthenticatedAdminSettingsIntegrationsRoute
   '/_authenticated/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/_authenticated/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -781,11 +789,13 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/': typeof AuthenticatedSuperAdminSettingsIndexRoute
   '/_authenticated/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/_authenticated/academy/$chapterId_/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
+  '/_authenticated/admin-settings/integrations/microsoft-365': typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   '/_authenticated/workspaces_/$workspaceId/members': typeof AuthenticatedWorkspacesWorkspaceIdMembersRoute
   '/_authenticated/admin-settings/credit-limits/': typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
+  '/_authenticated/admin-settings/integrations/': typeof AuthenticatedAdminSettingsIntegrationsIndexRoute
   '/_authenticated/admin-settings/letterheads/': typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   '/_authenticated/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
@@ -831,7 +841,6 @@ export interface FileRouteTypes {
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
-    | '/admin-settings/integrations'
     | '/admin-settings/retention'
     | '/admin-settings/roles'
     | '/admin-settings/security'
@@ -865,11 +874,13 @@ export interface FileRouteTypes {
     | '/super-admin-settings/'
     | '/workspaces/'
     | '/academy/$chapterId/complete'
+    | '/admin-settings/integrations/microsoft-365'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
     | '/workspaces/$workspaceId/members'
     | '/admin-settings/credit-limits/'
+    | '/admin-settings/integrations/'
     | '/admin-settings/letterheads/'
     | '/admin-settings/models/'
     | '/admin-settings/teams/'
@@ -910,7 +921,6 @@ export interface FileRouteTypes {
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
-    | '/admin-settings/integrations'
     | '/admin-settings/retention'
     | '/admin-settings/roles'
     | '/admin-settings/security'
@@ -944,11 +954,13 @@ export interface FileRouteTypes {
     | '/super-admin-settings'
     | '/workspaces'
     | '/academy/$chapterId/complete'
+    | '/admin-settings/integrations/microsoft-365'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
     | '/workspaces/$workspaceId/members'
     | '/admin-settings/credit-limits'
+    | '/admin-settings/integrations'
     | '/admin-settings/letterheads'
     | '/admin-settings/models'
     | '/admin-settings/teams'
@@ -993,7 +1005,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
     | '/_authenticated/admin-settings/instructions'
-    | '/_authenticated/admin-settings/integrations'
     | '/_authenticated/admin-settings/retention'
     | '/_authenticated/admin-settings/roles'
     | '/_authenticated/admin-settings/security'
@@ -1027,11 +1038,13 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/'
     | '/_authenticated/workspaces/'
     | '/_authenticated/academy/$chapterId_/complete'
+    | '/_authenticated/admin-settings/integrations/microsoft-365'
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
     | '/_authenticated/workspaces_/$workspaceId/members'
     | '/_authenticated/admin-settings/credit-limits/'
+    | '/_authenticated/admin-settings/integrations/'
     | '/_authenticated/admin-settings/letterheads/'
     | '/_authenticated/admin-settings/models/'
     | '/_authenticated/admin-settings/teams/'
@@ -1268,13 +1281,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsInstructionsRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
-    '/_authenticated/admin-settings/integrations': {
-      id: '/_authenticated/admin-settings/integrations'
-      path: '/integrations'
-      fullPath: '/admin-settings/integrations'
-      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsRouteImport
-      parentRoute: typeof AuthenticatedAdminSettingsRoute
-    }
     '/_authenticated/admin-settings/retention': {
       id: '/_authenticated/admin-settings/retention'
       path: '/retention'
@@ -1499,6 +1505,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsCreditLimitsIndexRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
+    '/_authenticated/admin-settings/integrations/': {
+      id: '/_authenticated/admin-settings/integrations/'
+      path: '/integrations'
+      fullPath: '/admin-settings/integrations/'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
+    '/_authenticated/admin-settings/integrations/microsoft-365': {
+      id: '/_authenticated/admin-settings/integrations/microsoft-365'
+      path: '/integrations/microsoft-365'
+      fullPath: '/admin-settings/integrations/microsoft-365'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365RouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
     '/_authenticated/admin-settings/letterheads/': {
       id: '/_authenticated/admin-settings/letterheads/'
       path: '/letterheads'
@@ -1647,16 +1667,17 @@ interface AuthenticatedAdminSettingsRouteChildren {
   AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
   AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
-  AuthenticatedAdminSettingsIntegrationsRoute: typeof AuthenticatedAdminSettingsIntegrationsRoute
   AuthenticatedAdminSettingsRetentionRoute: typeof AuthenticatedAdminSettingsRetentionRoute
   AuthenticatedAdminSettingsRolesRoute: typeof AuthenticatedAdminSettingsRolesRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
   AuthenticatedAdminSettingsUsageRoute: typeof AuthenticatedAdminSettingsUsageRoute
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
+  AuthenticatedAdminSettingsIntegrationsMicrosoft365Route: typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
   AuthenticatedAdminSettingsLetterheadsIdRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
   AuthenticatedAdminSettingsCreditLimitsIndexRoute: typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
+  AuthenticatedAdminSettingsIntegrationsIndexRoute: typeof AuthenticatedAdminSettingsIntegrationsIndexRoute
   AuthenticatedAdminSettingsLetterheadsIndexRoute: typeof AuthenticatedAdminSettingsLetterheadsIndexRoute
   AuthenticatedAdminSettingsModelsIndexRoute: typeof AuthenticatedAdminSettingsModelsIndexRoute
   AuthenticatedAdminSettingsTeamsIndexRoute: typeof AuthenticatedAdminSettingsTeamsIndexRoute
@@ -1673,8 +1694,6 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
       AuthenticatedAdminSettingsApiKeysRoute,
     AuthenticatedAdminSettingsInstructionsRoute:
       AuthenticatedAdminSettingsInstructionsRoute,
-    AuthenticatedAdminSettingsIntegrationsRoute:
-      AuthenticatedAdminSettingsIntegrationsRoute,
     AuthenticatedAdminSettingsRetentionRoute:
       AuthenticatedAdminSettingsRetentionRoute,
     AuthenticatedAdminSettingsRolesRoute: AuthenticatedAdminSettingsRolesRoute,
@@ -1683,12 +1702,16 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
     AuthenticatedAdminSettingsUsageRoute: AuthenticatedAdminSettingsUsageRoute,
     AuthenticatedAdminSettingsUsersRoute: AuthenticatedAdminSettingsUsersRoute,
     AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
+    AuthenticatedAdminSettingsIntegrationsMicrosoft365Route:
+      AuthenticatedAdminSettingsIntegrationsMicrosoft365Route,
     AuthenticatedAdminSettingsLetterheadsIdRoute:
       AuthenticatedAdminSettingsLetterheadsIdRoute,
     AuthenticatedAdminSettingsTeamsIdRoute:
       AuthenticatedAdminSettingsTeamsIdRoute,
     AuthenticatedAdminSettingsCreditLimitsIndexRoute:
       AuthenticatedAdminSettingsCreditLimitsIndexRoute,
+    AuthenticatedAdminSettingsIntegrationsIndexRoute:
+      AuthenticatedAdminSettingsIntegrationsIndexRoute,
     AuthenticatedAdminSettingsLetterheadsIndexRoute:
       AuthenticatedAdminSettingsLetterheadsIndexRoute,
     AuthenticatedAdminSettingsModelsIndexRoute:
