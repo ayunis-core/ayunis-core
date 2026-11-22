@@ -3,10 +3,22 @@ export interface Greeting {
   en: string;
 }
 
+export type TimePeriod =
+  | 'earlyMorning'
+  | 'morningStart'
+  | 'lateMorning'
+  | 'lunchBreak'
+  | 'earlyAfternoon'
+  | 'lateAfternoon'
+  | 'evening'
+  | 'night';
+
+export type GreetingSet = Record<TimePeriod, Greeting[]>;
+
 // Time-based greetings with German bureaucratic humor
 // Each time period has a set of greetings to randomly choose from
 
-export const greetings: Record<string, Greeting[]> = {
+export const greetings: GreetingSet = {
   // 6–8 Uhr (Die Frühaufsteher / Early Birds)
   earlyMorning: [
     {
