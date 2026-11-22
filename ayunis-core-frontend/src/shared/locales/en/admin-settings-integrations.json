@@ -6,12 +6,6 @@
       "invalidServerUrl": "Invalid server URL. Please check the URL format.",
       "duplicateIntegration": "An integration with this URL already exists."
     },
-    "createPredefinedIntegration": {
-      "success": "Integration created successfully",
-      "error": "Failed to create integration. Please try again.",
-      "invalidSlug": "Invalid integration type selected.",
-      "duplicateIntegration": "This integration type is already configured."
-    },
     "updateIntegration": {
       "success": "Integration updated successfully",
       "connectionFailed": "Integration saved, but the connection test failed: {{message}}",
@@ -42,22 +36,16 @@
       "authenticationFailed": "Authentication failed. Please check your credentials.",
       "notFound": "Integration not found. It may have been deleted."
     },
-    "comingSoonDialog": {
-      "title": "Coming Soon",
-      "description": "Predefined integrations are on the way. Check back soon!",
-      "close": "Got it"
-    },
     "page": {
       "accessDenied": "Access Denied",
       "accessDeniedMessage": "You need administrator privileges to access this page.",
       "errorLoadingTitle": "Error Loading Integrations",
       "errorLoadingMessage": "An error occurred while loading integrations",
       "retry": "Retry",
-      "addPredefined": "Add Predefined",
-      "addCustom": "Add Custom",
-      "add": "Add Integration",
-      "browseMarketplace": "Browse Marketplace",
-      "mcpTitle": "MCP integrations"
+      "add": "Add integration",
+      "mcpTitle": "MCP integrations",
+      "addMcpServer": "Add MCP server",
+      "addFromMarketplace": "Add from the Marketplace"
     },
     "card": {
       "openMenu": "Open menu",
@@ -71,14 +59,8 @@
       "marketplace": "Marketplace",
       "userConfigNeeded": "User config needed"
     },
-    "list": {
-      "noIntegrationsTitle": "No integrations yet",
-      "noIntegrationsMessage": "Create your first integration to get started.",
-      "noIntegrationsMarketplaceMessage": "Install integrations from the Marketplace to get started.",
-      "browseMarketplace": "Browse Marketplace"
-    },
     "createCustomDialog": {
-      "title": "Add Custom Integration",
+      "title": "Add MCP server",
       "description": "Connect to a custom MCP server and define which HTTP headers are supplied by the organization or by each user.",
       "name": "Name",
       "namePlaceholder": "My Custom Integration",
@@ -132,30 +114,6 @@
     },
     "validation": {
       "invalid": "Please check the highlighted fields."
-    },
-    "createPredefinedDialog": {
-      "title": "Add Predefined Integration",
-      "titleCloud": "Add Integration",
-      "integrationType": "Integration Type",
-      "integrationTypePlaceholder": "Select an integration",
-      "integrationTypeRequired": "Select an integration",
-      "name": "Name",
-      "namePlaceholder": "My Integration",
-      "nameDescription": "A friendly name for this integration instance",
-      "authMethod": "Authentication Method",
-      "authMethodPlaceholder": "Select method",
-      "authMethodApiKey": "API Key",
-      "authMethodBearerToken": "Bearer Token",
-      "headerName": "Header Name",
-      "headerNamePlaceholder": "X-API-Key",
-      "headerNameDescription": "The HTTP header name for authentication",
-      "credentials": "Credentials",
-      "credentialsPlaceholder": "Enter your credentials",
-      "credentialsDescriptionApiKey": "Your API key",
-      "credentialsDescriptionBearerToken": "Your bearer token",
-      "cancel": "Cancel",
-      "creating": "Creating...",
-      "create": "Create"
     },
     "editDialog": {
       "title": "Edit Integration",
@@ -228,6 +186,26 @@
         "provideUrl": "Under Choose how to upload app, choose to provide a URL, paste the manifest URL above, and select Upload.",
         "assign": "Select Everyone, Specific users/groups or Just me, then select Deploy."
       }
+    },
+    "emptyState": {
+      "title": "Connect the AI to your systems",
+      "description": "Integrations give the AI tools for your organization's systems, such as a document archive or a ticket system. Once installed, your users can work with them in chat.",
+      "steps": {
+        "install": {
+          "title": "Install",
+          "description": "Add your own MCP server.",
+          "marketplaceDescription": "Pick an integration from the Marketplace or add your own MCP server."
+        },
+        "connect": {
+          "title": "Connect",
+          "description": "Enter the access details. Where users sign in personally, they connect in their settings."
+        },
+        "use": {
+          "title": "Use it in chat",
+          "description": "Users add the integration to a chat via the + menu or link it to a skill."
+        }
+      },
+      "addFirst": "Add first integration"
     }
   }
 }

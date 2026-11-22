@@ -6,12 +6,6 @@
       "invalidServerUrl": "Ungültige Server-URL. Bitte überprüfen Sie das URL-Format.",
       "duplicateIntegration": "Eine Integration mit dieser URL existiert bereits."
     },
-    "createPredefinedIntegration": {
-      "success": "Integration erfolgreich erstellt",
-      "error": "Integration konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
-      "invalidSlug": "Ungültiger Integrationstyp ausgewählt.",
-      "duplicateIntegration": "Dieser Integrationstyp ist bereits konfiguriert."
-    },
     "updateIntegration": {
       "success": "Integration erfolgreich aktualisiert",
       "connectionFailed": "Integration gespeichert, aber der Verbindungstest ist fehlgeschlagen: {{message}}",
@@ -42,22 +36,16 @@
       "authenticationFailed": "Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.",
       "notFound": "Integration nicht gefunden. Sie wurde möglicherweise gelöscht."
     },
-    "comingSoonDialog": {
-      "title": "Demnächst verfügbar",
-      "description": "Vordefinierte Integrationen sind in Arbeit. Schauen Sie bald wieder vorbei!",
-      "close": "Verstanden"
-    },
     "page": {
       "accessDenied": "Zugriff verweigert",
       "accessDeniedMessage": "Sie benötigen Administratorrechte, um auf diese Seite zuzugreifen.",
       "errorLoadingTitle": "Fehler beim Laden der Integrationen",
       "errorLoadingMessage": "Beim Laden der Integrationen ist ein Fehler aufgetreten",
       "retry": "Erneut versuchen",
-      "addPredefined": "Vordefinierte hinzufügen",
-      "addCustom": "Benutzerdefinierte hinzufügen",
       "add": "Integration hinzufügen",
-      "browseMarketplace": "Marktplatz durchsuchen",
-      "mcpTitle": "MCP-Integrationen"
+      "mcpTitle": "MCP-Integrationen",
+      "addMcpServer": "MCP-Server hinzufügen",
+      "addFromMarketplace": "Aus dem Marketplace hinzufügen"
     },
     "card": {
       "openMenu": "Menü öffnen",
@@ -68,17 +56,11 @@
       "testing": "Teste...",
       "testConnection": "Verbindung testen",
       "testConnectionUserConfigTooltip": "Diese Integration kann nicht zentral getestet werden, da sich jede Person mit ihren eigenen Zugangsdaten verbindet. Nutzer hinterlegen ihre Zugangsdaten unter Einstellungen → Integrationen.",
-      "marketplace": "Marktplatz",
+      "marketplace": "Marketplace",
       "userConfigNeeded": "Nutzerkonfiguration nötig"
     },
-    "list": {
-      "noIntegrationsTitle": "Noch keine Integrationen",
-      "noIntegrationsMessage": "Erstellen Sie Ihre erste Integration, um loszulegen.",
-      "noIntegrationsMarketplaceMessage": "Installieren Sie Integrationen über den Marktplatz, um loszulegen.",
-      "browseMarketplace": "Marktplatz durchsuchen"
-    },
     "createCustomDialog": {
-      "title": "Benutzerdefinierte Integration hinzufügen",
+      "title": "MCP-Server hinzufügen",
       "description": "Verbinden Sie einen benutzerdefinierten MCP-Server und legen Sie fest, welche HTTP-Header von der Organisation oder jeder nutzenden Person bereitgestellt werden.",
       "name": "Name",
       "namePlaceholder": "Meine benutzerdefinierte Integration",
@@ -133,31 +115,6 @@
     "validation": {
       "invalid": "Bitte überprüfen Sie die markierten Felder."
     },
-    "createPredefinedDialog": {
-      "title": "Vordefinierte Integration hinzufügen",
-      "titleCloud": "Integration hinzufügen",
-      "integrationType": "Integrationstyp",
-      "integrationTypePlaceholder": "Integration auswählen",
-      "integrationTypeRequired": "Wählen Sie eine Integration aus",
-      "name": "Name",
-      "namePlaceholder": "Meine Integration",
-      "nameDescription": "Ein freundlicher Name für diese Integrationsinstanz",
-      "authMethod": "Authentifizierungsmethode",
-      "authMethodPlaceholder": "Methode auswählen",
-      "authMethodApiKey": "API-Schlüssel",
-      "authMethodBearerToken": "Bearer-Token",
-      "headerName": "Header-Name",
-      "headerNamePlaceholder": "X-API-Key",
-      "headerNameDescription": "Der HTTP-Header-Name für die Authentifizierung",
-      "credentials": "Anmeldedaten",
-      "credentialsPlaceholder": "Geben Sie Ihre Anmeldedaten ein",
-      "credentialsDescriptionApiKey": "Ihr API-Schlüssel",
-      "credentialsDescriptionBearerToken": "Ihr Bearer-Token",
-      "noCredentialsRequired": "Für diese Integration sind keine zusätzlichen Anmeldedaten erforderlich.",
-      "cancel": "Abbrechen",
-      "creating": "Wird erstellt...",
-      "create": "Erstellen"
-    },
     "editDialog": {
       "title": "Integration bearbeiten",
       "customDescription": "Aktualisieren Sie die Server-URL und die HTTP-Header-Konfiguration. Beim Speichern wird die aktualisierte Verbindung getestet.",
@@ -200,7 +157,7 @@
       "type": {
         "predefined": "Vordefiniert",
         "custom": "Benutzerdefiniert",
-        "marketplace": "Marktplatz"
+        "marketplace": "Marketplace"
       },
       "authMethod": {
         "none": "Keine",
@@ -229,6 +186,26 @@
         "provideUrl": "Wählen Sie unter „App-Upload auswählen“ die Angabe einer URL, fügen Sie die Manifest-URL von oben ein und wählen Sie „Hochladen“.",
         "assign": "Wählen Sie „Alle“, „Bestimmte Benutzer/Gruppen“ oder „Nur ich“ und dann „Bereitstellen“."
       }
+    },
+    "emptyState": {
+      "title": "Verbinden Sie die KI mit Ihren Systemen",
+      "description": "Integrationen geben der KI Werkzeuge für die Systeme Ihrer Organisation, etwa ein Dokumentenarchiv oder ein Ticketsystem. Einmal installiert, arbeiten Ihre Mitarbeitenden im Chat damit.",
+      "steps": {
+        "install": {
+          "title": "Installieren",
+          "description": "Fügen Sie Ihren eigenen MCP-Server hinzu.",
+          "marketplaceDescription": "Wählen Sie eine Integration aus dem Marketplace oder fügen Sie Ihren eigenen MCP-Server hinzu."
+        },
+        "connect": {
+          "title": "Verbinden",
+          "description": "Geben Sie die Zugangsdaten ein. Wo sich Mitarbeitende persönlich anmelden, verbinden sie sich in ihren Einstellungen."
+        },
+        "use": {
+          "title": "Im Chat nutzen",
+          "description": "Mitarbeitende fügen die Integration über das +-Menü einem Chat hinzu oder verknüpfen sie mit einem Skill."
+        }
+      },
+      "addFirst": "Erste Integration hinzufügen"
     }
   }
 }
