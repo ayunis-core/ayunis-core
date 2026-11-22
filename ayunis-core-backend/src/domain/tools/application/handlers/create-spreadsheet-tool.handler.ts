@@ -79,6 +79,7 @@ export class CreateSpreadsheetToolHandler extends ToolExecutionHandler {
           title: validatedInput.title,
           content: serializeSpreadsheetContent(grid),
           authorType: AuthorType.ASSISTANT,
+          isAnonymous: context.isAnonymous ?? false,
         }),
       );
 

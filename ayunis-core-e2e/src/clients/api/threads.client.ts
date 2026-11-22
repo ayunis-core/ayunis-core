@@ -6,9 +6,10 @@ import { config } from '../../config';
 export async function createEmptyThread(
   api: APIRequestContext,
   permittedModelId: string,
+  isAnonymous = false,
 ): Promise<GetThreadResponseDto> {
   return generatedApi.threadsControllerCreate(
-    { modelId: permittedModelId, isAnonymous: false },
+    { modelId: permittedModelId, isAnonymous },
     { api },
   );
 }

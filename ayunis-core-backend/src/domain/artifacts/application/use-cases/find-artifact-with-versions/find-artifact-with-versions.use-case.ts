@@ -24,7 +24,6 @@ export class FindArtifactWithVersionsUseCase {
     const artifact = await this.artifactsRepository.findByIdWithVersions(
       query.artifactId,
       userId,
-      { linkedThreadId: query.linkedThreadId },
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(query.artifactId);

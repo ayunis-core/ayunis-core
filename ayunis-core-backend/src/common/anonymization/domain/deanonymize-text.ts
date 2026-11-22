@@ -14,10 +14,14 @@ export function deanonymizeText(
   text: string,
   tokenToValue: ReadonlyMap<string, string>,
 ): string {
-  return text.replace(
-    PII_TOKEN_REGEX,
-    (token) => tokenToValue.get(token) ?? token,
-  );
+  return replacePiiTokens(text, (token) => tokenToValue.get(token) ?? token);
+}
+
+export function replacePiiTokens(
+  text: string,
+  replace: (token: string) => string,
+): string {
+  return text.replace(PII_TOKEN_REGEX, replace);
 }
 
 export function containsPiiToken(text: string): boolean {

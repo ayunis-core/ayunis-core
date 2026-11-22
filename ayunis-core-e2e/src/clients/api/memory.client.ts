@@ -43,9 +43,10 @@ export const NO_MEMORY: MemoryReport = {
 export async function createChat(
   api: APIRequestContext,
   permittedModelId?: string,
+  isAnonymous = false,
 ): Promise<string> {
   const modelId = permittedModelId ?? (await defaultModel(api)).id;
-  return (await createEmptyThread(api, modelId)).id;
+  return (await createEmptyThread(api, modelId, isAnonymous)).id;
 }
 
 /** The user's default model, as their effective permit. */

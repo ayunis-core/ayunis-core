@@ -7,7 +7,7 @@ import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.en
 import {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
-} from '../dtos/artifact-response.dto';
+} from 'src/domain/artifacts/presenters/http/dtos/artifact-response.dto';
 
 @Injectable()
 export class ArtifactDtoMapper {
@@ -18,6 +18,7 @@ export class ArtifactDtoMapper {
     dto.threadId = artifact.threadId;
     dto.userId = artifact.userId;
     dto.title = artifact.title;
+    dto.isAnonymous = artifact.isAnonymous;
     dto.letterheadId =
       artifact instanceof DocumentArtifact ? artifact.letterheadId : null;
     dto.currentVersionNumber = artifact.currentVersionNumber;
@@ -26,6 +27,13 @@ export class ArtifactDtoMapper {
 
     if (artifact.versions.length > 0) {
       dto.versions = artifact.versions.map((v) => this.toVersionDto(v));
+      if (artifact.isAnonymous) {
+        dto.piiMasks = artifact.piiMasks.map((mask) => ({
+          token: mask.token,
+          value: mask.value,
+          category: mask.category,
+        }));
+      }
     }
 
     return dto;

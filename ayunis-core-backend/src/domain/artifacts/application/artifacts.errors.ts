@@ -21,6 +21,7 @@ export enum ArtifactErrorCode {
   ARTIFACT_NOT_EXPORTABLE = 'ARTIFACT_NOT_EXPORTABLE',
   ARTIFACT_INVALID_SPREADSHEET_CONTENT = 'ARTIFACT_INVALID_SPREADSHEET_CONTENT',
   ARTIFACT_EXPORT_TIMEOUT = 'ARTIFACT_EXPORT_TIMEOUT',
+  ARTIFACT_UNKNOWN_PLACEHOLDER = 'ARTIFACT_UNKNOWN_PLACEHOLDER',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
 
@@ -184,6 +185,23 @@ export class ArtifactExportTimeoutError extends ArtifactError {
       504,
     );
     this.cause = cause;
+  }
+}
+
+/**
+ * An anonymous run wrote a `{{pii:…}}` placeholder its chat has no value for,
+ * so there is nothing to store in its place. The message names only the
+ * placeholders, never a value, and tells the model how to retry.
+ */
+export class ArtifactUnknownPlaceholderError extends ArtifactError {
+  constructor(tokens: string[], metadata?: ErrorMetadata) {
+    super(
+      `Nothing was saved: these placeholders do not exist in this conversation: ${tokens.join(', ')}. ` +
+        'Only use {{pii:…}} placeholders that appear in this conversation, then retry.',
+      ArtifactErrorCode.ARTIFACT_UNKNOWN_PLACEHOLDER,
+      400,
+      { placeholderCount: tokens.length, ...metadata },
+    );
   }
 }
 

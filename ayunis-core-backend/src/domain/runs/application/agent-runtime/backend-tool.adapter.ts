@@ -17,6 +17,7 @@ import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.err
 import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { ThreadPiiMaskThreadMissingError } from 'src/domain/thread-pii-masks/application/thread-pii-masks.errors';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { THREAD_PII_MASKS_EVENT } from './masks-event';
 import { stripDisallowedNulls } from 'src/common/util/strip-disallowed-nulls';
 import {
@@ -48,7 +49,9 @@ interface ToolExecutionOutcome {
  * marked exclusive.
  *
  * In anonymous threads, PII-returning tool output is redacted before the mask
- * dictionary and result are streamed to the client.
+ * dictionary and result are streamed to the client; a tool that allocated
+ * chat masks itself (an anonymous artifact read) streams the dictionary the
+ * same way.
  */
 @Injectable()
 export class BackendToolAdapter {
@@ -125,6 +128,8 @@ export class BackendToolAdapter {
       threadId: ctx.context.get<UUID>('threadId')!,
       isAnonymous: ctx.context.get<boolean>('isAnonymous') ?? false,
       signal: ctx.signal,
+      onPiiMasks: (masks: ThreadPiiMask[]) =>
+        ctx.emit({ name: THREAD_PII_MASKS_EVENT, data: masks }),
     };
     const outcome = await this.runTool(tool, input, context, ctx);
     let result = outcome.result;

@@ -10,6 +10,7 @@ import { PostgresThreadPiiMaskRepository } from './infrastructure/persistence/po
 import { GetThreadPiiMasksUseCase } from './application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
 import { AnonymizeTextForThreadUseCase } from './application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
 import { UnmaskThreadPiiMaskUseCase } from './application/use-cases/unmask-thread-pii-mask/unmask-thread-pii-mask.use-case';
+import { AllocateThreadPiiMasksUseCase } from './application/use-cases/allocate-thread-pii-masks/allocate-thread-pii-masks.use-case';
 import { PiiMaskDtoMapper } from './presenters/http/mappers/pii-mask.mapper';
 import { ThreadMaskAllocationLock } from './application/services/thread-mask-allocation-lock.service';
 
@@ -28,12 +29,14 @@ import { ThreadMaskAllocationLock } from './application/services/thread-mask-all
     GetThreadPiiMasksUseCase,
     AnonymizeTextForThreadUseCase,
     UnmaskThreadPiiMaskUseCase,
+    AllocateThreadPiiMasksUseCase,
     PiiMaskDtoMapper,
   ],
   exports: [
     GetThreadPiiMasksUseCase,
     AnonymizeTextForThreadUseCase,
     UnmaskThreadPiiMaskUseCase,
+    AllocateThreadPiiMasksUseCase,
     PiiMaskDtoMapper,
   ],
 })

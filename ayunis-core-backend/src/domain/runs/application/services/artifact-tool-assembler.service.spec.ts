@@ -7,7 +7,10 @@ import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/asse
 import type { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
-import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
+import { FindArtifactsForRunUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-for-run/find-artifacts-for-run.use-case';
+import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import {
@@ -21,7 +24,7 @@ import type { Thread } from 'src/domain/threads/domain/thread.entity';
 
 describe('ArtifactToolAssemblerService', () => {
   let service: ArtifactToolAssemblerService;
-  let findArtifactsByThreadUseCase: jest.Mocked<FindArtifactsByThreadUseCase>;
+  let findArtifactsForRunUseCase: jest.Mocked<FindArtifactsForRunUseCase>;
   let findArtifactWithVersionsUseCase: jest.Mocked<FindArtifactWithVersionsUseCase>;
 
   const mockThreadId = randomUUID();
@@ -35,6 +38,7 @@ describe('ArtifactToolAssemblerService', () => {
       title?: string;
       currentVersionNumber?: number;
       versions?: ArtifactVersion[];
+      isAnonymous?: boolean;
     } = {},
   ) {
     const params = {
@@ -42,6 +46,7 @@ describe('ArtifactToolAssemblerService', () => {
       threadId: mockThreadId,
       userId: mockUserId,
       title: overrides.title ?? 'Artifact',
+      isAnonymous: overrides.isAnonymous,
       currentVersionNumber: overrides.currentVersionNumber ?? 1,
       versions: overrides.versions,
     };
@@ -62,9 +67,11 @@ describe('ArtifactToolAssemblerService', () => {
       ),
     };
 
-    findArtifactsByThreadUseCase = {
-      execute: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<FindArtifactsByThreadUseCase>;
+    findArtifactsForRunUseCase = {
+      execute: jest
+        .fn()
+        .mockResolvedValue({ artifacts: [], threadPiiMasks: null }),
+    } as unknown as jest.Mocked<FindArtifactsForRunUseCase>;
 
     findArtifactWithVersionsUseCase = {
       execute: jest.fn().mockResolvedValue({
@@ -82,8 +89,8 @@ describe('ArtifactToolAssemblerService', () => {
         ArtifactToolAssemblerService,
         { provide: AssembleToolUseCase, useValue: mockAssembleToolUseCase },
         {
-          provide: FindArtifactsByThreadUseCase,
-          useValue: findArtifactsByThreadUseCase,
+          provide: FindArtifactsForRunUseCase,
+          useValue: findArtifactsForRunUseCase,
         },
         {
           provide: FindArtifactWithVersionsUseCase,
@@ -105,6 +112,20 @@ describe('ArtifactToolAssemblerService', () => {
     jest.clearAllMocks();
   });
 
+  function givenArtifacts(...artifacts: Artifact[]): void {
+    findArtifactsForRunUseCase.execute.mockResolvedValue({
+      artifacts: artifacts.map((artifact) => ({
+        artifact,
+        title: artifact.title,
+      })),
+      threadPiiMasks: null,
+    });
+  }
+
+  async function assemble(isAnonymous = false): Promise<Tool[]> {
+    return (await service.assembleArtifactTools(thread, isAnonymous)).tools;
+  }
+
   function toolNames(tools: Tool[]): string[] {
     return tools.map((t) => t.name);
   }
@@ -114,7 +135,7 @@ describe('ArtifactToolAssemblerService', () => {
   }
 
   it('should always offer create tools for document, diagram, and spreadsheet', async () => {
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const names = toolNames(tools);
     expect(names).toContain(ToolType.CREATE_DOCUMENT);
@@ -122,8 +143,43 @@ describe('ArtifactToolAssemblerService', () => {
     expect(names).toContain(ToolType.CREATE_SPREADSHEET);
   });
 
+  it('lists the run’s artifacts with their titles in the chat’s placeholders and hands on new chat masks', async () => {
+    const letter = makeArtifact('document', {
+      title: 'Brief an {{pii:PERSON_NAME_1}}',
+      isAnonymous: true,
+    });
+    const chatMasks = [
+      new ThreadPiiMask({
+        threadId: mockThreadId,
+        category: PiiCategory.PERSON_NAME,
+        maskIndex: 3,
+        value: 'Anna Schmidt',
+      }),
+    ];
+    findArtifactsForRunUseCase.execute.mockResolvedValue({
+      artifacts: [
+        { artifact: letter, title: 'Brief an {{pii:PERSON_NAME_3}}' },
+      ],
+      threadPiiMasks: chatMasks,
+    });
+
+    const assembled = await service.assembleArtifactTools(thread, true);
+
+    const listing = findTool(
+      assembled.tools,
+      ToolType.READ_DOCUMENT,
+    )?.descriptionLong;
+    expect(listing).toContain(`${letter.id}: "Brief an {{pii:PERSON_NAME_3}}"`);
+    expect(listing).not.toContain('{{pii:PERSON_NAME_1}}');
+    expect(assembled.threadPiiMasks).toBe(chatMasks);
+    expect(findArtifactsForRunUseCase.execute.mock.calls[0][0].run).toEqual({
+      threadId: mockThreadId,
+      isAnonymous: true,
+    });
+  });
+
   it('should not offer diagram or spreadsheet update and read tools on an empty thread', async () => {
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const names = toolNames(tools);
     expect(names).not.toContain(ToolType.UPDATE_DIAGRAM);
@@ -133,11 +189,9 @@ describe('ArtifactToolAssemblerService', () => {
   });
 
   it('should offer update_diagram and read_diagram only when the thread has diagram artifacts', async () => {
-    findArtifactsByThreadUseCase.execute.mockResolvedValue([
-      makeArtifact('diagram'),
-    ]);
+    givenArtifacts(makeArtifact('diagram'));
 
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const names = toolNames(tools);
     expect(names).toContain(ToolType.UPDATE_DIAGRAM);
@@ -147,11 +201,9 @@ describe('ArtifactToolAssemblerService', () => {
   });
 
   it('should offer update_spreadsheet and read_spreadsheet only when the thread has spreadsheet artifacts', async () => {
-    findArtifactsByThreadUseCase.execute.mockResolvedValue([
-      makeArtifact('spreadsheet'),
-    ]);
+    givenArtifacts(makeArtifact('spreadsheet'));
 
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const names = toolNames(tools);
     expect(names).toContain(ToolType.UPDATE_SPREADSHEET);
@@ -168,9 +220,9 @@ describe('ArtifactToolAssemblerService', () => {
     async (kind, updateType, readType) => {
       const first = makeArtifact(kind, { title: 'Ablauf' });
       const second = makeArtifact(kind, { title: 'Zuständigkeiten' });
-      findArtifactsByThreadUseCase.execute.mockResolvedValue([first, second]);
+      givenArtifacts(first, second);
 
-      const tools = await service.assembleArtifactTools(thread);
+      const tools = await assemble();
 
       const updateList = findTool(tools, updateType)?.descriptionLong?.split(
         'Available',
@@ -189,9 +241,9 @@ describe('ArtifactToolAssemblerService', () => {
       title: 'Budget 2026',
       currentVersionNumber: 3,
     });
-    findArtifactsByThreadUseCase.execute.mockResolvedValue([spreadsheet]);
+    givenArtifacts(spreadsheet);
 
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const updateTool = findTool(tools, ToolType.UPDATE_SPREADSHEET);
     expect(updateTool?.descriptionLong).toContain(spreadsheet.id);
@@ -201,7 +253,7 @@ describe('ArtifactToolAssemblerService', () => {
 
   it('should warn before updating a user-edited spreadsheet', async () => {
     const spreadsheet = makeArtifact('spreadsheet', { title: 'Budget 2026' });
-    findArtifactsByThreadUseCase.execute.mockResolvedValue([spreadsheet]);
+    givenArtifacts(spreadsheet);
     findArtifactWithVersionsUseCase.execute.mockResolvedValue(
       makeArtifact('spreadsheet', {
         id: spreadsheet.id,
@@ -219,7 +271,7 @@ describe('ArtifactToolAssemblerService', () => {
       }),
     );
 
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const updateTool = findTool(tools, ToolType.UPDATE_SPREADSHEET);
     expect(updateTool?.descriptionLong).toContain(
@@ -230,12 +282,9 @@ describe('ArtifactToolAssemblerService', () => {
   it('should only list document artifacts in the document tool descriptions', async () => {
     const document = makeArtifact('document', { title: 'Report' });
     const spreadsheet = makeArtifact('spreadsheet', { title: 'Sheet' });
-    findArtifactsByThreadUseCase.execute.mockResolvedValue([
-      document,
-      spreadsheet,
-    ]);
+    givenArtifacts(document, spreadsheet);
 
-    const tools = await service.assembleArtifactTools(thread);
+    const tools = await assemble();
 
     const updateDocTool = findTool(tools, ToolType.UPDATE_DOCUMENT);
     expect(updateDocTool?.descriptionLong).toContain(document.id);

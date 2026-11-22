@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
+import type { ArtifactRun } from 'src/domain/artifacts/application/models/artifact-run';
 
 export class UpdateArtifactCommand {
   readonly artifactId: UUID;
@@ -7,7 +8,7 @@ export class UpdateArtifactCommand {
   readonly authorType?: AuthorType;
   readonly expectedVersionNumber?: number;
   readonly letterheadId?: UUID | null;
-  readonly linkedThreadId?: UUID;
+  readonly run?: ArtifactRun;
 
   constructor(params: {
     artifactId: UUID;
@@ -15,13 +16,13 @@ export class UpdateArtifactCommand {
     authorType?: AuthorType;
     expectedVersionNumber?: number;
     letterheadId?: UUID | null;
-    linkedThreadId?: UUID;
+    run?: ArtifactRun;
   }) {
     this.artifactId = params.artifactId;
     this.content = params.content;
     this.authorType = params.authorType;
     this.expectedVersionNumber = params.expectedVersionNumber;
     this.letterheadId = params.letterheadId;
-    this.linkedThreadId = params.linkedThreadId;
+    this.run = params.run;
   }
 }

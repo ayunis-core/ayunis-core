@@ -4,6 +4,7 @@ import { generatedApi } from './generated-api';
 import { chat } from './memory.client';
 
 export type ArtifactToolName =
+  | 'create_document'
   | 'create_diagram'
   | 'update_diagram'
   | 'read_diagram'
@@ -91,6 +92,18 @@ export async function saveArtifactAsUser(
     artifactId,
     { content },
     { api },
+  );
+}
+
+/** Replaces every `{{pii:…}}` placeholder with its value from a dictionary. */
+export function resolvePlaceholders(
+  text: string,
+  dictionary: readonly { token: string; value: string }[],
+): string {
+  const values = new Map(dictionary.map((mask) => [mask.token, mask.value]));
+  return text.replace(
+    /\{\{pii:[A-Z][A-Z0-9_]*_\d+\}\}/g,
+    (token) => values.get(token) ?? token,
   );
 }
 

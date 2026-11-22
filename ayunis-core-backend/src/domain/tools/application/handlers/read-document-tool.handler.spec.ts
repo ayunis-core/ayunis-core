@@ -2,17 +2,20 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ReadDocumentToolHandler } from './read-document-tool.handler';
-import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
+import { ReadArtifactInRunUseCase } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
+import { readInRun } from 'src/domain/tools/application/testing/artifact-read.fixtures';
 import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-tool.entity';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import toolsConfig from 'src/config/tools.config';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 
 describe('ReadDocumentToolHandler', () => {
   let handler: ReadDocumentToolHandler;
-  let mockFindArtifactUseCase: jest.Mocked<FindArtifactWithVersionsUseCase>;
+  let mockFindArtifactUseCase: jest.Mocked<ReadArtifactInRunUseCase>;
 
   const mockThreadId = randomUUID();
   const mockOrgId = randomUUID();
@@ -22,13 +25,13 @@ describe('ReadDocumentToolHandler', () => {
   beforeEach(async () => {
     mockFindArtifactUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<FindArtifactWithVersionsUseCase>;
+    } as unknown as jest.Mocked<ReadArtifactInRunUseCase>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReadDocumentToolHandler,
         {
-          provide: FindArtifactWithVersionsUseCase,
+          provide: ReadArtifactInRunUseCase,
           useValue: mockFindArtifactUseCase,
         },
         {
@@ -73,7 +76,7 @@ describe('ReadDocumentToolHandler', () => {
       3,
       '<h1>Budget Report</h1><p>Total: €5.2M</p>',
     );
-    mockFindArtifactUseCase.execute.mockResolvedValue(artifact);
+    mockFindArtifactUseCase.execute.mockResolvedValue(readInRun(artifact));
 
     const tool = new ReadDocumentTool();
     const input = { artifact_id: mockArtifactId };
@@ -93,13 +96,48 @@ describe('ReadDocumentToolHandler', () => {
     });
   });
 
+  it('returns the title and content the run reads and hands new chat masks to the run, so they are streamed', async () => {
+    const chatMasks = [
+      new ThreadPiiMask({
+        threadId: mockThreadId,
+        category: PiiCategory.PERSON_NAME,
+        maskIndex: 3,
+        value: 'Anna Schmidt',
+      }),
+    ];
+    mockFindArtifactUseCase.execute.mockResolvedValue({
+      artifact: createMockArtifact(1, '<p>{{pii:PERSON_NAME_1}}</p>'),
+      title: 'Brief an {{pii:PERSON_NAME_3}}',
+      content: '<p>{{pii:PERSON_NAME_3}}</p>',
+      threadPiiMasks: chatMasks,
+    });
+    const onPiiMasks = jest.fn();
+
+    const result = await handler.execute({
+      tool: new ReadDocumentTool(),
+      input: { artifact_id: mockArtifactId },
+      context: {
+        threadId: mockThreadId,
+        orgId: mockOrgId,
+        isAnonymous: true,
+        onPiiMasks,
+      },
+    });
+
+    expect(JSON.parse(result)).toMatchObject({
+      title: 'Brief an {{pii:PERSON_NAME_3}}',
+      content: '<p>{{pii:PERSON_NAME_3}}</p>',
+    });
+    expect(onPiiMasks).toHaveBeenCalledWith(chatMasks);
+  });
+
   it('should return consecutive pages without duplicated or missing lines', async () => {
     const lines = Array.from(
       { length: 205 },
       (_, index) => `Budget line ${index + 1}`,
     );
     mockFindArtifactUseCase.execute.mockResolvedValue(
-      createMockArtifact(4, lines.join('\n')),
+      readInRun(createMockArtifact(4, lines.join('\n'))),
     );
     const tool = new ReadDocumentTool();
 
@@ -137,9 +175,9 @@ describe('ReadDocumentToolHandler', () => {
     expect(`${firstPage.content}\n${finalPage.content}`).toBe(lines.join('\n'));
   });
 
-  it('should call FindArtifactWithVersionsUseCase with the correct artifact ID', async () => {
+  it('reads the artifact as the run’s chat in the run’s mode', async () => {
     const artifact = createMockArtifact(1, '<p>Content</p>');
-    mockFindArtifactUseCase.execute.mockResolvedValue(artifact);
+    mockFindArtifactUseCase.execute.mockResolvedValue(readInRun(artifact));
 
     const tool = new ReadDocumentTool();
     const input = { artifact_id: mockArtifactId };
@@ -147,12 +185,13 @@ describe('ReadDocumentToolHandler', () => {
     await handler.execute({
       tool,
       input,
-      context: { threadId: mockThreadId, orgId: mockOrgId },
+      context: { threadId: mockThreadId, orgId: mockOrgId, isAnonymous: true },
     });
 
     expect(mockFindArtifactUseCase.execute).toHaveBeenCalledTimes(1);
     const query = mockFindArtifactUseCase.execute.mock.calls[0][0];
     expect(query.artifactId).toBe(mockArtifactId);
+    expect(query.run).toEqual({ threadId: mockThreadId, isAnonymous: true });
   });
 
   it('should throw ToolExecutionFailedError when use case fails', async () => {

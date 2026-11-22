@@ -6,6 +6,7 @@ import { DiagramArtifactRecord } from './schema/diagram-artifact.record';
 import { SpreadsheetArtifactRecord } from './schema/spreadsheet-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ThreadArtifactRecord } from './schema/thread-artifact.record';
+import { ArtifactPiiMaskRecord } from './schema/artifact-pii-mask.record';
 import { LocalArtifactsRepository } from './local-artifacts.repository';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
@@ -19,6 +20,7 @@ import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
       SpreadsheetArtifactRecord,
       ArtifactVersionRecord,
       ThreadArtifactRecord,
+      ArtifactPiiMaskRecord,
     ]),
   ],
   providers: [LocalArtifactsRepository, ArtifactMapper, ArtifactVersionMapper],

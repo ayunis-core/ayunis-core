@@ -25919,6 +25919,31 @@
           "createdAt"
         ]
       },
+      "ArtifactPiiMaskResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}}",
+            "example": "{{pii:PERSON_NAME_1}}"
+          },
+          "value": {
+            "type": "string",
+            "description": "The real value the placeholder stands for",
+            "example": "Max Mustermann"
+          },
+          "category": {
+            "description": "PII category of the value",
+            "example": "person_name",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          }
+        },
+        "required": ["token", "value", "category"]
+      },
       "ArtifactResponseDto": {
         "type": "object",
         "properties": {
@@ -25955,6 +25980,11 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "nullable": true
           },
+          "isAnonymous": {
+            "type": "boolean",
+            "description": "Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks",
+            "example": false
+          },
           "currentVersionNumber": {
             "type": "number",
             "description": "Current version number",
@@ -25965,6 +25995,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+            }
+          },
+          "piiMasks": {
+            "description": "The anonymous artifact's own placeholder dictionary (included with the versions)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactPiiMaskResponseDto"
             }
           },
           "createdAt": {
@@ -25984,6 +26021,7 @@
           "threadId",
           "userId",
           "title",
+          "isAnonymous",
           "currentVersionNumber",
           "createdAt",
           "updatedAt"

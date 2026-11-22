@@ -98,7 +98,6 @@ describe('FindArtifactWithVersionsUseCase', () => {
     expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
       mockArtifactId,
       mockUserId,
-      { linkedThreadId: undefined },
     );
   });
 

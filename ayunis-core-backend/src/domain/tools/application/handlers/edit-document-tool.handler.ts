@@ -14,8 +14,10 @@ import {
   ArtifactEditNotFoundError,
   ArtifactExpectedVersionMismatchError,
   ArtifactNotFoundError,
+  ArtifactUnknownPlaceholderError,
 } from 'src/domain/artifacts/application/artifacts.errors';
 
+import { artifactRunOf } from 'src/domain/tools/application/utils/artifact-run.utils';
 @Injectable()
 export class EditDocumentToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(EditDocumentToolHandler.name);
@@ -48,7 +50,7 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
           edits: edits,
           authorType: AuthorType.ASSISTANT,
           expectedVersionNumber: validatedInput.expected_version,
-          linkedThreadId: context.threadId,
+          run: artifactRunOf(context),
         }),
       );
 
@@ -70,7 +72,8 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
     if (
       error instanceof ArtifactEditNotFoundError ||
       error instanceof ArtifactEditAmbiguousError ||
-      error instanceof ArtifactNotFoundError
+      error instanceof ArtifactNotFoundError ||
+      error instanceof ArtifactUnknownPlaceholderError
     ) {
       throw this.toRetryableError(toolName, error.message);
     }

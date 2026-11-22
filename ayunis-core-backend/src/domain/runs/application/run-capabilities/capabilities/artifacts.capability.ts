@@ -1,4 +1,7 @@
+import type { Hook } from '@ayunis/agent-runtime';
 import { Injectable } from '@nestjs/common';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { THREAD_PII_MASKS_EVENT } from 'src/domain/runs/application/agent-runtime/masks-event';
 import { ArtifactToolAssemblerService } from 'src/domain/runs/application/services/artifact-tool-assembler.service';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
 import {
@@ -46,9 +49,31 @@ export class ArtifactsCapability implements RunCapability {
       (content) => ({ slot: PromptSlot.TOOL_USAGE, content }),
     );
     if (!context.model.canUseTools) return { sections };
-    const tools = await this.artifactToolAssembler.assembleArtifactTools(
-      context.thread,
-    );
-    return { tools, sections };
+    const { tools, threadPiiMasks } =
+      await this.artifactToolAssembler.assembleArtifactTools(
+        context.thread,
+        context.isAnonymous,
+      );
+    return {
+      tools,
+      sections,
+      ...(threadPiiMasks && {
+        hooks: [() => createArtifactTitleMasksHook(threadPiiMasks)],
+      }),
+    };
   }
+}
+
+/**
+ * The chat masks the listed artifact titles reference may have been created
+ * outside any run (an editor save's detection) or while listing; streaming
+ * the dictionary lets the client resolve the placeholders the model repeats
+ * from those titles.
+ */
+export function createArtifactTitleMasksHook(masks: ThreadPiiMask[]): Hook {
+  return {
+    name: 'ayunis-artifact-title-masks',
+    inheritToChildRuns: false,
+    runStart: (ctx) => ctx.emit({ name: THREAD_PII_MASKS_EVENT, data: masks }),
+  };
 }

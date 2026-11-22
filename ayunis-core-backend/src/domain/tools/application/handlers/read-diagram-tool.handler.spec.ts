@@ -2,7 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ReadDiagramToolHandler } from './read-diagram-tool.handler';
-import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
+import { ReadArtifactInRunUseCase } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
+import { readInRun } from 'src/domain/tools/application/testing/artifact-read.fixtures';
 import { ReadDiagramTool } from 'src/domain/tools/domain/tools/read-diagram-tool.entity';
 import {
   DiagramArtifact,
@@ -16,7 +17,7 @@ import toolsConfig from 'src/config/tools.config';
 
 describe('ReadDiagramToolHandler', () => {
   let handler: ReadDiagramToolHandler;
-  let findArtifactUseCase: jest.Mocked<FindArtifactWithVersionsUseCase>;
+  let findArtifactUseCase: jest.Mocked<ReadArtifactInRunUseCase>;
 
   const threadId = randomUUID();
   const orgId = randomUUID();
@@ -27,13 +28,13 @@ describe('ReadDiagramToolHandler', () => {
   beforeEach(async () => {
     findArtifactUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<FindArtifactWithVersionsUseCase>;
+    } as unknown as jest.Mocked<ReadArtifactInRunUseCase>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReadDiagramToolHandler,
         {
-          provide: FindArtifactWithVersionsUseCase,
+          provide: ReadArtifactInRunUseCase,
           useValue: findArtifactUseCase,
         },
         {
@@ -64,19 +65,21 @@ describe('ReadDiagramToolHandler', () => {
     });
   }
 
-  it('returns the mermaid source of the current version, not an older one', async () => {
+  it('returns the mermaid source the run reads, with its version', async () => {
     findArtifactUseCase.execute.mockResolvedValue(
-      new DiagramArtifact({
-        id: artifactId,
-        threadId,
-        userId,
-        title: 'Antragsprozess',
-        currentVersionNumber: 2,
-        versions: [
-          version(1, 'flowchart TD\n  A --> B'),
-          version(2, 'flowchart TD\n  A --> B\n  B --> C'),
-        ],
-      }),
+      readInRun(
+        new DiagramArtifact({
+          id: artifactId,
+          threadId,
+          userId,
+          title: 'Antragsprozess',
+          currentVersionNumber: 2,
+          versions: [
+            version(1, 'flowchart TD\n  A --> B'),
+            version(2, 'flowchart TD\n  A --> B\n  B --> C'),
+          ],
+        }),
+      ),
     );
 
     expect(JSON.parse(await read())).toMatchObject({
@@ -91,13 +94,15 @@ describe('ReadDiagramToolHandler', () => {
 
   it('points the model to read_spreadsheet when the artifact is a spreadsheet', async () => {
     findArtifactUseCase.execute.mockResolvedValue(
-      new SpreadsheetArtifact({
-        id: artifactId,
-        threadId,
-        userId,
-        title: 'Haushalt',
-        versions: [version(1, '{}')],
-      }),
+      readInRun(
+        new SpreadsheetArtifact({
+          id: artifactId,
+          threadId,
+          userId,
+          title: 'Haushalt',
+          versions: [version(1, '{}')],
+        }),
+      ),
     );
 
     await expect(read()).rejects.toThrow('Use read_spreadsheet to read it');

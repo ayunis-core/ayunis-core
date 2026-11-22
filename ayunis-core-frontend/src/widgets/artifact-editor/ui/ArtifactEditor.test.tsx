@@ -66,6 +66,7 @@ const artifact = {
   threadId: 'thread-id',
   userId: 'user-id',
   title: 'Document',
+  isAnonymous: false,
   currentVersionNumber: 1,
   versions: [
     {

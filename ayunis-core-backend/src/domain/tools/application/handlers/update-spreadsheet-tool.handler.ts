@@ -12,6 +12,7 @@ import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/appli
 import { serializeSpreadsheetContent } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import { UUID } from 'crypto';
 
+import { artifactRunOf } from 'src/domain/tools/application/utils/artifact-run.utils';
 @Injectable()
 export class UpdateSpreadsheetToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(UpdateSpreadsheetToolHandler.name);
@@ -40,7 +41,7 @@ export class UpdateSpreadsheetToolHandler extends ToolExecutionHandler {
           }),
           authorType: AuthorType.ASSISTANT,
           expectedVersionNumber: validatedInput.expected_version,
-          linkedThreadId: context.threadId,
+          run: artifactRunOf(context),
         }),
       );
 

@@ -1,6 +1,10 @@
+import type { UUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
-import { ApplyEditsToArtifactCommand } from './apply-edits-to-artifact.command';
+import {
+  ApplyEditsToArtifactCommand,
+  type ArtifactEdit,
+} from './apply-edits-to-artifact.command';
 import {
   ArtifactContentTooLargeError,
   ArtifactEditAmbiguousError,
@@ -11,12 +15,17 @@ import {
   UnexpectedArtifactError,
   ARTIFACT_MAX_CONTENT_LENGTH,
 } from 'src/domain/artifacts/application/artifacts.errors';
+import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
-import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
+import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/add-version-with-retry';
+import { runLookup } from 'src/domain/artifacts/application/models/artifact-run';
+import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
+import type { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 
 @Injectable()
 export class ApplyEditsToArtifactUseCase {
@@ -25,7 +34,7 @@ export class ApplyEditsToArtifactUseCase {
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
-    private readonly updateArtifactUseCase: UpdateArtifactUseCase,
+    private readonly artifactPlaceholdersService: ArtifactPlaceholdersService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
@@ -42,28 +51,17 @@ export class ApplyEditsToArtifactUseCase {
 
     const { userId } = getRequiredUserContext(this.contextService);
 
-    // Fetch artifact with versions to get current content
     const artifact = await this.artifactsRepository.findByIdWithVersions(
       command.artifactId,
       userId,
-      { linkedThreadId: command.linkedThreadId },
+      runLookup(command.run),
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
     }
 
-    if (
-      command.expectedVersionNumber !== undefined &&
-      command.expectedVersionNumber !== artifact.currentVersionNumber
-    ) {
-      throw new ArtifactExpectedVersionMismatchError(
-        artifact,
-        command.expectedVersionNumber,
-        artifact.currentVersionNumber,
-      );
-    }
+    this.assertExpectedVersion(command, artifact);
 
-    // Find current version content
     const currentVersion = artifact.versions.find(
       (v) => v.versionNumber === artifact.currentVersionNumber,
     );
@@ -74,24 +72,112 @@ export class ApplyEditsToArtifactUseCase {
       );
     }
 
-    const content = this.applyEdits(currentVersion.content, command.edits);
-
-    // Sanitize and save using UpdateArtifactUseCase
-    const updateCommand = new UpdateArtifactCommand({
-      artifactId: command.artifactId,
-      content: content,
-      authorType: command.authorType,
-      linkedThreadId: command.linkedThreadId,
+    return await this.writeEdits(artifact, currentVersion.content, {
+      command,
+      userId,
     });
+  }
 
-    const result = await this.updateArtifactUseCase.execute(updateCommand);
-    // Content is always provided here so result is always an ArtifactVersion
-    return result as ArtifactVersion;
+  /**
+   * In an anonymous artifact, `old_text` and `new_text` of a run carry the
+   * chat's placeholders; they are translated into the artifact's before the
+   * edits are matched against the stored content, and the dictionary entries
+   * they add are stored with the version.
+   */
+  private async writeEdits(
+    artifact: Artifact,
+    currentContent: string,
+    { command, userId }: { command: ApplyEditsToArtifactCommand; userId: UUID },
+  ): Promise<ArtifactVersion> {
+    const edit = (edits: readonly ArtifactEdit[]) =>
+      this.validateContentLength(
+        prepareContentForWrite(
+          artifact.type,
+          this.applyEdits(currentContent, edits),
+        ),
+      );
+    if (!artifact.isAnonymous || !command.run) {
+      return this.addVersion(command, userId, edit(command.edits), []);
+    }
+    const draft = await this.artifactPlaceholdersService.fromChat(
+      command.run.threadId,
+      (translate) => {
+        const edits = command.edits.map((e) => ({
+          oldText: translate(e.oldText),
+          newText: translate(e.newText),
+        }));
+        return edit(edits);
+      },
+    );
+    return this.artifactPlaceholdersService.write(
+      artifact.id,
+      draft,
+      (content, piiMasks) =>
+        this.addVersion(
+          command,
+          userId,
+          this.validateContentLength(content),
+          piiMasks,
+        ),
+    );
+  }
+
+  private async addVersion(
+    command: ApplyEditsToArtifactCommand,
+    userId: UUID,
+    content: string,
+    piiMasks: ArtifactPiiMask[],
+  ): Promise<ArtifactVersion> {
+    return addVersionWithRetry({
+      repository: this.artifactsRepository,
+      logger: this.logger,
+      artifactId: command.artifactId,
+      buildVersion: async () => {
+        const freshArtifact = await this.artifactsRepository.findById(
+          command.artifactId,
+          userId,
+          runLookup(command.run),
+        );
+        if (!freshArtifact) {
+          throw new ArtifactNotFoundError(command.artifactId);
+        }
+        // Translating and masking take time; a write that landed meanwhile
+        // must not be overwritten by edits made against the older version.
+        this.assertExpectedVersion(command, freshArtifact);
+        return {
+          expectedCurrentVersionNumber: freshArtifact.currentVersionNumber,
+          piiMasks,
+          version: new ArtifactVersion({
+            artifactId: freshArtifact.id,
+            versionNumber: freshArtifact.currentVersionNumber + 1,
+            content,
+            authorType: command.authorType,
+            authorId: command.authorType === AuthorType.USER ? userId : null,
+          }),
+        };
+      },
+    });
+  }
+
+  private assertExpectedVersion(
+    command: ApplyEditsToArtifactCommand,
+    artifact: Artifact,
+  ): void {
+    if (
+      command.expectedVersionNumber !== undefined &&
+      command.expectedVersionNumber !== artifact.currentVersionNumber
+    ) {
+      throw new ArtifactExpectedVersionMismatchError(
+        artifact,
+        command.expectedVersionNumber,
+        artifact.currentVersionNumber,
+      );
+    }
   }
 
   private applyEdits(
     originalContent: string,
-    edits: ApplyEditsToArtifactCommand['edits'],
+    edits: readonly ArtifactEdit[],
   ): string {
     let content = originalContent;
 
@@ -118,13 +204,16 @@ export class ApplyEditsToArtifactUseCase {
         content.substring(index + oldText.length);
     }
 
+    return this.validateContentLength(content);
+  }
+
+  private validateContentLength(content: string): string {
     if (content.length > ARTIFACT_MAX_CONTENT_LENGTH) {
       throw new ArtifactContentTooLargeError(
         content.length,
         ARTIFACT_MAX_CONTENT_LENGTH,
       );
     }
-
     return content;
   }
 

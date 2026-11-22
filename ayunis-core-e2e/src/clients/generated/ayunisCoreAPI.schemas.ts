@@ -6133,6 +6133,15 @@ export interface ArtifactVersionResponseDto {
   createdAt: string;
 }
 
+export interface ArtifactPiiMaskResponseDto {
+  /** The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}} */
+  token: string;
+  /** The real value the placeholder stands for */
+  value: string;
+  /** PII category of the value */
+  category: PiiCategory;
+}
+
 /**
  * The kind of artifact — document (HTML) or diagram (mermaid)
  */
@@ -6161,10 +6170,14 @@ export interface ArtifactResponseDto {
      * @nullable
      */
   letterheadId?: string | null;
+  /** Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks */
+  isAnonymous: boolean;
   /** Current version number */
   currentVersionNumber: number;
   /** All versions of this artifact (included when fetching by ID) */
   versions?: ArtifactVersionResponseDto[];
+  /** The anonymous artifact's own placeholder dictionary (included with the versions) */
+  piiMasks?: ArtifactPiiMaskResponseDto[];
   /** When the artifact was created */
   createdAt: string;
   /** When the artifact was last updated */

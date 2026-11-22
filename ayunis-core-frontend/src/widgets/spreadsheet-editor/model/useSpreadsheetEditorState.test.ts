@@ -42,6 +42,7 @@ function artifact(
     threadId: 'thread-id',
     userId: 'user-id',
     title: id,
+    isAnonymous: false,
     currentVersionNumber,
     versions,
     createdAt: '2026-01-01T00:00:00.000Z',
