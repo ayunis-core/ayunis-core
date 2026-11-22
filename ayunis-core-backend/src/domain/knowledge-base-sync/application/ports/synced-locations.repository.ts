@@ -49,13 +49,14 @@ export abstract class SyncedLocationsRepository {
   abstract pause(id: UUID, until: Date): Promise<void>;
 
   /**
-   * Takes up to `limit` locations whose sync is due at `now` and that are not
-   * paused, oldest due first, and moves their next sync to their provider's
-   * in `next`, so a concurrent call takes others.
+   * Takes up to `limit` locations of the providers in `next` whose sync is
+   * due at `now` and that are not paused, oldest due first, and moves their
+   * next sync to their provider's in `next`, so a concurrent call takes
+   * others.
    */
   abstract claimDue(
     now: Date,
-    next: NextSyncs,
+    next: Partial<NextSyncs>,
     limit: number,
   ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]>;
 

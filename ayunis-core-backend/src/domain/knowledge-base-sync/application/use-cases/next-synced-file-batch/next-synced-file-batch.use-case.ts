@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { FeatureFlag } from 'src/config/features.config';
 import { UnexpectedKnowledgeBaseSyncError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { NextSyncedFileBatchQuery } from './next-synced-file-batch.query';
 
@@ -16,7 +15,7 @@ export const SYNCED_FILE_BATCH_SIZE = 20;
  * after the previous batch, so a run feeds each file at most once and ends.
  * A file whose document is behind its version is fed, also one whose
  * earlier job ended without processing it. Empty once every file is fed, the
- * location is gone or no longer accessible, or connectors are switched off.
+ * location is gone or no longer accessible, or its provider is switched off.
  */
 @Injectable()
 export class NextSyncedFileBatchUseCase {
@@ -24,16 +23,18 @@ export class NextSyncedFileBatchUseCase {
 
   constructor(
     private readonly repository: SyncedLocationsRepository,
-    private readonly configService: ConfigService,
+    private readonly providers: EnabledSyncProviders,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseSyncError)
   async execute(query: NextSyncedFileBatchQuery): Promise<SyncedFileJobData[]> {
     this.logger.log({ locationId: query.locationId }, 'execute');
-    if (!this.configService.get<boolean>(`features.${FeatureFlag.Connectors}`))
-      return [];
     const location = await this.repository.findById(query.locationId);
-    if (location?.state !== SyncedLocationState.ACTIVE) return [];
+    if (
+      location?.state !== SyncedLocationState.ACTIVE ||
+      !this.providers.includes(location.provider)
+    )
+      return [];
     const files = await this.repository.findFilesToProcess(
       location.id,
       query.afterFileId,

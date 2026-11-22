@@ -18,7 +18,7 @@ export enum StartSyncedFileProcessingOutcome {
   UNPROCESSABLE = 'unprocessable',
   /** The job is outdated: file, document or version moved on, or are gone. */
   SKIPPED = 'skipped',
-  /** Connectors are switched off; nothing was done. */
+  /** The location's provider is switched off; nothing was done. */
   DISABLED = 'disabled',
 }
 

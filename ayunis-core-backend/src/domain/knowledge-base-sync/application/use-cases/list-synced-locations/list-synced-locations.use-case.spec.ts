@@ -1,11 +1,10 @@
 import { ConnectorProduct } from 'src/domain/connectors/domain/connector-product.enum';
 import { ConnectorStatus } from 'src/domain/connectors/domain/connector-status.enum';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { KnowledgeBaseSyncDisabledError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import {
   CONNECTOR_ID,
   createSyncHarness,
-  featureConfig,
+  enabledProviders,
   KNOWLEDGE_BASE_ID,
   ORG_ID,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
@@ -40,7 +39,7 @@ describe('ListSyncedLocationsUseCase', () => {
             },
           ]),
       } as never,
-      featureConfig(options.connectorsEnabled ?? true),
+      enabledProviders(options.connectorsEnabled ?? true),
     ).execute(new ListSyncedLocationsQuery(KNOWLEDGE_BASE_ID));
   }
 
@@ -93,9 +92,13 @@ describe('ListSyncedLocationsUseCase', () => {
     ).rejects.toBeInstanceOf(KnowledgeBaseNotFoundError);
   });
 
-  it('is not available while connectors are switched off', async () => {
+  it('shows no connector locations and offers no products while connectors are switched off', async () => {
+    const harness = createSyncHarness();
+    harness.system.add('Hundesteuer.pdf');
+    await harness.sync();
+
     await expect(
-      listing(createSyncHarness(), { connectorsEnabled: false }),
-    ).rejects.toBeInstanceOf(KnowledgeBaseSyncDisabledError);
+      listing(harness, { connectorsEnabled: false }),
+    ).resolves.toEqual({ locations: [], availableProducts: [] });
   });
 });

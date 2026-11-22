@@ -5,7 +5,6 @@ import {
   ConnectorProduct,
   type SyncedLocationResponseDto,
 } from '@ayunis/api-client/schemas';
-import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { useRemoveSyncedLocation } from '@/widgets/knowledge-base-synced-locations/api/useRemoveSyncedLocation';
 import { useSyncLocationNow } from '@/widgets/knowledge-base-synced-locations/api/useSyncLocationNow';
 import { useSyncedLocations } from '@/widgets/knowledge-base-synced-locations/api/useSyncedLocations';
@@ -14,17 +13,16 @@ import { SyncedLocationItem } from '@/widgets/knowledge-base-synced-locations/ui
 import { SyncedLocationsLoadError } from '@/widgets/knowledge-base-synced-locations/ui/SyncedLocationsLoadError';
 
 /**
- * The SharePoint locations a knowledge base syncs, to show among its
- * documents. Nothing while connectors are off: synced documents then show as
- * ordinary documents.
+ * The locations a knowledge base syncs, to show among its documents. While
+ * connectors are off, the backend leaves out the SharePoint locations, so
+ * their documents show as ordinary documents.
  */
 export function useSyncedSources(knowledgeBaseId: string, disabled: boolean) {
   const { t } = useTranslation('knowledge-bases');
-  const enabled = useIsFeatureEnabled('connectorsEnabled');
   const [syncRequestedAt, setSyncRequestedAt] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { locations, availableProducts, isLoading, loadFailed, refetch } =
-    useSyncedLocations(knowledgeBaseId, { enabled, syncRequestedAt });
+    useSyncedLocations(knowledgeBaseId, { syncRequestedAt });
   const requestSync = () => setSyncRequestedAt(Date.now());
   const { syncNow, isRequestingSync } = useSyncLocationNow(
     knowledgeBaseId,
@@ -34,8 +32,6 @@ export function useSyncedSources(knowledgeBaseId: string, disabled: boolean) {
     useRemoveSyncedLocation(knowledgeBaseId);
   const canAdd =
     !disabled && availableProducts.includes(ConnectorProduct.microsoft_365);
-
-  if (!enabled) return undefined;
 
   return {
     locations: isLoading ? null : locations,

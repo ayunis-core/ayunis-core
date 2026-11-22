@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { FeatureFlag } from 'src/config/features.config';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import {
   SyncedLocationNotFoundError,
@@ -17,6 +15,7 @@ import {
   SyncPlanApplier,
   type AppliedSync,
 } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
+import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
@@ -47,16 +46,16 @@ export class SyncLocationUseCase {
     private readonly sources: SyncSources,
     private readonly checkAcceptance: CheckSourceFileAcceptanceUseCase,
     private readonly applier: SyncPlanApplier,
-    private readonly configService: ConfigService,
+    private readonly providers: EnabledSyncProviders,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseSyncError)
   async execute(command: SyncLocationCommand): Promise<SyncLocationResult> {
     this.logger.log({ locationId: command.locationId }, 'execute');
-    if (!this.configService.get<boolean>(`features.${FeatureFlag.Connectors}`))
-      return { outcome: SyncLocationOutcome.DISABLED };
     const location = await this.repository.findById(command.locationId);
     if (!location) throw new SyncedLocationNotFoundError(command.locationId);
+    if (!this.providers.includes(location.provider))
+      return { outcome: SyncLocationOutcome.DISABLED };
     const now = new Date();
     const pausedUntil = location.pausedAt(now);
     if (pausedUntil)

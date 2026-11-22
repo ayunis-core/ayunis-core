@@ -424,6 +424,15 @@ describe('LocalSyncedLocationsRepository', () => {
       expect((await repository.findById(oldest.id))?.nextSyncAt).toEqual(next);
     });
 
+    it('takes no location of a switched-off provider and leaves its next sync as it is', async () => {
+      const due = await aLocation({ nextSyncAt: at('00:10') });
+
+      expect(await repository.claimDue(now, {}, 10)).toEqual([]);
+      expect((await repository.findById(due.id))?.nextSyncAt).toEqual(
+        at('00:10'),
+      );
+    });
+
     it('leaves a location its running sync holds to a later sweep, without waiting for it', async () => {
       const held = await aLocation({ nextSyncAt: at('00:40') });
       let release!: () => void;

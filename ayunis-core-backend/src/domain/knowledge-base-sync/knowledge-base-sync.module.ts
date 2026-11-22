@@ -11,6 +11,7 @@ import { SyncedLocationLocks } from './application/services/synced-location-lock
 import { SyncedFileDocuments } from './application/services/synced-file-documents.service';
 import { ConnectorSyncSource } from './application/services/connector-sync-source.service';
 import { SyncSources } from './application/services/sync-sources.service';
+import { EnabledSyncProviders } from './application/services/enabled-sync-providers.service';
 import { FailedSourcesDeletedListener } from './application/listeners/failed-sources-deleted.listener';
 import { StartSyncedFileProcessingUseCase } from './application/use-cases/start-synced-file-processing/start-synced-file-processing.use-case';
 import { CompleteSyncedFileProcessingUseCase } from './application/use-cases/complete-synced-file-processing/complete-synced-file-processing.use-case';
@@ -47,6 +48,7 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     SyncedFileDocuments,
     ConnectorSyncSource,
     SyncSources,
+    EnabledSyncProviders,
     FailedSourcesDeletedListener,
     AddSyncedLocationUseCase,
     RemoveSyncedLocationUseCase,

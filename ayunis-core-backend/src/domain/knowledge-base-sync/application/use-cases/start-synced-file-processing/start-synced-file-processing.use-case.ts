@@ -1,12 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { createHash, type UUID } from 'crypto';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import {
   detectFileType,
   getCanonicalMimeType,
 } from 'src/common/util/file-type';
-import { FeatureFlag } from 'src/config/features.config';
 import { UnexpectedKnowledgeBaseSyncError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import {
   SyncSourceOutcome,
@@ -14,6 +12,7 @@ import {
 } from 'src/domain/knowledge-base-sync/application/models/sync-source-results';
 import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { SyncedFileDocuments } from 'src/domain/knowledge-base-sync/application/services/synced-file-documents.service';
 import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
@@ -61,7 +60,7 @@ export class StartSyncedFileProcessingUseCase {
     private readonly getObjectInfo: GetObjectInfoUseCase,
     private readonly documents: SyncedFileDocuments,
     private readonly pauseSourceProcessing: PauseSourceProcessingUseCase,
-    private readonly configService: ConfigService,
+    private readonly providers: EnabledSyncProviders,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseSyncError)
@@ -73,10 +72,10 @@ export class StartSyncedFileProcessingUseCase {
       { syncedFileId: job.syncedFileId, sourceId: job.sourceId },
       'execute',
     );
-    if (!this.configService.get<boolean>(`features.${FeatureFlag.Connectors}`))
-      return { outcome: StartSyncedFileProcessingOutcome.DISABLED };
     const current = await this.currentFile(job);
     if (!current) return { outcome: StartSyncedFileProcessingOutcome.SKIPPED };
+    if (!this.providers.includes(current.location.provider))
+      return { outcome: StartSyncedFileProcessingOutcome.DISABLED };
     const pausedUntil = current.location.pausedAt(new Date());
     if (pausedUntil) {
       // A replacement an earlier attempt left processing waits too; the

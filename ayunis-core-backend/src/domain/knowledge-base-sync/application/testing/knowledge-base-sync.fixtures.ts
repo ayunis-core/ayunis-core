@@ -18,6 +18,7 @@ import type { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/a
 import { SyncReconciler } from 'src/domain/knowledge-base-sync/application/services/sync-reconciler.service';
 import { SyncPlanApplier } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
 import { ConnectorSyncSource } from 'src/domain/knowledge-base-sync/application/services/connector-sync-source.service';
+import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
 import { InMemorySyncedLocationsRepository } from './in-memory-synced-locations.fixtures';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
@@ -293,11 +294,13 @@ export const inlineTransactions = {
   withTransaction: <T>(operation: () => Promise<T>) => operation(),
 } as unknown as TransactionHost<TransactionalAdapterTypeOrm>;
 
-export function featureConfig(connectorsEnabled: boolean): ConfigService {
-  return {
+export function enabledProviders(
+  connectorsEnabled: boolean,
+): EnabledSyncProviders {
+  return new EnabledSyncProviders({
     get: (key: string) =>
       key === 'features.connectorsEnabled' ? connectorsEnabled : undefined,
-  } as unknown as ConfigService;
+  } as unknown as ConfigService);
 }
 
 interface FakeQueue {
@@ -350,7 +353,7 @@ function syncLocationUseCase(
       knowledgeBase.deleteSources as never,
       inlineTransactions,
     ),
-    featureConfig(connectorsEnabled),
+    enabledProviders(connectorsEnabled),
   );
 }
 
@@ -406,7 +409,7 @@ export function createSyncHarness(
   );
   const nextBatch = new NextSyncedFileBatchUseCase(
     repository,
-    featureConfig(connectorsEnabled),
+    enabledProviders(connectorsEnabled),
   );
   return {
     repository,

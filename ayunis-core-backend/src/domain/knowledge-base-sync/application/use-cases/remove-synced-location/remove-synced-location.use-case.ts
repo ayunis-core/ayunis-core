@@ -7,12 +7,14 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 import { AssertKnowledgeBaseWriteAccessQuery } from 'src/domain/knowledge-bases/application/use-cases/assert-knowledge-base-write-access/assert-knowledge-base-write-access.query';
 import { AssertKnowledgeBaseWriteAccessUseCase } from 'src/domain/knowledge-bases/application/use-cases/assert-knowledge-base-write-access/assert-knowledge-base-write-access.use-case';
 import {
+  KnowledgeBaseSyncDisabledError,
   SyncedLocationNotFoundError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { SyncedFileJobsPort } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { DeleteSourcesCommand } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.command';
 import { DeleteSourcesUseCase } from 'src/domain/sources/application/use-cases/delete-sources/delete-sources.use-case';
@@ -20,8 +22,9 @@ import { RemoveSyncedLocationCommand } from './remove-synced-location.command';
 
 /**
  * Removes a location with its documents and their index entries, and its
- * queued sync with the queued processing of its files. Stays available with connectors switched
- * off, so content can always be removed.
+ * queued sync with the queued processing of its files. A location of a
+ * switched-off provider stays, as it is not shown; its documents can be
+ * removed one by one.
  */
 @Injectable()
 export class RemoveSyncedLocationUseCase {
@@ -36,6 +39,7 @@ export class RemoveSyncedLocationUseCase {
     private readonly runs: SyncRunsPort,
     private readonly contextService: ContextService,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
+    private readonly providers: EnabledSyncProviders,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseSyncError)
@@ -48,6 +52,8 @@ export class RemoveSyncedLocationUseCase {
       location.knowledgeBaseId !== command.knowledgeBaseId
     )
       throw new SyncedLocationNotFoundError(command.locationId);
+    if (!this.providers.includes(location.provider))
+      throw new KnowledgeBaseSyncDisabledError();
     await this.writeAccess.execute(
       new AssertKnowledgeBaseWriteAccessQuery(location.knowledgeBaseId),
     );

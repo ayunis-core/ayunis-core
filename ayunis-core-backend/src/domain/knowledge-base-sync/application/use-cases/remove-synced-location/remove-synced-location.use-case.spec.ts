@@ -2,9 +2,13 @@ import { randomUUID, type UUID } from 'crypto';
 import { createMockContextService } from 'src/common/context/testing/context.fixtures';
 import { aUserContext } from 'src/common/context/testing/context.fixtures';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
-import { SyncedLocationNotFoundError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import {
+  KnowledgeBaseSyncDisabledError,
+  SyncedLocationNotFoundError,
+} from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import {
   createSyncHarness,
+  enabledProviders,
   inlineTransactions,
   KNOWLEDGE_BASE_ID,
   ORG_ID,
@@ -31,7 +35,11 @@ describe('RemoveSyncedLocationUseCase', () => {
 
   function removal(
     harness: Awaited<ReturnType<typeof syncedHarness>>,
-    options: { orgId?: typeof ORG_ID; writable?: boolean } = {},
+    options: {
+      orgId?: typeof ORG_ID;
+      writable?: boolean;
+      connectorsEnabled?: boolean;
+    } = {},
   ) {
     return new RemoveSyncedLocationUseCase(
       harness.repository,
@@ -59,6 +67,7 @@ describe('RemoveSyncedLocationUseCase', () => {
         aUserContext({ orgId: options.orgId ?? ORG_ID }),
       ),
       inlineTransactions,
+      enabledProviders(options.connectorsEnabled ?? true),
     );
   }
 
@@ -114,6 +123,19 @@ describe('RemoveSyncedLocationUseCase', () => {
         locationId: harness.location.id,
       }),
     ).rejects.toThrow(SyncedLocationNotFoundError);
+    expect(harness.knowledgeBase.documents.size).toBe(3);
+  });
+
+  it('keeps a connector location and its documents while connectors are switched off', async () => {
+    const harness = await syncedHarness();
+
+    await expect(
+      removal(harness, { connectorsEnabled: false }).execute({
+        knowledgeBaseId: KNOWLEDGE_BASE_ID,
+        locationId: harness.location.id,
+      }),
+    ).rejects.toThrow(KnowledgeBaseSyncDisabledError);
+    expect(harness.repository.locations.size).toBe(1);
     expect(harness.knowledgeBase.documents.size).toBe(3);
   });
 

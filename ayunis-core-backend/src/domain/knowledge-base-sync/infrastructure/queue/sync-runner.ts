@@ -4,10 +4,8 @@ import {
   Logger,
   type OnApplicationBootstrap,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { DelayedError, Job, Queue, WaitingChildrenError } from 'bullmq';
 import { ContextService } from 'src/common/context/services/context.service';
-import { FeatureFlag } from 'src/config/features.config';
 import { SyncedLocationNotFoundError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import { SyncedFileJobsPort } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { FinishLocationSyncCommand } from 'src/domain/knowledge-base-sync/application/use-cases/finish-location-sync/finish-location-sync.command';
@@ -61,7 +59,6 @@ export class SyncRunner implements OnApplicationBootstrap {
     private readonly pauseLocation: PauseSyncedLocationUseCase,
     private readonly syncDueLocations: SyncDueLocationsUseCase,
     private readonly fileJobs: SyncedFileJobsPort,
-    private readonly configService: ConfigService,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -74,14 +71,11 @@ export class SyncRunner implements OnApplicationBootstrap {
     });
   }
 
-  /** With connectors switched off, removes the schedule instead. */
+  /**
+   * Whatever the feature flags: the sweep leaves the locations of switched-off
+   * providers alone.
+   */
   async schedule(every = SYNC_DUE_LOCATIONS_INTERVAL_MS): Promise<void> {
-    if (
-      !this.configService.get<boolean>(`features.${FeatureFlag.Connectors}`)
-    ) {
-      await this.queue.removeJobScheduler(SYNC_DUE_LOCATIONS_SCHEDULER_ID);
-      return;
-    }
     await this.queue.upsertJobScheduler(
       SYNC_DUE_LOCATIONS_SCHEDULER_ID,
       { every },

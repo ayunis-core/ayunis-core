@@ -11,7 +11,7 @@ import {
 import type { SyncRunRequest } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import {
   createSyncHarness,
-  featureConfig,
+  enabledProviders,
   KNOWLEDGE_BASE_ID,
   ORG_ID,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
@@ -49,7 +49,7 @@ describe('SyncLocationNowUseCase', () => {
       createMockContextService(
         aUserContext({ orgId: options.orgId ?? ORG_ID }),
       ),
-      featureConfig(options.connectorsEnabled ?? true),
+      enabledProviders(options.connectorsEnabled ?? true),
     ).execute({
       knowledgeBaseId: options.knowledgeBaseId ?? KNOWLEDGE_BASE_ID,
       locationId: harness.location.id,

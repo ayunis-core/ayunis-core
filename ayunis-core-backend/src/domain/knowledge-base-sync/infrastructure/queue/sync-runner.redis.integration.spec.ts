@@ -10,7 +10,7 @@ import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/applicati
 import {
   CONNECTOR_ID,
   createSyncHarness,
-  featureConfig,
+  enabledProviders,
   KNOWLEDGE_BASE_ID,
   ORG_ID,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
@@ -85,7 +85,7 @@ describeRedis('location syncs against real Redis', () => {
     processFile: (job: Job<SyncedFileJobData>) => Promise<void>,
     options: { name?: string; connectorsEnabled?: boolean } = {},
   ) {
-    const features = featureConfig(options.connectorsEnabled ?? true);
+    const providers = enabledProviders(options.connectorsEnabled ?? true);
     const queue = new Queue(KNOWLEDGE_BASE_SYNC_QUEUE, { connection, prefix });
     const runs = new SyncRunsProducer(queue);
     const runner = new SyncRunner(
@@ -95,12 +95,11 @@ describeRedis('location syncs against real Redis', () => {
       harness.nextBatch,
       new FinishLocationSyncUseCase(harness.repository),
       new PauseSyncedLocationUseCase(harness.repository, {} as never),
-      new SyncDueLocationsUseCase(harness.repository, runs, features),
+      new SyncDueLocationsUseCase(harness.repository, runs, providers),
       new SyncedFileJobsProducer(
         { execute: () => Promise.resolve() } as never,
         queue,
       ),
-      features,
     );
     const worker = new Worker(
       KNOWLEDGE_BASE_SYNC_QUEUE,
@@ -281,18 +280,15 @@ describeRedis('location syncs against real Redis', () => {
     expect(filesProcessedBeforeAsked).toBeLessThanOrEqual(4);
   }, 30_000);
 
-  it('registers no schedule with connectors switched off, and removes one registered before', async () => {
+  it('registers the schedule also with connectors switched off', async () => {
     const harness = createSyncHarness();
-    const on = startInstance(harness, () => Promise.resolve());
-    await on.runner.schedule();
-    expect(await instances[0].queue.getJobSchedulers()).toHaveLength(1);
-
     const off = startInstance(harness, () => Promise.resolve(), {
       connectorsEnabled: false,
     });
+
     await off.runner.schedule();
 
-    expect(await instances[0].queue.getJobSchedulers()).toEqual([]);
+    expect(await instances[0].queue.getJobSchedulers()).toHaveLength(1);
   }, 30_000);
 
   it('waits out the pause a throttling connector asks for, then syncs', async () => {

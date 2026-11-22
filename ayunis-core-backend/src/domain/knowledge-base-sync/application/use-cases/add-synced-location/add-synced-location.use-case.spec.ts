@@ -7,7 +7,7 @@ import {
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import {
   CONNECTOR_ID,
-  featureConfig,
+  enabledProviders,
   InMemorySyncedLocationsRepository,
   KNOWLEDGE_BASE_ID,
   ORG_ID,
@@ -54,7 +54,7 @@ describe('AddSyncedLocationUseCase', () => {
           return Promise.resolve();
         },
       } as never,
-      featureConfig(options.connectorsEnabled ?? true),
+      enabledProviders(options.connectorsEnabled ?? true),
     );
     return { repository, useCase, queued };
   }
