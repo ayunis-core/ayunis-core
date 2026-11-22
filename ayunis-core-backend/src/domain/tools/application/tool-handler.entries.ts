@@ -24,8 +24,10 @@ import { ReadDocumentToolHandler } from './handlers/read-document-tool.handler';
 import { GenerateImageToolHandler } from './handlers/generate-image-tool.handler';
 import { CreateDiagramToolHandler } from './handlers/create-diagram-tool.handler';
 import { UpdateDiagramToolHandler } from './handlers/update-diagram-tool.handler';
+import { ReadDiagramToolHandler } from 'src/domain/tools/application/handlers/read-diagram-tool.handler';
 import { CreateSpreadsheetToolHandler } from './handlers/create-spreadsheet-tool.handler';
 import { UpdateSpreadsheetToolHandler } from './handlers/update-spreadsheet-tool.handler';
+import { ReadSpreadsheetToolHandler } from 'src/domain/tools/application/handlers/read-spreadsheet-tool.handler';
 import { MarketplaceSearchToolHandler } from './handlers/marketplace-search-tool.handler';
 import { SendNotificationToolHandler } from './handlers/send-notification-tool.handler';
 import { AddAnonymizationExceptionToolHandler } from './handlers/add-anonymization-exception-tool.handler';
@@ -53,8 +55,10 @@ import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-to
 import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
 import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { ReadDiagramTool } from 'src/domain/tools/domain/tools/read-diagram-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { ReadSpreadsheetTool } from 'src/domain/tools/domain/tools/read-spreadsheet-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { SendNotificationTool } from 'src/domain/tools/domain/tools/send-notification-tool.entity';
 import { AddAnonymizationExceptionTool } from 'src/domain/tools/domain/tools/add-anonymization-exception-tool.entity';
@@ -89,8 +93,10 @@ const TOOL_HANDLER_PAIRS: readonly (readonly [
   [GenerateImageTool, GenerateImageToolHandler],
   [CreateDiagramTool, CreateDiagramToolHandler],
   [UpdateDiagramTool, UpdateDiagramToolHandler],
+  [ReadDiagramTool, ReadDiagramToolHandler],
   [CreateSpreadsheetTool, CreateSpreadsheetToolHandler],
   [UpdateSpreadsheetTool, UpdateSpreadsheetToolHandler],
+  [ReadSpreadsheetTool, ReadSpreadsheetToolHandler],
   [MarketplaceSearchTool, MarketplaceSearchToolHandler],
   [SendNotificationTool, SendNotificationToolHandler],
   [AddAnonymizationExceptionTool, AddAnonymizationExceptionToolHandler],

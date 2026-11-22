@@ -50,19 +50,9 @@ export class UpdateSpreadsheetToolHandler extends ToolExecutionHandler {
       }
 
       if (error instanceof ArtifactExpectedVersionMismatchError) {
-        // The shared error text tells the model to use read_document, which
-        // does not exist for spreadsheets — give spreadsheet-specific
-        // recovery guidance instead.
-        const actualVersion = error.metadata?.actualVersion;
         throw new ToolExecutionFailedError({
           toolName: tool.name,
-          message:
-            `Version conflict: the spreadsheet is now at version ${String(actualVersion)}. ` +
-            `It has been edited since you last saw it, likely by the user in the editor. ` +
-            `Retry with expected_version set to the current version, and rebuild the full ` +
-            `columns and rows from the latest state visible in the conversation — do not ` +
-            `resend your previous content unchanged, or you may overwrite the user's edits. ` +
-            `If you do not know the user's latest changes, ask the user before updating.`,
+          message: error.message,
           exposeToLLM: true,
         });
       }

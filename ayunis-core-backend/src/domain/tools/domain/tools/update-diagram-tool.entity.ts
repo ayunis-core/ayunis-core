@@ -1,7 +1,7 @@
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 const updateDiagramToolParameters = {
   type: 'object' as const,
@@ -18,7 +18,7 @@ const updateDiagramToolParameters = {
     expected_version: {
       type: 'integer' as const,
       description:
-        'The version number you expect the diagram to be at. Pass the version from your last create/update result. The operation will fail if the diagram has been modified since.',
+        'The version number you expect the diagram to be at. Pass the version from your last create/update result, or from read_diagram. The operation will fail if the diagram has been modified since.',
     },
   },
   required: ['artifact_id', 'content', 'expected_version'],
@@ -39,8 +39,9 @@ export class UpdateDiagramTool extends Tool {
         'Use update_diagram when a diagram already exists in the conversation (was previously created with create_diagram). ' +
         'Use create_diagram instead when the user wants a brand new diagram. ' +
         'Always provide the full updated mermaid source, not a partial diff — diagrams are small enough that full replacement is fine. ' +
-        'You must pass expected_version with the version number from your last tool result. ' +
-        'If the diagram was modified by the user since then, the operation will fail.',
+        'You must pass expected_version with the version number from your last tool result or from read_diagram. ' +
+        'If the diagram was modified by the user since then, the operation will fail. ' +
+        'When you do not know the current version or source, for example because the user edited the diagram, call read_diagram first and base your update on its result.',
       parameters: updateDiagramToolParameters,
       type: ToolType.UPDATE_DIAGRAM,
     });

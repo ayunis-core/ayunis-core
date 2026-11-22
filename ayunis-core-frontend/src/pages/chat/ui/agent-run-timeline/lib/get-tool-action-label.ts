@@ -34,6 +34,19 @@ function asStringList(value: unknown): string | undefined {
   );
 }
 
+const ARTIFACT_TOOL_NAMES: ReadonlySet<string> = new Set([
+  'create_document',
+  'update_document',
+  'edit_document',
+  'read_document',
+  'create_diagram',
+  'update_diagram',
+  'read_diagram',
+  'create_spreadsheet',
+  'update_spreadsheet',
+  'read_spreadsheet',
+]);
+
 export function getToolActionLabel(
   toolUse: ToolUseMessageContent,
   t: TFunction,
@@ -43,52 +56,18 @@ export function getToolActionLabel(
 
   const pastChatLabel = getPastChatActionLabel(name, params, t);
   if (pastChatLabel) return pastChatLabel;
+  if (ARTIFACT_TOOL_NAMES.has(name)) {
+    return {
+      verb: t(`chat.timeline.actions.${name}`),
+      target: asString(params.title),
+    };
+  }
 
   switch (name) {
     case 'create_file':
       return {
         verb: t('chat.timeline.actions.create_file'),
         target: asString(params.filename),
-      };
-    case 'create_document':
-      return {
-        verb: t('chat.timeline.actions.create_document'),
-        target: asString(params.title),
-      };
-    case 'update_document':
-      return {
-        verb: t('chat.timeline.actions.update_document'),
-        target: asString(params.title),
-      };
-    case 'edit_document':
-      return {
-        verb: t('chat.timeline.actions.edit_document'),
-        target: asString(params.title),
-      };
-    case 'read_document':
-      return {
-        verb: t('chat.timeline.actions.read_document'),
-        target: asString(params.title),
-      };
-    case 'create_diagram':
-      return {
-        verb: t('chat.timeline.actions.create_diagram'),
-        target: asString(params.title),
-      };
-    case 'update_diagram':
-      return {
-        verb: t('chat.timeline.actions.update_diagram'),
-        target: asString(params.title),
-      };
-    case 'create_spreadsheet':
-      return {
-        verb: t('chat.timeline.actions.create_spreadsheet'),
-        target: asString(params.title),
-      };
-    case 'update_spreadsheet':
-      return {
-        verb: t('chat.timeline.actions.update_spreadsheet'),
-        target: asString(params.title),
       };
     case 'bar_chart':
     case 'line_chart':

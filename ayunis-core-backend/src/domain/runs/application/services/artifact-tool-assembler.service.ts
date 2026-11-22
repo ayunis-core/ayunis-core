@@ -48,16 +48,16 @@ export class ArtifactToolAssemblerService {
         letterheadSuffix,
       )),
       await this.assembleCreateTool(ToolType.CREATE_DIAGRAM),
-      ...(await this.assembleUpdateToolForType(
+      ...(await this.assembleExistingArtifactTools(
         threadArtifacts.filter((a) => a instanceof DiagramArtifact),
-        ToolType.UPDATE_DIAGRAM,
+        [ToolType.UPDATE_DIAGRAM, ToolType.READ_DIAGRAM],
         'diagrams',
         (a) => `- ${a.id}: "${a.title}"`,
       )),
       await this.assembleCreateTool(ToolType.CREATE_SPREADSHEET),
-      ...(await this.assembleUpdateToolForType(
+      ...(await this.assembleExistingArtifactTools(
         threadArtifacts.filter((a) => a instanceof SpreadsheetArtifact),
-        ToolType.UPDATE_SPREADSHEET,
+        [ToolType.UPDATE_SPREADSHEET, ToolType.READ_SPREADSHEET],
         'spreadsheets',
         async (a) => {
           const full = await this.findArtifactWithVersionsUseCase.execute(
@@ -68,7 +68,7 @@ export class ArtifactToolAssemblerService {
           );
           const warning =
             currentVersion?.authorType === AuthorType.USER
-              ? ' (⚠ user-edited — ask the user for the latest values before updating)'
+              ? ' (⚠ user-edited — use read_spreadsheet before updating)'
               : '';
           return `- ${a.id}: "${a.title}" (current version ${a.currentVersionNumber})${warning}`;
         },
@@ -140,9 +140,9 @@ export class ArtifactToolAssemblerService {
     return tools;
   }
 
-  private async assembleUpdateToolForType(
+  private async assembleExistingArtifactTools(
     artifacts: Artifact[],
-    toolType: ToolType,
+    toolTypes: ToolType[],
     label: string,
     formatLine: (artifact: Artifact) => string | Promise<string>,
   ): Promise<Tool[]> {
@@ -155,11 +155,15 @@ export class ArtifactToolAssemblerService {
     );
     const suffix = `\n\nAvailable ${label} in this conversation:\n${artifactLines.join('\n')}`;
 
-    const tool = await this.assembleToolsUseCase.execute(
-      new AssembleToolCommand({ type: toolType }),
-    );
-    tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
-    return [tool];
+    const tools: Tool[] = [];
+    for (const type of toolTypes) {
+      const tool = await this.assembleToolsUseCase.execute(
+        new AssembleToolCommand({ type }),
+      );
+      tool.descriptionLong = `${tool.descriptionLong ?? tool.description}${suffix}`;
+      tools.push(tool);
+    }
+    return tools;
   }
 
   private async fetchLetterheadsSafe(): Promise<Letterhead[]> {

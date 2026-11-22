@@ -1,7 +1,7 @@
 import { createAjv } from 'src/common/validators/ajv.factory';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
 
 // maxItems values must match MAX_SPREADSHEET_COLUMNS / MAX_SPREADSHEET_ROWS
 // enforced by the artifacts module on every write.
@@ -38,7 +38,7 @@ const updateSpreadsheetToolParameters = {
     expected_version: {
       type: 'integer' as const,
       description:
-        'The version number you expect the spreadsheet to be at. Pass the version from your last create/update result. The operation will fail if the spreadsheet has been modified since.',
+        'The version number you expect the spreadsheet to be at. Pass the version from your last create/update result, or from read_spreadsheet. The operation will fail if the spreadsheet has been modified since.',
     },
   },
   required: ['artifact_id', 'columns', 'rows', 'expected_version'],
@@ -61,8 +61,9 @@ export class UpdateSpreadsheetTool extends Tool {
         'Always provide the complete columns and rows, not a diff — the update replaces the entire spreadsheet. ' +
         'Use numbers for numeric values and null for empty cells. ' +
         'Cells starting with "=" are Excel formulas (headers are row 1, data starts at row 2); prefer formulas over pre-computed aggregates. ' +
-        'You must pass expected_version with the version number from your last tool result. ' +
-        'If the spreadsheet was modified by the user since then, the operation will fail.',
+        'You must pass expected_version with the version number from your last tool result or from read_spreadsheet. ' +
+        'If the spreadsheet was modified by the user since then, the operation will fail. ' +
+        'When you do not know the current version or content, for example because the user edited the spreadsheet, call read_spreadsheet first and build the complete columns and rows from its result.',
       parameters: updateSpreadsheetToolParameters,
       type: ToolType.UPDATE_SPREADSHEET,
     });

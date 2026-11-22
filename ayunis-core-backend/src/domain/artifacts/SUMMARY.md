@@ -96,6 +96,7 @@ artifacts/
 - The HTTP API always writes as `AuthorType.USER`; clients cannot choose the author. Only the artifact tool handlers write as `AuthorType.ASSISTANT`
 - Applying edits performs search-and-replace patches on the current content, creating a new version (errors on ambiguous or missing matches)
 - Reverting copies content from a target version into a new version (non-destructive)
+- A write with a stale expected version fails with `ARTIFACT_EXPECTED_VERSION_MISMATCH`, whose message tells the model to call the read tool for the artifact's type (`read_document`, `read_diagram` or `read_spreadsheet`) and retry
 - Deleting a thread cascade-deletes all its artifacts and versions
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
 - DOCX export uses the same letterhead lookup and puts its artwork behind editable body text. The Word section uses the larger configured margin for each edge across the first and continuation pages, so text can reflow after editing.
