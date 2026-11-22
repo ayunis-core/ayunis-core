@@ -26,6 +26,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     id,
     userId: { type: 'varchar' },
     workspaceId: { type: 'varchar', nullable: true },
+    isAnonymous: { type: 'boolean', default: false },
   },
 });
 export const artifactSchema = new EntitySchema<
@@ -205,11 +206,12 @@ export async function insertChat(
   db: DataSource,
   userId: UUID,
   workspaceId: UUID | null,
+  isAnonymous = false,
 ): Promise<UUID> {
   const chatId = randomUUID();
   await db
     .getRepository(ThreadRecord)
-    .insert({ id: chatId, userId, workspaceId });
+    .insert({ id: chatId, userId, workspaceId, isAnonymous });
   return chatId;
 }
 

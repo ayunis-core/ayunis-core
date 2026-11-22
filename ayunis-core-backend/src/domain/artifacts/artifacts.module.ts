@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ArtifactsController } from './presenters/http/artifacts.controller';
+import { ThreadArtifactsController } from './presenters/http/thread-artifacts.controller';
 import { ArtifactsRepository } from './application/ports/artifacts-repository.port';
 import { DocumentExportModule } from './document-export.module';
 import { SpreadsheetExportPort } from './application/ports/spreadsheet-export.port';
@@ -28,6 +29,7 @@ import { FindArtifactsForRunUseCase } from './application/use-cases/find-artifac
 import { DeleteThreadLinksOutsideScopeUseCase } from './application/use-cases/delete-thread-links-outside-scope/delete-thread-links-outside-scope.use-case';
 import { FindPersonalArtifactsUseCase } from './application/use-cases/find-personal-artifacts/find-personal-artifacts.use-case';
 import { DeleteArtifactUseCase } from './application/use-cases/delete-artifact/delete-artifact.use-case';
+import { AttachArtifactToThreadUseCase } from './application/use-cases/attach-artifact-to-thread/attach-artifact-to-thread.use-case';
 import { UserContentMaskingService } from './application/services/user-content-masking.service';
 import { ArtifactPlaceholdersService } from './application/services/artifact-placeholders.service';
 import { ArtifactMaskAllocationLock } from './application/services/artifact-mask-allocation-lock.service';
@@ -43,7 +45,7 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     AnonymizationSettingsModule,
     WorkspacesModule,
   ],
-  controllers: [ArtifactsController],
+  controllers: [ArtifactsController, ThreadArtifactsController],
   providers: [
     {
       provide: ArtifactsRepository,
@@ -67,6 +69,7 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     DeleteThreadLinksOutsideScopeUseCase,
     FindPersonalArtifactsUseCase,
     DeleteArtifactUseCase,
+    AttachArtifactToThreadUseCase,
     // Services
     UserContentMaskingService,
     ArtifactPlaceholdersService,

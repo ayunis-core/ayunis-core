@@ -105,6 +105,17 @@
     "integrationNotAuthorized": "Authorize this integration in Settings → Integrations first",
     "shared": "Shared",
     "createKnowledgeBase": "Create knowledge base",
+    "attachArtifact": "Attach content",
+    "removeArtifact": "Remove content {{title}}",
+    "artifactPicker": {
+      "title": "Attach content",
+      "descriptionPersonal": "Your personal content from the Library.",
+      "descriptionWorkspace": "The content of this workspace.",
+      "searchPlaceholder": "Search by title",
+      "loadError": "Content could not be loaded",
+      "empty": "No content to attach",
+      "noResults": "No matching content"
+    },
     "noEmbeddingModelEnabled": "To upload documents, an embedding model must be enabled.",
     "cancelTooltip": "Cancel",
     "sendTooltip": "Send",

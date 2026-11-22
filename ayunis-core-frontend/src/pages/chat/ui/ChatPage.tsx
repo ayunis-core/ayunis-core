@@ -42,6 +42,7 @@ import { getThreadsControllerFindAllQueryKey } from '@/shared/api/generated/ayun
 import { useChatThread } from '@/pages/chat/api/useChatThread';
 import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
+import { useComposerArtifacts } from '@/pages/chat/hooks/useComposerArtifacts';
 import type { PendingImage } from '@/pages/chat/api/useMessageSend';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
@@ -150,6 +151,7 @@ export default function ChatPage({
   const { addIntegration, removeIntegration } = useMcpIntegrationAttachment({
     threadId: thread.id,
   });
+  const composerArtifacts = useComposerArtifacts(thread);
   const { unmaskPiiMask } = useUnmaskPiiMask({
     threadId: thread.id,
     onSuccess: (masks) =>
@@ -260,6 +262,10 @@ export default function ChatPage({
         images: imageFiles?.map((img) => img.file),
       });
       chatInputRef.current?.setMessage('');
+      if (!(await composerArtifacts.attachPending())) {
+        failSubmission(thread.id);
+        return;
+      }
       if (hasProcessingSources) {
         deferThreadRun({
           threadId: thread.id,
@@ -398,11 +404,15 @@ export default function ChatPage({
         sources={chatFiles.files}
         knowledgeBases={thread.knowledgeBases}
         mcpIntegrations={thread.mcpIntegrations}
+        {...composerArtifacts.composerProps}
         isAnonymous={thread.isAnonymous}
-        submissionState={getChatInputSubmissionState(
-          isStreaming,
-          pendingSubmission,
-        )}
+        submissionState={
+          // The submission only shows once its run starts; until then the
+          // composer must not take edits or another send.
+          composerArtifacts.isAttaching
+            ? 'submitting'
+            : getChatInputSubmissionState(isStreaming, pendingSubmission)
+        }
         isSendDisabled={isSendDisabled}
         onModelChange={() => {}}
         onFileUpload={chatFiles.upload}
@@ -415,7 +425,9 @@ export default function ChatPage({
           void handleSend(m, imageFiles, voiceInput)
         }
         onCancel={handleSendCancelled}
-        isCancelDisabled={!isRunCancellable && !isDeferred}
+        isCancelDisabled={
+          composerArtifacts.isAttaching || (!isRunCancellable && !isDeferred)
+        }
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isVisionEnabled={isVisionEnabled}
       />

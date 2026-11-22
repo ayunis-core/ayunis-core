@@ -10045,6 +10045,15 @@
             }
           },
           {
+            "name": "isAnonymous",
+            "required": false,
+            "in": "query",
+            "description": "Only anonymous artifacts when true, only normal artifacts when false",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -10145,6 +10154,15 @@
             "schema": {
               "enum": ["document", "diagram", "spreadsheet"],
               "type": "string"
+            }
+          },
+          {
+            "name": "isAnonymous",
+            "required": false,
+            "in": "query",
+            "description": "Only anonymous artifacts when true, only normal artifacts when false",
+            "schema": {
+              "type": "boolean"
             }
           },
           {
@@ -10281,6 +10299,46 @@
         },
         "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
         "tags": ["artifacts"]
+      }
+    },
+    "/threads/{id}/artifacts/{artifactId}": {
+      "post": {
+        "operationId": "ThreadArtifactsController_attach",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "artifactId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact to attach",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The artifact is attached to the thread (also when it was already)"
+          },
+          "400": {
+            "description": "The artifact belongs to another scope or has another mode than the thread"
+          },
+          "404": {
+            "description": "Thread or artifact not found"
+          }
+        },
+        "summary": "Attach an artifact to a chat. Personal chats take the personal artifacts of their user, workspace chats the artifacts of their workspace; the artifact must have the chat’s mode (anonymous or normal)",
+        "tags": ["threads"]
       }
     },
     "/letterheads": {

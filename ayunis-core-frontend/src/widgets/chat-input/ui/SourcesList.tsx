@@ -33,8 +33,10 @@ import {
   AlertCircle,
   Mic,
   Plug,
+  Files,
 } from 'lucide-react';
 import type {
+  ArtifactSummary,
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
@@ -56,9 +58,11 @@ interface SourcesListProps {
   sources: Source[];
   knowledgeBases?: KnowledgeBaseSummary[];
   mcpIntegrations?: IntegrationSummary[];
+  artifacts?: ArtifactSummary[];
   onRemove: (sourceId: string) => void;
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onRemoveIntegration?: (integrationId: string) => void;
+  onRemoveArtifact?: (artifactId: string) => void;
 }
 
 function getSourceIcon(source: {
@@ -86,9 +90,11 @@ export function SourcesList({
   sources,
   knowledgeBases = [],
   mcpIntegrations = [],
+  artifacts = [],
   onRemove,
   onRemoveKnowledgeBase,
   onRemoveIntegration,
+  onRemoveArtifact,
 }: Readonly<SourcesListProps>) {
   const { t } = useTranslation('common');
   const visibleSources = sources.filter(
@@ -98,13 +104,37 @@ export function SourcesList({
   if (
     visibleSources.length === 0 &&
     knowledgeBases.length === 0 &&
-    mcpIntegrations.length === 0
+    mcpIntegrations.length === 0 &&
+    artifacts.length === 0
   ) {
     return null;
   }
 
   return (
     <ScrollFadeContainer>
+      {artifacts.map((artifact) => (
+        <Badge
+          key={`artifact-${artifact.id}`}
+          variant="secondary"
+          data-testid={`chat-artifact-chip-${artifact.id}`}
+        >
+          <Files className="h-3 w-3" />
+          {artifact.title}
+          {onRemoveArtifact && (
+            <button
+              type="button"
+              data-testid="chat-artifact-chip-remove"
+              aria-label={t('chatInput.removeArtifact', {
+                title: artifact.title,
+              })}
+              className="cursor-pointer"
+              onClick={() => onRemoveArtifact(artifact.id)}
+            >
+              <XIcon className="h-3 w-3" />
+            </button>
+          )}
+        </Badge>
+      ))}
       {knowledgeBases.map((kb) => (
         <Badge key={`kb-${kb.id}`} variant="secondary">
           <Brain className="h-3 w-3" />

@@ -22,6 +22,8 @@ export enum ArtifactErrorCode {
   ARTIFACT_INVALID_SPREADSHEET_CONTENT = 'ARTIFACT_INVALID_SPREADSHEET_CONTENT',
   ARTIFACT_EXPORT_TIMEOUT = 'ARTIFACT_EXPORT_TIMEOUT',
   ARTIFACT_UNKNOWN_PLACEHOLDER = 'ARTIFACT_UNKNOWN_PLACEHOLDER',
+  ARTIFACT_OUTSIDE_CHAT_SCOPE = 'ARTIFACT_OUTSIDE_CHAT_SCOPE',
+  ARTIFACT_CHAT_MODE_MISMATCH = 'ARTIFACT_CHAT_MODE_MISMATCH',
   ARTIFACT_UNEXPECTED = 'ARTIFACT_UNEXPECTED',
 }
 
@@ -201,6 +203,28 @@ export class ArtifactUnknownPlaceholderError extends ArtifactError {
       ArtifactErrorCode.ARTIFACT_UNKNOWN_PLACEHOLDER,
       400,
       { placeholderCount: tokens.length, ...metadata },
+    );
+  }
+}
+
+export class ArtifactOutsideChatScopeError extends ArtifactError {
+  constructor(artifactId: string, threadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Artifact '${artifactId}' cannot be attached to chat '${threadId}': a personal chat only takes the user's personal artifacts, a workspace chat only that workspace's artifacts`,
+      ArtifactErrorCode.ARTIFACT_OUTSIDE_CHAT_SCOPE,
+      400,
+      { artifactId, threadId, ...metadata },
+    );
+  }
+}
+
+export class ArtifactChatModeMismatchError extends ArtifactError {
+  constructor(artifactId: string, threadId: string, metadata?: ErrorMetadata) {
+    super(
+      `Artifact '${artifactId}' cannot be attached to chat '${threadId}': anonymous chats only take anonymous artifacts, normal chats only normal artifacts`,
+      ArtifactErrorCode.ARTIFACT_CHAT_MODE_MISMATCH,
+      400,
+      { artifactId, threadId, ...metadata },
     );
   }
 }

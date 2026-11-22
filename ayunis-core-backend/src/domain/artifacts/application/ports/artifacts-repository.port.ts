@@ -10,6 +10,7 @@ export interface ArtifactListOptions {
   /** Matches the title as shown, with the real values of its placeholders. */
   search?: string;
   type?: ArtifactType;
+  isAnonymous?: boolean;
   limit: number;
   offset: number;
 }
@@ -27,6 +28,18 @@ export interface ArtifactLookupOptions {
 export abstract class ArtifactsRepository {
   abstract create(artifact: Artifact): Promise<Artifact>;
   abstract addThreadLink(threadId: UUID, artifactId: UUID): Promise<void>;
+  /**
+   * Links the artifact to the user's chat, unless it is linked already, if
+   * the chat's scope and mode still match the artifact's owner and mode.
+   * Holds both rows while it checks, so a chat moving to another scope at the
+   * same time either sees the link or makes it fail. Returns whether the
+   * artifact is linked to the chat afterwards.
+   */
+  abstract linkToMatchingThread(
+    threadId: UUID,
+    artifactId: UUID,
+    userId: UUID,
+  ): Promise<boolean>;
   abstract findById(
     id: UUID,
     userId: UUID,

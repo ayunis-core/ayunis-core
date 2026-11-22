@@ -7923,6 +7923,10 @@ search?: string;
  */
 type?: ArtifactsControllerFindPersonalType;
 /**
+ * Only anonymous artifacts when true, only normal artifacts when false
+ */
+isAnonymous?: boolean;
+/**
  * Maximum number of artifacts to return
  */
 limit?: number;
@@ -7950,6 +7954,10 @@ search?: string;
  * Filter by type
  */
 type?: ArtifactsControllerFindByWorkspaceType;
+/**
+ * Only anonymous artifacts when true, only normal artifacts when false
+ */
+isAnonymous?: boolean;
 /**
  * Maximum number of artifacts to return
  */

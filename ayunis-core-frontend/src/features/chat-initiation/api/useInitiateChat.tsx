@@ -26,6 +26,10 @@ import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
+import {
+  artifactAttachErrorKey,
+  attachArtifacts,
+} from '@/shared/lib/artifact-attachment';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -73,6 +77,8 @@ interface InitiateChatParams {
   sources: PendingSource[];
   knowledgeBases: KnowledgeBaseSummary[];
   mcpIntegrations: IntegrationSummary[];
+  /** Artifacts to link to the new chat; it must have their scope and mode. */
+  artifactIds?: string[];
   isAnonymous: boolean;
   /** Files the new chat under a workspace ("Projekt"). */
   workspaceId?: string;
@@ -274,6 +280,7 @@ export const useInitiateChat = (options?: {
       sources,
       knowledgeBases,
       mcpIntegrations,
+      artifactIds = [],
       isAnonymous,
       workspaceId,
       origin,
@@ -313,7 +320,8 @@ export const useInitiateChat = (options?: {
     if (
       sources.length === 0 &&
       knowledgeBases.length === 0 &&
-      mcpIntegrations.length === 0
+      mcpIntegrations.length === 0 &&
+      artifactIds.length === 0
     ) {
       await finalizeAndNavigate(thread, params);
       return;
@@ -345,6 +353,17 @@ export const useInitiateChat = (options?: {
         isCancelled,
       );
       if (!integrationsOk || isCancelled()) {
+        stopInitiatingChat();
+        return;
+      }
+
+      const artifactsOk = await attachArtifacts(
+        thread.id,
+        artifactIds,
+        isCancelled,
+        (error) => showError(t(artifactAttachErrorKey(error))),
+      );
+      if (!artifactsOk || isCancelled()) {
         stopInitiatingChat();
         return;
       }

@@ -120,6 +120,22 @@ describe('Listing artifacts by owner (PostgreSQL)', () => {
     expect((await listed(personal(user))).total).toBe(2);
   });
 
+  it('lists only anonymous or only normal artifacts for the picker of a chat in that mode', async () => {
+    const anonymous = await insert(personal(user), 'Bescheid', {
+      isAnonymous: true,
+    });
+    const normal = await insert(personal(user), 'Antrag');
+
+    expect(await listed(personal(user), { isAnonymous: true })).toEqual({
+      ids: [anonymous],
+      total: 1,
+    });
+    expect(await listed(personal(user), { isAnonymous: false })).toEqual({
+      ids: [normal],
+      total: 1,
+    });
+  });
+
   it('searches titles case-insensitively', async () => {
     const match = await insert(personal(user), 'Bauantrag Lindenstraße');
     await insert(personal(user), 'Haushaltsplan');

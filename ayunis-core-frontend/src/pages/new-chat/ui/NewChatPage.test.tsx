@@ -85,6 +85,12 @@ vi.mock('./NewChatPageLayout', () => ({
   default: ({ compose }: { compose: ReactNode }) => compose,
 }));
 vi.mock('@/widgets/chat-input', () => ({
+  usePendingArtifacts: () => ({
+    artifacts: [],
+    add: vi.fn(),
+    remove: vi.fn(),
+    clear: vi.fn(),
+  }),
   default: ({
     modelId,
     onModelChange,

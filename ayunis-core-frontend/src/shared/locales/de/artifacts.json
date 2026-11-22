@@ -138,6 +138,9 @@
       "description": "Bitte laden Sie die Seite neu."
     }
   },
+  "page": {
+    "chatPlaceholder": "Mit diesem Inhalt im Chat weiterarbeiten…"
+  },
   "delete": {
     "button": "Löschen",
     "confirmTitle": "Inhalt löschen?",

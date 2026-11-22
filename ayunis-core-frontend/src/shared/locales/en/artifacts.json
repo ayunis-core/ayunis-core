@@ -138,6 +138,9 @@
       "description": "Please reload the page."
     }
   },
+  "page": {
+    "chatPlaceholder": "Continue working on this content in a chat…"
+  },
   "delete": {
     "button": "Delete",
     "confirmTitle": "Delete content?",

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ChatInput from '@/widgets/chat-input';
+import ChatInput, { usePendingArtifacts } from '@/widgets/chat-input';
+import { ShieldAlert } from 'lucide-react';
+import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import {
   useInitiateChat,
@@ -32,6 +34,16 @@ interface ChatStarterProps extends ChatStarterDefaults {
   workspaceId?: string;
   origin?: CreateThreadOrigin;
   placeholder?: string;
+  /** Links the chat to the artifact; the chat takes its mode. */
+  artifact?: { id: string; isAnonymous: boolean };
+  autoFocus?: boolean;
+  /**
+   * Asked before the chat is created, e.g. to settle unsaved edits on the
+   * page, which leaving for the chat would otherwise stop; false sends nothing.
+   */
+  confirmStart?: () => Promise<boolean>;
+  /** Runs right before the created chat opens. */
+  onStarted?: () => void;
 }
 
 type LocalSource = {
@@ -75,17 +87,24 @@ export function ChatStarter({
   placeholder,
   selectedModelId,
   isEmbeddingModelEnabled,
+  artifact,
+  autoFocus,
+  confirmStart,
+  onStarted,
 }: Readonly<ChatStarterProps>) {
   const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat({
     settleAnimation: false,
+    onSuccess: onStarted,
   });
   const { models } = usePermittedModels();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
 
   const [modelId, setModelId] = useState(selectedModelId);
   const { isAnonymousByDefault } = useAnonymousModeDefault();
-  const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
+  const [isAnonymous, setIsAnonymous] = useState(
+    artifact?.isAnonymous ?? isAnonymousByDefault,
+  );
   const [sources, setSources] = useState<LocalSource[]>([]);
   const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
     KnowledgeBaseSummary[]
@@ -101,6 +120,14 @@ export function ChatStarter({
     isAnonymousEnforced,
   } = useSelectedModel(modelId, models, isAnonymous);
   const isVisionEnabled = selectedModel?.canVision ?? false;
+  const pendingArtifacts = usePendingArtifacts({
+    workspaceId: workspaceId ?? null,
+    isAnonymous: isAnonymous || isAnonymousEnforced,
+  });
+  // A model that enforces anonymous mode would start an anonymous chat, which
+  // cannot take a normal artifact.
+  const isArtifactModeBlocked =
+    !!artifact && !artifact.isAnonymous && isAnonymousEnforced;
 
   function handleFileUpload(files: File[]) {
     const newSources: LocalSource[] = files.map((file) => ({
@@ -131,13 +158,17 @@ export function ChatStarter({
       return;
     }
 
-    void initiateChat({
+    void startChat({
       message,
       images: imageFiles ?? [],
       ...(selectedMode ? { mode: selectedMode } : { modelId: resolvedModelId }),
       sources,
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
+      artifactIds: [
+        ...(artifact ? [artifact.id] : []),
+        ...pendingArtifacts.artifacts.map(({ id }) => id),
+      ],
       isAnonymous,
       workspaceId,
       origin,
@@ -145,6 +176,11 @@ export function ChatStarter({
       voiceInput,
       onSourceStatus: handleSourceStatus,
     });
+  }
+
+  async function startChat(params: Parameters<typeof initiateChat>[0]) {
+    if (confirmStart && !(await confirmStart())) return;
+    await initiateChat(params);
   }
 
   function handleCancel() {
@@ -162,13 +198,32 @@ export function ChatStarter({
   return (
     <div>
       <AcademyGateNotice className="mb-2" />
+      {isArtifactModeBlocked && (
+        <Alert
+          variant="warning"
+          className="mb-2"
+          data-testid="chat-starter-artifact-mode-notice"
+        >
+          <ShieldAlert />
+          <AlertDescription>
+            {t('chat.artifactRequiresNormalModel')}
+          </AlertDescription>
+        </Alert>
+      )}
       <ChatInput
         modelId={modelId}
         sources={sources}
         knowledgeBases={selectedKnowledgeBases}
         mcpIntegrations={selectedIntegrations}
+        artifacts={pendingArtifacts.artifacts}
+        workspaceId={workspaceId ?? null}
+        onAddArtifact={pendingArtifacts.add}
+        onRemoveArtifact={pendingArtifacts.remove}
+        linkedArtifactIds={artifact ? [artifact.id] : undefined}
         submissionState={isCreating ? 'submitting' : 'idle'}
-        isSendDisabled={isAcademyGated || !resolvedModelId}
+        isSendDisabled={
+          isAcademyGated || !resolvedModelId || isArtifactModeBlocked
+        }
         onModelChange={setModelId}
         onSend={handleSend}
         onCancel={handleCancel}
@@ -195,9 +250,11 @@ export function ChatStarter({
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isAnonymous={isAnonymous}
         onAnonymousChange={setIsAnonymous}
+        isAnonymousChangeDisabled={!!artifact}
         isAnonymousEnforced={isAnonymousEnforced}
         isVisionEnabled={isVisionEnabled}
         placeholder={placeholder}
+        autoFocus={autoFocus}
       />
     </div>
   );

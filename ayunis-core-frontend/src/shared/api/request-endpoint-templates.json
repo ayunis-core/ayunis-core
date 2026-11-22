@@ -292,6 +292,7 @@
   "/teams/{teamId}/permitted-models/{id}",
   "/threads",
   "/threads/{id}",
+  "/threads/{id}/artifacts/{artifactId}",
   "/threads/{id}/knowledge-bases/{knowledgeBaseId}",
   "/threads/{id}/mcp-integrations/{mcpIntegrationId}",
   "/threads/{id}/pii-masks/{maskId}/unmask",
