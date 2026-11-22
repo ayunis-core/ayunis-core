@@ -8,10 +8,7 @@ import {
 } from 'src/domain/connectors/application/models/connector-sync-results';
 import { ListConnectorChangesCommand } from 'src/domain/connectors/application/use-cases/list-connector-changes/list-connector-changes.command';
 import { ListConnectorChangesUseCase } from 'src/domain/connectors/application/use-cases/list-connector-changes/list-connector-changes.use-case';
-import {
-  ConnectorItemUnprocessableReason,
-  type ConnectorItem,
-} from 'src/domain/connectors/domain/sync/connector-item';
+import type { ConnectorItem } from 'src/domain/connectors/domain/sync/connector-item';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import {
   SyncedLocationNotFoundError,
@@ -23,6 +20,7 @@ import {
   type AppliedSync,
 } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { skipReasonOf } from 'src/domain/knowledge-base-sync/domain/connector-skip-reason';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { throttlePauseEnd } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
@@ -112,7 +110,7 @@ export class SyncLocationUseCase {
     const listed = new Map(items.map((item) => [item.id, item]));
     for (const item of listed.values()) {
       const reason = item.unprocessableReason
-        ? CONNECTOR_SKIP_REASONS[item.unprocessableReason]
+        ? skipReasonOf(item.unprocessableReason)
         : await this.uploadRejection(item);
       if (reason) rejections.set(item.id, reason);
     }
@@ -146,16 +144,6 @@ export class SyncLocationUseCase {
     };
   }
 }
-
-const CONNECTOR_SKIP_REASONS: Record<
-  ConnectorItemUnprocessableReason,
-  SyncedFileSkipReason
-> = {
-  [ConnectorItemUnprocessableReason.UNSUPPORTED_TYPE]:
-    SyncedFileSkipReason.UNSUPPORTED_TYPE,
-  [ConnectorItemUnprocessableReason.TOO_LARGE]: SyncedFileSkipReason.TOO_LARGE,
-  [ConnectorItemUnprocessableReason.ENCRYPTED]: SyncedFileSkipReason.ENCRYPTED,
-};
 
 const UPLOAD_SKIP_REASONS: Record<SourceFileRejection, SyncedFileSkipReason> = {
   [SourceFileRejection.UNSUPPORTED_TYPE]: SyncedFileSkipReason.UNSUPPORTED_TYPE,
