@@ -71,7 +71,10 @@ export default [
         },
       );
       await openArtifact(context, spreadsheet.id);
-      return context.page.getByTestId('artifact-page');
+      return context.page
+        .getByTestId('artifact-page')
+        .locator('revogr-data .rgCell')
+        .first();
     },
   },
   {
