@@ -34,6 +34,7 @@ describe('SaveMicrosoft365ConnectorUseCase', () => {
   ) {
     const repository: jest.Mocked<ConnectorsRepository> = {
       findAllByOrgId: jest.fn(),
+      findById: jest.fn(),
       findByOrgIdAndProduct: jest.fn(),
       upsert: jest.fn((connector: Connector) => Promise.resolve(connector)),
       updateSetupOfSetUp: jest.fn().mockResolvedValue(setUpConnector),

@@ -44,6 +44,9 @@ import { CompleteKnowledgeBaseUploadUseCase } from './application/use-cases/comp
 import { AddUrlToKnowledgeBaseUseCase } from './application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { RemoveFailedDocumentsFromKnowledgeBaseUseCase } from './application/use-cases/remove-failed-documents-from-knowledge-base/remove-failed-documents-from-knowledge-base.use-case';
+import { AddSyncedDocumentsToKnowledgeBaseUseCase } from './application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.use-case';
+import { AssertKnowledgeBaseWriteAccessUseCase } from './application/use-cases/assert-knowledge-base-write-access/assert-knowledge-base-write-access.use-case';
+import { LockKnowledgeBaseUseCase } from './application/use-cases/lock-knowledge-base/lock-knowledge-base.use-case';
 import { ListKnowledgeBaseDocumentsUseCase } from './application/use-cases/list-knowledge-base-documents/list-knowledge-base-documents.use-case';
 import { QueryKnowledgeBaseUseCase } from './application/use-cases/query-knowledge-base/query-knowledge-base.use-case';
 import { GetKnowledgeBaseDocumentTextUseCase } from './application/use-cases/get-knowledge-base-document-text/get-knowledge-base-document-text.use-case';
@@ -94,6 +97,9 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     RemoveFailedDocumentsFromKnowledgeBaseUseCase,
+    AddSyncedDocumentsToKnowledgeBaseUseCase,
+    AssertKnowledgeBaseWriteAccessUseCase,
+    LockKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,
@@ -137,6 +143,9 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     RemoveFailedDocumentsFromKnowledgeBaseUseCase,
+    AddSyncedDocumentsToKnowledgeBaseUseCase,
+    AssertKnowledgeBaseWriteAccessUseCase,
+    LockKnowledgeBaseUseCase,
     ListKnowledgeBaseDocumentsUseCase,
     QueryKnowledgeBaseUseCase,
     GetKnowledgeBaseDocumentTextUseCase,

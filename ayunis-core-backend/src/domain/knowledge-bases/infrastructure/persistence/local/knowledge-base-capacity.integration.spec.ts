@@ -1,5 +1,7 @@
 import { AddUrlToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { AddUrlToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
+import { AddSyncedDocumentsToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.use-case';
+import { AddSyncedDocumentsToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.command';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
@@ -92,6 +94,19 @@ describe('Knowledge-base capacity across source writers', () => {
     await runner.release();
     await db.destroy();
   });
+
+  // Waits for the competing writer to reach its database lock, not a timer guess.
+  async function competingWriterIsWaiting(): Promise<boolean> {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const rows = await db.query<Array<{ waiting: boolean }>>(
+        "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE $1) AS waiting",
+        [`%${schema}%`],
+      );
+      if (rows[0].waiting) return true;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    return false;
+  }
 
   async function addUrl(
     knowledgeBaseId: ReturnType<typeof randomUUID>,
@@ -198,17 +213,7 @@ describe('Knowledge-base capacity across source writers', () => {
         (error: unknown) => error,
       );
       try {
-        // Wait for the competing writer to reach its database lock, not a timer guess.
-        let waiting = false;
-        for (let attempt = 0; attempt < 100 && !waiting; attempt++) {
-          const rows = await db.query<Array<{ waiting: boolean }>>(
-            "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE $1) AS waiting",
-            [`%${schema}%`],
-          );
-          waiting = rows[0].waiting;
-          if (!waiting) await new Promise((resolve) => setTimeout(resolve, 10));
-        }
-        expect(waiting).toBe(true);
+        expect(await competingWriterIsWaiting()).toBe(true);
       } finally {
         unlock();
       }
@@ -225,6 +230,76 @@ describe('Knowledge-base capacity across source writers', () => {
       ).toBeNull();
     },
   );
+  it('gives synced files only the room left once a racing writer has taken its slot', async () => {
+    const knowledgeBaseId = randomUUID();
+    const rootId = randomUUID();
+    await db.getRepository(KnowledgeBaseRecord).insert({ id: knowledgeBaseId });
+    await db.getRepository(SourceRecord).insert([
+      { id: rootId, knowledgeBaseId },
+      ...Array.from({ length: 489 }, () => ({
+        id: randomUUID(),
+        knowledgeBaseId,
+      })),
+    ]);
+    const pdf = new FileSource({
+      name: 'Statute',
+      type: TextType.FILE,
+      fileType: FileType.PDF,
+      knowledgeBaseId,
+    });
+    let unlock!: () => void;
+    let locked!: () => void;
+    const release = new Promise<void>((resolve) => {
+      unlock = resolve;
+    });
+    const acquired = new Promise<void>((resolve) => {
+      locked = resolve;
+    });
+    const registration = db.transaction(async (manager) => {
+      await selectCrawledFilesWithinCapacity(manager, rootId, [pdf], 500);
+      locked();
+      await release;
+      await manager
+        .getRepository(SourceRecord)
+        .insert({ id: pdf.id, knowledgeBaseId });
+    });
+    await acquired;
+    const createSources = {
+      execute: async ({ fileNames }: { fileNames: string[] }) => {
+        const ids = fileNames.map(() => randomUUID());
+        await transactions
+          .getStore()!
+          .getRepository(SourceRecord)
+          .insert(ids.map((id) => ({ id, knowledgeBaseId })));
+        return ids.map((id) => ({ id }));
+      },
+    };
+    const txHost = {
+      withTransaction: (operation: () => Promise<unknown>) =>
+        db.transaction((manager) => transactions.run(manager, operation)),
+    };
+    const synced = new AddSyncedDocumentsToKnowledgeBaseUseCase(
+      repository,
+      createSources as never,
+      txHost as never,
+    ).execute(
+      new AddSyncedDocumentsToKnowledgeBaseCommand(
+        knowledgeBaseId,
+        Array.from({ length: 20 }, (_, index) => `Plan ${index}.pdf`),
+      ),
+    );
+    try {
+      expect(await competingWriterIsWaiting()).toBe(true);
+    } finally {
+      unlock();
+    }
+    await registration;
+
+    expect(await synced).toHaveLength(9);
+    expect(
+      await db.getRepository(SourceRecord).countBy({ knowledgeBaseId }),
+    ).toBe(500);
+  });
   it('allows an unchanged assignment when the collection is already full', async () => {
     const knowledgeBaseId = randomUUID();
     const id = randomUUID();

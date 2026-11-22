@@ -69,38 +69,39 @@ none of these packages implements the Agent Plugins standard.
 
 ### Domain Modules — Core Business Logic
 
-| Module                                                                          | Summary        | Detail                                                                                                         |
-| ------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- |
-| [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md)                    | Conversations  | Chat session management with organization sharing                                                              |
-| [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)                  | Chat History   | Message storage and retrieval                                                                                  |
-| [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                          | AI Execution   | LLM request tracking, streaming, and chat image upload validation                                              |
-| [models](ayunis-core-backend/src/domain/models/SUMMARY.md)                      | LLM Config     | Multi-provider model management                                                                                |
-| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                        | Capabilities   | Extensible tool system with JSON schema, CSV/text downloads and the Outlook pane's `outlook__` tools           |
-| [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                      | AI Context     | Owner-aware personal, workspace, team and org instruction bundles                                              |
-| [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)    | AI Context     | Owner-aware personal, workspace, team and org document collections                                             |
-| [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                | Ownership      | Shared owner types, team/org access checks and owner constraints for skills, knowledge bases and recordings    |
-| [recordings](ayunis-core-backend/src/domain/recordings/SUMMARY.md)              | Meetings       | Meeting recordings owned by a user, workspace, team or the org: transcript, summary and search in chat         |
-| [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                    | Documents      | File and URL data sources                                                                                      |
-| [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                            | Retrieval      | Embeddings, chunking, semantic search                                                                          |
-| [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)              | Search         | File, URL, and internet search retrieval                                                                       |
-| [storage](ayunis-core-backend/src/domain/storage/SUMMARY.md)                    | Files          | MinIO-based file storage                                                                                       |
-| [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md)                            | Integrations   | Model Context Protocol server connections                                                                      |
-| [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md)                      | Sharing        | Organization-wide resource sharing                                                                             |
-| [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)      | Voice          | Audio transcription service                                                                                    |
-| [speech](ayunis-core-backend/src/domain/speech/SUMMARY.md)                      | Voice          | Streams assistant messages as speech in a voice matching their language                                        |
-| [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                        | Metering       | Token and credit usage tracking                                                                                |
-| [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md)    | Blueprints     | Admin-managed skill templates with distribution modes                                                          |
-| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md)                    | Learning       | Academy chapters, videos, learner confirmations, and completion                                                |
-| [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings) | Privacy Config | Org-level PII whitelist for anonymous mode                                                                     |
-| [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)  | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                              |
-| [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                | Favorites      | User-owned ordered references resolved for navigation                                                          |
-| [memory](ayunis-core-backend/src/domain/memory/SUMMARY.md)                      | AI Context     | Per-user key/value memory the assistant reads in every chat and writes itself (behind a feature flag)          |
-| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)              | Folders        | Member-owned project folders ("Projekte") grouping chats with scoped skills, knowledge bases and instructions  |
-| [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                  | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                      |
-| [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)        | Inbox          | Per-user inbox of routine notifications with media, read state and "Chat about this"                           |
-| [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)        | Release Notes  | Hourly copy of the Announcable release notes, shown as product updates with read state                         |
-| [office-addins](ayunis-core-backend/src/domain/office-addins/SUMMARY.md)        | Office Add-ins | Outlook add-in manifest rendered for this deployment                                                           |
-| [connectors](ayunis-core-backend/src/domain/connectors/SUMMARY.md)              | Connections    | Per-org connections to external products (Microsoft 365) with encrypted credentials (behind a feature flag)    |
+| Module                                                                               | Summary        | Detail                                                                                                        |
+| ------------------------------------------------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------- |
+| [threads](ayunis-core-backend/src/domain/threads/SUMMARY.md)                         | Conversations  | Chat session management with organization sharing                                                             |
+| [messages](ayunis-core-backend/src/domain/messages/SUMMARY.md)                       | Chat History   | Message storage and retrieval                                                                                 |
+| [runs](ayunis-core-backend/src/domain/runs/SUMMARY.md)                               | AI Execution   | LLM request tracking, streaming, and chat image upload validation                                             |
+| [models](ayunis-core-backend/src/domain/models/SUMMARY.md)                           | LLM Config     | Multi-provider model management                                                                               |
+| [tools](ayunis-core-backend/src/domain/tools/SUMMARY.md)                             | Capabilities   | Extensible tool system with JSON schema, CSV/text downloads and the Outlook pane's `outlook__` tools          |
+| [skills](ayunis-core-backend/src/domain/skills/SUMMARY.md)                           | AI Context     | Owner-aware personal, workspace, team and org instruction bundles                                             |
+| [knowledge-bases](ayunis-core-backend/src/domain/knowledge-bases/SUMMARY.md)         | AI Context     | Owner-aware personal, workspace, team and org document collections                                            |
+| [ownership](ayunis-core-backend/src/domain/ownership/SUMMARY.md)                     | Ownership      | Shared owner types, team/org access checks and owner constraints for skills, knowledge bases and recordings   |
+| [recordings](ayunis-core-backend/src/domain/recordings/SUMMARY.md)                   | Meetings       | Meeting recordings owned by a user, workspace, team or the org: transcript, summary and search in chat        |
+| [sources](ayunis-core-backend/src/domain/sources/SUMMARY.md)                         | Documents      | File and URL data sources                                                                                     |
+| [rag](ayunis-core-backend/src/domain/rag/SUMMARY.md)                                 | Retrieval      | Embeddings, chunking, semantic search                                                                         |
+| [retrievers](ayunis-core-backend/src/domain/retrievers/SUMMARY.md)                   | Search         | File, URL, and internet search retrieval                                                                      |
+| [storage](ayunis-core-backend/src/domain/storage/SUMMARY.md)                         | Files          | MinIO-based file storage                                                                                      |
+| [mcp](ayunis-core-backend/src/domain/mcp/SUMMARY.md)                                 | Integrations   | Model Context Protocol server connections                                                                     |
+| [shares](ayunis-core-backend/src/domain/shares/SUMMARY.md)                           | Sharing        | Organization-wide resource sharing                                                                            |
+| [transcriptions](ayunis-core-backend/src/domain/transcriptions/SUMMARY.md)           | Voice          | Audio transcription service                                                                                   |
+| [speech](ayunis-core-backend/src/domain/speech/SUMMARY.md)                           | Voice          | Streams assistant messages as speech in a voice matching their language                                       |
+| [usage](ayunis-core-backend/src/domain/usage/SUMMARY.md)                             | Metering       | Token and credit usage tracking                                                                               |
+| [skill-templates](ayunis-core-backend/src/domain/skill-templates/SUMMARY.md)         | Blueprints     | Admin-managed skill templates with distribution modes                                                         |
+| [academy](ayunis-core-backend/src/domain/academy/SUMMARY.md)                         | Learning       | Academy chapters, videos, learner confirmations, and completion                                               |
+| [anonymization-settings](ayunis-core-backend/src/domain/anonymization-settings)      | Privacy Config | Org-level PII whitelist for anonymous mode                                                                    |
+| [thread-pii-masks](ayunis-core-backend/src/domain/thread-pii-masks/SUMMARY.md)       | Privacy        | Per-thread PII mask dictionary for anonymous mode                                                             |
+| [favorites](ayunis-core-backend/src/domain/favorites/SUMMARY.md)                     | Favorites      | User-owned ordered references resolved for navigation                                                         |
+| [memory](ayunis-core-backend/src/domain/memory/SUMMARY.md)                           | AI Context     | Per-user key/value memory the assistant reads in every chat and writes itself (behind a feature flag)         |
+| [workspaces](ayunis-core-backend/src/domain/workspaces/SUMMARY.md)                   | Folders        | Member-owned project folders ("Projekte") grouping chats with scoped skills, knowledge bases and instructions |
+| [routines](ayunis-core-backend/src/domain/routines/SUMMARY.md)                       | Automation     | User-owned prompts that run unattended on the user's behalf, each run in a routine thread                     |
+| [notifications](ayunis-core-backend/src/domain/notifications/SUMMARY.md)             | Inbox          | Per-user inbox of routine notifications with media, read state and "Chat about this"                          |
+| [release-notes](ayunis-core-backend/src/domain/release-notes/SUMMARY.md)             | Release Notes  | Hourly copy of the Announcable release notes, shown as product updates with read state                        |
+| [office-addins](ayunis-core-backend/src/domain/office-addins/SUMMARY.md)             | Office Add-ins | Outlook add-in manifest rendered for this deployment                                                          |
+| [connectors](ayunis-core-backend/src/domain/connectors/SUMMARY.md)                   | Connections    | Per-org connections to external products (Microsoft 365) with encrypted credentials (behind a feature flag)   |
+| [knowledge-base-sync](ayunis-core-backend/src/domain/knowledge-base-sync/SUMMARY.md) | Synced Sources | Knowledge base locations kept in sync with an external system through a connector (behind a feature flag)     |
 
 ### IAM Modules — Identity & Access Management
 
