@@ -36,7 +36,7 @@ export function IntegrationsList({
   const { toggleIntegration, togglingIds } = useToggleIntegration();
   const { validateIntegration, validatingIds } = useValidateIntegration();
   const marketplace = useMarketplaceConfig();
-  const navigate = useNavigate({ from: '/admin-settings/integrations' });
+  const navigate = useNavigate({ from: '/admin-settings/integrations/' });
   const sortedIntegrations = sortIntegrationsByName(integrations);
   // Resolved during render so the saved integration's page is shown on the
   // first paint; the effect below only brings the URL in line.

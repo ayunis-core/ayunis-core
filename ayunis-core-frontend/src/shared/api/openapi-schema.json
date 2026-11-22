@@ -14813,6 +14813,68 @@
         "tags": ["connectors"]
       }
     },
+    "/connectors/microsoft-365": {
+      "get": {
+        "description": "Tenant and client ID, never the client secret.",
+        "operationId": "ConnectorsController_getMicrosoft365",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft365ConnectorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the Microsoft 365 connection of the organization",
+        "tags": ["connectors"]
+      },
+      "put": {
+        "description": "Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one.",
+        "operationId": "ConnectorsController_saveMicrosoft365",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMicrosoft365ConnectorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft365ConnectorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set up the Microsoft 365 connection or change it",
+        "tags": ["connectors"]
+      },
+      "delete": {
+        "description": "Deletes the stored setup and credentials. What refers to the connection is kept and reconnects when it is set up again.",
+        "operationId": "ConnectorsController_removeMicrosoft365",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove the Microsoft 365 connection",
+        "tags": ["connectors"]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Authenticate user with email and password. Sets authentication cookies on successful login.",
@@ -27065,6 +27127,52 @@
           }
         },
         "required": ["product", "status"]
+      },
+      "Microsoft365ConnectorResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Whether the organization has set up Microsoft 365",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorStatus"
+              }
+            ]
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "Directory (tenant) ID; null while not set up",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Application (client) ID; null while not set up",
+            "nullable": true
+          }
+        },
+        "required": ["status", "tenantId", "clientId"]
+      },
+      "SaveMicrosoft365ConnectorDto": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "description": "Directory (tenant) ID of the Entra tenant",
+            "example": "6f1c2c4e-3c1a-4f4e-9a59-2f1f0b8a7d11"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Application (client) ID of the Entra app registration",
+            "example": "0b8a7d11-2f1f-4f4e-9a59-6f1c2c4e3c1a"
+          },
+          "clientSecret": {
+            "type": "string",
+            "description": "Value of a client secret of the app registration. Required to set up the connection; omit it to keep the stored secret. Never returned.",
+            "writeOnly": true,
+            "maxLength": 1024
+          }
+        },
+        "required": ["tenantId", "clientId"]
       },
       "LoginDto": {
         "type": "object",

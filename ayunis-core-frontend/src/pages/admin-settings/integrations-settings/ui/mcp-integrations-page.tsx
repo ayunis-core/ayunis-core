@@ -50,7 +50,7 @@ export function McpIntegrationsPage({
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const isOutlookAddinEnabled = useIsFeatureEnabled('outlookAddinEnabled');
   const isConnectorsEnabled = useIsFeatureEnabled('connectorsEnabled');
-  const navigate = useNavigate({ from: '/admin-settings/integrations' });
+  const navigate = useNavigate({ from: '/admin-settings/integrations/' });
 
   // Queries
   const {
