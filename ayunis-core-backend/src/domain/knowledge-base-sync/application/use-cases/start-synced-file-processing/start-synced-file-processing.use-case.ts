@@ -7,17 +7,15 @@ import {
   getCanonicalMimeType,
 } from 'src/common/util/file-type';
 import { FeatureFlag } from 'src/config/features.config';
-import {
-  ConnectorSyncOutcome,
-  type ConnectorItemContent,
-} from 'src/domain/connectors/application/models/connector-sync-results';
-import { FetchConnectorItemContentCommand } from 'src/domain/connectors/application/use-cases/fetch-connector-item-content/fetch-connector-item-content.command';
-import { FetchConnectorItemContentUseCase } from 'src/domain/connectors/application/use-cases/fetch-connector-item-content/fetch-connector-item-content.use-case';
 import { UnexpectedKnowledgeBaseSyncError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import {
+  SyncSourceOutcome,
+  type SyncItemContent,
+} from 'src/domain/knowledge-base-sync/application/models/sync-source-results';
 import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncedFileDocuments } from 'src/domain/knowledge-base-sync/application/services/synced-file-documents.service';
-import { skipReasonOf } from 'src/domain/knowledge-base-sync/domain/connector-skip-reason';
+import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
@@ -44,8 +42,8 @@ import {
 
 /**
  * Prepares a queued version of a synced file for the document pipeline: its
- * content is read through the connector and stored as the original of a new
- * hidden replacement of the file's document, which the pipeline then
+ * content is read through the location's source and stored as the original
+ * of a new hidden replacement of the file's document, which the pipeline then
  * processes. Waits while the location is paused, and pauses it while the
  * source system throttles. The document stays as it is until the replacement is settled
  * (`CompleteSyncedFileProcessingUseCase`). Runs without a user.
@@ -56,7 +54,7 @@ export class StartSyncedFileProcessingUseCase {
 
   constructor(
     private readonly repository: SyncedLocationsRepository,
-    private readonly fetchContent: FetchConnectorItemContentUseCase,
+    private readonly sources: SyncSources,
     private readonly uploadObject: UploadOrgObjectUseCase,
     private readonly createReplacement: CreateReplacementSourceUseCase,
     private readonly getSources: GetSourcesByIdsUseCase,
@@ -141,33 +139,29 @@ export class StartSyncedFileProcessingUseCase {
     file: SyncedFile,
     location: SyncedLocation,
   ): Promise<StartSyncedFileProcessingResult> {
-    const content = await this.fetchContent.execute(
-      new FetchConnectorItemContentCommand({
-        connectorId: location.connectorId,
-        orgId: location.orgId,
-        location: location.location,
-        itemId: file.externalId,
-      }),
+    const content = await this.sources.fetchItemContent(
+      location,
+      file.externalId,
     );
     switch (content.outcome) {
-      case ConnectorSyncOutcome.ACCESS_LOST:
+      case SyncSourceOutcome.ACCESS_LOST:
         await this.repository.markNoLongerAccessible(
           location.id,
           location.lastSyncedAt,
         );
         return { outcome: StartSyncedFileProcessingOutcome.ACCESS_LOST };
-      case ConnectorSyncOutcome.THROTTLED: {
+      case SyncSourceOutcome.THROTTLED: {
         const retryAt = throttlePauseEnd(content.retryAt, new Date());
         await this.repository.pause(location.id, retryAt);
         return { outcome: StartSyncedFileProcessingOutcome.THROTTLED, retryAt };
       }
-      case ConnectorSyncOutcome.GONE:
+      case SyncSourceOutcome.GONE:
         await this.documents.remove(job);
         return { outcome: StartSyncedFileProcessingOutcome.GONE };
-      case ConnectorSyncOutcome.UNPROCESSABLE:
-        await this.documents.skip(job, skipReasonOf(content.reason));
+      case SyncSourceOutcome.UNPROCESSABLE:
+        await this.documents.skip(job, content.reason);
         return { outcome: StartSyncedFileProcessingOutcome.UNPROCESSABLE };
-      case ConnectorSyncOutcome.CONTENT:
+      case SyncSourceOutcome.CONTENT:
         return this.storeReplacement(job, file, content);
     }
   }
@@ -177,7 +171,7 @@ export class StartSyncedFileProcessingUseCase {
   private async storeReplacement(
     job: SyncedFileJobData,
     file: SyncedFile,
-    content: ConnectorItemContent,
+    content: SyncItemContent,
   ): Promise<StartSyncedFileProcessingResult> {
     const replacementId = replacementIdOf(job);
     const storageKey = buildSyncedOriginalKey(

@@ -14,6 +14,7 @@ function aLocation(
 ): SyncedLocationResponseDto {
   return {
     id: 'b2c7f1de-0b6a-4d55-9a3e-5c1b2f0e7a11',
+    provider: 'connector',
     product: 'microsoft_365',
     location: 'https://contoso.sharepoint.com/sites/bauamt',
     state: 'active',

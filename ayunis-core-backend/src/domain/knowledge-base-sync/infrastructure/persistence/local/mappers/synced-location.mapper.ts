@@ -1,20 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
-import type { SyncedLocationRecord } from 'src/domain/knowledge-base-sync/infrastructure/persistence/local/schema/synced-location.record';
-
-type SyncedLocationRow = Omit<
-  SyncedLocationRecord,
-  'org' | 'knowledgeBase' | 'connector'
->;
+import type { UUID } from 'crypto';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import type {
+  SyncedLocation,
+  SyncedLocationParams,
+} from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import {
+  ConnectorSyncedLocationRecord,
+  type SyncedLocationRecord,
+} from 'src/domain/knowledge-base-sync/infrastructure/persistence/local/schema/synced-location.record';
 
 @Injectable()
 export class SyncedLocationMapper {
-  toDomain(record: SyncedLocationRow): SyncedLocation {
-    return new SyncedLocation({
+  toDomain(record: SyncedLocationRecord): SyncedLocation {
+    if (record instanceof ConnectorSyncedLocationRecord)
+      return new ConnectorSyncedLocation({
+        ...this.toParams(record),
+        connectorId: record.connectorId as UUID,
+      });
+    throw new Error(`Unknown synced location record subtype for ${record.id}`);
+  }
+
+  /** A record to insert; `createdAt` and `updatedAt` are the database's. */
+  toInsertRecord(location: SyncedLocation): SyncedLocationRecord {
+    if (location instanceof ConnectorSyncedLocation)
+      return Object.assign(new ConnectorSyncedLocationRecord(), {
+        ...this.toRow(location),
+        connectorId: location.connectorId,
+      });
+    throw new Error(`Unknown synced location subtype for ${location.id}`);
+  }
+
+  private toParams(record: SyncedLocationRecord): SyncedLocationParams {
+    return {
       id: record.id,
       orgId: record.orgId,
       knowledgeBaseId: record.knowledgeBaseId,
-      connectorId: record.connectorId,
       location: record.location,
       cursor: record.cursor,
       state: record.state,
@@ -24,17 +45,14 @@ export class SyncedLocationMapper {
       pausedUntil: record.pausedUntil,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
-    });
+    };
   }
 
-  toInsertRow(
-    location: SyncedLocation,
-  ): Omit<SyncedLocationRow, 'createdAt' | 'updatedAt'> {
+  private toRow(location: SyncedLocation) {
     return {
       id: location.id,
       orgId: location.orgId,
       knowledgeBaseId: location.knowledgeBaseId,
-      connectorId: location.connectorId,
       location: location.location,
       cursor: location.cursor,
       state: location.state,

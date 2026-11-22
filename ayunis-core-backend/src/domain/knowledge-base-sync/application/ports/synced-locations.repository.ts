@@ -2,9 +2,10 @@ import type { UUID } from 'crypto';
 import type { SyncedFilesSummary } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import type { NextSyncs } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
 
 export abstract class SyncedLocationsRepository {
-  /** `false` when the knowledge base already syncs it through the connector. */
+  /** `false` when the knowledge base already syncs it from the provider. */
   abstract create(location: SyncedLocation): Promise<boolean>;
 
   abstract findById(id: UUID): Promise<SyncedLocation | null>;
@@ -41,20 +42,20 @@ export abstract class SyncedLocationsRepository {
   /** Marks the location as syncing since `startedAt`, unless it already is. */
   abstract recordSyncStarted(id: UUID, startedAt: Date): Promise<void>;
 
-  /** Ends the location's sync; the next one is due at `nextSyncAt`. */
-  abstract recordSyncEnded(id: UUID, nextSyncAt: Date): Promise<void>;
+  /** Ends the location's sync; the next one is due as its provider's. */
+  abstract recordSyncEnded(id: UUID, next: NextSyncs): Promise<void>;
 
   /** Pauses syncing until `until`, unless it is paused longer already. */
   abstract pause(id: UUID, until: Date): Promise<void>;
 
   /**
    * Takes up to `limit` locations whose sync is due at `now` and that are not
-   * paused, oldest due first, and moves their next sync to `next`, so a
-   * concurrent call takes others.
+   * paused, oldest due first, and moves their next sync to their provider's
+   * in `next`, so a concurrent call takes others.
    */
   abstract claimDue(
     now: Date,
-    next: Date,
+    next: NextSyncs,
     limit: number,
   ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]>;
 

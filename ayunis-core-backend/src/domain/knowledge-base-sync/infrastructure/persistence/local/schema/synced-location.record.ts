@@ -1,16 +1,31 @@
 import type { UUID } from 'crypto';
-import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
+import {
+  Check,
+  ChildEntity,
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  TableInheritance,
+  Unique,
+} from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { ConnectorRecord } from 'src/domain/connectors/infrastructure/persistence/local/schema/connector.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
+import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 
 // The unique constraint leads with knowledgeBaseId and so also serves the
 // knowledge base's FK cascade.
 @Entity({ name: 'knowledge_base_synced_locations' })
-@Unique(['knowledgeBaseId', 'connectorId', 'location'])
-export class SyncedLocationRecord extends BaseRecord {
+@TableInheritance({ column: { type: 'varchar', name: 'provider' } })
+@Unique(['knowledgeBaseId', 'provider', 'location'])
+@Check(
+  `("provider" = '${SyncedLocationProvider.CONNECTOR}') = ("connectorId" IS NOT NULL)`,
+)
+export abstract class SyncedLocationRecord extends BaseRecord {
   @Index()
   @Column({ type: 'uuid' })
   orgId: UUID;
@@ -28,16 +43,6 @@ export class SyncedLocationRecord extends BaseRecord {
   })
   @JoinColumn({ name: 'knowledgeBaseId' })
   knowledgeBase: KnowledgeBaseRecord;
-
-  // The connector outlives a removed connection, so this cascade only runs
-  // with the organization.
-  @Index()
-  @Column({ type: 'uuid' })
-  connectorId: UUID;
-
-  @ManyToOne(() => ConnectorRecord, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'connectorId' })
-  connector: ConnectorRecord;
 
   @Column({ type: 'text' })
   location: string;
@@ -64,4 +69,19 @@ export class SyncedLocationRecord extends BaseRecord {
 
   @Column({ type: 'timestamptz', nullable: true })
   pausedUntil: Date | null;
+}
+
+// Nullable for the rows of other providers, which share the table; the check
+// constraint requires it exactly for connector locations.
+@ChildEntity(SyncedLocationProvider.CONNECTOR)
+export class ConnectorSyncedLocationRecord extends SyncedLocationRecord {
+  // The connector outlives a removed connection, so this cascade only runs
+  // with the organization.
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  connectorId: UUID | null;
+
+  @ManyToOne(() => ConnectorRecord, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'connectorId' })
+  connector: ConnectorRecord | null;
 }

@@ -4,7 +4,8 @@ import type { SyncedFilesSummary } from './synced-files-summary';
 
 export interface SyncedLocationOverview {
   location: SyncedLocation;
-  product: ConnectorProduct;
+  /** The product of a connector location's connector; `null` for others. */
+  product: ConnectorProduct | null;
   files: SyncedFilesSummary;
 }
 

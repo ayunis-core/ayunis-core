@@ -5566,6 +5566,16 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+/**
+ * Where the files come from
+ */
+export type SyncedLocationProvider = typeof SyncedLocationProvider[keyof typeof SyncedLocationProvider];
+
+
+export const SyncedLocationProvider = {
+  connector: 'connector',
+} as const;
+
 export type ConnectorProduct = typeof ConnectorProduct[keyof typeof ConnectorProduct];
 
 
@@ -5607,7 +5617,9 @@ export interface SkippedSyncedFileResponseDto {
 
 export interface SyncedLocationResponseDto {
   id: string;
-  product: ConnectorProduct;
+  /** Where the files come from */
+  provider: SyncedLocationProvider;
+  product: ConnectorProduct | null;
   /** The URL that is synced */
   location: string;
   /** Whether the connector still reaches the location; its documents stay when it does not */

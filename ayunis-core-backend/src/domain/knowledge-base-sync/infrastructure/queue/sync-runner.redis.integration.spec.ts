@@ -17,8 +17,9 @@ import {
 import { FinishLocationSyncUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/finish-location-sync/finish-location-sync.use-case';
 import { PauseSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.use-case';
 import { SyncDueLocationsUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/sync-due-locations/sync-due-locations.use-case';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
-import { SYNC_INTERVAL_MS } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import { SYNC_INTERVALS_MS } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
+import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import {
   KNOWLEDGE_BASE_SYNC_QUEUE,
   SYNCED_FILE_JOB,
@@ -119,8 +120,8 @@ describeRedis('location syncs against real Redis', () => {
     return { runner, runs };
   }
 
-  function addLocation(harness: Harness): SyncedLocation {
-    const location = new SyncedLocation({
+  function addLocation(harness: Harness): ConnectorSyncedLocation {
+    const location = new ConnectorSyncedLocation({
       orgId: ORG_ID,
       knowledgeBaseId: KNOWLEDGE_BASE_ID,
       connectorId: CONNECTOR_ID,
@@ -241,7 +242,7 @@ describeRedis('location syncs against real Redis', () => {
     }
     const location = harness.repository.locations.get(harness.location.id)!;
     expect(location.nextSyncAt.getTime()).toBeGreaterThan(
-      Date.now() + SYNC_INTERVAL_MS - 60_000,
+      Date.now() + SYNC_INTERVALS_MS[SyncedLocationProvider.CONNECTOR] - 60_000,
     );
     expect(
       await instances[0].queue.getJob(syncRunJobId(harness.location.id)),

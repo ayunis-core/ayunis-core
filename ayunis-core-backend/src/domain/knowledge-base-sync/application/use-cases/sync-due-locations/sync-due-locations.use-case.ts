@@ -5,17 +5,17 @@ import { FeatureFlag } from 'src/config/features.config';
 import { UnexpectedKnowledgeBaseSyncError } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
-import { nextSyncAfter } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
+import { nextSyncsAfter } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
 import { SyncDueLocationsCommand } from './sync-due-locations.command';
 
 /** At most this many locations per sweep; the rest follow a sweep later. */
 const SWEEP_BATCH_SIZE = 500;
 
 /**
- * The hourly schedule: queues a sync of every location whose next sync is
- * due and that is not paused. Each due location is taken by one sweep,
- * which moves its next sync an hour on, so a run lost with its queue is
- * retried then; the run itself schedules the next one when it ends.
+ * The schedule: queues a sync of every location whose next sync is due and
+ * that is not paused. Each due location is taken by one sweep, which moves
+ * its next sync on by its provider's interval, so a run lost with its queue
+ * is retried then; the run itself schedules the next one when it ends.
  */
 @Injectable()
 export class SyncDueLocationsUseCase {
@@ -33,7 +33,7 @@ export class SyncDueLocationsUseCase {
       return 0;
     const due = await this.repository.claimDue(
       command.now,
-      nextSyncAfter(command.now),
+      nextSyncsAfter(command.now),
       SWEEP_BATCH_SIZE,
     );
     await this.runs.enqueue(

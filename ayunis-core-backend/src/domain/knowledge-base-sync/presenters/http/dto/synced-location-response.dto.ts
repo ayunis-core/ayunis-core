@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { ConnectorProduct } from 'src/domain/connectors/domain/connector-product.enum';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
+import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 
 export class SkippedSyncedFileResponseDto {
@@ -26,8 +27,20 @@ export class SyncedLocationResponseDto {
   @ApiProperty({ type: 'string', format: 'uuid' })
   id: UUID;
 
-  @ApiProperty({ enum: ConnectorProduct, enumName: 'ConnectorProduct' })
-  product: ConnectorProduct;
+  @ApiProperty({
+    description: 'Where the files come from',
+    enum: SyncedLocationProvider,
+    enumName: 'SyncedLocationProvider',
+  })
+  provider: SyncedLocationProvider;
+
+  // No description: it would become the shared ConnectorProduct schema's.
+  @ApiProperty({
+    enum: ConnectorProduct,
+    enumName: 'ConnectorProduct',
+    nullable: true,
+  })
+  product: ConnectorProduct | null;
 
   @ApiProperty({
     description: 'The URL that is synced',

@@ -25709,6 +25709,11 @@
           }
         }
       },
+      "SyncedLocationProvider": {
+        "type": "string",
+        "enum": ["connector"],
+        "description": "Where the files come from"
+      },
       "ConnectorProduct": {
         "type": "string",
         "enum": ["microsoft_365"]
@@ -25758,7 +25763,16 @@
             "type": "string",
             "format": "uuid"
           },
+          "provider": {
+            "description": "Where the files come from",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SyncedLocationProvider"
+              }
+            ]
+          },
           "product": {
+            "nullable": true,
             "allOf": [
               {
                 "$ref": "#/components/schemas/ConnectorProduct"
@@ -25827,6 +25841,7 @@
         },
         "required": [
           "id",
+          "provider",
           "product",
           "location",
           "state",

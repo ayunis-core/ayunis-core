@@ -18,10 +18,10 @@ import { StorageUnavailableError } from 'src/domain/storage/application/storage.
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { PauseSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.use-case';
 import { ProviderServerError } from 'src/common/errors/provider.errors';
 import {
+  connectorSyncSources,
   createSyncHarness,
   featureConfig,
   inlineTransactions,
@@ -29,6 +29,7 @@ import {
   type FakeDocument,
   type FakeKnowledgeBase,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
+import { withChanges } from 'src/domain/knowledge-base-sync/application/testing/in-memory-synced-locations.fixtures';
 import { SyncedFileProcessingConsumer } from './synced-file-processing.consumer';
 
 const INDEXED = new Set([
@@ -257,9 +258,7 @@ function createProcessingHarness(
     { execute: () => Promise.resolve(true) } as never,
     new StartSyncedFileProcessingUseCase(
       repository,
-      {
-        execute: ({ itemId }: { itemId: string }) => system.fetch(itemId),
-      } as never,
+      connectorSyncSources(system),
       upload as never,
       replacements.create as never,
       replacements.get as never,
@@ -323,7 +322,7 @@ function createProcessingHarness(
       const location = repository.locations.get(harness.location.id)!;
       repository.locations.set(
         location.id,
-        new SyncedLocation({ ...location, pausedUntil: new Date(0) }),
+        withChanges(location, { pausedUntil: new Date(0) }),
       );
     },
     process: (data: SyncedFileJobData, attemptsMade = 0) =>
@@ -774,8 +773,7 @@ describe('SyncedFileProcessingConsumer', () => {
     const location = harness.repository.locations.get(harness.location.id)!;
     harness.repository.locations.set(
       location.id,
-      new SyncedLocation({
-        ...location,
+      withChanges(location, {
         pausedUntil: new Date(Date.now() + 60 * 60_000),
       }),
     );

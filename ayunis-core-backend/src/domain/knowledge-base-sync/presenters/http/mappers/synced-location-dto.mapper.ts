@@ -25,6 +25,7 @@ export function toSyncedLocationDto(
 ): SyncedLocationResponseDto {
   return {
     id: location.id,
+    provider: location.provider,
     product,
     location: location.location,
     state: location.state,

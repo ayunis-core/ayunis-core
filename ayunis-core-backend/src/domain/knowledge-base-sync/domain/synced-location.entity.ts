@@ -1,18 +1,34 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import type { SyncedLocationProvider } from './synced-location-provider.enum';
 import { SyncedLocationState } from './synced-location-state.enum';
+
+export interface SyncedLocationParams {
+  id?: UUID;
+  orgId: UUID;
+  knowledgeBaseId: UUID;
+  location: string;
+  cursor?: string | null;
+  state?: SyncedLocationState;
+  lastSyncedAt?: Date | null;
+  nextSyncAt?: Date;
+  syncingSince?: Date | null;
+  pausedUntil?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 /**
  * One URL a user added to a knowledge base; everything below it is synced
- * through the organization's connector.
+ * through the source of its provider.
  */
-export class SyncedLocation {
+export abstract class SyncedLocation {
+  abstract readonly provider: SyncedLocationProvider;
   readonly id: UUID;
   readonly orgId: UUID;
   readonly knowledgeBaseId: UUID;
-  readonly connectorId: UUID;
   readonly location: string;
-  /** The connector's opaque position; `null` before the first sync. */
+  /** The source's opaque position; `null` before the first sync. */
   readonly cursor: string | null;
   readonly state: SyncedLocationState;
   readonly lastSyncedAt: Date | null;
@@ -28,25 +44,10 @@ export class SyncedLocation {
   readonly createdAt: Date;
   readonly updatedAt: Date;
 
-  constructor(params: {
-    id?: UUID;
-    orgId: UUID;
-    knowledgeBaseId: UUID;
-    connectorId: UUID;
-    location: string;
-    cursor?: string | null;
-    state?: SyncedLocationState;
-    lastSyncedAt?: Date | null;
-    nextSyncAt?: Date;
-    syncingSince?: Date | null;
-    pausedUntil?: Date | null;
-    createdAt?: Date;
-    updatedAt?: Date;
-  }) {
+  constructor(params: SyncedLocationParams) {
     this.id = params.id ?? randomUUID();
     this.orgId = params.orgId;
     this.knowledgeBaseId = params.knowledgeBaseId;
-    this.connectorId = params.connectorId;
     this.location = params.location;
     this.cursor = params.cursor ?? null;
     this.state = params.state ?? SyncedLocationState.ACTIVE;
