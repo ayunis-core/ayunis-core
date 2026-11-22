@@ -91,6 +91,57 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
     });
   }
 
+  async recordSyncStarted(id: UUID, startedAt: Date): Promise<void> {
+    await this.locations
+      .createQueryBuilder()
+      .update()
+      .set({ syncingSince: () => 'COALESCE("syncingSince", :startedAt)' })
+      .where({ id })
+      .setParameters({ startedAt })
+      .execute();
+  }
+
+  async recordSyncEnded(id: UUID, nextSyncAt: Date): Promise<void> {
+    await this.locations.update(id, { syncingSince: null, nextSyncAt });
+  }
+
+  async pause(id: UUID, until: Date): Promise<void> {
+    await this.locations
+      .createQueryBuilder()
+      .update()
+      // GREATEST ignores a NULL.
+      .set({ pausedUntil: () => 'GREATEST("pausedUntil", :until)' })
+      .where({ id })
+      .setParameters({ until })
+      .execute();
+  }
+
+  async claimDue(
+    now: Date,
+    next: Date,
+    limit: number,
+  ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]> {
+    const due = this.locations
+      .createQueryBuilder('due')
+      .select('due.id')
+      .where('due."nextSyncAt" <= :now')
+      .andWhere('(due."pausedUntil" IS NULL OR due."pausedUntil" <= :now)')
+      .orderBy('due."nextSyncAt"', 'ASC')
+      .limit(limit)
+      // A location locked by its running sync is taken by a later call.
+      .setLock('pessimistic_write')
+      .setOnLocked('skip_locked');
+    const result = await this.locations
+      .createQueryBuilder()
+      .update()
+      .set({ nextSyncAt: next })
+      .where(`id IN (${due.getQuery()})`)
+      .setParameters({ now })
+      .returning(['id', 'orgId'])
+      .execute();
+    return result.raw as Pick<SyncedLocation, 'id' | 'orgId'>[];
+  }
+
   async delete(id: UUID): Promise<void> {
     await this.locations.delete(id);
   }
@@ -114,6 +165,22 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
   async findFileById(id: UUID): Promise<SyncedFile | null> {
     const record = await this.files.findOne({ where: { id } });
     return record ? this.fileMapper.toDomain(record) : null;
+  }
+
+  async findFilesToProcess(
+    locationId: UUID,
+    afterFileId: UUID | null,
+    limit: number,
+  ): Promise<SyncedFile[]> {
+    const query = this.files
+      .createQueryBuilder('file')
+      .where({ locationId, sourceId: Not(IsNull()) })
+      .andWhere('file."documentVersion" IS DISTINCT FROM file."version"')
+      .orderBy('file.id', 'ASC')
+      .limit(limit);
+    if (afterFileId) query.andWhere('file.id > :afterFileId', { afterFileId });
+    const records = await query.getMany();
+    return records.map((record) => this.fileMapper.toDomain(record));
   }
 
   async lockFile(id: UUID): Promise<SyncedFile | null> {

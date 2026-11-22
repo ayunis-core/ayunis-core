@@ -7,11 +7,16 @@ import { createHash, type UUID } from 'crypto';
 import {
   SyncedFileJobsPort,
   type SyncedFileJobData,
+  type SyncRunReference,
 } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { AssertOrgActiveUseCase } from 'src/iam/orgs/application/use-cases/assert-org-active/assert-org-active.use-case';
 import { chunk } from 'src/common/util/chunk';
 import { DOCUMENT_JOB_OPTIONS } from 'src/domain/sources/infrastructure/queue/bullmq-job.helpers';
-import { KNOWLEDGE_BASE_SYNC_QUEUE } from './knowledge-base-sync.constants';
+import {
+  KNOWLEDGE_BASE_SYNC_QUEUE,
+  SYNCED_FILE_JOB,
+  SYNCED_FILE_JOB_PRIORITY,
+} from './knowledge-base-sync.constants';
 
 const REMOVAL_BATCH_SIZE = 100;
 
@@ -20,11 +25,14 @@ const REMOVAL_BATCH_SIZE = 100;
 // (access lost, the file changed meanwhile, or failed without settling it,
 // e.g. after its worker died too often) must not keep the next sync from
 // queueing that version again under the same ID. A version whose failure
-// was settled is not queued again anyway.
+// was settled is not queued again anyway. Behind the location syncs on the
+// same queue, so a sync starts without waiting for the files queued before
+// it.
 const SYNCED_FILE_JOB_OPTIONS: JobsOptions = {
   ...DOCUMENT_JOB_OPTIONS,
   removeOnComplete: true,
   removeOnFail: true,
+  priority: SYNCED_FILE_JOB_PRIORITY,
 };
 
 /**
@@ -56,15 +64,25 @@ export class SyncedFileJobsProducer extends SyncedFileJobsPort {
   // Under the organisation lifecycle lock like the other ingestion
   // producers, so no job is created after the organisation is deleted.
   @Transactional()
-  async enqueue(orgId: UUID, jobs: SyncedFileJobData[]): Promise<void> {
+  async enqueue(
+    orgId: UUID,
+    jobs: SyncedFileJobData[],
+    run: SyncRunReference,
+  ): Promise<void> {
     if (jobs.length === 0) return;
     await this.orgAccess.execute({ orgId, lockForLifecycle: true });
     this.logger.log({ orgId, count: jobs.length }, 'Enqueuing synced files');
     await this.queue.addBulk(
       jobs.map((data) => ({
-        name: 'sync-file',
+        name: SYNCED_FILE_JOB,
         data,
-        opts: { jobId: syncedFileJobId(data), ...SYNCED_FILE_JOB_OPTIONS },
+        opts: {
+          jobId: syncedFileJobId(data),
+          ...SYNCED_FILE_JOB_OPTIONS,
+          parent: run,
+          // A file that fails for good does not keep its run from going on.
+          ignoreDependencyOnFailure: true,
+        },
       })),
     );
   }

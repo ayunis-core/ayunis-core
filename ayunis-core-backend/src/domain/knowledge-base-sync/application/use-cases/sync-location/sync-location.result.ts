@@ -1,7 +1,10 @@
 export enum SyncLocationOutcome {
   SYNCED = 'synced',
   ACCESS_LOST = 'access_lost',
+  /** The connector asks to retry later; the location is paused until then. */
   THROTTLED = 'throttled',
+  /** The location is paused; nothing was listed. */
+  PAUSED = 'paused',
   /** Connectors are switched off; nothing was synced. */
   DISABLED = 'disabled',
   /** Another sync of the location was recorded meanwhile; nothing applied. */
@@ -25,6 +28,9 @@ export interface SyncSummary {
 export type SyncLocationResult =
   | { outcome: SyncLocationOutcome.SYNCED; summary: SyncSummary }
   | { outcome: SyncLocationOutcome.ACCESS_LOST }
-  | { outcome: SyncLocationOutcome.THROTTLED; retryAt: Date }
+  | {
+      outcome: SyncLocationOutcome.THROTTLED | SyncLocationOutcome.PAUSED;
+      retryAt: Date;
+    }
   | { outcome: SyncLocationOutcome.DISABLED }
   | { outcome: SyncLocationOutcome.SUPERSEDED };

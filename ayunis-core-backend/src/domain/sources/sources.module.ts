@@ -76,6 +76,7 @@ import { CreateProcessingFileSourcesUseCase } from './application/use-cases/crea
 import { RenameSourcesUseCase } from './application/use-cases/rename-sources/rename-sources.use-case';
 import { LockSourcesUseCase } from './application/use-cases/lock-sources/lock-sources.use-case';
 import { CreateReplacementSourceUseCase } from './application/use-cases/create-replacement-source/create-replacement-source.use-case';
+import { PauseSourceProcessingUseCase } from './application/use-cases/pause-source-processing/pause-source-processing.use-case';
 import { SwapInReplacementSourceUseCase } from './application/use-cases/swap-in-replacement-source/swap-in-replacement-source.use-case';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
 import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
@@ -173,6 +174,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     RenameSourcesUseCase,
     LockSourcesUseCase,
     CreateReplacementSourceUseCase,
+    PauseSourceProcessingUseCase,
     SwapInReplacementSourceUseCase,
   ],
   exports: [
@@ -215,6 +217,7 @@ const SOURCE_UPLOAD_USE_CASES = [
     RenameSourcesUseCase,
     LockSourcesUseCase,
     CreateReplacementSourceUseCase,
+    PauseSourceProcessingUseCase,
     SwapInReplacementSourceUseCase,
   ],
 })

@@ -2,6 +2,11 @@ import { ModelProvider } from 'src/domain/models/domain/value-objects/model-prov
 import { EmbeddingDimensions } from 'src/domain/models/domain/value-objects/embedding-dimensions.enum';
 import { PreparedContentEmbeddings } from 'src/domain/rag/indexers/application/models/prepared-content-embeddings';
 import { StoredFileMismatchError } from 'src/domain/sources/application/sources.errors';
+import { ProcessingDeferredError } from 'src/domain/sources/application/models/document-to-process';
+import {
+  ProviderRequestRejectedError,
+  ProviderServerError,
+} from 'src/common/errors/provider.errors';
 import type { UUID } from 'crypto';
 import type { Job } from 'bullmq';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -169,6 +174,7 @@ describe('DocumentProcessingConsumer worker', () => {
 
 describe('DocumentProcessingConsumer', () => {
   let consumer: DocumentProcessingConsumer;
+  let pipeline: DocumentProcessingPipeline;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -176,31 +182,66 @@ describe('DocumentProcessingConsumer', () => {
     sourceRepository.saveProcessingTextSourceContent.mockResolvedValue(true);
     admitOrgProcessing.execute.mockResolvedValue(true);
 
+    pipeline = new DocumentProcessingPipeline(
+      retrieveFileContentUseCase as never,
+      preflightCheckUseCase as never,
+      splitTextUseCase as never,
+      storedFiles as never,
+      deleteObjectUseCase as never,
+      sourceRepository as never,
+      helper as never,
+      spreadsheetParser as never,
+      new SourceProcessingHeartbeatService(sourceRepository as never),
+      checkpoints as never,
+      earlyEmbedding as never,
+      new RecordingTranscriptExtractor(
+        storedFiles as never,
+        transcribeRecordingUseCase as never,
+        { tempDirectory: undefined } as never,
+      ),
+      transcriptContent as never,
+      { tempDirectory: undefined } as never,
+      eventEmitter as never,
+    );
     consumer = new DocumentProcessingConsumer(
       contextService as never,
       admitOrgProcessing as never,
-      new DocumentProcessingPipeline(
-        retrieveFileContentUseCase as never,
-        preflightCheckUseCase as never,
-        splitTextUseCase as never,
-        storedFiles as never,
-        deleteObjectUseCase as never,
-        sourceRepository as never,
-        helper as never,
-        spreadsheetParser as never,
-        new SourceProcessingHeartbeatService(sourceRepository as never),
-        checkpoints as never,
-        earlyEmbedding as never,
-        new RecordingTranscriptExtractor(
-          storedFiles as never,
-          transcribeRecordingUseCase as never,
-          { tempDirectory: undefined } as never,
-        ),
-        transcriptContent as never,
-        { tempDirectory: undefined } as never,
-        eventEmitter as never,
-      ),
+      pipeline,
     );
+  });
+
+  it('hands an embedding outage back to a caller that backs off, without failing the source on its last attempt', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    helper.index.mockRejectedValueOnce(
+      new ProviderServerError({ provider: 'mistral', upstreamStatus: 503 }),
+    );
+
+    await expect(
+      pipeline.process(makeJob({ attemptsMade: 2 } as never), {
+        ...makeJobData(),
+        deferProviderOutages: true,
+      }),
+    ).rejects.toBeInstanceOf(ProcessingDeferredError);
+    expect(helper.markFailed).not.toHaveBeenCalled();
+    expect(checkpoints.cleanup).not.toHaveBeenCalled();
+  });
+
+  it('fails a source the provider rejects even for a caller that backs off from outages', async () => {
+    sourceRepository.findById.mockResolvedValue(makeSource());
+    helper.index.mockRejectedValueOnce(
+      new ProviderRequestRejectedError({
+        provider: 'mistral',
+        upstreamStatus: 400,
+      }),
+    );
+
+    await expect(
+      pipeline.process(makeJob(), {
+        ...makeJobData(),
+        deferProviderOutages: true,
+      }),
+    ).rejects.not.toBeInstanceOf(ProcessingDeferredError);
+    expect(helper.markFailed).toHaveBeenCalled();
   });
 
   it('cleans saved results when a resumed source has already failed', async () => {

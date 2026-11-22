@@ -19,6 +19,9 @@ export class SyncedLocationMapper {
       cursor: record.cursor,
       state: record.state,
       lastSyncedAt: record.lastSyncedAt,
+      nextSyncAt: record.nextSyncAt,
+      syncingSince: record.syncingSince,
+      pausedUntil: record.pausedUntil,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
     });
@@ -36,6 +39,9 @@ export class SyncedLocationMapper {
       cursor: location.cursor,
       state: location.state,
       lastSyncedAt: location.lastSyncedAt,
+      nextSyncAt: location.nextSyncAt,
+      syncingSince: location.syncingSince,
+      pausedUntil: location.pausedUntil,
     };
   }
 }

@@ -20,7 +20,10 @@ describe('SyncedFileJobsProducer', () => {
     await new SyncedFileJobsProducer(
       { execute: jest.fn().mockResolvedValue(undefined) } as never,
       { addBulk } as never,
-    ).enqueue(orgId, jobs);
+    ).enqueue(orgId, jobs, {
+      id: 'location-run',
+      queue: 'bull:knowledge-base-sync',
+    });
     return (addBulk.mock.calls[0] as [AddedJob[]])[0];
   }
 

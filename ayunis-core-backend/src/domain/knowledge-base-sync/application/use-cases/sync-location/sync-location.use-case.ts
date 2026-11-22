@@ -17,16 +17,15 @@ import {
   SyncedLocationNotFoundError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
-import { SyncedFileJobsPort } from 'src/domain/knowledge-base-sync/application/ports/synced-file-jobs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import {
   SyncPlanApplier,
   type AppliedSync,
 } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
-import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
+import { throttlePauseEnd } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
 import { CheckSourceFileAcceptanceQuery } from 'src/domain/sources/application/use-cases/check-source-file-acceptance/check-source-file-acceptance.query';
 import { CheckSourceFileAcceptanceUseCase } from 'src/domain/sources/application/use-cases/check-source-file-acceptance/check-source-file-acceptance.use-case';
 import { SourceFileRejection } from 'src/domain/sources/application/models/source-file-rejection';
@@ -38,10 +37,10 @@ import {
 } from './sync-location.result';
 
 /**
- * One sync run of a location: the connector's changes since the cursor are
- * reconciled with the location's files and documents. Runs without a user;
- * scheduling it is AYC-1885; `SyncedFileProcessingConsumer` processes the
- * queued files.
+ * The listing of a location's sync: the connector's changes since the cursor
+ * are reconciled with the location's files and documents, and the location
+ * is marked as syncing. Runs without a user, in a run of the sync queue that
+ * then feeds the files to processing (`NextSyncedFileBatchUseCase`).
  */
 @Injectable()
 export class SyncLocationUseCase {
@@ -52,7 +51,6 @@ export class SyncLocationUseCase {
     private readonly listChanges: ListConnectorChangesUseCase,
     private readonly checkAcceptance: CheckSourceFileAcceptanceUseCase,
     private readonly applier: SyncPlanApplier,
-    private readonly jobs: SyncedFileJobsPort,
     private readonly configService: ConfigService,
   ) {}
 
@@ -63,6 +61,11 @@ export class SyncLocationUseCase {
       return { outcome: SyncLocationOutcome.DISABLED };
     const location = await this.repository.findById(command.locationId);
     if (!location) throw new SyncedLocationNotFoundError(command.locationId);
+    const now = new Date();
+    const pausedUntil = location.pausedAt(now);
+    if (pausedUntil)
+      return { outcome: SyncLocationOutcome.PAUSED, retryAt: pausedUntil };
+    await this.repository.recordSyncStarted(location.id, now);
 
     const changes = await this.listChanges.execute(
       new ListConnectorChangesCommand({
@@ -79,11 +82,11 @@ export class SyncLocationUseCase {
           location.lastSyncedAt,
         );
         return { outcome: SyncLocationOutcome.ACCESS_LOST };
-      case ConnectorSyncOutcome.THROTTLED:
-        return {
-          outcome: SyncLocationOutcome.THROTTLED,
-          retryAt: changes.retryAt,
-        };
+      case ConnectorSyncOutcome.THROTTLED: {
+        const retryAt = throttlePauseEnd(changes.retryAt, new Date());
+        await this.repository.pause(location.id, retryAt);
+        return { outcome: SyncLocationOutcome.THROTTLED, retryAt };
+      }
       case ConnectorSyncOutcome.CHANGES:
         return this.reconcile(location, changes);
     }
@@ -96,7 +99,6 @@ export class SyncLocationUseCase {
     const rejections = await this.rejections(changes.items);
     const applied = await this.applier.apply(location, changes, rejections);
     if (!applied) return { outcome: SyncLocationOutcome.SUPERSEDED };
-    await this.enqueue(location, applied.plan.files);
     const summary = this.summarize(applied);
     this.logger.log({ locationId: location.id, ...summary }, 'Synced');
     return { outcome: SyncLocationOutcome.SYNCED, summary };
@@ -129,35 +131,6 @@ export class SyncLocationUseCase {
       }),
     );
     return rejection ? UPLOAD_SKIP_REASONS[rejection] : null;
-  }
-
-  /**
-   * After the commit, so a worker never sees a file before its document.
-   * Every document not yet processed at its file's version is queued on
-   * every sync, which queues nothing twice but recovers jobs a failed or
-   * interrupted enqueue lost.
-   */
-  private async enqueue(
-    location: SyncedLocation,
-    files: SyncedFile[],
-  ): Promise<void> {
-    await this.jobs.enqueue(
-      location.orgId,
-      files.flatMap((file) =>
-        file.sourceId && file.needsProcessing()
-          ? [
-              {
-                orgId: location.orgId,
-                knowledgeBaseId: location.knowledgeBaseId,
-                locationId: location.id,
-                syncedFileId: file.id,
-                sourceId: file.sourceId,
-                version: file.version,
-              },
-            ]
-          : [],
-      ),
-    );
   }
 
   private summarize({ plan, createdSourceIds }: AppliedSync): SyncSummary {
