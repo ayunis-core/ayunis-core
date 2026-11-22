@@ -4,10 +4,15 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import type { UUID } from 'crypto';
 import { EntityManager, Repository } from 'typeorm';
-import { SourceBatchWriteRepository } from 'src/domain/sources/application/ports/source-batch-write.repository';
+import {
+  SourceBatchWriteRepository,
+  type ReplacedSource,
+} from 'src/domain/sources/application/ports/source-batch-write.repository';
+import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { insertCrawledFileSources } from './crawled-file-sources.helpers';
-import { SourceRecord } from './schema/source.record';
+import { SourceRecord, TextSourceRecord } from './schema/source.record';
+import { FileSourceDetailsRecord } from './schema/text-source-details.record';
 
 @Injectable()
 export class LocalSourceBatchWriteRepository extends SourceBatchWriteRepository {
@@ -43,11 +48,68 @@ export class LocalSourceBatchWriteRepository extends SourceBatchWriteRepository 
     );
   }
 
-  async lock(sourceIds: UUID[]): Promise<void> {
-    if (sourceIds.length === 0) return;
-    await this.manager.query(
-      `SELECT 1 FROM "sources" WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
+  async lock(sourceIds: UUID[]): Promise<UUID[]> {
+    if (sourceIds.length === 0) return [];
+    const rows = await this.manager.query<{ id: UUID }[]>(
+      `SELECT id FROM "sources" WHERE id = ANY($1) ORDER BY id FOR UPDATE`,
       [sourceIds],
     );
+    return rows.map(({ id }) => id);
+  }
+
+  async insertReplacement(
+    replacement: FileSource,
+    replacedId: UUID,
+  ): Promise<void> {
+    await this.manager.getRepository(TextSourceRecord).insert({
+      id: replacement.id,
+      name: replacement.name,
+      createdBy: replacement.createdBy,
+      status: replacement.status,
+      processingStartedAt: replacement.processingStartedAt,
+      storageKey: replacement.storageKey,
+      knowledgeBaseId: null,
+      replacesSourceId: replacedId,
+      textType: replacement.textType,
+      fileType: replacement.fileType,
+      url: replacement.url,
+    });
+    await this.manager.getRepository(FileSourceDetailsRecord).insert({
+      id: replacement.id,
+      fileType: replacement.fileType,
+      source: { id: replacement.id },
+      text: '',
+    });
+  }
+
+  async findReplacementIds(replacedId: UUID): Promise<UUID[]> {
+    const rows = await this.manager.getRepository(SourceRecord).find({
+      select: { id: true },
+      where: { replacesSourceId: replacedId },
+    });
+    return rows.map(({ id }) => id);
+  }
+
+  async moveReplacementIn(
+    replacementId: UUID,
+    name: string,
+  ): Promise<ReplacedSource | null> {
+    const [rows]: [ReplacedSource[], number] = await this.manager.query(
+      `UPDATE "sources" AS r
+       SET "knowledgeBaseId" = o."knowledgeBaseId", "replacesSourceId" = NULL,
+           "name" = $2, "updatedAt" = now()
+       FROM "sources" AS o
+       WHERE r.id = $1 AND o.id = r."replacesSourceId"
+         AND (r.status IN ($3, $4) OR (r.status = $5 AND o.status NOT IN ($3, $4)))
+       RETURNING o.id AS "id", o."storageKey" AS "storageKey"`,
+      [
+        replacementId,
+        name,
+        SourceStatus.READY,
+        SourceStatus.REINDEXING,
+        SourceStatus.FAILED,
+      ],
+    );
+    return rows.at(0) ?? null;
   }
 }

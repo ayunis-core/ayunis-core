@@ -23,6 +23,20 @@ export function buildSourceUploadKey(
   return `${orgId}/uploads/${sessionId}/${uploadObjectFileName(fileName)}`;
 }
 
+/**
+ * Synced files' originals live beside the uploaded ones, not under
+ * `uploads/`, whose sweep aborts every multipart upload no session claims.
+ */
+export const SYNCED_ORIGINALS_SEGMENT = 'synced';
+
+export function buildSyncedOriginalKey(
+  orgId: string,
+  sourceId: string,
+  fileName: string,
+): string {
+  return `${orgId}/${SYNCED_ORIGINALS_SEGMENT}/${sourceId}/${uploadObjectFileName(fileName)}`;
+}
+
 /** The last segment of the key a file with this name is uploaded under. */
 export function uploadObjectFileName(fileName: string): string {
   const sanitizedFileName = path

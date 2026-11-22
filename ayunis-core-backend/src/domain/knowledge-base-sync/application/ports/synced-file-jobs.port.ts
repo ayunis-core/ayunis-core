@@ -17,4 +17,12 @@ export abstract class SyncedFileJobsPort {
    * file imported again after its document was removed gets a new job.
    */
   abstract enqueue(orgId: UUID, jobs: SyncedFileJobData[]): Promise<void>;
+
+  /**
+   * Best effort: removes the jobs of these document versions that wait or
+   * are delayed; a running one stops once it sees its document gone.
+   */
+  abstract remove(
+    jobs: Pick<SyncedFileJobData, 'sourceId' | 'version'>[],
+  ): Promise<void>;
 }

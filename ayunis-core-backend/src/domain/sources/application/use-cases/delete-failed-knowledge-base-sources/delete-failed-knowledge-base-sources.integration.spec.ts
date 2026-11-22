@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataSource, EntitySchema } from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import 'src/config/env';
@@ -20,6 +21,7 @@ import type { IndexerPort } from 'src/domain/rag/indexers/application/ports/inde
 import { IndexType } from 'src/domain/rag/indexers/domain/value-objects/index-type.enum';
 import type { CleanupSourceProcessingCommand } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.command';
 import type { CleanupSourceProcessingUseCase } from 'src/domain/sources/application/use-cases/cleanup-source-processing/cleanup-source-processing.use-case';
+import { FailedSourcesDeletedEvent } from 'src/domain/sources/application/events/failed-sources-deleted.event';
 import { DeleteFailedKnowledgeBaseSourcesUseCase } from './delete-failed-knowledge-base-sources.use-case';
 import { DeleteFailedKnowledgeBaseSourcesCommand } from './delete-failed-knowledge-base-sources.command';
 
@@ -53,6 +55,7 @@ describe('DeleteFailedKnowledgeBaseSourcesUseCase against PostgreSQL', () => {
   let sources: LocalSourceRepository;
   let index: ParentChildIndexerRepository;
   let cleanup: { execute: jest.Mock };
+  const events = { emitAsync: jest.fn().mockResolvedValue([]) };
   let useCase: DeleteFailedKnowledgeBaseSourcesUseCase;
 
   beforeAll(async () => {
@@ -112,12 +115,14 @@ describe('DeleteFailedKnowledgeBaseSourcesUseCase against PostgreSQL', () => {
       sources,
       cleanup as unknown as CleanupSourceProcessingUseCase,
       txHost,
+      events as unknown as EventEmitter2,
     );
   }
 
   afterEach(() => {
     jest.restoreAllMocks();
     cleanup.execute.mockClear();
+    events.emitAsync.mockReset().mockResolvedValue([]);
   });
   afterAll(async () => {
     if (!db?.isInitialized) return;
@@ -190,6 +195,22 @@ describe('DeleteFailedKnowledgeBaseSourcesUseCase against PostgreSQL', () => {
     );
     expect(await remaining(all)).toEqual(kept);
     expect(await indexedDocuments(all)).toEqual(kept);
+  });
+
+  it('tells listeners which failed sources it removed, inside the deletion, so a failing one keeps them', async () => {
+    const knowledgeBaseId = randomUUID();
+    const failed = await insertSource(knowledgeBaseId, SourceStatus.FAILED);
+    events.emitAsync.mockRejectedValueOnce(new Error('listener failed'));
+
+    await expect(useCase.execute(command(knowledgeBaseId))).rejects.toThrow();
+    expect(await remaining([failed])).toEqual([failed]);
+
+    await useCase.execute(command(knowledgeBaseId));
+    expect(events.emitAsync).toHaveBeenLastCalledWith(
+      FailedSourcesDeletedEvent.EVENT_NAME,
+      new FailedSourcesDeletedEvent([failed]),
+    );
+    expect(await remaining([failed])).toEqual([]);
   });
 
   it('releases the processing files and originals of removed sources after commit', async () => {

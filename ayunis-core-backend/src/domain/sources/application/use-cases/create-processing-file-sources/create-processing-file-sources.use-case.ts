@@ -1,17 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import {
-  detectFileType,
-  getCanonicalMimeType,
-} from 'src/common/util/file-type';
 import { SourceBatchWriteRepository } from 'src/domain/sources/application/ports/source-batch-write.repository';
-import {
-  UnexpectedSourceError,
-  UnsupportedSourceFileTypeError,
-} from 'src/domain/sources/application/sources.errors';
-import { fileTypeFromMimeType } from 'src/domain/sources/application/util/source-file-type.helpers';
+import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
+import { fileTypeFromName } from 'src/domain/sources/application/util/source-file-type.helpers';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
-import type { FileType } from 'src/domain/sources/domain/source-type.enum';
 import { TextType } from 'src/domain/sources/domain/source-type.enum';
 import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { CreateProcessingFileSourcesCommand } from './create-processing-file-sources.command';
@@ -41,7 +33,7 @@ export class CreateProcessingFileSourcesUseCase {
       (name) =>
         new FileSource({
           name,
-          fileType: this.fileTypeOf(name),
+          fileType: fileTypeFromName(name),
           type: TextType.FILE,
           knowledgeBaseId: command.knowledgeBaseId,
           status: SourceStatus.PROCESSING,
@@ -52,12 +44,5 @@ export class CreateProcessingFileSourcesUseCase {
     );
     await this.repository.insertFileSources(sources);
     return sources;
-  }
-
-  private fileTypeOf(name: string): FileType {
-    const mimeType = getCanonicalMimeType(detectFileType('', name));
-    const fileType = mimeType ? fileTypeFromMimeType(mimeType) : undefined;
-    if (!fileType) throw new UnsupportedSourceFileTypeError(name);
-    return fileType;
   }
 }

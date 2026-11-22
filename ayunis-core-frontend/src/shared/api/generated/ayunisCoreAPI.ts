@@ -24304,6 +24304,397 @@ export const useSuperAdminTrialsControllerUpdateTrial = <TError = void,
     }
 
 /**
+ * Returns every available product with whether the organization has set it up. Credentials are never returned.
+ * @summary List the available connectors of the organization
+ */
+export const connectorsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ConnectorResponseDto[]>(
+      {url: `/connectors`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerListQueryKey = () => {
+    return [
+    `/connectors`
+    ] as const;
+    }
+
+
+export const getConnectorsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getConnectorsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof connectorsControllerList>>> = ({ signal }) => connectorsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ConnectorsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerList>>>
+export type ConnectorsControllerListQueryError = unknown
+
+
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof connectorsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof connectorsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof connectorsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof connectorsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the available connectors of the organization
+ */
+
+export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getConnectorsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Tenant and client ID, never the client secret.
+ * @summary Get the Microsoft 365 connection of the organization
+ */
+export const connectorsControllerGetMicrosoft365 = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Microsoft365ConnectorResponseDto>(
+      {url: `/connectors/microsoft-365`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerGetMicrosoft365QueryKey = () => {
+    return [
+    `/connectors/microsoft-365`
+    ] as const;
+    }
+
+
+export const getConnectorsControllerGetMicrosoft365QueryOptions = <TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getConnectorsControllerGetMicrosoft365QueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>> = ({ signal }) => connectorsControllerGetMicrosoft365(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ConnectorsControllerGetMicrosoft365QueryResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>>
+export type ConnectorsControllerGetMicrosoft365QueryError = unknown
+
+
+export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>,
+          TError,
+          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>,
+          TError,
+          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the Microsoft 365 connection of the organization
+ */
+
+export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getConnectorsControllerGetMicrosoft365QueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one. The saved connection is tested right away.
+ * @summary Set up the Microsoft 365 connection or change it
+ */
+export const connectorsControllerSaveMicrosoft365 = (
+    saveMicrosoft365ConnectorDto: SaveMicrosoft365ConnectorDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SavedMicrosoft365ConnectorResponseDto>(
+      {url: `/connectors/microsoft-365`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: saveMicrosoft365ConnectorDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerSaveMicrosoft365MutationKey = () => ['connectorsControllerSaveMicrosoft365'] as const;
+
+export const getConnectorsControllerSaveMicrosoft365MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, TError,ConnectorsControllerSaveMicrosoft365MutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, TError,ConnectorsControllerSaveMicrosoft365MutationVariables, TContext> => {
+
+const mutationKey = getConnectorsControllerSaveMicrosoft365MutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, ConnectorsControllerSaveMicrosoft365MutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  connectorsControllerSaveMicrosoft365(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectorsControllerSaveMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>>
+    export type ConnectorsControllerSaveMicrosoft365MutationBody = SaveMicrosoft365ConnectorDto
+    export type ConnectorsControllerSaveMicrosoft365MutationError = unknown
+    export type ConnectorsControllerSaveMicrosoft365MutationVariables = {data: SaveMicrosoft365ConnectorDto}
+
+    /**
+ * @summary Set up the Microsoft 365 connection or change it
+ */
+export const useConnectorsControllerSaveMicrosoft365 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, TError,ConnectorsControllerSaveMicrosoft365MutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>,
+        TError,
+        ConnectorsControllerSaveMicrosoft365MutationVariables,
+        TContext
+      > => {
+      return useMutation(getConnectorsControllerSaveMicrosoft365MutationOptions(options), queryClient);
+    }
+
+/**
+ * Deletes the stored setup and credentials. What refers to the connection is kept and reconnects when it is set up again.
+ * @summary Remove the Microsoft 365 connection
+ */
+export const connectorsControllerRemoveMicrosoft365 = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/connectors/microsoft-365`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerRemoveMicrosoft365MutationKey = () => ['connectorsControllerRemoveMicrosoft365'] as const;
+
+export const getConnectorsControllerRemoveMicrosoft365MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, TError,void, TContext> => {
+
+const mutationKey = getConnectorsControllerRemoveMicrosoft365MutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, void> = () => {
+
+
+          return  connectorsControllerRemoveMicrosoft365()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectorsControllerRemoveMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>>
+
+    export type ConnectorsControllerRemoveMicrosoft365MutationError = unknown
+
+
+    /**
+ * @summary Remove the Microsoft 365 connection
+ */
+export const useConnectorsControllerRemoveMicrosoft365 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getConnectorsControllerRemoveMicrosoft365MutationOptions(options), queryClient);
+    }
+
+/**
+ * Requests an app-only token with the stored credentials and shows the permissions granted in it. Entra refusing the token, or not answering, is the test's outcome, not an error.
+ * @summary Test the Microsoft 365 connection
+ */
+export const connectorsControllerTestMicrosoft365 = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Microsoft365ConnectionTestResponseDto>(
+      {url: `/connectors/microsoft-365/test`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerTestMicrosoft365MutationKey = () => ['connectorsControllerTestMicrosoft365'] as const;
+
+export const getConnectorsControllerTestMicrosoft365MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext> => {
+
+const mutationKey = getConnectorsControllerTestMicrosoft365MutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, void> = () => {
+
+
+          return  connectorsControllerTestMicrosoft365()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectorsControllerTestMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>>
+
+    export type ConnectorsControllerTestMicrosoft365MutationError = unknown
+
+
+    /**
+ * @summary Test the Microsoft 365 connection
+ */
+export const useConnectorsControllerTestMicrosoft365 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getConnectorsControllerTestMicrosoft365MutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Create a recording
  */
 export const recordingsControllerCreate = (
@@ -31407,397 +31798,6 @@ export function useModelsControllerRetrieve<TData = Awaited<ReturnType<typeof mo
 
 
 
-
-/**
- * Returns every available product with whether the organization has set it up. Credentials are never returned.
- * @summary List the available connectors of the organization
- */
-export const connectorsControllerList = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ConnectorResponseDto[]>(
-      {url: `/connectors`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getConnectorsControllerListQueryKey = () => {
-    return [
-    `/connectors`
-    ] as const;
-    }
-
-
-export const getConnectorsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getConnectorsControllerListQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof connectorsControllerList>>> = ({ signal }) => connectorsControllerList(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ConnectorsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerList>>>
-export type ConnectorsControllerListQueryError = unknown
-
-
-export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof connectorsControllerList>>,
-          TError,
-          Awaited<ReturnType<typeof connectorsControllerList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof connectorsControllerList>>,
-          TError,
-          Awaited<ReturnType<typeof connectorsControllerList>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List the available connectors of the organization
- */
-
-export function useConnectorsControllerList<TData = Awaited<ReturnType<typeof connectorsControllerList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerList>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getConnectorsControllerListQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Tenant and client ID, never the client secret.
- * @summary Get the Microsoft 365 connection of the organization
- */
-export const connectorsControllerGetMicrosoft365 = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<Microsoft365ConnectorResponseDto>(
-      {url: `/connectors/microsoft-365`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getConnectorsControllerGetMicrosoft365QueryKey = () => {
-    return [
-    `/connectors/microsoft-365`
-    ] as const;
-    }
-
-
-export const getConnectorsControllerGetMicrosoft365QueryOptions = <TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getConnectorsControllerGetMicrosoft365QueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>> = ({ signal }) => connectorsControllerGetMicrosoft365(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ConnectorsControllerGetMicrosoft365QueryResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>>
-export type ConnectorsControllerGetMicrosoft365QueryError = unknown
-
-
-export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>,
-          TError,
-          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>,
-          TError,
-          Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the Microsoft 365 connection of the organization
- */
-
-export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof connectorsControllerGetMicrosoft365>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getConnectorsControllerGetMicrosoft365QueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one. The saved connection is tested right away.
- * @summary Set up the Microsoft 365 connection or change it
- */
-export const connectorsControllerSaveMicrosoft365 = (
-    saveMicrosoft365ConnectorDto: SaveMicrosoft365ConnectorDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<SavedMicrosoft365ConnectorResponseDto>(
-      {url: `/connectors/microsoft-365`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: saveMicrosoft365ConnectorDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getConnectorsControllerSaveMicrosoft365MutationKey = () => ['connectorsControllerSaveMicrosoft365'] as const;
-
-export const getConnectorsControllerSaveMicrosoft365MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, TError,ConnectorsControllerSaveMicrosoft365MutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, TError,ConnectorsControllerSaveMicrosoft365MutationVariables, TContext> => {
-
-const mutationKey = getConnectorsControllerSaveMicrosoft365MutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, ConnectorsControllerSaveMicrosoft365MutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  connectorsControllerSaveMicrosoft365(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ConnectorsControllerSaveMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>>
-    export type ConnectorsControllerSaveMicrosoft365MutationBody = SaveMicrosoft365ConnectorDto
-    export type ConnectorsControllerSaveMicrosoft365MutationError = unknown
-    export type ConnectorsControllerSaveMicrosoft365MutationVariables = {data: SaveMicrosoft365ConnectorDto}
-
-    /**
- * @summary Set up the Microsoft 365 connection or change it
- */
-export const useConnectorsControllerSaveMicrosoft365 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>, TError,ConnectorsControllerSaveMicrosoft365MutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof connectorsControllerSaveMicrosoft365>>,
-        TError,
-        ConnectorsControllerSaveMicrosoft365MutationVariables,
-        TContext
-      > => {
-      return useMutation(getConnectorsControllerSaveMicrosoft365MutationOptions(options), queryClient);
-    }
-
-/**
- * Deletes the stored setup and credentials. What refers to the connection is kept and reconnects when it is set up again.
- * @summary Remove the Microsoft 365 connection
- */
-export const connectorsControllerRemoveMicrosoft365 = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/connectors/microsoft-365`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getConnectorsControllerRemoveMicrosoft365MutationKey = () => ['connectorsControllerRemoveMicrosoft365'] as const;
-
-export const getConnectorsControllerRemoveMicrosoft365MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, TError,void, TContext> => {
-
-const mutationKey = getConnectorsControllerRemoveMicrosoft365MutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, void> = () => {
-
-
-          return  connectorsControllerRemoveMicrosoft365()
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ConnectorsControllerRemoveMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>>
-
-    export type ConnectorsControllerRemoveMicrosoft365MutationError = unknown
-
-
-    /**
- * @summary Remove the Microsoft 365 connection
- */
-export const useConnectorsControllerRemoveMicrosoft365 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof connectorsControllerRemoveMicrosoft365>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getConnectorsControllerRemoveMicrosoft365MutationOptions(options), queryClient);
-    }
-
-/**
- * Requests an app-only token with the stored credentials and shows the permissions granted in it. Entra refusing the token, or not answering, is the test's outcome, not an error.
- * @summary Test the Microsoft 365 connection
- */
-export const connectorsControllerTestMicrosoft365 = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<Microsoft365ConnectionTestResponseDto>(
-      {url: `/connectors/microsoft-365/test`, method: 'POST', signal
-    },
-      );
-    }
-
-
-
-
-export const getConnectorsControllerTestMicrosoft365MutationKey = () => ['connectorsControllerTestMicrosoft365'] as const;
-
-export const getConnectorsControllerTestMicrosoft365MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext> => {
-
-const mutationKey = getConnectorsControllerTestMicrosoft365MutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, void> = () => {
-
-
-          return  connectorsControllerTestMicrosoft365()
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ConnectorsControllerTestMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>>
-
-    export type ConnectorsControllerTestMicrosoft365MutationError = unknown
-
-
-    /**
- * @summary Test the Microsoft 365 connection
- */
-export const useConnectorsControllerTestMicrosoft365 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getConnectorsControllerTestMicrosoft365MutationOptions(options), queryClient);
-    }
 
 /**
  * Authenticate user with email and password. Sets authentication cookies on successful login.

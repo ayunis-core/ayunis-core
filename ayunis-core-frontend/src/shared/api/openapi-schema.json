@@ -11674,6 +11674,113 @@
         "tags": ["Super Admin Trials"]
       }
     },
+    "/connectors": {
+      "get": {
+        "description": "Returns every available product with whether the organization has set it up. Credentials are never returned.",
+        "operationId": "ConnectorsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConnectorResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the available connectors of the organization",
+        "tags": ["connectors"]
+      }
+    },
+    "/connectors/microsoft-365": {
+      "get": {
+        "description": "Tenant and client ID, never the client secret.",
+        "operationId": "ConnectorsController_getMicrosoft365",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft365ConnectorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the Microsoft 365 connection of the organization",
+        "tags": ["connectors"]
+      },
+      "put": {
+        "description": "Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one. The saved connection is tested right away.",
+        "operationId": "ConnectorsController_saveMicrosoft365",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMicrosoft365ConnectorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedMicrosoft365ConnectorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set up the Microsoft 365 connection or change it",
+        "tags": ["connectors"]
+      },
+      "delete": {
+        "description": "Deletes the stored setup and credentials. What refers to the connection is kept and reconnects when it is set up again.",
+        "operationId": "ConnectorsController_removeMicrosoft365",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Remove the Microsoft 365 connection",
+        "tags": ["connectors"]
+      }
+    },
+    "/connectors/microsoft-365/test": {
+      "post": {
+        "description": "Requests an app-only token with the stored credentials and shows the permissions granted in it. Entra refusing the token, or not answering, is the test's outcome, not an error.",
+        "operationId": "ConnectorsController_testMicrosoft365",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft365ConnectionTestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Test the Microsoft 365 connection",
+        "tags": ["connectors"]
+      }
+    },
     "/recordings": {
       "post": {
         "operationId": "RecordingsController_create",
@@ -14787,113 +14894,6 @@
           }
         },
         "tags": ["Models"]
-      }
-    },
-    "/connectors": {
-      "get": {
-        "description": "Returns every available product with whether the organization has set it up. Credentials are never returned.",
-        "operationId": "ConnectorsController_list",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ConnectorResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List the available connectors of the organization",
-        "tags": ["connectors"]
-      }
-    },
-    "/connectors/microsoft-365": {
-      "get": {
-        "description": "Tenant and client ID, never the client secret.",
-        "operationId": "ConnectorsController_getMicrosoft365",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Microsoft365ConnectorResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get the Microsoft 365 connection of the organization",
-        "tags": ["connectors"]
-      },
-      "put": {
-        "description": "Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one. The saved connection is tested right away.",
-        "operationId": "ConnectorsController_saveMicrosoft365",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SaveMicrosoft365ConnectorDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SavedMicrosoft365ConnectorResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Set up the Microsoft 365 connection or change it",
-        "tags": ["connectors"]
-      },
-      "delete": {
-        "description": "Deletes the stored setup and credentials. What refers to the connection is kept and reconnects when it is set up again.",
-        "operationId": "ConnectorsController_removeMicrosoft365",
-        "parameters": [],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "summary": "Remove the Microsoft 365 connection",
-        "tags": ["connectors"]
-      }
-    },
-    "/connectors/microsoft-365/test": {
-      "post": {
-        "description": "Requests an app-only token with the stored credentials and shows the permissions granted in it. Entra refusing the token, or not answering, is the test's outcome, not an error.",
-        "operationId": "ConnectorsController_testMicrosoft365",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Microsoft365ConnectionTestResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Test the Microsoft 365 connection",
-        "tags": ["connectors"]
       }
     },
     "/auth/login": {
@@ -24792,6 +24792,191 @@
           }
         }
       },
+      "ConnectorProduct": {
+        "type": "string",
+        "enum": ["microsoft_365"],
+        "description": "The product this connector connects to"
+      },
+      "ConnectorStatus": {
+        "type": "string",
+        "enum": ["not_set_up", "set_up"],
+        "description": "Whether the organization has set up this connector"
+      },
+      "ConnectorResponseDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "description": "The product this connector connects to",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorProduct"
+              }
+            ]
+          },
+          "status": {
+            "description": "Whether the organization has set up this connector",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorStatus"
+              }
+            ]
+          }
+        },
+        "required": ["product", "status"]
+      },
+      "Microsoft365ConnectorResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Whether the organization has set up Microsoft 365",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorStatus"
+              }
+            ]
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "Directory (tenant) ID; null while not set up",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Application (client) ID; null while not set up",
+            "nullable": true
+          }
+        },
+        "required": ["status", "tenantId", "clientId"]
+      },
+      "SaveMicrosoft365ConnectorDto": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "description": "Directory (tenant) ID of the Entra tenant",
+            "example": "6f1c2c4e-3c1a-4f4e-9a59-2f1f0b8a7d11"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Application (client) ID of the Entra app registration",
+            "example": "0b8a7d11-2f1f-4f4e-9a59-6f1c2c4e3c1a"
+          },
+          "clientSecret": {
+            "type": "string",
+            "description": "Value of a client secret of the app registration. Required to set up the connection; omit it to keep the stored secret. Never returned.",
+            "writeOnly": true,
+            "maxLength": 1024
+          }
+        },
+        "required": ["tenantId", "clientId"]
+      },
+      "Microsoft365ConnectionTestOutcome": {
+        "type": "string",
+        "enum": [
+          "connected",
+          "tenant_not_found",
+          "client_not_found",
+          "client_secret_invalid",
+          "client_secret_expired",
+          "consent_missing",
+          "consent_on_wrong_api",
+          "required_permission_missing",
+          "rejected",
+          "microsoft_unavailable",
+          "unexpected_error"
+        ],
+        "description": "Whether the connection works, or the setup mistake that stops it"
+      },
+      "Microsoft365PermissionResponseDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Microsoft Graph application permission",
+            "example": "Sites.Selected"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether Ayunis cannot work without it"
+          },
+          "granted": {
+            "type": "boolean",
+            "description": "Whether the app's token carries it"
+          }
+        },
+        "required": ["name", "required", "granted"]
+      },
+      "Microsoft365ConnectionTestResponseDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "description": "Whether the connection works, or the setup mistake that stops it",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Microsoft365ConnectionTestOutcome"
+              }
+            ]
+          },
+          "permissions": {
+            "description": "The Microsoft Graph permissions Ayunis uses",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Microsoft365PermissionResponseDto"
+            }
+          },
+          "otherGrantedPermissions": {
+            "description": "Microsoft Graph permissions granted to the app that Ayunis does not use",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "entraErrorCode": {
+            "type": "string",
+            "description": "Entra's error code when it refused the token",
+            "nullable": true,
+            "example": "AADSTS7000215"
+          }
+        },
+        "required": [
+          "outcome",
+          "permissions",
+          "otherGrantedPermissions",
+          "entraErrorCode"
+        ]
+      },
+      "SavedMicrosoft365ConnectorResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "description": "Whether the organization has set up Microsoft 365",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConnectorStatus"
+              }
+            ]
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "Directory (tenant) ID; null while not set up",
+            "nullable": true
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Application (client) ID; null while not set up",
+            "nullable": true
+          },
+          "connectionTest": {
+            "description": "The test run right after saving",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Microsoft365ConnectionTestResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["status", "tenantId", "clientId", "connectionTest"]
+      },
       "CreateRecordingDto": {
         "type": "object",
         "properties": {
@@ -27116,191 +27301,6 @@
       "ChatCompletionRequestDto": {
         "type": "object",
         "properties": {}
-      },
-      "ConnectorProduct": {
-        "type": "string",
-        "enum": ["microsoft_365"],
-        "description": "The product this connector connects to"
-      },
-      "ConnectorStatus": {
-        "type": "string",
-        "enum": ["not_set_up", "set_up"],
-        "description": "Whether the organization has set up this connector"
-      },
-      "ConnectorResponseDto": {
-        "type": "object",
-        "properties": {
-          "product": {
-            "description": "The product this connector connects to",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ConnectorProduct"
-              }
-            ]
-          },
-          "status": {
-            "description": "Whether the organization has set up this connector",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ConnectorStatus"
-              }
-            ]
-          }
-        },
-        "required": ["product", "status"]
-      },
-      "Microsoft365ConnectorResponseDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "description": "Whether the organization has set up Microsoft 365",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ConnectorStatus"
-              }
-            ]
-          },
-          "tenantId": {
-            "type": "string",
-            "description": "Directory (tenant) ID; null while not set up",
-            "nullable": true
-          },
-          "clientId": {
-            "type": "string",
-            "description": "Application (client) ID; null while not set up",
-            "nullable": true
-          }
-        },
-        "required": ["status", "tenantId", "clientId"]
-      },
-      "SaveMicrosoft365ConnectorDto": {
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "description": "Directory (tenant) ID of the Entra tenant",
-            "example": "6f1c2c4e-3c1a-4f4e-9a59-2f1f0b8a7d11"
-          },
-          "clientId": {
-            "type": "string",
-            "description": "Application (client) ID of the Entra app registration",
-            "example": "0b8a7d11-2f1f-4f4e-9a59-6f1c2c4e3c1a"
-          },
-          "clientSecret": {
-            "type": "string",
-            "description": "Value of a client secret of the app registration. Required to set up the connection; omit it to keep the stored secret. Never returned.",
-            "writeOnly": true,
-            "maxLength": 1024
-          }
-        },
-        "required": ["tenantId", "clientId"]
-      },
-      "Microsoft365ConnectionTestOutcome": {
-        "type": "string",
-        "enum": [
-          "connected",
-          "tenant_not_found",
-          "client_not_found",
-          "client_secret_invalid",
-          "client_secret_expired",
-          "consent_missing",
-          "consent_on_wrong_api",
-          "required_permission_missing",
-          "rejected",
-          "microsoft_unavailable",
-          "unexpected_error"
-        ],
-        "description": "Whether the connection works, or the setup mistake that stops it"
-      },
-      "Microsoft365PermissionResponseDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Microsoft Graph application permission",
-            "example": "Sites.Selected"
-          },
-          "required": {
-            "type": "boolean",
-            "description": "Whether Ayunis cannot work without it"
-          },
-          "granted": {
-            "type": "boolean",
-            "description": "Whether the app's token carries it"
-          }
-        },
-        "required": ["name", "required", "granted"]
-      },
-      "Microsoft365ConnectionTestResponseDto": {
-        "type": "object",
-        "properties": {
-          "outcome": {
-            "description": "Whether the connection works, or the setup mistake that stops it",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Microsoft365ConnectionTestOutcome"
-              }
-            ]
-          },
-          "permissions": {
-            "description": "The Microsoft Graph permissions Ayunis uses",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Microsoft365PermissionResponseDto"
-            }
-          },
-          "otherGrantedPermissions": {
-            "description": "Microsoft Graph permissions granted to the app that Ayunis does not use",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "entraErrorCode": {
-            "type": "string",
-            "description": "Entra's error code when it refused the token",
-            "nullable": true,
-            "example": "AADSTS7000215"
-          }
-        },
-        "required": [
-          "outcome",
-          "permissions",
-          "otherGrantedPermissions",
-          "entraErrorCode"
-        ]
-      },
-      "SavedMicrosoft365ConnectorResponseDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "description": "Whether the organization has set up Microsoft 365",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ConnectorStatus"
-              }
-            ]
-          },
-          "tenantId": {
-            "type": "string",
-            "description": "Directory (tenant) ID; null while not set up",
-            "nullable": true
-          },
-          "clientId": {
-            "type": "string",
-            "description": "Application (client) ID; null while not set up",
-            "nullable": true
-          },
-          "connectionTest": {
-            "description": "The test run right after saving",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Microsoft365ConnectionTestResponseDto"
-              }
-            ]
-          }
-        },
-        "required": ["status", "tenantId", "clientId", "connectionTest"]
       },
       "LoginDto": {
         "type": "object",

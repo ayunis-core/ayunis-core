@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import transcriptionConfig from 'src/config/transcription.config';
 import type { ProcessingContext } from 'src/common/types/processing-context';
-import type { DocumentProcessingJobData } from 'src/domain/sources/application/ports/document-processing.port';
+import type { DocumentToProcess } from 'src/domain/sources/application/models/document-to-process';
 import { StoredSourceFileService } from 'src/domain/sources/application/services/stored-source-file.service';
 import { transcriptChunks } from 'src/domain/sources/application/util/transcript-chunks';
 import type { TextSourceContentChunk } from 'src/domain/sources/domain/source-content-chunk.entity';
@@ -35,7 +35,7 @@ export class RecordingTranscriptExtractor {
   ) {}
 
   async extract(
-    data: DocumentProcessingJobData,
+    data: DocumentToProcess,
     processingContext?: ProcessingContext,
   ): Promise<ExtractedContent> {
     const { fileName, fileType } = data;
