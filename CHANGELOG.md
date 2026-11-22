@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.80.0](https://github.com/ayunis-core/ayunis-core/compare/v2.79.0...v2.80.0) (2026-11-22)
+
+
+### Features
+
+* **chat:** lead users into skills and routines from every chat (AYC-2015) ([#2465](https://github.com/ayunis-core/ayunis-core/issues/2465)) ([1a3dfee](https://github.com/ayunis-core/ayunis-core/commit/1a3dfeec4d9ea85c341d5136d9526435a7dd1c9e))
+* **onboarding:** explain features on empty pages and guide users in chat (AYC-97) ([#2471](https://github.com/ayunis-core/ayunis-core/issues/2471)) ([d0014a3](https://github.com/ayunis-core/ayunis-core/commit/d0014a38a92aa5ac67ac9d3c2586c2832c515b21))
+* **onboarding:** lead onboarding chats into skills (AYC-2016) ([#2466](https://github.com/ayunis-core/ayunis-core/issues/2466)) ([4065fc9](https://github.com/ayunis-core/ayunis-core/commit/4065fc9c429841954c85072dc4efb79a2fea2d01))
+* **onboarding:** replace the personalization card with an onboarding chat (AYC-1991) ([#2455](https://github.com/ayunis-core/ayunis-core/issues/2455)) ([46e2204](https://github.com/ayunis-core/ayunis-core/commit/46e2204a3932378c0d25e7dbee669e27a974e27e))
+* **outlook:** reply and reply all with the draft from the reading pane (AYC-2027) ([#2485](https://github.com/ayunis-core/ayunis-core/issues/2485)) ([fc5b996](https://github.com/ayunis-core/ayunis-core/commit/fc5b996a1eccce139786071ef353a1f047da7cba))
+
+
+### Bug Fixes
+
+* **chat:** open created artifacts before the run finishes (AYC-2018) ([#2470](https://github.com/ayunis-core/ayunis-core/issues/2470)) ([f7c72ae](https://github.com/ayunis-core/ayunis-core/commit/f7c72ae16b7910fce21fe7b30237fdf428ba6359))
+
 ## [2.79.0](https://github.com/ayunis-core/ayunis-core/compare/v2.78.0...v2.79.0) (2026-11-20)
 
 
