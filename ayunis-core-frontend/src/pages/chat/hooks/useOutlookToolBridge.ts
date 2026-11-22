@@ -11,8 +11,6 @@ import {
   addAttachmentAsSource,
   answeredToolCallIds,
   chatItemKey,
-  clearPendingReplyDraft,
-  currentPendingReplyDraftId,
   currentOutlookItemKey,
   currentOutlookMailboxItem,
   currentOutlookReplySourceKey,
@@ -27,10 +25,6 @@ import {
   rememberOutlookDraftSource,
   waitsForUser,
   subscribeToOutlookItem,
-  subscribeToPendingReplyDraft,
-  stagePendingReplyDraft,
-  takePendingReplyDraft,
-  withOutlookReplyDraftLock,
   type OutlookToolCall,
   type OutlookToolOutcome,
 } from '@/features/outlook-tools';
@@ -113,22 +107,6 @@ function waitingReads(messages: readonly Message[]): OutlookToolCall[] {
   );
 }
 
-function stageLatestReply(
-  call: OutlookToolCall,
-  runItem: string | null,
-  messages: readonly Message[],
-  masks: ReadonlyMap<string, PiiMask>,
-): void {
-  if (
-    !runItem ||
-    call.id !== latestDraftCallId(messages) ||
-    hasCallAwaitingConfirmation(messages)
-  )
-    return;
-  const { body } = resolveParams(call.params, masks);
-  if (typeof body === 'string') stagePendingReplyDraft(runItem, call.id, body);
-}
-
 /**
  * The mail a run is about. A new chat's first run belongs to the mail the
  * chat was created next to, even if the user moved on before it opened;
@@ -193,10 +171,6 @@ export function useOutlookToolBridge({
   const mailboxItem = useSyncExternalStore(
     embedded ? subscribeToOutlookItem : ignoreOutlookItem,
     currentOutlookMailboxItem,
-  );
-  const pendingReplyDraftId = useSyncExternalStore(
-    embedded ? subscribeToPendingReplyDraft : ignoreOutlookItem,
-    embedded ? currentPendingReplyDraftId : () => undefined,
   );
   const [toolStates, setToolStates] = useState<
     Partial<Record<string, TrackedToolState>>
@@ -310,35 +284,18 @@ export function useOutlookToolBridge({
       }
       setToolStates((current) => ({ ...current, [call.id]: running }));
       const params = resolveParams(call.params, masksRef.current);
-      const runTool = () =>
-        executeOutlookTool(call.name, params, {
-          extractAttachmentText: (file) =>
-            addAttachmentAsSource(
-              outlookAttachmentSourceApi,
-              threadId,
-              file,
-              options.signal,
-            ),
-          expectedItemKey: options.expectedItemKey,
-          expectedReplySourceKey: options.expectedReplySourceKey,
-          draftId: call.id,
-        });
-      const { expectedReplySourceKey } = options;
-      const outcome =
-        expectedReplySourceKey === undefined
-          ? await runTool()
-          : await withOutlookReplyDraftLock(
-              async (): Promise<OutlookToolOutcome> => {
-                if (currentOutlookMailboxItem() !== running.replyItem) {
-                  return { status: 'failed', failure: 'itemChanged' };
-                }
-                const result = await runTool();
-                if (result.status === 'done') {
-                  takePendingReplyDraft(expectedReplySourceKey, call.id);
-                }
-                return result;
-              },
-            );
+      const outcome = await executeOutlookTool(call.name, params, {
+        extractAttachmentText: (file) =>
+          addAttachmentAsSource(
+            outlookAttachmentSourceApi,
+            threadId,
+            file,
+            options.signal,
+          ),
+        expectedItemKey: options.expectedItemKey,
+        expectedReplySourceKey: options.expectedReplySourceKey,
+        draftId: call.id,
+      });
       setToolStates((current) =>
         current[call.id] === running
           ? { ...current, [call.id]: { ...running, state: outcome } }
@@ -372,12 +329,6 @@ export function useOutlookToolBridge({
       .at(-1);
     if (latestDraft) {
       rememberOutlookDraftSource(threadId, latestDraft.id, runItem);
-      stageLatestReply(
-        latestDraft,
-        runItem,
-        messagesRef.current,
-        masksRef.current,
-      );
     }
     setCallItemKeys((current) => ({
       ...current,
@@ -426,10 +377,6 @@ export function useOutlookToolBridge({
         itemKey: itemKeyForRun(threadId, takesOverStartedRun),
         observingFromReply: false,
       };
-      // A turn about this email supersedes the draft from an earlier turn.
-      if (runOrigin.current.itemKey) {
-        clearPendingReplyDraft(runOrigin.current.itemKey);
-      }
     },
     [embedded, threadId],
   );
@@ -471,8 +418,7 @@ export function useOutlookToolBridge({
         const source = replyItemKey(id);
         if (!source || !waitsForUser(name, source)) return null;
         if (source === replySourceKey) return 'insert';
-        if (source !== openItemKey) return null;
-        return id === pendingReplyDraftId ? 'autoReply' : 'openReply';
+        return source === openItemKey ? 'openReply' : null;
       },
       insertDraft: (call) => {
         if (call.id !== latestDraftCallId(messagesRef.current)) return;
@@ -488,7 +434,6 @@ export function useOutlookToolBridge({
     embedded,
     openItemKey,
     replySourceKey,
-    pendingReplyDraftId,
     mailboxItem,
     toolStates,
     replyItemKey,

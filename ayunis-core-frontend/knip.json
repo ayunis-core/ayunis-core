@@ -2,7 +2,8 @@
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "entry": [
     "src/main.tsx",
-    "src/outlook/dialog.ts"
+    "src/outlook/dialog.ts",
+    "src/outlook/events.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx}"

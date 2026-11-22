@@ -1,10 +1,13 @@
 # Outlook add-in
 
-The pages Outlook opens for the Ayunis add-in (`ayunis-core-frontend/outlook/*.html`).
+The pages Outlook opens for the Ayunis Core add-in (`ayunis-core-frontend/outlook/*.html`).
 The HTML pages load Office.js from Microsoft's CDN first. The manifest
 (`GET /api/office-addins/outlook/manifest.xml`, backend `office-addins`
 module) points every button at `/outlook/taskpane.html?surface=<surface>`;
-keep that path, tenant admins have deployed it.
+keep that path, tenant admins have deployed it. Clients that read the
+manifest's VersionOverrides 1.1 block also pass
+`manifestVersion=<version>`; a feature that depends on something only a newer
+manifest declares checks a minimum version there.
 
 The task pane runs the web app's own build (`src/main.tsx`, branching on
 `<html data-entry="outlook-pane">`); the build writes
@@ -12,17 +15,20 @@ The task pane runs the web app's own build (`src/main.tsx`, branching on
 (`outlookTaskpanePage` in `vite.config.js`) rather than adding a second input,
 which would split the web app's first load into many more chunks. The pane
 page does not load `/config.js`, so it runs without analytics or AppSignal.
-The dialog's last page (`dialog.html`) and the background compose runtime
-(`reply-event.html`) are separate entries without the app.
+The dialog's last page (`dialog.html`) and the launch-event runtime
+(`events.html`) are separate entries without the app.
 
-The reading pane stages the latest completed reply in the add-in's browser
-storage with a five-minute expiry. This requires the event-enabled manifest,
-a browser-based Outlook runtime with Mailbox 1.14, and a Web Lock shared with
-the event runtime. On native Reply or Reply All, the event checks the Outlook
-account, compose sender, and original Internet Message-ID before consuming
-the draft and using the existing compose writer. Superseding turns and
-sign-out clear the handoff. The compose pane can also insert the draft
-manually.
+The launch-event runtime handles every event the manifest registers
+(`OnMessageCompose`, `OnMessageRecipientsChanged`,
+`OnMessageAttachmentsChanged`, `OnMessageFromChanged`,
+`OnInfoBarDismissClicked`). `events.html` loads only Office.js and
+`events.ts`; classic Outlook on Windows runs `public/outlook/events-classic.js`
+instead, a single file without imports. Both register one handler per event,
+named after the event (`onMessageCompose`, …), that calls `event.completed()`
+at once and makes no network call; no feature uses them yet. Keep the names in
+both files in step with the manifest. A reading-pane draft is inserted only
+from the compose pane: the draft shows a hint to open Reply and Ayunis Core
+there, and the compose pane offers "Insert into open reply".
 
 | Path                                                                        | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

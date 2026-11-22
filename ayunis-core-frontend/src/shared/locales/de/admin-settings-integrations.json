@@ -210,7 +210,7 @@
     },
     "outlook": {
       "title": "Microsoft Outlook",
-      "description": "Mit dem Ayunis-Add-in nutzen Ihre Mitarbeitenden Ayunis direkt in Outlook. Bereitgestellt wird es im Microsoft 365 Admin Center, durch eine Person mit Microsoft-365- oder Exchange-Administratorrechten.",
+      "description": "Mit dem Ayunis-Core-Add-in nutzen Ihre Mitarbeitenden Ayunis Core direkt in Outlook. Bereitgestellt wird es im Microsoft 365 Admin Center, durch eine Person mit Microsoft-365- oder Exchange-Administratorrechten.",
       "manifestUrl": "Manifest-URL",
       "openIntegratedApps": "„Integrierte Apps“ öffnen",
       "downloadManifest": "Manifest herunterladen",

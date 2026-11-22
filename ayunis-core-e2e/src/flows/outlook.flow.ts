@@ -115,3 +115,31 @@ export async function selectOutlookItem(
     (window as unknown as OfficeStubWindow).__officeStub.selectItem(selected);
   }, item);
 }
+
+/**
+ * Loads the launch-event runtime as Outlook does and returns the handler
+ * names it registered before the Office.js handshake.
+ */
+export async function openLaunchEventRuntime(runtime: Page): Promise<string[]> {
+  await runtime.goto('/outlook/events.html');
+  const registered = () =>
+    runtime.evaluate(() =>
+      (window as unknown as OfficeStubWindow).__officeStub.launchEventHandlers(),
+    );
+  await expect.poll(async () => (await registered()).length).toBeGreaterThan(0);
+  return registered();
+}
+
+/** Dispatches a launch event; true if its handler completed it at once. */
+export function dispatchLaunchEvent(
+  runtime: Page,
+  functionName: string,
+): Promise<boolean> {
+  return runtime.evaluate(
+    (name) =>
+      (window as unknown as OfficeStubWindow).__officeStub.dispatchLaunchEvent(
+        name,
+      ),
+    functionName,
+  );
+}

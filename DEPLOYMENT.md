@@ -201,7 +201,7 @@ new images and restarting.
 Every HTML page now sends `Content-Security-Policy: frame-ancestors 'self'`,
 so browsers refuse to show Ayunis inside an iframe on another site, such as an
 intranet portal. Open Ayunis in its own tab or window instead. The Outlook
-task pane and reply event runtime can be framed by the origins in
+task pane and event runtime can be framed by the origins in
 `OUTLOOK_ADDIN_FRAME_ORIGINS`. If your reverse proxy sets framing headers,
 browsers apply both policies. [Outlook Add-in](#outlook-add-in) lists the
 paths to allow.
@@ -552,8 +552,8 @@ and admins have to deploy the new manifest and remove the old one.
 
 Outlook on the web and the new Outlook for Windows show the add-in in an
 iframe. While the add-in is on, Ayunis allows these origins to frame the task
-pane (`/outlook/taskpane.html`) and the reply event runtime
-(`/outlook/reply-event.html`). Other pages allow framing by Ayunis only.
+pane (`/outlook/taskpane.html`) and the event runtime
+(`/outlook/events.html`). Other pages allow framing by Ayunis only.
 
 ```text
 https://outlook.office.com
@@ -581,11 +581,11 @@ In the Microsoft 365 admin center, go to **Settings > Integrated apps >
 Upload custom apps**, choose **Office Add-in**, and upload the manifest file
 or enter its URL.
 
-To enable automatic draft insertion on Reply, update the existing integrated
-app with Outlook manifest version 1.0.2 or later, then reload Outlook after
-the update has reached the test mailbox. Try it first in Outlook on the web
-with a Microsoft 365 mailbox. The add-in uses the compose event on clients
-with Mailbox 1.14 and a browser runtime that can share storage with the pane.
+When a release raises the manifest version, update the integrated app with
+the new manifest. The update wizard lists the Outlook events the add-in
+registers (composing a message, changing its recipients, attachments or
+sender, and dismissing a notification); these take effect only once you
+consent to the update.
 
 ### Exchange Server (on-premises)
 

@@ -71,10 +71,10 @@ export default function OutlookDraftWidget({
           </ItemDescription>
         )}
       </ItemContent>
-      {(action === 'autoReply' || action === 'openReply') && !isStreaming && (
+      {action === 'openReply' && !isStreaming && (
         <ItemFooter>
           <ItemDescription data-testid="outlook-draft-instruction">
-            {t(`chat.outlookDraft.${action}`)}
+            {t('chat.outlookDraft.openReply')}
           </ItemDescription>
         </ItemFooter>
       )}
