@@ -28,7 +28,6 @@ import {
 import { ComingSoonDialog } from './coming-soon-dialog';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
-import { OutlookAddinSection } from './outlook-addin-section';
 import { ConnectionsSection } from './connections-section';
 
 export function McpIntegrationsPage({
@@ -61,13 +60,15 @@ export function McpIntegrationsPage({
     predefinedConfigs,
   } = useMcpIntegrationsQueries();
 
-  // Connections and the Outlook add-in sit apart from the MCP integrations
-  // and show whatever their state.
+  // Connections sit apart from the MCP integrations and show whatever their
+  // state.
   const sectionsAboveMcp =
     isConnectorsEnabled || isOutlookAddinEnabled ? (
       <>
-        {isConnectorsEnabled && <ConnectionsSection />}
-        {isOutlookAddinEnabled && <OutlookAddinSection />}
+        <ConnectionsSection
+          connectorsEnabled={isConnectorsEnabled}
+          officeAddinsEnabled={isOutlookAddinEnabled}
+        />
         <h2 className="pt-2 text-lg font-semibold">
           {t('integrations.page.mcpTitle')}
         </h2>

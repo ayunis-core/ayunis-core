@@ -10,7 +10,7 @@ import {
 } from '@ayunis/ui/components/card';
 import config from '@/shared/config';
 import { CopyButton } from '@/shared/ui/copy-button';
-import { outlookManifestUrl } from '@/pages/admin-settings/integrations-settings/lib/outlook-manifest-url';
+import { outlookManifestUrl } from '@/pages/admin-settings/office-add-ins/lib/outlook-manifest-url';
 
 // The Microsoft 365 admin center page where add-ins are deployed; the admin
 // center's home doesn't lead there obviously.

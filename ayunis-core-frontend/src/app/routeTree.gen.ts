@@ -71,6 +71,7 @@ import { Route as AuthenticatedAcademyChapterIdCompleteRouteImport } from './rou
 import { Route as AuthenticatedAdminSettingsCreditLimitsIndexRouteImport } from './routes/_authenticated/admin-settings.credit-limits.index'
 import { Route as AuthenticatedAdminSettingsIntegrationsIndexRouteImport } from './routes/_authenticated/admin-settings.integrations.index'
 import { Route as AuthenticatedAdminSettingsIntegrationsMicrosoft365RouteImport } from './routes/_authenticated/admin-settings.integrations.microsoft-365'
+import { Route as AuthenticatedAdminSettingsIntegrationsOfficeAddInsRouteImport } from './routes/_authenticated/admin-settings.integrations.office-add-ins'
 import { Route as AuthenticatedAdminSettingsLetterheadsIndexRouteImport } from './routes/_authenticated/admin-settings.letterheads.index'
 import { Route as AuthenticatedAdminSettingsLetterheadsIdRouteImport } from './routes/_authenticated/admin-settings.letterheads.$id'
 import { Route as AuthenticatedAdminSettingsModelsIndexRouteImport } from './routes/_authenticated/admin-settings.models.index'
@@ -442,6 +443,12 @@ const AuthenticatedAdminSettingsIntegrationsMicrosoft365Route =
     path: '/integrations/microsoft-365',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
+const AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute =
+  AuthenticatedAdminSettingsIntegrationsOfficeAddInsRouteImport.update({
+    id: '/integrations/office-add-ins',
+    path: '/integrations/office-add-ins',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
 const AuthenticatedAdminSettingsLetterheadsIndexRoute =
   AuthenticatedAdminSettingsLetterheadsIndexRouteImport.update({
     id: '/letterheads/',
@@ -625,6 +632,7 @@ export interface FileRoutesByFullPath {
   '/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/academy/$chapterId/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
   '/admin-settings/integrations/microsoft-365': typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
+  '/admin-settings/integrations/office-add-ins': typeof AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -705,6 +713,7 @@ export interface FileRoutesByTo {
   '/workspaces': typeof AuthenticatedWorkspacesIndexRoute
   '/academy/$chapterId/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
   '/admin-settings/integrations/microsoft-365': typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
+  '/admin-settings/integrations/office-add-ins': typeof AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute
   '/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -790,6 +799,7 @@ export interface FileRoutesById {
   '/_authenticated/workspaces/': typeof AuthenticatedWorkspacesIndexRoute
   '/_authenticated/academy/$chapterId_/complete': typeof AuthenticatedAcademyChapterIdCompleteRoute
   '/_authenticated/admin-settings/integrations/microsoft-365': typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
+  '/_authenticated/admin-settings/integrations/office-add-ins': typeof AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute
   '/_authenticated/admin-settings/letterheads/$id': typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   '/_authenticated/admin-settings/teams/$id': typeof AuthenticatedAdminSettingsTeamsIdRoute
   '/_authenticated/super-admin-settings/orgs/$id': typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
@@ -875,6 +885,7 @@ export interface FileRouteTypes {
     | '/workspaces/'
     | '/academy/$chapterId/complete'
     | '/admin-settings/integrations/microsoft-365'
+    | '/admin-settings/integrations/office-add-ins'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -955,6 +966,7 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/academy/$chapterId/complete'
     | '/admin-settings/integrations/microsoft-365'
+    | '/admin-settings/integrations/office-add-ins'
     | '/admin-settings/letterheads/$id'
     | '/admin-settings/teams/$id'
     | '/super-admin-settings/orgs/$id'
@@ -1039,6 +1051,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workspaces/'
     | '/_authenticated/academy/$chapterId_/complete'
     | '/_authenticated/admin-settings/integrations/microsoft-365'
+    | '/_authenticated/admin-settings/integrations/office-add-ins'
     | '/_authenticated/admin-settings/letterheads/$id'
     | '/_authenticated/admin-settings/teams/$id'
     | '/_authenticated/super-admin-settings/orgs/$id'
@@ -1519,6 +1532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365RouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
+    '/_authenticated/admin-settings/integrations/office-add-ins': {
+      id: '/_authenticated/admin-settings/integrations/office-add-ins'
+      path: '/integrations/office-add-ins'
+      fullPath: '/admin-settings/integrations/office-add-ins'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsIntegrationsOfficeAddInsRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
     '/_authenticated/admin-settings/letterheads/': {
       id: '/_authenticated/admin-settings/letterheads/'
       path: '/letterheads'
@@ -1674,6 +1694,7 @@ interface AuthenticatedAdminSettingsRouteChildren {
   AuthenticatedAdminSettingsUsersRoute: typeof AuthenticatedAdminSettingsUsersRoute
   AuthenticatedAdminSettingsIndexRoute: typeof AuthenticatedAdminSettingsIndexRoute
   AuthenticatedAdminSettingsIntegrationsMicrosoft365Route: typeof AuthenticatedAdminSettingsIntegrationsMicrosoft365Route
+  AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute: typeof AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute
   AuthenticatedAdminSettingsLetterheadsIdRoute: typeof AuthenticatedAdminSettingsLetterheadsIdRoute
   AuthenticatedAdminSettingsTeamsIdRoute: typeof AuthenticatedAdminSettingsTeamsIdRoute
   AuthenticatedAdminSettingsCreditLimitsIndexRoute: typeof AuthenticatedAdminSettingsCreditLimitsIndexRoute
@@ -1704,6 +1725,8 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
     AuthenticatedAdminSettingsIndexRoute: AuthenticatedAdminSettingsIndexRoute,
     AuthenticatedAdminSettingsIntegrationsMicrosoft365Route:
       AuthenticatedAdminSettingsIntegrationsMicrosoft365Route,
+    AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute:
+      AuthenticatedAdminSettingsIntegrationsOfficeAddInsRoute,
     AuthenticatedAdminSettingsLetterheadsIdRoute:
       AuthenticatedAdminSettingsLetterheadsIdRoute,
     AuthenticatedAdminSettingsTeamsIdRoute:
