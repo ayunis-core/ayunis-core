@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.81.0](https://github.com/ayunis-core/ayunis-core/compare/v2.80.0...v2.81.0) (2026-11-22)
+
+
+### Features
+
+* **integrations:** explain integrations when none exist and add them from one menu (AYC-2028) ([#2483](https://github.com/ayunis-core/ayunis-core/issues/2483)) ([b59c7a2](https://github.com/ayunis-core/ayunis-core/commit/b59c7a2fa34978894ea0781a97d0523abe6f7e29))
+* **knowledge-bases:** add sharepoint as a synced knowledge base source (AYC-1637) ([#2423](https://github.com/ayunis-core/ayunis-core/issues/2423)) ([ac184aa](https://github.com/ayunis-core/ayunis-core/commit/ac184aac0f59ef0ee1c5f9fc450419457bb6b567))
+* **knowledge-bases:** remove all failed documents at once (AYC-1638) ([#2405](https://github.com/ayunis-core/ayunis-core/issues/2405)) ([f100a89](https://github.com/ayunis-core/ayunis-core/commit/f100a89ee703bb5d4950aa1ab6f69bd0f18368ab))
+* **outlook:** greet with a time-of-day email joke in the pane (AYC-2030) ([#2489](https://github.com/ayunis-core/ayunis-core/issues/2489)) ([7966510](https://github.com/ayunis-core/ayunis-core/commit/79665102be62cbdad72a0d567b9503a57f1d039c))
+
+
+### Code Refactoring
+
+* **connectors:** group microsoft 365 into its own provider module (AYC-2029) ([#2487](https://github.com/ayunis-core/ayunis-core/issues/2487)) ([29e13bf](https://github.com/ayunis-core/ayunis-core/commit/29e13bfbfa076ec63a6478e35ac39c0d7fe3ec53))
+
 ## [2.80.0](https://github.com/ayunis-core/ayunis-core/compare/v2.79.0...v2.80.0) (2026-11-22)
 
 
