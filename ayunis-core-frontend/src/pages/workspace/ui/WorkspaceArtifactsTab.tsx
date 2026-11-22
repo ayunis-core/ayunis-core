@@ -21,7 +21,6 @@ import {
   WorkspaceContextEmpty,
   WorkspaceContextPagination,
 } from './WorkspaceContextList';
-import { getWorkspaceArtifactRoute } from '@/pages/workspace/lib/workspace-artifact-route';
 
 export function WorkspaceArtifactsTab({
   workspaceId,
@@ -62,38 +61,34 @@ export function WorkspaceArtifactsTab({
       ) : null}
       {artifacts.length > 0 ? (
         <ItemGroup className="gap-2">
-          {artifacts.map((artifact) => {
-            const route = getWorkspaceArtifactRoute(artifact);
-            return (
-              <Item
-                asChild
-                key={artifact.id}
-                variant="outline"
-                className="cursor-pointer"
-                data-testid={`workspace-artifact-${artifact.id}`}
+          {artifacts.map((artifact) => (
+            <Item
+              asChild
+              key={artifact.id}
+              variant="outline"
+              className="cursor-pointer"
+              data-testid={`workspace-artifact-${artifact.id}`}
+            >
+              <Link
+                to="/artifacts/$artifactId"
+                params={{ artifactId: artifact.id }}
               >
-                <Link
-                  to="/chats/$threadId"
-                  params={{ threadId: route.threadId }}
-                  search={{ artifactId: route.artifactId }}
-                >
-                  <ItemContent>
-                    <ItemTitle>
-                      {artifact.title || t('artifacts.untitled')}
-                    </ItemTitle>
-                    <ItemDescription>
-                      {t(`artifacts.type.${artifact.type}`)} ·{' '}
-                      {t('artifacts.version', {
-                        version: artifact.currentVersionNumber,
-                      })}{' '}
-                      · {formatUpdatedAt(artifact.updatedAt)}
-                    </ItemDescription>
-                  </ItemContent>
-                  <Badge variant="secondary">{t('artifacts.open')}</Badge>
-                </Link>
-              </Item>
-            );
-          })}
+                <ItemContent>
+                  <ItemTitle>
+                    {artifact.title || t('artifacts.untitled')}
+                  </ItemTitle>
+                  <ItemDescription>
+                    {t(`artifacts.type.${artifact.type}`)} ·{' '}
+                    {t('artifacts.version', {
+                      version: artifact.currentVersionNumber,
+                    })}{' '}
+                    · {formatUpdatedAt(artifact.updatedAt)}
+                  </ItemDescription>
+                </ItemContent>
+                <Badge variant="secondary">{t('artifacts.open')}</Badge>
+              </Link>
+            </Item>
+          ))}
         </ItemGroup>
       ) : null}
       <WorkspaceContextPagination

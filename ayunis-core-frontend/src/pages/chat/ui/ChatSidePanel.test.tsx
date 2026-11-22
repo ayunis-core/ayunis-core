@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ChatSidePanel } from './ChatSidePanel';
-import type { ArtifactSidePanel } from './ArtifactSidePanel';
+import type { ArtifactPanel } from '@/widgets/artifact-panel';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -12,8 +12,8 @@ vi.mock('./ArtifactListSidePanel', () => ({
   ArtifactListSidePanel: () => <div>artifact-list</div>,
 }));
 
-vi.mock('./ArtifactSidePanel', () => ({
-  ArtifactSidePanel: ({ showClose }: { showClose?: boolean }) => (
+vi.mock('@/widgets/artifact-panel', () => ({
+  ArtifactPanel: ({ showClose }: { showClose?: boolean }) => (
     <div data-testid="artifact-detail" data-show-close={String(showClose)} />
   ),
 }));
@@ -31,7 +31,7 @@ const artifactPanelProps = {
   onClose: vi.fn(),
   onBack: vi.fn(),
   onLetterheadChange: vi.fn(),
-} satisfies ComponentProps<typeof ArtifactSidePanel>;
+} satisfies ComponentProps<typeof ArtifactPanel>;
 
 describe('ChatSidePanel', () => {
   it('renders a stable tab shell and delegates tab and close transitions', () => {

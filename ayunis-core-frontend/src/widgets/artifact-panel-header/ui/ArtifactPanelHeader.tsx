@@ -7,7 +7,7 @@ interface ArtifactPanelHeaderProps {
   readonly title: ReactNode;
   readonly actions?: ReactNode;
   readonly onBack?: () => void;
-  readonly onClose: () => void;
+  readonly onClose?: () => void;
   readonly showClose?: boolean;
 }
 
@@ -37,7 +37,7 @@ export function ArtifactPanelHeader({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {actions}
-        {showClose && (
+        {showClose && onClose && (
           <Button
             variant="ghost"
             size="icon"

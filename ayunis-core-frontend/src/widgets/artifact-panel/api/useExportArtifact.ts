@@ -12,7 +12,8 @@ import { useTranslation } from 'react-i18next';
 
 interface UseExportArtifactOptions {
   artifactId: string;
-  threadId: string;
+  /** The chat the artifact is exported from; outcomes are only tracked there. */
+  threadId?: string;
   title: string;
 }
 
@@ -34,7 +35,9 @@ export function useExportArtifact({
           versionNumber,
         });
         saveBlobAs(data, `${title}.${format}`);
-        trackProductiveOutcome(queryClient, threadId, exportOutcome(format));
+        if (threadId) {
+          trackProductiveOutcome(queryClient, threadId, exportOutcome(format));
+        }
       } catch {
         showError(t('export.errorFormat', { format: format.toUpperCase() }));
       } finally {

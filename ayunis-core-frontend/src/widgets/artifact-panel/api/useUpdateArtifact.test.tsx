@@ -2,6 +2,12 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as SharedApi from '@/shared/api';
+import {
+  getArtifactsControllerFindByThreadQueryKey,
+  getArtifactsControllerFindByWorkspaceQueryKey,
+  getArtifactsControllerFindOneQueryKey,
+} from '@/shared/api';
 import { useUpdateArtifact } from './useUpdateArtifact';
 
 const { updateArtifact, client } = vi.hoisted(() => ({
@@ -11,20 +17,9 @@ const { updateArtifact, client } = vi.hoisted(() => ({
 
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@/shared/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof SharedApi>()),
   artifactsControllerUpdate: updateArtifact,
-  getArtifactsControllerFindOneQueryKey: (artifactId: string) => [
-    'artifact',
-    artifactId,
-  ],
-  getArtifactsControllerFindByThreadQueryKey: (threadId: string) => [
-    'thread-artifacts',
-    threadId,
-  ],
-  getArtifactsControllerFindByWorkspaceQueryKey: (workspaceId: string) => [
-    'workspace-artifacts',
-    workspaceId,
-  ],
 }));
 
 describe('useUpdateArtifact', () => {
@@ -34,19 +29,24 @@ describe('useUpdateArtifact', () => {
     client.track.mockResolvedValue(undefined);
   });
 
-  it('invalidates the workspace artifact list after updating an artifact', async () => {
+  it('refreshes the chat and workspace lists that show the artifact without being told which', async () => {
     const queryClient = new QueryClient();
-    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries');
+    const listKeys = [
+      getArtifactsControllerFindByThreadQueryKey('thread-id'),
+      getArtifactsControllerFindByWorkspaceQueryKey('workspace-id', {
+        limit: 10,
+        offset: 0,
+      }),
+    ];
+    const otherArtifactKey = getArtifactsControllerFindOneQueryKey('other-id');
+    [...listKeys, otherArtifactKey].forEach((key) =>
+      queryClient.setQueryData(key, []),
+    );
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     const { result } = renderHook(
-      () =>
-        useUpdateArtifact({
-          artifactId: 'artifact-id',
-          threadId: 'thread-id',
-          workspaceId: 'workspace-id',
-        }),
+      () => useUpdateArtifact({ artifactId: 'artifact-id' }),
       { wrapper },
     );
 
@@ -54,9 +54,12 @@ describe('useUpdateArtifact', () => {
       await result.current.updateArtifactAsync({ content: 'updated content' });
     });
 
-    expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['workspace-artifacts', 'workspace-id'],
-    });
+    expect(
+      listKeys.map((key) => queryClient.getQueryState(key)?.isInvalidated),
+    ).toEqual([true, true]);
+    expect(queryClient.getQueryState(otherArtifactKey)?.isInvalidated).toBe(
+      false,
+    );
   });
 
   describe('artifact_edited', () => {

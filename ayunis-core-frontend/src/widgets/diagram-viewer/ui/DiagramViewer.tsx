@@ -7,8 +7,8 @@ import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
 
 interface DiagramViewerProps {
   readonly artifact: ArtifactResponseDto;
-  readonly onClose: () => void;
-  readonly onBack: () => void;
+  readonly onClose?: () => void;
+  readonly onBack?: () => void;
   readonly showClose?: boolean;
 }
 

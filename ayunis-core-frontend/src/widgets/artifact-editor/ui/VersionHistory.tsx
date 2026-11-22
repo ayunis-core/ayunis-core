@@ -64,6 +64,7 @@ export function VersionHistory({
       <button
         type="button"
         className="hover:bg-muted flex w-full items-center gap-2 px-3 py-2 text-sm font-medium"
+        data-testid="artifact-version-history-toggle"
         onClick={() => setIsOpen(!isOpen)}
       >
         <History className="size-4" />
@@ -104,6 +105,7 @@ export function VersionHistory({
                 variant="outline"
                 size="sm"
                 className="relative h-7 px-2"
+                data-testid={`artifact-version-revert-${version.versionNumber}`}
                 onClick={() => onRevert(version.versionNumber)}
                 title={t('versionHistory.revertTo', {
                   version: version.versionNumber,

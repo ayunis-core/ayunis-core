@@ -1,20 +1,16 @@
-import {
-  artifactsControllerUpdate,
-  getArtifactsControllerFindOneQueryKey,
-  getArtifactsControllerFindByThreadQueryKey,
-  getArtifactsControllerFindByWorkspaceQueryKey,
-} from '@/shared/api';
+import { artifactsControllerUpdate } from '@/shared/api';
 import type {
   ArtifactResponseDtoType,
   UpdateArtifactDto,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { trackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { invalidateArtifactQueries } from './invalidateArtifactQueries';
 
 interface UseUpdateArtifactOptions {
   artifactId: string;
-  threadId: string;
-  workspaceId?: string | null;
+  /** The chat the artifact is edited in; outcomes are only tracked there. */
+  threadId?: string;
   artifactType?: ArtifactResponseDtoType;
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
@@ -23,7 +19,6 @@ interface UseUpdateArtifactOptions {
 export function useUpdateArtifact({
   artifactId,
   threadId,
-  workspaceId,
   artifactType,
   onSuccess,
   onError,
@@ -35,6 +30,7 @@ export function useUpdateArtifact({
       artifactsControllerUpdate(artifactId, data),
     onSuccess: (_, variables) => {
       if (
+        threadId &&
         variables.content !== undefined &&
         (artifactType === 'document' || artifactType === 'spreadsheet')
       ) {
@@ -46,19 +42,7 @@ export function useUpdateArtifact({
       onSuccess?.();
     },
     onError,
-    onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: getArtifactsControllerFindOneQueryKey(artifactId),
-      });
-      void queryClient.invalidateQueries({
-        queryKey: getArtifactsControllerFindByThreadQueryKey(threadId),
-      });
-      if (workspaceId) {
-        void queryClient.invalidateQueries({
-          queryKey: getArtifactsControllerFindByWorkspaceQueryKey(workspaceId),
-        });
-      }
-    },
+    onSettled: () => invalidateArtifactQueries(queryClient, artifactId),
   });
 
   return {

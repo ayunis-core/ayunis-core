@@ -24,20 +24,20 @@ function GridRow({ height }: { readonly height: string }) {
   );
 }
 
-interface ArtifactSidePanelSkeletonProps {
+interface ArtifactPanelSkeletonProps {
   /** Spreadsheets get a grid-shaped body; other editors get text lines. */
   readonly variant?: 'spreadsheet' | 'document';
-  readonly onClose: () => void;
-  readonly onBack: () => void;
+  readonly onClose?: () => void;
+  readonly onBack?: () => void;
   readonly showClose?: boolean;
 }
 
-export default function ArtifactSidePanelSkeleton({
+export default function ArtifactPanelSkeleton({
   variant = 'document',
   onClose,
   onBack,
   showClose = true,
-}: ArtifactSidePanelSkeletonProps) {
+}: ArtifactPanelSkeletonProps) {
   return (
     <div
       className="flex h-full flex-col overflow-hidden border-l"
