@@ -63,6 +63,14 @@ vi.mock('./delete-confirmation-dialog', () => ({
   DeleteConfirmationDialog: () => null,
 }));
 vi.mock('./coming-soon-dialog', () => ({ ComingSoonDialog: () => null }));
+vi.mock('./connections-section', () => ({
+  ConnectionsSection: ({
+    officeAddinsEnabled,
+  }: {
+    officeAddinsEnabled: boolean;
+  }) =>
+    officeAddinsEnabled ? <div data-testid="office-add-ins-item" /> : null,
+}));
 vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({
   default: ({
     action,
@@ -93,26 +101,24 @@ it('offers custom integration creation on cloud deployments', () => {
   expect(screen.getByText('custom-dialog-open')).toBeTruthy();
 });
 
-it('shows admins the Outlook add-in manifest URL while the add-in is enabled', () => {
+it('lists the Office add-ins while the Outlook add-in is enabled', () => {
   outlookAddinEnabled.current = true;
   render(<McpIntegrationsPage isCloud page={1} />);
 
-  expect(screen.getByTestId('outlook-addin-manifest-url').textContent).toMatch(
-    /^https?:\/\/[^/]+\/.*office-addins\/outlook\/manifest\.xml$/,
-  );
+  expect(screen.getByTestId('office-add-ins-item')).toBeTruthy();
 });
 
-it('leaves the Outlook add-in out while it is disabled', () => {
+it('leaves the Office add-ins out while the Outlook add-in is disabled', () => {
   render(<McpIntegrationsPage isCloud page={1} />);
 
-  expect(screen.queryByTestId('outlook-addin-section')).toBeNull();
+  expect(screen.queryByTestId('office-add-ins-item')).toBeNull();
 });
 
-// The add-in has nothing to do with the MCP integrations.
-it('keeps the Outlook add-in instructions when the MCP integrations fail to load', () => {
+// The add-ins have nothing to do with the MCP integrations.
+it('keeps the Office add-ins when the MCP integrations fail to load', () => {
   outlookAddinEnabled.current = true;
   mcpQuery.error = new Error('MCP down');
   render(<McpIntegrationsPage isCloud page={1} />);
 
-  expect(screen.getByTestId('outlook-addin-section')).toBeTruthy();
+  expect(screen.getByTestId('office-add-ins-item')).toBeTruthy();
 });

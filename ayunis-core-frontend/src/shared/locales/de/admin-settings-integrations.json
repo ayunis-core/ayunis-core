@@ -208,8 +208,16 @@
         "bearerToken": "Bearer-Token"
       }
     },
+    "officeAddins": {
+      "title": "Microsoft Office-Add-ins",
+      "description": "Nutzen Sie Ayunis Core in Ihren Office-Tools.",
+      "comingSoon": {
+        "title": "Demnächst",
+        "description": "Add-ins für alle weiteren Office-Tools."
+      }
+    },
     "outlook": {
-      "title": "Microsoft Outlook",
+      "title": "Microsoft Office",
       "description": "Mit dem Ayunis-Core-Add-in nutzen Ihre Mitarbeitenden Ayunis Core direkt in Outlook. Bereitgestellt wird es im Microsoft 365 Admin Center, durch eine Person mit Microsoft-365- oder Exchange-Administratorrechten.",
       "manifestUrl": "Manifest-URL",
       "openIntegratedApps": "„Integrierte Apps“ öffnen",

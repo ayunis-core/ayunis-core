@@ -22,14 +22,28 @@ const connectorPages = {
   microsoft_365: '/admin-settings/integrations/microsoft-365',
 } as const satisfies Record<ConnectorProduct, string>;
 
-export function ConnectionsSection() {
+export function ConnectionsSection({
+  connectorsEnabled,
+  officeAddinsEnabled,
+}: Readonly<{ connectorsEnabled: boolean; officeAddinsEnabled: boolean }>) {
+  const { t } = useTranslation('admin-settings-connections');
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold">{t('connections.title')}</h2>
+      {connectorsEnabled && <ConnectorItems />}
+      {officeAddinsEnabled && <OfficeAddinsItem />}
+    </section>
+  );
+}
+
+function ConnectorItems() {
   const { t } = useTranslation('admin-settings-connections');
   const { connectors, isLoading, error, refetch } = useConnectors();
   const failed = !isLoading && error !== null;
 
   return (
-    <section className="space-y-4" data-testid="connections-section">
-      <h2 className="text-lg font-semibold">{t('connections.title')}</h2>
+    <div className="space-y-4" data-testid="connections-section">
       {isLoading && <Skeleton className="h-16 w-full" />}
       {failed && (
         <Alert variant="destructive">
@@ -80,6 +94,26 @@ export function ConnectionsSection() {
             </Link>
           </Item>
         ))}
-    </section>
+    </div>
+  );
+}
+
+function OfficeAddinsItem() {
+  const { t } = useTranslation('admin-settings-integrations');
+
+  return (
+    <Item variant="outline" data-testid="office-add-ins-item" asChild>
+      <Link to="/admin-settings/integrations/office-add-ins">
+        <ItemContent>
+          <ItemTitle>{t('integrations.officeAddins.title')}</ItemTitle>
+          <ItemDescription>
+            {t('integrations.officeAddins.description')}
+          </ItemDescription>
+        </ItemContent>
+        <ItemActions>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </ItemActions>
+      </Link>
+    </Item>
   );
 }
