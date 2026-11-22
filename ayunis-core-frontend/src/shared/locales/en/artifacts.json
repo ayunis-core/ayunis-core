@@ -117,5 +117,36 @@
       "out": "Zoom out",
       "reset": "Reset view"
     }
+  },
+  "library": {
+    "title": "Library",
+    "searchPlaceholder": "Search by title",
+    "typeFilter": "Type",
+    "allTypes": "All types",
+    "type": {
+      "document": "Document",
+      "diagram": "Diagram",
+      "spreadsheet": "Spreadsheet"
+    },
+    "changedAt": "Changed {{date}}",
+    "emptyTitle": "No content yet",
+    "emptyDescription": "Documents, diagrams and spreadsheets created in your personal chats appear here.",
+    "noResultsTitle": "No matching content",
+    "noResultsDescription": "Try a different title or type.",
+    "loadError": {
+      "title": "Library could not be loaded",
+      "description": "Please reload the page."
+    }
+  },
+  "delete": {
+    "button": "Delete",
+    "confirmTitle": "Delete content?",
+    "confirmDescription": "“{{title}}” and all its versions will be deleted permanently and removed from every chat.",
+    "confirmText": "Delete",
+    "cancelText": "Cancel",
+    "success": "Content deleted",
+    "notFound": "This content no longer exists.",
+    "forbidden": "Only its creator and members who may manage the workspace can delete this content.",
+    "error": "Content could not be deleted. Please try again."
   }
 }

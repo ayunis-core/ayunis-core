@@ -6,7 +6,8 @@ import type { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-m
 import type { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import type { ArtifactOwner } from 'src/domain/artifacts/domain/artifact-owner';
 
-export interface ArtifactsByWorkspaceListOptions {
+export interface ArtifactListOptions {
+  /** Matches the title as shown, with the real values of its placeholders. */
   search?: string;
   type?: ArtifactType;
   limit: number;
@@ -41,12 +42,12 @@ export abstract class ArtifactsRepository {
     options?: Pick<ArtifactLookupOptions, 'isAnonymous'>,
   ): Promise<Artifact[]>;
   /**
-   * Every artifact of the workspace, anonymous ones with their mask
-   * dictionaries; callers check membership first.
+   * The owner's artifacts, most recently changed first, anonymous ones with
+   * their mask dictionaries; callers check access first.
    */
-  abstract findByWorkspaceId(
-    workspaceId: UUID,
-    options: ArtifactsByWorkspaceListOptions,
+  abstract findByOwner(
+    owner: ArtifactOwner,
+    options: ArtifactListOptions,
   ): Promise<Paginated<Artifact>>;
   abstract deleteThreadLinksNotOwnedBy(
     threadId: UUID,

@@ -7,7 +7,7 @@ import {
 } from 'src/domain/artifacts/domain/artifacts.constants';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 
-export class FindArtifactsByWorkspaceQueryParamsDto {
+export class FindArtifactsQueryParamsDto {
   @ApiPropertyOptional({ description: 'Search artifacts by title' })
   @IsOptional()
   @IsString()

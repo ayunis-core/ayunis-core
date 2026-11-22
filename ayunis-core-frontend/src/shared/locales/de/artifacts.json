@@ -117,5 +117,36 @@
       "out": "Verkleinern",
       "reset": "Ansicht zurücksetzen"
     }
+  },
+  "library": {
+    "title": "Ablage",
+    "searchPlaceholder": "Nach Titel suchen",
+    "typeFilter": "Typ",
+    "allTypes": "Alle Typen",
+    "type": {
+      "document": "Dokument",
+      "diagram": "Diagramm",
+      "spreadsheet": "Tabelle"
+    },
+    "changedAt": "Geändert am {{date}}",
+    "emptyTitle": "Noch keine Inhalte",
+    "emptyDescription": "Dokumente, Diagramme und Tabellen aus Ihren persönlichen Chats erscheinen hier.",
+    "noResultsTitle": "Keine passenden Inhalte",
+    "noResultsDescription": "Versuchen Sie einen anderen Titel oder Typ.",
+    "loadError": {
+      "title": "Ablage konnte nicht geladen werden",
+      "description": "Bitte laden Sie die Seite neu."
+    }
+  },
+  "delete": {
+    "button": "Löschen",
+    "confirmTitle": "Inhalt löschen?",
+    "confirmDescription": "„{{title}}“ wird mit allen Versionen endgültig gelöscht und aus allen Chats entfernt.",
+    "confirmText": "Löschen",
+    "cancelText": "Abbrechen",
+    "success": "Inhalt gelöscht",
+    "notFound": "Dieser Inhalt existiert nicht mehr.",
+    "forbidden": "Nur die Person, die den Inhalt erstellt hat, und Mitglieder, die den Arbeitsbereich verwalten dürfen, können ihn löschen.",
+    "error": "Inhalt konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
   }
 }

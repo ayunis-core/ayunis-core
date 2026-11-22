@@ -16,6 +16,7 @@
   "/api-keys/{id}",
   "/app-alert",
   "/artifacts",
+  "/artifacts/personal",
   "/artifacts/thread/{threadId}",
   "/artifacts/workspace/{workspaceId}",
   "/artifacts/{id}",

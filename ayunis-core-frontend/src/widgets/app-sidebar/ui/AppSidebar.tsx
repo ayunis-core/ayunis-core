@@ -8,6 +8,7 @@ import {
   Brain,
   Sparkles,
   FolderOpen,
+  Library,
   Store,
   GraduationCap,
   CalendarClock,
@@ -60,6 +61,7 @@ import { useMobileSidebarNavigationHandler } from '@/widgets/app-sidebar/hooks/u
 
 const NAVIGATION_TEST_IDS: Partial<Record<string, string>> = {
   '/chat': 'sidebar-navigation-new-chat',
+  '/library': 'sidebar-navigation-library',
   '/routines': 'sidebar-navigation-routines',
   '/recordings': 'sidebar-navigation-recordings',
   '/skills': 'sidebar-navigation-skills',
@@ -107,6 +109,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: '/workspaces',
       icon: FolderOpen,
       exact: true,
+    },
+    {
+      title: t('sidebar.library'),
+      url: '/library',
+      icon: Library,
     },
     {
       title: t('sidebar.skills'),

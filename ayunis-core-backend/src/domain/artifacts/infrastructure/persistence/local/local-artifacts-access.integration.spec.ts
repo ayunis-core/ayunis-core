@@ -115,10 +115,10 @@ describe('Artifacts are accessible by their owner (PostgreSQL)', () => {
     );
     await insertArtifact(db, await insertChat(db, colleague, randomUUID()));
 
-    const listed = await artifacts.findByWorkspaceId(workspaceId, {
-      limit: 20,
-      offset: 0,
-    });
+    const listed = await artifacts.findByOwner(
+      { type: 'workspace', workspaceId },
+      { limit: 20, offset: 0 },
+    );
 
     expect(listed.data.map((artifact) => artifact.id)).toEqual(
       expect.arrayContaining([workspaceArtifact, colleagueArtifact]),

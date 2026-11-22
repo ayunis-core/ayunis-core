@@ -9,6 +9,8 @@ import type { FindArtifactsByWorkspaceUseCase } from 'src/domain/artifacts/appli
 import type { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import type { RevertArtifactUseCase } from 'src/domain/artifacts/application/use-cases/revert-artifact/revert-artifact.use-case';
 import type { ExportArtifactUseCase } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.use-case';
+import type { FindPersonalArtifactsUseCase } from 'src/domain/artifacts/application/use-cases/find-personal-artifacts/find-personal-artifacts.use-case';
+import type { DeleteArtifactUseCase } from 'src/domain/artifacts/application/use-cases/delete-artifact/delete-artifact.use-case';
 import type { CreateArtifactDto } from 'src/domain/artifacts/presenters/http/dtos/create-artifact.dto';
 import type { UpdateArtifactDto } from 'src/domain/artifacts/presenters/http/dtos/update-artifact.dto';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -28,6 +30,8 @@ function setup() {
     {} as FindArtifactWithVersionsUseCase,
     {} as RevertArtifactUseCase,
     {} as ExportArtifactUseCase,
+    {} as FindPersonalArtifactsUseCase,
+    {} as DeleteArtifactUseCase,
     {
       toDto: jest.fn(),
       toVersionDto: jest.fn(),

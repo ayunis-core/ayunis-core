@@ -51,6 +51,7 @@ import { Route as AuthenticatedInboxIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedInboxNotificationIdRouteImport } from './routes/_authenticated/inbox.$notificationId'
 import { Route as AuthenticatedKnowledgeBasesIndexRouteImport } from './routes/_authenticated/knowledge-bases.index'
 import { Route as AuthenticatedKnowledgeBasesIdRouteImport } from './routes/_authenticated/knowledge-bases.$id'
+import { Route as AuthenticatedLibraryIndexRouteImport } from './routes/_authenticated/library.index'
 import { Route as AuthenticatedNewsIndexRouteImport } from './routes/_authenticated/news.index'
 import { Route as AuthenticatedNewsReleaseNoteIdRouteImport } from './routes/_authenticated/news.$releaseNoteId'
 import { Route as AuthenticatedRecordingsIndexRouteImport } from './routes/_authenticated/recordings.index'
@@ -324,6 +325,12 @@ const AuthenticatedKnowledgeBasesIdRoute =
   AuthenticatedKnowledgeBasesIdRouteImport.update({
     id: '/knowledge-bases/$id',
     path: '/knowledge-bases/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedLibraryIndexRoute =
+  AuthenticatedLibraryIndexRouteImport.update({
+    id: '/library/',
+    path: '/library/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedNewsIndexRoute = AuthenticatedNewsIndexRouteImport.update({
@@ -631,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/inbox/': typeof AuthenticatedInboxIndexRoute
   '/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/library/': typeof AuthenticatedLibraryIndexRoute
   '/news/': typeof AuthenticatedNewsIndexRoute
   '/recordings/': typeof AuthenticatedRecordingsIndexRoute
   '/routines/': typeof AuthenticatedRoutinesIndexRoute
@@ -713,6 +721,7 @@ export interface FileRoutesByTo {
   '/getting-started': typeof AuthenticatedGettingStartedIndexRoute
   '/inbox': typeof AuthenticatedInboxIndexRoute
   '/knowledge-bases': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/library': typeof AuthenticatedLibraryIndexRoute
   '/news': typeof AuthenticatedNewsIndexRoute
   '/recordings': typeof AuthenticatedRecordingsIndexRoute
   '/routines': typeof AuthenticatedRoutinesIndexRoute
@@ -800,6 +809,7 @@ export interface FileRoutesById {
   '/_authenticated/getting-started/': typeof AuthenticatedGettingStartedIndexRoute
   '/_authenticated/inbox/': typeof AuthenticatedInboxIndexRoute
   '/_authenticated/knowledge-bases/': typeof AuthenticatedKnowledgeBasesIndexRoute
+  '/_authenticated/library/': typeof AuthenticatedLibraryIndexRoute
   '/_authenticated/news/': typeof AuthenticatedNewsIndexRoute
   '/_authenticated/recordings/': typeof AuthenticatedRecordingsIndexRoute
   '/_authenticated/routines/': typeof AuthenticatedRoutinesIndexRoute
@@ -887,6 +897,7 @@ export interface FileRouteTypes {
     | '/getting-started/'
     | '/inbox/'
     | '/knowledge-bases/'
+    | '/library/'
     | '/news/'
     | '/recordings/'
     | '/routines/'
@@ -969,6 +980,7 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/inbox'
     | '/knowledge-bases'
+    | '/library'
     | '/news'
     | '/recordings'
     | '/routines'
@@ -1055,6 +1067,7 @@ export interface FileRouteTypes {
     | '/_authenticated/getting-started/'
     | '/_authenticated/inbox/'
     | '/_authenticated/knowledge-bases/'
+    | '/_authenticated/library/'
     | '/_authenticated/news/'
     | '/_authenticated/recordings/'
     | '/_authenticated/routines/'
@@ -1403,6 +1416,13 @@ declare module '@tanstack/react-router' {
       path: '/knowledge-bases/$id'
       fullPath: '/knowledge-bases/$id'
       preLoaderRoute: typeof AuthenticatedKnowledgeBasesIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/library/': {
+      id: '/_authenticated/library/'
+      path: '/library'
+      fullPath: '/library/'
+      preLoaderRoute: typeof AuthenticatedLibraryIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/news/': {
@@ -1852,6 +1872,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedGettingStartedIndexRoute: typeof AuthenticatedGettingStartedIndexRoute
   AuthenticatedKnowledgeBasesIndexRoute: typeof AuthenticatedKnowledgeBasesIndexRoute
+  AuthenticatedLibraryIndexRoute: typeof AuthenticatedLibraryIndexRoute
   AuthenticatedNewsIndexRoute: typeof AuthenticatedNewsIndexRoute
   AuthenticatedRecordingsIndexRoute: typeof AuthenticatedRecordingsIndexRoute
   AuthenticatedRoutinesIndexRoute: typeof AuthenticatedRoutinesIndexRoute
@@ -1892,6 +1913,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedGettingStartedIndexRoute: AuthenticatedGettingStartedIndexRoute,
   AuthenticatedKnowledgeBasesIndexRoute: AuthenticatedKnowledgeBasesIndexRoute,
+  AuthenticatedLibraryIndexRoute: AuthenticatedLibraryIndexRoute,
   AuthenticatedNewsIndexRoute: AuthenticatedNewsIndexRoute,
   AuthenticatedRecordingsIndexRoute: AuthenticatedRecordingsIndexRoute,
   AuthenticatedRoutinesIndexRoute: AuthenticatedRoutinesIndexRoute,

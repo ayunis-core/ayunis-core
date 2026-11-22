@@ -54,6 +54,7 @@ import type {
   ArtifactVersionResponseDto,
   ArtifactsControllerExportParams,
   ArtifactsControllerFindByWorkspaceParams,
+  ArtifactsControllerFindPersonalParams,
   AssignThreadWorkspaceDto,
   BulkAddTeamMembersDto,
   CSVDataSourceResponseDto,
@@ -20536,6 +20537,166 @@ export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getArtifactsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Delete an artifact with its versions and its links to chats. Personal artifacts: the owner; workspace artifacts: the creator or members with manage_workspace
+ */
+export const artifactsControllerDelete = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/artifacts/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerDeleteMutationKey = () => ['artifactsControllerDelete'] as const;
+
+export const getArtifactsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerDelete>>, TError,ArtifactsControllerDeleteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerDelete>>, TError,ArtifactsControllerDeleteMutationVariables, TContext> => {
+
+const mutationKey = getArtifactsControllerDeleteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerDelete>>, ArtifactsControllerDeleteMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  artifactsControllerDelete(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerDelete>>>
+
+    export type ArtifactsControllerDeleteMutationError = void
+    export type ArtifactsControllerDeleteMutationVariables = {id: string}
+
+    /**
+ * @summary Delete an artifact with its versions and its links to chats. Personal artifacts: the owner; workspace artifacts: the creator or members with manage_workspace
+ */
+export const useArtifactsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerDelete>>, TError,ArtifactsControllerDeleteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerDelete>>,
+        TError,
+        ArtifactsControllerDeleteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArtifactsControllerDeleteMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List the caller's personal artifacts (not workspace artifacts)
+ */
+export const artifactsControllerFindPersonal = (
+    params?: ArtifactsControllerFindPersonalParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactListResponseDto>(
+      {url: `/artifacts/personal`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerFindPersonalQueryKey = (params?: ArtifactsControllerFindPersonalParams,) => {
+    return [
+    `/artifacts/personal`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getArtifactsControllerFindPersonalQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError = unknown>(params?: ArtifactsControllerFindPersonalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindPersonalQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>> = ({ signal }) => artifactsControllerFindPersonal(params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindPersonalQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>>
+export type ArtifactsControllerFindPersonalQueryError = unknown
+
+
+export function useArtifactsControllerFindPersonal<TData = Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError = unknown>(
+ params: undefined |  ArtifactsControllerFindPersonalParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindPersonal>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindPersonal>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindPersonal<TData = Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError = unknown>(
+ params?: ArtifactsControllerFindPersonalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindPersonal>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindPersonal>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindPersonal<TData = Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError = unknown>(
+ params?: ArtifactsControllerFindPersonalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the caller's personal artifacts (not workspace artifacts)
+ */
+
+export function useArtifactsControllerFindPersonal<TData = Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError = unknown>(
+ params?: ArtifactsControllerFindPersonalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindPersonal>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindPersonalQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

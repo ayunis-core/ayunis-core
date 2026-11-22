@@ -74,6 +74,7 @@ const artifact = {
   type: 'spreadsheet',
   ownerType: 'personal',
   userId: 'user-id',
+  creatorId: 'user-id',
   title: 'Budget',
   isAnonymous: false,
   currentVersionNumber: 1,
