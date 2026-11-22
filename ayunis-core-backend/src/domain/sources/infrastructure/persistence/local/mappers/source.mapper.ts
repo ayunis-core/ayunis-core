@@ -56,6 +56,7 @@ export class SourceMapper {
           id: record.id,
           fileType: record.fileType!,
           url: record.url,
+          syncedLocationId: record.syncedLocationId,
           name: record.name,
           type: TextType.FILE,
           processingErrorCode: record.processingErrorCode,

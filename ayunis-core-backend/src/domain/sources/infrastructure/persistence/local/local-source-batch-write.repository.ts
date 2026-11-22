@@ -109,6 +109,7 @@ export class LocalSourceBatchWriteRepository extends SourceBatchWriteRepository 
     const [rows]: [ReplacedSource[], number] = await this.manager.query(
       `UPDATE "sources" AS r
        SET "knowledgeBaseId" = o."knowledgeBaseId", "replacesSourceId" = NULL,
+           "syncedLocationId" = o."syncedLocationId",
            "name" = $2, "updatedAt" = now()
        FROM "sources" AS o
        WHERE r.id = $1 AND o.id = r."replacesSourceId"

@@ -3639,6 +3639,8 @@ export interface KnowledgeBaseDocumentResponseDto {
   textType?: KnowledgeBaseDocumentResponseDtoTextType;
   /** The URL of the source (only for web sources) */
   url?: string;
+  /** The synced location the document is kept in sync with; it is listed under that location */
+  syncedLocationId?: string;
 }
 
 export interface KnowledgeBaseDocumentListResponseDto {
@@ -5556,6 +5558,276 @@ export interface UpdateTrialRequestDto {
   messagesSent?: number;
 }
 
+export type ConnectorProduct = typeof ConnectorProduct[keyof typeof ConnectorProduct];
+
+
+export const ConnectorProduct = {
+  microsoft_365: 'microsoft_365',
+} as const;
+
+/**
+ * Whether the connector still reaches the location; its documents stay when it does not
+ */
+export type SyncedLocationState = typeof SyncedLocationState[keyof typeof SyncedLocationState];
+
+
+export const SyncedLocationState = {
+  active: 'active',
+  no_longer_accessible: 'no_longer_accessible',
+} as const;
+
+/**
+ * Why the file is set aside
+ */
+export type SyncedFileSkipReason = typeof SyncedFileSkipReason[keyof typeof SyncedFileSkipReason];
+
+
+export const SyncedFileSkipReason = {
+  unsupported_type: 'unsupported_type',
+  too_large: 'too_large',
+  encrypted: 'encrypted',
+  removed_after_failure: 'removed_after_failure',
+} as const;
+
+export interface SkippedSyncedFileResponseDto {
+  name: string;
+  /** Below the location, including the name */
+  path: string;
+  /** Why the file is set aside */
+  reason: SyncedFileSkipReason;
+}
+
+export interface SyncedLocationResponseDto {
+  id: string;
+  product: ConnectorProduct;
+  /** The URL that is synced */
+  location: string;
+  /** Whether the connector still reaches the location; its documents stay when it does not */
+  state: SyncedLocationState;
+  /**
+     * When the location was last synced; null before its first sync
+     * @nullable
+     */
+  lastSyncedAt: string | null;
+  /**
+     * Since when a sync runs, until its files are processed; null between syncs
+     * @nullable
+     */
+  syncingSince: string | null;
+  /**
+     * While syncing is paused after the provider was unavailable: the next attempt
+     * @nullable
+     */
+  pausedUntil: string | null;
+  /** When the next scheduled sync is due */
+  nextSyncAt: string;
+  /** Files synced as documents */
+  documentCount: number;
+  /** Synced files whose latest version failed to process */
+  failedCount: number;
+  /** Files not synced because the knowledge base's document limit is reached */
+  notSyncedLimitReachedCount: number;
+  /** Files set aside, e.g. unsupported or encrypted */
+  skippedCount: number;
+  /** The first files set aside, by path */
+  skippedFiles: SkippedSyncedFileResponseDto[];
+}
+
+export interface SyncedLocationListResponseDto {
+  data: SyncedLocationResponseDto[];
+  /** The products whose locations can be added: those the organization has set up */
+  availableProducts: ConnectorProduct[];
+}
+
+export interface AddSyncedLocationDto {
+  /** The product whose connector syncs the location */
+  product: ConnectorProduct;
+  /**
+     * The URL of the location, as the product resolved it (for SharePoint the `location` of a found resolution)
+     * @maxLength 2048
+     */
+  location: string;
+}
+
+/**
+ * Whether the organization has set up this connector
+ */
+export type ConnectorStatus = typeof ConnectorStatus[keyof typeof ConnectorStatus];
+
+
+export const ConnectorStatus = {
+  not_set_up: 'not_set_up',
+  set_up: 'set_up',
+} as const;
+
+export interface ConnectorResponseDto {
+  /** The product this connector connects to */
+  product: ConnectorProduct;
+  /** Whether the organization has set up this connector */
+  status: ConnectorStatus;
+}
+
+export interface Microsoft365ConnectorResponseDto {
+  /** Whether the organization has set up Microsoft 365 */
+  status: ConnectorStatus;
+  /**
+     * Directory (tenant) ID; null while not set up
+     * @nullable
+     */
+  tenantId: string | null;
+  /**
+     * Application (client) ID; null while not set up
+     * @nullable
+     */
+  clientId: string | null;
+}
+
+export interface SaveMicrosoft365ConnectorDto {
+  /** Directory (tenant) ID of the Entra tenant */
+  tenantId: string;
+  /** Application (client) ID of the Entra app registration */
+  clientId: string;
+  /**
+     * Value of a client secret of the app registration. Required to set up the connection; omit it to keep the stored secret. Never returned.
+     * @maxLength 1024
+     */
+  clientSecret?: string;
+}
+
+/**
+ * Whether the connection works, or the setup mistake that stops it
+ */
+export type Microsoft365ConnectionTestOutcome = typeof Microsoft365ConnectionTestOutcome[keyof typeof Microsoft365ConnectionTestOutcome];
+
+
+export const Microsoft365ConnectionTestOutcome = {
+  connected: 'connected',
+  tenant_not_found: 'tenant_not_found',
+  client_not_found: 'client_not_found',
+  client_secret_invalid: 'client_secret_invalid',
+  client_secret_expired: 'client_secret_expired',
+  consent_missing: 'consent_missing',
+  consent_on_wrong_api: 'consent_on_wrong_api',
+  required_permission_missing: 'required_permission_missing',
+  rejected: 'rejected',
+  microsoft_unavailable: 'microsoft_unavailable',
+  unexpected_error: 'unexpected_error',
+} as const;
+
+export interface Microsoft365PermissionResponseDto {
+  /** Microsoft Graph application permission */
+  name: string;
+  /** Whether Ayunis cannot work without it */
+  required: boolean;
+  /** Whether the app's token carries it */
+  granted: boolean;
+}
+
+export interface Microsoft365ConnectionTestResponseDto {
+  /** Whether the connection works, or the setup mistake that stops it */
+  outcome: Microsoft365ConnectionTestOutcome;
+  /** The Microsoft Graph permissions Ayunis uses */
+  permissions: Microsoft365PermissionResponseDto[];
+  /** Microsoft Graph permissions granted to the app that Ayunis does not use */
+  otherGrantedPermissions: string[];
+  /**
+     * Entra's error code when it refused the token
+     * @nullable
+     */
+  entraErrorCode: string | null;
+}
+
+export interface SavedMicrosoft365ConnectorResponseDto {
+  /** Whether the organization has set up Microsoft 365 */
+  status: ConnectorStatus;
+  /**
+     * Directory (tenant) ID; null while not set up
+     * @nullable
+     */
+  tenantId: string | null;
+  /**
+     * Application (client) ID; null while not set up
+     * @nullable
+     */
+  clientId: string | null;
+  /** The test run right after saving */
+  connectionTest: Microsoft365ConnectionTestResponseDto;
+}
+
+export interface ResolveSharePointLocationDto {
+  /**
+     * A URL copied from SharePoint Online: a site, a document library or a folder
+     * @maxLength 2048
+     */
+  url: string;
+}
+
+/**
+ * Found, not granted to Ayunis, not found or not granted (where Microsoft Graph cannot tell), not found, or not a URL of a site, library or folder
+ */
+export type SharePointResolutionOutcome = typeof SharePointResolutionOutcome[keyof typeof SharePointResolutionOutcome];
+
+
+export const SharePointResolutionOutcome = {
+  found: 'found',
+  not_granted: 'not_granted',
+  not_found_or_not_granted: 'not_found_or_not_granted',
+  not_found: 'not_found',
+  unsupported_url: 'unsupported_url',
+} as const;
+
+/**
+ * What was found
+ */
+export type SharePointLocationKind = typeof SharePointLocationKind[keyof typeof SharePointLocationKind];
+
+
+export const SharePointLocationKind = {
+  site: 'site',
+  library: 'library',
+  folder: 'folder',
+} as const;
+
+/**
+ * What the grant covers: the whole site (Sites.Selected) or one folder (Files.SelectedOperations.Selected)
+ */
+export type SharePointGrantScope = typeof SharePointGrantScope[keyof typeof SharePointGrantScope];
+
+
+export const SharePointGrantScope = {
+  site: 'site',
+  folder: 'folder',
+} as const;
+
+export interface SharePointGrantResponseDto {
+  /** What the grant covers: the whole site (Sites.Selected) or one folder (Files.SelectedOperations.Selected) */
+  scope: SharePointGrantScope;
+  /** Microsoft Graph PowerShell commands that grant the organization’s app read access, for the Microsoft 365 admin */
+  command: string;
+}
+
+export interface SharePointLocationResolutionResponseDto {
+  /** Found, not granted to Ayunis, not found or not granted (where Microsoft Graph cannot tell), not found, or not a URL of a site, library or folder */
+  outcome: SharePointResolutionOutcome;
+  /** What was found */
+  kind: SharePointLocationKind | null;
+  /**
+     * The name of what was found
+     * @nullable
+     */
+  name: string | null;
+  /**
+     * SharePoint’s own URL of what was found, to add as the synced location
+     * @nullable
+     */
+  location: string | null;
+  /**
+     * How to grant it, when it is not (or may not be) granted
+     * @nullable
+     */
+  grant: SharePointGrantResponseDto | null;
+}
+
 export type CreateRecordingDtoOwnerType = typeof CreateRecordingDtoOwnerType[keyof typeof CreateRecordingDtoOwnerType];
 
 
@@ -6965,121 +7237,6 @@ export interface UpdateRetentionPolicyRequestDto {
 }
 
 export interface ChatCompletionRequestDto { [key: string]: unknown }
-
-/**
- * The product this connector connects to
- */
-export type ConnectorProduct = typeof ConnectorProduct[keyof typeof ConnectorProduct];
-
-
-export const ConnectorProduct = {
-  microsoft_365: 'microsoft_365',
-} as const;
-
-/**
- * Whether the organization has set up this connector
- */
-export type ConnectorStatus = typeof ConnectorStatus[keyof typeof ConnectorStatus];
-
-
-export const ConnectorStatus = {
-  not_set_up: 'not_set_up',
-  set_up: 'set_up',
-} as const;
-
-export interface ConnectorResponseDto {
-  /** The product this connector connects to */
-  product: ConnectorProduct;
-  /** Whether the organization has set up this connector */
-  status: ConnectorStatus;
-}
-
-export interface Microsoft365ConnectorResponseDto {
-  /** Whether the organization has set up Microsoft 365 */
-  status: ConnectorStatus;
-  /**
-     * Directory (tenant) ID; null while not set up
-     * @nullable
-     */
-  tenantId: string | null;
-  /**
-     * Application (client) ID; null while not set up
-     * @nullable
-     */
-  clientId: string | null;
-}
-
-export interface SaveMicrosoft365ConnectorDto {
-  /** Directory (tenant) ID of the Entra tenant */
-  tenantId: string;
-  /** Application (client) ID of the Entra app registration */
-  clientId: string;
-  /**
-     * Value of a client secret of the app registration. Required to set up the connection; omit it to keep the stored secret. Never returned.
-     * @maxLength 1024
-     */
-  clientSecret?: string;
-}
-
-/**
- * Whether the connection works, or the setup mistake that stops it
- */
-export type Microsoft365ConnectionTestOutcome = typeof Microsoft365ConnectionTestOutcome[keyof typeof Microsoft365ConnectionTestOutcome];
-
-
-export const Microsoft365ConnectionTestOutcome = {
-  connected: 'connected',
-  tenant_not_found: 'tenant_not_found',
-  client_not_found: 'client_not_found',
-  client_secret_invalid: 'client_secret_invalid',
-  client_secret_expired: 'client_secret_expired',
-  consent_missing: 'consent_missing',
-  consent_on_wrong_api: 'consent_on_wrong_api',
-  required_permission_missing: 'required_permission_missing',
-  rejected: 'rejected',
-  microsoft_unavailable: 'microsoft_unavailable',
-  unexpected_error: 'unexpected_error',
-} as const;
-
-export interface Microsoft365PermissionResponseDto {
-  /** Microsoft Graph application permission */
-  name: string;
-  /** Whether Ayunis cannot work without it */
-  required: boolean;
-  /** Whether the app's token carries it */
-  granted: boolean;
-}
-
-export interface Microsoft365ConnectionTestResponseDto {
-  /** Whether the connection works, or the setup mistake that stops it */
-  outcome: Microsoft365ConnectionTestOutcome;
-  /** The Microsoft Graph permissions Ayunis uses */
-  permissions: Microsoft365PermissionResponseDto[];
-  /** Microsoft Graph permissions granted to the app that Ayunis does not use */
-  otherGrantedPermissions: string[];
-  /**
-     * Entra's error code when it refused the token
-     * @nullable
-     */
-  entraErrorCode: string | null;
-}
-
-export interface SavedMicrosoft365ConnectorResponseDto {
-  /** Whether the organization has set up Microsoft 365 */
-  status: ConnectorStatus;
-  /**
-     * Directory (tenant) ID; null while not set up
-     * @nullable
-     */
-  tenantId: string | null;
-  /**
-     * Application (client) ID; null while not set up
-     * @nullable
-     */
-  clientId: string | null;
-  /** The test run right after saving */
-  connectionTest: Microsoft365ConnectionTestResponseDto;
-}
 
 export interface LoginDto {
   /** Email address for authentication */

@@ -2,7 +2,7 @@
 
 Keeps a knowledge base location in sync with an external system: a user adds a URL (for SharePoint a site, a document library or a folder), and every file below it becomes a regular knowledge base document. Provider-neutral: connectors (`domain/connectors`) list the files and read their content; this module decides what that means for the documents. Nothing here knows a product.
 
-Everything here is behind the `connectorsEnabled` feature flag (`FEATURE_CONNECTORS_ENABLED`, off by default), except removing a location. With the flag off, no schedule is registered, nothing is synced and synced documents stay searchable as normal documents.
+Everything here is behind the `connectorsEnabled` feature flag (`FEATURE_CONNECTORS_ENABLED`, off by default), including its HTTP routes; only the removal use case itself works with the flag off. With the flag off, no schedule is registered, nothing is synced and synced documents stay searchable as normal documents.
 
 ## Domain
 
@@ -27,7 +27,8 @@ A full listing (`fullListing`, e.g. after Graph's `410 resyncRequired`) reaches 
 
 ## Use Cases
 
-- **`AddSyncedLocationUseCase`** — Adds a location to a knowledge base the current user may change (`AssertKnowledgeBaseWriteAccessUseCase`), through the organization's set-up connector for the product (`FindSetUpConnectorUseCase`). `SYNCED_LOCATION_ALREADY_EXISTS` (409) for a duplicate, `KNOWLEDGE_BASE_SYNC_DISABLED` (404) with the flag off. Lists nothing yet.
+- **`AddSyncedLocationUseCase`** — Adds a location to a knowledge base the current user may change (`AssertKnowledgeBaseWriteAccessUseCase`), through the organization's set-up connector for the product (`FindSetUpConnectorUseCase`), and queues its first run (`SyncRunsPort`; if that fails, the sweep takes the location within a minute, as it is due). `SYNCED_LOCATION_ALREADY_EXISTS` (409) for a duplicate, `KNOWLEDGE_BASE_SYNC_DISABLED` (404) with the flag off. The URL is stored as given; the frontend adds what the connector resolved (for SharePoint `ResolveSharePointLocationUseCase`), and a URL the connector cannot resolve becomes `no_longer_accessible` on its first sync.
+- **`ListSyncedLocationsUseCase`** — For a user who may read the knowledge base (`AssertKnowledgeBaseReadAccessUseCase`, so readers see the state too): its locations in the order they were added, each with its product (through `ListConnectorsUseCase`) and what its files amount to (`SyncedFilesSummary`: files with a document, those whose latest version failed, `awaiting_capacity` ones for "X files not synced, limit reached", and the skipped ones with the first 100 by path and their reasons), plus `availableProducts`, the products the organization has set up (what may be added). `KNOWLEDGE_BASE_SYNC_DISABLED` with the flag off.
 - **`SyncLocationUseCase`** — The listing of a sync, without a user, in a run (see Schedule and runs). While the location is paused it lists nothing (`paused` with the pause's end); otherwise it marks the location as syncing (`syncingSince`, kept from an earlier attempt of the same run) and asks the connectors module for the changes since the cursor (`ListConnectorChangesUseCase`):
   - `access_lost` — the location becomes `no_longer_accessible`, unless a newer sync was recorded meanwhile; its documents stay searchable. The next successful sync makes it `active` again.
   - `throttled` — the location is paused until `retryAt`, which is returned; nothing else changes.
@@ -37,9 +38,9 @@ A full listing (`fullListing`, e.g. after Graph's `410 resyncRequired`) reaches 
 - **`NextSyncedFileBatchUseCase`** — The next batch of up to 20 (`SYNCED_FILE_BATCH_SIZE`) files whose document is behind their version, by file ID after the previous batch, as job data. Empty once all are fed, or when the location is gone or no longer accessible, or connectors are off.
 - **`FinishLocationSyncUseCase`** — Ends a run: `syncingSince` is cleared and the next sync is due an hour later (`SYNC_INTERVAL_MS`).
 - **`PauseSyncedLocationUseCase`** — The back-off for a provider outage (`outagePauseEnd` in `domain/sync-schedule.ts`): when `findProviderOutage` (`common/errors`) classifies the failure as one (no connection, a timeout, a server error, a 408/429 rejection; not a rejection of the request itself), the location is paused until the provider's `Retry-After` or else 1, 2, 4 … 32 minutes by the job's earlier pauses (at most an hour each), a replacement the job was processing is paused too (`PauseSourceProcessingUseCase`, so the stale-processing cleanup leaves it), and the end is returned. `null` for other failures, and once the job paused six times (about an hour), so a file that fails at a provider every time fails as usual instead of holding up its location for good. A pause only ever extends (`pause` keeps the later end).
-- **`SyncLocationNowUseCase`** — "Sync now" for a user who may change the knowledge base (`AssertKnowledgeBaseWriteAccessUseCase`; another organisation's location is `SYNCED_LOCATION_NOT_FOUND`, `KNOWLEDGE_BASE_SYNC_DISABLED` with the flag off): queues a run (`SyncRunsPort`), which starts ahead of the files on the queue. Nothing more while the location's run is queued, running or waiting; a paused location waits for its pause.
+- **`SyncLocationNowUseCase`** — "Sync now" for a user who may change the knowledge base (`AssertKnowledgeBaseWriteAccessUseCase`; another organisation's location, or one of another knowledge base than the command's, is `SYNCED_LOCATION_NOT_FOUND`, `KNOWLEDGE_BASE_SYNC_DISABLED` with the flag off): queues a run (`SyncRunsPort`), which starts ahead of the files on the queue. Nothing more while the location's run is queued, running or waiting; a paused location waits for its pause.
 - **`SyncDueLocationsUseCase`** — The sweep: takes up to 500 due, unpaused locations (`claimDue`: `nextSyncAt <= now`, oldest first, `FOR UPDATE SKIP LOCKED`, moving `nextSyncAt` an hour on in the same statement, so a run lost with its queue is retried then) and queues a run for each. Nothing with the flag off.
-- **`RemoveSyncedLocationUseCase`** — With write access to the knowledge base: removes the location, its files and their documents with their index entries, in one transaction holding the location's locks (`SyncedLocationLocks`), so a running sync cannot add documents meanwhile; the waiting jobs of its files are removed after the commit. Available with the flag off.
+- **`RemoveSyncedLocationUseCase`** — With write access to the knowledge base (a location of another organisation or knowledge base than the command's is `SYNCED_LOCATION_NOT_FOUND`): removes the location, its files and their documents with their index entries, in one transaction holding the location's locks (`SyncedLocationLocks`), so a running sync cannot add documents meanwhile; the waiting jobs of its files are removed after the commit. Available with the flag off.
 
 ## Locks (`SyncedLocationLocks`)
 
@@ -76,8 +77,19 @@ All on the `knowledge-base-sync` queue, worked by `SyncedFileProcessingConsumer`
 - A file's `sourceId` is set to `null` when its document is deleted (`ON DELETE SET NULL`).
 - The connector outlives a removed connection: its locations stay and report access lost until it is set up again.
 
+## HTTP API
+
+Controller: `KnowledgeBaseSyncedLocationsController`, tag `knowledge-bases`, behind `@RequireFeature(connectorsEnabled)` (404 with the flag off). Access as in the use cases: readers of the knowledge base list, whoever may change its documents adds, syncs and removes (denials answer like the knowledge base's other document routes; another organization's knowledge base or location is 404).
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/knowledge-bases/:id/synced-locations` | `{ data, availableProducts }`; each location with `state`, `lastSyncedAt`, `syncingSince`, `pausedUntil` (only while paused), `nextSyncAt`, `documentCount`, `failedCount`, `notSyncedLimitReachedCount`, `skippedCount` and `skippedFiles` |
+| POST | `/knowledge-bases/:id/synced-locations` | `{ product, location }` (201); the first sync starts right away |
+| POST | `/knowledge-bases/:id/synced-locations/:locationId/sync` | "Sync now" (202) |
+| DELETE | `/knowledge-bases/:id/synced-locations/:locationId` | Removes the location and its documents (204) |
+
 ## Infrastructure
 
-- **`LocalSyncedLocationsRepository`** — TypeORM, tables `knowledge_base_synced_locations` and `knowledge_base_synced_files`. Files are written in batches with one `INSERT … ON CONFLICT (id) DO UPDATE` each and read under `FOR UPDATE` during a sync. Check constraints: `skipReason` is set exactly for skipped files, and only imported files have a document. `lastSourceId` has no foreign key, so it outlives the document.
+- **`LocalSyncedLocationsRepository`** — TypeORM, tables `knowledge_base_synced_locations` and `knowledge_base_synced_files`. `summarizeFiles` counts the files of many locations in one grouped query and takes their first skipped files with `ROW_NUMBER() OVER (PARTITION BY "locationId")` in another. Files are written in batches with one `INSERT … ON CONFLICT (id) DO UPDATE` each and read under `FOR UPDATE` during a sync. Check constraints: `skipReason` is set exactly for skipped files, and only imported files have a document. `lastSourceId` has no foreign key, so it outlives the document.
 - **`SyncedFileProcessingConsumer`** — the `knowledge-base-sync` queue's worker (see Processing); listed in queue inspection and telemetry. `SyncRunner` works its sweep and run jobs (see Schedule and runs); both are provided by `IngestionConsumersModule`.
 - **`SyncRunsProducer`** — `SyncRunsPort`, the runs' job IDs and options. Without the organisation lifecycle lock: a run queued after its organisation was deleted finds no location and ends.

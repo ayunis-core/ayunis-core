@@ -54,6 +54,7 @@ export class AddSyncedDocumentsToKnowledgeBaseUseCase {
         new CreateProcessingFileSourcesCommand(
           knowledgeBaseId,
           fileNames.slice(0, room),
+          command.syncedLocationId,
         ),
       );
     });

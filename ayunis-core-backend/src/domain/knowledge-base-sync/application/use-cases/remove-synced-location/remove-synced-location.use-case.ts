@@ -43,7 +43,10 @@ export class RemoveSyncedLocationUseCase {
     const { orgId } = getRequiredUserContext(this.contextService);
     this.logger.log({ locationId: command.locationId }, 'execute');
     const location = await this.repository.findById(command.locationId);
-    if (location?.orgId !== orgId)
+    if (
+      location?.orgId !== orgId ||
+      location.knowledgeBaseId !== command.knowledgeBaseId
+    )
       throw new SyncedLocationNotFoundError(command.locationId);
     await this.writeAccess.execute(
       new AssertKnowledgeBaseWriteAccessQuery(location.knowledgeBaseId),

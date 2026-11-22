@@ -72,6 +72,7 @@ export class SyncPlanApplier {
         new AddSyncedDocumentsToKnowledgeBaseCommand(
           location.knowledgeBaseId,
           plan.awaitingDocument.map(({ name }) => name),
+          location.id,
         ),
       );
       const createdSourceIds = created.map(({ id }) => id);

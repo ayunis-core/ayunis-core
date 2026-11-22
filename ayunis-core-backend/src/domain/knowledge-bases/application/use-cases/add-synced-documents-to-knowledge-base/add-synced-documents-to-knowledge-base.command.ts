@@ -5,5 +5,6 @@ export class AddSyncedDocumentsToKnowledgeBaseCommand {
     public readonly knowledgeBaseId: UUID,
     /** In the order they get the remaining room. */
     public readonly fileNames: string[],
+    public readonly syncedLocationId: UUID,
   ) {}
 }

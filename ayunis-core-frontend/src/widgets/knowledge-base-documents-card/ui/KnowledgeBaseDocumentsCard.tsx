@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { PendingSourceUpload } from '@/shared/lib/source-upload';
 import { PendingUploadItems } from '@/shared/ui/pending-upload-items';
-import { Fragment } from 'react/jsx-runtime';
 import {
   Card,
   CardContent,
@@ -10,46 +9,20 @@ import {
   CardDescription,
   CardAction,
 } from '@ayunis/ui/components/card';
-import { Button } from '@ayunis/ui/components/button';
 import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemActions,
-  ItemMedia,
-  ItemGroup,
-  ItemSeparator,
-} from '@ayunis/ui/components/item';
-import {
-  KnowledgeBaseDocumentResponseDtoTextType,
   KnowledgeBaseDocumentResponseDtoStatus,
   type KnowledgeBaseDocumentResponseDto,
-  type SourceProcessingErrorCode,
 } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import {
-  Upload,
-  X,
-  FileText,
-  Globe,
-  Loader2,
-  AlertCircle,
-  Clock,
-} from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@ayunis/ui/components/tooltip';
 import { useTranslation } from 'react-i18next';
-import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-error';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { cn } from '@ayunis/ui/lib/cn';
-import { formatDate } from '@/shared/lib/format-date';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
 import { isValidUrl } from '@/widgets/knowledge-base-documents-card/lib/isValidUrl';
+import type { SyncedSources } from '@/widgets/knowledge-base-documents-card/model/synced-sources';
 import { AddUrlDialog } from './AddUrlDialog';
+import { AddSourceMenu } from './AddSourceMenu';
 import { RemoveFailedDocumentsButton } from './RemoveFailedDocumentsButton';
+import { SourcesList } from './SourcesList';
 
 const ACCEPTED_EXTENSIONS = [
   '.pdf',
@@ -93,9 +66,11 @@ export interface KnowledgeBaseDocumentsController {
 export default function KnowledgeBaseDocumentsCard({
   disabled = false,
   controller,
+  synced,
 }: Readonly<{
   disabled?: boolean;
   controller: KnowledgeBaseDocumentsController;
+  synced?: SyncedSources;
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const { t: tCommon } = useTranslation('common');
@@ -199,34 +174,14 @@ export default function KnowledgeBaseDocumentsCard({
                 path="knowledge-collections/create-and-upload/"
                 variant="icon"
               />
-              {addUrlAsync ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setUrlDialogOpen(true)}
-                  disabled={isAddingUrl}
-                >
-                  {isAddingUrl ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Globe />
-                  )}
-                  {t('detail.documents.addUrl')}
-                </Button>
-              ) : null}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload />
-                )}
-                {t('detail.documents.upload')}
-              </Button>
+              <AddSourceMenu
+                onUpload={() => fileInputRef.current?.click()}
+                onAddUrl={
+                  addUrlAsync ? () => setUrlDialogOpen(true) : undefined
+                }
+                entries={synced?.addMenuEntries}
+                isBusy={isUploading || isAddingUrl}
+              />
             </div>
           </CardAction>
         )}
@@ -239,10 +194,12 @@ export default function KnowledgeBaseDocumentsCard({
             isRemovingFailed={isRemovingFailed}
           />
         )}
+        {synced?.notice}
         <PendingUploadItems uploads={uploads} />
-        <DocumentsContent
+        <SourcesList
           isLoading={isLoading}
           documents={documents}
+          synced={synced}
           hasPendingUploads={uploads.length > 0}
           removeDocument={removeDocument}
           isRemoving={isRemoving}
@@ -263,222 +220,7 @@ export default function KnowledgeBaseDocumentsCard({
           t={t}
         />
       ) : null}
+      {synced?.dialogs}
     </Card>
   );
-}
-
-function DocumentsContent({
-  isLoading,
-  documents,
-  hasPendingUploads,
-  removeDocument,
-  isRemoving,
-  emptyText,
-  disabled = false,
-}: Readonly<{
-  isLoading: boolean;
-  documents: KnowledgeBaseDocumentResponseDto[];
-  hasPendingUploads: boolean;
-  removeDocument: (id: string) => void;
-  isRemoving: boolean;
-  emptyText: string;
-  disabled?: boolean;
-}>) {
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  if (documents.length === 0) {
-    if (hasPendingUploads) return null;
-    return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
-        {emptyText}
-      </p>
-    );
-  }
-  return (
-    <ItemGroup>
-      {documents.map((doc, index) => (
-        <Fragment key={doc.id}>
-          <DocumentItem
-            doc={doc}
-            removeDocument={removeDocument}
-            isRemoving={isRemoving}
-            disabled={disabled}
-          />
-          {index < documents.length - 1 && <ItemSeparator />}
-        </Fragment>
-      ))}
-    </ItemGroup>
-  );
-}
-
-/** Processing sources older than this are shown with a slow-processing warning. */
-const SLOW_PROCESSING_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes
-
-function DocumentItem({
-  doc,
-  removeDocument,
-  isRemoving,
-  disabled = false,
-}: Readonly<{
-  doc: KnowledgeBaseDocumentResponseDto;
-  removeDocument: (id: string) => void;
-  isRemoving: boolean;
-  disabled?: boolean;
-}>) {
-  const { t } = useTranslation('knowledge-bases');
-  const isWeb = doc.textType === KnowledgeBaseDocumentResponseDtoTextType.web;
-  const isProcessing =
-    doc.status === KnowledgeBaseDocumentResponseDtoStatus.processing;
-  const isFailed = doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed;
-  const isReindexing =
-    doc.status === KnowledgeBaseDocumentResponseDtoStatus.reindexing;
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!isProcessing) return;
-    const id = setInterval(() => setNow(Date.now()), 30_000);
-    return () => clearInterval(id);
-  }, [isProcessing]);
-
-  const isProcessingSlow =
-    isProcessing &&
-    now - new Date(doc.createdAt).getTime() > SLOW_PROCESSING_THRESHOLD_MS;
-
-  return (
-    <Item
-      data-testid={`knowledge-base-document-${doc.id}`}
-      data-document-status={doc.status}
-    >
-      <ItemMedia variant="icon">
-        <DocumentItemIcon
-          isWeb={isWeb}
-          isProcessing={isProcessing || isReindexing}
-          isProcessingSlow={isProcessingSlow}
-          isFailed={isFailed}
-        />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>{doc.name}</ItemTitle>
-        <DocumentItemDescription
-          isWeb={isWeb}
-          url={doc.url}
-          isProcessing={isProcessing}
-          isProcessingSlow={isProcessingSlow}
-          isFailed={isFailed}
-          isReindexing={isReindexing}
-          processingErrorCode={doc.processingErrorCode}
-          t={t}
-        />
-        <ItemDescription>
-          {t('detail.documents.addedAt', {
-            date: formatDate(doc.createdAt),
-          })}
-        </ItemDescription>
-      </ItemContent>
-      {!disabled && (
-        <ItemActions>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => removeDocument(doc.id)}
-            disabled={isRemoving}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </ItemActions>
-      )}
-    </Item>
-  );
-}
-
-function DocumentItemDescription({
-  isWeb,
-  url,
-  isProcessing,
-  isProcessingSlow,
-  isFailed,
-  isReindexing,
-  processingErrorCode,
-  t,
-}: Readonly<{
-  isWeb: boolean;
-  url: string | null | undefined;
-  isProcessing: boolean;
-  isProcessingSlow: boolean;
-  isFailed: boolean;
-  isReindexing: boolean;
-  processingErrorCode: SourceProcessingErrorCode | undefined;
-  t: (key: string) => string;
-}>) {
-  if (isReindexing) {
-    return (
-      <ItemDescription>
-        {t('detail.documents.statusReindexing')}
-      </ItemDescription>
-    );
-  }
-  if (isProcessing) {
-    return (
-      <ItemDescription
-        className={
-          isProcessingSlow ? 'text-amber-600 dark:text-amber-400' : undefined
-        }
-      >
-        {isProcessingSlow
-          ? t('detail.documents.statusProcessingSlow')
-          : t('detail.documents.statusProcessing')}
-      </ItemDescription>
-    );
-  }
-  if (isFailed) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <ItemDescription className="text-destructive cursor-help">
-            {t('detail.documents.statusFailed')}
-          </ItemDescription>
-        </TooltipTrigger>
-        <TooltipContent>
-          {t(
-            `detail.documents.processingErrors.${getSourceProcessingErrorReason(processingErrorCode)}`,
-          )}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-  if (isWeb && url) {
-    return <ItemDescription>{url}</ItemDescription>;
-  }
-  return null;
-}
-
-function DocumentItemIcon({
-  isWeb,
-  isProcessing,
-  isProcessingSlow,
-  isFailed,
-}: Readonly<{
-  isWeb: boolean;
-  isProcessing: boolean;
-  isProcessingSlow: boolean;
-  isFailed: boolean;
-}>) {
-  if (isProcessingSlow) {
-    return (
-      <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-    );
-  }
-  if (isProcessing) {
-    return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />;
-  }
-  if (isFailed) {
-    return <AlertCircle className="h-3.5 w-3.5 shrink-0" />;
-  }
-  const Icon = isWeb ? Globe : FileText;
-  return <Icon className="h-3.5 w-3.5 shrink-0" />;
 }

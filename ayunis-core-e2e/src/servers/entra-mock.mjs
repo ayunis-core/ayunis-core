@@ -7,7 +7,8 @@ import { URL, URLSearchParams } from "node:url";
 // testing a Microsoft 365 connection in e2e never reaches Microsoft Entra.
 const port = Number(process.env.E2E_ENTRA_PORT ?? 3196);
 
-// Keep in sync with CONNECTED_TENANT_ID in tests/connectors/microsoft-365-connection-test.spec.ts.
+// Keep in sync with CONNECTED_TENANT_ID in tests/connectors/microsoft-365-connection-test.spec.ts
+// and src/factories/microsoft-365.factory.ts.
 // Entra issues this tenant's app a Graph token; every other tenant is unknown.
 const CONNECTED_TENANT_ID = "e2e0c0de-1a2b-4c3d-8e4f-5a6b7c8d9e0f";
 const GRANTED_ROLES = ["Sites.Selected", "Files.SelectedOperations.Selected"];

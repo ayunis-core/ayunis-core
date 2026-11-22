@@ -30,7 +30,7 @@ describe('LocalSourceBatchWriteRepository', () => {
     // The column types of the migrated table: IDs are varchar, not uuid. The
     // replacement's foreign key as AddSyncedFileProcessing creates it.
     await db.query(
-      `CREATE TABLE "${schema}"."sources" ("id" character varying PRIMARY KEY, "name" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "status" character varying, "knowledgeBaseId" character varying, "storageKey" character varying, "replacesSourceId" character varying REFERENCES "${schema}"."sources" ("id") ON DELETE CASCADE)`,
+      `CREATE TABLE "${schema}"."sources" ("id" character varying PRIMARY KEY, "name" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "status" character varying, "knowledgeBaseId" character varying, "storageKey" character varying, "replacesSourceId" character varying REFERENCES "${schema}"."sources" ("id") ON DELETE CASCADE, "syncedLocationId" character varying)`,
     );
     repository = new LocalSourceBatchWriteRepository(
       { manager: db.manager } as never,
@@ -75,6 +75,7 @@ describe('LocalSourceBatchWriteRepository', () => {
 
   describe('replacements of changed files', () => {
     const knowledgeBaseId = randomUUID();
+    const syncedLocationId = randomUUID();
 
     async function aSource(
       status: SourceStatus,
@@ -82,13 +83,14 @@ describe('LocalSourceBatchWriteRepository', () => {
     ): Promise<UUID> {
       const id = randomUUID();
       await db.query(
-        `INSERT INTO "${schema}"."sources" ("id", "name", "status", "knowledgeBaseId", "storageKey", "replacesSourceId") VALUES ($1, 'Hundesteuer.pdf', $2, $3, $4, $5)`,
+        `INSERT INTO "${schema}"."sources" ("id", "name", "status", "knowledgeBaseId", "storageKey", "replacesSourceId", "syncedLocationId") VALUES ($1, 'Hundesteuer.pdf', $2, $3, $4, $5, $6)`,
         [
           id,
           status,
           replaces ? null : knowledgeBaseId,
           `org/synced/${id}/Hundesteuer.pdf`,
           replaces,
+          replaces ? null : syncedLocationId,
         ],
       );
       return id;
@@ -96,9 +98,13 @@ describe('LocalSourceBatchWriteRepository', () => {
 
     async function row(id: UUID) {
       const [found] = await db.query<
-        { name: string; knowledgeBaseId: string | null }[]
+        {
+          name: string;
+          knowledgeBaseId: string | null;
+          syncedLocationId: string | null;
+        }[]
       >(
-        `SELECT "name", "knowledgeBaseId" FROM "${schema}"."sources" WHERE id = $1`,
+        `SELECT "name", "knowledgeBaseId", "syncedLocationId" FROM "${schema}"."sources" WHERE id = $1`,
         [id],
       );
       return found ?? null;
@@ -123,9 +129,11 @@ describe('LocalSourceBatchWriteRepository', () => {
         id: replaced,
         storageKey: `org/synced/${replaced}/Hundesteuer.pdf`,
       });
+      // It stays listed under the location the replaced source belonged to.
       expect(await row(replacement)).toEqual({
         name: 'Hundesteuer 2025.pdf',
         knowledgeBaseId,
+        syncedLocationId,
       });
       await db.query(`DELETE FROM "${schema}"."sources" WHERE id = $1`, [
         replaced,

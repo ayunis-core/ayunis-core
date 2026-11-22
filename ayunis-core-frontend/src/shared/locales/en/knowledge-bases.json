@@ -150,11 +150,12 @@
     "documents": {
       "title": "Documents",
       "description": "Manage the documents in this knowledge base. Supported formats: PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG and audio.",
-      "upload": "Upload",
       "empty": "No documents uploaded yet. Upload a PDF, DOCX or ODT file to get started.",
       "uploadSuccess": "Document uploaded successfully!",
       "uploadAccepted": "Document uploaded — processing in the background...",
       "uploadError": "Failed to upload document. Please try again.",
+      "add": "Add",
+      "addDocument": "Upload document",
       "addUrl": "Add URL",
       "urlPlaceholder": "https://example.com",
       "urlDialogTitle": "Add Website URL",
@@ -198,6 +199,105 @@
         "recordingTooLong": "The recording is too long to transcribe. Split it into shorter parts and upload them separately.",
         "spreadsheetTooLarge": "The spreadsheet is too large. Remove unused rows and columns or split it into smaller files, then upload it again.",
         "unavailable": "The document processing service is temporarily unavailable. Upload the file again later."
+      }
+    },
+    "syncedLocations": {
+      "sharePoint": "SharePoint",
+      "loadError": "Synced sources could not be loaded. Please try again.",
+      "retry": "Try again",
+      "openInSharePoint": "Open in SharePoint",
+      "syncNow": "Sync now",
+      "progress": "{{processed}} of {{total}} processed",
+      "filesRange": "{{first}}–{{last}} of {{total}}",
+      "previousFiles": "Previous documents",
+      "nextFiles": "Next documents",
+      "remove": "Remove",
+      "accessNote": "Everyone with access to this knowledge base sees the synced files according to its sharing in Ayunis, not according to SharePoint permissions.",
+      "status": {
+        "syncing": "Syncing…",
+        "waiting": "Waiting for the first sync",
+        "synced": "Last synced {{time}}",
+        "paused": "Paused after a service was unavailable, next attempt {{time}}",
+        "noLongerAccessible": "No longer accessible to Ayunis. Its documents stay until you remove the source."
+      },
+      "documents_one": "{{count}} document",
+      "documents_other": "{{count}} documents",
+      "failed_one": "{{count}} could not be processed",
+      "failed_other": "{{count}} could not be processed",
+      "limitReached_one": "{{count}} file not synced, limit reached",
+      "limitReached_other": "{{count}} files not synced, limit reached",
+      "skipped_one": "{{count}} file set aside",
+      "skipped_other": "{{count}} files set aside",
+      "skippedMore_one": "and {{count}} more",
+      "skippedMore_other": "and {{count}} more",
+      "skipReasons": {
+        "unsupported_type": "file type not supported",
+        "too_large": "too large",
+        "encrypted": "encrypted with a sensitivity label",
+        "removed_after_failure": "removed after it could not be processed; synced again once it changes"
+      },
+      "dialog": {
+        "title": "Add SharePoint source",
+        "description": "Paste the link of a SharePoint site, document library or folder. All files in it are synced into this knowledge base.",
+        "urlLabel": "SharePoint link",
+        "urlPlaceholder": "https://…sharepoint.com/sites/…",
+        "check": "Check",
+        "add": "Add",
+        "cancel": "Cancel"
+      },
+      "resolution": {
+        "found": {
+          "site": "Site “{{name}}”",
+          "library": "Library “{{name}}”",
+          "folder": "Folder “{{name}}”",
+          "description": "All its files are synced and kept up to date."
+        },
+        "not_granted": {
+          "title": "Not granted to Ayunis yet",
+          "description": "Forward this command to your Microsoft 365 administrator. Once it has run, check the link again."
+        },
+        "not_found_or_not_granted": {
+          "title": "Not found, or not granted to Ayunis",
+          "description": "Check the link. If the location exists, forward this command to your Microsoft 365 administrator, then check the link again."
+        },
+        "not_found": {
+          "title": "Not found",
+          "description": "This location does not exist in SharePoint. Check the link."
+        },
+        "unsupported_url": {
+          "title": "Not a SharePoint site, library or folder",
+          "description": "Copy the address of a site, document library or folder from the browser. Links to files and sharing links do not work."
+        },
+        "commandLabel": "command"
+      },
+      "validation": {
+        "url": {
+          "isNotEmpty": "Enter a SharePoint link",
+          "maxLength": "The link must be 2048 characters or fewer",
+          "invalid": "Invalid link"
+        },
+        "invalid": "Invalid input"
+      },
+      "addSuccess": "SharePoint source added. Its files are being synced.",
+      "syncNowSuccess": "Sync started",
+      "removeSuccess": "Source removed",
+      "confirmRemove": {
+        "title": "Remove synced source",
+        "description_one": "“{{name}}” and its {{count}} document will be removed from this knowledge base. Nothing changes in SharePoint.",
+        "description_other": "“{{name}}” and its {{count}} documents will be removed from this knowledge base. Nothing changes in SharePoint.",
+        "confirmText": "Remove",
+        "cancelText": "Cancel"
+      },
+      "errors": {
+        "resolve": "The link could not be checked",
+        "notSetUp": "Microsoft 365 is not connected. Ask your administrator to set it up.",
+        "connectionFailed": "The connection to Microsoft 365 is not working. Ask your administrator to test it in the admin settings.",
+        "microsoftUnavailable": "Microsoft 365 is not available right now. Try again in a few minutes.",
+        "alreadyExists": "This knowledge base already syncs this source",
+        "add": "The source could not be added",
+        "syncNow": "The sync could not be started",
+        "remove": "The source could not be removed",
+        "notFound": "This source no longer exists"
       }
     }
   },
