@@ -63,9 +63,14 @@ export class UrlRetrieverTimeoutError extends UrlRetrieverError {
 }
 
 export class UrlRetrieverHttpError extends UrlRetrieverError {
-  constructor(url: string, statusCode: number, metadata?: ErrorMetadata) {
+  constructor(
+    url: string,
+    /** The status the remote server answered with. */
+    public readonly upstreamStatus: number,
+    metadata?: ErrorMetadata,
+  ) {
     super(
-      `HTTP error when retrieving '${url}': ${statusCode}`,
+      `HTTP error when retrieving '${url}': ${upstreamStatus}`,
       UrlRetrieverErrorCode.HTTP_ERROR,
       422,
       metadata,

@@ -14,9 +14,21 @@ jest.mock('p-limit', () => ({
 import { CrawlUrlUseCase } from './crawl-url.use-case';
 import { CrawlUrlCommand } from './crawl-url.command';
 import { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
+import type { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { UrlCrawlConstants } from 'src/domain/retrievers/url-retrievers/domain/url-crawl.constants';
-import { UrlRetrieverProviderNotAvailableError } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import {
+  UrlRetrieverContentTooLargeError,
+  UrlRetrieverHttpError,
+  UrlRetrieverParsingError,
+  UrlRetrieverProviderNotAvailableError,
+  UrlRetrieverTimeoutError,
+  UrlRetrieverTooManyRedirectsError,
+  UrlRetrieverUnsupportedContentTypeError,
+} from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import { GetPdfVersionUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/get-pdf-version/get-pdf-version.use-case';
+import { UrlCrawlFailureKind } from 'src/domain/retrievers/url-retrievers/domain/url-crawl-result.entity';
+import { CrawlDomainAccessDeniedError } from 'src/domain/crawl-domain-grants/application/crawl-domain-grants.errors';
 import { TooManyPagesError } from 'src/domain/retrievers/file-retrievers/application/file-retriever.errors';
 
 const ORG_ID = '00000000-0000-0000-0000-000000000010' as UUID;
@@ -58,14 +70,35 @@ function fakeRetriever(
 
 async function buildUseCase(
   retriever: Pick<RetrieveUrlUseCase, 'execute'>,
+  pdfVersions: Pick<GetPdfVersionUseCase, 'execute'> = {
+    execute: jest.fn(({ url }: { url: string }) =>
+      Promise.resolve(`etag:${url}`),
+    ),
+  },
 ): Promise<CrawlUrlUseCase> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       CrawlUrlUseCase,
       { provide: RetrieveUrlUseCase, useValue: retriever },
+      { provide: GetPdfVersionUseCase, useValue: pdfVersions },
     ],
   }).compile();
   return module.get(CrawlUrlUseCase);
+}
+
+/** A retriever whose listed URLs reject with the given error. */
+function failingRetriever(
+  pages: Record<string, { links?: string[] }>,
+  failures: Record<string, Error>,
+): Pick<RetrieveUrlUseCase, 'execute'> {
+  const pagesRetriever = fakeRetriever(pages);
+  return {
+    execute: jest.fn((command: RetrieveUrlCommand) =>
+      failures[command.url]
+        ? Promise.reject(failures[command.url])
+        : pagesRetriever.execute(command),
+    ),
+  };
 }
 
 describe('CrawlUrlUseCase', () => {
@@ -354,6 +387,9 @@ describe('CrawlUrlUseCase', () => {
       'https://acme.test/',
       'https://acme.test/ok',
     ]);
+    expect(result.failures).toEqual([
+      { url: 'https://acme.test/broken', kind: UrlCrawlFailureKind.TRANSIENT },
+    ]);
   });
 
   it('skips a PDF link that exceeds the page cap and keeps crawling the site', async () => {
@@ -393,6 +429,7 @@ describe('CrawlUrlUseCase', () => {
       'https://acme.test/',
       'https://acme.test/ok',
     ]);
+    expect(result.failures).toEqual([]);
   });
 
   it('redacts URL query tokens and raw error text from skip logs', async () => {
@@ -445,6 +482,177 @@ describe('CrawlUrlUseCase', () => {
       'https://acme.test/',
       'https://acme.test/a',
       'https://acme.test/b',
+    ]);
+  });
+});
+
+describe('CrawlUrlUseCase failure reporting', () => {
+  const root = 'https://acme.test/';
+
+  it('reports a child page answering 503 or timing out as transiently failed and one answering 404 or 410 as gone', async () => {
+    const links = ['a', 'b', 'c', 'd', 'e'].map((p) => `${root}${p}`);
+    const retriever = failingRetriever(
+      { [root]: { links }, [links[4]]: {} },
+      {
+        [links[0]]: new UrlRetrieverHttpError(links[0], 503),
+        [links[1]]: new UrlRetrieverTimeoutError(links[1], 5000),
+        [links[2]]: new UrlRetrieverHttpError(links[2], 404),
+        [links[3]]: new UrlRetrieverHttpError(links[3], 410),
+      },
+    );
+    const result = await (
+      await buildUseCase(retriever)
+    ).execute(new CrawlUrlCommand(root, ORG_ID, 1));
+
+    expect(result.pages.map((p) => p.url)).toEqual([root, links[4]]);
+    expect(result.failures).toEqual([
+      { url: links[0], kind: UrlCrawlFailureKind.TRANSIENT },
+      { url: links[1], kind: UrlCrawlFailureKind.TRANSIENT },
+      { url: links[2], kind: UrlCrawlFailureKind.GONE },
+      { url: links[3], kind: UrlCrawlFailureKind.GONE },
+    ]);
+  });
+
+  it('reports a child page blocked mid-crawl (401, 403, 429, redirect loop, denied destination) as transiently failed, not gone', async () => {
+    const failures: Record<string, Error> = {
+      [`${root}login`]: new UrlRetrieverHttpError(`${root}login`, 401),
+      [`${root}waf`]: new UrlRetrieverHttpError(`${root}waf`, 403),
+      [`${root}limited`]: new UrlRetrieverHttpError(`${root}limited`, 429),
+      [`${root}loop`]: new UrlRetrieverTooManyRedirectsError(`${root}loop`, 5),
+      [`${root}moved`]: new CrawlDomainAccessDeniedError(),
+    };
+    const links = Object.keys(failures);
+    const result = await (
+      await buildUseCase(failingRetriever({ [root]: { links } }, failures))
+    ).execute(new CrawlUrlCommand(root, ORG_ID, 1));
+
+    expect(result.failures).toEqual(
+      links.map((url) => ({ url, kind: UrlCrawlFailureKind.TRANSIENT })),
+    );
+  });
+
+  it('does not report a page that was served but cannot be crawled as served', async () => {
+    const image = `${root}logo.png`;
+    const huge = `${root}archiv`;
+    const broken = `${root}kaputt`;
+    const retriever = failingRetriever(
+      { [root]: { links: [image, huge, broken] } },
+      {
+        [image]: new UrlRetrieverUnsupportedContentTypeError(
+          image,
+          'image/png',
+        ),
+        [huge]: new UrlRetrieverContentTooLargeError(huge, 25 * 1024 * 1024),
+        [broken]: new UrlRetrieverParsingError(broken, 'malformed markup'),
+      },
+    );
+    const result = await (
+      await buildUseCase(retriever)
+    ).execute(new CrawlUrlCommand(root, ORG_ID, 1));
+
+    expect(result.failures).toEqual([]);
+  });
+
+  it('still aborts the crawl when the root page answers 503', async () => {
+    const retriever = failingRetriever(
+      {},
+      { [root]: new UrlRetrieverHttpError(root, 503) },
+    );
+    await expect(
+      (await buildUseCase(retriever)).execute(
+        new CrawlUrlCommand(root, ORG_ID, 1, {
+          liftCaps: true,
+          resolvePdfVersions: true,
+        }),
+      ),
+    ).rejects.toBeInstanceOf(UrlRetrieverHttpError);
+  });
+});
+
+describe('CrawlUrlUseCase with lifted caps', () => {
+  const root = 'https://acme.test/';
+  const children = Array.from({ length: 6 }, (_, i) => `${root}c${i}`);
+  const grandchildren = children.flatMap((child) =>
+    Array.from({ length: 6 }, (_, i) => `${child}/g${i}`),
+  );
+  const greatGrandchild = `${root}too-deep`;
+  const pdfs = grandchildren.map(
+    (url) => `https://cdn.test/${url.slice(18)}.pdf`,
+  );
+  const site = {
+    [root]: { links: children },
+    ...Object.fromEntries(
+      children.map((child, i) => [
+        child,
+        { links: grandchildren.slice(i * 6, i * 6 + 6) },
+      ]),
+    ),
+    ...Object.fromEntries(
+      grandchildren.map((url, i) => [
+        url,
+        { links: [pdfs[i], greatGrandchild] },
+      ]),
+    ),
+    [greatGrandchild]: {},
+  };
+
+  it('returns more than 25 pages and 25 PDFs of a depth-2 crawl, still bounded by the depth', async () => {
+    const result = await (
+      await buildUseCase(fakeRetriever(site))
+    ).execute(new CrawlUrlCommand(root, ORG_ID, 2, { liftCaps: true }));
+
+    expect(result.pages).toHaveLength(1 + 6 + 36);
+    expect(result.pdfLinks).toHaveLength(36);
+    expect(result.pages.map((p) => p.url)).not.toContain(greatGrandchild);
+  });
+
+  it('keeps the page and PDF caps when the caller does not lift them', async () => {
+    const pdfVersions = { execute: jest.fn() };
+    const result = await (
+      await buildUseCase(fakeRetriever(site), pdfVersions)
+    ).execute(new CrawlUrlCommand(root, ORG_ID, 2));
+
+    expect(result.pages).toHaveLength(UrlCrawlConstants.MAX_PAGES);
+    // One PDF per grandchild within the page cap: 25 - root - 6 children.
+    expect(result.pdfLinks).toHaveLength(18);
+    expect(result.pdfLinks.every((pdf) => pdf.version === undefined)).toBe(
+      true,
+    );
+    expect(pdfVersions.execute).not.toHaveBeenCalled();
+  });
+});
+
+describe('CrawlUrlUseCase PDF versions', () => {
+  const root = 'https://acme.test/';
+  const current = 'https://cdn.test/current.pdf';
+  const unavailable = 'https://cdn.test/unavailable.pdf';
+  const deleted = 'https://cdn.test/deleted.pdf';
+
+  it('versions every PDF and reports PDFs whose version cannot be read as failed', async () => {
+    const pdfVersions = {
+      execute: jest.fn(({ url }: { url: string }) => {
+        if (url === unavailable)
+          return Promise.reject(new UrlRetrieverHttpError(url, 502));
+        if (url === deleted)
+          return Promise.reject(new UrlRetrieverHttpError(url, 404));
+        return Promise.resolve('etag:"v7"');
+      }),
+    };
+    const retriever = fakeRetriever({
+      [root]: { links: [current, unavailable, deleted] },
+    });
+    const result = await (
+      await buildUseCase(retriever, pdfVersions)
+    ).execute(
+      new CrawlUrlCommand(root, ORG_ID, 0, { resolvePdfVersions: true }),
+    );
+
+    expect(result.pdfLinks).toEqual([
+      { url: current, name: 'current.pdf', version: 'etag:"v7"' },
+    ]);
+    expect(result.failures).toEqual([
+      { url: unavailable, kind: UrlCrawlFailureKind.TRANSIENT },
+      { url: deleted, kind: UrlCrawlFailureKind.GONE },
     ]);
   });
 });

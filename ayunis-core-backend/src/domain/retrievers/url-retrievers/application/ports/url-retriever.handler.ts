@@ -37,6 +37,14 @@ export interface RawUrlResponse {
   body: Buffer;
 }
 
+/** The validator headers of a HEAD response; `null` when the server sent none. */
+export interface UrlHeadResponse {
+  finalUrl: string;
+  etag: string | null;
+  lastModified: string | null;
+  contentLength: string | null;
+}
+
 export abstract class UrlRetrieverHandler {
   /**
    * Fetch a URL's raw bytes, following redirects (re-asserting the org gate on
@@ -45,6 +53,12 @@ export abstract class UrlRetrieverHandler {
    * decision belongs to the application layer.
    */
   abstract fetch(input: UrlRetrieverInput): Promise<RawUrlResponse>;
+
+  /**
+   * Send a HEAD request with the same redirect, destination and timeout rules
+   * as {@link fetch}, without reading a body. `assertContentType` is ignored.
+   */
+  abstract head(input: UrlRetrieverInput): Promise<UrlHeadResponse>;
 
   /**
    * Parse an HTML document into cleaned text, title, and discovered links.

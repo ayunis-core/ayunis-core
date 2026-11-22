@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import * as cheerio from 'cheerio';
 import {
   RawUrlResponse,
+  UrlHeadResponse,
   UrlRetrieverHandler,
   UrlRetrieverInput,
 } from 'src/domain/retrievers/url-retrievers/application/ports/url-retriever.handler';
@@ -33,6 +34,8 @@ const MAX_REDIRECTS = 5;
 // value can never disable the abort timer that bounds the whole fetch.
 const MAX_TIMEOUT_MS = 60_000;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
+
+type HttpMethod = 'GET' | 'HEAD';
 
 @Injectable()
 export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
@@ -57,47 +60,83 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
 
   async fetch(input: UrlRetrieverInput): Promise<RawUrlResponse> {
     try {
-      return await this.fetchRaw(input);
+      return await this.withTimeout(input, (signal) =>
+        this.fetchRaw(input, signal),
+      );
     } catch (error) {
       return this.handleTopLevelError(error, input.url);
     }
   }
 
-  private async fetchRaw(input: UrlRetrieverInput): Promise<RawUrlResponse> {
+  async head(input: UrlRetrieverInput): Promise<UrlHeadResponse> {
+    try {
+      return await this.withTimeout(input, (signal) =>
+        this.headRaw(input, signal),
+      );
+    } catch (error) {
+      return this.handleTopLevelError(error, input.url);
+    }
+  }
+
+  private async fetchRaw(
+    input: UrlRetrieverInput,
+    signal: AbortSignal,
+  ): Promise<RawUrlResponse> {
     this.logger.debug(
       { url: input.url },
       'Retrieving URL with Cheerio handler',
     );
 
+    const { response, finalUrl } = await this.fetchFollowingRedirects(
+      input,
+      signal,
+      'GET',
+    );
+
+    const contentType =
+      response.headers.get('content-type')?.toLowerCase() ?? '';
+    // Reject bad status / unsupported type from headers alone, before
+    // buffering the body (cancelling the body stream on rejection).
+    await this.assertResponseAcceptable(response, finalUrl, contentType, input);
+    // The timer stays armed through the body read — it is the longest phase,
+    // so a slow-loris body must be bounded by the same timeout as the headers.
+    // The size cap is enforced while streaming (readBodyWithCap), not from the
+    // Content-Length header — proxies and buggy servers overstate it, which
+    // would otherwise reject valid small payloads. Streaming still guarantees
+    // the whole response is never buffered: it aborts once the cap is hit.
+    const body = await this.readBodyWithCap(response, finalUrl);
+
+    return { contentType, finalUrl, body };
+  }
+
+  private async headRaw(
+    input: UrlRetrieverInput,
+    signal: AbortSignal,
+  ): Promise<UrlHeadResponse> {
+    const { response, finalUrl } = await this.fetchFollowingRedirects(
+      input,
+      signal,
+      'HEAD',
+    );
+    await this.discardBody(response);
+    this.assertHttpOk(response, finalUrl);
+    return {
+      finalUrl,
+      etag: response.headers.get('etag'),
+      lastModified: response.headers.get('last-modified'),
+      contentLength: response.headers.get('content-length'),
+    };
+  }
+
+  private async withTimeout<T>(
+    input: UrlRetrieverInput,
+    run: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
     const timeout = this.resolveTimeout(input);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-
     try {
-      const { response, finalUrl } = await this.fetchFollowingRedirects(
-        input,
-        controller.signal,
-      );
-
-      const contentType =
-        response.headers.get('content-type')?.toLowerCase() ?? '';
-      // Reject bad status / unsupported type from headers alone, before
-      // buffering the body (cancelling the body stream on rejection).
-      await this.assertResponseAcceptable(
-        response,
-        finalUrl,
-        contentType,
-        input,
-      );
-      // The timer stays armed through the body read — it is the longest phase,
-      // so a slow-loris body must be bounded by the same timeout as the headers.
-      // The size cap is enforced while streaming (readBodyWithCap), not from the
-      // Content-Length header — proxies and buggy servers overstate it, which
-      // would otherwise reject valid small payloads. Streaming still guarantees
-      // the whole response is never buffered: it aborts once the cap is hit.
-      const body = await this.readBodyWithCap(response, finalUrl);
-
-      return { contentType, finalUrl, body };
+      return await run(controller.signal);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new UrlRetrieverTimeoutError(input.url, timeout, {
@@ -164,11 +203,12 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
   private async fetchFollowingRedirects(
     input: UrlRetrieverInput,
     signal: AbortSignal,
+    method: HttpMethod,
   ): Promise<{ response: Response; finalUrl: string }> {
     let currentUrl = input.url;
 
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-      const response = await this.fetchPage(currentUrl, input, signal);
+      const response = await this.fetchPage(currentUrl, input, signal, method);
 
       const location = response.headers.get('location');
       if (!REDIRECT_STATUSES.has(response.status) || !location) {
@@ -202,6 +242,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
     url: string,
     input: UrlRetrieverInput,
     signal: AbortSignal,
+    method: HttpMethod,
   ): Promise<Response> {
     const dispatcher = input.assertPrivateDestinationAccess
       ? await this.destinations.dispatcherFor(
@@ -211,6 +252,7 @@ export class CheerioUrlRetrieverHandler extends UrlRetrieverHandler {
         )
       : undefined;
     const init = {
+      method,
       signal,
       // The crawler user-agent also excludes these requests from undici telemetry.
       headers: { 'User-Agent': 'Ayunis/1.0' },
