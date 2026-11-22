@@ -158,6 +158,7 @@ import type {
   MfaLoginConfirmResponseDto,
   MfaSetupResponseDto,
   MfaStatusResponseDto,
+  Microsoft365ConnectionTestResponseDto,
   Microsoft365ConnectorResponseDto,
   ModelDistributionResponseDto,
   ModelModeDefaultResponseDto,
@@ -228,6 +229,7 @@ import type {
   RunThreadResponseDto,
   RunsControllerSendMessageBody,
   SaveMicrosoft365ConnectorDto,
+  SavedMicrosoft365ConnectorResponseDto,
   SessionHandoffRequestDto,
   SessionTokensResponseDto,
   SetAppAlertRequestDto,
@@ -31595,7 +31597,7 @@ export function useConnectorsControllerGetMicrosoft365<TData = Awaited<ReturnTyp
 
 
 /**
- * Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one.
+ * Uses the organization's own Entra app. Without a client secret, the stored secret is kept; setting up requires one. The saved connection is tested right away.
  * @summary Set up the Microsoft 365 connection or change it
  */
 export const connectorsControllerSaveMicrosoft365 = (
@@ -31604,7 +31606,7 @@ export const connectorsControllerSaveMicrosoft365 = (
 ) => {
 
 
-      return customAxiosInstance<Microsoft365ConnectorResponseDto>(
+      return customAxiosInstance<SavedMicrosoft365ConnectorResponseDto>(
       {url: `/connectors/microsoft-365`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: saveMicrosoft365ConnectorDto, signal
@@ -31728,6 +31730,73 @@ export const useConnectorsControllerRemoveMicrosoft365 = <TError = unknown,
         TContext
       > => {
       return useMutation(getConnectorsControllerRemoveMicrosoft365MutationOptions(options), queryClient);
+    }
+
+/**
+ * Requests an app-only token with the stored credentials and shows the permissions granted in it. Entra refusing the token, or not answering, is the test's outcome, not an error.
+ * @summary Test the Microsoft 365 connection
+ */
+export const connectorsControllerTestMicrosoft365 = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Microsoft365ConnectionTestResponseDto>(
+      {url: `/connectors/microsoft-365/test`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getConnectorsControllerTestMicrosoft365MutationKey = () => ['connectorsControllerTestMicrosoft365'] as const;
+
+export const getConnectorsControllerTestMicrosoft365MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext> => {
+
+const mutationKey = getConnectorsControllerTestMicrosoft365MutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, void> = () => {
+
+
+          return  connectorsControllerTestMicrosoft365()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectorsControllerTestMicrosoft365MutationResult = NonNullable<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>>
+
+    export type ConnectorsControllerTestMicrosoft365MutationError = unknown
+
+
+    /**
+ * @summary Test the Microsoft 365 connection
+ */
+export const useConnectorsControllerTestMicrosoft365 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof connectorsControllerTestMicrosoft365>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getConnectorsControllerTestMicrosoft365MutationOptions(options), queryClient);
     }
 
 /**

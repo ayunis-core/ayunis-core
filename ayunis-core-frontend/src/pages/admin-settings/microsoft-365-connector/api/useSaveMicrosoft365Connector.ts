@@ -9,6 +9,7 @@ import {
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
+import type { ShowConnectionTest } from '@/pages/admin-settings/microsoft-365-connector/lib/useLatestConnectionTest';
 import type { Microsoft365ConnectorFormValues } from '@/pages/admin-settings/microsoft-365-connector/model/microsoft365ConnectorFormSchema';
 import {
   toMicrosoft365ConnectorFormValues,
@@ -17,18 +18,25 @@ import {
 
 export function useSaveMicrosoft365Connector(
   form: UseFormReturn<Microsoft365ConnectorFormValues>,
+  startRequest: () => ShowConnectionTest,
 ) {
   const queryClient = useQueryClient();
   const { t } = useTranslation('admin-settings-connections');
 
   const mutation = useConnectorsControllerSaveMicrosoft365({
     mutation: {
-      onSuccess: (connector) => {
+      onMutate: startRequest,
+      onSuccess: (
+        { connectionTest, ...connector },
+        _variables,
+        showConnectionTest,
+      ) => {
         queryClient.setQueryData(
           getConnectorsControllerGetMicrosoft365QueryKey(),
           connector,
         );
         form.reset(toMicrosoft365ConnectorFormValues(connector));
+        showConnectionTest(connectionTest);
         showSuccess(t('microsoft365.save.success'));
       },
       onError: (error: unknown) => {

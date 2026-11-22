@@ -28,6 +28,9 @@ test('with connectors disabled the integrations have no Connections section and 
   expect(
     (await requestMicrosoft365Connector.remove(api, disabledApiUrl)).status(),
   ).toBe(404);
+  expect(
+    (await requestMicrosoft365Connector.test(api, disabledApiUrl)).status(),
+  ).toBe(404);
   const integration = await createCustomIntegration(api, {
     name: `Connectors off ${Date.now()}`,
     serverUrl: `${config.apiURL}/health`,

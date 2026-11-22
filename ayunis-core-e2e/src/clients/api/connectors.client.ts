@@ -1,8 +1,10 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { config } from '../../config';
 import type {
+  Microsoft365ConnectionTestResponseDto,
   Microsoft365ConnectorResponseDto,
   SaveMicrosoft365ConnectorDto,
+  SavedMicrosoft365ConnectorResponseDto,
 } from '../generated/ayunisCoreAPI.schemas';
 import { generatedApi } from './generated-api';
 
@@ -25,6 +27,8 @@ export const requestMicrosoft365Connector = {
   ) => api.put(`${apiURL}/api/connectors/microsoft-365`, { data }),
   remove: (api: APIRequestContext, apiURL = config.apiURL) =>
     api.delete(`${apiURL}/api/connectors/microsoft-365`),
+  test: (api: APIRequestContext, apiURL = config.apiURL) =>
+    api.post(`${apiURL}/api/connectors/microsoft-365/test`),
 };
 
 export function getMicrosoft365Connector(
@@ -36,6 +40,12 @@ export function getMicrosoft365Connector(
 export function saveMicrosoft365Connector(
   api: APIRequestContext,
   data: SaveMicrosoft365ConnectorDto,
-): Promise<Microsoft365ConnectorResponseDto> {
+): Promise<SavedMicrosoft365ConnectorResponseDto> {
   return generatedApi.connectorsControllerSaveMicrosoft365(data, { api });
+}
+
+export function testMicrosoft365Connection(
+  api: APIRequestContext,
+): Promise<Microsoft365ConnectionTestResponseDto> {
+  return generatedApi.connectorsControllerTestMicrosoft365({ api });
 }

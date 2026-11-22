@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
@@ -30,13 +30,19 @@ import {
   type Microsoft365ConnectorFormValues,
 } from '@/pages/admin-settings/microsoft-365-connector/model/microsoft365ConnectorFormSchema';
 import { toMicrosoft365ConnectorFormValues } from '@/pages/admin-settings/microsoft-365-connector/lib/microsoft-365-connector-form';
+import { looksLikeSecretId } from '@/pages/admin-settings/microsoft-365-connector/lib/microsoft-365-connection-test';
+import type { ShowConnectionTest } from '@/pages/admin-settings/microsoft-365-connector/lib/useLatestConnectionTest';
 
 interface Microsoft365ConnectorFormProps {
   connector: Microsoft365ConnectorResponseDto;
+  startRequest: () => ShowConnectionTest;
+  onRemoved: () => void;
 }
 
 export function Microsoft365ConnectorForm({
   connector,
+  startRequest,
+  onRemoved,
 }: Readonly<Microsoft365ConnectorFormProps>) {
   const { t } = useTranslation('admin-settings-connections');
   const { confirm } = useConfirmation();
@@ -48,8 +54,14 @@ export function Microsoft365ConnectorForm({
     ),
     defaultValues: toMicrosoft365ConnectorFormValues(connector),
   });
-  const { saveConnector, isSaving } = useSaveMicrosoft365Connector(form);
-  const removeConnector = useRemoveMicrosoft365Connector();
+  const { saveConnector, isSaving } = useSaveMicrosoft365Connector(
+    form,
+    startRequest,
+  );
+  const secretLooksLikeId = looksLikeSecretId(
+    useWatch({ control: form.control, name: 'clientSecret' }),
+  );
+  const removeConnector = useRemoveMicrosoft365Connector(onRemoved);
 
   const handleRemove = () =>
     confirm({
@@ -120,6 +132,14 @@ export function Microsoft365ConnectorForm({
                     <FormDescription>
                       {t('microsoft365.setup.clientSecretKept')}
                     </FormDescription>
+                  )}
+                  {secretLooksLikeId && (
+                    <p
+                      className="text-sm text-warning"
+                      data-testid="microsoft-365-connector-client-secret-id-warning"
+                    >
+                      {t('microsoft365.setup.clientSecretLooksLikeId')}
+                    </p>
                   )}
                   <FormMessage />
                 </FormItem>

@@ -7021,6 +7021,66 @@ export interface SaveMicrosoft365ConnectorDto {
   clientSecret?: string;
 }
 
+/**
+ * Whether the connection works, or the setup mistake that stops it
+ */
+export type Microsoft365ConnectionTestOutcome = typeof Microsoft365ConnectionTestOutcome[keyof typeof Microsoft365ConnectionTestOutcome];
+
+
+export const Microsoft365ConnectionTestOutcome = {
+  connected: 'connected',
+  tenant_not_found: 'tenant_not_found',
+  client_not_found: 'client_not_found',
+  client_secret_invalid: 'client_secret_invalid',
+  client_secret_expired: 'client_secret_expired',
+  consent_missing: 'consent_missing',
+  consent_on_wrong_api: 'consent_on_wrong_api',
+  required_permission_missing: 'required_permission_missing',
+  rejected: 'rejected',
+  microsoft_unavailable: 'microsoft_unavailable',
+  unexpected_error: 'unexpected_error',
+} as const;
+
+export interface Microsoft365PermissionResponseDto {
+  /** Microsoft Graph application permission */
+  name: string;
+  /** Whether Ayunis cannot work without it */
+  required: boolean;
+  /** Whether the app's token carries it */
+  granted: boolean;
+}
+
+export interface Microsoft365ConnectionTestResponseDto {
+  /** Whether the connection works, or the setup mistake that stops it */
+  outcome: Microsoft365ConnectionTestOutcome;
+  /** The Microsoft Graph permissions Ayunis uses */
+  permissions: Microsoft365PermissionResponseDto[];
+  /** Microsoft Graph permissions granted to the app that Ayunis does not use */
+  otherGrantedPermissions: string[];
+  /**
+     * Entra's error code when it refused the token
+     * @nullable
+     */
+  entraErrorCode: string | null;
+}
+
+export interface SavedMicrosoft365ConnectorResponseDto {
+  /** Whether the organization has set up Microsoft 365 */
+  status: ConnectorStatus;
+  /**
+     * Directory (tenant) ID; null while not set up
+     * @nullable
+     */
+  tenantId: string | null;
+  /**
+     * Application (client) ID; null while not set up
+     * @nullable
+     */
+  clientId: string | null;
+  /** The test run right after saving */
+  connectionTest: Microsoft365ConnectionTestResponseDto;
+}
+
 export interface LoginDto {
   /** Email address for authentication */
   email: string;

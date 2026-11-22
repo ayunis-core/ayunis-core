@@ -18,7 +18,8 @@
       "tenantId": "Directory (tenant) ID",
       "clientId": "Application (client) ID",
       "clientSecret": "Client secret value",
-      "clientSecretKept": "Leave empty to keep the stored secret."
+      "clientSecretKept": "Leave empty to keep the stored secret.",
+      "clientSecretLooksLikeId": "This looks like the secret's ID. Enter the secret's value instead: it's only shown once, when the secret is created; if it's lost, create a new secret."
     },
     "save": {
       "button": "Save",
@@ -34,6 +35,66 @@
       "cancel": "Cancel",
       "success": "Microsoft 365 connection removed.",
       "error": "The Microsoft 365 connection could not be removed."
+    },
+    "test": {
+      "title": "Connection test",
+      "description": "Requests a token for the app from Microsoft Entra and shows the permissions granted to it.",
+      "button": "Test connection",
+      "testing": "Testing…",
+      "error": "The connection could not be tested.",
+      "notSetUp": "The Microsoft 365 connection is no longer set up.",
+      "entraErrorCode": "Entra error code: {{code}}",
+      "required": "Required",
+      "optional": "Optional",
+      "granted": "Granted",
+      "notGranted": "Not granted",
+      "otherGranted": "Also granted, not used by Ayunis: {{permissions}}",
+      "outcomes": {
+        "connected": {
+          "title": "Connected",
+          "hint": "Ayunis can sign in with this app."
+        },
+        "tenant_not_found": {
+          "title": "Tenant not found",
+          "hint": "Microsoft Entra doesn't know this directory (tenant) ID. Copy it from the app's overview page in the Entra admin center."
+        },
+        "client_not_found": {
+          "title": "App not found in this tenant",
+          "hint": "Use the Application (client) ID from the app's overview page, not the Object ID or the secret's ID. Check that the tenant ID is the one the app is registered in."
+        },
+        "client_secret_invalid": {
+          "title": "Client secret invalid",
+          "hint": "Enter the secret's value, not its secret ID. The value is only shown once, when the secret is created; if it's lost, create a new secret."
+        },
+        "client_secret_expired": {
+          "title": "Client secret expired",
+          "hint": "Create a new client secret under Certificates & secrets and enter its value."
+        },
+        "consent_missing": {
+          "title": "No permissions granted",
+          "hint": "Add Sites.Selected under Microsoft Graph (not SharePoint) as an application permission, then grant admin consent."
+        },
+        "consent_on_wrong_api": {
+          "title": "Permissions added under SharePoint",
+          "hint": "The permissions must be added under Microsoft Graph, not SharePoint, as application permissions, followed by admin consent."
+        },
+        "required_permission_missing": {
+          "title": "Sites.Selected missing",
+          "hint": "Add Sites.Selected under Microsoft Graph as an application permission, then grant admin consent."
+        },
+        "rejected": {
+          "title": "Microsoft Entra refused the sign-in",
+          "hint": "Entra issued no token for the app, e.g. because of a Conditional Access policy or a disabled app. IT can look up the error code."
+        },
+        "microsoft_unavailable": {
+          "title": "Microsoft not reachable",
+          "hint": "Microsoft Entra didn't answer. Try again in a few minutes."
+        },
+        "unexpected_error": {
+          "title": "Connection not tested",
+          "hint": "The connection was saved, but the test failed because of an unexpected error. Test the connection again."
+        }
+      }
     },
     "validation": {
       "tenantId": {
