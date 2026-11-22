@@ -37,6 +37,8 @@ import {
   findUnreferencedSourceIds,
   hasIndexedSourceInOrgs,
 } from './local-source-reachability.queries';
+import { deleteFailedSources } from './local-source-deletion.queries';
+import { extractSourceTextLines } from './local-source-text.queries';
 
 // Keeps each candidate lookup far below Postgres' 65,535 bind-parameter cap.
 export const UNREFERENCED_LOOKUP_CHUNK_SIZE = 1000;
@@ -341,25 +343,12 @@ export class LocalSourceRepository extends SourceRepository {
     endLine: number,
   ): Promise<{ totalLines: number; text: string } | null> {
     this.logger.log({ sourceId, startLine, endLine }, 'extractTextLines');
-    const result: { totalLines: string; text: string }[] =
-      await this.textSourceDetailsRepository.query(
-        `SELECT
-          array_length(string_to_array(text, E'\\n'), 1) AS "totalLines",
-          array_to_string(
-            (string_to_array(text, E'\\n'))[$1:$2],
-            E'\\n'
-          ) AS "text"
-        FROM text_source_details_record
-        WHERE "sourceId" = $3`,
-        [startLine, endLine, sourceId],
-      );
-    if (result.length === 0) {
-      return null;
-    }
-    return {
-      totalLines: parseInt(result[0].totalLines, 10),
-      text: result[0].text,
-    };
+    return extractSourceTextLines(
+      this.textSourceDetailsRepository,
+      sourceId,
+      startLine,
+      endLine,
+    );
   }
 
   async findCitationTarget(
@@ -452,6 +441,13 @@ export class LocalSourceRepository extends SourceRepository {
       return;
     }
     await this.sourceRepository.delete(sourceIds);
+  }
+
+  async deleteFailedByKnowledgeBaseId(
+    knowledgeBaseId: UUID,
+  ): Promise<Pick<Source, 'id' | 'storageKey'>[]> {
+    this.logger.log({ knowledgeBaseId }, 'deleteFailedByKnowledgeBaseId');
+    return deleteFailedSources(this.sourceRepository, knowledgeBaseId);
   }
 
   async findUnreferencedIds(

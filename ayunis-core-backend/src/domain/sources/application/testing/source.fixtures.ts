@@ -28,6 +28,7 @@ export function createMockSourceRepository(): jest.Mocked<SourceRepository> {
     findContentChunksByIds: jest.fn().mockResolvedValue([]),
     delete: jest.fn().mockResolvedValue(undefined),
     deleteMany: jest.fn().mockResolvedValue(undefined),
+    deleteFailedByKnowledgeBaseId: jest.fn().mockResolvedValue([]),
     findUnreferencedIds: jest.fn().mockResolvedValue([]),
     findOrphanedIds: jest.fn().mockResolvedValue([]),
     hasIndexedSourceInOrgs: jest.fn().mockResolvedValue(false),

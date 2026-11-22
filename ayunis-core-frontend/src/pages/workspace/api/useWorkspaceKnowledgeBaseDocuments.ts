@@ -8,6 +8,7 @@ import {
   knowledgeBaseUploadsControllerCreateUpload,
   knowledgeBasesControllerAddUrl,
   knowledgeBasesControllerRemoveDocument,
+  knowledgeBasesControllerRemoveFailedDocuments,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import type { KnowledgeBaseDocumentListResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
@@ -111,6 +112,36 @@ function useRemoveDocument(
   return { removeDocument: mutation.mutate, isRemoving: mutation.isPending };
 }
 
+function useRemoveFailedDocuments(
+  knowledgeBaseId: string,
+  refresh: () => Promise<void>,
+) {
+  const { t } = useTranslation('knowledge-bases');
+  const mutation = useMutation({
+    mutationFn: () =>
+      knowledgeBasesControllerRemoveFailedDocuments(knowledgeBaseId),
+    onSuccess: refresh,
+    onError: (error) => {
+      try {
+        const { code } = extractErrorData(error);
+        showError(
+          t(
+            code === 'KNOWLEDGE_BASE_NOT_FOUND'
+              ? 'delete.notFound'
+              : 'detail.documents.removeFailedError',
+          ),
+        );
+      } catch {
+        showError(t('detail.documents.removeFailedError'));
+      }
+    },
+  });
+  return {
+    removeFailedDocuments: () => mutation.mutate(),
+    isRemovingFailed: mutation.isPending,
+  };
+}
+
 function addUrlErrorKey(error: unknown) {
   const { code } = extractErrorData(error);
   if (code === 'UNSUPPORTED_CONTENT_TYPE')
@@ -156,6 +187,7 @@ export function useWorkspaceKnowledgeBaseDocuments(
   const refresh = useRefreshDocuments(workspaceId, knowledgeBaseId);
   const upload = useUploadDocument(knowledgeBaseId, refresh);
   const remove = useRemoveDocument(knowledgeBaseId, refresh);
+  const removeFailed = useRemoveFailedDocuments(knowledgeBaseId, refresh);
   const addUrl = useAddUrl(knowledgeBaseId, refresh);
   return {
     documents: response.data.map((document) => ({
@@ -165,6 +197,7 @@ export function useWorkspaceKnowledgeBaseDocuments(
     isLoading,
     ...upload,
     ...remove,
+    ...removeFailed,
     ...addUrl,
   };
 }
