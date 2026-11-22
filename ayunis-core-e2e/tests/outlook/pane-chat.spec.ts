@@ -1,7 +1,8 @@
-import type { APIRequestContext, Page } from '@playwright/test';
+import type { APIRequestContext, Locator, Page } from '@playwright/test';
 import {
   stubOfficeHost,
   type OfficeStubComposeItem,
+  type OfficeStubReadItem,
 } from '../../src/clients/office-host-stub';
 import type { MailcatcherClient } from '../../src/clients/mailcatcher.client';
 import { createMemberSession } from '../../src/factories/user.factory';
@@ -16,6 +17,7 @@ import {
   officeItemCalls,
   openLaunchEventRuntime,
   openSignedInPane,
+  selectOutlookItem,
 } from '../../src/flows/outlook.flow';
 
 // The pane runs the chat app, whose Outlook tools act on the stubbed mail
@@ -33,6 +35,34 @@ function composeItem(key: string): OfficeStubComposeItem {
   };
 }
 
+function readItem(key: string): OfficeStubReadItem {
+  const { subject, body, from } = composeItem(key);
+  return {
+    itemId: key,
+    internetMessageId: `<${key}@e2e.local>`,
+    subject,
+    body,
+    from,
+  };
+}
+
+const REPLY_FORM_METHODS = [
+  'displayReplyForm',
+  'displayReplyAllForm',
+  'displayReplyFormAsync',
+  'displayReplyAllFormAsync',
+];
+
+async function replyFormCalls(page: Page) {
+  return (await officeItemCalls(page)).filter(({ method }) =>
+    REPLY_FORM_METHODS.includes(method),
+  );
+}
+
+function replyButtons(draft: Locator) {
+  return draft.getByTestId(/^outlook-draft-reply(-all)?$/);
+}
+
 type StorageState = Awaited<ReturnType<APIRequestContext['storageState']>>;
 
 /** Returns the member's web session for checks outside the pane. */
@@ -41,9 +71,12 @@ async function openPaneAsNewMember(
   adminApi: APIRequestContext,
   mail: MailcatcherClient,
   key: string,
-  item: OfficeStubComposeItem,
+  item: OfficeStubComposeItem | { readItem: OfficeStubReadItem },
 ): Promise<StorageState> {
-  await stubOfficeHost(page, { composeItem: item });
+  await stubOfficeHost(
+    page,
+    'readItem' in item ? item : { composeItem: item },
+  );
   const { api: memberApi } = await createMemberSession(adminApi, mail, key);
   try {
     await openSignedInPane(page, memberApi);
@@ -91,6 +124,7 @@ test('inserts a drafted reply into the email being composed', async ({
     'data-status',
     'inserted',
   );
+  await expect(replyButtons(page.getByTestId('outlook-draft'))).toHaveCount(0);
   expect(await officeItemCalls(page)).toContainEqual({
     method: 'body.prependAsync',
     args: [
@@ -105,27 +139,17 @@ test('inserts the reading-pane draft into the already open Outlook reply', async
   api,
 }) => {
   const key = `outlook-inline-reply-${Date.now()}`;
-  const internetMessageId = `<${key}@e2e.local>`;
+  const { internetMessageId } = readItem(key);
   const item = composeItem(key);
-  await stubOfficeHost(page, {
-    readItem: {
-      itemId: key,
-      internetMessageId,
-      subject: item.subject,
-      body: item.body,
-      from: item.from,
-    },
-  });
+  await stubOfficeHost(page, { readItem: readItem(key) });
   await openSignedInPane(page, api);
   await sendMessage(page, DRAFT_REPLY_PROMPT);
   await expect(page.getByTestId('outlook-draft')).toContainText(
     'E2E mock reply',
   );
-  await expect(page.getByTestId('outlook-draft-instruction')).toBeVisible();
+  await expect(page.getByTestId('outlook-draft-reply-all')).toBeVisible();
   await expect(page.getByTestId('outlook-draft-insert')).toHaveCount(0);
-  expect(await officeItemCalls(page)).not.toContainEqual(
-    expect.objectContaining({ method: 'displayReplyForm' }),
-  );
+  expect(await replyFormCalls(page)).toEqual([]);
 
   // Opening Reply in Outlook fires the compose event, which leaves the
   // reply as Outlook created it.
@@ -143,6 +167,7 @@ test('inserts the reading-pane draft into the already open Outlook reply', async
   await reply.goto('/outlook/taskpane.html?surface=messageCompose');
   const insert = reply.getByTestId('outlook-draft-insert');
   await expect(insert).toBeEnabled();
+  await expect(replyButtons(reply.getByTestId('outlook-draft'))).toHaveCount(0);
   expect(await officeItemCalls(reply)).not.toContainEqual(
     expect.objectContaining({ method: 'body.prependAsync' }),
   );
@@ -158,6 +183,66 @@ test('inserts the reading-pane draft into the already open Outlook reply', async
       { coercionType: 'html' },
     ],
   });
+});
+
+test('opens Reply all and Reply with the latest reading-pane draft', async ({
+  page,
+  api,
+}) => {
+  const key = `outlook-reply-buttons-${Date.now()}`;
+  await stubOfficeHost(page, { readItem: readItem(key) });
+  await openSignedInPane(page, api);
+  await sendMessage(page, DRAFT_REPLY_PROMPT);
+  await expect(page.getByTestId('outlook-draft-reply-all')).toBeVisible();
+  await sendMessage(page, DRAFT_REPLY_PROMPT);
+  const drafts = page.getByTestId('outlook-draft');
+  await expect(drafts).toHaveCount(2);
+  const latest = drafts.last();
+  await expect(latest.getByTestId('outlook-draft-reply-all')).toBeVisible();
+  await expect(replyButtons(drafts.first())).toHaveCount(0);
+  expect(await replyFormCalls(page)).toEqual([]);
+
+  const draftHtml = {
+    htmlBody: expect.stringMatching(
+      /^<div id="ayunis-draft-[0-9a-f]+">E2E mock reply<\/div>$/,
+    ),
+  };
+  await latest.getByTestId('outlook-draft-reply-all').click();
+  await expect
+    .poll(() => replyFormCalls(page))
+    .toEqual([{ method: 'displayReplyAllFormAsync', args: [draftHtml] }]);
+  await expect(latest).toHaveAttribute('data-status', 'none');
+
+  await latest.getByTestId('outlook-draft-reply').click();
+  await expect
+    .poll(() => replyFormCalls(page))
+    .toEqual([
+      { method: 'displayReplyAllFormAsync', args: [draftHtml] },
+      { method: 'displayReplyFormAsync', args: [draftHtml] },
+    ]);
+  await expect(latest).toHaveAttribute('data-status', 'none');
+  await expect(replyButtons(latest)).toHaveCount(2);
+});
+
+// The pane opens its only chat from the history on another email.
+test('offers no reply on a draft once the pinned pane shows another email', async ({
+  page,
+  api,
+  mail,
+}) => {
+  const key = `outlook-reply-moved-${Date.now()}`;
+  await openPaneAsNewMember(page, api, mail, key, { readItem: readItem(key) });
+  await sendMessage(page, DRAFT_REPLY_PROMPT);
+  await expect(page.getByTestId('outlook-draft-reply-all')).toBeVisible();
+
+  await selectOutlookItem(page, readItem(`${key}-other`));
+  await page.getByTestId('embedded-history').click();
+  await page.getByTestId('chat-card').click();
+
+  await expect(page.getByTestId('outlook-draft')).toContainText(
+    'E2E mock reply',
+  );
+  await expect(replyButtons(page.getByTestId('outlook-draft'))).toHaveCount(0);
 });
 
 test('keeps pane chats out of the web app and web chats out of the pane', async ({

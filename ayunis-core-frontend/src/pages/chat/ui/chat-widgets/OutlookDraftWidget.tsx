@@ -3,6 +3,7 @@ import { Mail } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
   ItemFooter,
@@ -71,11 +72,27 @@ export default function OutlookDraftWidget({
           </ItemDescription>
         )}
       </ItemContent>
-      {action === 'openReply' && !isStreaming && (
+      {action === 'reply' && !isStreaming && (
         <ItemFooter>
-          <ItemDescription data-testid="outlook-draft-instruction">
-            {t('chat.outlookDraft.openReply')}
-          </ItemDescription>
+          <ItemActions>
+            <Button
+              size="sm"
+              disabled={state?.status === 'running'}
+              onClick={() => bridge?.openReply({ ...call, params }, 'all')}
+              data-testid="outlook-draft-reply-all"
+            >
+              {t('chat.outlookDraft.replyAll')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={state?.status === 'running'}
+              onClick={() => bridge?.openReply({ ...call, params }, 'sender')}
+              data-testid="outlook-draft-reply"
+            >
+              {t('chat.outlookDraft.reply')}
+            </Button>
+          </ItemActions>
         </ItemFooter>
       )}
       {action === 'insert' && state?.status !== 'done' && (

@@ -139,7 +139,19 @@ const officeStub = (
         succeed(callback, read.body),
       ),
     },
-    displayReplyForm: recorded('displayReplyForm', () => undefined),
+    displayReplyForm: (formData) => {
+      state.calls.push({ method: 'displayReplyForm', args: [formData] });
+    },
+    displayReplyAllForm: (formData) => {
+      state.calls.push({ method: 'displayReplyAllForm', args: [formData] });
+    },
+    displayReplyFormAsync: recorded('displayReplyFormAsync', (_data, callback) =>
+      succeed(callback),
+    ),
+    displayReplyAllFormAsync: recorded(
+      'displayReplyAllFormAsync',
+      (_data, callback) => succeed(callback),
+    ),
   };
   const mailbox = {
     item: readItemFrom(${JSON.stringify(readItem)}) ?? composeItem ?? undefined,

@@ -387,7 +387,8 @@
     "fromReleaseNote": "Product update",
     "outlookDraft": {
       "insert": "Insert into open reply",
-      "openReply": "Choose Reply in Outlook and open Ayunis Core in the reply to insert this draft.",
+      "replyAll": "Reply all",
+      "reply": "Reply",
       "status": {
         "running": "Working in Outlook …",
         "inserted": "Inserted into your reply",

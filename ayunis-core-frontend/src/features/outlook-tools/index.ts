@@ -2,6 +2,10 @@ export * from '@/features/outlook-tools/lib/outlook-tool-names';
 export * from '@/features/outlook-tools/lib/execute-outlook-tool';
 export * from '@/features/outlook-tools/lib/outlook-tool-calls';
 export {
+  openOutlookReply,
+  type OutlookReplyRecipients,
+} from '@/features/outlook-tools/lib/open-reply';
+export {
   currentOutlookItemKey,
   currentOutlookLegacyReadKey,
   currentOutlookMailboxItem,

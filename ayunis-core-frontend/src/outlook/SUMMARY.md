@@ -26,9 +26,11 @@ The launch-event runtime handles every event the manifest registers
 instead, a single file without imports. Both register one handler per event,
 named after the event (`onMessageCompose`, …), that calls `event.completed()`
 at once and makes no network call; no feature uses them yet. Keep the names in
-both files in step with the manifest. A reading-pane draft is inserted only
-from the compose pane: the draft shows a hint to open Reply and Ayunis Core
-there, and the compose pane offers "Insert into open reply".
+both files in step with the manifest. Outlook's own Reply inserts nothing. In
+the reading pane, the latest draft offers "Allen antworten" / "Reply all" and
+"Antworten" / "Reply", which open Outlook's reply form with the draft
+(`displayReplyAllForm` / `displayReplyForm`, the async variants from Mailbox
+1.9); in an open reply, the compose pane offers "Insert into open reply".
 
 | Path                                                                        | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

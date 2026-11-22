@@ -45,8 +45,18 @@ function readItem() {
     body: { getAsync: vi.fn(succeed('Hello Bob')) },
     displayReplyForm: vi.fn(),
     displayReplyFormAsync: vi.fn(succeed()),
+    displayReplyAllForm: vi.fn(),
+    displayReplyAllFormAsync: vi.fn(succeed()),
   };
 }
+
+const fail =
+  (message: string) =>
+  (...args: unknown[]) =>
+    (args[args.length - 1] as Callback)({
+      status: 'failed',
+      error: { message },
+    } as Parameters<Callback>[0]);
 
 function composeItem() {
   return {
@@ -302,8 +312,9 @@ describe(useOutlookToolBridge.name, () => {
 
     run(messages);
     await act(() => Promise.resolve());
-    expect(result.current.bridge?.draftAction(draftCall)).toBe('openReply');
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('reply');
     expect(item.displayReplyFormAsync).not.toHaveBeenCalled();
+    expect(item.displayReplyAllFormAsync).not.toHaveBeenCalled();
 
     const reply = { ...composeItem(), inReplyTo: item.internetMessageId };
     stubOffice(reply);
@@ -320,6 +331,119 @@ describe(useOutlookToolBridge.name, () => {
       ),
     );
     expect(reply.subject.setAsync).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['all', 'displayReplyAllFormAsync', 'displayReplyFormAsync'],
+    ['sender', 'displayReplyFormAsync', 'displayReplyAllFormAsync'],
+  ] as const)(
+    'opens the %s reply form once with the draft as HTML, the anonymised names restored and no status left',
+    async (recipients, method, otherMethod) => {
+      const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+      stubOffice(item);
+      const { result, run } = renderBridge(true);
+      const call = {
+        ...draftCall,
+        params: { body: 'Dear {{pii:PERSON_NAME_1}} & co\nBye' },
+      };
+      run(turn(call.id, call.name, call.params));
+      await act(() => Promise.resolve());
+
+      act(() => result.current.bridge?.openReply(call, recipients));
+
+      await waitFor(() => expect(item[method]).toHaveBeenCalledOnce());
+      expect(item[method]).toHaveBeenCalledWith(
+        {
+          htmlBody: expect.stringMatching(
+            /^<div id="ayunis-draft-[^"]+">Dear Bob Becker &amp; co<br>Bye<\/div>$/,
+          ) as string,
+        },
+        expect.any(Function),
+      );
+      expect(item[otherMethod]).not.toHaveBeenCalled();
+      await act(() => Promise.resolve());
+      expect(result.current.bridge?.stateFor(call.id)).toBeUndefined();
+      expect(result.current.bridge?.draftAction(draftCall)).toBe('reply');
+    },
+  );
+
+  it.each([
+    ['fails the call', fail('The body exceeds 32 KB')],
+    [
+      'throws',
+      () => {
+        throw new Error('The body exceeds 32 KB');
+      },
+    ],
+  ])(
+    'shows the failed state and keeps the buttons when Outlook %s instead of opening the reply',
+    async (_, refuse) => {
+      const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+      item.displayReplyAllFormAsync = vi.fn(refuse);
+      stubOffice(item);
+      const { result, run } = renderBridge(true);
+      const call = { ...draftCall, params: { body: 'Dear Bob' } };
+      run(turn(call.id, call.name, call.params));
+      await act(() => Promise.resolve());
+
+      act(() => result.current.bridge?.openReply(call, 'all'));
+
+      await waitFor(() =>
+        expect(result.current.bridge?.stateFor(call.id)).toEqual({
+          status: 'failed',
+          failure: 'officeFailed',
+          message: 'The body exceeds 32 KB',
+        }),
+      );
+      expect(result.current.bridge?.draftAction(draftCall)).toBe('reply');
+    },
+  );
+
+  it('offers no reply and opens none once the pinned pane moved to another email', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, run } = renderBridge(true);
+    const call = { ...draftCall, params: { body: 'Dear Bob' } };
+    run(turn(call.id, call.name, call.params));
+    await act(() => Promise.resolve());
+    expect(result.current.bridge?.draftAction(draftCall)).toBe('reply');
+    const staleOpenReply = result.current.bridge?.openReply;
+
+    const other = {
+      ...readItem(),
+      itemId: 'mail-2',
+      internetMessageId: '<mail-2@example.org>',
+    };
+    changeOfficeItem(other);
+    expect(result.current.bridge?.draftAction(draftCall)).toBeNull();
+    act(() => staleOpenReply?.(call, 'all'));
+    await act(() => Promise.resolve());
+
+    expect(other.displayReplyAllFormAsync).not.toHaveBeenCalled();
+    expect(item.displayReplyAllFormAsync).not.toHaveBeenCalled();
+  });
+
+  it('offers the reply only on the latest draft of the chat', async () => {
+    const item = { ...readItem(), internetMessageId: '<mail-1@example.org>' };
+    stubOffice(item);
+    const { result, run } = renderBridge(true);
+    const first = turn(draftCall.id, draftCall.name, { body: 'First' });
+    run(first);
+    run([...first, ...turn('new-call', draftCall.name, { body: 'Revised' })]);
+    await act(() => Promise.resolve());
+
+    expect(result.current.bridge?.draftAction(draftCall)).toBeNull();
+    expect(
+      result.current.bridge?.draftAction({ ...draftCall, id: 'new-call' }),
+    ).toBe('reply');
+    act(() =>
+      result.current.bridge?.openReply(
+        { ...draftCall, params: { body: 'First' } },
+        'sender',
+      ),
+    );
+    await act(() => Promise.resolve());
+    expect(item.displayReplyFormAsync).not.toHaveBeenCalled();
   });
 
   it('offers Insert again after discarding a reply and opening another for the same email', async () => {
