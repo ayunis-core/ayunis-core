@@ -159,19 +159,19 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       }),
       order: { threadLinks: { createdAt: 'ASC' }, createdAt: 'ASC' },
     });
-    if (options.isAnonymous) {
-      await this.attachPiiMasks(records);
-    }
+    await this.attachPiiMasks(records);
     return records.map((r) => this.artifactMapper.toDomain(r));
   }
 
+  /** Loads the mask dictionaries of the anonymous artifacts among the records. */
   private async attachPiiMasks(records: ArtifactRecord[]): Promise<void> {
-    if (records.length === 0) return;
+    const anonymous = records.filter((record) => record.isAnonymous);
+    if (anonymous.length === 0) return;
     const masks = await this.piiMaskRepo.find({
-      where: { artifactId: In(records.map((record) => record.id)) },
+      where: { artifactId: In(anonymous.map((record) => record.id)) },
       order: { category: 'ASC', maskIndex: 'ASC' },
     });
-    for (const record of records) {
+    for (const record of anonymous) {
       record.piiMasks = masks.filter((mask) => mask.artifactId === record.id);
     }
   }
@@ -204,6 +204,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       .skip(options.offset)
       .take(options.limit)
       .getManyAndCount();
+    await this.attachPiiMasks(records);
 
     return new Paginated({
       data: records.map((record) => this.artifactMapper.toDomain(record)),

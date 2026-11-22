@@ -7,7 +7,7 @@ import { useExportArtifact } from '@/widgets/artifact-panel/api/useExportArtifac
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
 import { useLetterheadChange } from './useLetterheadChange';
-import { resolveArtifactTitle } from '@/widgets/artifact-panel/lib/resolve-artifact-title';
+import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
 
 /**
  * Loads an artifact and wires the editing actions of `ArtifactPanel`. Pass the

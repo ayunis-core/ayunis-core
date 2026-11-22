@@ -9,7 +9,8 @@
     "loadErrorDescription": "The content could not be loaded. Please try again.",
     "notFoundTitle": "Content not found",
     "notFoundDescription": "This content may no longer exist.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "anonymized": "Anonymized"
   },
   "unsavedChanges": {
     "title": "Unsaved changes",

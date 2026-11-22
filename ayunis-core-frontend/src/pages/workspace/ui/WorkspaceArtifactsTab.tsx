@@ -16,6 +16,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
+import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import {
   WorkspaceContextEmpty,
@@ -75,7 +76,7 @@ export function WorkspaceArtifactsTab({
               >
                 <ItemContent>
                   <ItemTitle>
-                    {artifact.title || t('artifacts.untitled')}
+                    {resolveArtifactTitle(artifact) || t('artifacts.untitled')}
                   </ItemTitle>
                   <ItemDescription>
                     {t(`artifacts.type.${artifact.type}`)} ·{' '}

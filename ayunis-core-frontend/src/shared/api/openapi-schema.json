@@ -24040,7 +24040,7 @@
             }
           },
           "piiMasks": {
-            "description": "The anonymous artifact's own placeholder dictionary (included with the versions)",
+            "description": "The anonymous artifact's own placeholder dictionary: every entry with the versions, in lists the entries its title uses",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ArtifactPiiMaskResponseDto"
