@@ -1,14 +1,10 @@
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
-import { Card, CardContent } from '@ayunis/ui/components/card';
-import { Button } from '@ayunis/ui/components/button';
-import { ExternalLink, FileQuestion, Store } from 'lucide-react';
 import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
 import { IntegrationCard } from './integration-card';
+import { IntegrationsEmptyState } from './integrations-empty-state';
 import { useToggleIntegration } from '@/pages/admin-settings/integrations-settings/api/useToggleIntegration';
 import { useValidateIntegration } from '@/pages/admin-settings/integrations-settings/api/useValidateIntegration';
-import { useMarketplaceConfig } from '@/features/marketplace';
 import { PaginationWidget } from '@/widgets/pagination';
 import { paginateItems } from '@/shared/lib/paginate-items';
 import {
@@ -32,10 +28,8 @@ export function IntegrationsList({
   onEdit,
   onDelete,
 }: Readonly<IntegrationsListProps>) {
-  const { t } = useTranslation('admin-settings-integrations');
   const { toggleIntegration, togglingIds } = useToggleIntegration();
   const { validateIntegration, validatingIds } = useValidateIntegration();
-  const marketplace = useMarketplaceConfig();
   const navigate = useNavigate({ from: '/admin-settings/integrations/' });
   const sortedIntegrations = sortIntegrationsByName(integrations);
   // Resolved during render so the saved integration's page is shown on the
@@ -61,38 +55,7 @@ export function IntegrationsList({
   }, [savedIntegrationPage, currentPage, page, navigate]);
 
   if (integrations.length === 0) {
-    const hasMarketplace = marketplace.enabled && !!marketplace.url;
-
-    return (
-      <Card>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <FileQuestion className="mb-4 h-16 w-16 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-semibold">
-              {t('integrations.list.noIntegrationsTitle')}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {hasMarketplace
-                ? t('integrations.list.noIntegrationsMarketplaceMessage')
-                : t('integrations.list.noIntegrationsMessage')}
-            </p>
-            {hasMarketplace && (
-              <Button variant="outline" size="sm" className="mt-4" asChild>
-                <a
-                  href={`${marketplace.url!.replace(/\/$/, '')}/integrations`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Store className="h-4 w-4" />
-                  {t('integrations.list.browseMarketplace')}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <IntegrationsEmptyState />;
   }
 
   return (

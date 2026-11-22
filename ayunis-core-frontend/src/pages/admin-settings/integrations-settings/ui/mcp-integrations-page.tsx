@@ -3,50 +3,37 @@ import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
-import { Plus, AlertCircle, ExternalLink } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { IntegrationsList } from './integrations-list';
-import { CreatePredefinedDialog } from './create-predefined-dialog';
-import { CreateCustomDialog } from './create-custom-dialog';
 import { EditIntegrationDialog } from './edit-integration-dialog';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { useMcpIntegrationsQueries } from '@/pages/admin-settings/integrations-settings/api/useMcpIntegrationsQueries';
 import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@ayunis/ui/components/dropdown-menu';
-import {
   Item,
   ItemActions,
   ItemContent,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { ComingSoonDialog } from './coming-soon-dialog';
-import { useMarketplaceConfig } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { ConnectionsSection } from './connections-section';
+import { AddIntegrationMenu } from './add-integration-menu';
 
 export function McpIntegrationsPage({
-  isCloud,
   page,
   integrationId,
-}: Readonly<{ isCloud: boolean; page: number; integrationId?: string }>) {
+}: Readonly<{ page: number; integrationId?: string }>) {
   const { t } = useTranslation('admin-settings-integrations');
   const { t: tLayout } = useTranslation('admin-settings-layout');
 
   // Dialog states
-  const [createPredefinedOpen, setCreatePredefinedOpen] = useState(false);
-  const [createCustomOpen, setCreateCustomOpen] = useState(false);
   const [editIntegration, setEditIntegration] = useState<McpIntegration | null>(
     null,
   );
   const [deleteIntegration, setDeleteIntegration] =
     useState<McpIntegration | null>(null);
-  const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const isOutlookAddinEnabled = useIsFeatureEnabled('outlookAddinEnabled');
   const isConnectorsEnabled = useIsFeatureEnabled('connectorsEnabled');
   const navigate = useNavigate({ from: '/admin-settings/integrations/' });
@@ -57,7 +44,6 @@ export function McpIntegrationsPage({
     isLoadingIntegrations,
     integrationsError,
     refetchIntegrations,
-    predefinedConfigs,
   } = useMcpIntegrationsQueries();
 
   // Connections sit apart from the MCP integrations and show whatever their
@@ -77,15 +63,6 @@ export function McpIntegrationsPage({
 
   const showSavedIntegration = (saved: McpIntegration) => {
     void navigate({ search: { integration: saved.id } });
-  };
-
-  const handleOpenCreatePredefined = () => {
-    if (!predefinedConfigs.length) {
-      setComingSoonOpen(true);
-      return;
-    }
-
-    setCreatePredefinedOpen(true);
   };
 
   // Loading state
@@ -142,11 +119,10 @@ export function McpIntegrationsPage({
   return (
     <SettingsLayout
       action={
-        <HeaderActions
-          onCreatePredefined={handleOpenCreatePredefined}
-          onCreateCustom={() => setCreateCustomOpen(true)}
-          t={t}
-        />
+        <div className="flex gap-2">
+          <HelpLink path="settings/admin/integrations/" />
+          <AddIntegrationMenu showIcon />
+        </div>
       }
       title={tLayout('layout.integrations')}
     >
@@ -158,20 +134,6 @@ export function McpIntegrationsPage({
           integrationId={integrationId}
           onEdit={setEditIntegration}
           onDelete={setDeleteIntegration}
-        />
-
-        <CreatePredefinedDialog
-          open={createPredefinedOpen}
-          onOpenChange={setCreatePredefinedOpen}
-          onSaved={showSavedIntegration}
-          predefinedConfigs={predefinedConfigs}
-          isCloud={isCloud}
-        />
-
-        <CreateCustomDialog
-          open={createCustomOpen}
-          onOpenChange={setCreateCustomOpen}
-          onSaved={showSavedIntegration}
         />
 
         <EditIntegrationDialog
@@ -186,58 +148,7 @@ export function McpIntegrationsPage({
           open={!!deleteIntegration}
           onOpenChange={(open) => !open && setDeleteIntegration(null)}
         />
-
-        <ComingSoonDialog
-          open={comingSoonOpen}
-          onOpenChange={setComingSoonOpen}
-        />
       </div>
     </SettingsLayout>
-  );
-}
-
-function HeaderActions({
-  onCreatePredefined,
-  onCreateCustom,
-  t,
-}: Readonly<{
-  onCreatePredefined: () => void;
-  onCreateCustom: () => void;
-  t: (key: string) => string;
-}>) {
-  const marketplace = useMarketplaceConfig();
-
-  return (
-    <div className="flex gap-2">
-      <HelpLink path="settings/admin/integrations/" />
-      {marketplace.enabled && marketplace.url && (
-        <Button variant="outline" size="sm" asChild>
-          <a
-            href={`${marketplace.url.replace(/\/$/, '')}/integrations`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLink className="h-4 w-4" />
-            {t('integrations.page.browseMarketplace')}
-          </a>
-        </Button>
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm">
-            <Plus className="h-4 w-4" />
-            {t('integrations.page.add')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onCreatePredefined}>
-            {t('integrations.page.addPredefined')}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onCreateCustom}>
-            {t('integrations.page.addCustom')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
   );
 }
