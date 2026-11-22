@@ -46,6 +46,7 @@ export class ApplyEditsToArtifactUseCase {
     const artifact = await this.artifactsRepository.findByIdWithVersions(
       command.artifactId,
       userId,
+      { linkedThreadId: command.linkedThreadId },
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
@@ -80,6 +81,7 @@ export class ApplyEditsToArtifactUseCase {
       artifactId: command.artifactId,
       content: content,
       authorType: command.authorType,
+      linkedThreadId: command.linkedThreadId,
     });
 
     const result = await this.updateArtifactUseCase.execute(updateCommand);

@@ -6,7 +6,7 @@ import type {
 import { mockTextResponse, mockToolCallResponse } from './mock-chunk-responses';
 
 const CALL_PROMPT =
-  /^E2E artifact call ((?:create|update|read)_(?:diagram|spreadsheet|document)) (\{.*\})$/s;
+  /^E2E artifact call ((?:create|update|read)_(?:diagram|spreadsheet|document)|edit_document) (\{.*\})$/s;
 const CALL_ID_PREFIX = 'mock-artifact-tool-';
 
 /**

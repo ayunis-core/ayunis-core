@@ -10,7 +10,9 @@ export type ArtifactToolName =
   | 'create_spreadsheet'
   | 'update_spreadsheet'
   | 'read_spreadsheet'
-  | 'read_document';
+  | 'read_document'
+  | 'update_document'
+  | 'edit_document';
 
 /** What the model sees after a successful create or update. */
 export const ARTIFACT_WRITE_SUCCEEDED = 'Tool has been displayed successfully';

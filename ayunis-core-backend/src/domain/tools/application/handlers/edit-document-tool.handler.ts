@@ -13,6 +13,7 @@ import {
   ArtifactEditAmbiguousError,
   ArtifactEditNotFoundError,
   ArtifactExpectedVersionMismatchError,
+  ArtifactNotFoundError,
 } from 'src/domain/artifacts/application/artifacts.errors';
 
 @Injectable()
@@ -30,7 +31,7 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log('Executing edit_document tool');
 
     try {
@@ -47,6 +48,7 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
           edits: edits,
           authorType: AuthorType.ASSISTANT,
           expectedVersionNumber: validatedInput.expected_version,
+          linkedThreadId: context.threadId,
         }),
       );
 
@@ -67,7 +69,8 @@ export class EditDocumentToolHandler extends ToolExecutionHandler {
     }
     if (
       error instanceof ArtifactEditNotFoundError ||
-      error instanceof ArtifactEditAmbiguousError
+      error instanceof ArtifactEditAmbiguousError ||
+      error instanceof ArtifactNotFoundError
     ) {
       throw this.toRetryableError(toolName, error.message);
     }

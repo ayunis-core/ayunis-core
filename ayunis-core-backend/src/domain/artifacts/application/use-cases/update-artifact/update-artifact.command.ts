@@ -7,6 +7,7 @@ export class UpdateArtifactCommand {
   readonly authorType?: AuthorType;
   readonly expectedVersionNumber?: number;
   readonly letterheadId?: UUID | null;
+  readonly linkedThreadId?: UUID;
 
   constructor(params: {
     artifactId: UUID;
@@ -14,11 +15,13 @@ export class UpdateArtifactCommand {
     authorType?: AuthorType;
     expectedVersionNumber?: number;
     letterheadId?: UUID | null;
+    linkedThreadId?: UUID;
   }) {
     this.artifactId = params.artifactId;
     this.content = params.content;
     this.authorType = params.authorType;
     this.expectedVersionNumber = params.expectedVersionNumber;
     this.letterheadId = params.letterheadId;
+    this.linkedThreadId = params.linkedThreadId;
   }
 }

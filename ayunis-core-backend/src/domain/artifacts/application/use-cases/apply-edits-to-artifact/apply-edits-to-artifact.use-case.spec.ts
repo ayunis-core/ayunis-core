@@ -118,6 +118,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
       expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
         mockArtifactId,
         mockUserId,
+        { linkedThreadId: undefined },
       );
       expect(updateArtifactUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({

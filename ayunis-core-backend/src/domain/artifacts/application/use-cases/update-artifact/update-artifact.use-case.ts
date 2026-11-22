@@ -62,6 +62,7 @@ export class UpdateArtifactUseCase {
     const artifact = await this.artifactsRepository.findById(
       command.artifactId,
       userId,
+      { linkedThreadId: command.linkedThreadId },
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
@@ -159,6 +160,7 @@ export class UpdateArtifactUseCase {
         const freshArtifact = await this.artifactsRepository.findById(
           command.artifactId,
           userId,
+          { linkedThreadId: command.linkedThreadId },
         );
         if (!freshArtifact) {
           throw new ArtifactNotFoundError(command.artifactId);

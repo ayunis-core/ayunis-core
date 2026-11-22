@@ -61,6 +61,7 @@ describe('CreateArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       findVersion: jest.fn(),
       addVersion: jest.fn(),
+      addThreadLink: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       delete: jest.fn(),
     };
@@ -140,6 +141,24 @@ describe('CreateArtifactUseCase', () => {
     expect(logger.log).toHaveBeenCalledWith(
       { type: ArtifactType.DOCUMENT },
       'Creating artifact',
+    );
+  });
+
+  it('links the new artifact to the chat it was created in, so the chat lists it', async () => {
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+
+    const result = await useCase.execute(
+      new CreateArtifactCommand({
+        threadId: mockThreadId,
+        title: 'Antwortschreiben Bürgeranfrage',
+        content: '<p>Sehr geehrte Damen und Herren</p>',
+        authorType: AuthorType.ASSISTANT,
+      }),
+    );
+
+    expect(artifactsRepository.addThreadLink).toHaveBeenCalledWith(
+      mockThreadId,
+      result.id,
     );
   });
 

@@ -91,6 +91,10 @@ export class CreateArtifactUseCase {
     });
 
     await this.artifactsRepository.addVersion(version);
+    await this.artifactsRepository.addThreadLink(
+      command.threadId,
+      createdArtifact.id,
+    );
 
     return this.withVersion(createdArtifact, version);
   }
