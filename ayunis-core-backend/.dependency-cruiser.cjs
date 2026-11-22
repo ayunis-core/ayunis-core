@@ -6,10 +6,15 @@
 // guard rejects the equivalent `(?:[^/]+/)?`.
 const MODULE_GROUP_PREFIX = '(?:rag/|retrievers/)?';
 
+// Connector providers (src/domain/connectors/providers/*) have their own
+// layers inside the connectors module, so the layer rules match them as
+// modules, while the cross-module rule treats them as part of connectors.
+const LAYERED_GROUP_PREFIX = '(?:rag/|retrievers/|connectors/providers/)?';
+
 // Matches the root of any module, e.g. `src/domain/threads` or
 // `src/domain/retrievers/url-retrievers`. `(domain|iam)` is a capture group;
 // rules that only need path scoping ignore it.
-const MODULE_ROOT = `^src/(domain|iam)/${MODULE_GROUP_PREFIX}[^/]+`;
+const MODULE_ROOT = `^src/(domain|iam)/${LAYERED_GROUP_PREFIX}[^/]+`;
 
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
@@ -100,7 +105,20 @@ module.exports = {
       },
       to: {
         path: `${MODULE_ROOT}/application/ports/`,
-        pathNot: '^src/$1/$2/application/ports/',
+        pathNot: ['^src/$1/$2/application/ports/', '^src/$1/$2/providers/'],
+      },
+    },
+    {
+      name: 'connectors-core-no-providers',
+      comment:
+        'The connectors core is product-neutral: providers register with it, it never imports them',
+      severity: 'error',
+      from: {
+        path: '^src/domain/connectors/',
+        pathNot: '^src/domain/connectors/providers/',
+      },
+      to: {
+        path: '^src/domain/connectors/providers/',
       },
     },
 
