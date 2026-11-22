@@ -6,6 +6,10 @@ import {
   screen,
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  ConfirmationModal,
+  ConfirmationProvider,
+} from '@/widgets/confirmation-modal';
 import { MemoryEntryCard } from './MemoryEntryCard';
 
 vi.mock('react-i18next', () => ({
@@ -29,12 +33,14 @@ describe('MemoryEntryCard', () => {
   it('keeps the editor open with the draft when saving fails', async () => {
     const onSave = vi.fn().mockRejectedValue(new Error('save failed'));
     render(
-      <MemoryEntryCard
-        entry={entry}
-        isSaving={false}
-        onSave={onSave}
-        onRemove={vi.fn()}
-      />,
+      <ConfirmationProvider>
+        <MemoryEntryCard
+          entry={entry}
+          isSaving={false}
+          onSave={onSave}
+          onRemove={vi.fn()}
+        />
+      </ConfirmationProvider>,
     );
 
     fireEvent.click(screen.getByTestId('memory-entry-edit'));
@@ -50,5 +56,28 @@ describe('MemoryEntryCard', () => {
       'value',
       'Head of the building authority',
     );
+  });
+
+  it('removes an entry only after the user confirms the removal', async () => {
+    const onRemove = vi.fn();
+    render(
+      <ConfirmationProvider>
+        <MemoryEntryCard
+          entry={entry}
+          isSaving={false}
+          onSave={vi.fn()}
+          onRemove={onRemove}
+        />
+        <ConfirmationModal />
+      </ConfirmationProvider>,
+    );
+
+    fireEvent.click(screen.getByTestId('memory-entry-remove'));
+    expect(onRemove).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('confirmation-confirm'));
+    });
+    expect(onRemove).toHaveBeenCalledWith('personal');
   });
 });

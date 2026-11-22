@@ -193,6 +193,18 @@
       "cancel": "Abbrechen",
       "confirm": "Alles löschen"
     },
+    "confirmRemove": {
+      "delete": {
+        "title": "„{{name}}“ löschen?",
+        "body": "Der Eintrag wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirm": "Löschen"
+      },
+      "clear": {
+        "title": "„{{name}}“ leeren?",
+        "body": "Der Inhalt wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirm": "Leeren"
+      }
+    },
     "descriptionLabel": "Wann ist das relevant?",
     "descriptionPlaceholder": "Eine Zeile dazu, wann der Assistent das nutzen soll, z. B. „Beim Verfassen der monatlichen Ratsberichte“"
   }
