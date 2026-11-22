@@ -29,6 +29,7 @@ import { ComingSoonDialog } from './coming-soon-dialog';
 import { useMarketplaceConfig } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { OutlookAddinSection } from './outlook-addin-section';
+import { ConnectionsSection } from './connections-section';
 
 export function McpIntegrationsPage({
   isCloud,
@@ -48,6 +49,7 @@ export function McpIntegrationsPage({
     useState<McpIntegration | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const isOutlookAddinEnabled = useIsFeatureEnabled('outlookAddinEnabled');
+  const isConnectorsEnabled = useIsFeatureEnabled('connectorsEnabled');
   const navigate = useNavigate({ from: '/admin-settings/integrations' });
 
   // Queries
@@ -59,16 +61,18 @@ export function McpIntegrationsPage({
     predefinedConfigs,
   } = useMcpIntegrationsQueries();
 
-  // The Outlook add-in is deployed in Microsoft 365, not configured here, so
-  // it sits apart from the MCP integrations and shows whatever their state.
-  const outlookSection = isOutlookAddinEnabled ? (
-    <>
-      <OutlookAddinSection />
-      <h2 className="pt-2 text-lg font-semibold">
-        {t('integrations.page.mcpTitle')}
-      </h2>
-    </>
-  ) : null;
+  // Connections and the Outlook add-in sit apart from the MCP integrations
+  // and show whatever their state.
+  const sectionsAboveMcp =
+    isConnectorsEnabled || isOutlookAddinEnabled ? (
+      <>
+        {isConnectorsEnabled && <ConnectionsSection />}
+        {isOutlookAddinEnabled && <OutlookAddinSection />}
+        <h2 className="pt-2 text-lg font-semibold">
+          {t('integrations.page.mcpTitle')}
+        </h2>
+      </>
+    ) : null;
 
   const showSavedIntegration = (saved: McpIntegration) => {
     void navigate({ search: { integration: saved.id } });
@@ -88,7 +92,7 @@ export function McpIntegrationsPage({
     return (
       <SettingsLayout title={tLayout('layout.integrations')}>
         <div className="space-y-4">
-          {outlookSection}
+          {sectionsAboveMcp}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <Item key={i}>
@@ -112,7 +116,9 @@ export function McpIntegrationsPage({
   if (integrationsError) {
     return (
       <SettingsLayout title={tLayout('layout.integrations')}>
-        {outlookSection && <div className="space-y-4">{outlookSection}</div>}
+        {sectionsAboveMcp && (
+          <div className="space-y-4">{sectionsAboveMcp}</div>
+        )}
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
             <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-600" />
@@ -144,7 +150,7 @@ export function McpIntegrationsPage({
       title={tLayout('layout.integrations')}
     >
       <div className="space-y-4">
-        {outlookSection}
+        {sectionsAboveMcp}
         <IntegrationsList
           integrations={integrations}
           page={page}

@@ -19,6 +19,7 @@ import {
 import { validateTrustProxy } from 'src/config/trust-proxy';
 import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
 import { validateOutlookFrameOrigins } from 'src/config/outlook-frame-origins';
+import { validateConnectorRules } from 'src/config/connector-env.validation';
 
 const NODE_ENVS = ['development', 'production', 'test'] as const;
 const BOOLEAN_STRINGS = ['true', 'false'] as const;
@@ -75,6 +76,10 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsIn(BOOLEAN_STRINGS)
   FEATURE_MEMORY_ENABLED?: string;
+
+  @IsOptional()
+  @IsIn(BOOLEAN_STRINGS)
+  FEATURE_CONNECTORS_ENABLED?: string;
 
   // Auth — JWT_SECRET / COOKIE_SECRET are required in every environment; there
   // is no insecure default fallback (a shared default would let anyone forge
@@ -456,6 +461,7 @@ export function validateEnv(
     ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
     ...validateOutlookFrameOrigins(env),
+    ...validateConnectorRules(env),
     ...validateSubscriptionSyncRules(env),
   ];
   if (messages.length > 0) {

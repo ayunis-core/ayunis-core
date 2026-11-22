@@ -381,6 +381,17 @@ short-lived pre-signed URLs issued per upload session.
 - `LOCABOO_4_URL`: Base URL of Locaboo 4 MCP server (if using Locaboo integration)
   - Example: `http://localhost:8080` or `https://locaboo.your-domain.com`
 
+#### Connectors (Required with `FEATURE_CONNECTORS_ENABLED=true`)
+
+- `CONNECTOR_ENCRYPTION_KEY`: 64-character hex string for encrypting connector
+  credentials (e.g. a Microsoft 365 client secret). The backend refuses to
+  start with the flag on and no key, and with a malformed key either way. Use
+  a key of its own, not `MCP_ENCRYPTION_KEY`.
+
+  ```bash
+  openssl rand -hex 32
+  ```
+
 #### Model Providers
 
 At least one must be configured:
@@ -427,6 +438,7 @@ Before starting the application:
 - [ ] `JWT_SECRET` is a secure random string
 - [ ] `COOKIE_SECRET` is a secure random string
 - [ ] `MCP_ENCRYPTION_KEY` is set and is 64 hex characters
+- [ ] `CONNECTOR_ENCRYPTION_KEY` is set and is 64 hex characters if `FEATURE_CONNECTORS_ENABLED=true`
 - [ ] `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` are set to strong, non-default values
 - [ ] `MINIO_INTERNAL_ENDPOINT` targets this deployment's own MinIO service
 - [ ] `MINIO_PUBLIC_ENDPOINT` is the browser-reachable MinIO host and its CORS allows the app origin; for file handover to MCP servers it is also reachable from the internet over HTTPS
