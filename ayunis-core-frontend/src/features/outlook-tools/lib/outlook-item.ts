@@ -33,6 +33,16 @@ export interface ReadItem extends AttachmentContentSource {
       callback: Callback<string>,
     ) => void;
   };
+  displayReplyForm: (formData: Office.ReplyFormData) => void;
+  displayReplyAllForm: (formData: Office.ReplyFormData) => void;
+  displayReplyFormAsync?: (
+    formData: Office.ReplyFormData,
+    callback: Callback<void>,
+  ) => void;
+  displayReplyAllFormAsync?: (
+    formData: Office.ReplyFormData,
+    callback: Callback<void>,
+  ) => void;
 }
 
 interface AsyncGetter<T> {

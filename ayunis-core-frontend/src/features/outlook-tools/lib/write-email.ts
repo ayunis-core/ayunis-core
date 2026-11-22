@@ -58,6 +58,15 @@ function draftBlockId(callId: string | undefined): string | undefined {
   return `ayunis-draft-${encoded}`;
 }
 
+/**
+ * The draft as the block a compose write would prepend, so the compose pane
+ * recognizes it in a reply that was opened with it.
+ */
+export function draftBlockHtml(body: string, callId?: string): string {
+  const blockId = draftBlockId(callId) ?? `ayunis-draft-${crypto.randomUUID()}`;
+  return `<div id="${blockId}">${toHtml(body)}</div>`;
+}
+
 function findDraftBlock(bodyHtml: string, blockId: string) {
   return new RegExp(`<div\\b[^>]*\\sid="${blockId}"[^>]*>`, 'i').exec(bodyHtml);
 }

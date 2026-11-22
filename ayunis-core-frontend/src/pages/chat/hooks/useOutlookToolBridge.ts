@@ -18,6 +18,7 @@ import {
   hasCallAwaitingConfirmation,
   isAwaitingResultTool,
   isOutlookDraftTool,
+  openOutlookReply,
   outlookDraftSource,
   outlookToolCalls,
   OUTLOOK_TOOL,
@@ -25,6 +26,7 @@ import {
   rememberOutlookDraftSource,
   waitsForUser,
   subscribeToOutlookItem,
+  type OutlookReplyRecipients,
   type OutlookToolCall,
   type OutlookToolOutcome,
 } from '@/features/outlook-tools';
@@ -306,6 +308,33 @@ export function useOutlookToolBridge({
     [threadId],
   );
 
+  const reply = useCallback(
+    async (
+      call: OutlookToolCall,
+      recipients: OutlookReplyRecipients,
+      expectedItemKey: string,
+    ) => {
+      const running: TrackedToolState = { state: { status: 'running' } };
+      setToolStates((current) => ({ ...current, [call.id]: running }));
+      const { body } = resolveParams(call.params, masksRef.current);
+      const outcome = await openOutlookReply(
+        recipients,
+        typeof body === 'string' ? body : '',
+        { expectedItemKey, draftId: call.id },
+      );
+      setToolStates((current) =>
+        current[call.id] === running
+          ? {
+              ...current,
+              [call.id]:
+                outcome.status === 'opened' ? undefined : { state: outcome },
+            }
+          : current,
+      );
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!embedded || endedRun?.threadId !== threadId || isStreaming) return;
     if (settledRun.current === endedRun) return;
@@ -418,7 +447,7 @@ export function useOutlookToolBridge({
         const source = replyItemKey(id);
         if (!source || !waitsForUser(name, source)) return null;
         if (source === replySourceKey) return 'insert';
-        return source === openItemKey ? 'openReply' : null;
+        return source === openItemKey ? 'reply' : null;
       },
       insertDraft: (call) => {
         if (call.id !== latestDraftCallId(messagesRef.current)) return;
@@ -429,6 +458,12 @@ export function useOutlookToolBridge({
           { expectedReplySourceKey: source },
         );
       },
+      openReply: (call, recipients) => {
+        if (call.id !== latestDraftCallId(messagesRef.current)) return;
+        const source = replyItemKey(call.id);
+        if (!source || !waitsForUser(call.name, source)) return;
+        void reply(call, recipients, source);
+      },
     };
   }, [
     embedded,
@@ -438,6 +473,7 @@ export function useOutlookToolBridge({
     toolStates,
     replyItemKey,
     execute,
+    reply,
   ]);
 
   return { bridge, beginRun, runEnded };
