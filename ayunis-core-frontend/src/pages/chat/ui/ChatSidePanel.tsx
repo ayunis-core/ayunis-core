@@ -15,14 +15,14 @@ import type {
 } from '@/pages/chat/model/chat-side-panel';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { ArtifactListSidePanel } from './ArtifactListSidePanel';
-import { ArtifactSidePanel } from './ArtifactSidePanel';
+import { ArtifactPanel } from '@/widgets/artifact-panel';
 import { ChatContextSidePanel } from './ChatContextSidePanel';
 
 interface ChatSidePanelProps {
   readonly threadId: string;
   readonly view: ChatSidePanelView;
   readonly artifactPanelRef: Ref<ArtifactPanelHandle>;
-  readonly artifactPanelProps: ComponentProps<typeof ArtifactSidePanel>;
+  readonly artifactPanelProps: ComponentProps<typeof ArtifactPanel>;
   readonly onSelectArtifact: (artifactId: string) => void;
   readonly onTabChange: (tab: ChatSidePanelTab) => void;
   readonly onClose: () => void;
@@ -120,7 +120,7 @@ function ArtifactPanelContent({
   }
   if (view === 'artifact-detail') {
     return (
-      <ArtifactSidePanel
+      <ArtifactPanel
         ref={artifactPanelRef}
         {...artifactPanelProps}
         showClose={false}

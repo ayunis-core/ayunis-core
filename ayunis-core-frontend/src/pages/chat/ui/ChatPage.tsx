@@ -31,12 +31,11 @@ import type { PiiMaskEntry } from '@/widgets/markdown';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
-import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
 import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
 import { useChatFiles } from '@/pages/chat/api/useChatFiles';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
-import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
+import { useArtifactActions } from '@/widgets/artifact-panel';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useQueryClient } from '@tanstack/react-query';
 import { getThreadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
@@ -120,13 +119,8 @@ export default function ChatPage({
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
-  } = useArtifactActions(thread.id, initialArtifactId, thread.workspaceId);
-
-  const { handleLetterheadChange } = useLetterheadChange({
-    artifactId: artifactPanel.artifact?.id ?? '',
-    threadId: thread.id,
-    workspaceId: thread.workspaceId,
-  });
+    handleLetterheadChange,
+  } = useArtifactActions(initialArtifactId ?? null, thread.id);
   const sidePanelTransitions = useChatSidePanelTransitions({
     artifactPanelRef,
     isArtifactDetailOpen: sidePanelState.view === 'artifact-detail',

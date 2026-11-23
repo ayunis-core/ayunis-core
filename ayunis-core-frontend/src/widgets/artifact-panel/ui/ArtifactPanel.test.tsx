@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { AxiosError } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
-import { ArtifactSidePanel } from './ArtifactSidePanel';
+import { ArtifactPanel } from './ArtifactPanel';
 
 const mocks = vi.hoisted(() => ({
   requestEditorExit: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock('@/widgets/spreadsheet-editor', () => ({
   SpreadsheetEditor: () => null,
 }));
 
-describe('ArtifactSidePanel', () => {
+describe('ArtifactPanel', () => {
   const baseProps = {
     onSave: vi.fn(),
     onRevert: vi.fn(),
@@ -52,9 +52,7 @@ describe('ArtifactSidePanel', () => {
   });
 
   it('keeps a closeable panel visible while the artifact is loading', () => {
-    render(
-      <ArtifactSidePanel {...baseProps} artifact={null} isLoading={true} />,
-    );
+    render(<ArtifactPanel {...baseProps} artifact={null} isLoading={true} />);
 
     expect(screen.getByTestId('artifact-side-panel-loading')).toBeTruthy();
     fireEvent.click(screen.getByTestId('artifact-side-panel-close'));
@@ -63,7 +61,7 @@ describe('ArtifactSidePanel', () => {
 
   it('shows a retry and close action when loading the artifact fails', () => {
     render(
-      <ArtifactSidePanel
+      <ArtifactPanel
         {...baseProps}
         artifact={null}
         error={new Error('not found')}
@@ -79,7 +77,7 @@ describe('ArtifactSidePanel', () => {
 
   it('returns from artifact detail to the artifact list', async () => {
     render(
-      <ArtifactSidePanel
+      <ArtifactPanel
         {...baseProps}
         artifact={{
           id: 'artifact-id',
@@ -101,8 +99,9 @@ describe('ArtifactSidePanel', () => {
   it('routes external transitions through the active editor', async () => {
     const ref = createRef<ArtifactPanelHandle>();
     const transition = vi.fn();
+    const stay = vi.fn();
     render(
-      <ArtifactSidePanel
+      <ArtifactPanel
         ref={ref}
         {...baseProps}
         artifact={{
@@ -119,9 +118,9 @@ describe('ArtifactSidePanel', () => {
     );
 
     await screen.findByText('editor-back');
-    ref.current?.requestExit(transition);
+    ref.current?.requestExit(transition, stay);
 
-    expect(mocks.requestEditorExit).toHaveBeenCalledWith(transition);
+    expect(mocks.requestEditorExit).toHaveBeenCalledWith(transition, stay);
     expect(transition).not.toHaveBeenCalled();
   });
 
@@ -129,7 +128,7 @@ describe('ArtifactSidePanel', () => {
     const ref = createRef<ArtifactPanelHandle>();
     const transition = vi.fn();
     render(
-      <ArtifactSidePanel
+      <ArtifactPanel
         ref={ref}
         {...baseProps}
         artifact={null}
@@ -146,9 +145,9 @@ describe('ArtifactSidePanel', () => {
     const error = new AxiosError('not found');
     Object.defineProperty(error, 'response', { value: { status: 404 } });
 
-    render(<ArtifactSidePanel {...baseProps} artifact={null} error={error} />);
+    render(<ArtifactPanel {...baseProps} artifact={null} error={error} />);
 
-    expect(screen.getByText('chat.artifactPanel.notFoundTitle')).toBeTruthy();
+    expect(screen.getByText('panel.notFoundTitle')).toBeTruthy();
     expect(screen.queryByTestId('artifact-side-panel-retry')).toBeNull();
   });
 });

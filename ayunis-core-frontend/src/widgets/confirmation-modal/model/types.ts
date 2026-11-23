@@ -5,4 +5,5 @@ export interface ConfirmationOptions {
   cancelText?: string;
   variant?: 'default' | 'destructive';
   onConfirm: () => void | Promise<void>;
+  onCancel?: () => void;
 }

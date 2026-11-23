@@ -1,46 +1,49 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useArtifact } from '@/pages/chat/api/useArtifact';
-import { useUpdateArtifact } from '@/pages/chat/api/useUpdateArtifact';
-import { useRevertArtifact } from '@/pages/chat/api/useRevertArtifact';
-import { useExportArtifact } from '@/pages/chat/api/useExportArtifact';
+import { useArtifact } from '@/widgets/artifact-panel/api/useArtifact';
+import { useUpdateArtifact } from '@/widgets/artifact-panel/api/useUpdateArtifact';
+import { useRevertArtifact } from '@/widgets/artifact-panel/api/useRevertArtifact';
+import { useExportArtifact } from '@/widgets/artifact-panel/api/useExportArtifact';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import { showSuccess } from '@/shared/lib/toast';
+import { useLetterheadChange } from './useLetterheadChange';
 
+/**
+ * Loads an artifact and wires the editing actions of `ArtifactPanel`. Pass the
+ * chat's `threadId` when the artifact is open in a chat, so its productive
+ * outcomes are tracked.
+ */
 export function useArtifactActions(
-  threadId: string,
-  initialArtifactId?: string,
-  workspaceId?: string | null,
+  artifactId: string | null,
+  threadId?: string,
 ) {
-  const { t } = useTranslation('chat');
-  const openArtifactId = initialArtifactId ?? null;
+  const { t } = useTranslation('artifacts');
 
   const {
     artifact: openArtifact,
     isLoading: isArtifactLoading,
     error: artifactError,
     refetch: refetchArtifact,
-  } = useArtifact(openArtifactId);
+  } = useArtifact(artifactId);
 
   const { updateArtifactAsync: saveArtifactAsync } = useUpdateArtifact({
-    artifactId: openArtifactId ?? '',
+    artifactId: artifactId ?? '',
     threadId,
-    workspaceId,
     artifactType: openArtifact?.type,
-    onSuccess: () => showSuccess(t('chat.artifactSaved')),
+    onSuccess: () => showSuccess(t('editor.saved')),
   });
 
   const { revertArtifact } = useRevertArtifact({
-    artifactId: openArtifactId ?? '',
-    threadId,
-    workspaceId,
+    artifactId: artifactId ?? '',
   });
 
   const { exportArtifact, isExporting } = useExportArtifact({
-    artifactId: openArtifactId ?? '',
+    artifactId: artifactId ?? '',
     threadId,
     title: openArtifact?.title ?? 'document',
   });
+
+  const { handleLetterheadChange } = useLetterheadChange(artifactId ?? '');
 
   const handleSaveArtifact = useCallback(
     async (content: string) => {
@@ -90,5 +93,6 @@ export function useArtifactActions(
     handleSaveArtifact,
     handleRevertArtifact,
     handleExportArtifact,
+    handleLetterheadChange,
   };
 }

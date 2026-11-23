@@ -12,7 +12,7 @@ import type { ArtifactResponseDto } from '@/shared/api';
 import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
-import ArtifactSidePanelSkeleton from './ArtifactSidePanelSkeleton';
+import ArtifactPanelSkeleton from './ArtifactPanelSkeleton';
 
 const LazyArtifactEditor = lazy(() =>
   import('@/widgets/artifact-editor').then((m) => ({
@@ -32,7 +32,7 @@ const LazySpreadsheetEditor = lazy(() =>
   })),
 );
 
-interface ArtifactSidePanelProps {
+interface ArtifactPanelProps {
   readonly artifact: ArtifactResponseDto | null;
   readonly isLoading?: boolean;
   readonly error?: unknown;
@@ -44,17 +44,17 @@ interface ArtifactSidePanelProps {
     unsavedContent?: string,
     versionNumber?: number,
   ) => void;
-  readonly onClose: () => void;
-  readonly onBack: () => void;
+  readonly onClose?: () => void;
+  readonly onBack?: () => void;
   readonly onLetterheadChange: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
   readonly showClose?: boolean;
 }
 
-export const ArtifactSidePanel = forwardRef<
+export const ArtifactPanel = forwardRef<
   ArtifactPanelHandle,
-  ArtifactSidePanelProps
->(function ArtifactSidePanel(
+  ArtifactPanelProps
+>(function ArtifactPanel(
   {
     artifact,
     isLoading = false,
@@ -71,12 +71,12 @@ export const ArtifactSidePanel = forwardRef<
   },
   ref,
 ) {
-  const { t } = useTranslation('chat');
+  const { t } = useTranslation('artifacts');
   const editorRef = useRef<ArtifactPanelHandle>(null);
   useImperativeHandle(ref, () => ({
-    requestExit: (onExit) => {
+    requestExit: (onExit, onStay) => {
       if (editorRef.current) {
-        editorRef.current.requestExit(onExit);
+        editorRef.current.requestExit(onExit, onStay);
         return;
       }
       onExit();
@@ -89,7 +89,7 @@ export const ArtifactSidePanel = forwardRef<
   if (!artifact) {
     if (isLoading) {
       return (
-        <ArtifactSidePanelSkeleton
+        <ArtifactPanelSkeleton
           onClose={onClose}
           onBack={onBack}
           showClose={showClose}
@@ -105,7 +105,7 @@ export const ArtifactSidePanel = forwardRef<
         <ArtifactPanelHeader
           title={
             <h2 className="truncate text-sm font-semibold">
-              {t('chat.artifactPanel.title')}
+              {t('panel.title')}
             </h2>
           }
           onBack={onBack}
@@ -124,15 +124,15 @@ export const ArtifactSidePanel = forwardRef<
             >
               {t(
                 hasArtifactLoadError
-                  ? 'chat.artifactPanel.loadErrorTitle'
-                  : 'chat.artifactPanel.notFoundTitle',
+                  ? 'panel.loadErrorTitle'
+                  : 'panel.notFoundTitle',
               )}
             </AlertTitle>
             <AlertDescription>
               {t(
                 hasArtifactLoadError
-                  ? 'chat.artifactPanel.loadErrorDescription'
-                  : 'chat.artifactPanel.notFoundDescription',
+                  ? 'panel.loadErrorDescription'
+                  : 'panel.notFoundDescription',
               )}
               {hasArtifactLoadError && (
                 <Button
@@ -142,7 +142,7 @@ export const ArtifactSidePanel = forwardRef<
                   data-testid="artifact-side-panel-retry"
                   onClick={onRetry}
                 >
-                  {t('chat.artifactPanel.retry')}
+                  {t('panel.retry')}
                 </Button>
               )}
             </AlertDescription>
@@ -204,7 +204,7 @@ export const ArtifactSidePanel = forwardRef<
   return (
     <Suspense
       fallback={
-        <ArtifactSidePanelSkeleton
+        <ArtifactPanelSkeleton
           variant={artifact.type === 'spreadsheet' ? 'spreadsheet' : 'document'}
           onClose={onClose}
           onBack={onBack}

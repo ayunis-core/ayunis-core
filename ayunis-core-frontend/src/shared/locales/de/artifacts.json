@@ -3,6 +3,14 @@
     "back": "Zurück zu den erstellten Inhalten",
     "close": "Schließen"
   },
+  "panel": {
+    "title": "Erstellte Inhalte",
+    "loadErrorTitle": "Inhalt konnte nicht geladen werden",
+    "loadErrorDescription": "Der Inhalt konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "notFoundTitle": "Inhalt nicht gefunden",
+    "notFoundDescription": "Dieser Inhalt existiert möglicherweise nicht mehr.",
+    "retry": "Erneut versuchen"
+  },
   "unsavedChanges": {
     "title": "Ungespeicherte Änderungen",
     "description": "Dieses Dokument enthält ungespeicherte Änderungen. Vor dem Verlassen speichern?",
@@ -11,6 +19,7 @@
   },
   "editor": {
     "save": "Speichern",
+    "saved": "Dokument erfolgreich gespeichert",
     "placeholder": "Schreiben beginnen…",
     "linkPrompt": "URL",
     "invalidUrl": "Bitte geben Sie eine gültige URL ein (http://, https:// oder mailto:).",

@@ -23,8 +23,8 @@ interface SpreadsheetEditorProps {
     unsavedContent?: string,
     versionNumber?: number,
   ) => void;
-  readonly onClose: () => void;
-  readonly onBack: () => void;
+  readonly onClose?: () => void;
+  readonly onBack?: () => void;
   readonly isExporting?: boolean;
   readonly showClose?: boolean;
 }
@@ -77,7 +77,7 @@ export const SpreadsheetEditor = forwardRef<
   };
 
   const handleExit = useCallback(
-    (onExit: () => void) => {
+    (onExit: () => void, onStay?: () => void) => {
       if (!editor.isDirty) {
         onExit();
         return;
@@ -97,6 +97,7 @@ export const SpreadsheetEditor = forwardRef<
           }
           onExit();
         },
+        onCancel: onStay,
       });
     },
     [canSave, confirm, editor.isDirty, handleSave, t],
@@ -134,8 +135,8 @@ export const SpreadsheetEditor = forwardRef<
             </Button>
           </>
         }
-        onBack={() => handleExit(onBack)}
-        onClose={() => handleExit(onClose)}
+        onBack={onBack && (() => handleExit(onBack))}
+        onClose={onClose && (() => handleExit(onClose))}
         showClose={showClose}
       />
 

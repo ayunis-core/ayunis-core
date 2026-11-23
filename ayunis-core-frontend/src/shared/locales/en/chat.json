@@ -11,7 +11,6 @@
     "deleteText": "Delete",
     "cancelText": "Cancel",
     "errorDeleteThread": "Failed to delete chat",
-    "artifactSaved": "Document saved successfully",
     "artifactPanel": {
       "title": "Created content",
       "openList": "Open created content",
@@ -22,10 +21,6 @@
         "spreadsheet": "Table",
         "diagram": "Diagram"
       },
-      "loadErrorTitle": "Content could not be loaded",
-      "loadErrorDescription": "The content could not be loaded. Please try again.",
-      "notFoundTitle": "Content not found",
-      "notFoundDescription": "This content may no longer exist.",
       "retry": "Try again"
     },
     "sidePanel": {

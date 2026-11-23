@@ -36,8 +36,8 @@ interface ArtifactEditorProps {
   readonly onSave: (content: string) => void | Promise<void>;
   readonly onRevert: (versionNumber: number) => void;
   readonly onExport: (format: 'docx' | 'pdf', unsavedContent?: string) => void;
-  readonly onClose: () => void;
-  readonly onBack: () => void;
+  readonly onClose?: () => void;
+  readonly onBack?: () => void;
   readonly onLetterheadChange?: (letterheadId: string | null) => void;
   readonly isExporting?: boolean;
   readonly showClose?: boolean;
@@ -117,7 +117,7 @@ export const ArtifactEditor = forwardRef<
   }, [editor, onSave]);
 
   const requestExit = useCallback(
-    (onExit: () => void) => {
+    (onExit: () => void, onStay?: () => void) => {
       const content = editor.getHTML();
       if (!currentVersion || content === loadedHtmlRef.current) {
         onExit();
@@ -132,6 +132,7 @@ export const ArtifactEditor = forwardRef<
           await onSave(content);
           onExit();
         },
+        onCancel: onStay,
       });
     },
     [confirm, currentVersion, editor, onSave, t],
@@ -183,8 +184,8 @@ export const ArtifactEditor = forwardRef<
             </Button>
           </>
         }
-        onBack={() => requestExit(onBack)}
-        onClose={() => requestExit(onClose)}
+        onBack={onBack && (() => requestExit(onBack))}
+        onClose={onClose && (() => requestExit(onClose))}
         showClose={showClose}
       />
 

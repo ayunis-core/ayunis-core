@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
 import { Button } from '@ayunis/ui/components/button';
-import { useConfirmationContext } from '../model/useConfirmationContext';
+import { useConfirmationContext } from '@/widgets/confirmation-modal/model/useConfirmationContext';
 import { useState } from 'react';
 
 export default function ConfirmationModal() {
@@ -28,6 +28,10 @@ export default function ConfirmationModal() {
   };
 
   const handleCancel = () => {
+    // A confirmation in flight finishes first; Escape or an outside click
+    // must not report a cancel for it.
+    if (isLoading) return;
+    options?.onCancel?.();
     hideConfirmation();
   };
 

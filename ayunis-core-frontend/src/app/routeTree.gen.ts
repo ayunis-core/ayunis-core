@@ -42,6 +42,7 @@ import { Route as AuthenticatedAdminSettingsRolesRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
 import { Route as AuthenticatedAdminSettingsUsageRouteImport } from './routes/_authenticated/admin-settings.usage'
 import { Route as AuthenticatedAdminSettingsUsersRouteImport } from './routes/_authenticated/admin-settings.users'
+import { Route as AuthenticatedArtifactsArtifactIdRouteImport } from './routes/_authenticated/artifacts.$artifactId'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedChatsThreadIdRouteImport } from './routes/_authenticated/chats.$threadId'
@@ -273,6 +274,12 @@ const AuthenticatedAdminSettingsUsersRoute =
     id: '/users',
     path: '/users',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
+const AuthenticatedArtifactsArtifactIdRoute =
+  AuthenticatedArtifactsArtifactIdRouteImport.update({
+    id: '/artifacts/$artifactId',
+    path: '/artifacts/$artifactId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   id: '/chat/',
@@ -603,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/artifacts/$artifactId': typeof AuthenticatedArtifactsArtifactIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
@@ -684,6 +692,7 @@ export interface FileRoutesByTo {
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/artifacts/$artifactId': typeof AuthenticatedArtifactsArtifactIdRoute
   '/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
@@ -770,6 +779,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
   '/_authenticated/admin-settings/usage': typeof AuthenticatedAdminSettingsUsageRoute
   '/_authenticated/admin-settings/users': typeof AuthenticatedAdminSettingsUsersRoute
+  '/_authenticated/artifacts/$artifactId': typeof AuthenticatedArtifactsArtifactIdRoute
   '/_authenticated/chats/$threadId': typeof AuthenticatedChatsThreadIdRoute
   '/_authenticated/inbox/$notificationId': typeof AuthenticatedInboxNotificationIdRoute
   '/_authenticated/knowledge-bases/$id': typeof AuthenticatedKnowledgeBasesIdRoute
@@ -856,6 +866,7 @@ export interface FileRouteTypes {
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
+    | '/artifacts/$artifactId'
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
@@ -937,6 +948,7 @@ export interface FileRouteTypes {
     | '/admin-settings/security'
     | '/admin-settings/usage'
     | '/admin-settings/users'
+    | '/artifacts/$artifactId'
     | '/chats/$threadId'
     | '/inbox/$notificationId'
     | '/knowledge-bases/$id'
@@ -1022,6 +1034,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/security'
     | '/_authenticated/admin-settings/usage'
     | '/_authenticated/admin-settings/users'
+    | '/_authenticated/artifacts/$artifactId'
     | '/_authenticated/chats/$threadId'
     | '/_authenticated/inbox/$notificationId'
     | '/_authenticated/knowledge-bases/$id'
@@ -1328,6 +1341,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin-settings/users'
       preLoaderRoute: typeof AuthenticatedAdminSettingsUsersRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
+    '/_authenticated/artifacts/$artifactId': {
+      id: '/_authenticated/artifacts/$artifactId'
+      path: '/artifacts/$artifactId'
+      fullPath: '/artifacts/$artifactId'
+      preLoaderRoute: typeof AuthenticatedArtifactsArtifactIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/chat/': {
       id: '/_authenticated/chat/'
@@ -1814,6 +1834,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedSuperAdminSettingsRoute: typeof AuthenticatedSuperAdminSettingsRouteWithChildren
   AuthenticatedAcademyChapterIdRoute: typeof AuthenticatedAcademyChapterIdRoute
+  AuthenticatedArtifactsArtifactIdRoute: typeof AuthenticatedArtifactsArtifactIdRoute
   AuthenticatedChatsThreadIdRoute: typeof AuthenticatedChatsThreadIdRoute
   AuthenticatedKnowledgeBasesIdRoute: typeof AuthenticatedKnowledgeBasesIdRoute
   AuthenticatedNewsReleaseNoteIdRoute: typeof AuthenticatedNewsReleaseNoteIdRoute
@@ -1851,6 +1872,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSuperAdminSettingsRoute:
     AuthenticatedSuperAdminSettingsRouteWithChildren,
   AuthenticatedAcademyChapterIdRoute: AuthenticatedAcademyChapterIdRoute,
+  AuthenticatedArtifactsArtifactIdRoute: AuthenticatedArtifactsArtifactIdRoute,
   AuthenticatedChatsThreadIdRoute: AuthenticatedChatsThreadIdRoute,
   AuthenticatedKnowledgeBasesIdRoute: AuthenticatedKnowledgeBasesIdRoute,
   AuthenticatedNewsReleaseNoteIdRoute: AuthenticatedNewsReleaseNoteIdRoute,

@@ -3,6 +3,14 @@
     "back": "Back to created content",
     "close": "Close"
   },
+  "panel": {
+    "title": "Created content",
+    "loadErrorTitle": "Content could not be loaded",
+    "loadErrorDescription": "The content could not be loaded. Please try again.",
+    "notFoundTitle": "Content not found",
+    "notFoundDescription": "This content may no longer exist.",
+    "retry": "Try again"
+  },
   "unsavedChanges": {
     "title": "Unsaved changes",
     "description": "This document has unsaved changes. Save them before leaving?",
@@ -11,6 +19,7 @@
   },
   "editor": {
     "save": "Save",
+    "saved": "Document saved successfully",
     "placeholder": "Start writing…",
     "linkPrompt": "URL",
     "invalidUrl": "Please enter a valid URL (http://, https://, or mailto:).",
