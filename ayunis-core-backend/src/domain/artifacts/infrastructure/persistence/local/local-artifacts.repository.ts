@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { UUID } from 'crypto';
 
 import {
+  ArtifactLookupOptions,
   ArtifactsByWorkspaceListOptions,
   ArtifactsRepository,
 } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
@@ -17,6 +18,7 @@ import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact
 import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
+import { ThreadArtifactRecord } from './schema/thread-artifact.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
@@ -34,6 +36,8 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     private readonly defaultDocumentArtifactRepo: Repository<DocumentArtifactRecord>,
     @InjectRepository(ArtifactVersionRecord)
     private readonly defaultVersionRepo: Repository<ArtifactVersionRecord>,
+    @InjectRepository(ThreadArtifactRecord)
+    private readonly defaultThreadLinkRepo: Repository<ThreadArtifactRecord>,
     private readonly artifactMapper: ArtifactMapper,
     private readonly versionMapper: ArtifactVersionMapper,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
@@ -61,6 +65,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     );
   }
 
+  private get threadLinkRepo(): Repository<ThreadArtifactRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ThreadArtifactRecord) ?? this.defaultThreadLinkRepo
+    );
+  }
+
   async create(artifact: Artifact): Promise<Artifact> {
     this.logger.log(
       {
@@ -74,24 +85,36 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     return this.artifactMapper.toDomain(saved);
   }
 
-  private accessibleTo(userId: UUID) {
+  async addThreadLink(threadId: UUID, artifactId: UUID): Promise<void> {
+    this.logger.log({ threadId, artifactId }, 'addThreadLink');
+    await this.threadLinkRepo.insert({ threadId, artifactId });
+  }
+
+  private accessibleTo(userId: UUID, options: ArtifactLookupOptions = {}) {
     return {
       userId,
       thread: { workspaceId: personalOrMemberWorkspace(userId) },
+      ...(options.linkedThreadId && {
+        threadLinks: { threadId: options.linkedThreadId },
+      }),
     };
   }
 
-  async findById(id: UUID, userId: UUID): Promise<Artifact | null> {
+  async findById(
+    id: UUID,
+    userId: UUID,
+    options?: ArtifactLookupOptions,
+  ): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
-      where: { id, ...this.accessibleTo(userId) },
+      where: { id, ...this.accessibleTo(userId, options) },
     });
     return record ? this.artifactMapper.toDomain(record) : null;
   }
 
   async findByThreadId(threadId: UUID, userId: UUID): Promise<Artifact[]> {
     const records = await this.artifactRepo.find({
-      where: { threadId, ...this.accessibleTo(userId) },
-      order: { createdAt: 'ASC' },
+      where: this.accessibleTo(userId, { linkedThreadId: threadId }),
+      order: { threadLinks: { createdAt: 'ASC' }, createdAt: 'ASC' },
     });
     return records.map((r) => this.artifactMapper.toDomain(r));
   }
@@ -136,9 +159,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     });
   }
 
-  async findByIdWithVersions(id: UUID, userId: UUID): Promise<Artifact | null> {
+  async findByIdWithVersions(
+    id: UUID,
+    userId: UUID,
+    options?: ArtifactLookupOptions,
+  ): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
-      where: { id, ...this.accessibleTo(userId) },
+      where: { id, ...this.accessibleTo(userId, options) },
       relations: { versions: true },
       order: { versions: { versionNumber: 'ASC' } },
     });

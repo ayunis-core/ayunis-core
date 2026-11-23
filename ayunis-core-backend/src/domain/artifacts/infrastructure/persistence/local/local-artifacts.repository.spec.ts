@@ -8,6 +8,7 @@ import type { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 import type { ArtifactRecord } from './schema/artifact.record';
 import type { ArtifactVersionRecord } from './schema/artifact-version.record';
 import type { DocumentArtifactRecord } from './schema/document-artifact.record';
+import type { ThreadArtifactRecord } from './schema/thread-artifact.record';
 
 describe('LocalArtifactsRepository', () => {
   it('lists only supported artifact types for a workspace', async () => {
@@ -34,6 +35,7 @@ describe('LocalArtifactsRepository', () => {
       artifactRepository,
       documentArtifactRepository,
       versionRepository,
+      {} as Repository<ThreadArtifactRecord>,
       artifactMapper,
       versionMapper,
       {

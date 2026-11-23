@@ -24,7 +24,7 @@ export class UpdateDiagramToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log('Executing update_diagram tool');
 
     try {
@@ -36,6 +36,7 @@ export class UpdateDiagramToolHandler extends ToolExecutionHandler {
           content: validatedInput.content,
           authorType: AuthorType.ASSISTANT,
           expectedVersionNumber: validatedInput.expected_version,
+          linkedThreadId: context.threadId,
         }),
       );
 

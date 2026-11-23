@@ -14,6 +14,7 @@ import { LocalArtifactsRepository } from './local-artifacts.repository';
 import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
+import { ThreadArtifactRecord } from './schema/thread-artifact.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 
@@ -104,6 +105,7 @@ describe('Artifact version transaction', () => {
           provide: getRepositoryToken(ArtifactVersionRecord),
           useValue: db.getRepository(ArtifactVersionRecord),
         },
+        { provide: getRepositoryToken(ThreadArtifactRecord), useValue: {} },
         { provide: TransactionHost, useValue: txHost },
       ],
     }).compile();

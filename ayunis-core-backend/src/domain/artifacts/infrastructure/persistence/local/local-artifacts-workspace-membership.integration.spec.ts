@@ -1,74 +1,14 @@
 import { randomUUID, type UUID } from 'crypto';
-import { DataSource, EntitySchema } from 'typeorm';
-import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-import type { TransactionHost } from '@nestjs-cls/transactional';
-import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import 'src/config/env';
-import { typeormConfigRaw } from 'src/config/typeorm.config';
-import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
-import { LocalArtifactsRepository } from './local-artifacts.repository';
-import type { ArtifactMapper } from './mappers/artifact.mapper';
-import type { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
-import { ArtifactRecord } from './schema/artifact.record';
-import { ArtifactVersionRecord } from './schema/artifact-version.record';
-import { DocumentArtifactRecord } from './schema/document-artifact.record';
-
-// ts-jest drops the column types of the records, so the tables the queries
-// touch are declared explicitly. Ids are varchar, as in the real schema.
-const id = { type: 'varchar', primary: true } as const;
-const threadSchema = new EntitySchema<ThreadRecord>({
-  name: 'ThreadRecord',
-  target: ThreadRecord,
-  tableName: 'threads',
-  columns: {
-    id,
-    userId: { type: 'varchar' },
-    workspaceId: { type: 'varchar', nullable: true },
-  },
-});
-const artifactSchema = new EntitySchema<ArtifactRecord>({
-  name: 'ArtifactRecord',
-  target: ArtifactRecord,
-  tableName: 'artifacts',
-  columns: {
-    id,
-    threadId: { type: 'varchar' },
-    userId: { type: 'varchar' },
-    title: { type: 'varchar' },
-    currentVersionNumber: { type: Number, default: 1 },
-    createdAt: { type: 'timestamp', createDate: true },
-  },
-  relations: {
-    thread: {
-      type: 'many-to-one',
-      target: 'ThreadRecord',
-      joinColumn: { name: 'threadId' },
-    },
-    versions: {
-      type: 'one-to-many',
-      target: 'ArtifactVersionRecord',
-      inverseSide: 'artifact',
-    },
-  },
-});
-const versionSchema = new EntitySchema<ArtifactVersionRecord>({
-  name: 'ArtifactVersionRecord',
-  target: ArtifactVersionRecord,
-  tableName: 'artifact_versions',
-  columns: {
-    id,
-    artifactId: { type: 'varchar' },
-    versionNumber: { type: Number },
-  },
-  relations: {
-    artifact: {
-      type: 'many-to-one',
-      target: 'ArtifactRecord',
-      joinColumn: { name: 'artifactId' },
-      inverseSide: 'versions',
-    },
-  },
-});
+import type { DataSource } from 'typeorm';
+import type { LocalArtifactsRepository } from './local-artifacts.repository';
+import {
+  artifactSchema,
+  createArtifactsRepository,
+  createArtifactTestDb,
+  dropArtifactTestDb,
+  insertArtifact,
+  insertChat,
+} from './testing/artifact-db.fixtures';
 
 /**
  * Distinct principals: the creator and a colleague are both members of the
@@ -89,39 +29,8 @@ describe('Workspace chat artifacts require current membership (PostgreSQL)', () 
   let personalArtifact: UUID;
 
   beforeAll(async () => {
-    schema = `ayc1698_artifacts_${randomUUID().replaceAll('-', '')}`;
-    db = new DataSource({
-      ...(typeormConfigRaw as PostgresConnectionOptions),
-      schema,
-      entities: [threadSchema, artifactSchema, versionSchema],
-      migrations: [],
-      migrationsRun: false,
-      logging: false,
-      // The membership condition names workspace_members unqualified, so every
-      // pooled connection must resolve it inside the throwaway schema.
-      extra: { options: `-c search_path=${schema}` },
-    });
-    await db.initialize();
-    const runner = db.createQueryRunner();
-    await runner.createSchema(schema, true);
-    await runner.release();
-    await db.synchronize();
-    await db.query(`CREATE TABLE workspace_members (
-      id varchar PRIMARY KEY, "workspaceId" varchar NOT NULL,
-      "userId" varchar NOT NULL, UNIQUE ("workspaceId", "userId")
-    )`);
-    artifacts = new LocalArtifactsRepository(
-      db.getRepository(ArtifactRecord),
-      db.getRepository(DocumentArtifactRecord),
-      db.getRepository(ArtifactVersionRecord),
-      {
-        toDomain: (record: ArtifactRecord) => record,
-      } as unknown as ArtifactMapper,
-      {} as ArtifactVersionMapper,
-      {
-        tx: undefined,
-      } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
-    );
+    ({ db, schema } = await createArtifactTestDb('ayc1698_artifacts'));
+    artifacts = createArtifactsRepository(db);
   }, 30_000);
 
   beforeEach(async () => {
@@ -138,11 +47,7 @@ describe('Workspace chat artifacts require current membership (PostgreSQL)', () 
   }, 30_000);
 
   afterAll(async () => {
-    if (!db?.isInitialized) return;
-    const runner = db.createQueryRunner();
-    await runner.dropSchema(schema, true, true);
-    await runner.release();
-    await db.destroy();
+    await dropArtifactTestDb(db, schema);
   }, 30_000);
 
   async function join(userId: UUID): Promise<void> {
@@ -161,25 +66,11 @@ describe('Workspace chat artifacts require current membership (PostgreSQL)', () 
   }
 
   async function chat(userId: UUID, workspace: UUID | null): Promise<UUID> {
-    const chatId = randomUUID();
-    await db
-      .getRepository(ThreadRecord)
-      .insert({ id: chatId, userId, workspaceId: workspace });
-    return chatId;
+    return insertChat(db, userId, workspace);
   }
 
   async function artifact(userId: UUID, threadId: UUID): Promise<UUID> {
-    const artifactId = randomUUID();
-    await db.getRepository(artifactSchema).insert({
-      id: artifactId,
-      threadId,
-      userId,
-      title: 'Beschlussvorlage',
-    });
-    await db
-      .getRepository(versionSchema)
-      .insert({ id: randomUUID(), artifactId, versionNumber: 1 });
-    return artifactId;
+    return insertArtifact(db, userId, threadId);
   }
 
   /** Every lookup that serves an artifact to a user, by path. */

@@ -33,11 +33,11 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log('Executing read_diagram tool');
 
     try {
-      return await this.readDiagram(tool, input);
+      return await this.readDiagram(tool, input, context.threadId);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -54,6 +54,7 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
   private async readDiagram(
     tool: ReadDiagramTool,
     input: Record<string, unknown>,
+    threadId: UUID,
   ): Promise<string> {
     const {
       artifact_id: artifactId,
@@ -62,7 +63,10 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
     } = tool.validateParams(input);
 
     const artifact = await this.findArtifactWithVersionsUseCase.execute(
-      new FindArtifactWithVersionsQuery({ artifactId: artifactId as UUID }),
+      new FindArtifactWithVersionsQuery({
+        artifactId: artifactId as UUID,
+        linkedThreadId: threadId,
+      }),
     );
     assertArtifactType(artifact, ArtifactType.DIAGRAM, tool.name);
 

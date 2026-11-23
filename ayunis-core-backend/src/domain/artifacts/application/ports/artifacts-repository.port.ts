@@ -11,9 +11,18 @@ export interface ArtifactsByWorkspaceListOptions {
   offset: number;
 }
 
+export interface ArtifactLookupOptions {
+  linkedThreadId?: UUID;
+}
+
 export abstract class ArtifactsRepository {
   abstract create(artifact: Artifact): Promise<Artifact>;
-  abstract findById(id: UUID, userId: UUID): Promise<Artifact | null>;
+  abstract addThreadLink(threadId: UUID, artifactId: UUID): Promise<void>;
+  abstract findById(
+    id: UUID,
+    userId: UUID,
+    options?: ArtifactLookupOptions,
+  ): Promise<Artifact | null>;
   abstract findByThreadId(threadId: UUID, userId: UUID): Promise<Artifact[]>;
   abstract findByWorkspaceId(
     workspaceId: UUID,
@@ -23,6 +32,7 @@ export abstract class ArtifactsRepository {
   abstract findByIdWithVersions(
     id: UUID,
     userId: UUID,
+    options?: ArtifactLookupOptions,
   ): Promise<Artifact | null>;
   abstract findVersion(
     artifactId: UUID,

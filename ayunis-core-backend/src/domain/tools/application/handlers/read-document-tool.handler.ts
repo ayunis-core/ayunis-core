@@ -29,11 +29,11 @@ export class ReadDocumentToolHandler extends ToolExecutionHandler {
     input: Record<string, unknown>;
     context: ToolExecutionContext;
   }): Promise<string> {
-    const { tool, input } = params;
+    const { tool, input, context } = params;
     this.logger.log('Executing read_document tool');
 
     try {
-      return await this.readDocument(tool, input);
+      return await this.readDocument(tool, input, context.threadId);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -50,6 +50,7 @@ export class ReadDocumentToolHandler extends ToolExecutionHandler {
   private async readDocument(
     tool: ReadDocumentTool,
     input: Record<string, unknown>,
+    threadId: UUID,
   ): Promise<string> {
     const {
       artifact_id: artifactId,
@@ -58,7 +59,10 @@ export class ReadDocumentToolHandler extends ToolExecutionHandler {
     } = tool.validateParams(input);
 
     const artifact = await this.findArtifactWithVersionsUseCase.execute(
-      new FindArtifactWithVersionsQuery({ artifactId: artifactId as UUID }),
+      new FindArtifactWithVersionsQuery({
+        artifactId: artifactId as UUID,
+        linkedThreadId: threadId,
+      }),
     );
 
     return readTextArtifactPage({

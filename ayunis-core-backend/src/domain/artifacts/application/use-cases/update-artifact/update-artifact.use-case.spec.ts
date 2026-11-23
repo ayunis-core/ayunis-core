@@ -135,6 +135,7 @@ describe('UpdateArtifactUseCase', () => {
     expect(artifactsRepository.findById).toHaveBeenCalledWith(
       mockArtifactId,
       mockUserId,
+      { linkedThreadId: undefined },
     );
   });
 
@@ -578,6 +579,7 @@ describe('UpdateArtifactUseCase', () => {
     expect(artifactsRepository.findById).toHaveBeenCalledWith(
       mockArtifactId,
       mockUserId,
+      { linkedThreadId: undefined },
     );
     expect(artifactsRepository.updateLetterheadId).toHaveBeenCalledWith(
       mockArtifactId,
