@@ -14,6 +14,8 @@ import type { UUID } from 'crypto';
 import { EMPTY_SYNCED_FILES_SUMMARY } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import { AddSyncedLocationCommand } from 'src/domain/knowledge-base-sync/application/use-cases/add-synced-location/add-synced-location.command';
 import { AddSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/add-synced-location/add-synced-location.use-case';
+import { AddWebSyncedLocationCommand } from 'src/domain/knowledge-base-sync/application/use-cases/add-web-synced-location/add-web-synced-location.command';
+import { AddWebSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/add-web-synced-location/add-web-synced-location.use-case';
 import { ListSyncedLocationsQuery } from 'src/domain/knowledge-base-sync/application/use-cases/list-synced-locations/list-synced-locations.query';
 import { ListSyncedLocationsUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/list-synced-locations/list-synced-locations.use-case';
 import { RemoveSyncedLocationCommand } from 'src/domain/knowledge-base-sync/application/use-cases/remove-synced-location/remove-synced-location.command';
@@ -21,6 +23,7 @@ import { RemoveSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/appl
 import { SyncLocationNowCommand } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location-now/sync-location-now.command';
 import { SyncLocationNowUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location-now/sync-location-now.use-case';
 import { AddSyncedLocationDto } from './dto/add-synced-location.dto';
+import { AddWebsiteDto } from './dto/add-website.dto';
 import {
   SyncedLocationListResponseDto,
   SyncedLocationResponseDto,
@@ -55,6 +58,7 @@ export class KnowledgeBaseSyncedLocationsController {
   constructor(
     private readonly listSyncedLocationsUseCase: ListSyncedLocationsUseCase,
     private readonly addSyncedLocationUseCase: AddSyncedLocationUseCase,
+    private readonly addWebSyncedLocationUseCase: AddWebSyncedLocationUseCase,
     private readonly syncLocationNowUseCase: SyncLocationNowUseCase,
     private readonly removeSyncedLocationUseCase: RemoveSyncedLocationUseCase,
   ) {}
@@ -110,6 +114,46 @@ export class KnowledgeBaseSyncedLocationsController {
     return toSyncedLocationDto({
       location,
       product: dto.product,
+      files: EMPTY_SYNCED_FILES_SUMMARY,
+    });
+  }
+
+  @Post(':id/urls')
+  @ApiOperation({
+    summary: 'Add a website to a knowledge base',
+    description:
+      'The website is synced daily: every page reached up to the link depth and every PDF they link to becomes a document of the knowledge base, within its document limit. The first sync starts right away.',
+  })
+  @ApiParam(KB_ID_PARAM)
+  @ApiResponse({ status: 201, type: SyncedLocationResponseDto })
+  @ApiResponse({
+    status: 400,
+    description: 'Not an http(s) URL (INVALID_SYNCED_LOCATION)',
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Knowledge base not found, or the host is reserved for another organization (CRAWL_DOMAIN_ACCESS_DENIED)',
+  })
+  @ApiResponse({
+    status: 409,
+    description:
+      'The knowledge base already syncs the website (SYNCED_LOCATION_ALREADY_EXISTS)',
+  })
+  async addWebsite(
+    @Param('id', ParseUUIDPipe) id: UUID,
+    @Body() dto: AddWebsiteDto,
+  ): Promise<SyncedLocationResponseDto> {
+    const location = await this.addWebSyncedLocationUseCase.execute(
+      new AddWebSyncedLocationCommand({
+        knowledgeBaseId: id,
+        url: dto.url,
+        depth: dto.maxDepth ?? 0,
+      }),
+    );
+    return toSyncedLocationDto({
+      location,
+      product: null,
       files: EMPTY_SYNCED_FILES_SUMMARY,
     });
   }

@@ -156,20 +156,6 @@
       "uploadError": "Dokument konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
       "add": "Hinzufügen",
       "addDocument": "Dokument hochladen",
-      "addUrl": "URL hinzufügen",
-      "urlPlaceholder": "https://beispiel.de",
-      "urlDialogTitle": "Website-URL hinzufügen",
-      "urlDialogDescription": "Geben Sie die URL einer Website ein, um deren Inhalt in die Wissenssammlung zu importieren.",
-      "urlLabel": "Website-URL",
-      "urlDepthLabel": "Linktiefe",
-      "urlDepthOption0": "Nur diese Seite",
-      "urlDepthOption1": "Diese Seite + verlinkte Seiten",
-      "urlDepthOption2": "Diese Seite + 2 Linkebenen",
-      "urlDepthHint": "Folgt Links auf derselben Website. Höhere Tiefen importieren mehr Seiten und dauern länger.",
-      "addUrlSuccess": "URL erfolgreich hinzugefügt! Der Website-Inhalt wird verarbeitet.",
-      "addUrlError": "URL konnte nicht hinzugefügt werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut.",
-      "addUrlRetrievalFailed": "Die Website konnte nicht erreicht werden. Bitte überprüfen Sie, ob die URL korrekt ist und die Website erreichbar ist.",
-      "addUrlUnsupportedContentType": "Diese URL verweist auf eine Datei (z. B. PDF) statt auf eine Website. Bitte laden Sie die Datei herunter und laden Sie sie direkt hoch.",
       "addedAt": "Hinzugefügt am {{date}}",
       "statusProcessing": "Wird verarbeitet… Sie können diese Seite verlassen.",
       "statusProcessingSlow": "Verarbeitung dauert länger als erwartet… Sie können diese Seite verlassen.",
@@ -189,7 +175,6 @@
       },
       "removeFailedSuccess": "Fehlgeschlagene Dokumente entfernt.",
       "removeFailedError": "Fehlgeschlagene Dokumente konnten nicht entfernt werden. Bitte versuchen Sie es erneut.",
-      "urlDialogCancel": "Abbrechen",
       "processingErrors": {
         "failed": "Die Datei konnte nicht verarbeitet werden. Laden Sie sie erneut hoch. Falls der Fehler weiterhin auftritt, wenden Sie sich an den Support.",
         "unreadable": "Diese Datei konnte nicht gelesen werden. Laden Sie sie erneut hoch.",
@@ -218,7 +203,9 @@
         "waiting": "Wartet auf die erste Synchronisierung",
         "synced": "Zuletzt synchronisiert {{time}}",
         "paused": "Pausiert, weil ein Dienst nicht erreichbar war. Nächster Versuch {{time}}",
-        "noLongerAccessible": "Für Ayunis nicht mehr zugänglich. Die Dokumente bleiben, bis Sie die Quelle entfernen."
+        "noLongerAccessible": "Für Ayunis nicht mehr zugänglich. Die Dokumente bleiben, bis Sie die Quelle entfernen.",
+        "lastSyncFailed": "Letzte Synchronisierung fehlgeschlagen, die Website war nicht erreichbar. Zuletzt erfolgreich {{time}}",
+        "firstSyncFailed": "Synchronisierung fehlgeschlagen, die Website war nicht erreichbar"
       },
       "documents_one": "{{count}} Dokument",
       "documents_other": "{{count}} Dokumente",
@@ -285,6 +272,8 @@
         "title": "Synchronisierte Quelle entfernen",
         "description_one": "„{{name}}“ und das zugehörige Dokument werden aus dieser Wissenssammlung entfernt. In SharePoint ändert sich nichts.",
         "description_other": "„{{name}}“ und die {{count}} zugehörigen Dokumente werden aus dieser Wissenssammlung entfernt. In SharePoint ändert sich nichts.",
+        "descriptionWebsite_one": "„{{name}}“ und das zugehörige Dokument werden aus dieser Wissenssammlung entfernt. Auf der Website ändert sich nichts.",
+        "descriptionWebsite_other": "„{{name}}“ und die {{count}} zugehörigen Dokumente werden aus dieser Wissenssammlung entfernt. Auf der Website ändert sich nichts.",
         "confirmText": "Entfernen",
         "cancelText": "Abbrechen"
       },
@@ -298,6 +287,38 @@
         "syncNow": "Die Synchronisierung konnte nicht gestartet werden",
         "remove": "Die Quelle konnte nicht entfernt werden",
         "notFound": "Diese Quelle gibt es nicht mehr"
+      },
+      "website": {
+        "add": "URL hinzufügen",
+        "open": "Website öffnen",
+        "addSuccess": "Website hinzugefügt. Ihre Seiten werden synchronisiert.",
+        "dialog": {
+          "title": "Website hinzufügen",
+          "description": "Die Seiten der Website und die PDFs, auf die sie verlinken, werden in diese Wissenssammlung übernommen und täglich aktualisiert.",
+          "urlLabel": "Website-URL",
+          "urlPlaceholder": "https://beispiel.de",
+          "depthLabel": "Linktiefe",
+          "depthOption0": "Nur diese Seite",
+          "depthOption1": "Diese Seite + verlinkte Seiten",
+          "depthOption2": "Diese Seite + 2 Linkebenen",
+          "depthHint": "Folgt Links auf derselben Website. Höhere Tiefen übernehmen mehr Seiten.",
+          "add": "Hinzufügen",
+          "cancel": "Abbrechen"
+        },
+        "validation": {
+          "url": {
+            "isNotEmpty": "Geben Sie eine URL ein",
+            "maxLength": "Die URL darf höchstens 2048 Zeichen lang sein",
+            "isUrl": "Geben Sie eine URL ein, die mit http:// oder https:// beginnt",
+            "invalid": "Ungültige URL"
+          },
+          "invalid": "Ungültige Eingabe"
+        },
+        "errors": {
+          "alreadyExists": "Diese Wissenssammlung synchronisiert diese Website bereits",
+          "domainNotAvailable": "Diese Website kann Ihre Organisation nicht hinzufügen",
+          "add": "Die Website konnte nicht hinzugefügt werden"
+        }
       }
     }
   },

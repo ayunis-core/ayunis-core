@@ -6655,50 +6655,6 @@
         "tags": ["knowledge-bases"]
       }
     },
-    "/knowledge-bases/{id}/urls": {
-      "post": {
-        "operationId": "KnowledgeBasesController_addUrl",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the knowledge base",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddUrlToKnowledgeBaseDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "The URL source has been accepted and is being processed in the background",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeBaseDocumentResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Knowledge base not found"
-          }
-        },
-        "summary": "Add a URL source to a knowledge base",
-        "tags": ["knowledge-bases"]
-      }
-    },
     "/knowledge-bases/{id}/documents/{documentId}": {
       "delete": {
         "operationId": "KnowledgeBasesController_removeDocument",
@@ -11764,6 +11720,57 @@
           }
         },
         "summary": "Add a synced location to a knowledge base",
+        "tags": ["knowledge-bases"]
+      }
+    },
+    "/knowledge-bases/{id}/urls": {
+      "post": {
+        "description": "The website is synced daily: every page reached up to the link depth and every PDF they link to becomes a document of the knowledge base, within its document limit. The first sync starts right away.",
+        "operationId": "KnowledgeBaseSyncedLocationsController_addWebsite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWebsiteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncedLocationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not an http(s) URL (INVALID_SYNCED_LOCATION)"
+          },
+          "404": {
+            "description": "Knowledge base not found, or the host is reserved for another organization (CRAWL_DOMAIN_ACCESS_DENIED)"
+          },
+          "409": {
+            "description": "The knowledge base already syncs the website (SYNCED_LOCATION_ALREADY_EXISTS)"
+          }
+        },
+        "summary": "Add a website to a knowledge base",
         "tags": ["knowledge-bases"]
       }
     },
@@ -22349,25 +22356,6 @@
         },
         "required": ["data"]
       },
-      "AddUrlToKnowledgeBaseDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL to crawl and add to the knowledge base",
-            "example": "https://example.com/page"
-          },
-          "maxDepth": {
-            "type": "number",
-            "description": "How many links deep to follow from the URL when crawling (0 = just this page, 1 = + linked pages, 2 = + their links). Only same-domain links are followed. Defaults to 0.",
-            "minimum": 0,
-            "maximum": 2,
-            "default": 0,
-            "example": 1
-          }
-        },
-        "required": ["url"]
-      },
       "KnowledgeBaseTransferOwnerDto": {
         "type": "object",
         "properties": {
@@ -25894,6 +25882,26 @@
           }
         },
         "required": ["product", "location"]
+      },
+      "AddWebsiteDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the website, where the crawl starts",
+            "example": "https://www.musterstadt.de/rathaus",
+            "maxLength": 2048
+          },
+          "maxDepth": {
+            "type": "number",
+            "description": "How many links deep to follow from the URL on every sync (0 = just this page, 1 = + linked pages, 2 = + their links). Only same-site links are followed. Defaults to 0.",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0,
+            "example": 1
+          }
+        },
+        "required": ["url"]
       },
       "ConnectorStatus": {
         "type": "string",

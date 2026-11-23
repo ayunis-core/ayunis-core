@@ -47,8 +47,6 @@ import { DeleteKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/applicati
 import { DeleteKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/delete-knowledge-base/delete-knowledge-base.command';
 import { AddDocumentToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
 import { AddDocumentToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.command';
-import { AddUrlToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
-import { AddUrlToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.command';
 import { RemoveFailedDocumentsFromKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/remove-failed-documents-from-knowledge-base/remove-failed-documents-from-knowledge-base.use-case';
@@ -65,7 +63,6 @@ import {
   toKnowledgeBaseOwner,
 } from './dto/knowledge-base-owner.dto';
 import { UpdateKnowledgeBaseDto } from './dto/update-knowledge-base.dto';
-import { AddUrlToKnowledgeBaseDto } from './dto/add-url-to-knowledge-base.dto';
 import { SetKnowledgeBaseActivationRequestDto } from './dto/set-knowledge-base-activation.request-dto';
 import {
   KnowledgeBaseResponseDto,
@@ -116,7 +113,6 @@ export class KnowledgeBasesController {
     private readonly updateKnowledgeBaseUseCase: UpdateKnowledgeBaseUseCase,
     private readonly deleteKnowledgeBaseUseCase: DeleteKnowledgeBaseUseCase,
     private readonly addDocumentUseCase: AddDocumentToKnowledgeBaseUseCase,
-    private readonly addUrlUseCase: AddUrlToKnowledgeBaseUseCase,
     private readonly removeDocumentUseCase: RemoveDocumentFromKnowledgeBaseUseCase,
     private readonly removeFailedDocumentsUseCase: RemoveFailedDocumentsFromKnowledgeBaseUseCase,
     private readonly listDocumentsUseCase: ListKnowledgeBaseDocumentsUseCase,
@@ -374,46 +370,6 @@ export class KnowledgeBasesController {
           ? `Unable to determine MIME type for detected file type: ${detectedType}`
           : `Unsupported file type: ${file.originalname}. Knowledge bases only support PDF, DOCX, PPTX, ODT, ODP, CSV, XLSX, XLS, ODS, TXT, EML, MSG, and audio files (MP3, M4A, WAV, WebM).`,
     });
-  }
-
-  @Post(':id/urls')
-  @ApiOperation({ summary: 'Add a URL source to a knowledge base' })
-  @ApiParam({
-    name: 'id',
-    description: 'The UUID of the knowledge base',
-    type: 'string',
-    format: 'uuid',
-  })
-  @ApiBody({ type: AddUrlToKnowledgeBaseDto })
-  @HttpCode(HttpStatus.ACCEPTED)
-  @ApiResponse({
-    status: 202,
-    description:
-      'The URL source has been accepted and is being processed in the background',
-    type: KnowledgeBaseDocumentResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Knowledge base not found' })
-  async addUrl(
-    @Param('id', ParseUUIDPipe) id: UUID,
-    @Body() dto: AddUrlToKnowledgeBaseDto,
-  ): Promise<KnowledgeBaseDocumentResponseDto> {
-    this.logger.log(
-      {
-        knowledgeBaseId: id,
-        url: dto.url,
-        maxDepth: dto.maxDepth,
-      },
-      'addUrl',
-    );
-    const source = await this.addUrlUseCase.execute(
-      new AddUrlToKnowledgeBaseCommand({
-        knowledgeBaseId: id,
-        url: dto.url,
-        maxDepth: dto.maxDepth,
-      }),
-    );
-
-    return this.knowledgeBaseDtoMapper.toDocumentDto(source);
   }
 
   @Delete(':id/documents/:documentId')

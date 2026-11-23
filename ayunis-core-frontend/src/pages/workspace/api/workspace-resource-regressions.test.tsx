@@ -380,35 +380,6 @@ describe('workspace resource regressions', () => {
     await act(() => vi.advanceTimersByTimeAsync(15000));
     expect(request).toHaveBeenCalledTimes(calls);
   });
-
-  it('uses canonical entity-id document operations and enables URL sources', async () => {
-    const document = {
-      id: 'document',
-      name: 'Building regulations.pdf',
-      status: 'ready',
-      processingError: undefined,
-    } as KnowledgeBaseDocumentResponseDto;
-    request.mockResolvedValue({ data: [document] });
-    const { wrapper } = setup();
-    const { result } = renderHook(
-      () =>
-        useWorkspaceKnowledgeBaseDocuments('project', 'knowledge', {
-          data: [document],
-        }),
-      { wrapper },
-    );
-
-    await act(() => result.current.addUrlAsync?.('https://example.com', 1));
-
-    expect(result.current.documents).toEqual([document]);
-    expect(request).toHaveBeenCalledWith(
-      expect.objectContaining({
-        url: '/knowledge-bases/knowledge/urls',
-        method: 'POST',
-        data: { url: 'https://example.com', maxDepth: 1 },
-      }),
-    );
-  });
 });
 
 describe('workspace adoption tracking', () => {

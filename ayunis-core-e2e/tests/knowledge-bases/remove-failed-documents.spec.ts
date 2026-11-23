@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { createServer, type Server } from "node:http";
 import type { APIRequestContext } from "@playwright/test";
 import { test, expect } from "../../src/fixtures/test";
 import { generatedApi } from "../../src/clients/api/generated-api";
@@ -7,44 +6,6 @@ import { permitEmbeddingModel } from "../../src/clients/api/models.client";
 import { markSourceProcessing } from "../../src/clients/database.client";
 import { createMemberSession } from "../../src/factories/user.factory";
 import { createWorkspaceWithResources } from "../../src/factories/workspace-resources.factory";
-
-let server: Server;
-let statutesUrl: string;
-let noticeUrl: string;
-
-test.beforeAll(async () => {
-  server = createServer((req, res) => {
-    res.writeHead(200, { "content-type": "text/html" });
-    if (req.url === "/statutes") {
-      // localhost is never granted as a crawl domain, so both PDFs fail.
-      const pdfBase = `http://localhost:${port()}`;
-      res.end(
-        `<title>Ortsrecht</title><a href="${pdfBase}/budget.pdf">Haushaltssatzung</a><a href="${pdfBase}/fees.pdf">Gebührensatzung</a>`,
-      );
-    } else {
-      res.end("<title>Bekanntmachung</title><p>Sprechzeiten Mo–Fr</p>");
-    }
-  });
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(0, resolve);
-  });
-  statutesUrl = `http://127.0.0.1:${port()}/statutes`;
-  noticeUrl = `http://127.0.0.1:${port()}/notice`;
-});
-
-test.afterAll(async () => {
-  await new Promise<void>((resolve, reject) =>
-    server.close((error) => (error ? reject(error) : resolve())),
-  );
-});
-
-function port(): number {
-  const address = server.address();
-  if (!address || typeof address === "string")
-    throw new Error("Missing fixture port");
-  return address.port;
-}
 
 test("removes all failed documents at once, only for members who may remove documents", async ({
   api,
@@ -58,18 +19,20 @@ test("removes all failed documents at once, only for members who may remove docu
   const knowledgeBaseId = workspace.knowledgeBaseId;
   const member = await createMemberSession(api, mail, `rm-failed-${key}`);
   try {
-    await addUrl(api, knowledgeBaseId, statutesUrl);
+    await upload(api, knowledgeBaseId, "haushalt.htm", EMPTY_HTML);
+    await upload(api, knowledgeBaseId, "gebuehren.htm", EMPTY_HTML);
+    await upload(api, knowledgeBaseId, "ortsrecht.txt", "Ortsrecht der Gemeinde");
+    const notice = await upload(
+      api,
+      knowledgeBaseId,
+      "bekanntmachung.txt",
+      "Sprechzeiten Mo–Fr",
+    );
     await waitForDocuments(api, knowledgeBaseId, [
-      "file:failed",
-      "file:failed",
-      "web:ready",
-    ]);
-    const notice = await addUrl(api, knowledgeBaseId, noticeUrl);
-    await waitForDocuments(api, knowledgeBaseId, [
-      "file:failed",
-      "file:failed",
-      "web:ready",
-      "web:ready",
+      "failed",
+      "failed",
+      "ready",
+      "ready",
     ]);
     await markSourceProcessing(notice.id);
     const before = await documents(api, knowledgeBaseId);
@@ -101,23 +64,18 @@ test("removes all failed documents at once, only for members who may remove docu
     await page.getByTestId("knowledge-base-remove-failed-documents").click();
     await expect(page.getByRole("dialog")).toContainText("2");
     await page.getByTestId("confirmation-confirm").click();
-    await waitForDocuments(api, knowledgeBaseId, [
-      "web:processing",
-      "web:ready",
-    ]);
+    await waitForDocuments(api, knowledgeBaseId, ["processing", "ready"]);
     await expect(
       page.getByTestId("knowledge-base-remove-failed-documents"),
     ).toHaveCount(0);
     const kept = before.filter((doc) => doc.status !== "failed");
     expect(await documents(api, knowledgeBaseId)).toEqual(kept);
 
-    await addUrl(api, knowledgeBaseId, statutesUrl);
+    await upload(api, knowledgeBaseId, "haushalt.htm", EMPTY_HTML);
     await waitForDocuments(api, knowledgeBaseId, [
-      "file:failed",
-      "file:failed",
-      "web:processing",
-      "web:ready",
-      "web:ready",
+      "failed",
+      "processing",
+      "ready",
     ]);
     await generatedApi.workspaceMembersControllerUpdateRole(
       workspace.id,
@@ -129,23 +87,36 @@ test("removes all failed documents at once, only for members who may remove docu
       knowledgeBaseId,
       { api: member.api },
     );
-    await waitForDocuments(api, knowledgeBaseId, [
-      "web:processing",
-      "web:ready",
-      "web:ready",
-    ]);
+    await waitForDocuments(api, knowledgeBaseId, ["processing", "ready"]);
   } finally {
     await member.api.dispose();
     await generatedApi.workspacesControllerRemove(workspace.id, { api });
   }
 });
 
-function addUrl(api: APIRequestContext, knowledgeBaseId: string, url: string) {
-  return generatedApi.knowledgeBasesControllerAddUrl(
-    knowledgeBaseId,
-    { url, maxDepth: 0 },
-    { api },
+// Extracts to no text, so its processing fails (DOCUMENT_EMPTY).
+const EMPTY_HTML = "<html><script>track()</script></html>";
+
+async function upload(
+  api: APIRequestContext,
+  knowledgeBaseId: string,
+  name: string,
+  content: string,
+): Promise<{ id: string }> {
+  const response = await api.post(
+    `/api/knowledge-bases/${knowledgeBaseId}/documents`,
+    {
+      multipart: {
+        file: {
+          name,
+          mimeType: name.endsWith(".htm") ? "text/html" : "text/plain",
+          buffer: Buffer.from(content),
+        },
+      },
+    },
   );
+  expect(response.ok()).toBe(true);
+  return (await response.json()) as { id: string };
 }
 
 async function documents(api: APIRequestContext, knowledgeBaseId: string) {
@@ -170,7 +141,7 @@ async function waitForDocuments(
           knowledgeBaseId,
           { api },
         );
-        return list.data.map((doc) => `${doc.textType}:${doc.status}`).sort();
+        return list.data.map((doc) => doc.status).sort();
       },
       { timeout: 60_000 },
     )

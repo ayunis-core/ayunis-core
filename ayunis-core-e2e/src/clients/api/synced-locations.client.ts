@@ -20,6 +20,15 @@ export const requestSyncedLocations = {
     api.post(`${apiURL}/api/knowledge-bases/${knowledgeBaseId}/synced-locations`, {
       data: { product: 'microsoft_365', location },
     }),
+  addWebsite: (
+    api: APIRequestContext,
+    knowledgeBaseId: string,
+    url: string,
+    apiURL = config.apiURL,
+  ) =>
+    api.post(`${apiURL}/api/knowledge-bases/${knowledgeBaseId}/urls`, {
+      data: { url, maxDepth: 0 },
+    }),
   syncNow: (
     api: APIRequestContext,
     knowledgeBaseId: string,
@@ -61,6 +70,19 @@ export function addSharePointLocation(
   return generatedApi.knowledgeBaseSyncedLocationsControllerAdd(
     knowledgeBaseId,
     { product: 'microsoft_365', location },
+    { api },
+  );
+}
+
+export function addWebsite(
+  api: APIRequestContext,
+  knowledgeBaseId: string,
+  url: string,
+  maxDepth = 0,
+): Promise<SyncedLocationResponseDto> {
+  return generatedApi.knowledgeBaseSyncedLocationsControllerAddWebsite(
+    knowledgeBaseId,
+    { url, maxDepth },
     { api },
   );
 }

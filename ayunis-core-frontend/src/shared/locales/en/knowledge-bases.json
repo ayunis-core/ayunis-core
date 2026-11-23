@@ -156,20 +156,6 @@
       "uploadError": "Failed to upload document. Please try again.",
       "add": "Add",
       "addDocument": "Upload document",
-      "addUrl": "Add URL",
-      "urlPlaceholder": "https://example.com",
-      "urlDialogTitle": "Add Website URL",
-      "urlDialogDescription": "Enter the URL of a website to import its content into the knowledge base.",
-      "urlLabel": "Website URL",
-      "urlDepthLabel": "Link depth",
-      "urlDepthOption0": "Just this page",
-      "urlDepthOption1": "This page + linked pages",
-      "urlDepthOption2": "This page + 2 levels of links",
-      "urlDepthHint": "Follows links on the same website. Higher depths import more pages and take longer.",
-      "addUrlSuccess": "URL added successfully! The website content is being processed.",
-      "addUrlError": "Failed to add URL. Please check the URL and try again.",
-      "addUrlRetrievalFailed": "The website could not be reached. Please check that the URL is correct and the website is accessible.",
-      "addUrlUnsupportedContentType": "This URL points to a file (e.g. PDF) instead of a website. Please download the file and upload it directly.",
       "addedAt": "Added {{date}}",
       "statusProcessing": "Processing… You can safely navigate away.",
       "statusProcessingSlow": "Taking longer than expected… You can safely navigate away.",
@@ -189,7 +175,6 @@
       },
       "removeFailedSuccess": "Failed documents removed.",
       "removeFailedError": "Failed documents could not be removed. Please try again.",
-      "urlDialogCancel": "Cancel",
       "processingErrors": {
         "failed": "The file could not be processed. Upload it again. If the problem persists, contact support.",
         "unreadable": "Couldn’t read this file. Upload it again.",
@@ -218,7 +203,9 @@
         "waiting": "Waiting for the first sync",
         "synced": "Last synced {{time}}",
         "paused": "Paused after a service was unavailable, next attempt {{time}}",
-        "noLongerAccessible": "No longer accessible to Ayunis. Its documents stay until you remove the source."
+        "noLongerAccessible": "No longer accessible to Ayunis. Its documents stay until you remove the source.",
+        "lastSyncFailed": "Last sync failed, the website could not be reached. Last succeeded {{time}}",
+        "firstSyncFailed": "Sync failed, the website could not be reached"
       },
       "documents_one": "{{count}} document",
       "documents_other": "{{count}} documents",
@@ -285,6 +272,8 @@
         "title": "Remove synced source",
         "description_one": "“{{name}}” and its {{count}} document will be removed from this knowledge base. Nothing changes in SharePoint.",
         "description_other": "“{{name}}” and its {{count}} documents will be removed from this knowledge base. Nothing changes in SharePoint.",
+        "descriptionWebsite_one": "“{{name}}” and its {{count}} document will be removed from this knowledge base. Nothing changes on the website.",
+        "descriptionWebsite_other": "“{{name}}” and its {{count}} documents will be removed from this knowledge base. Nothing changes on the website.",
         "confirmText": "Remove",
         "cancelText": "Cancel"
       },
@@ -298,6 +287,38 @@
         "syncNow": "The sync could not be started",
         "remove": "The source could not be removed",
         "notFound": "This source no longer exists"
+      },
+      "website": {
+        "add": "Add URL",
+        "open": "Open website",
+        "addSuccess": "Website added. Its pages are being synced.",
+        "dialog": {
+          "title": "Add website",
+          "description": "The website's pages and the PDFs they link to are added to this knowledge base and updated daily.",
+          "urlLabel": "Website URL",
+          "urlPlaceholder": "https://example.com",
+          "depthLabel": "Link depth",
+          "depthOption0": "Just this page",
+          "depthOption1": "This page + linked pages",
+          "depthOption2": "This page + 2 levels of links",
+          "depthHint": "Follows links on the same website. Higher depths add more pages.",
+          "add": "Add",
+          "cancel": "Cancel"
+        },
+        "validation": {
+          "url": {
+            "isNotEmpty": "Enter a URL",
+            "maxLength": "The URL must be 2048 characters or fewer",
+            "isUrl": "Enter a URL starting with http:// or https://",
+            "invalid": "Invalid URL"
+          },
+          "invalid": "Invalid input"
+        },
+        "errors": {
+          "alreadyExists": "This knowledge base already syncs this website",
+          "domainNotAvailable": "Your organization cannot add this website",
+          "add": "The website could not be added"
+        }
       }
     }
   },

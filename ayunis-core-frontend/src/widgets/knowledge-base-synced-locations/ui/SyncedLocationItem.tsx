@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ExternalLink,
   FolderSync,
+  Globe,
   Loader2,
   RefreshCw,
   X,
@@ -29,7 +30,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import type { SyncedLocationResponseDto } from '@ayunis/api-client/schemas';
+import {
+  SyncedLocationProvider,
+  type SyncedLocationResponseDto,
+} from '@ayunis/api-client/schemas';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { syncedLocationLabel } from '@/widgets/knowledge-base-synced-locations/lib/synced-location-label';
@@ -58,16 +62,23 @@ export function SyncedLocationItem({
 }>) {
   const { t } = useTranslation('knowledge-bases');
   const { confirm } = useConfirmation();
-  const { name, path } = syncedLocationLabel(location.location);
+  const { name, path } = syncedLocationLabel(location);
   const isSyncing = location.syncingSince !== null;
+  const isWebsite = location.provider === SyncedLocationProvider.web;
+  const Icon = isWebsite ? Globe : FolderSync;
 
   const confirmRemove = () =>
     confirm({
       title: t('detail.syncedLocations.confirmRemove.title'),
-      description: t('detail.syncedLocations.confirmRemove.description', {
-        name,
-        count: location.documentCount,
-      }),
+      description: t(
+        isWebsite
+          ? 'detail.syncedLocations.confirmRemove.descriptionWebsite'
+          : 'detail.syncedLocations.confirmRemove.description',
+        {
+          name,
+          count: location.documentCount,
+        },
+      ),
       confirmText: t('detail.syncedLocations.confirmRemove.confirmText'),
       cancelText: t('detail.syncedLocations.confirmRemove.cancelText'),
       variant: 'destructive',
@@ -78,10 +89,11 @@ export function SyncedLocationItem({
     <Collapsible>
       <Item
         data-testid={`synced-location-${location.id}`}
+        data-provider={location.provider}
         data-sync-state={syncedLocationStatus(location).kind}
       >
         <ItemMedia variant="icon">
-          <FolderSync className="h-3.5 w-3.5 shrink-0" />
+          <Icon className="h-3.5 w-3.5 shrink-0" />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>
@@ -90,7 +102,11 @@ export function SyncedLocationItem({
               href={location.location}
               target="_blank"
               rel="noreferrer"
-              aria-label={t('detail.syncedLocations.openInSharePoint')}
+              aria-label={t(
+                isWebsite
+                  ? 'detail.syncedLocations.website.open'
+                  : 'detail.syncedLocations.openInSharePoint',
+              )}
               className="text-muted-foreground hover:text-foreground"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -184,6 +200,16 @@ function SyncStatus({
       return (
         <p className="text-destructive">
           {t('detail.syncedLocations.status.noLongerAccessible')}
+        </p>
+      );
+    case 'last_sync_failed':
+      return (
+        <p className="text-destructive">
+          {status.lastSucceededAt
+            ? t('detail.syncedLocations.status.lastSyncFailed', {
+                time: formatRelativeDate(status.lastSucceededAt, i18n.language),
+              })
+            : t('detail.syncedLocations.status.firstSyncFailed')}
         </p>
       );
     case 'paused':
