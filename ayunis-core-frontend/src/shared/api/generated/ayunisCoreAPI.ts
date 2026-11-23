@@ -20319,6 +20319,1467 @@ export const useReleaseNotesControllerMarkRead = <TError = void,
     }
 
 /**
+ * @summary Create a new artifact (document)
+ */
+export const artifactsControllerCreate = (
+    createArtifactDto: CreateArtifactDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactResponseDto>(
+      {url: `/artifacts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createArtifactDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerCreateMutationKey = () => ['artifactsControllerCreate'] as const;
+
+export const getArtifactsControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,ArtifactsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,ArtifactsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getArtifactsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerCreate>>, ArtifactsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  artifactsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerCreate>>>
+    export type ArtifactsControllerCreateMutationBody = CreateArtifactDto
+    export type ArtifactsControllerCreateMutationError = void
+    export type ArtifactsControllerCreateMutationVariables = {data: CreateArtifactDto}
+
+    /**
+ * @summary Create a new artifact (document)
+ */
+export const useArtifactsControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,ArtifactsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerCreate>>,
+        TError,
+        ArtifactsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArtifactsControllerCreateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Update an artifact (add a new version)
+ */
+export const artifactsControllerUpdate = (
+    id: string,
+    updateArtifactDto: UpdateArtifactDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactVersionResponseDto | void>(
+      {url: `/artifacts/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateArtifactDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerUpdateMutationKey = () => ['artifactsControllerUpdate'] as const;
+
+export const getArtifactsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,ArtifactsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,ArtifactsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getArtifactsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerUpdate>>, ArtifactsControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  artifactsControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerUpdate>>>
+    export type ArtifactsControllerUpdateMutationBody = UpdateArtifactDto
+    export type ArtifactsControllerUpdateMutationError = void
+    export type ArtifactsControllerUpdateMutationVariables = {id: string;data: UpdateArtifactDto}
+
+    /**
+ * @summary Update an artifact (add a new version)
+ */
+export const useArtifactsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,ArtifactsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerUpdate>>,
+        TError,
+        ArtifactsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArtifactsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get an artifact by ID with all versions
+ */
+export const artifactsControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactResponseDto>(
+      {url: `/artifacts/${id}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerFindOneQueryKey = (id: string,) => {
+    return [
+    `/artifacts/${id}`
+    ] as const;
+    }
+
+
+export const getArtifactsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindOneQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindOne>>> = ({ signal }) => artifactsControllerFindOne(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindOne>>>
+export type ArtifactsControllerFindOneQueryError = void
+
+
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get an artifact by ID with all versions
+ */
+
+export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get all artifacts for a thread
+ */
+export const artifactsControllerFindByThread = (
+    threadId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactResponseDto[]>(
+      {url: `/artifacts/thread/${threadId}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerFindByThreadQueryKey = (threadId: string,) => {
+    return [
+    `/artifacts/thread/${threadId}`
+    ] as const;
+    }
+
+
+export const getArtifactsControllerFindByThreadQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindByThreadQueryKey(threadId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindByThread>>> = ({ signal }) => artifactsControllerFindByThread(threadId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindByThreadQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindByThread>>>
+export type ArtifactsControllerFindByThreadQueryError = unknown
+
+
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByThread>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all artifacts for a thread
+ */
+
+export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
+ threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindByThreadQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get all artifacts in a workspace
+ */
+export const artifactsControllerFindByWorkspace = (
+    workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactListResponseDto>(
+      {url: `/artifacts/workspace/${workspaceId}`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerFindByWorkspaceQueryKey = (workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams,) => {
+    return [
+    `/artifacts/workspace/${workspaceId}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getArtifactsControllerFindByWorkspaceQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindByWorkspaceQueryKey(workspaceId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>> = ({ signal }) => artifactsControllerFindByWorkspace(workspaceId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: workspaceId !== null && workspaceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerFindByWorkspaceQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>>
+export type ArtifactsControllerFindByWorkspaceQueryError = unknown
+
+
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string,
+    params: undefined |  ArtifactsControllerFindByWorkspaceParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all artifacts in a workspace
+ */
+
+export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
+ workspaceId: string,
+    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerFindByWorkspaceQueryOptions(workspaceId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Revert an artifact to a specific version
+ */
+export const artifactsControllerRevert = (
+    id: string,
+    revertArtifactDto: RevertArtifactDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ArtifactVersionResponseDto>(
+      {url: `/artifacts/${id}/revert`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: revertArtifactDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerRevertMutationKey = () => ['artifactsControllerRevert'] as const;
+
+export const getArtifactsControllerRevertMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,ArtifactsControllerRevertMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,ArtifactsControllerRevertMutationVariables, TContext> => {
+
+const mutationKey = getArtifactsControllerRevertMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerRevert>>, ArtifactsControllerRevertMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  artifactsControllerRevert(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerRevertMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerRevert>>>
+    export type ArtifactsControllerRevertMutationBody = RevertArtifactDto
+    export type ArtifactsControllerRevertMutationError = void
+    export type ArtifactsControllerRevertMutationVariables = {id: string;data: RevertArtifactDto}
+
+    /**
+ * @summary Revert an artifact to a specific version
+ */
+export const useArtifactsControllerRevert = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,ArtifactsControllerRevertMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerRevert>>,
+        TError,
+        ArtifactsControllerRevertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArtifactsControllerRevertMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
+ */
+export const artifactsControllerExport = (
+    id: string,
+    params: ArtifactsControllerExportParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<Blob>(
+      {url: `/artifacts/${id}/export`, method: 'GET',
+        params,
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerExportQueryKey = (id: string,
+    params?: ArtifactsControllerExportParams,) => {
+    return [
+    `/artifacts/${id}/export`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getArtifactsControllerExportQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerExportQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerExport>>> = ({ signal }) => artifactsControllerExport(id,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ArtifactsControllerExportQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerExport>>>
+export type ArtifactsControllerExportQueryError = void
+
+
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerExport>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof artifactsControllerExport>>,
+          TError,
+          Awaited<ReturnType<typeof artifactsControllerExport>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
+ */
+
+export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
+ id: string,
+    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getArtifactsControllerExportQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create a new letterhead
+ */
+export const letterheadsControllerCreate = (
+    createLetterheadDto: CreateLetterheadDto,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+if(createLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, createLetterheadDto.fontFamily);
+ }
+if(createLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, createLetterheadDto.fontSizePt);
+ }
+formData.append(`name`, createLetterheadDto.name);
+if(createLetterheadDto.description !== undefined) {
+ formData.append(`description`, createLetterheadDto.description);
+ }
+formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins);
+formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins);
+
+      return customAxiosInstance<LetterheadResponseDto>(
+      {url: `/letterheads`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerCreateMutationKey = () => ['letterheadsControllerCreate'] as const;
+
+export const getLetterheadsControllerCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,LetterheadsControllerCreateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,LetterheadsControllerCreateMutationVariables, TContext> => {
+
+const mutationKey = getLetterheadsControllerCreateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerCreate>>, LetterheadsControllerCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  letterheadsControllerCreate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerCreate>>>
+    export type LetterheadsControllerCreateMutationBody = CreateLetterheadDto
+    export type LetterheadsControllerCreateMutationError = void
+    export type LetterheadsControllerCreateMutationVariables = {data: CreateLetterheadDto}
+
+    /**
+ * @summary Create a new letterhead
+ */
+export const useLetterheadsControllerCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,LetterheadsControllerCreateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerCreate>>,
+        TError,
+        LetterheadsControllerCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLetterheadsControllerCreateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary List all letterheads for the current org
+ */
+export const letterheadsControllerFindAll = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LetterheadResponseDto[]>(
+      {url: `/letterheads`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerFindAllQueryKey = () => {
+    return [
+    `/letterheads`
+    ] as const;
+    }
+
+
+export const getLetterheadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerFindAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerFindAll>>> = ({ signal }) => letterheadsControllerFindAll(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerFindAll>>>
+export type LetterheadsControllerFindAllQueryError = unknown
+
+
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all letterheads for the current org
+ */
+
+export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Render a sample letter with the draft letterhead
+ */
+export const letterheadsControllerPreview = (
+    previewLetterheadDto: PreviewLetterheadDto,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+if(previewLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, previewLetterheadDto.fontFamily);
+ }
+if(previewLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, previewLetterheadDto.fontSizePt);
+ }
+if(previewLetterheadDto.letterheadId !== undefined) {
+ formData.append(`letterheadId`, previewLetterheadDto.letterheadId);
+ }
+if(previewLetterheadDto.firstPagePdf !== undefined) {
+ formData.append(`firstPagePdf`, previewLetterheadDto.firstPagePdf);
+ }
+if(previewLetterheadDto.continuationPagePdf !== undefined) {
+ formData.append(`continuationPagePdf`, previewLetterheadDto.continuationPagePdf);
+ }
+formData.append(`firstPageMargins`, previewLetterheadDto.firstPageMargins);
+formData.append(`continuationPageMargins`, previewLetterheadDto.continuationPageMargins);
+if(previewLetterheadDto.removeContinuationPage !== undefined) {
+ formData.append(`removeContinuationPage`, previewLetterheadDto.removeContinuationPage);
+ }
+if(previewLetterheadDto.language !== undefined) {
+ formData.append(`language`, previewLetterheadDto.language);
+ }
+
+      return customAxiosInstance<Blob>(
+      {url: `/letterheads/preview`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData,
+        responseType: 'blob', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerPreviewMutationKey = () => ['letterheadsControllerPreview'] as const;
+
+export const getLetterheadsControllerPreviewMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext> => {
+
+const mutationKey = getLetterheadsControllerPreviewMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerPreview>>, LetterheadsControllerPreviewMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  letterheadsControllerPreview(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerPreview>>>
+    export type LetterheadsControllerPreviewMutationBody = PreviewLetterheadDto
+    export type LetterheadsControllerPreviewMutationError = void
+    export type LetterheadsControllerPreviewMutationVariables = {data: PreviewLetterheadDto}
+
+    /**
+ * @summary Render a sample letter with the draft letterhead
+ */
+export const useLetterheadsControllerPreview = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerPreview>>,
+        TError,
+        LetterheadsControllerPreviewMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLetterheadsControllerPreviewMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get a letterhead by ID
+ */
+export const letterheadsControllerFindOne = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<LetterheadResponseDto>(
+      {url: `/letterheads/${id}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerFindOneQueryKey = (id: string,) => {
+    return [
+    `/letterheads/${id}`
+    ] as const;
+    }
+
+
+export const getLetterheadsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerFindOneQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerFindOne>>> = ({ signal }) => letterheadsControllerFindOne(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerFindOne>>>
+export type LetterheadsControllerFindOneQueryError = void
+
+
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerFindOne>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a letterhead by ID
+ */
+
+export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerFindOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Update a letterhead
+ */
+export const letterheadsControllerUpdate = (
+    id: string,
+    updateLetterheadDto: UpdateLetterheadDto,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+if(updateLetterheadDto.fontFamily !== undefined) {
+ formData.append(`fontFamily`, updateLetterheadDto.fontFamily);
+ }
+if(updateLetterheadDto.fontSizePt !== undefined) {
+ formData.append(`fontSizePt`, updateLetterheadDto.fontSizePt);
+ }
+if(updateLetterheadDto.name !== undefined) {
+ formData.append(`name`, updateLetterheadDto.name);
+ }
+if(updateLetterheadDto.description !== undefined) {
+ formData.append(`description`, updateLetterheadDto.description);
+ }
+if(updateLetterheadDto.firstPageMargins !== undefined) {
+ formData.append(`firstPageMargins`, updateLetterheadDto.firstPageMargins);
+ }
+if(updateLetterheadDto.continuationPageMargins !== undefined) {
+ formData.append(`continuationPageMargins`, updateLetterheadDto.continuationPageMargins);
+ }
+if(updateLetterheadDto.removeContinuationPage !== undefined) {
+ formData.append(`removeContinuationPage`, updateLetterheadDto.removeContinuationPage);
+ }
+
+      return customAxiosInstance<LetterheadResponseDto>(
+      {url: `/letterheads/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerUpdateMutationKey = () => ['letterheadsControllerUpdate'] as const;
+
+export const getLetterheadsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,LetterheadsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,LetterheadsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getLetterheadsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, LetterheadsControllerUpdateMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  letterheadsControllerUpdate(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerUpdate>>>
+    export type LetterheadsControllerUpdateMutationBody = UpdateLetterheadDto
+    export type LetterheadsControllerUpdateMutationError = void
+    export type LetterheadsControllerUpdateMutationVariables = {id: string;data: UpdateLetterheadDto}
+
+    /**
+ * @summary Update a letterhead
+ */
+export const useLetterheadsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,LetterheadsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerUpdate>>,
+        TError,
+        LetterheadsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLetterheadsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Delete a letterhead
+ */
+export const letterheadsControllerRemove = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/letterheads/${id}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerRemoveMutationKey = () => ['letterheadsControllerRemove'] as const;
+
+export const getLetterheadsControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,LetterheadsControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,LetterheadsControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getLetterheadsControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerRemove>>, LetterheadsControllerRemoveMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  letterheadsControllerRemove(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LetterheadsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerRemove>>>
+
+    export type LetterheadsControllerRemoveMutationError = void
+    export type LetterheadsControllerRemoveMutationVariables = {id: string}
+
+    /**
+ * @summary Delete a letterhead
+ */
+export const useLetterheadsControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,LetterheadsControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof letterheadsControllerRemove>>,
+        TError,
+        LetterheadsControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLetterheadsControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Download the first-page PDF of a letterhead
+ */
+export const letterheadsControllerDownloadFirstPagePdf = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerDownloadFirstPagePdfQueryKey = (id: string,) => {
+    return [
+    `/letterheads/${id}/first-page-pdf`
+    ] as const;
+    }
+
+
+export const getLetterheadsControllerDownloadFirstPagePdfQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerDownloadFirstPagePdfQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>> = ({ signal }) => letterheadsControllerDownloadFirstPagePdf(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerDownloadFirstPagePdfQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>>
+export type LetterheadsControllerDownloadFirstPagePdfQueryError = void
+
+
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the first-page PDF of a letterhead
+ */
+
+export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerDownloadFirstPagePdfQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Download the continuation-page PDF of a letterhead
+ */
+export const letterheadsControllerDownloadContinuationPagePdf = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getLetterheadsControllerDownloadContinuationPagePdfQueryKey = (id: string,) => {
+    return [
+    `/letterheads/${id}/continuation-page-pdf`
+    ] as const;
+    }
+
+
+export const getLetterheadsControllerDownloadContinuationPagePdfQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerDownloadContinuationPagePdfQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>> = ({ signal }) => letterheadsControllerDownloadContinuationPagePdf(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LetterheadsControllerDownloadContinuationPagePdfQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>>
+export type LetterheadsControllerDownloadContinuationPagePdfQueryError = void
+
+
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>,
+          TError,
+          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the continuation-page PDF of a letterhead
+ */
+
+export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLetterheadsControllerDownloadContinuationPagePdfQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Available to authenticated organization members.
+ * @summary Get the current organization’s document defaults
+ */
+export const documentDefaultsControllerFind = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DocumentTypographyDto>(
+      {url: `/document-defaults`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getDocumentDefaultsControllerFindQueryKey = () => {
+    return [
+    `/document-defaults`
+    ] as const;
+    }
+
+
+export const getDocumentDefaultsControllerFindQueryOptions = <TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDocumentDefaultsControllerFindQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof documentDefaultsControllerFind>>> = ({ signal }) => documentDefaultsControllerFind(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DocumentDefaultsControllerFindQueryResult = NonNullable<Awaited<ReturnType<typeof documentDefaultsControllerFind>>>
+export type DocumentDefaultsControllerFindQueryError = unknown
+
+
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>,
+          TError,
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>,
+          TError,
+          Awaited<ReturnType<typeof documentDefaultsControllerFind>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the current organization’s document defaults
+ */
+
+export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDocumentDefaultsControllerFindQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Omitted fields are preserved. Send null to reset a field.
+ * @summary Update the current organization’s document defaults
+ */
+export const documentDefaultsControllerUpdate = (
+    updateDocumentDefaultsDto: UpdateDocumentDefaultsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<DocumentTypographyDto>(
+      {url: `/document-defaults`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateDocumentDefaultsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getDocumentDefaultsControllerUpdateMutationKey = () => ['documentDefaultsControllerUpdate'] as const;
+
+export const getDocumentDefaultsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext> => {
+
+const mutationKey = getDocumentDefaultsControllerUpdateMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, DocumentDefaultsControllerUpdateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  documentDefaultsControllerUpdate(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DocumentDefaultsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>>
+    export type DocumentDefaultsControllerUpdateMutationBody = UpdateDocumentDefaultsDto
+    export type DocumentDefaultsControllerUpdateMutationError = void
+    export type DocumentDefaultsControllerUpdateMutationVariables = {data: UpdateDocumentDefaultsDto}
+
+    /**
+ * @summary Update the current organization’s document defaults
+ */
+export const useDocumentDefaultsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>,
+        TError,
+        DocumentDefaultsControllerUpdateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDocumentDefaultsControllerUpdateMutationOptions(options), queryClient);
+    }
+
+/**
  * Retrieve the global credits-per-euro value used for credit calculations. Super admin only.
  * @summary Get the current credits-per-euro configuration
  */
@@ -26310,1467 +27771,6 @@ export const useSuperAdminSkillTemplatesControllerDelete = <TError = void,
         TContext
       > => {
       return useMutation(getSuperAdminSkillTemplatesControllerDeleteMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Create a new artifact (document)
- */
-export const artifactsControllerCreate = (
-    createArtifactDto: CreateArtifactDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ArtifactResponseDto>(
-      {url: `/artifacts`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createArtifactDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerCreateMutationKey = () => ['artifactsControllerCreate'] as const;
-
-export const getArtifactsControllerCreateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,ArtifactsControllerCreateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,ArtifactsControllerCreateMutationVariables, TContext> => {
-
-const mutationKey = getArtifactsControllerCreateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerCreate>>, ArtifactsControllerCreateMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  artifactsControllerCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ArtifactsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerCreate>>>
-    export type ArtifactsControllerCreateMutationBody = CreateArtifactDto
-    export type ArtifactsControllerCreateMutationError = void
-    export type ArtifactsControllerCreateMutationVariables = {data: CreateArtifactDto}
-
-    /**
- * @summary Create a new artifact (document)
- */
-export const useArtifactsControllerCreate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerCreate>>, TError,ArtifactsControllerCreateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof artifactsControllerCreate>>,
-        TError,
-        ArtifactsControllerCreateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getArtifactsControllerCreateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Update an artifact (add a new version)
- */
-export const artifactsControllerUpdate = (
-    id: string,
-    updateArtifactDto: UpdateArtifactDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ArtifactVersionResponseDto | void>(
-      {url: `/artifacts/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateArtifactDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerUpdateMutationKey = () => ['artifactsControllerUpdate'] as const;
-
-export const getArtifactsControllerUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,ArtifactsControllerUpdateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,ArtifactsControllerUpdateMutationVariables, TContext> => {
-
-const mutationKey = getArtifactsControllerUpdateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerUpdate>>, ArtifactsControllerUpdateMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  artifactsControllerUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ArtifactsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerUpdate>>>
-    export type ArtifactsControllerUpdateMutationBody = UpdateArtifactDto
-    export type ArtifactsControllerUpdateMutationError = void
-    export type ArtifactsControllerUpdateMutationVariables = {id: string;data: UpdateArtifactDto}
-
-    /**
- * @summary Update an artifact (add a new version)
- */
-export const useArtifactsControllerUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerUpdate>>, TError,ArtifactsControllerUpdateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof artifactsControllerUpdate>>,
-        TError,
-        ArtifactsControllerUpdateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getArtifactsControllerUpdateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Get an artifact by ID with all versions
- */
-export const artifactsControllerFindOne = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ArtifactResponseDto>(
-      {url: `/artifacts/${id}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerFindOneQueryKey = (id: string,) => {
-    return [
-    `/artifacts/${id}`
-    ] as const;
-    }
-
-
-export const getArtifactsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindOneQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindOne>>> = ({ signal }) => artifactsControllerFindOne(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ArtifactsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindOne>>>
-export type ArtifactsControllerFindOneQueryError = void
-
-
-export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get an artifact by ID with all versions
- */
-
-export function useArtifactsControllerFindOne<TData = Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getArtifactsControllerFindOneQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get all artifacts for a thread
- */
-export const artifactsControllerFindByThread = (
-    threadId: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ArtifactResponseDto[]>(
-      {url: `/artifacts/thread/${threadId}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerFindByThreadQueryKey = (threadId: string,) => {
-    return [
-    `/artifacts/thread/${threadId}`
-    ] as const;
-    }
-
-
-export const getArtifactsControllerFindByThreadQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindByThreadQueryKey(threadId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindByThread>>> = ({ signal }) => artifactsControllerFindByThread(threadId, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: threadId !== null && threadId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ArtifactsControllerFindByThreadQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindByThread>>>
-export type ArtifactsControllerFindByThreadQueryError = unknown
-
-
-export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
- threadId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerFindByThread>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerFindByThread>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerFindByThread>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerFindByThread>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all artifacts for a thread
- */
-
-export function useArtifactsControllerFindByThread<TData = Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError = unknown>(
- threadId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByThread>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getArtifactsControllerFindByThreadQueryOptions(threadId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Get all artifacts in a workspace
- */
-export const artifactsControllerFindByWorkspace = (
-    workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ArtifactListResponseDto>(
-      {url: `/artifacts/workspace/${workspaceId}`, method: 'GET',
-        params, signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerFindByWorkspaceQueryKey = (workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams,) => {
-    return [
-    `/artifacts/workspace/${workspaceId}`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getArtifactsControllerFindByWorkspaceQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerFindByWorkspaceQueryKey(workspaceId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>> = ({ signal }) => artifactsControllerFindByWorkspace(workspaceId,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: workspaceId !== null && workspaceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ArtifactsControllerFindByWorkspaceQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>>
-export type ArtifactsControllerFindByWorkspaceQueryError = unknown
-
-
-export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
- workspaceId: string,
-    params: undefined |  ArtifactsControllerFindByWorkspaceParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
- workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
- workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get all artifacts in a workspace
- */
-
-export function useArtifactsControllerFindByWorkspace<TData = Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError = unknown>(
- workspaceId: string,
-    params?: ArtifactsControllerFindByWorkspaceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerFindByWorkspace>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getArtifactsControllerFindByWorkspaceQueryOptions(workspaceId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Revert an artifact to a specific version
- */
-export const artifactsControllerRevert = (
-    id: string,
-    revertArtifactDto: RevertArtifactDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<ArtifactVersionResponseDto>(
-      {url: `/artifacts/${id}/revert`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: revertArtifactDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerRevertMutationKey = () => ['artifactsControllerRevert'] as const;
-
-export const getArtifactsControllerRevertMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,ArtifactsControllerRevertMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,ArtifactsControllerRevertMutationVariables, TContext> => {
-
-const mutationKey = getArtifactsControllerRevertMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerRevert>>, ArtifactsControllerRevertMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  artifactsControllerRevert(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ArtifactsControllerRevertMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerRevert>>>
-    export type ArtifactsControllerRevertMutationBody = RevertArtifactDto
-    export type ArtifactsControllerRevertMutationError = void
-    export type ArtifactsControllerRevertMutationVariables = {id: string;data: RevertArtifactDto}
-
-    /**
- * @summary Revert an artifact to a specific version
- */
-export const useArtifactsControllerRevert = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerRevert>>, TError,ArtifactsControllerRevertMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof artifactsControllerRevert>>,
-        TError,
-        ArtifactsControllerRevertMutationVariables,
-        TContext
-      > => {
-      return useMutation(getArtifactsControllerRevertMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
- */
-export const artifactsControllerExport = (
-    id: string,
-    params: ArtifactsControllerExportParams,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<Blob>(
-      {url: `/artifacts/${id}/export`, method: 'GET',
-        params,
-        responseType: 'blob', signal
-    },
-      );
-    }
-
-
-
-
-export const getArtifactsControllerExportQueryKey = (id: string,
-    params?: ArtifactsControllerExportParams,) => {
-    return [
-    `/artifacts/${id}/export`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getArtifactsControllerExportQueryOptions = <TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(id: string,
-    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getArtifactsControllerExportQueryKey(id,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof artifactsControllerExport>>> = ({ signal }) => artifactsControllerExport(id,params, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ArtifactsControllerExportQueryResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerExport>>>
-export type ArtifactsControllerExportQueryError = void
-
-
-export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
- id: string,
-    params: ArtifactsControllerExportParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerExport>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerExport>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
- id: string,
-    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof artifactsControllerExport>>,
-          TError,
-          Awaited<ReturnType<typeof artifactsControllerExport>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
- id: string,
-    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Export an artifact as DOCX, PDF, XLSX, or CSV
- */
-
-export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof artifactsControllerExport>>, TError = void>(
- id: string,
-    params: ArtifactsControllerExportParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof artifactsControllerExport>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getArtifactsControllerExportQueryOptions(id,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Create a new letterhead
- */
-export const letterheadsControllerCreate = (
-    createLetterheadDto: CreateLetterheadDto,
- signal?: AbortSignal
-) => {
-
-      const formData = new FormData();
-if(createLetterheadDto.fontFamily !== undefined) {
- formData.append(`fontFamily`, createLetterheadDto.fontFamily);
- }
-if(createLetterheadDto.fontSizePt !== undefined) {
- formData.append(`fontSizePt`, createLetterheadDto.fontSizePt);
- }
-formData.append(`name`, createLetterheadDto.name);
-if(createLetterheadDto.description !== undefined) {
- formData.append(`description`, createLetterheadDto.description);
- }
-formData.append(`firstPageMargins`, createLetterheadDto.firstPageMargins);
-formData.append(`continuationPageMargins`, createLetterheadDto.continuationPageMargins);
-
-      return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/letterheads`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerCreateMutationKey = () => ['letterheadsControllerCreate'] as const;
-
-export const getLetterheadsControllerCreateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,LetterheadsControllerCreateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,LetterheadsControllerCreateMutationVariables, TContext> => {
-
-const mutationKey = getLetterheadsControllerCreateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerCreate>>, LetterheadsControllerCreateMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  letterheadsControllerCreate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LetterheadsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerCreate>>>
-    export type LetterheadsControllerCreateMutationBody = CreateLetterheadDto
-    export type LetterheadsControllerCreateMutationError = void
-    export type LetterheadsControllerCreateMutationVariables = {data: CreateLetterheadDto}
-
-    /**
- * @summary Create a new letterhead
- */
-export const useLetterheadsControllerCreate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerCreate>>, TError,LetterheadsControllerCreateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof letterheadsControllerCreate>>,
-        TError,
-        LetterheadsControllerCreateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getLetterheadsControllerCreateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary List all letterheads for the current org
- */
-export const letterheadsControllerFindAll = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<LetterheadResponseDto[]>(
-      {url: `/letterheads`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerFindAllQueryKey = () => {
-    return [
-    `/letterheads`
-    ] as const;
-    }
-
-
-export const getLetterheadsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerFindAllQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerFindAll>>> = ({ signal }) => letterheadsControllerFindAll(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type LetterheadsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerFindAll>>>
-export type LetterheadsControllerFindAllQueryError = unknown
-
-
-export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List all letterheads for the current org
- */
-
-export function useLetterheadsControllerFindAll<TData = Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getLetterheadsControllerFindAllQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Render a sample letter with the draft letterhead
- */
-export const letterheadsControllerPreview = (
-    previewLetterheadDto: PreviewLetterheadDto,
- signal?: AbortSignal
-) => {
-
-      const formData = new FormData();
-if(previewLetterheadDto.fontFamily !== undefined) {
- formData.append(`fontFamily`, previewLetterheadDto.fontFamily);
- }
-if(previewLetterheadDto.fontSizePt !== undefined) {
- formData.append(`fontSizePt`, previewLetterheadDto.fontSizePt);
- }
-if(previewLetterheadDto.letterheadId !== undefined) {
- formData.append(`letterheadId`, previewLetterheadDto.letterheadId);
- }
-if(previewLetterheadDto.firstPagePdf !== undefined) {
- formData.append(`firstPagePdf`, previewLetterheadDto.firstPagePdf);
- }
-if(previewLetterheadDto.continuationPagePdf !== undefined) {
- formData.append(`continuationPagePdf`, previewLetterheadDto.continuationPagePdf);
- }
-formData.append(`firstPageMargins`, previewLetterheadDto.firstPageMargins);
-formData.append(`continuationPageMargins`, previewLetterheadDto.continuationPageMargins);
-if(previewLetterheadDto.removeContinuationPage !== undefined) {
- formData.append(`removeContinuationPage`, previewLetterheadDto.removeContinuationPage);
- }
-if(previewLetterheadDto.language !== undefined) {
- formData.append(`language`, previewLetterheadDto.language);
- }
-
-      return customAxiosInstance<Blob>(
-      {url: `/letterheads/preview`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData,
-        responseType: 'blob', signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerPreviewMutationKey = () => ['letterheadsControllerPreview'] as const;
-
-export const getLetterheadsControllerPreviewMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext> => {
-
-const mutationKey = getLetterheadsControllerPreviewMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerPreview>>, LetterheadsControllerPreviewMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  letterheadsControllerPreview(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LetterheadsControllerPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerPreview>>>
-    export type LetterheadsControllerPreviewMutationBody = PreviewLetterheadDto
-    export type LetterheadsControllerPreviewMutationError = void
-    export type LetterheadsControllerPreviewMutationVariables = {data: PreviewLetterheadDto}
-
-    /**
- * @summary Render a sample letter with the draft letterhead
- */
-export const useLetterheadsControllerPreview = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerPreview>>, TError,LetterheadsControllerPreviewMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof letterheadsControllerPreview>>,
-        TError,
-        LetterheadsControllerPreviewMutationVariables,
-        TContext
-      > => {
-      return useMutation(getLetterheadsControllerPreviewMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Get a letterhead by ID
- */
-export const letterheadsControllerFindOne = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/letterheads/${id}`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerFindOneQueryKey = (id: string,) => {
-    return [
-    `/letterheads/${id}`
-    ] as const;
-    }
-
-
-export const getLetterheadsControllerFindOneQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerFindOneQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerFindOne>>> = ({ signal }) => letterheadsControllerFindOne(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type LetterheadsControllerFindOneQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerFindOne>>>
-export type LetterheadsControllerFindOneQueryError = void
-
-
-export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerFindOne>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerFindOne>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get a letterhead by ID
- */
-
-export function useLetterheadsControllerFindOne<TData = Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerFindOne>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getLetterheadsControllerFindOneQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Update a letterhead
- */
-export const letterheadsControllerUpdate = (
-    id: string,
-    updateLetterheadDto: UpdateLetterheadDto,
- signal?: AbortSignal
-) => {
-
-      const formData = new FormData();
-if(updateLetterheadDto.fontFamily !== undefined) {
- formData.append(`fontFamily`, updateLetterheadDto.fontFamily);
- }
-if(updateLetterheadDto.fontSizePt !== undefined) {
- formData.append(`fontSizePt`, updateLetterheadDto.fontSizePt);
- }
-if(updateLetterheadDto.name !== undefined) {
- formData.append(`name`, updateLetterheadDto.name);
- }
-if(updateLetterheadDto.description !== undefined) {
- formData.append(`description`, updateLetterheadDto.description);
- }
-if(updateLetterheadDto.firstPageMargins !== undefined) {
- formData.append(`firstPageMargins`, updateLetterheadDto.firstPageMargins);
- }
-if(updateLetterheadDto.continuationPageMargins !== undefined) {
- formData.append(`continuationPageMargins`, updateLetterheadDto.continuationPageMargins);
- }
-if(updateLetterheadDto.removeContinuationPage !== undefined) {
- formData.append(`removeContinuationPage`, updateLetterheadDto.removeContinuationPage);
- }
-
-      return customAxiosInstance<LetterheadResponseDto>(
-      {url: `/letterheads/${id}`, method: 'PATCH',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerUpdateMutationKey = () => ['letterheadsControllerUpdate'] as const;
-
-export const getLetterheadsControllerUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,LetterheadsControllerUpdateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,LetterheadsControllerUpdateMutationVariables, TContext> => {
-
-const mutationKey = getLetterheadsControllerUpdateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, LetterheadsControllerUpdateMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  letterheadsControllerUpdate(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LetterheadsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerUpdate>>>
-    export type LetterheadsControllerUpdateMutationBody = UpdateLetterheadDto
-    export type LetterheadsControllerUpdateMutationError = void
-    export type LetterheadsControllerUpdateMutationVariables = {id: string;data: UpdateLetterheadDto}
-
-    /**
- * @summary Update a letterhead
- */
-export const useLetterheadsControllerUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerUpdate>>, TError,LetterheadsControllerUpdateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof letterheadsControllerUpdate>>,
-        TError,
-        LetterheadsControllerUpdateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getLetterheadsControllerUpdateMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Delete a letterhead
- */
-export const letterheadsControllerRemove = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/letterheads/${id}`, method: 'DELETE', signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerRemoveMutationKey = () => ['letterheadsControllerRemove'] as const;
-
-export const getLetterheadsControllerRemoveMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,LetterheadsControllerRemoveMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,LetterheadsControllerRemoveMutationVariables, TContext> => {
-
-const mutationKey = getLetterheadsControllerRemoveMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof letterheadsControllerRemove>>, LetterheadsControllerRemoveMutationVariables> = (props) => {
-          const {id} = props ?? {};
-
-          return  letterheadsControllerRemove(id,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LetterheadsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerRemove>>>
-
-    export type LetterheadsControllerRemoveMutationError = void
-    export type LetterheadsControllerRemoveMutationVariables = {id: string}
-
-    /**
- * @summary Delete a letterhead
- */
-export const useLetterheadsControllerRemove = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof letterheadsControllerRemove>>, TError,LetterheadsControllerRemoveMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof letterheadsControllerRemove>>,
-        TError,
-        LetterheadsControllerRemoveMutationVariables,
-        TContext
-      > => {
-      return useMutation(getLetterheadsControllerRemoveMutationOptions(options), queryClient);
-    }
-
-/**
- * @summary Download the first-page PDF of a letterhead
- */
-export const letterheadsControllerDownloadFirstPagePdf = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/letterheads/${id}/first-page-pdf`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerDownloadFirstPagePdfQueryKey = (id: string,) => {
-    return [
-    `/letterheads/${id}/first-page-pdf`
-    ] as const;
-    }
-
-
-export const getLetterheadsControllerDownloadFirstPagePdfQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerDownloadFirstPagePdfQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>> = ({ signal }) => letterheadsControllerDownloadFirstPagePdf(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type LetterheadsControllerDownloadFirstPagePdfQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>>
-export type LetterheadsControllerDownloadFirstPagePdfQueryError = void
-
-
-export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Download the first-page PDF of a letterhead
- */
-
-export function useLetterheadsControllerDownloadFirstPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadFirstPagePdf>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getLetterheadsControllerDownloadFirstPagePdfQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * @summary Download the continuation-page PDF of a letterhead
- */
-export const letterheadsControllerDownloadContinuationPagePdf = (
-    id: string,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<void>(
-      {url: `/letterheads/${id}/continuation-page-pdf`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getLetterheadsControllerDownloadContinuationPagePdfQueryKey = (id: string,) => {
-    return [
-    `/letterheads/${id}/continuation-page-pdf`
-    ] as const;
-    }
-
-
-export const getLetterheadsControllerDownloadContinuationPagePdfQueryOptions = <TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getLetterheadsControllerDownloadContinuationPagePdfQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>> = ({ signal }) => letterheadsControllerDownloadContinuationPagePdf(id, signal);
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type LetterheadsControllerDownloadContinuationPagePdfQueryResult = NonNullable<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>>
-export type LetterheadsControllerDownloadContinuationPagePdfQueryError = void
-
-
-export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
- id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>,
-          TError,
-          Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Download the continuation-page PDF of a letterhead
- */
-
-export function useLetterheadsControllerDownloadContinuationPagePdf<TData = Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError = void>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof letterheadsControllerDownloadContinuationPagePdf>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getLetterheadsControllerDownloadContinuationPagePdfQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Available to authenticated organization members.
- * @summary Get the current organization’s document defaults
- */
-export const documentDefaultsControllerFind = (
-
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<DocumentTypographyDto>(
-      {url: `/document-defaults`, method: 'GET', signal
-    },
-      );
-    }
-
-
-
-
-export const getDocumentDefaultsControllerFindQueryKey = () => {
-    return [
-    `/document-defaults`
-    ] as const;
-    }
-
-
-export const getDocumentDefaultsControllerFindQueryOptions = <TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDocumentDefaultsControllerFindQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof documentDefaultsControllerFind>>> = ({ signal }) => documentDefaultsControllerFind(signal);
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DocumentDefaultsControllerFindQueryResult = NonNullable<Awaited<ReturnType<typeof documentDefaultsControllerFind>>>
-export type DocumentDefaultsControllerFindQueryError = unknown
-
-
-export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof documentDefaultsControllerFind>>,
-          TError,
-          Awaited<ReturnType<typeof documentDefaultsControllerFind>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof documentDefaultsControllerFind>>,
-          TError,
-          Awaited<ReturnType<typeof documentDefaultsControllerFind>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get the current organization’s document defaults
- */
-
-export function useDocumentDefaultsControllerFind<TData = Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof documentDefaultsControllerFind>>, TError, TData>>, }
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDocumentDefaultsControllerFindQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-/**
- * Omitted fields are preserved. Send null to reset a field.
- * @summary Update the current organization’s document defaults
- */
-export const documentDefaultsControllerUpdate = (
-    updateDocumentDefaultsDto: UpdateDocumentDefaultsDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<DocumentTypographyDto>(
-      {url: `/document-defaults`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: updateDocumentDefaultsDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getDocumentDefaultsControllerUpdateMutationKey = () => ['documentDefaultsControllerUpdate'] as const;
-
-export const getDocumentDefaultsControllerUpdateMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext> => {
-
-const mutationKey = getDocumentDefaultsControllerUpdateMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, DocumentDefaultsControllerUpdateMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  documentDefaultsControllerUpdate(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DocumentDefaultsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>>
-    export type DocumentDefaultsControllerUpdateMutationBody = UpdateDocumentDefaultsDto
-    export type DocumentDefaultsControllerUpdateMutationError = void
-    export type DocumentDefaultsControllerUpdateMutationVariables = {data: UpdateDocumentDefaultsDto}
-
-    /**
- * @summary Update the current organization’s document defaults
- */
-export const useDocumentDefaultsControllerUpdate = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>, TError,DocumentDefaultsControllerUpdateMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof documentDefaultsControllerUpdate>>,
-        TError,
-        DocumentDefaultsControllerUpdateMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDocumentDefaultsControllerUpdateMutationOptions(options), queryClient);
     }
 
 /**

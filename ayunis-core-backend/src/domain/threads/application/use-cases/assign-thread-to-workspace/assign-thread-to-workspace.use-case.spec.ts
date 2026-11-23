@@ -1,3 +1,9 @@
+jest.mock('@nestjs-cls/transactional', () => ({
+  Transactional:
+    () => (_target: unknown, _key: string, descriptor: PropertyDescriptor) =>
+      descriptor,
+}));
+
 import { Test } from '@nestjs/testing';
 
 import type { UUID } from 'crypto';
@@ -9,6 +15,7 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { AssignThreadToWorkspaceCommand } from './assign-thread-to-workspace.command';
 import { AssignThreadToWorkspaceUseCase } from './assign-thread-to-workspace.use-case';
+import { DeleteThreadLinksOutsideScopeUseCase } from 'src/domain/artifacts/application/use-cases/delete-thread-links-outside-scope/delete-thread-links-outside-scope.use-case';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 const THREAD_ID = '22222222-2222-4222-8222-222222222222' as UUID;
@@ -18,6 +25,7 @@ describe('AssignThreadToWorkspaceUseCase', () => {
   let useCase: AssignThreadToWorkspaceUseCase;
   let threadsRepository: jest.Mocked<ThreadsRepository>;
   let workspaceReadAccess: jest.Mocked<AssertWorkspaceReadAccessUseCase>;
+  let deleteThreadLinksOutsideScope: { execute: jest.Mock };
 
   async function setup(context: { userId?: UUID } = { userId: USER_ID }) {
     threadsRepository = {
@@ -26,6 +34,9 @@ describe('AssignThreadToWorkspaceUseCase', () => {
     workspaceReadAccess = {
       execute: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<AssertWorkspaceReadAccessUseCase>;
+    deleteThreadLinksOutsideScope = {
+      execute: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -34,6 +45,10 @@ describe('AssignThreadToWorkspaceUseCase', () => {
         {
           provide: AssertWorkspaceReadAccessUseCase,
           useValue: workspaceReadAccess,
+        },
+        {
+          provide: DeleteThreadLinksOutsideScopeUseCase,
+          useValue: deleteThreadLinksOutsideScope,
         },
         {
           provide: ContextService,
@@ -112,6 +127,21 @@ describe('AssignThreadToWorkspaceUseCase', () => {
         }),
       ),
     ).rejects.toThrow(ThreadNotFoundError);
+    expect(deleteThreadLinksOutsideScope.execute).not.toHaveBeenCalled();
+  });
+
+  it('drops the moved chat’s links to artifacts outside its new scope', async () => {
+    await useCase.execute(
+      new AssignThreadToWorkspaceCommand({
+        threadId: THREAD_ID,
+        workspaceId: null,
+      }),
+    );
+
+    expect(deleteThreadLinksOutsideScope.execute).toHaveBeenCalledWith({
+      threadId: THREAD_ID,
+      workspaceId: null,
+    });
   });
 
   it('rejects an unauthenticated caller', async () => {

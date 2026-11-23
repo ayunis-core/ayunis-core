@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Workspaces group their members' chats and own workspace-scoped skills and knowledge bases. A workspace carries a name, optional description, appearance, and optional project instruction. User favorites and ordering belong to the favorites module.
+Workspaces group their members' chats and own workspace-scoped skills, knowledge bases and artifacts. A workspace carries a name, optional description, appearance, and optional project instruction. User favorites and ordering belong to the favorites module.
 
 ## Domain behavior
 
@@ -16,6 +16,7 @@ Workspaces group their members' chats and own workspace-scoped skills and knowle
 - Workspace lookups (`findById`, `findAllByUserId`, `findAllByIds`) only return workspaces the user is a member of. The list's chat count and chat activity only cover the requesting member's own chats, because chats stay private to their creator.
 - Creating a workspace does not add it to favorites. Users explicitly favorite or unfavorite it; existing favorites are unchanged.
 - Workspace skills and knowledge bases use `workspaceId` ownership and cannot be mixed with personal resources.
+- Artifacts created in a workspace chat belong to the workspace (`artifacts.workspaceId`, see the artifacts module); every member may read and edit them, whoever created them. The artifacts module checks membership through `AssertWorkspaceReadAccessUseCase` for its workspace list and, for lookups by id, with the `memberWorkspace` condition (`infrastructure/persistence/local/queries/member-workspace.ts`), which matches no workspace for a non-member, org admins included.
 - Skill and knowledge-base activation is workspace-wide. Both start active; deactivation excludes them from new run context. Deactivating a skill also clears its pin.
 - Enabled skills are advertised as activation candidates. Instructions and attached resources are loaded only after `activate_skill` or a trusted quick action.
 - `GetWorkspaceAiContextUseCase` resolves instruction, active skill candidates, independently active knowledge bases, and source counts. `BuildWorkspaceRunContextUseCase` prepares this for inference.
@@ -43,7 +44,7 @@ Workspace-owned resource lifecycle is exposed by the canonical `/skills` and `/k
 
 ## Deletion
 
-`WorkspaceDeletionService` emits `WorkspaceDeletionRequestedEvent` before deleting and drains deferred cleanup only after the database delete succeeds. `DeleteWorkspaceUseCase` uses it after checking that the caller is a workspace admin. Favorites, threads, skills, and knowledge bases listen for their cleanup responsibilities. Database cascades remove owned rows and relation state; listeners handle external object and processing cleanup.
+`WorkspaceDeletionService` emits `WorkspaceDeletionRequestedEvent` before deleting and drains deferred cleanup only after the database delete succeeds. `DeleteWorkspaceUseCase` uses it after checking that the caller is a workspace admin. Favorites, threads, skills, and knowledge bases listen for their cleanup responsibilities. Database cascades remove owned rows (chats, artifacts) and relation state; listeners handle external object and processing cleanup.
 
 Deleting a user account cascades their memberships but no workspace. `WorkspacesUserDeletionRequestedListener` resolves the user's workspaces before the user row is deleted and defers two independent tasks until after it: `WorkspaceMembersRepository.promoteSuccessors` makes the longest-standing remaining member `admin` wherever no admin is left (it locks the workspace rows first), and every workspace left without members is deleted through `WorkspaceDeletionService`, so the regular deletion listeners still run.
 

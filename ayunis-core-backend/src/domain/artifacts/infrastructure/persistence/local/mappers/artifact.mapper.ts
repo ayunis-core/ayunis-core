@@ -11,6 +11,7 @@ import { DiagramArtifactRecord } from 'src/domain/artifacts/infrastructure/persi
 import { SpreadsheetArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/spreadsheet-artifact.record';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
 import { ArtifactPiiMaskMapper } from './artifact-pii-mask.mapper';
+import type { ArtifactOwner } from 'src/domain/artifacts/domain/artifact-owner';
 
 @Injectable()
 export class ArtifactMapper {
@@ -23,8 +24,8 @@ export class ArtifactMapper {
   toDomain(record: ArtifactRecord): Artifact {
     const base = {
       id: record.id,
-      threadId: record.threadId,
-      userId: record.userId,
+      owner: toOwner(record),
+      creatorId: record.creatorId,
       title: record.title,
       isAnonymous: record.isAnonymous,
       currentVersionNumber: record.currentVersionNumber,
@@ -56,8 +57,7 @@ export class ArtifactMapper {
     if (domain instanceof DocumentArtifact) {
       const record = new DocumentArtifactRecord();
       record.id = domain.id;
-      record.threadId = domain.threadId;
-      record.userId = domain.userId;
+      assignOwner(record, domain);
       record.title = domain.title;
       record.isAnonymous = domain.isAnonymous;
       record.letterheadId = domain.letterheadId;
@@ -70,8 +70,7 @@ export class ArtifactMapper {
     if (domain instanceof DiagramArtifact) {
       const record = new DiagramArtifactRecord();
       record.id = domain.id;
-      record.threadId = domain.threadId;
-      record.userId = domain.userId;
+      assignOwner(record, domain);
       record.title = domain.title;
       record.isAnonymous = domain.isAnonymous;
       record.currentVersionNumber = domain.currentVersionNumber;
@@ -83,8 +82,7 @@ export class ArtifactMapper {
     if (domain instanceof SpreadsheetArtifact) {
       const record = new SpreadsheetArtifactRecord();
       record.id = domain.id;
-      record.threadId = domain.threadId;
-      record.userId = domain.userId;
+      assignOwner(record, domain);
       record.title = domain.title;
       record.isAnonymous = domain.isAnonymous;
       record.currentVersionNumber = domain.currentVersionNumber;
@@ -95,4 +93,21 @@ export class ArtifactMapper {
     }
     throw new Error('Invalid artifact domain type');
   }
+}
+
+function toOwner(record: ArtifactRecord): ArtifactOwner {
+  if (record.workspaceId) {
+    return { type: 'workspace', workspaceId: record.workspaceId };
+  }
+  if (record.userId) {
+    return { type: 'personal', userId: record.userId };
+  }
+  throw new Error('Artifact record without owner');
+}
+
+function assignOwner(record: ArtifactRecord, domain: Artifact): void {
+  record.userId = domain.owner.type === 'personal' ? domain.owner.userId : null;
+  record.workspaceId =
+    domain.owner.type === 'workspace' ? domain.owner.workspaceId : null;
+  record.creatorId = domain.creatorId;
 }

@@ -71,8 +71,8 @@ describe('FindArtifactsForRunUseCase', () => {
     findByThreadId.mockResolvedValue([
       new DocumentArtifact({
         id: letterId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Brief an {{pii:PERSON_NAME_1}}',
         isAnonymous: true,
         piiMasks: [
@@ -84,8 +84,8 @@ describe('FindArtifactsForRunUseCase', () => {
       }),
       new DiagramArtifact({
         id: processId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Ablauf {{pii:PERSON_NAME_1}}',
         isAnonymous: true,
         piiMasks: [
@@ -120,8 +120,8 @@ describe('FindArtifactsForRunUseCase', () => {
     findByThreadId.mockResolvedValue([
       new DocumentArtifact({
         id: letterId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Brief an Anna Schmidt',
       }),
     ]);

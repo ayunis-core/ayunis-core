@@ -2,11 +2,12 @@
 
 ## Purpose
 
-Manages versioned artifacts (documents, diagrams, and spreadsheets) attached to threads. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead for DOCX and PDF exports.
+Manages versioned artifacts (documents, diagrams, and spreadsheets), owned by a user or a workspace and linked to chats. Artifacts are created and updated by AI tools (`create_document`, `update_document`, `edit_document`) or by users via the WYSIWYG editor. Each modification creates a new version, enabling full version history with revert capability. Document artifacts can also be linked to an optional organization letterhead for DOCX and PDF exports.
 
 ## Domain Concepts
 
-- **Artifact** — A named, typed artifact belonging to a thread and user. Tracks the current version number; only document artifacts can have an optional `letterheadId` used for DOCX and PDF exports.
+- **Artifact** — A named, typed artifact. Tracks the current version number; only document artifacts can have an optional `letterheadId` used for DOCX and PDF exports.
+- **Owner** (`ArtifactOwner`, `domain/artifact-owner.ts`, in the vocabulary of the ownership module's `ResourceOwner`) — Exactly one of: the user, for an artifact created in a personal chat (`userId`), or the workspace, for one created in a workspace chat (`workspaceId`); a check constraint (`num_nonnulls("userId", "workspaceId") = 1`) enforces it. Artifacts never change owner, not even when their chat moves. The user who created the artifact is kept as `creatorId` (for delete rights later) and cleared when that user is deleted. The artifact does not remember the chat it was created in.
 - **Anonymous artifact** — An artifact created in an anonymous run (`isAnonymous`). Its stored title and content hold `{{pii:CATEGORY_n}}` placeholders numbered in its own dictionary, independent of any chat's.
 - **ArtifactPiiMask** — One entry of an anonymous artifact's dictionary (`artifact_pii_masks`, unique `(artifactId, category, maskIndex)` and `(artifactId, category, value)`, deleted with the artifact): the real value behind one placeholder. There is no manual unmasking for artifacts; a chat's unmasking (AYC-807) stays with the chat.
 - **DocumentArtifact** — An artifact whose version content is sanitized HTML and may be exported to DOCX or PDF.
@@ -15,7 +16,7 @@ Manages versioned artifacts (documents, diagrams, and spreadsheets) attached to 
 - **ArtifactVersion** — An immutable snapshot of an artifact's serialized content at a specific version number. The content representation depends on the artifact type, and each version tracks who authored it (user or assistant).
 - **ArtifactType** — Enum distinguishing `DOCUMENT`, `DIAGRAM`, and `SPREADSHEET` artifacts.
 - **AuthorType** — Enum distinguishing whether a version was created by a `USER` or `ASSISTANT`.
-- **Chat link** — A row in `thread_artifacts` (`threadId`, `artifactId`, `createdAt`, unique pair) connecting a chat to an artifact. Chats reach their artifacts only through links. The artifact still records the chat it was created in (`threadId`), which access checks and the detection of user saves use until artifacts get their own owner.
+- **Chat link** — A row in `thread_artifacts` (`threadId`, `artifactId`, `createdAt`, unique pair) connecting a chat to an artifact. Chats reach their artifacts only through links, and a link never grants access.
 
 ## Architecture
 
@@ -23,6 +24,7 @@ Manages versioned artifacts (documents, diagrams, and spreadsheets) attached to 
 artifacts/
 ├── domain/
 │   ├── artifact.entity.ts
+│   ├── artifact-owner.ts
 │   ├── artifact-pii-mask.entity.ts
 │   ├── artifact-version.entity.ts
 │   ├── artifacts.constants.ts
@@ -52,6 +54,7 @@ artifacts/
 │   └── use-cases/
 │       ├── apply-edits-to-artifact/
 │       ├── create-artifact/
+│       ├── delete-thread-links-outside-scope/
 │       ├── update-artifact/
 │       ├── find-artifacts-by-thread/
 │       ├── find-artifacts-by-workspace/
@@ -87,9 +90,10 @@ artifacts/
 
 ## Dependencies
 
-- **ThreadsModule** — Imported for thread ownership validation when creating artifacts and for the chat's anonymous flag on user saves
-- **ThreadPiiMasksModule** — Imported to detect values in user saves of anonymous artifacts, to read the chat's dictionary when a run writes, and to allocate chat masks when a run reads
-- **WorkspacesModule** — Imported for workspace membership validation when listing artifacts
+- **ThreadsModule** — Imported for the chat a new artifact is created in: its user, scope (owner) and anonymous flag. The threads module imports this module back (`forwardRef`) to drop a moved chat's links
+- **ThreadPiiMasksModule** — Imported to read the chat's dictionary when a run writes and to allocate chat masks when a run reads
+- **AnonymizationSettingsModule** — Imported to detect values in user saves of anonymous artifacts with the org's whitelists (`AnonymizeTextForOrgUseCase`)
+- **WorkspacesModule** — Imported for workspace membership validation when listing a workspace's artifacts
 - **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
 - **StorageModule** — Imported for downloading letterhead PDFs during export
 
@@ -101,8 +105,11 @@ artifacts/
 
 ## Key Behaviors
 
-- Creating an artifact also creates version 1 and the link to the chat it was created in, in the same transaction
-- A chat's artifact list (`GET /artifacts/thread/:threadId`, used by the chat's side panel and by the runs module's tool assembly) returns the artifacts linked to the chat, in the order they were linked
+- Creating an artifact also creates version 1 and the link to the chat it was created in, in the same transaction. Its owner is the chat's scope: the chat's user for a personal chat, the chat's workspace for a workspace chat; the creating user becomes `creatorId`
+- Access follows the owner, for every read and write: a personal artifact is found only for its owner, a workspace artifact for every current member of the workspace, whoever created it. Non-members, org admins included, get `ARTIFACT_NOT_FOUND` (404) like for a missing artifact. The condition sits in the repository's lookups by id (`accessibleTo`, membership through the workspaces module's `memberWorkspace` condition), so detail, update, edits, revert and export all apply it; runs check as the chat's user
+- A chat's artifact list (`GET /artifacts/thread/:threadId`, used by the chat's side panel and by the runs module's tool assembly) returns the artifacts linked to the chat that the caller may access, in the order they were linked; lookups through a chat (lists and run lookups) only find anything for the chat's own user
+- A workspace's artifact list (`GET /artifacts/workspace/:workspaceId`, the workspace's artifact tab) returns every artifact the workspace owns, after `AssertWorkspaceReadAccessUseCase` checked the caller's membership
+- Moving a chat to another scope (personal ↔ workspace, workspace ↔ workspace) deletes its links to artifacts the new scope does not own (`DeleteThreadLinksOutsideScopeUseCase`, called by the threads module in the move's transaction); the artifacts stay with their owner
 - Lookups from a run (`ArtifactRun` on `ReadArtifactInRunQuery`, `UpdateArtifactCommand` and `ApplyEditsToArtifactCommand`) find an artifact only when it is linked to the run's chat and matches the run's mode (anonymous runs anonymous artifacts, normal runs normal ones; the runs module decides the mode: anonymous chat or a model with enforced anonymous mode), in addition to the user access rules; otherwise they fail with `ARTIFACT_NOT_FOUND` and nothing is written. Lookups from the HTTP API are not restricted by links or mode
 - An artifact created by a run gets the run's mode; one created through the HTTP API the mode of its chat
 - Creating an artifact can optionally attach a validated `letterheadId`
@@ -113,12 +120,13 @@ artifacts/
   - A run writes (create with its title, update, edit including `old_text` and `new_text`): chat placeholder → value → artifact placeholder; new values get new dictionary entries. A placeholder the chat does not know rejects the write with `ARTIFACT_UNKNOWN_PLACEHOLDER` (a retryable tool error) and nothing is stored
   - Spreadsheets are translated per header and string cell, formulas included
   - New dictionary entries are written in the transaction of the version that needs them (`addVersionAndUpdateArtifact`, or the transaction that creates the artifact), so a write that fails, e.g. on a version conflict, leaves none behind. For an existing artifact they are numbered under a per-artifact lock (`ArtifactMaskAllocationLock`, process-local; the unique constraints reject a duplicate across instances) that is held until the version is written
-- User-authored content (`AuthorType.USER` on create or update) of an anonymous artifact is masked before it is stored, so the model never reads a real value a user typed: values are detected through the chat's anonymization (`AnonymizeTextForThreadUseCase`, with the chat's whitelists) and replaced with placeholders of the artifact's own dictionary. The title of an artifact created through the HTTP API is masked the same way. Documents and diagrams are masked as a whole; spreadsheets per header and string cell, with formulas untouched and strings the current version already stores skipped. Existing `{{pii:…}}` placeholders are kept. If masking fails, the save fails and no version is stored. Normal artifacts are stored as written
+- User-authored content (`AuthorType.USER` on create or update) of an anonymous artifact is masked before it is stored, so the model never reads a real value a user typed: values are detected with the org's whitelists (`AnonymizeTextForOrgUseCase`; a chat's manual unmasking does not apply to artifacts) and replaced with placeholders of the artifact's own dictionary. The title of an artifact created through the HTTP API is masked the same way. Documents and diagrams are masked as a whole; spreadsheets per header and string cell, with formulas untouched and strings the current version already stores skipped. Existing `{{pii:…}}` placeholders are kept. If masking fails, the save fails and no version is stored. Normal artifacts are stored as written
 - The HTTP API always writes as `AuthorType.USER`; clients cannot choose the author. Only the artifact tool handlers write as `AuthorType.ASSISTANT`
 - Applying edits performs search-and-replace patches on the current content, creating a new version (errors on ambiguous or missing matches)
 - Reverting copies content from a target version into a new version (non-destructive)
 - A write with a stale expected version fails with `ARTIFACT_EXPECTED_VERSION_MISMATCH`, whose message tells the model to call the read tool for the artifact's type (`read_document`, `read_diagram` or `read_spreadsheet`) and retry
-- Deleting a thread cascade-deletes its links and all its artifacts and versions; deleting an artifact cascade-deletes its links and its dictionary
+- Deleting a chat, by its user or by retention, deletes only its links (`thread_artifacts.threadId` cascade); the artifacts stay. Deleting a user deletes their personal artifacts (`userId` cascade) and keeps the workspace artifacts they created with `creatorId` cleared (SET NULL). Deleting a workspace deletes its artifacts (`workspaceId` cascade). Deleting an artifact cascade-deletes its versions, links and dictionary
+- Migrations `AddArtifactOwners`, `BackfillArtifactOwners` and `DropArtifactThreadId`: artifacts of workspace chats became the workspace's, artifacts of personal chats stayed with their user, every artifact's user became its creator, and the chat reference was dropped (every artifact already had its link to the chat, from `CreateThreadArtifactsTable`). Reverting gives every artifact the first chat linked to it and that chat's user, and deletes artifacts no chat links to, as they would have been deleted with their chat
 - Migration `AddAnonymousArtifactDictionaries`: artifacts of anonymous chats became anonymous artifacts, each with a copy of its chat's entries for the placeholders that occur in its title or any of its versions (same tokens, title and content unchanged)
 - PDF export resolves the artifact's letterhead, downloads its PDFs from storage, and composites the rendered content onto the first-page / continuation-page backgrounds; if letterhead resolution fails, export falls back to a plain PDF
 - DOCX, PDF, XLSX and CSV exports of an anonymous artifact resolve its placeholders, in the content as in the file name, with the artifact's own dictionary, so they show real values even after the chat that wrote them is gone. `GET /artifacts/:id` returns `isAnonymous` and, with the versions, the dictionary (`piiMasks`) for anonymous artifacts
@@ -131,7 +139,6 @@ artifacts/
 - Diagram content is stored without document HTML or spreadsheet normalization
 - Content size validation (max ~512K characters) on create and update
 - Thread ownership verification when creating artifacts
-- Artifact lookups by id or by thread (detail, update, edits, revert, export, thread list) require, for an artifact in a workspace chat, that its creator is still a member of the workspace; they reuse the threads module's membership condition. Workspace listings check membership through `AssertWorkspaceReadAccessUseCase` before filtering by user
 - Workspace artifact listings ignore unsupported legacy discriminator values
 - Retry-on-conflict logic for version number uniqueness (unique constraint + up to 3 retries)
 

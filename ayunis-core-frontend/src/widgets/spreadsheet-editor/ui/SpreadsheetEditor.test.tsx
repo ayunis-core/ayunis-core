@@ -72,7 +72,7 @@ vi.mock('./SpreadsheetToolbar', () => ({
 const artifact = {
   id: 'artifact-id',
   type: 'spreadsheet',
-  threadId: 'thread-id',
+  ownerType: 'personal',
   userId: 'user-id',
   title: 'Budget',
   isAnonymous: false,

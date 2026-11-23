@@ -43,8 +43,8 @@ describe('ArtifactToolAssemblerService', () => {
   ) {
     const params = {
       id: overrides.id ?? randomUUID(),
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal' as const, userId: mockUserId },
+      creatorId: mockUserId,
       title: overrides.title ?? 'Artifact',
       isAnonymous: overrides.isAnonymous,
       currentVersionNumber: overrides.currentVersionNumber ?? 1,

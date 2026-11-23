@@ -322,14 +322,14 @@ test("workspace members get what their workspace role allows, never more", async
       expect(await listedWorkspaceIds(adminApi)).not.toContain(id);
     });
 
-    await test.step("members never see each other's chats or artifacts", async () => {
+    await test.step("members never see each other's chats but share the workspace's artifacts", async () => {
       const [model] =
         await generatedApi.modelsControllerGetPermittedLanguageModels(as(ben));
       const thread = await generatedApi.threadsControllerCreate(
         { workspaceId: id, modelId: model.id },
         as(ben),
       );
-      await generatedApi.artifactsControllerCreate(
+      const artifact = await generatedApi.artifactsControllerCreate(
         {
           title: "Entwurf Haushaltsrede",
           content: "<p>Sehr geehrte Damen und Herren</p>",
@@ -351,14 +351,9 @@ test("workspace members get what their workspace role allows, never more", async
           undefined,
           as(clara),
         );
-      expect(claraArtifacts.data).toEqual([]);
-      const benArtifacts =
-        await generatedApi.artifactsControllerFindByWorkspace(
-          id,
-          undefined,
-          as(ben),
-        );
-      expect(benArtifacts.data).toHaveLength(1);
+      expect(claraArtifacts.data.map((listed) => listed.id)).toEqual([
+        artifact.id,
+      ]);
     });
 
     await test.step("an admin may change roles and delete, but not leave the workspace without an admin", async () => {

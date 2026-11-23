@@ -63,8 +63,8 @@ describe('ReadDocumentToolHandler', () => {
 
     return new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Municipal Budget Report 2026',
       currentVersionNumber: versionNumber,
       versions: [version],

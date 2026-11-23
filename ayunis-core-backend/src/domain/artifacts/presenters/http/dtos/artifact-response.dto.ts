@@ -87,16 +87,25 @@ export class ArtifactResponseDto {
   type: ArtifactType;
 
   @ApiProperty({
-    description: 'The thread this artifact belongs to',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description:
+      'Whether the artifact belongs to a user (created in a personal chat) or a workspace (created in a workspace chat)',
+    enum: ['personal', 'workspace'],
   })
-  threadId: string;
+  ownerType: 'personal' | 'workspace';
 
-  @ApiProperty({
-    description: 'The user who owns this artifact',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+  @ApiPropertyOptional({
+    description: 'The owning user of a personal artifact',
+    type: 'string',
+    format: 'uuid',
   })
-  userId: string;
+  userId?: string;
+
+  @ApiPropertyOptional({
+    description: 'The owning workspace of a workspace artifact',
+    type: 'string',
+    format: 'uuid',
+  })
+  workspaceId?: string;
 
   @ApiProperty({
     description: 'Title of the document',

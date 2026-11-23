@@ -70,8 +70,8 @@ describe('ReadDiagramToolHandler', () => {
       readInRun(
         new DiagramArtifact({
           id: artifactId,
-          threadId,
-          userId,
+          owner: { type: 'personal', userId },
+          creatorId: userId,
           title: 'Antragsprozess',
           currentVersionNumber: 2,
           versions: [
@@ -97,8 +97,8 @@ describe('ReadDiagramToolHandler', () => {
       readInRun(
         new SpreadsheetArtifact({
           id: artifactId,
-          threadId,
-          userId,
+          owner: { type: 'personal', userId },
+          creatorId: userId,
           title: 'Haushalt',
           versions: [version(1, '{}')],
         }),

@@ -4999,6 +4999,357 @@ export interface UnreadReleaseNoteCountResponseDto {
   count: number;
 }
 
+export interface CreateArtifactDto {
+  /** Title of the document */
+  title: string;
+  /** HTML content of the document */
+  content: string;
+  /** The thread this artifact belongs to */
+  threadId: string;
+  /** Optional letterhead to apply to this artifact */
+  letterheadId?: string;
+}
+
+/**
+ * Who authored this version
+ */
+export type ArtifactVersionResponseDtoAuthorType = typeof ArtifactVersionResponseDtoAuthorType[keyof typeof ArtifactVersionResponseDtoAuthorType];
+
+
+export const ArtifactVersionResponseDtoAuthorType = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
+/**
+ * ID of the author (user ID if authored by user, null if AI)
+ * @nullable
+ */
+export type ArtifactVersionResponseDtoAuthorId = { [key: string]: unknown } | null;
+
+export interface ArtifactVersionResponseDto {
+  /** Unique identifier of the version */
+  id: string;
+  /** The artifact this version belongs to */
+  artifactId: string;
+  /** Sequential version number */
+  versionNumber: number;
+  /** HTML content of this version */
+  content: string;
+  /** Who authored this version */
+  authorType: ArtifactVersionResponseDtoAuthorType;
+  /**
+     * ID of the author (user ID if authored by user, null if AI)
+     * @nullable
+     */
+  authorId?: ArtifactVersionResponseDtoAuthorId;
+  /** When this version was created */
+  createdAt: string;
+}
+
+export interface ArtifactPiiMaskResponseDto {
+  /** The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}} */
+  token: string;
+  /** The real value the placeholder stands for */
+  value: string;
+  /** PII category of the value */
+  category: PiiCategory;
+}
+
+/**
+ * The kind of artifact — document (HTML) or diagram (mermaid)
+ */
+export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeof ArtifactResponseDtoType];
+
+
+export const ArtifactResponseDtoType = {
+  document: 'document',
+  diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
+} as const;
+
+/**
+ * Whether the artifact belongs to a user (created in a personal chat) or a workspace (created in a workspace chat)
+ */
+export type ArtifactResponseDtoOwnerType = typeof ArtifactResponseDtoOwnerType[keyof typeof ArtifactResponseDtoOwnerType];
+
+
+export const ArtifactResponseDtoOwnerType = {
+  personal: 'personal',
+  workspace: 'workspace',
+} as const;
+
+export interface ArtifactResponseDto {
+  /** Unique identifier of the artifact */
+  id: string;
+  /** The kind of artifact — document (HTML) or diagram (mermaid) */
+  type: ArtifactResponseDtoType;
+  /** Whether the artifact belongs to a user (created in a personal chat) or a workspace (created in a workspace chat) */
+  ownerType: ArtifactResponseDtoOwnerType;
+  /** The owning user of a personal artifact */
+  userId?: string;
+  /** The owning workspace of a workspace artifact */
+  workspaceId?: string;
+  /** Title of the document */
+  title: string;
+  /**
+     * The letterhead applied to this artifact
+     * @nullable
+     */
+  letterheadId?: string | null;
+  /** Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks */
+  isAnonymous: boolean;
+  /** Current version number */
+  currentVersionNumber: number;
+  /** All versions of this artifact (included when fetching by ID) */
+  versions?: ArtifactVersionResponseDto[];
+  /** The anonymous artifact's own placeholder dictionary (included with the versions) */
+  piiMasks?: ArtifactPiiMaskResponseDto[];
+  /** When the artifact was created */
+  createdAt: string;
+  /** When the artifact was last updated */
+  updatedAt: string;
+}
+
+export interface UpdateArtifactDto {
+  /** Updated HTML content of the document. When omitted, no new version is created. */
+  content?: string;
+  /**
+     * Optional letterhead to apply to this artifact (null to remove)
+     * @nullable
+     */
+  letterheadId?: string | null;
+}
+
+export interface ArtifactListResponseDto {
+  data: ArtifactResponseDto[];
+  pagination: PaginationDto;
+}
+
+export interface RevertArtifactDto {
+  /** The version number to revert to */
+  versionNumber: number;
+}
+
+/**
+ * Font family. Send an empty string to inherit the organization default.
+ */
+export type CreateLetterheadDtoFontFamily = typeof CreateLetterheadDtoFontFamily[keyof typeof CreateLetterheadDtoFontFamily];
+
+
+export const CreateLetterheadDtoFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+  '': '',
+} as const;
+
+export interface CreateLetterheadDto {
+  /** Font family. Send an empty string to inherit the organization default. */
+  fontFamily?: CreateLetterheadDtoFontFamily;
+  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
+  fontSizePt?: string;
+  /** Name of the letterhead */
+  name: string;
+  /** Description of the letterhead (used by AI for context) */
+  description?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  firstPageMargins: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  continuationPageMargins: string;
+}
+
+export type DocumentFontFamily = typeof DocumentFontFamily[keyof typeof DocumentFontFamily];
+
+
+export const DocumentFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+} as const;
+
+export interface PageMarginsDto {
+  /** Top margin in mm */
+  top: number;
+  /** Bottom margin in mm */
+  bottom: number;
+  /** Left margin in mm */
+  left: number;
+  /** Right margin in mm */
+  right: number;
+}
+
+export interface LetterheadResponseDto {
+  fontFamily: DocumentFontFamily | null;
+  /**
+     * @minimum 6
+     * @maximum 72
+     * @nullable
+     */
+  fontSizePt: number | null;
+  /** Unique identifier of the letterhead */
+  id: string;
+  /** Name of the letterhead */
+  name: string;
+  /**
+     * Description of the letterhead
+     * @nullable
+     */
+  description?: string | null;
+  /** Margins for the first page in mm */
+  firstPageMargins: PageMarginsDto;
+  /** Margins for continuation pages in mm */
+  continuationPageMargins: PageMarginsDto;
+  /** Whether a continuation page PDF is configured */
+  hasContinuationPage: boolean;
+  /** When the letterhead was created */
+  createdAt: string;
+  /** When the letterhead was last updated */
+  updatedAt: string;
+}
+
+/**
+ * Font family. Send an empty string to inherit the organization default.
+ */
+export type PreviewLetterheadDtoFontFamily = typeof PreviewLetterheadDtoFontFamily[keyof typeof PreviewLetterheadDtoFontFamily];
+
+
+export const PreviewLetterheadDtoFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+  '': '',
+} as const;
+
+export type PreviewLetterheadDtoRemoveContinuationPage = typeof PreviewLetterheadDtoRemoveContinuationPage[keyof typeof PreviewLetterheadDtoRemoveContinuationPage];
+
+
+export const PreviewLetterheadDtoRemoveContinuationPage = {
+  true: 'true',
+} as const;
+
+export type PreviewLetterheadDtoLanguage = typeof PreviewLetterheadDtoLanguage[keyof typeof PreviewLetterheadDtoLanguage];
+
+
+export const PreviewLetterheadDtoLanguage = {
+  de: 'de',
+  en: 'en',
+} as const;
+
+export interface PreviewLetterheadDto {
+  /** Font family. Send an empty string to inherit the organization default. */
+  fontFamily?: PreviewLetterheadDtoFontFamily;
+  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
+  fontSizePt?: string;
+  letterheadId?: string;
+  firstPagePdf?: Blob;
+  continuationPagePdf?: Blob;
+  /** First-page margins in millimeters, as a JSON string */
+  firstPageMargins: string;
+  /** Continuation margins in millimeters, as a JSON string */
+  continuationPageMargins: string;
+  removeContinuationPage?: PreviewLetterheadDtoRemoveContinuationPage;
+  language?: PreviewLetterheadDtoLanguage;
+}
+
+/**
+ * Font family. Send an empty string to inherit the organization default.
+ */
+export type UpdateLetterheadDtoFontFamily = typeof UpdateLetterheadDtoFontFamily[keyof typeof UpdateLetterheadDtoFontFamily];
+
+
+export const UpdateLetterheadDtoFontFamily = {
+  Arial: 'Arial',
+  Times_New_Roman: 'Times New Roman',
+  Courier_New: 'Courier New',
+  Calibri: 'Calibri',
+  Cambria: 'Cambria',
+  Georgia: 'Georgia',
+  Roboto: 'Roboto',
+  Open_Sans: 'Open Sans',
+  Lato: 'Lato',
+  Montserrat: 'Montserrat',
+  Inter: 'Inter',
+  Noto_Sans: 'Noto Sans',
+  Source_Sans_3: 'Source Sans 3',
+  Noto_Serif: 'Noto Serif',
+  Fira_Sans: 'Fira Sans',
+  '': '',
+} as const;
+
+export interface UpdateLetterheadDto {
+  /** Font family. Send an empty string to inherit the organization default. */
+  fontFamily?: UpdateLetterheadDtoFontFamily;
+  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
+  fontSizePt?: string;
+  /** Name of the letterhead */
+  name?: string;
+  /** Description of the letterhead */
+  description?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  firstPageMargins?: string;
+  /** JSON string of { top, bottom, left, right } margins in mm */
+  continuationPageMargins?: string;
+  /** Set to "true" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded. */
+  removeContinuationPage?: string;
+}
+
+export interface DocumentTypographyDto {
+  fontFamily: DocumentFontFamily | null;
+  /**
+     * @minimum 6
+     * @maximum 72
+     * @nullable
+     */
+  fontSizePt: number | null;
+}
+
+export interface UpdateDocumentDefaultsDto {
+  fontFamily?: DocumentFontFamily | null;
+  /**
+     * @minimum 6
+     * @maximum 72
+     * @nullable
+     */
+  fontSizePt?: number | null;
+}
+
 export interface CreditsPerEuroResponseDto {
   /** Number of credits per euro of token cost */
   creditsPerEuro: number;
@@ -6083,344 +6434,6 @@ export interface UpdateSkillTemplateDto {
   defaultActive?: boolean;
   /** Whether copied skills should be pinned by default (only for pre_created_copy mode) */
   defaultPinned?: boolean;
-}
-
-export interface CreateArtifactDto {
-  /** Title of the document */
-  title: string;
-  /** HTML content of the document */
-  content: string;
-  /** The thread this artifact belongs to */
-  threadId: string;
-  /** Optional letterhead to apply to this artifact */
-  letterheadId?: string;
-}
-
-/**
- * Who authored this version
- */
-export type ArtifactVersionResponseDtoAuthorType = typeof ArtifactVersionResponseDtoAuthorType[keyof typeof ArtifactVersionResponseDtoAuthorType];
-
-
-export const ArtifactVersionResponseDtoAuthorType = {
-  USER: 'USER',
-  ASSISTANT: 'ASSISTANT',
-} as const;
-
-/**
- * ID of the author (user ID if authored by user, null if AI)
- * @nullable
- */
-export type ArtifactVersionResponseDtoAuthorId = { [key: string]: unknown } | null;
-
-export interface ArtifactVersionResponseDto {
-  /** Unique identifier of the version */
-  id: string;
-  /** The artifact this version belongs to */
-  artifactId: string;
-  /** Sequential version number */
-  versionNumber: number;
-  /** HTML content of this version */
-  content: string;
-  /** Who authored this version */
-  authorType: ArtifactVersionResponseDtoAuthorType;
-  /**
-     * ID of the author (user ID if authored by user, null if AI)
-     * @nullable
-     */
-  authorId?: ArtifactVersionResponseDtoAuthorId;
-  /** When this version was created */
-  createdAt: string;
-}
-
-export interface ArtifactPiiMaskResponseDto {
-  /** The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}} */
-  token: string;
-  /** The real value the placeholder stands for */
-  value: string;
-  /** PII category of the value */
-  category: PiiCategory;
-}
-
-/**
- * The kind of artifact — document (HTML) or diagram (mermaid)
- */
-export type ArtifactResponseDtoType = typeof ArtifactResponseDtoType[keyof typeof ArtifactResponseDtoType];
-
-
-export const ArtifactResponseDtoType = {
-  document: 'document',
-  diagram: 'diagram',
-  spreadsheet: 'spreadsheet',
-} as const;
-
-export interface ArtifactResponseDto {
-  /** Unique identifier of the artifact */
-  id: string;
-  /** The kind of artifact — document (HTML) or diagram (mermaid) */
-  type: ArtifactResponseDtoType;
-  /** The thread this artifact belongs to */
-  threadId: string;
-  /** The user who owns this artifact */
-  userId: string;
-  /** Title of the document */
-  title: string;
-  /**
-     * The letterhead applied to this artifact
-     * @nullable
-     */
-  letterheadId?: string | null;
-  /** Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks */
-  isAnonymous: boolean;
-  /** Current version number */
-  currentVersionNumber: number;
-  /** All versions of this artifact (included when fetching by ID) */
-  versions?: ArtifactVersionResponseDto[];
-  /** The anonymous artifact's own placeholder dictionary (included with the versions) */
-  piiMasks?: ArtifactPiiMaskResponseDto[];
-  /** When the artifact was created */
-  createdAt: string;
-  /** When the artifact was last updated */
-  updatedAt: string;
-}
-
-export interface UpdateArtifactDto {
-  /** Updated HTML content of the document. When omitted, no new version is created. */
-  content?: string;
-  /**
-     * Optional letterhead to apply to this artifact (null to remove)
-     * @nullable
-     */
-  letterheadId?: string | null;
-}
-
-export interface ArtifactListResponseDto {
-  data: ArtifactResponseDto[];
-  pagination: PaginationDto;
-}
-
-export interface RevertArtifactDto {
-  /** The version number to revert to */
-  versionNumber: number;
-}
-
-/**
- * Font family. Send an empty string to inherit the organization default.
- */
-export type CreateLetterheadDtoFontFamily = typeof CreateLetterheadDtoFontFamily[keyof typeof CreateLetterheadDtoFontFamily];
-
-
-export const CreateLetterheadDtoFontFamily = {
-  Arial: 'Arial',
-  Times_New_Roman: 'Times New Roman',
-  Courier_New: 'Courier New',
-  Calibri: 'Calibri',
-  Cambria: 'Cambria',
-  Georgia: 'Georgia',
-  Roboto: 'Roboto',
-  Open_Sans: 'Open Sans',
-  Lato: 'Lato',
-  Montserrat: 'Montserrat',
-  Inter: 'Inter',
-  Noto_Sans: 'Noto Sans',
-  Source_Sans_3: 'Source Sans 3',
-  Noto_Serif: 'Noto Serif',
-  Fira_Sans: 'Fira Sans',
-  '': '',
-} as const;
-
-export interface CreateLetterheadDto {
-  /** Font family. Send an empty string to inherit the organization default. */
-  fontFamily?: CreateLetterheadDtoFontFamily;
-  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
-  fontSizePt?: string;
-  /** Name of the letterhead */
-  name: string;
-  /** Description of the letterhead (used by AI for context) */
-  description?: string;
-  /** JSON string of { top, bottom, left, right } margins in mm */
-  firstPageMargins: string;
-  /** JSON string of { top, bottom, left, right } margins in mm */
-  continuationPageMargins: string;
-}
-
-export type DocumentFontFamily = typeof DocumentFontFamily[keyof typeof DocumentFontFamily];
-
-
-export const DocumentFontFamily = {
-  Arial: 'Arial',
-  Times_New_Roman: 'Times New Roman',
-  Courier_New: 'Courier New',
-  Calibri: 'Calibri',
-  Cambria: 'Cambria',
-  Georgia: 'Georgia',
-  Roboto: 'Roboto',
-  Open_Sans: 'Open Sans',
-  Lato: 'Lato',
-  Montserrat: 'Montserrat',
-  Inter: 'Inter',
-  Noto_Sans: 'Noto Sans',
-  Source_Sans_3: 'Source Sans 3',
-  Noto_Serif: 'Noto Serif',
-  Fira_Sans: 'Fira Sans',
-} as const;
-
-export interface PageMarginsDto {
-  /** Top margin in mm */
-  top: number;
-  /** Bottom margin in mm */
-  bottom: number;
-  /** Left margin in mm */
-  left: number;
-  /** Right margin in mm */
-  right: number;
-}
-
-export interface LetterheadResponseDto {
-  fontFamily: DocumentFontFamily | null;
-  /**
-     * @minimum 6
-     * @maximum 72
-     * @nullable
-     */
-  fontSizePt: number | null;
-  /** Unique identifier of the letterhead */
-  id: string;
-  /** Name of the letterhead */
-  name: string;
-  /**
-     * Description of the letterhead
-     * @nullable
-     */
-  description?: string | null;
-  /** Margins for the first page in mm */
-  firstPageMargins: PageMarginsDto;
-  /** Margins for continuation pages in mm */
-  continuationPageMargins: PageMarginsDto;
-  /** Whether a continuation page PDF is configured */
-  hasContinuationPage: boolean;
-  /** When the letterhead was created */
-  createdAt: string;
-  /** When the letterhead was last updated */
-  updatedAt: string;
-}
-
-/**
- * Font family. Send an empty string to inherit the organization default.
- */
-export type PreviewLetterheadDtoFontFamily = typeof PreviewLetterheadDtoFontFamily[keyof typeof PreviewLetterheadDtoFontFamily];
-
-
-export const PreviewLetterheadDtoFontFamily = {
-  Arial: 'Arial',
-  Times_New_Roman: 'Times New Roman',
-  Courier_New: 'Courier New',
-  Calibri: 'Calibri',
-  Cambria: 'Cambria',
-  Georgia: 'Georgia',
-  Roboto: 'Roboto',
-  Open_Sans: 'Open Sans',
-  Lato: 'Lato',
-  Montserrat: 'Montserrat',
-  Inter: 'Inter',
-  Noto_Sans: 'Noto Sans',
-  Source_Sans_3: 'Source Sans 3',
-  Noto_Serif: 'Noto Serif',
-  Fira_Sans: 'Fira Sans',
-  '': '',
-} as const;
-
-export type PreviewLetterheadDtoRemoveContinuationPage = typeof PreviewLetterheadDtoRemoveContinuationPage[keyof typeof PreviewLetterheadDtoRemoveContinuationPage];
-
-
-export const PreviewLetterheadDtoRemoveContinuationPage = {
-  true: 'true',
-} as const;
-
-export type PreviewLetterheadDtoLanguage = typeof PreviewLetterheadDtoLanguage[keyof typeof PreviewLetterheadDtoLanguage];
-
-
-export const PreviewLetterheadDtoLanguage = {
-  de: 'de',
-  en: 'en',
-} as const;
-
-export interface PreviewLetterheadDto {
-  /** Font family. Send an empty string to inherit the organization default. */
-  fontFamily?: PreviewLetterheadDtoFontFamily;
-  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
-  fontSizePt?: string;
-  letterheadId?: string;
-  firstPagePdf?: Blob;
-  continuationPagePdf?: Blob;
-  /** First-page margins in millimeters, as a JSON string */
-  firstPageMargins: string;
-  /** Continuation margins in millimeters, as a JSON string */
-  continuationPageMargins: string;
-  removeContinuationPage?: PreviewLetterheadDtoRemoveContinuationPage;
-  language?: PreviewLetterheadDtoLanguage;
-}
-
-/**
- * Font family. Send an empty string to inherit the organization default.
- */
-export type UpdateLetterheadDtoFontFamily = typeof UpdateLetterheadDtoFontFamily[keyof typeof UpdateLetterheadDtoFontFamily];
-
-
-export const UpdateLetterheadDtoFontFamily = {
-  Arial: 'Arial',
-  Times_New_Roman: 'Times New Roman',
-  Courier_New: 'Courier New',
-  Calibri: 'Calibri',
-  Cambria: 'Cambria',
-  Georgia: 'Georgia',
-  Roboto: 'Roboto',
-  Open_Sans: 'Open Sans',
-  Lato: 'Lato',
-  Montserrat: 'Montserrat',
-  Inter: 'Inter',
-  Noto_Sans: 'Noto Sans',
-  Source_Sans_3: 'Source Sans 3',
-  Noto_Serif: 'Noto Serif',
-  Fira_Sans: 'Fira Sans',
-  '': '',
-} as const;
-
-export interface UpdateLetterheadDto {
-  /** Font family. Send an empty string to inherit the organization default. */
-  fontFamily?: UpdateLetterheadDtoFontFamily;
-  /** Font size in points (6–72). Send an empty string to inherit the organization default. */
-  fontSizePt?: string;
-  /** Name of the letterhead */
-  name?: string;
-  /** Description of the letterhead */
-  description?: string;
-  /** JSON string of { top, bottom, left, right } margins in mm */
-  firstPageMargins?: string;
-  /** JSON string of { top, bottom, left, right } margins in mm */
-  continuationPageMargins?: string;
-  /** Set to "true" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded. */
-  removeContinuationPage?: string;
-}
-
-export interface DocumentTypographyDto {
-  fontFamily: DocumentFontFamily | null;
-  /**
-     * @minimum 6
-     * @maximum 72
-     * @nullable
-     */
-  fontSizePt: number | null;
-}
-
-export interface UpdateDocumentDefaultsDto {
-  fontFamily?: DocumentFontFamily | null;
-  /**
-     * @minimum 6
-     * @maximum 72
-     * @nullable
-     */
-  fontSizePt?: number | null;
 }
 
 export interface MemoryEntryResponseDto {
@@ -7895,6 +7908,55 @@ type?: NotificationType;
 unread?: boolean;
 };
 
+export type ArtifactsControllerFindByWorkspaceParams = {
+/**
+ * Search artifacts by title
+ */
+search?: string;
+/**
+ * Filter by type
+ */
+type?: ArtifactsControllerFindByWorkspaceType;
+/**
+ * Maximum number of artifacts to return
+ */
+limit?: number;
+/**
+ * Number of artifacts to skip
+ */
+offset?: number;
+};
+
+export type ArtifactsControllerFindByWorkspaceType = typeof ArtifactsControllerFindByWorkspaceType[keyof typeof ArtifactsControllerFindByWorkspaceType];
+
+
+export const ArtifactsControllerFindByWorkspaceType = {
+  document: 'document',
+  diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
+} as const;
+
+export type ArtifactsControllerExportParams = {
+/**
+ * Export format
+ */
+format: ArtifactsControllerExportFormat;
+/**
+ * Version number to export; defaults to the current version
+ */
+versionNumber?: number;
+};
+
+export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
+
+
+export const ArtifactsControllerExportFormat = {
+  docx: 'docx',
+  pdf: 'pdf',
+  xlsx: 'xlsx',
+  csv: 'csv',
+} as const;
+
 export type UsageControllerGetUserUsageParams = {
 /**
  * Start date in ISO format
@@ -8061,55 +8123,6 @@ export type RecordingsControllerFindAllOwnerType = typeof RecordingsControllerFi
 export const RecordingsControllerFindAllOwnerType = {
   personal: 'personal',
   workspace: 'workspace',
-} as const;
-
-export type ArtifactsControllerFindByWorkspaceParams = {
-/**
- * Search artifacts by title
- */
-search?: string;
-/**
- * Filter by type
- */
-type?: ArtifactsControllerFindByWorkspaceType;
-/**
- * Maximum number of artifacts to return
- */
-limit?: number;
-/**
- * Number of artifacts to skip
- */
-offset?: number;
-};
-
-export type ArtifactsControllerFindByWorkspaceType = typeof ArtifactsControllerFindByWorkspaceType[keyof typeof ArtifactsControllerFindByWorkspaceType];
-
-
-export const ArtifactsControllerFindByWorkspaceType = {
-  document: 'document',
-  diagram: 'diagram',
-  spreadsheet: 'spreadsheet',
-} as const;
-
-export type ArtifactsControllerExportParams = {
-/**
- * Export format
- */
-format: ArtifactsControllerExportFormat;
-/**
- * Version number to export; defaults to the current version
- */
-versionNumber?: number;
-};
-
-export type ArtifactsControllerExportFormat = typeof ArtifactsControllerExportFormat[keyof typeof ArtifactsControllerExportFormat];
-
-
-export const ArtifactsControllerExportFormat = {
-  docx: 'docx',
-  pdf: 'pdf',
-  xlsx: 'xlsx',
-  csv: 'csv',
 } as const;
 
 export type RunsControllerSendMessageBody = {

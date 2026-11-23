@@ -8,6 +8,7 @@ import {
 } from '../../src/clients/api/artifact-tools.client';
 import { generatedApi } from '../../src/clients/api/generated-api';
 import { createChat } from '../../src/clients/api/memory.client';
+import { deleteThread } from '../../src/clients/api/threads.client';
 import { createMemberSession } from '../../src/factories/user.factory';
 import { createProjectThread } from '../../src/factories/workspace-context.factory';
 import { expect, test } from '../../src/fixtures/test';
@@ -209,4 +210,76 @@ test('shows the not-found state for an artifact of another user and for a missin
 
   await page.goto('/artifacts/00000000-0000-4000-8000-000000000000');
   await expect(page.getByTestId('artifact-side-panel-not-found')).toBeVisible();
+});
+
+test('lets a workspace member open and edit a colleague’s artifact from the workspace tab, also after its chat is deleted, while non-members see not found', async ({
+  page,
+  api,
+  browser,
+  mail,
+}) => {
+  test.setTimeout(120_000);
+  const suffix = `${Date.now()}`;
+  const creator = await createMemberSession(api, mail, `art-ws-a-${suffix}`);
+  const colleague = await createMemberSession(api, mail, `art-ws-b-${suffix}`);
+  const colleagueContext = await browser.newContext({
+    storageState: await colleague.api.storageState(),
+  });
+  try {
+    const workspace = await generatedApi.workspacesControllerCreate(
+      { name: `Gemeinsam ${suffix}`, icon: 'building-2' },
+      { api: creator.api },
+    );
+    const chat = await createProjectThread(creator.api, workspace.id);
+    const artifact = await generatedApi.artifactsControllerCreate(
+      {
+        threadId: chat.id,
+        title: `Stellungnahme ${suffix}`,
+        content: '<p>Entwurf zur Stellungnahme</p>',
+      },
+      { api: creator.api },
+    );
+    const colleaguePage = await colleagueContext.newPage();
+
+    await colleaguePage.goto(`/artifacts/${artifact.id}`);
+    await expect(
+      colleaguePage.getByTestId('artifact-side-panel-not-found'),
+    ).toBeVisible();
+
+    await generatedApi.workspaceMembersControllerAdd(
+      workspace.id,
+      { userIds: [colleague.member.id], role: 'user' },
+      { api: creator.api },
+    );
+
+    await openFromWorkspaceTab(colleaguePage, workspace.id, artifact.id);
+    const content = colleaguePage.getByTestId('artifact-document-content');
+    await expect(content).toContainText('Entwurf zur Stellungnahme');
+    await content.click();
+    await colleaguePage.keyboard.press('Control+End');
+    await colleaguePage.keyboard.type(' Ergänzung aus dem Arbeitsbereich');
+    await colleaguePage.goBack();
+    await colleaguePage.getByTestId('confirmation-confirm').click();
+    await expect
+      .poll(
+        async () =>
+          (await currentArtifactContent(creator.api, artifact.id)).content,
+      )
+      .toContain('Ergänzung aus dem Arbeitsbereich');
+
+    await deleteThread(creator.api, chat.id);
+
+    await openFromWorkspaceTab(colleaguePage, workspace.id, artifact.id);
+    await expect(content).toContainText('Ergänzung aus dem Arbeitsbereich');
+
+    await page.goto(`/artifacts/${artifact.id}`);
+    await expect(
+      page.getByTestId('artifact-side-panel-not-found'),
+    ).toBeVisible();
+    await expect(page.getByTestId('artifact-document-content')).toHaveCount(0);
+  } finally {
+    await colleagueContext.close();
+    await creator.api.dispose();
+    await colleague.api.dispose();
+  }
 });

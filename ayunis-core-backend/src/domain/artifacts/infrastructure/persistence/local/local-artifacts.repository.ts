@@ -1,5 +1,5 @@
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import type { EntityManager } from 'typeorm';
+import type { EntityManager, FindOptionsWhere } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,6 +16,7 @@ import { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+import type { ArtifactOwner } from 'src/domain/artifacts/domain/artifact-owner';
 import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
@@ -26,7 +27,7 @@ import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 import { ArtifactPiiMaskMapper } from './mappers/artifact-pii-mask.mapper';
 import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Paginated } from 'src/common/pagination/paginated.entity';
-import { personalOrMemberWorkspace } from 'src/domain/threads/infrastructure/persistence/local/queries/personal-or-member-workspace';
+import { memberWorkspace } from 'src/domain/workspaces/infrastructure/persistence/local/queries/member-workspace';
 
 @Injectable()
 export class LocalArtifactsRepository extends ArtifactsRepository {
@@ -102,17 +103,37 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     await this.threadLinkRepo.insert({ threadId, artifactId });
   }
 
-  private accessibleTo(userId: UUID, options: ArtifactLookupOptions = {}) {
-    return {
-      userId,
-      thread: { workspaceId: personalOrMemberWorkspace(userId) },
+  /**
+   * A personal artifact is accessible to its owner, a workspace artifact to
+   * the workspace's members. Through a chat only the chat's user finds it.
+   */
+  private accessibleTo(
+    userId: UUID,
+    options: ArtifactLookupOptions = {},
+  ): FindOptionsWhere<ArtifactRecord>[] {
+    const filters: FindOptionsWhere<ArtifactRecord> = {
       ...(options.linkedThreadId && {
-        threadLinks: { threadId: options.linkedThreadId },
+        threadLinks: { threadId: options.linkedThreadId, thread: { userId } },
       }),
       ...(options.isAnonymous !== undefined && {
         isAnonymous: options.isAnonymous,
       }),
     };
+    return [
+      { userId, ...filters },
+      { workspaceId: memberWorkspace(userId), ...filters },
+    ];
+  }
+
+  private accessibleById(
+    id: UUID,
+    userId: UUID,
+    options?: ArtifactLookupOptions,
+  ): FindOptionsWhere<ArtifactRecord>[] {
+    return this.accessibleTo(userId, options).map((where) => ({
+      id,
+      ...where,
+    }));
   }
 
   async findById(
@@ -121,7 +142,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     options?: ArtifactLookupOptions,
   ): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
-      where: { id, ...this.accessibleTo(userId, options) },
+      where: this.accessibleById(id, userId, options),
     });
     return record ? this.artifactMapper.toDomain(record) : null;
   }
@@ -157,14 +178,11 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
 
   async findByWorkspaceId(
     workspaceId: UUID,
-    userId: UUID,
     options: ArtifactsByWorkspaceListOptions,
   ): Promise<Paginated<Artifact>> {
     const queryBuilder = this.artifactRepo
       .createQueryBuilder('artifact')
-      .innerJoin('artifact.thread', 'thread')
-      .where('artifact.userId = :userId', { userId })
-      .andWhere('thread.workspaceId = :workspaceId', { workspaceId })
+      .where('artifact.workspaceId = :workspaceId', { workspaceId })
       .andWhere('artifact.type IN (:...artifactTypes)', {
         artifactTypes: Object.values(ArtifactType),
       });
@@ -195,13 +213,28 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     });
   }
 
+  async deleteThreadLinksNotOwnedBy(
+    threadId: UUID,
+    owner: ArtifactOwner,
+  ): Promise<void> {
+    this.logger.log({ threadId, owner }, 'deleteThreadLinksNotOwnedBy');
+    const [ownerColumn, ownerId] =
+      owner.type === 'personal'
+        ? ['userId', owner.userId]
+        : ['workspaceId', owner.workspaceId];
+    await this.threadLinkRepo.query(
+      `DELETE FROM "thread_artifacts" WHERE "threadId" = $1 AND "artifactId" NOT IN (SELECT "id" FROM "artifacts" WHERE "${ownerColumn}" = $2)`,
+      [threadId, ownerId],
+    );
+  }
+
   async findByIdWithVersions(
     id: UUID,
     userId: UUID,
     options?: ArtifactLookupOptions,
   ): Promise<Artifact | null> {
     const record = await this.artifactRepo.findOne({
-      where: { id, ...this.accessibleTo(userId, options) },
+      where: this.accessibleById(id, userId, options),
       relations: { versions: true },
       order: { versions: { versionNumber: 'ASC' } },
     });

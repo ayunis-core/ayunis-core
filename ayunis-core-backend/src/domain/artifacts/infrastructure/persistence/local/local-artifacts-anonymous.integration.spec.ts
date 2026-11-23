@@ -32,8 +32,8 @@ describe('Anonymous artifacts (PostgreSQL)', () => {
   beforeEach(async () => {
     owner = randomUUID();
     chat = await insertChat(db, owner, null);
-    anonymousArtifact = await insertArtifact(db, owner, chat, true);
-    normalArtifact = await insertArtifact(db, owner, chat);
+    anonymousArtifact = await insertArtifact(db, chat, true);
+    normalArtifact = await insertArtifact(db, chat);
   }, 30_000);
 
   afterAll(async () => {
@@ -93,7 +93,7 @@ describe('Anonymous artifacts (PostgreSQL)', () => {
   });
 
   it('loads an anonymous artifact with its own dictionary and no other artifact’s', async () => {
-    const otherAnonymousArtifact = await insertArtifact(db, owner, chat, true);
+    const otherAnonymousArtifact = await insertArtifact(db, chat, true);
     await artifacts.addPiiMasks([
       mask(anonymousArtifact, 1, 'Anna Schmidt'),
       mask(anonymousArtifact, 2, 'Bernd Bauer'),

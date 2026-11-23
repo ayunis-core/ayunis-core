@@ -189,7 +189,7 @@ export class ArtifactsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'List of artifacts from chats in the workspace',
+    description: 'List of the artifacts the workspace owns',
     type: ArtifactListResponseDto,
   })
   @ApiQuery({ name: 'search', required: false, type: String })

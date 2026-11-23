@@ -2,12 +2,13 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { ArtifactVersion } from './artifact-version.entity';
 import type { ArtifactPiiMask } from './artifact-pii-mask.entity';
+import type { ArtifactOwner } from './artifact-owner';
 import { ArtifactType } from './value-objects/artifact-type.enum';
 
 interface ArtifactParams {
   id?: UUID;
-  threadId: UUID;
-  userId: UUID;
+  owner: ArtifactOwner;
+  creatorId: UUID | null;
   title: string;
   isAnonymous?: boolean;
   currentVersionNumber?: number;
@@ -20,8 +21,9 @@ interface ArtifactParams {
 export abstract class Artifact {
   public readonly id: UUID;
   public readonly type: ArtifactType;
-  public readonly threadId: UUID;
-  public readonly userId: UUID;
+  public readonly owner: ArtifactOwner;
+  /** Cleared when the creator's account is deleted. */
+  public readonly creatorId: UUID | null;
   public readonly title: string;
   /**
    * Created in an anonymous run: its content holds `{{pii:…}}` placeholders
@@ -38,8 +40,8 @@ export abstract class Artifact {
   protected constructor(params: ArtifactParams & { type: ArtifactType }) {
     this.id = params.id ?? randomUUID();
     this.type = params.type;
-    this.threadId = params.threadId;
-    this.userId = params.userId;
+    this.owner = params.owner;
+    this.creatorId = params.creatorId;
     this.title = params.title;
     this.isAnonymous = params.isAnonymous ?? false;
     this.currentVersionNumber = params.currentVersionNumber ?? 1;

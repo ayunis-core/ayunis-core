@@ -15,8 +15,12 @@ export class ArtifactDtoMapper {
     const dto = new ArtifactResponseDto();
     dto.id = artifact.id;
     dto.type = artifact.type;
-    dto.threadId = artifact.threadId;
-    dto.userId = artifact.userId;
+    dto.ownerType = artifact.owner.type;
+    if (artifact.owner.type === 'personal') {
+      dto.userId = artifact.owner.userId;
+    } else {
+      dto.workspaceId = artifact.owner.workspaceId;
+    }
     dto.title = artifact.title;
     dto.isAnonymous = artifact.isAnonymous;
     dto.letterheadId =

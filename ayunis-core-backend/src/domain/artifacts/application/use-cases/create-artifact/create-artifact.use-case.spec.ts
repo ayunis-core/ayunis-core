@@ -35,8 +35,8 @@ import {
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
-import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
-import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.use-case';
+import type { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ProviderServerError } from 'src/common/errors/provider.errors';
 import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
@@ -53,7 +53,7 @@ describe('CreateArtifactUseCase', () => {
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
-  let anonymizeTextForThreadUseCase: { execute: jest.Mock };
+  let anonymizeTextForOrgUseCase: { execute: jest.Mock };
   let getThreadPiiMasksUseCase: { execute: jest.Mock };
   let logger: LoggerMock;
 
@@ -84,14 +84,17 @@ describe('CreateArtifactUseCase', () => {
     } as unknown as jest.Mocked<ContextService>;
 
     const mockFindThreadUseCase = {
-      execute: jest.fn().mockResolvedValue({ thread: {}, isLongChat: false }),
+      execute: jest.fn().mockResolvedValue({
+        thread: { userId: mockUserId, workspaceId: null },
+        isLongChat: false,
+      }),
     };
 
     const mockFindLetterheadUseCase = {
       execute: jest.fn().mockResolvedValue({}),
     };
 
-    anonymizeTextForThreadUseCase = { execute: jest.fn() };
+    anonymizeTextForOrgUseCase = { execute: jest.fn() };
     getThreadPiiMasksUseCase = { execute: jest.fn().mockResolvedValue([]) };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -106,8 +109,8 @@ describe('CreateArtifactUseCase', () => {
         },
         UserContentMaskingService,
         {
-          provide: AnonymizeTextForThreadUseCase,
-          useValue: anonymizeTextForThreadUseCase,
+          provide: AnonymizeTextForOrgUseCase,
+          useValue: anonymizeTextForOrgUseCase,
         },
         ArtifactPlaceholdersService,
         ArtifactMaskAllocationLock,
@@ -169,8 +172,6 @@ describe('CreateArtifactUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(result.title).toBe('Quarterly Budget Report');
-    expect(result.threadId).toBe(mockThreadId);
-    expect(result.userId).toBe(mockUserId);
     expect(result).toBeInstanceOf(DocumentArtifact);
     expect((result as DocumentArtifact).letterheadId).toBeNull();
     expect(result.currentVersionNumber).toBe(1);
@@ -202,6 +203,40 @@ describe('CreateArtifactUseCase', () => {
       mockThreadId,
       result.id,
     );
+  });
+
+  it('gives an artifact created in a personal chat to the chat’s user and one created in a workspace chat to the workspace, never to the user', async () => {
+    const workspaceId = '523e4567-e89b-12d3-a456-426614174000' as UUID;
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+    const createIn = async (chatWorkspaceId: UUID | null) => {
+      findThreadUseCase.execute.mockResolvedValue({
+        thread: new Thread({
+          id: mockThreadId,
+          userId: mockUserId,
+          messages: [],
+          workspaceId: chatWorkspaceId,
+        }),
+        isLongChat: false,
+      });
+      const artifact = await useCase.execute(
+        new CreateArtifactCommand({
+          threadId: mockThreadId,
+          title: 'Sitzungsvorlage',
+          content: '<p>Beschlussvorschlag</p>',
+          authorType: AuthorType.ASSISTANT,
+        }),
+      );
+      return { owner: artifact.owner, creatorId: artifact.creatorId };
+    };
+
+    expect(await createIn(null)).toEqual({
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
+    });
+    expect(await createIn(workspaceId)).toEqual({
+      owner: { type: 'workspace', workspaceId },
+      creatorId: mockUserId,
+    });
   });
 
   it('should create an artifact with letterheadId when provided', async () => {
@@ -254,9 +289,9 @@ describe('CreateArtifactUseCase', () => {
       }),
       isLongChat: false,
     });
-    // Stands in for the chat's detection, which finds the typed name.
-    anonymizeTextForThreadUseCase.execute.mockImplementation(
-      (command: AnonymizeTextForThreadCommand) => {
+    // Stands in for the org's detection, which finds the typed name.
+    anonymizeTextForOrgUseCase.execute.mockImplementation(
+      (command: AnonymizeTextForOrgCommand) => {
         const start = command.text.indexOf('Max Mustermann');
         return Promise.resolve({
           anonymizedText: command.text,
@@ -395,7 +430,7 @@ describe('CreateArtifactUseCase', () => {
       }),
       isLongChat: false,
     });
-    anonymizeTextForThreadUseCase.execute.mockRejectedValue(
+    anonymizeTextForOrgUseCase.execute.mockRejectedValue(
       new ProviderServerError({ provider: 'anonymize' }),
     );
 

@@ -3,8 +3,8 @@ import { ArtifactMapper } from './artifact.mapper';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
-import { DocumentArtifactRecord } from '../schema/document-artifact.record';
-import { ArtifactVersionRecord } from '../schema/artifact-version.record';
+import { DocumentArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/document-artifact.record';
+import { ArtifactVersionRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/artifact-version.record';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 
 describe('ArtifactMapper', () => {
@@ -18,7 +18,7 @@ describe('ArtifactMapper', () => {
 
   const now = new Date('2026-02-18T10:00:00.000Z');
   const artifactId = randomUUID();
-  const threadId = randomUUID();
+  const workspaceId = randomUUID();
   const userId = randomUUID();
   const letterheadId = randomUUID();
 
@@ -26,8 +26,9 @@ describe('ArtifactMapper', () => {
     it('should map a record without versions to a domain entity', () => {
       const record = new DocumentArtifactRecord();
       record.id = artifactId;
-      record.threadId = threadId;
       record.userId = userId;
+      record.workspaceId = null;
+      record.creatorId = userId;
       record.title = 'Budget Report Q1 2026';
       record.letterheadId = null;
       record.currentVersionNumber = 3;
@@ -38,8 +39,8 @@ describe('ArtifactMapper', () => {
 
       expect(domain).toBeInstanceOf(DocumentArtifact);
       expect(domain.id).toBe(artifactId);
-      expect(domain.threadId).toBe(threadId);
-      expect(domain.userId).toBe(userId);
+      expect(domain.owner).toEqual({ type: 'personal', userId });
+      expect(domain.creatorId).toBe(userId);
       expect(domain.title).toBe('Budget Report Q1 2026');
       expect(domain.letterheadId).toBeNull();
       expect(domain.currentVersionNumber).toBe(3);
@@ -50,8 +51,9 @@ describe('ArtifactMapper', () => {
     it('should map a record with letterheadId to a domain entity', () => {
       const record = new DocumentArtifactRecord();
       record.id = artifactId;
-      record.threadId = threadId;
       record.userId = userId;
+      record.workspaceId = null;
+      record.creatorId = userId;
       record.title = 'Official Letter';
       record.letterheadId = letterheadId;
       record.currentVersionNumber = 1;
@@ -75,8 +77,9 @@ describe('ArtifactMapper', () => {
 
       const record = new DocumentArtifactRecord();
       record.id = artifactId;
-      record.threadId = threadId;
       record.userId = userId;
+      record.workspaceId = null;
+      record.creatorId = userId;
       record.title = 'Budget Report Q1 2026';
       record.letterheadId = null;
       record.currentVersionNumber = 1;
@@ -96,8 +99,8 @@ describe('ArtifactMapper', () => {
     it('should map a domain entity to a record', () => {
       const domain = new DocumentArtifact({
         id: artifactId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Budget Report Q1 2026',
         currentVersionNumber: 2,
         createdAt: now,
@@ -108,8 +111,9 @@ describe('ArtifactMapper', () => {
 
       expect(record).toBeInstanceOf(DocumentArtifactRecord);
       expect(record.id).toBe(artifactId);
-      expect(record.threadId).toBe(threadId);
       expect(record.userId).toBe(userId);
+      expect(record.workspaceId).toBeNull();
+      expect(record.creatorId).toBe(userId);
       expect(record.title).toBe('Budget Report Q1 2026');
       expect(record.letterheadId).toBeNull();
       expect(record.currentVersionNumber).toBe(2);
@@ -118,8 +122,8 @@ describe('ArtifactMapper', () => {
     it('should map a domain entity with letterheadId to a record', () => {
       const domain = new DocumentArtifact({
         id: artifactId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Official Letter',
         letterheadId,
         currentVersionNumber: 1,
@@ -130,6 +134,25 @@ describe('ArtifactMapper', () => {
       const record = mapper.toRecord(domain);
 
       expect(record.letterheadId).toBe(letterheadId);
+    });
+  });
+
+  describe('owner', () => {
+    it('stores a workspace artifact without an owning user and reads it back as the workspace’s, keeping a cleared creator', () => {
+      const record = mapper.toRecord(
+        new DocumentArtifact({
+          owner: { type: 'workspace', workspaceId },
+          creatorId: null,
+          title: 'Haushaltsplan',
+        }),
+      );
+
+      expect(record.userId).toBeNull();
+      expect(record.workspaceId).toBe(workspaceId);
+      expect(record.creatorId).toBeNull();
+      const domain = mapper.toDomain(record);
+      expect(domain.owner).toEqual({ type: 'workspace', workspaceId });
+      expect(domain.creatorId).toBeNull();
     });
   });
 
@@ -146,8 +169,8 @@ describe('ArtifactMapper', () => {
 
       const original = new DocumentArtifact({
         id: artifactId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Project Plan Document',
         letterheadId,
         currentVersionNumber: 1,
@@ -166,8 +189,8 @@ describe('ArtifactMapper', () => {
       const reconstructed = mapper.toDomain(record);
 
       expect(reconstructed.id).toBe(original.id);
-      expect(reconstructed.threadId).toBe(original.threadId);
-      expect(reconstructed.userId).toBe(original.userId);
+      expect(reconstructed.owner).toEqual(original.owner);
+      expect(reconstructed.creatorId).toBe(original.creatorId);
       expect(reconstructed.title).toBe(original.title);
       expect(reconstructed.letterheadId).toBe(original.letterheadId);
       expect(reconstructed.currentVersionNumber).toBe(

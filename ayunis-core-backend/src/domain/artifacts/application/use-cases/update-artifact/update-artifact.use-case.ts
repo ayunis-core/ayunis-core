@@ -123,7 +123,6 @@ export class UpdateArtifactUseCase {
       );
     }
     return this.userContentMaskingService.mask({
-      threadId: artifact.threadId,
       orgId,
       type: artifact.type,
       content,

@@ -20,7 +20,6 @@ describe('FindArtifactWithVersionsUseCase', () => {
 
   const mockOrgId = '223e4567-e89b-12d3-a456-426614174999' as UUID;
   const mockArtifactId = '323e4567-e89b-12d3-a456-426614174000' as UUID;
-  const mockThreadId = '223e4567-e89b-12d3-a456-426614174000' as UUID;
 
   beforeEach(async () => {
     const mockRepository = {
@@ -76,8 +75,8 @@ describe('FindArtifactWithVersionsUseCase', () => {
 
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Municipal Budget Proposal',
       currentVersionNumber: 2,
       versions,

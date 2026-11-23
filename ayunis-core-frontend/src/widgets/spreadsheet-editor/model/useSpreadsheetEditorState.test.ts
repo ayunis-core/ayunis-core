@@ -39,7 +39,7 @@ function artifact(
   return {
     id,
     type: 'spreadsheet',
-    threadId: 'thread-id',
+    ownerType: 'personal',
     userId: 'user-id',
     title: id,
     isAnonymous: false,

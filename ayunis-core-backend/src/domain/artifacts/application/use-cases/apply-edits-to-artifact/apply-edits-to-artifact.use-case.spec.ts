@@ -104,8 +104,8 @@ describe('ApplyEditsToArtifactUseCase', () => {
 
     return new DocumentArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Test Document',
       ...params,
       currentVersionNumber: 1,
@@ -217,8 +217,8 @@ describe('ApplyEditsToArtifactUseCase', () => {
     it('should throw ArtifactExpectedVersionMismatchError when expected version does not match', async () => {
       const advancedArtifact = new DocumentArtifact({
         id: mockArtifactId,
-        threadId: mockThreadId,
-        userId: mockUserId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
         title: 'Test Document',
         currentVersionNumber: 5,
         versions: [
@@ -272,8 +272,8 @@ describe('ApplyEditsToArtifactUseCase', () => {
       artifactsRepository.findById.mockResolvedValue(
         new DocumentArtifact({
           id: mockArtifactId,
-          threadId: mockThreadId,
-          userId: mockUserId,
+          owner: { type: 'personal', userId: mockUserId },
+          creatorId: mockUserId,
           title: 'Test Document',
           currentVersionNumber: 2,
         }),
@@ -412,8 +412,8 @@ describe('ApplyEditsToArtifactUseCase', () => {
       artifactsRepository.findById.mockResolvedValue(
         new DocumentArtifact({
           id: mockArtifactId,
-          threadId: mockThreadId,
-          userId: mockUserId,
+          owner: { type: 'personal', userId: mockUserId },
+          creatorId: mockUserId,
           title: 'Test Document',
           isAnonymous: true,
           currentVersionNumber: 2,

@@ -8,6 +8,7 @@ import {
   getThreadsControllerFindOneQueryKey,
   getThreadAiContextControllerGetAiContextQueryKey,
   getWorkspacesControllerFindAllQueryKey,
+  getArtifactsControllerFindByThreadQueryKey,
 } from '@/shared/api/generated/ayunisCoreAPI';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
@@ -47,6 +48,10 @@ export function useAssignThreadToWorkspace() {
       });
       void queryClient.invalidateQueries({
         queryKey: getThreadAiContextControllerGetAiContextQueryKey(threadId),
+      });
+      // The move drops the chat's links to artifacts of its old scope.
+      void queryClient.invalidateQueries({
+        queryKey: getArtifactsControllerFindByThreadQueryKey(threadId),
       });
       // The workspace list is ordered by chat activity, so it must refetch.
       void queryClient.invalidateQueries({

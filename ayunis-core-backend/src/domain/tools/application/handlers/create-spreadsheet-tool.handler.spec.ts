@@ -59,8 +59,8 @@ describe('CreateSpreadsheetToolHandler', () => {
   function createMockArtifact(): SpreadsheetArtifact {
     return new SpreadsheetArtifact({
       id: mockArtifactId,
-      threadId: mockThreadId,
-      userId: mockUserId,
+      owner: { type: 'personal', userId: mockUserId },
+      creatorId: mockUserId,
       title: 'Budget 2026',
       currentVersionNumber: 1,
     });

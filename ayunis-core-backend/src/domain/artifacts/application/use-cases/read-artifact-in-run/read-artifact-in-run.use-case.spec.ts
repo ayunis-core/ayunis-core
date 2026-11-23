@@ -87,8 +87,8 @@ describe('ReadArtifactInRunUseCase', () => {
     findByIdWithVersions.mockResolvedValue(
       new DocumentArtifact({
         id: artifactId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Brief an {{pii:PERSON_NAME_1}}',
         isAnonymous: params.isAnonymous ?? true,
         piiMasks: params.piiMasks ?? [
@@ -143,8 +143,8 @@ describe('ReadArtifactInRunUseCase', () => {
     findByIdWithVersions.mockResolvedValue(
       new SpreadsheetArtifact({
         id: artifactId,
-        threadId,
-        userId,
+        owner: { type: 'personal', userId },
+        creatorId: userId,
         title: 'Kontakte',
         isAnonymous: true,
         piiMasks: [

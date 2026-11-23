@@ -9881,6 +9881,626 @@
         "tags": ["release-notes"]
       }
     },
+    "/artifacts": {
+      "post": {
+        "operationId": "ArtifactsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The artifact has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new artifact (document)",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/{id}": {
+      "patch": {
+        "operationId": "ArtifactsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new version has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Letterhead updated (no content change)"
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Update an artifact (add a new version)",
+        "tags": ["artifacts"]
+      },
+      "get": {
+        "operationId": "ArtifactsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The artifact with all versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Get an artifact by ID with all versions",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/thread/{threadId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByThread",
+        "parameters": [
+          {
+            "name": "threadId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the thread",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artifacts for the thread",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArtifactResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all artifacts for a thread",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "ArtifactsController_findByWorkspace",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the workspace",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search artifacts by title",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by type",
+            "schema": {
+              "enum": ["document", "diagram", "spreadsheet"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of artifacts to return",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of artifacts to skip",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of the artifacts the workspace owns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all artifacts in a workspace",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/{id}/revert": {
+      "post": {
+        "operationId": "ArtifactsController_revert",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevertArtifactDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "A new version was created with the reverted content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact or version not found"
+          }
+        },
+        "summary": "Revert an artifact to a specific version",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/{id}/export": {
+      "get": {
+        "operationId": "ArtifactsController_export",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": true,
+            "in": "query",
+            "description": "Export format",
+            "schema": {
+              "enum": ["docx", "pdf", "xlsx", "csv"],
+              "type": "string",
+              "example": "docx"
+            }
+          },
+          {
+            "name": "versionNumber",
+            "required": false,
+            "in": "query",
+            "description": "Version number to export; defaults to the current version",
+            "schema": {
+              "example": 2,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The exported file",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
+        "tags": ["artifacts"]
+      }
+    },
+    "/letterheads": {
+      "post": {
+        "operationId": "LetterheadsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The letterhead has been created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          }
+        },
+        "summary": "Create a new letterhead",
+        "tags": ["letterheads"]
+      },
+      "get": {
+        "operationId": "LetterheadsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of letterheads",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LetterheadResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List all letterheads for the current org",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/preview": {
+      "post": {
+        "operationId": "LetterheadsController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The rendered sample letter",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid PDF or page margins"
+          },
+          "403": {
+            "description": "Organization administrator required"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Render a sample letter with the draft letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/{id}": {
+      "get": {
+        "operationId": "LetterheadsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The letterhead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Get a letterhead by ID",
+        "tags": ["letterheads"]
+      },
+      "patch": {
+        "operationId": "LetterheadsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLetterheadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated letterhead",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterheadResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Update a letterhead",
+        "tags": ["letterheads"]
+      },
+      "delete": {
+        "operationId": "LetterheadsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Letterhead deleted"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Delete a letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/{id}/first-page-pdf": {
+      "get": {
+        "operationId": "LetterheadsController_downloadFirstPagePdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The first-page PDF file"
+          },
+          "404": {
+            "description": "Letterhead not found"
+          }
+        },
+        "summary": "Download the first-page PDF of a letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/letterheads/{id}/continuation-page-pdf": {
+      "get": {
+        "operationId": "LetterheadsController_downloadContinuationPagePdf",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the letterhead",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The continuation-page PDF file"
+          },
+          "404": {
+            "description": "Letterhead or PDF not found"
+          }
+        },
+        "summary": "Download the continuation-page PDF of a letterhead",
+        "tags": ["letterheads"]
+      }
+    },
+    "/document-defaults": {
+      "get": {
+        "description": "Available to authenticated organization members.",
+        "operationId": "DocumentDefaultsController_find",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTypographyDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current organization’s document defaults",
+        "tags": ["document-defaults"]
+      },
+      "patch": {
+        "description": "Omitted fields are preserved. Send null to reset a field.",
+        "operationId": "DocumentDefaultsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentDefaultsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTypographyDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "403": {
+            "description": "User is not an organization admin"
+          }
+        },
+        "summary": "Update the current organization’s document defaults",
+        "tags": ["document-defaults"]
+      }
+    },
     "/super-admin/platform-config/credits-per-euro": {
       "get": {
         "description": "Retrieve the global credits-per-euro value used for credit calculations. Super admin only.",
@@ -12586,626 +13206,6 @@
         },
         "summary": "Delete a skill template",
         "tags": ["Super Admin Skill Templates"]
-      }
-    },
-    "/artifacts": {
-      "post": {
-        "operationId": "ArtifactsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateArtifactDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The artifact has been created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input data"
-          }
-        },
-        "summary": "Create a new artifact (document)",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/{id}": {
-      "patch": {
-        "operationId": "ArtifactsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateArtifactDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The new version has been created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
-                }
-              }
-            }
-          },
-          "204": {
-            "description": "Letterhead updated (no content change)"
-          },
-          "404": {
-            "description": "Artifact not found"
-          }
-        },
-        "summary": "Update an artifact (add a new version)",
-        "tags": ["artifacts"]
-      },
-      "get": {
-        "operationId": "ArtifactsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The artifact with all versions",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Artifact not found"
-          }
-        },
-        "summary": "Get an artifact by ID with all versions",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/thread/{threadId}": {
-      "get": {
-        "operationId": "ArtifactsController_findByThread",
-        "parameters": [
-          {
-            "name": "threadId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the thread",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of artifacts for the thread",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArtifactResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get all artifacts for a thread",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/workspace/{workspaceId}": {
-      "get": {
-        "operationId": "ArtifactsController_findByWorkspace",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the workspace",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "description": "Search artifacts by title",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "type",
-            "required": false,
-            "in": "query",
-            "description": "Filter by type",
-            "schema": {
-              "enum": ["document", "diagram", "spreadsheet"],
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Maximum number of artifacts to return",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "Number of artifacts to skip",
-            "schema": {
-              "default": 0,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of artifacts from chats in the workspace",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactListResponseDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get all artifacts in a workspace",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/{id}/revert": {
-      "post": {
-        "operationId": "ArtifactsController_revert",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RevertArtifactDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "A new version was created with the reverted content",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ArtifactVersionResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Artifact or version not found"
-          }
-        },
-        "summary": "Revert an artifact to a specific version",
-        "tags": ["artifacts"]
-      }
-    },
-    "/artifacts/{id}/export": {
-      "get": {
-        "operationId": "ArtifactsController_export",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the artifact",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "format",
-            "required": true,
-            "in": "query",
-            "description": "Export format",
-            "schema": {
-              "enum": ["docx", "pdf", "xlsx", "csv"],
-              "type": "string",
-              "example": "docx"
-            }
-          },
-          {
-            "name": "versionNumber",
-            "required": false,
-            "in": "query",
-            "description": "Version number to export; defaults to the current version",
-            "schema": {
-              "example": 2,
-              "type": "number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The exported file",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Artifact not found"
-          }
-        },
-        "summary": "Export an artifact as DOCX, PDF, XLSX, or CSV",
-        "tags": ["artifacts"]
-      }
-    },
-    "/letterheads": {
-      "post": {
-        "operationId": "LetterheadsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLetterheadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "The letterhead has been created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LetterheadResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input data"
-          }
-        },
-        "summary": "Create a new letterhead",
-        "tags": ["letterheads"]
-      },
-      "get": {
-        "operationId": "LetterheadsController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "List of letterheads",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LetterheadResponseDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List all letterheads for the current org",
-        "tags": ["letterheads"]
-      }
-    },
-    "/letterheads/preview": {
-      "post": {
-        "operationId": "LetterheadsController_preview",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/PreviewLetterheadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The rendered sample letter",
-            "content": {
-              "application/pdf": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid PDF or page margins"
-          },
-          "403": {
-            "description": "Organization administrator required"
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Render a sample letter with the draft letterhead",
-        "tags": ["letterheads"]
-      }
-    },
-    "/letterheads/{id}": {
-      "get": {
-        "operationId": "LetterheadsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The letterhead",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LetterheadResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Get a letterhead by ID",
-        "tags": ["letterheads"]
-      },
-      "patch": {
-        "operationId": "LetterheadsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLetterheadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "The updated letterhead",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LetterheadResponseDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Update a letterhead",
-        "tags": ["letterheads"]
-      },
-      "delete": {
-        "operationId": "LetterheadsController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Letterhead deleted"
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Delete a letterhead",
-        "tags": ["letterheads"]
-      }
-    },
-    "/letterheads/{id}/first-page-pdf": {
-      "get": {
-        "operationId": "LetterheadsController_downloadFirstPagePdf",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The first-page PDF file"
-          },
-          "404": {
-            "description": "Letterhead not found"
-          }
-        },
-        "summary": "Download the first-page PDF of a letterhead",
-        "tags": ["letterheads"]
-      }
-    },
-    "/letterheads/{id}/continuation-page-pdf": {
-      "get": {
-        "operationId": "LetterheadsController_downloadContinuationPagePdf",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "The UUID of the letterhead",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The continuation-page PDF file"
-          },
-          "404": {
-            "description": "Letterhead or PDF not found"
-          }
-        },
-        "summary": "Download the continuation-page PDF of a letterhead",
-        "tags": ["letterheads"]
-      }
-    },
-    "/document-defaults": {
-      "get": {
-        "description": "Available to authenticated organization members.",
-        "operationId": "DocumentDefaultsController_find",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DocumentTypographyDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get the current organization’s document defaults",
-        "tags": ["document-defaults"]
-      },
-      "patch": {
-        "description": "Omitted fields are preserved. Send null to reset a field.",
-        "operationId": "DocumentDefaultsController_update",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDocumentDefaultsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DocumentTypographyDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input data"
-          },
-          "403": {
-            "description": "User is not an organization admin"
-          }
-        },
-        "summary": "Update the current organization’s document defaults",
-        "tags": ["document-defaults"]
       }
     },
     "/memory": {
@@ -23878,6 +23878,563 @@
         },
         "required": ["count"]
       },
+      "CreateArtifactDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the document",
+            "example": "Meeting Notes Q1 2026"
+          },
+          "content": {
+            "type": "string",
+            "description": "HTML content of the document",
+            "example": "<p>Meeting notes content...</p>"
+          },
+          "threadId": {
+            "type": "string",
+            "description": "The thread this artifact belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          },
+          "letterheadId": {
+            "type": "string",
+            "description": "Optional letterhead to apply to this artifact",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid"
+          }
+        },
+        "required": ["title", "content", "threadId"]
+      },
+      "ArtifactVersionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the version",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "artifactId": {
+            "type": "string",
+            "description": "The artifact this version belongs to",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "versionNumber": {
+            "type": "number",
+            "description": "Sequential version number",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "description": "HTML content of this version",
+            "example": "<p>Document content...</p>"
+          },
+          "authorType": {
+            "type": "string",
+            "description": "Who authored this version",
+            "enum": ["USER", "ASSISTANT"],
+            "example": "ASSISTANT"
+          },
+          "authorId": {
+            "type": "object",
+            "description": "ID of the author (user ID if authored by user, null if AI)",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When this version was created",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "artifactId",
+          "versionNumber",
+          "content",
+          "authorType",
+          "createdAt"
+        ]
+      },
+      "ArtifactPiiMaskResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}}",
+            "example": "{{pii:PERSON_NAME_1}}"
+          },
+          "value": {
+            "type": "string",
+            "description": "The real value the placeholder stands for",
+            "example": "Max Mustermann"
+          },
+          "category": {
+            "description": "PII category of the value",
+            "example": "person_name",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PiiCategory"
+              }
+            ]
+          }
+        },
+        "required": ["token", "value", "category"]
+      },
+      "ArtifactResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the artifact",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "type": {
+            "type": "string",
+            "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
+            "enum": ["document", "diagram", "spreadsheet"],
+            "example": "document"
+          },
+          "ownerType": {
+            "type": "string",
+            "description": "Whether the artifact belongs to a user (created in a personal chat) or a workspace (created in a workspace chat)",
+            "enum": ["personal", "workspace"]
+          },
+          "userId": {
+            "type": "string",
+            "description": "The owning user of a personal artifact",
+            "format": "uuid"
+          },
+          "workspaceId": {
+            "type": "string",
+            "description": "The owning workspace of a workspace artifact",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the document",
+            "example": "Meeting Notes Q1 2026"
+          },
+          "letterheadId": {
+            "type": "string",
+            "description": "The letterhead applied to this artifact",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "nullable": true
+          },
+          "isAnonymous": {
+            "type": "boolean",
+            "description": "Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks",
+            "example": false
+          },
+          "currentVersionNumber": {
+            "type": "number",
+            "description": "Current version number",
+            "example": 3
+          },
+          "versions": {
+            "description": "All versions of this artifact (included when fetching by ID)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactVersionResponseDto"
+            }
+          },
+          "piiMasks": {
+            "description": "The anonymous artifact's own placeholder dictionary (included with the versions)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactPiiMaskResponseDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the artifact was created",
+            "example": "2026-01-15T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When the artifact was last updated",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "ownerType",
+          "title",
+          "isAnonymous",
+          "currentVersionNumber",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UpdateArtifactDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Updated HTML content of the document. When omitted, no new version is created.",
+            "example": "<p>Updated meeting notes...</p>"
+          },
+          "letterheadId": {
+            "type": "string",
+            "description": "Optional letterhead to apply to this artifact (null to remove)",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "ArtifactListResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "RevertArtifactDto": {
+        "type": "object",
+        "properties": {
+          "versionNumber": {
+            "type": "number",
+            "description": "The version number to revert to",
+            "example": 1
+          }
+        },
+        "required": ["versionNumber"]
+      },
+      "CreateLetterheadDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "type": "string",
+            "enum": [
+              "Arial",
+              "Times New Roman",
+              "Courier New",
+              "Calibri",
+              "Cambria",
+              "Georgia",
+              "Roboto",
+              "Open Sans",
+              "Lato",
+              "Montserrat",
+              "Inter",
+              "Noto Sans",
+              "Source Sans 3",
+              "Noto Serif",
+              "Fira Sans",
+              ""
+            ],
+            "description": "Font family. Send an empty string to inherit the organization default."
+          },
+          "fontSizePt": {
+            "type": "string",
+            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the letterhead",
+            "example": "Stadtverwaltung Musterstadt"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the letterhead (used by AI for context)",
+            "example": "Offizielles Briefpapier der Stadtverwaltung"
+          },
+          "firstPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          },
+          "continuationPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          }
+        },
+        "required": ["name", "firstPageMargins", "continuationPageMargins"]
+      },
+      "DocumentFontFamily": {
+        "type": "string",
+        "enum": [
+          "Arial",
+          "Times New Roman",
+          "Courier New",
+          "Calibri",
+          "Cambria",
+          "Georgia",
+          "Roboto",
+          "Open Sans",
+          "Lato",
+          "Montserrat",
+          "Inter",
+          "Noto Sans",
+          "Source Sans 3",
+          "Noto Serif",
+          "Fira Sans"
+        ]
+      },
+      "PageMarginsDto": {
+        "type": "object",
+        "properties": {
+          "top": {
+            "type": "number",
+            "description": "Top margin in mm",
+            "example": 55
+          },
+          "bottom": {
+            "type": "number",
+            "description": "Bottom margin in mm",
+            "example": 20
+          },
+          "left": {
+            "type": "number",
+            "description": "Left margin in mm",
+            "example": 25
+          },
+          "right": {
+            "type": "number",
+            "description": "Right margin in mm",
+            "example": 15
+          }
+        },
+        "required": ["top", "bottom", "left", "right"]
+      },
+      "LetterheadResponseDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentFontFamily"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 72,
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the letterhead",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the letterhead",
+            "example": "Stadtverwaltung Musterstadt"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the letterhead",
+            "example": "Offizielles Briefpapier der Stadtverwaltung",
+            "nullable": true
+          },
+          "firstPageMargins": {
+            "description": "Margins for the first page in mm",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PageMarginsDto"
+              }
+            ]
+          },
+          "continuationPageMargins": {
+            "description": "Margins for continuation pages in mm",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PageMarginsDto"
+              }
+            ]
+          },
+          "hasContinuationPage": {
+            "type": "boolean",
+            "description": "Whether a continuation page PDF is configured"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "When the letterhead was created",
+            "example": "2026-01-15T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When the letterhead was last updated",
+            "example": "2026-01-15T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "fontFamily",
+          "fontSizePt",
+          "id",
+          "name",
+          "firstPageMargins",
+          "continuationPageMargins",
+          "hasContinuationPage",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PreviewLetterheadDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "type": "string",
+            "enum": [
+              "Arial",
+              "Times New Roman",
+              "Courier New",
+              "Calibri",
+              "Cambria",
+              "Georgia",
+              "Roboto",
+              "Open Sans",
+              "Lato",
+              "Montserrat",
+              "Inter",
+              "Noto Sans",
+              "Source Sans 3",
+              "Noto Serif",
+              "Fira Sans",
+              ""
+            ],
+            "description": "Font family. Send an empty string to inherit the organization default."
+          },
+          "fontSizePt": {
+            "type": "string",
+            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
+          },
+          "letterheadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstPagePdf": {
+            "type": "string",
+            "format": "binary"
+          },
+          "continuationPagePdf": {
+            "type": "string",
+            "format": "binary"
+          },
+          "firstPageMargins": {
+            "type": "string",
+            "description": "First-page margins in millimeters, as a JSON string"
+          },
+          "continuationPageMargins": {
+            "type": "string",
+            "description": "Continuation margins in millimeters, as a JSON string"
+          },
+          "removeContinuationPage": {
+            "type": "string",
+            "enum": ["true"]
+          },
+          "language": {
+            "type": "string",
+            "enum": ["de", "en"]
+          }
+        },
+        "required": ["firstPageMargins", "continuationPageMargins"]
+      },
+      "UpdateLetterheadDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "type": "string",
+            "enum": [
+              "Arial",
+              "Times New Roman",
+              "Courier New",
+              "Calibri",
+              "Cambria",
+              "Georgia",
+              "Roboto",
+              "Open Sans",
+              "Lato",
+              "Montserrat",
+              "Inter",
+              "Noto Sans",
+              "Source Sans 3",
+              "Noto Serif",
+              "Fira Sans",
+              ""
+            ],
+            "description": "Font family. Send an empty string to inherit the organization default."
+          },
+          "fontSizePt": {
+            "type": "string",
+            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the letterhead",
+            "example": "Stadtverwaltung Musterstadt — Neues Design"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the letterhead",
+            "example": "Überarbeitetes Briefpapier 2026"
+          },
+          "firstPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          },
+          "continuationPageMargins": {
+            "type": "string",
+            "description": "JSON string of { top, bottom, left, right } margins in mm"
+          },
+          "removeContinuationPage": {
+            "type": "string",
+            "description": "Set to \"true\" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded."
+          }
+        }
+      },
+      "DocumentTypographyDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentFontFamily"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 72,
+            "nullable": true
+          }
+        },
+        "required": ["fontFamily", "fontSizePt"]
+      },
+      "UpdateDocumentDefaultsDto": {
+        "type": "object",
+        "properties": {
+          "fontFamily": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentFontFamily"
+              }
+            ]
+          },
+          "fontSizePt": {
+            "type": "integer",
+            "minimum": 6,
+            "maximum": 72,
+            "nullable": true
+          }
+        }
+      },
       "CreditsPerEuroResponseDto": {
         "type": "object",
         "properties": {
@@ -25838,559 +26395,6 @@
             "type": "boolean",
             "description": "Whether copied skills should be pinned by default (only for pre_created_copy mode)",
             "example": false
-          }
-        }
-      },
-      "CreateArtifactDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Title of the document",
-            "example": "Meeting Notes Q1 2026"
-          },
-          "content": {
-            "type": "string",
-            "description": "HTML content of the document",
-            "example": "<p>Meeting notes content...</p>"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "The thread this artifact belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          },
-          "letterheadId": {
-            "type": "string",
-            "description": "Optional letterhead to apply to this artifact",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid"
-          }
-        },
-        "required": ["title", "content", "threadId"]
-      },
-      "ArtifactVersionResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the version",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "artifactId": {
-            "type": "string",
-            "description": "The artifact this version belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "versionNumber": {
-            "type": "number",
-            "description": "Sequential version number",
-            "example": 1
-          },
-          "content": {
-            "type": "string",
-            "description": "HTML content of this version",
-            "example": "<p>Document content...</p>"
-          },
-          "authorType": {
-            "type": "string",
-            "description": "Who authored this version",
-            "enum": ["USER", "ASSISTANT"],
-            "example": "ASSISTANT"
-          },
-          "authorId": {
-            "type": "object",
-            "description": "ID of the author (user ID if authored by user, null if AI)",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When this version was created",
-            "example": "2026-01-15T10:30:00.000Z"
-          }
-        },
-        "required": [
-          "id",
-          "artifactId",
-          "versionNumber",
-          "content",
-          "authorType",
-          "createdAt"
-        ]
-      },
-      "ArtifactPiiMaskResponseDto": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "description": "The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}}",
-            "example": "{{pii:PERSON_NAME_1}}"
-          },
-          "value": {
-            "type": "string",
-            "description": "The real value the placeholder stands for",
-            "example": "Max Mustermann"
-          },
-          "category": {
-            "description": "PII category of the value",
-            "example": "person_name",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PiiCategory"
-              }
-            ]
-          }
-        },
-        "required": ["token", "value", "category"]
-      },
-      "ArtifactResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the artifact",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "type": {
-            "type": "string",
-            "description": "The kind of artifact — document (HTML) or diagram (mermaid)",
-            "enum": ["document", "diagram", "spreadsheet"],
-            "example": "document"
-          },
-          "threadId": {
-            "type": "string",
-            "description": "The thread this artifact belongs to",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "userId": {
-            "type": "string",
-            "description": "The user who owns this artifact",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "title": {
-            "type": "string",
-            "description": "Title of the document",
-            "example": "Meeting Notes Q1 2026"
-          },
-          "letterheadId": {
-            "type": "string",
-            "description": "The letterhead applied to this artifact",
-            "format": "uuid",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "nullable": true
-          },
-          "isAnonymous": {
-            "type": "boolean",
-            "description": "Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks",
-            "example": false
-          },
-          "currentVersionNumber": {
-            "type": "number",
-            "description": "Current version number",
-            "example": 3
-          },
-          "versions": {
-            "description": "All versions of this artifact (included when fetching by ID)",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArtifactVersionResponseDto"
-            }
-          },
-          "piiMasks": {
-            "description": "The anonymous artifact's own placeholder dictionary (included with the versions)",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArtifactPiiMaskResponseDto"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the artifact was created",
-            "example": "2026-01-15T10:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "When the artifact was last updated",
-            "example": "2026-01-15T10:30:00.000Z"
-          }
-        },
-        "required": [
-          "id",
-          "type",
-          "threadId",
-          "userId",
-          "title",
-          "isAnonymous",
-          "currentVersionNumber",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "UpdateArtifactDto": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "description": "Updated HTML content of the document. When omitted, no new version is created.",
-            "example": "<p>Updated meeting notes...</p>"
-          },
-          "letterheadId": {
-            "type": "string",
-            "description": "Optional letterhead to apply to this artifact (null to remove)",
-            "example": "123e4567-e89b-12d3-a456-426614174000",
-            "format": "uuid",
-            "nullable": true
-          }
-        }
-      },
-      "ArtifactListResponseDto": {
-        "type": "object",
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ArtifactResponseDto"
-            }
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": ["data", "pagination"]
-      },
-      "RevertArtifactDto": {
-        "type": "object",
-        "properties": {
-          "versionNumber": {
-            "type": "number",
-            "description": "The version number to revert to",
-            "example": 1
-          }
-        },
-        "required": ["versionNumber"]
-      },
-      "CreateLetterheadDto": {
-        "type": "object",
-        "properties": {
-          "fontFamily": {
-            "type": "string",
-            "enum": [
-              "Arial",
-              "Times New Roman",
-              "Courier New",
-              "Calibri",
-              "Cambria",
-              "Georgia",
-              "Roboto",
-              "Open Sans",
-              "Lato",
-              "Montserrat",
-              "Inter",
-              "Noto Sans",
-              "Source Sans 3",
-              "Noto Serif",
-              "Fira Sans",
-              ""
-            ],
-            "description": "Font family. Send an empty string to inherit the organization default."
-          },
-          "fontSizePt": {
-            "type": "string",
-            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the letterhead",
-            "example": "Stadtverwaltung Musterstadt"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the letterhead (used by AI for context)",
-            "example": "Offizielles Briefpapier der Stadtverwaltung"
-          },
-          "firstPageMargins": {
-            "type": "string",
-            "description": "JSON string of { top, bottom, left, right } margins in mm"
-          },
-          "continuationPageMargins": {
-            "type": "string",
-            "description": "JSON string of { top, bottom, left, right } margins in mm"
-          }
-        },
-        "required": ["name", "firstPageMargins", "continuationPageMargins"]
-      },
-      "DocumentFontFamily": {
-        "type": "string",
-        "enum": [
-          "Arial",
-          "Times New Roman",
-          "Courier New",
-          "Calibri",
-          "Cambria",
-          "Georgia",
-          "Roboto",
-          "Open Sans",
-          "Lato",
-          "Montserrat",
-          "Inter",
-          "Noto Sans",
-          "Source Sans 3",
-          "Noto Serif",
-          "Fira Sans"
-        ]
-      },
-      "PageMarginsDto": {
-        "type": "object",
-        "properties": {
-          "top": {
-            "type": "number",
-            "description": "Top margin in mm",
-            "example": 55
-          },
-          "bottom": {
-            "type": "number",
-            "description": "Bottom margin in mm",
-            "example": 20
-          },
-          "left": {
-            "type": "number",
-            "description": "Left margin in mm",
-            "example": 25
-          },
-          "right": {
-            "type": "number",
-            "description": "Right margin in mm",
-            "example": 15
-          }
-        },
-        "required": ["top", "bottom", "left", "right"]
-      },
-      "LetterheadResponseDto": {
-        "type": "object",
-        "properties": {
-          "fontFamily": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DocumentFontFamily"
-              }
-            ]
-          },
-          "fontSizePt": {
-            "type": "integer",
-            "minimum": 6,
-            "maximum": 72,
-            "nullable": true
-          },
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of the letterhead",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the letterhead",
-            "example": "Stadtverwaltung Musterstadt"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the letterhead",
-            "example": "Offizielles Briefpapier der Stadtverwaltung",
-            "nullable": true
-          },
-          "firstPageMargins": {
-            "description": "Margins for the first page in mm",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PageMarginsDto"
-              }
-            ]
-          },
-          "continuationPageMargins": {
-            "description": "Margins for continuation pages in mm",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PageMarginsDto"
-              }
-            ]
-          },
-          "hasContinuationPage": {
-            "type": "boolean",
-            "description": "Whether a continuation page PDF is configured"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "When the letterhead was created",
-            "example": "2026-01-15T10:00:00.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "When the letterhead was last updated",
-            "example": "2026-01-15T10:30:00.000Z"
-          }
-        },
-        "required": [
-          "fontFamily",
-          "fontSizePt",
-          "id",
-          "name",
-          "firstPageMargins",
-          "continuationPageMargins",
-          "hasContinuationPage",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "PreviewLetterheadDto": {
-        "type": "object",
-        "properties": {
-          "fontFamily": {
-            "type": "string",
-            "enum": [
-              "Arial",
-              "Times New Roman",
-              "Courier New",
-              "Calibri",
-              "Cambria",
-              "Georgia",
-              "Roboto",
-              "Open Sans",
-              "Lato",
-              "Montserrat",
-              "Inter",
-              "Noto Sans",
-              "Source Sans 3",
-              "Noto Serif",
-              "Fira Sans",
-              ""
-            ],
-            "description": "Font family. Send an empty string to inherit the organization default."
-          },
-          "fontSizePt": {
-            "type": "string",
-            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
-          },
-          "letterheadId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "firstPagePdf": {
-            "type": "string",
-            "format": "binary"
-          },
-          "continuationPagePdf": {
-            "type": "string",
-            "format": "binary"
-          },
-          "firstPageMargins": {
-            "type": "string",
-            "description": "First-page margins in millimeters, as a JSON string"
-          },
-          "continuationPageMargins": {
-            "type": "string",
-            "description": "Continuation margins in millimeters, as a JSON string"
-          },
-          "removeContinuationPage": {
-            "type": "string",
-            "enum": ["true"]
-          },
-          "language": {
-            "type": "string",
-            "enum": ["de", "en"]
-          }
-        },
-        "required": ["firstPageMargins", "continuationPageMargins"]
-      },
-      "UpdateLetterheadDto": {
-        "type": "object",
-        "properties": {
-          "fontFamily": {
-            "type": "string",
-            "enum": [
-              "Arial",
-              "Times New Roman",
-              "Courier New",
-              "Calibri",
-              "Cambria",
-              "Georgia",
-              "Roboto",
-              "Open Sans",
-              "Lato",
-              "Montserrat",
-              "Inter",
-              "Noto Sans",
-              "Source Sans 3",
-              "Noto Serif",
-              "Fira Sans",
-              ""
-            ],
-            "description": "Font family. Send an empty string to inherit the organization default."
-          },
-          "fontSizePt": {
-            "type": "string",
-            "description": "Font size in points (6–72). Send an empty string to inherit the organization default."
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the letterhead",
-            "example": "Stadtverwaltung Musterstadt — Neues Design"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the letterhead",
-            "example": "Überarbeitetes Briefpapier 2026"
-          },
-          "firstPageMargins": {
-            "type": "string",
-            "description": "JSON string of { top, bottom, left, right } margins in mm"
-          },
-          "continuationPageMargins": {
-            "type": "string",
-            "description": "JSON string of { top, bottom, left, right } margins in mm"
-          },
-          "removeContinuationPage": {
-            "type": "string",
-            "description": "Set to \"true\" to remove the continuation page PDF. Ignored if a new continuationPagePdf file is uploaded."
-          }
-        }
-      },
-      "DocumentTypographyDto": {
-        "type": "object",
-        "properties": {
-          "fontFamily": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DocumentFontFamily"
-              }
-            ]
-          },
-          "fontSizePt": {
-            "type": "integer",
-            "minimum": 6,
-            "maximum": 72,
-            "nullable": true
-          }
-        },
-        "required": ["fontFamily", "fontSizePt"]
-      },
-      "UpdateDocumentDefaultsDto": {
-        "type": "object",
-        "properties": {
-          "fontFamily": {
-            "nullable": true,
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/DocumentFontFamily"
-              }
-            ]
-          },
-          "fontSizePt": {
-            "type": "integer",
-            "minimum": 6,
-            "maximum": 72,
-            "nullable": true
           }
         }
       },
