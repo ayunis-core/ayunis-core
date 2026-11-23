@@ -1,6 +1,6 @@
 import { randomUUID, type UUID } from 'crypto';
-import { ExecuteRunAndSetTitleUseCase } from './execute-run-and-set-title.use-case';
-import { ExecuteRunAndSetTitleCommand } from './execute-run-and-set-title.command';
+import { ExecuteRunAndSetTitleUseCase } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
+import { ExecuteRunAndSetTitleCommand } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import type { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute-run/execute-run.use-case';
 import type { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import type { GenerateAndSetThreadTitleUseCase } from 'src/domain/threads/application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
@@ -84,7 +84,9 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
     } as unknown as jest.Mocked<AnonymizeTextForOrgUseCase>;
 
     contextService = {
-      get: jest.fn().mockReturnValue(randomUUID()),
+      get: jest.fn((key: string) =>
+        key === 'client' ? undefined : randomUUID(),
+      ),
     } as unknown as jest.Mocked<ContextService>;
 
     inferenceAdmissionGuard = {
@@ -175,29 +177,39 @@ describe('ExecuteRunAndSetTitleUseCase', () => {
     );
   });
 
-  it('runs the web chat with the chat profile', async () => {
-    executeRunUseCase.execute.mockResolvedValue(
-      (async function* (): AsyncGenerator<Message> {
-        for (const message of [] as Message[]) {
-          yield message;
-        }
-      })(),
-    );
+  it.each([
+    { client: undefined, profileId: 'chat', surface: 'web' },
+    { client: 'outlook', profileId: 'outlook', surface: 'Outlook' },
+  ])(
+    'selects the $profileId profile for $surface chat',
+    async ({ client, profileId }) => {
+      const contextId = randomUUID();
+      contextService.get.mockImplementation((key) =>
+        key === 'client' ? client : contextId,
+      );
+      executeRunUseCase.execute.mockResolvedValue(
+        (async function* (): AsyncGenerator<Message> {
+          for (const message of [] as Message[]) {
+            yield message;
+          }
+        })(),
+      );
 
-    await drain(
-      useCase.execute(
-        new ExecuteRunAndSetTitleCommand({
-          threadId,
-          input: new RunUserInput('Wann ist die Bürgersprechstunde?', []),
-          streaming: true,
-        }),
-      ),
-    );
+      await drain(
+        useCase.execute(
+          new ExecuteRunAndSetTitleCommand({
+            threadId,
+            input: new RunUserInput('Wann ist die Bürgersprechstunde?', []),
+            streaming: true,
+          }),
+        ),
+      );
 
-    expect(executeRunUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ profile: { id: 'chat' } }),
-    );
-  });
+      expect(executeRunUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ profile: { id: profileId } }),
+      );
+    },
+  );
 
   describe('first-run title', () => {
     function makeTitledThread(): Thread {

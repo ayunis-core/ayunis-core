@@ -1,10 +1,10 @@
+import type { SURFACE_REGISTRY } from 'src/config/surface-registry';
+
 /**
  * The profile an entry point runs with, plus the input only that profile
  * needs. One union member per profile.
  */
-export interface ChatRunProfileInput {
-  readonly id: 'chat';
-}
+export type ChatRunProfileInput = typeof SURFACE_REGISTRY.web.run.profile;
 
 /**
  * The routine's task is the run's user message, not part of this input, so a
@@ -20,9 +20,8 @@ export interface RoutineRunProfileInput {
 }
 
 /** The same chat, run from the Outlook add-in pane instead of the web app. */
-export interface OutlookRunProfileInput {
-  readonly id: 'outlook';
-}
+export type OutlookRunProfileInput =
+  typeof SURFACE_REGISTRY.outlook.run.profile;
 
 export type RunProfileInput =
   ChatRunProfileInput | OutlookRunProfileInput | RoutineRunProfileInput;

@@ -28,7 +28,7 @@ import {
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/runs/testing/run-capability.fixture';
-import { OutlookRunProfile } from './outlook-run-profile';
+import { OutlookRunProfile } from 'src/domain/runs/application/run-profiles/outlook-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
 const integrationId = '33333333-3333-4333-8333-333333333333' as UUID;
@@ -174,7 +174,7 @@ describe('OutlookRunProfile', () => {
     const { tools } = await assembleOutlook();
     const names = tools.map((tool) => tool.name);
 
-    expect(names).toEqual(expect.not.arrayContaining(WEB_ONLY_TOOLS));
+    expect(WEB_ONLY_TOOLS.filter((tool) => names.includes(tool))).toEqual([]);
   });
 
   it('keeps the retrieval tools the pane answers from', async () => {

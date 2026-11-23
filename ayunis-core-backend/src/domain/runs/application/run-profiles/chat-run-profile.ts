@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import type { RunCapability } from 'src/domain/runs/application/run-capabilities/run-capability';
 import { AnonymizationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization.capability';
 import { ArtifactsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/artifacts.capability';
@@ -38,7 +39,7 @@ import {
 /** Interactive chat with a user who reads the answers as they stream. */
 @Injectable()
 export class ChatRunProfile implements RunProfile {
-  readonly id = 'chat';
+  readonly id = SURFACE_REGISTRY.web.run.profile.id;
   readonly preamble = AYUNIS_PREAMBLE;
   readonly closing = 'You are now ready to assist the user.';
   readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
@@ -77,35 +78,6 @@ export class ChatRunProfile implements RunProfile {
   ) {}
 
   get capabilities(): readonly RunCapability[] {
-    return [
-      this.dateTime,
-      this.dataHandling,
-      this.anonymization,
-      this.behavior,
-      this.legalReferences,
-      this.customInstructions,
-      this.codeExecution,
-      this.emailCalendar,
-      this.filesChartsMap,
-      this.artifacts,
-      this.skills,
-      this.routines,
-      this.anonymizationException,
-      this.internet,
-      this.marketplace,
-      this.imageGeneration,
-      this.threadSources,
-      this.knowledgeBases,
-      this.recordings,
-      this.notificationContext,
-      this.releaseNoteContext,
-      this.onboarding,
-      this.featureGuide,
-      this.workspaceInstructions,
-      this.adoption,
-      this.memory,
-      this.chatHistory,
-      this.mcp,
-    ];
+    return SURFACE_REGISTRY.web.run.capabilities.map((name) => this[name]);
   }
 }

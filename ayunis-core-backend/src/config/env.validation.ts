@@ -18,7 +18,8 @@ import {
 } from 'class-validator';
 import { validateTrustProxy } from 'src/config/trust-proxy';
 import { isLoopbackHttpUrl } from 'src/config/sso-oidc-url';
-import { validateOutlookFrameOrigins } from 'src/config/outlook-frame-origins';
+import { validateFrameOrigins } from 'src/config/frame-origins';
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import { validateConnectorRules } from 'src/config/connector-env.validation';
 import { IsOptionalHttpUrl } from 'src/config/is-optional-http-url.decorator';
 
@@ -456,7 +457,9 @@ export function validateEnv(
     ...validateProductionRules(env),
     ...validateTrustProxy(env.TRUST_PROXY),
     ...validateSsoOidcRules(env),
-    ...validateOutlookFrameOrigins(env),
+    ...Object.values(SURFACE_REGISTRY).flatMap(({ framing }) =>
+      framing ? validateFrameOrigins(env, framing.originsEnvKey) : [],
+    ),
     ...validateConnectorRules(env),
     ...validateSubscriptionSyncRules(env),
   ];

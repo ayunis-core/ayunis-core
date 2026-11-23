@@ -416,7 +416,7 @@ At least one must be configured:
   lets the add-in sign in (see [Outlook Add-in](#outlook-add-in)). Off by
   default.
 - `OUTLOOK_ADDIN_FRAME_ORIGINS`: comma-separated origins allowed to frame the
-  Outlook task pane while the add-in is on (see [Outlook Add-in](#outlook-add-in)).
+  Outlook task pane and event runtime while the add-in is on. See [Outlook Add-in](#outlook-add-in).
 - `OCR_MAX_CONCURRENCY`: OCR requests in flight per process (default `4`). The
   batches of one long PDF run in parallel and may use every slot, so the total
   against the Mistral account is this value times the number of API and worker
@@ -549,8 +549,9 @@ it the manifest below answers 404 and an installed add-in cannot sign in. Turn
 it on per deployment, for example on an instance your own Microsoft 365 tenant
 uses to try the add-in before it is released.
 
-Each deployment serves its own Outlook add-in manifest, rendered for its
-`FRONTEND_BASEURL`:
+The [backend surface registry](ayunis-core-backend/src/config/surface-registry.ts)
+defines the manifest route and the HTML documents allowed to load inside Outlook.
+Each deployment renders its manifest for its `FRONTEND_BASEURL` at this address.
 
 ```text
 https://<your-ayunis-host>/api/office-addins/outlook/manifest.xml

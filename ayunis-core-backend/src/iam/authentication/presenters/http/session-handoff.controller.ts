@@ -20,7 +20,7 @@ import {
 import type { Request } from 'express';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { Public } from 'src/common/guards/public.guard';
-import { FeatureFlag } from 'src/config/features.config';
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import { RateLimit } from 'src/common/decorators/rate-limit.decorator';
 import {
   HandoffOriginNotAllowedError,
@@ -39,7 +39,7 @@ import { SessionTokensResponseDtoMapper } from 'src/iam/authentication/presenter
 // needs; refresh, logout and me stay open so an existing session can end.
 @ApiTags('Authentication')
 @Controller('auth/session')
-@RequireFeature(FeatureFlag.OutlookAddin)
+@RequireFeature(SURFACE_REGISTRY.outlook.featureFlag.name)
 export class SessionHandoffController {
   private readonly logger = new Logger(SessionHandoffController.name);
 

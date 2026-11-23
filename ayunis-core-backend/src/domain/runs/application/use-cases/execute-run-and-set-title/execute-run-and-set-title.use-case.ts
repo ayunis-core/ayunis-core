@@ -27,6 +27,7 @@ import { AnonymizeTextForOrgUseCase } from 'src/domain/anonymization-settings/ap
 import { AnonymizeTextForOrgCommand } from 'src/domain/anonymization-settings/application/use-cases/anonymize-text-for-org/anonymize-text-for-org.command';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { ContextService } from 'src/common/context/services/context.service';
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import type { RunProfileInput } from 'src/domain/runs/application/run-profiles/run-profile-input';
 import { RunAnonymizationUnavailableError } from 'src/domain/runs/application/runs.errors';
 import type { RunExecutionOutcome } from 'src/domain/runs/application/run-execution-outcome';
@@ -96,9 +97,8 @@ export class ExecuteRunAndSetTitleUseCase {
 
   /** The pane and the web app share this entry point; the session says which. */
   private runProfile(): RunProfileInput {
-    return this.contextService.get('client') === 'outlook'
-      ? { id: 'outlook' }
-      : { id: 'chat' };
+    const surface = this.contextService.get('client') ?? 'web';
+    return SURFACE_REGISTRY[surface].run.profile;
   }
 
   // Starts only once ExecuteRunUseCase admitted the run, so a rejected run

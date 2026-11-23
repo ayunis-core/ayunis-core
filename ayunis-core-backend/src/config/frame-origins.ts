@@ -1,13 +1,3 @@
-// Outlook on the web and the new Outlook for Windows render the task pane in
-// an iframe on one of these origins. On-premises OWA hosts are added by
-// listing them in OUTLOOK_ADDIN_FRAME_ORIGINS, which replaces this list.
-const MICROSOFT_OUTLOOK_ORIGINS = [
-  'https://outlook.office.com',
-  'https://outlook.office365.com',
-  'https://outlook.cloud.microsoft',
-  'https://outlook.live.com',
-];
-
 // Scheme, host and optional port only: no wildcard, path or CSP syntax can
 // reach the frame-ancestors header.
 const HTTPS_ORIGIN = /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*(:\d{1,5})?$/i;
@@ -21,15 +11,19 @@ function splitOrigins(value: string): string[] {
     .filter(Boolean);
 }
 
-export function outlookFrameOrigins(value: string | undefined): string[] {
+export function frameOrigins(
+  value: string | undefined,
+  fallback: readonly string[],
+): readonly string[] {
   const origins = splitOrigins(value ?? '');
-  return origins.length > 0 ? origins : MICROSOFT_OUTLOOK_ORIGINS;
+  return origins.length > 0 ? origins : fallback;
 }
 
-export function validateOutlookFrameOrigins(
+export function validateFrameOrigins(
   env: Record<string, unknown>,
+  envKey: string,
 ): string[] {
-  const value = env.OUTLOOK_ADDIN_FRAME_ORIGINS;
+  const value = env[envKey];
   if (value === undefined) {
     return [];
   }
@@ -42,7 +36,7 @@ export function validateOutlookFrameOrigins(
     return [];
   }
   return [
-    `OUTLOOK_ADDIN_FRAME_ORIGINS must be a comma-separated list of ` +
+    `${envKey} must be a comma-separated list of ` +
       `${isProduction ? 'HTTPS ' : ''}origins (scheme, host and optional ` +
       `port; no wildcards or paths)`,
   ];
