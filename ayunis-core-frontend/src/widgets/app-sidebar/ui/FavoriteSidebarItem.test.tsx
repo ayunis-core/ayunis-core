@@ -38,7 +38,7 @@ vi.mock('@/features/favorites', () => ({
 vi.mock('@/features/workspaces', () => ({
   useWorkspaces: () => ({ workspaces: [] }),
 }));
-vi.mock('@/widgets/app-sidebar/api/useAssignThreadToWorkspace', () => ({
+vi.mock('@/widgets/chat-workspace-menu/api/useAssignThreadToWorkspace', () => ({
   useAssignThreadToWorkspace: () => ({ mutate: vi.fn() }),
 }));
 

@@ -8,7 +8,7 @@ Chat file uploads and removals invalidate the subscribed thread query only. Uplo
 
 Existing chats match their bound model to the current effective grant by catalog model id, so switching defaults or moving between equivalent organization and team grants does not incorrectly hide the composer.
 
-The chat overview page places its search control in the content header. The project overview keeps only the add-project action there without repeating a content title. Project rows expose pinning with an explanatory tooltip.
+The chat overview page places its search control in the content header. Its chat rows, like the open chat's actions menu, offer moving the chat to a workspace, so chats beyond the sidebar's recent list can be assigned without pinning them first. The project overview keeps only the add-project action there without repeating a content title. Project rows expose pinning with an explanatory tooltip.
 
 The new-chat heading is a random greeting for the time of day (`useTimeBasedGreeting`), from `greetings-data.ts` in the web app and from `email-greetings-data.ts` in the Outlook pane. `.new-chat-greeting` caps the heading at two lines (`max-height: 4rem`, needed for its exit animation), so every pane greeting must fit two lines at the pane's 320 px minimum width in both languages.
 

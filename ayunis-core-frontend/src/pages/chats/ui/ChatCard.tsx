@@ -7,6 +7,7 @@ import {
   useToggleFavorite,
 } from '@/features/favorites';
 import { useDeleteChat } from '@/features/useDeleteChat';
+import { ChatWorkspaceMenuButton } from '@/widgets/chat-workspace-menu';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ChatListItem } from '@/shared/ui/chat-list-item';
 import { PinButton } from '@/shared/ui/pin-button';
@@ -47,12 +48,18 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
       actions={
         <>
           {!isEmbedded && (
-            <PinButton
-              isPinned={isPinned}
-              pinLabel={t('card.pin')}
-              unpinLabel={t('card.unpin')}
-              onToggle={() => toggleFavorite('thread', chat.id)}
-            />
+            <>
+              <PinButton
+                isPinned={isPinned}
+                pinLabel={t('card.pin')}
+                unpinLabel={t('card.unpin')}
+                onToggle={() => toggleFavorite('thread', chat.id)}
+              />
+              <ChatWorkspaceMenuButton
+                threadId={chat.id}
+                workspaceId={chat.workspaceId}
+              />
+            </>
           )}
           <Button
             variant="destructive-ghost"
