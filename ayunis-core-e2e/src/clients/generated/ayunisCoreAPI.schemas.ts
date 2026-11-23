@@ -31,6 +31,8 @@ export interface FeatureTogglesResponseDto {
   memoryEnabled: boolean;
   /** Admins can connect the organization to external products such as Microsoft 365 (Connections) */
   connectorsEnabled: boolean;
+  /** Council information systems (OParl) are mirrored and managed by super admins */
+  oparlEnabled: boolean;
 }
 
 export interface CreateOrgRequestDto {
@@ -5826,6 +5828,104 @@ export interface SharePointLocationResolutionResponseDto {
      * @nullable
      */
   grant: SharePointGrantResponseDto | null;
+}
+
+export interface OparlBodyResponseDto {
+  id: string;
+  /** The OParl ID (URL) of the body */
+  oparlId: string;
+  /** @nullable */
+  name: string | null;
+  /** @nullable */
+  shortName: string | null;
+  /**
+     * Web page in the RIS
+     * @nullable
+     */
+  web: string | null;
+}
+
+export interface OparlObjectCountsDto {
+  body: number;
+  legislativeTerm: number;
+  organization: number;
+  person: number;
+  membership: number;
+  meeting: number;
+  agendaItem: number;
+  paper: number;
+  consultation: number;
+  file: number;
+  location: number;
+}
+
+export type OparlSystemHealth = typeof OparlSystemHealth[keyof typeof OparlSystemHealth];
+
+
+export const OparlSystemHealth = {
+  pending: 'pending',
+  healthy: 'healthy',
+  suspicious: 'suspicious',
+  failing: 'failing',
+} as const;
+
+export type OparlSyncKind = typeof OparlSyncKind[keyof typeof OparlSyncKind];
+
+
+export const OparlSyncKind = {
+  initial: 'initial',
+  delta: 'delta',
+  full: 'full',
+} as const;
+
+export interface OparlRunningSyncDto {
+  kind: OparlSyncKind;
+  startedAt: string;
+}
+
+export type OparlSyncRunStatus = typeof OparlSyncRunStatus[keyof typeof OparlSyncRunStatus];
+
+
+export const OparlSyncRunStatus = {
+  running: 'running',
+  succeeded: 'succeeded',
+  suspicious: 'suspicious',
+  failed: 'failed',
+} as const;
+
+export interface OparlSystemResponseDto {
+  id: string;
+  /** The URL the system was added under */
+  url: string;
+  /** @nullable */
+  name: string | null;
+  /** @nullable */
+  vendor: string | null;
+  /** @nullable */
+  product: string | null;
+  /** @nullable */
+  oparlVersion: string | null;
+  bodies: OparlBodyResponseDto[];
+  counts: OparlObjectCountsDto;
+  health: OparlSystemHealth;
+  /** @nullable */
+  running: OparlRunningSyncDto | null;
+  /** @nullable */
+  lastDeltaSyncAt: string | null;
+  /** @nullable */
+  lastFullSyncAt: string | null;
+  lastRunStatus: OparlSyncRunStatus | null;
+  /** @nullable */
+  lastRunFinishedAt: string | null;
+  /** @nullable */
+  lastError: string | null;
+  nextSyncAt: string;
+  createdAt: string;
+}
+
+export interface AddOparlSystemDto {
+  /** The URL of the OParl System object */
+  url: string;
 }
 
 export type CreateRecordingDtoOwnerType = typeof CreateRecordingDtoOwnerType[keyof typeof CreateRecordingDtoOwnerType];

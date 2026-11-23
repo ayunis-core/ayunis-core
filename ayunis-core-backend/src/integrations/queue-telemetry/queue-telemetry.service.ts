@@ -9,6 +9,7 @@ import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-cra
 import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
 import { RECORDING_SUMMARY_QUEUE } from 'src/domain/recordings/infrastructure/queue/recording-summary.constants';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
+import { OPARL_SYNC_QUEUE } from 'src/domain/oparl/infrastructure/queue/oparl-sync.constants';
 import { sampleQueueHealth } from './queue-health';
 
 @Injectable()
@@ -25,6 +26,7 @@ export class QueueTelemetryService {
     @InjectQueue(RECORDING_SUMMARY_QUEUE)
     private readonly recordingSummaries: Queue,
     @InjectQueue(KNOWLEDGE_BASE_SYNC_QUEUE) private readonly syncedFiles: Queue,
+    @InjectQueue(OPARL_SYNC_QUEUE) private readonly oparlSyncs: Queue,
   ) {}
 
   @Interval(30_000)
@@ -40,6 +42,7 @@ export class QueueTelemetryService {
         this.routines,
         this.recordingSummaries,
         this.syncedFiles,
+        this.oparlSyncs,
       ]) {
         try {
           await sampleQueueHealth(queue, client.metrics());

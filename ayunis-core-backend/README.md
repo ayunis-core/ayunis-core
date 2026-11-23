@@ -249,11 +249,11 @@ the API.
 
 Concurrency per worker defaults to 4 document jobs, 2 spreadsheet jobs, 2 crawls,
 1 re-index job (documents embedded again after an org changed its embedding
-model, on their own queue below uploads) and 1 synced file (of a synced
-knowledge base location, on its own queue). Override with
+model, on their own queue below uploads), 1 synced file (of a synced
+knowledge base location, on its own queue) and 3 OParl system syncs. Override with
 `INGESTION_DOCUMENT_CONCURRENCY`, `INGESTION_DATA_SOURCE_CONCURRENCY`,
-`INGESTION_URL_CRAWL_CONCURRENCY`, `INGESTION_REINDEX_CONCURRENCY` and
-`INGESTION_SYNC_CONCURRENCY`.
+`INGESTION_URL_CRAWL_CONCURRENCY`, `INGESTION_REINDEX_CONCURRENCY`,
+`INGESTION_SYNC_CONCURRENCY` and `INGESTION_OPARL_CONCURRENCY`.
 `POSTGRES_POOL_SIZE` controls each process's database pool. Adding replicas
 multiplies concurrency, provider calls and connections, including document/audio
 part concurrency. Start with one worker and measure provider throttling, queue

@@ -6,6 +6,7 @@ import { URL_CRAWL_QUEUE } from 'src/domain/sources/infrastructure/queue/url-cra
 import { ROUTINE_EXECUTION_QUEUE } from 'src/domain/routines/infrastructure/queue/routine-execution.constants';
 import { RECORDING_SUMMARY_QUEUE } from 'src/domain/recordings/infrastructure/queue/recording-summary.constants';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
+import { OPARL_SYNC_QUEUE } from 'src/domain/oparl/infrastructure/queue/oparl-sync.constants';
 import { QueueTelemetryService } from './queue-telemetry.service';
 
 @Module({
@@ -17,6 +18,7 @@ import { QueueTelemetryService } from './queue-telemetry.service';
       { name: ROUTINE_EXECUTION_QUEUE },
       { name: RECORDING_SUMMARY_QUEUE },
       { name: KNOWLEDGE_BASE_SYNC_QUEUE },
+      { name: OPARL_SYNC_QUEUE },
     ),
   ],
   providers: [QueueTelemetryService],

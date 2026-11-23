@@ -9,6 +9,7 @@ import {
   Megaphone,
   EyeOff,
   ListTree,
+  Landmark,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,9 +17,11 @@ import {
   type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import config from '@/shared/config';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 
 export function SuperAdminSettingsSidebar() {
   const { t } = useTranslation('super-admin-settings-layout');
+  const isOparlEnabled = useIsFeatureEnabled('oparlEnabled');
 
   const groups: SidebarMenuGroup[] = [
     {
@@ -69,6 +72,16 @@ export function SuperAdminSettingsSidebar() {
           icon: <EyeOff />,
           label: t('layout.anonymization'),
         },
+        ...(isOparlEnabled
+          ? [
+              {
+                to: '/super-admin-settings/oparl',
+                testId: 'super-admin-nav-oparl',
+                icon: <Landmark />,
+                label: t('layout.oparl'),
+              },
+            ]
+          : []),
       ],
     },
     {

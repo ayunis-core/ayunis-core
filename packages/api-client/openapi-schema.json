@@ -11975,6 +11975,110 @@
         "tags": ["connectors"]
       }
     },
+    "/super-admin/oparl/systems": {
+      "get": {
+        "description": "Each system with its bodies, sync state and health, and the mirrored objects per type.",
+        "operationId": "SuperAdminOparlSystemsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OparlSystemResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a super admin"
+          },
+          "404": {
+            "description": "OParl is disabled"
+          }
+        },
+        "summary": "List the OParl systems in the catalog",
+        "tags": ["Super Admin OParl"]
+      },
+      "post": {
+        "description": "The URL must lead to an OParl System object on a public http(s) host. Its bodies are discovered and the initial import starts.",
+        "operationId": "SuperAdminOparlSystemsController_add",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOparlSystemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OparlSystemResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not an http(s) URL (OPARL_INVALID_SYSTEM_URL), or not on a public host (OPARL_HOST_BLOCKED)"
+          },
+          "403": {
+            "description": "Not a super admin"
+          },
+          "404": {
+            "description": "OParl is disabled"
+          },
+          "409": {
+            "description": "The system is already in the catalog (OPARL_SYSTEM_ALREADY_EXISTS)"
+          },
+          "422": {
+            "description": "Unreachable (OPARL_REQUEST_FAILED), or no OParl System (OPARL_NOT_AN_OPARL_SYSTEM, OPARL_INVALID_RESPONSE)"
+          }
+        },
+        "summary": "Add an OParl system by its URL",
+        "tags": ["Super Admin OParl"]
+      }
+    },
+    "/super-admin/oparl/systems/{id}/sync": {
+      "post": {
+        "description": "Queues a sync unless one is queued or running.",
+        "operationId": "SuperAdminOparlSystemsController_sync",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Sync queued"
+          },
+          "403": {
+            "description": "Not a super admin"
+          },
+          "404": {
+            "description": "OParl is disabled"
+          }
+        },
+        "summary": "Sync an OParl system now",
+        "tags": ["Super Admin OParl"]
+      }
+    },
     "/recordings": {
       "post": {
         "operationId": "RecordingsController_create",
@@ -16513,6 +16617,11 @@
             "type": "boolean",
             "description": "Admins can connect the organization to external products such as Microsoft 365 (Connections)",
             "default": false
+          },
+          "oparlEnabled": {
+            "type": "boolean",
+            "description": "Council information systems (OParl) are mirrored and managed by super admins",
+            "default": false
           }
         },
         "required": [
@@ -16524,7 +16633,8 @@
           "readAloudEnabled",
           "outlookAddinEnabled",
           "memoryEnabled",
-          "connectorsEnabled"
+          "connectorsEnabled",
+          "oparlEnabled"
         ]
       },
       "CreateOrgRequestDto": {
@@ -25678,6 +25788,232 @@
           }
         },
         "required": ["outcome", "kind", "name", "location", "grant"]
+      },
+      "OparlBodyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "oparlId": {
+            "type": "string",
+            "description": "The OParl ID (URL) of the body"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "shortName": {
+            "type": "string",
+            "nullable": true
+          },
+          "web": {
+            "type": "string",
+            "nullable": true,
+            "description": "Web page in the RIS"
+          }
+        },
+        "required": ["id", "oparlId", "name", "shortName", "web"]
+      },
+      "OparlObjectCountsDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "number"
+          },
+          "legislativeTerm": {
+            "type": "number"
+          },
+          "organization": {
+            "type": "number"
+          },
+          "person": {
+            "type": "number"
+          },
+          "membership": {
+            "type": "number"
+          },
+          "meeting": {
+            "type": "number"
+          },
+          "agendaItem": {
+            "type": "number"
+          },
+          "paper": {
+            "type": "number"
+          },
+          "consultation": {
+            "type": "number"
+          },
+          "file": {
+            "type": "number"
+          },
+          "location": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "body",
+          "legislativeTerm",
+          "organization",
+          "person",
+          "membership",
+          "meeting",
+          "agendaItem",
+          "paper",
+          "consultation",
+          "file",
+          "location"
+        ]
+      },
+      "OparlSystemHealth": {
+        "type": "string",
+        "enum": ["pending", "healthy", "suspicious", "failing"]
+      },
+      "OparlSyncKind": {
+        "type": "string",
+        "enum": ["initial", "delta", "full"]
+      },
+      "OparlRunningSyncDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OparlSyncKind"
+              }
+            ]
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["kind", "startedAt"]
+      },
+      "OparlSyncRunStatus": {
+        "type": "string",
+        "enum": ["running", "succeeded", "suspicious", "failed"]
+      },
+      "OparlSystemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "description": "The URL the system was added under"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "vendor": {
+            "type": "string",
+            "nullable": true
+          },
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "oparlVersion": {
+            "type": "string",
+            "nullable": true
+          },
+          "bodies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OparlBodyResponseDto"
+            }
+          },
+          "counts": {
+            "$ref": "#/components/schemas/OparlObjectCountsDto"
+          },
+          "health": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OparlSystemHealth"
+              }
+            ]
+          },
+          "running": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OparlRunningSyncDto"
+              }
+            ]
+          },
+          "lastDeltaSyncAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastFullSyncAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastRunStatus": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OparlSyncRunStatus"
+              }
+            ]
+          },
+          "lastRunFinishedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastError": {
+            "type": "string",
+            "nullable": true
+          },
+          "nextSyncAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "name",
+          "vendor",
+          "product",
+          "oparlVersion",
+          "bodies",
+          "counts",
+          "health",
+          "running",
+          "lastDeltaSyncAt",
+          "lastFullSyncAt",
+          "lastRunStatus",
+          "lastRunFinishedAt",
+          "lastError",
+          "nextSyncAt",
+          "createdAt"
+        ]
+      },
+      "AddOparlSystemDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL of the OParl System object",
+            "example": "https://rim.ekom21.de/aarbergen/webservice/oparl/v1.1/system"
+          }
+        },
+        "required": ["url"]
       },
       "CreateRecordingDto": {
         "type": "object",

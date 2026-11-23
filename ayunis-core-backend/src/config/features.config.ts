@@ -22,6 +22,11 @@ export enum FeatureFlag {
    * and everything that syncs knowledge base sources through a connector.
    */
   Connectors = 'connectorsEnabled',
+  /**
+   * Off until released: the mirror of council information systems (OParl),
+   * its sync schedule and the super-admin catalog.
+   */
+  Oparl = 'oparlEnabled',
 }
 
 type SurfaceFeatureName = NonNullable<
@@ -82,6 +87,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
     ),
     connectorsEnabled: parseBooleanWithDefault(
       process.env.FEATURE_CONNECTORS_ENABLED,
+      false,
+    ),
+    oparlEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_OPARL_ENABLED,
       false,
     ),
   };

@@ -40,6 +40,10 @@ import { KnowledgeBaseSyncModule } from 'src/domain/knowledge-base-sync/knowledg
 import { SyncedFileProcessingConsumer } from 'src/domain/knowledge-base-sync/infrastructure/queue/synced-file-processing.consumer';
 import { SyncRunner } from 'src/domain/knowledge-base-sync/infrastructure/queue/sync-runner';
 import { KNOWLEDGE_BASE_SYNC_QUEUE } from 'src/domain/knowledge-base-sync/infrastructure/queue/knowledge-base-sync.constants';
+import { OparlModule } from 'src/domain/oparl/oparl.module';
+import { OparlSyncConsumer } from 'src/domain/oparl/infrastructure/queue/oparl-sync.consumer';
+import { OparlSyncScheduler } from 'src/domain/oparl/infrastructure/queue/oparl-sync.scheduler';
+import { OPARL_SYNC_QUEUE } from 'src/domain/oparl/infrastructure/queue/oparl-sync.constants';
 
 /** The queues this module's consumers serve; a worker's health check requires them all. */
 export const INGESTION_QUEUES = [
@@ -48,6 +52,7 @@ export const INGESTION_QUEUES = [
   URL_CRAWL_QUEUE,
   SOURCE_REINDEX_QUEUE,
   KNOWLEDGE_BASE_SYNC_QUEUE,
+  OPARL_SYNC_QUEUE,
 ] as const;
 
 /**
@@ -78,6 +83,8 @@ export const INGESTION_QUEUES = [
     ModelsModule,
     // Synced files are read through connectors and settled by the sync engine.
     KnowledgeBaseSyncModule,
+    // OParl systems are mirrored by their own runs and schedule.
+    OparlModule,
   ],
   providers: [
     StoredSourceFileService,
@@ -98,6 +105,8 @@ export const INGESTION_QUEUES = [
     SourceReindexConsumer,
     SyncedFileProcessingConsumer,
     SyncRunner,
+    OparlSyncConsumer,
+    OparlSyncScheduler,
   ],
 })
 export class IngestionConsumersModule {}

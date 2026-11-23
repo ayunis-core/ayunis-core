@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 type ProcessingQueue =
-  'document' | 'dataSource' | 'urlCrawl' | 'reindex' | 'sync';
+  'document' | 'dataSource' | 'urlCrawl' | 'reindex' | 'sync' | 'oparl';
 
 const CONCURRENCY = {
   document: { variable: 'INGESTION_DOCUMENT_CONCURRENCY', fallback: 4 },
@@ -9,6 +9,7 @@ const CONCURRENCY = {
   urlCrawl: { variable: 'INGESTION_URL_CRAWL_CONCURRENCY', fallback: 2 },
   reindex: { variable: 'INGESTION_REINDEX_CONCURRENCY', fallback: 1 },
   sync: { variable: 'INGESTION_SYNC_CONCURRENCY', fallback: 1 },
+  oparl: { variable: 'INGESTION_OPARL_CONCURRENCY', fallback: 3 },
 } as const;
 
 /** Whether the API process also works through the ingestion queues. */
@@ -67,4 +68,5 @@ export default registerAs('ingestion', () => ({
   urlCrawlConcurrency: ingestionConcurrency('urlCrawl'),
   reindexConcurrency: ingestionConcurrency('reindex'),
   syncConcurrency: ingestionConcurrency('sync'),
+  oparlConcurrency: ingestionConcurrency('oparl'),
 }));

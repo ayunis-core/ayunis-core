@@ -20,6 +20,7 @@ describe('queue sampler lifecycle', () => {
     'routine-execution',
     'recording-summary',
     'knowledge-base-sync',
+    'oparl-sync',
   ].map((name) => ({
     name,
     getJobCounts: jest.fn(),
@@ -27,7 +28,7 @@ describe('queue sampler lifecycle', () => {
     getWorkersCount: jest.fn().mockResolvedValue(1),
   }));
   const service = new QueueTelemetryService(
-    ...(queues as unknown as [Queue, Queue, Queue, Queue, Queue, Queue]),
+    ...(queues as unknown as [Queue, Queue, Queue, Queue, Queue, Queue, Queue]),
   );
 
   beforeEach(() => {
@@ -53,12 +54,12 @@ describe('queue sampler lifecycle', () => {
     expect(gauges).toHaveLength(0);
   });
 
-  it('exports all six queues independently', async () => {
+  it('exports all seven queues independently', async () => {
     await service.sample();
     expect(new Set(gauges.map((gauge) => gauge.queue))).toEqual(
       new Set(queues.map((queue) => queue.name)),
     );
-    expect(gauges).toHaveLength(42);
+    expect(gauges).toHaveLength(49);
   });
 
   it('one unavailable queue does not suppress the other queues or future samples', async () => {
@@ -66,9 +67,9 @@ describe('queue sampler lifecycle', () => {
       new Error('Redis unavailable'),
     );
     await service.sample();
-    expect(gauges).toHaveLength(35);
+    expect(gauges).toHaveLength(42);
     await service.sample();
-    expect(gauges).toHaveLength(77);
+    expect(gauges).toHaveLength(91);
   });
 
   it('skips overlapping ticks until the prior sample settles', async () => {
@@ -83,6 +84,6 @@ describe('queue sampler lifecycle', () => {
     expect(gauges).toHaveLength(0);
     release({ waiting: 0, active: 0, delayed: 0, completed: 0, failed: 0 });
     await first;
-    expect(gauges).toHaveLength(42);
+    expect(gauges).toHaveLength(49);
   });
 });

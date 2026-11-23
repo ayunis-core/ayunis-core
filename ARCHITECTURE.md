@@ -112,6 +112,7 @@ available to a surface when its entry grants it.
 | [office-addins](ayunis-core-backend/src/domain/office-addins/SUMMARY.md)             | Office Add-ins | Outlook add-in manifest rendered for this deployment                                                          |
 | [connectors](ayunis-core-backend/src/domain/connectors/SUMMARY.md)                   | Connections    | Per-org connections to external products, encrypted credentials, one module per provider (flagged)            |
 | [knowledge-base-sync](ayunis-core-backend/src/domain/knowledge-base-sync/SUMMARY.md) | Synced Sources | Knowledge base locations kept in sync with an external system through a connector (behind a feature flag)     |
+| [oparl](ayunis-core-backend/src/domain/oparl/SUMMARY.md)                             | Council Data   | Installation-wide mirror of council information systems (OParl), global data outside org scope (flagged)      |
 
 ### IAM Modules — Identity & Access Management
 

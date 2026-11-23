@@ -6,6 +6,9 @@ import { SuperAdminSettingsSidebar } from './SuperAdminSettingsSidebar';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
+vi.mock('@/features/feature-toggles', () => ({
+  useIsFeatureEnabled: () => false,
+}));
 vi.mock('@/widgets/settings-sidebar/ui/SettingsSidebarWidget', () => ({
   SettingsSidebarWidget: ({ groups }: { groups: SidebarMenuGroup[] }) => (
     <nav>

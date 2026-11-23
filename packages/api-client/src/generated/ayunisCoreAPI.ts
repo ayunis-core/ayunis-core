@@ -37,6 +37,7 @@ import type {
   ActiveThreadRunResponseDto,
   AddGlobalPiiWhitelistWordsRequestDto,
   AddGlobalPiiWhitelistWordsResponseDto,
+  AddOparlSystemDto,
   AddSyncedLocationDto,
   AddTeamMemberDto,
   AddUrlToKnowledgeBaseDto,
@@ -173,6 +174,7 @@ import type {
   NotificationsControllerFindAllParams,
   OnboardingResponseDto,
   OnboardingStageResponseDto,
+  OparlSystemResponseDto,
   OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
   OrgErrorResponseDto,
@@ -25066,6 +25068,236 @@ export const useSharePointLocationsControllerResolve = <TError = void,
         TContext
       > => {
       return useMutation(getSharePointLocationsControllerResolveMutationOptions(options), queryClient);
+    }
+
+/**
+ * Each system with its bodies, sync state and health, and the mirrored objects per type.
+ * @summary List the OParl systems in the catalog
+ */
+export const superAdminOparlSystemsControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OparlSystemResponseDto[]>(
+      {url: `/super-admin/oparl/systems`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOparlSystemsControllerListQueryKey = () => {
+    return [
+    `/super-admin/oparl/systems`
+    ] as const;
+    }
+
+
+export const getSuperAdminOparlSystemsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminOparlSystemsControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>> = ({ signal }) => superAdminOparlSystemsControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminOparlSystemsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>>
+export type SuperAdminOparlSystemsControllerListQueryError = void
+
+
+export function useSuperAdminOparlSystemsControllerList<TData = Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOparlSystemsControllerList<TData = Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOparlSystemsControllerList<TData = Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the OParl systems in the catalog
+ */
+
+export function useSuperAdminOparlSystemsControllerList<TData = Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminOparlSystemsControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * The URL must lead to an OParl System object on a public http(s) host. Its bodies are discovered and the initial import starts.
+ * @summary Add an OParl system by its URL
+ */
+export const superAdminOparlSystemsControllerAdd = (
+    addOparlSystemDto: AddOparlSystemDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OparlSystemResponseDto>(
+      {url: `/super-admin/oparl/systems`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addOparlSystemDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOparlSystemsControllerAddMutationKey = () => ['superAdminOparlSystemsControllerAdd'] as const;
+
+export const getSuperAdminOparlSystemsControllerAddMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerAdd>>, TError,SuperAdminOparlSystemsControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerAdd>>, TError,SuperAdminOparlSystemsControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminOparlSystemsControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOparlSystemsControllerAdd>>, SuperAdminOparlSystemsControllerAddMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminOparlSystemsControllerAdd(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOparlSystemsControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOparlSystemsControllerAdd>>>
+    export type SuperAdminOparlSystemsControllerAddMutationBody = AddOparlSystemDto
+    export type SuperAdminOparlSystemsControllerAddMutationError = void
+    export type SuperAdminOparlSystemsControllerAddMutationVariables = {data: AddOparlSystemDto}
+
+    /**
+ * @summary Add an OParl system by its URL
+ */
+export const useSuperAdminOparlSystemsControllerAdd = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerAdd>>, TError,SuperAdminOparlSystemsControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOparlSystemsControllerAdd>>,
+        TError,
+        SuperAdminOparlSystemsControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminOparlSystemsControllerAddMutationOptions(options), queryClient);
+    }
+
+/**
+ * Queues a sync unless one is queued or running.
+ * @summary Sync an OParl system now
+ */
+export const superAdminOparlSystemsControllerSync = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/oparl/systems/${id}/sync`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOparlSystemsControllerSyncMutationKey = () => ['superAdminOparlSystemsControllerSync'] as const;
+
+export const getSuperAdminOparlSystemsControllerSyncMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerSync>>, TError,SuperAdminOparlSystemsControllerSyncMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerSync>>, TError,SuperAdminOparlSystemsControllerSyncMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminOparlSystemsControllerSyncMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOparlSystemsControllerSync>>, SuperAdminOparlSystemsControllerSyncMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  superAdminOparlSystemsControllerSync(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOparlSystemsControllerSyncMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOparlSystemsControllerSync>>>
+
+    export type SuperAdminOparlSystemsControllerSyncMutationError = void
+    export type SuperAdminOparlSystemsControllerSyncMutationVariables = {id: string}
+
+    /**
+ * @summary Sync an OParl system now
+ */
+export const useSuperAdminOparlSystemsControllerSync = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlSystemsControllerSync>>, TError,SuperAdminOparlSystemsControllerSyncMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOparlSystemsControllerSync>>,
+        TError,
+        SuperAdminOparlSystemsControllerSyncMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminOparlSystemsControllerSyncMutationOptions(options), queryClient);
     }
 
 /**

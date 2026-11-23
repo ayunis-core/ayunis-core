@@ -14,6 +14,7 @@ const SUPER_ADMIN_ROUTES = [
   '/super-admin-settings/academy',
   '/super-admin-settings/anonymization',
   '/super-admin-settings/app-alerts',
+  '/super-admin-settings/oparl',
 ];
 
 test('org admin without the super admin system role is redirected off every super admin route', async ({
