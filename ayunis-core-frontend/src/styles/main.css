@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '@ayunis/ui/styles.css';
 @import './scroll-region.css';
+@import '@ayunis/chat/surface.css';
 @import './interactions.css';
 @import './scrollbar.css';
 @source '../../../packages/chat/src';

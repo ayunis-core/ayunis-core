@@ -14,7 +14,6 @@ import {
   currentOutlookItemKey,
   currentOutlookMailboxItem,
   currentOutlookReplySourceKey,
-  executeOutlookTool,
   hasCallAwaitingConfirmation,
   isAwaitingResultTool,
   isOutlookDraftTool,
@@ -33,6 +32,7 @@ import {
 import { isThreadRunActive } from '@/features/thread-run';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import { resolvePiiTokens } from '@/widgets/markdown';
+import { outlookClientTools } from '@/pages/chat/model/outlook-client-tools';
 import { outlookAttachmentSourceApi } from '@/pages/chat/api/outlook-attachment-source-api';
 import type { Message } from '@/pages/chat/model/openapi';
 import type {
@@ -279,25 +279,31 @@ export function useOutlookToolBridge({
         expectedItemKey?: string | null;
         expectedReplySourceKey?: string;
       } = {},
-    ) => {
+    ): Promise<OutlookToolOutcome> => {
+      const executeTool = outlookClientTools.get(call.name)?.execute;
+      if (!executeTool) return { status: 'failed', failure: 'officeFailed' };
+
       const running: TrackedToolState = { state: { status: 'running' } };
       if (options.expectedReplySourceKey !== undefined) {
         running.replyItem = currentOutlookMailboxItem();
       }
       setToolStates((current) => ({ ...current, [call.id]: running }));
       const params = resolveParams(call.params, masksRef.current);
-      const outcome = await executeOutlookTool(call.name, params, {
-        extractAttachmentText: (file) =>
-          addAttachmentAsSource(
-            outlookAttachmentSourceApi,
-            threadId,
-            file,
-            options.signal,
-          ),
-        expectedItemKey: options.expectedItemKey,
-        expectedReplySourceKey: options.expectedReplySourceKey,
-        draftId: call.id,
-      });
+      const outcome = await executeTool(
+        { ...call, params },
+        {
+          extractAttachmentText: (file) =>
+            addAttachmentAsSource(
+              outlookAttachmentSourceApi,
+              threadId,
+              file,
+              options.signal,
+            ),
+          expectedItemKey: options.expectedItemKey,
+          expectedReplySourceKey: options.expectedReplySourceKey,
+          draftId: call.id,
+        },
+      );
       setToolStates((current) =>
         current[call.id] === running
           ? { ...current, [call.id]: { ...running, state: outcome } }

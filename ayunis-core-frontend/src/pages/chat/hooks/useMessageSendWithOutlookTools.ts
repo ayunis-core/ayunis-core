@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import type { RunEndpoints } from '@ayunis/chat/runs';
 import {
   useMessageSend,
   type SendMessageInput,
@@ -12,6 +13,7 @@ interface UseMessageSendWithOutlookToolsParams extends UseMessageSendParams {
   messages: readonly Message[];
   isStreaming: boolean;
   piiMasks: readonly { token: string; value: string }[];
+  transport?: RunEndpoints;
 }
 
 /**
@@ -22,15 +24,19 @@ export function useMessageSendWithOutlookTools({
   messages,
   isStreaming,
   piiMasks,
+  transport,
   ...params
 }: UseMessageSendWithOutlookToolsParams) {
-  const messageSend = useMessageSend({
-    ...params,
-    onComplete: (failed, reason) => {
-      params.onComplete?.(failed, reason);
-      outlookTools.runEnded(failed, reason);
+  const messageSend = useMessageSend(
+    {
+      ...params,
+      onComplete: (failed, reason) => {
+        params.onComplete?.(failed, reason);
+        outlookTools.runEnded(failed, reason);
+      },
     },
-  });
+    transport,
+  );
   // Let reattach register its stream before the bridge considers a reopened read.
   const { isRunCancellable, isCheckingForRun } = useThreadRunReattach({
     threadId: params.threadId,

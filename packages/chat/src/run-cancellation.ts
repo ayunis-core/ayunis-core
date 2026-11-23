@@ -7,12 +7,14 @@ import {
 
 export function stopRun(
   threadId: string,
-  cancel: NonNullable<RunEndpoints['cancel']>,
+  cancel?: RunEndpoints['cancel'],
 ): void {
-  markThreadRunStopped(threadId);
-  cancel(threadId).catch((error: unknown) => {
-    console.error('Failed to cancel run', error);
-    unmarkThreadRunStopped(threadId);
-  });
+  if (cancel) {
+    markThreadRunStopped(threadId);
+    cancel(threadId).catch((error: unknown) => {
+      console.error('Failed to cancel run', error);
+      unmarkThreadRunStopped(threadId);
+    });
+  }
   abortActiveThreadRun(threadId);
 }

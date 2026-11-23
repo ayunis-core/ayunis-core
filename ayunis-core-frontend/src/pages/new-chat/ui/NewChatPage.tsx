@@ -42,6 +42,7 @@ import {
   EmbeddedHistoryButton,
   EmbeddedNewChatCompose,
 } from './EmbeddedNewChat';
+import { useAppChatSurface } from '@/features/chat-surface';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface NewChatPageProps {
@@ -62,6 +63,7 @@ export default function NewChatPage({
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
   const isEmbedded = useEmbedded();
+  const { capabilities } = useAppChatSurface();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
@@ -265,12 +267,15 @@ export default function NewChatPage({
         isSettling={isCreating}
         mistPhase={mistPhase}
         onMistExitComplete={handleMistExitComplete}
-        header={
-          <ContentAreaHeader
-            breadcrumbs={[{ label: t('newChat.newChat') }]}
-            action={<EmbeddedHistoryButton />}
-          />
-        }
+        slots={{
+          header: (actions) => (
+            <ContentAreaHeader
+              breadcrumbs={[{ label: t('newChat.newChat') }]}
+              action={actions}
+            />
+          ),
+          actions: <EmbeddedHistoryButton />,
+        }}
         compose={
           <EmbeddedNewChatCompose
             isCreating={isCreating}
@@ -313,14 +318,15 @@ export default function NewChatPage({
       isSettling={isCreating}
       mistPhase={mistPhase}
       onMistExitComplete={handleMistExitComplete}
-      header={
-        <ContentAreaHeader
-          breadcrumbs={[{ label: t('newChat.newChat') }]}
-          action={<HelpLink path="" />}
-        />
-      }
-      compose={
-        <>
+      slots={{
+        header: (actions) => (
+          <ContentAreaHeader
+            breadcrumbs={[{ label: t('newChat.newChat') }]}
+            action={actions}
+          />
+        ),
+        actions: <HelpLink path="" />,
+        emptyState: (
           <h1
             className={cn(
               'new-chat-greeting text-center text-2xl font-bold',
@@ -330,7 +336,10 @@ export default function NewChatPage({
           >
             {greeting}
           </h1>
-
+        ),
+      }}
+      compose={
+        <>
           <div className="new-chat-input-stack relative z-20 w-full">
             <p
               className={cn(
@@ -413,17 +422,19 @@ export default function NewChatPage({
             )}
             aria-hidden={isCreating}
           >
-            <OnboardingTourTarget
-              name={TOUR_TARGET.pinnedSkills}
-              settleMs={900}
-            >
-              <PinnedSkills
-                isSubmitting={isCreating}
-                workspaceId={workspaceId}
-                onSkillSelect={handleSkillSelect}
-                selectedSkillId={selectedSkillId}
-              />
-            </OnboardingTourTarget>
+            {capabilities.skills && (
+              <OnboardingTourTarget
+                name={TOUR_TARGET.pinnedSkills}
+                settleMs={900}
+              >
+                <PinnedSkills
+                  isSubmitting={isCreating}
+                  workspaceId={workspaceId}
+                  onSkillSelect={handleSkillSelect}
+                  selectedSkillId={selectedSkillId}
+                />
+              </OnboardingTourTarget>
+            )}
             <div className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground">
               <Lock className="h-3 w-3 shrink-0" />
               <span>{t('newChat.privacyHint')}</span>

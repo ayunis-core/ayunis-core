@@ -1,89 +1,23 @@
-import React, { useCallback } from 'react';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
-import { useAutoScroll } from '@/features/useAutoScroll';
-import { useContentScrollHeader } from '@/features/useContentScrollHeader';
+import { ChatSurface, type ChatSurfaceProps } from '@ayunis/chat/surface';
+import type { ReactNode } from 'react';
 import {
   Panel,
   Group as PanelGroup,
   Separator as PanelResizeHandle,
 } from 'react-resizable-panels';
 
-interface ChatInterfaceLayoutProps {
-  chatHeader: React.ReactNode;
-  chatContent: React.ReactNode;
-  chatInput: React.ReactNode;
-  sidePanel?: React.ReactNode;
-  className?: string;
-  resetKey?: unknown;
+interface ChatInterfaceLayoutProps extends ChatSurfaceProps {
+  readonly sidePanel?: ReactNode;
 }
 
-export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
-  chatHeader,
-  chatContent,
-  chatInput,
-  sidePanel: requestedSidePanel,
-  className = '',
-  resetKey,
-}) => {
-  // The Outlook pane is too narrow to split, so it never opens the side panel.
-  const sidePanel = useEmbedded() ? undefined : requestedSidePanel;
-  const { scrollRef: autoScrollRef, handleScroll } = useAutoScroll(
-    chatContent,
-    resetKey,
-  );
-  const {
-    scrollRef: headerScrollRef,
-    headerScrolled,
-    onScroll: onHeaderScroll,
-  } = useContentScrollHeader(resetKey);
-
-  const setScrollRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      autoScrollRef.current = node;
-      headerScrollRef.current = node;
-    },
-    [autoScrollRef, headerScrollRef],
-  );
-
-  const onScroll = useCallback(
-    (e: React.UIEvent<HTMLDivElement>) => {
-      handleScroll(e);
-      onHeaderScroll(e);
-    },
-    [handleScroll, onHeaderScroll],
-  );
-
-  const chatPane = (
-    <div
-      className={`flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-t-xl pb-2 sm:pb-4 ${className}`}
-    >
-      <div className="content-scroll-region relative flex min-h-0 flex-1 flex-col">
-        <div
-          className="content-scroll-viewport min-h-0 flex-1 overflow-x-hidden overflow-y-auto w-full"
-          ref={setScrollRef}
-          onScroll={onScroll}
-        >
-          <div className="content-scroll-header-offset" aria-hidden />
-          <div className="mx-auto w-full max-w-[800px]">{chatContent}</div>
-        </div>
-        <div
-          className="content-scroll-header"
-          data-scrolled={headerScrolled ? 'true' : 'false'}
-        >
-          {chatHeader}
-        </div>
-      </div>
-
-      <div className="sticky bottom-0 z-10 mx-auto w-full min-w-0 max-w-[800px] flex-shrink-0 bg-background">
-        {chatInput}
-      </div>
-    </div>
-  );
-
+export default function ChatInterfaceLayout({
+  sidePanel,
+  ...chat
+}: ChatInterfaceLayoutProps) {
   return (
     <PanelGroup orientation="horizontal" className="absolute inset-0">
       <Panel defaultSize={sidePanel ? 50 : 100} minSize={30}>
-        {chatPane}
+        <ChatSurface {...chat} />
       </Panel>
       {sidePanel && (
         <>
@@ -95,6 +29,4 @@ export const ChatInterfaceLayout: React.FC<ChatInterfaceLayoutProps> = ({
       )}
     </PanelGroup>
   );
-};
-
-export default ChatInterfaceLayout;
+}

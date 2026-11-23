@@ -1,3 +1,4 @@
+import type { ChatSlots } from '@ayunis/chat/surface';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@ayunis/ui/lib/cn';
 import NewChatBackdrop, { type NewChatBackdropPhase } from './NewChatBackdrop';
@@ -6,9 +7,7 @@ import { useComposeLift } from '@/pages/new-chat/model/useComposeLift';
 export type NewChatMistPhase = NewChatBackdropPhase | 'hidden';
 
 interface NewChatPageLayoutProps {
-  header: React.ReactNode;
-  /** Centered content (personalization, errors) */
-  children?: React.ReactNode;
+  slots: Pick<ChatSlots, 'header' | 'actions' | 'emptyState'>;
   /** Greeting + input stack; lifted when idle, slides to chat dock when settling */
   compose?: React.ReactNode;
   isSettling?: boolean;
@@ -17,8 +16,7 @@ interface NewChatPageLayoutProps {
 }
 
 export default function NewChatPageLayout({
-  header,
-  children,
+  slots,
   compose,
   isSettling = false,
   mistPhase = 'idle',
@@ -40,7 +38,9 @@ export default function NewChatPageLayout({
           />
         )}
         <div className="absolute inset-0 z-[1] flex min-h-0 flex-col">
-          <div className="content-area-page-header">{header}</div>
+          <div className="content-area-page-header">
+            {slots.header ? slots.header(slots.actions) : slots.actions}
+          </div>
 
           {useComposeLayout ? (
             <div
@@ -67,13 +67,14 @@ export default function NewChatPageLayout({
                     inside mirror this via settleMs. Lives on an inner wrapper so
                     its keyframe transform doesn't override the lift transform. */}
                 <div className="new-chat-compose__content flex w-full flex-col gap-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 fill-mode-both [animation-delay:200ms]">
+                  {slots.emptyState}
                   {compose}
                 </div>
               </div>
             </div>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-2 pb-2 sm:px-4 sm:pb-4">
-              <div className="w-full max-w-[800px]">{children}</div>
+              <div className="w-full max-w-[800px]">{slots.emptyState}</div>
             </div>
           )}
         </div>

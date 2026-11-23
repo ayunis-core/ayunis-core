@@ -3,13 +3,14 @@ name: Dependency Check
 on:
   pull_request:
     paths:
-      - 'ayunis-core-backend/src/**/*.ts'
-      - 'ayunis-core-backend/.dependency-cruiser.cjs'
-      - 'ayunis-core-frontend/src/**/*.ts'
-      - 'ayunis-core-frontend/src/**/*.tsx'
-      - 'ayunis-core-frontend/.dependency-cruiser.cjs'
-      - '.github/workflows/dependency-check.yml'
-      - '.github/actions/setup-node-pnpm/action.yml'
+      - "ayunis-core-backend/src/**/*.ts"
+      - "ayunis-core-backend/.dependency-cruiser.cjs"
+      - "ayunis-core-frontend/src/**/*.ts"
+      - "ayunis-core-frontend/src/**/*.tsx"
+      - "ayunis-core-frontend/.dependency-cruiser.cjs"
+      - "packages/chat/**"
+      - ".github/workflows/dependency-check.yml"
+      - ".github/actions/setup-node-pnpm/action.yml"
 
 permissions:
   contents: read
@@ -71,7 +72,7 @@ jobs:
       - name: Generate violation report (on failure)
         if: failure()
         run: |
-          pnpm exec dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known --output-type err-html > dependency-violations.html || true
+          pnpm exec dependency-cruiser src ../packages/chat/src --config .dependency-cruiser.cjs --ignore-known --output-type err-html > dependency-violations.html || true
           echo "::error::Frontend FSD violations detected. See artifact for details."
 
       - name: Upload violation report

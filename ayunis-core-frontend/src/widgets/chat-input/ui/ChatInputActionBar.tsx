@@ -14,9 +14,10 @@ import type {
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
+import type { ChatCapabilities } from '@ayunis/chat/surface';
 
 interface ChatInputActionBarProps {
+  capabilities: ChatCapabilities;
   isSubmitting: boolean;
   isEmbeddingModelEnabled: boolean;
   isVisionEnabled: boolean;
@@ -74,6 +75,7 @@ function appendTranscription(
 }
 
 export function ChatInputActionBar({
+  capabilities,
   isSubmitting,
   isEmbeddingModelEnabled,
   isVisionEnabled,
@@ -104,8 +106,6 @@ export function ChatInputActionBar({
   onDictation,
 }: Readonly<ChatInputActionBarProps>) {
   const { t } = useTranslation('common');
-  // AYC-510 keeps knowledge bases and integrations out of the Outlook pane.
-  const isEmbedded = useEmbedded();
 
   return (
     <ChatInputToolbar
@@ -119,14 +119,16 @@ export function ChatInputActionBar({
               isFileSourceDisabled={!isEmbeddingModelEnabled || isSubmitting}
               isImageUploadDisabled={!isVisionEnabled || isSubmitting}
               onKnowledgeBaseSelect={
-                isEmbedded ? undefined : onAddKnowledgeBase
+                capabilities.knowledgeBases ? onAddKnowledgeBase : undefined
               }
               attachedKnowledgeBaseIds={knowledgeBases?.map((kb) => kb.id)}
-              onIntegrationSelect={isEmbedded ? undefined : onAddIntegration}
+              onIntegrationSelect={
+                capabilities.integrations ? onAddIntegration : undefined
+              }
               attachedIntegrationIds={mcpIntegrations?.map(
                 (integration) => integration.id,
               )}
-              onSkillSelect={onSkillSelect}
+              onSkillSelect={capabilities.skills ? onSkillSelect : undefined}
               selectedSkillId={selectedSkillId}
             />
           </OnboardingTourTarget>
@@ -147,28 +149,32 @@ export function ChatInputActionBar({
         </>
       }
       modelSelector={
-        <TooltipIf
-          condition={isModelChangeDisabled ?? false}
-          tooltip={t('chatInput.modelChangeDisabledTooltip')}
-        >
-          <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
-            <ModelSelector
-              isDisabled={isModelChangeDisabled ?? false}
-              isAnonymous={isAnonymous}
-              selectedModelId={modelId}
-              onModelChange={onModelChange}
-            />
-          </OnboardingTourTarget>
-        </TooltipIf>
+        capabilities.modelSelection && (
+          <TooltipIf
+            condition={isModelChangeDisabled ?? false}
+            tooltip={t('chatInput.modelChangeDisabledTooltip')}
+          >
+            <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
+              <ModelSelector
+                isDisabled={isModelChangeDisabled ?? false}
+                isAnonymous={isAnonymous}
+                selectedModelId={modelId}
+                onModelChange={onModelChange}
+              />
+            </OnboardingTourTarget>
+          </TooltipIf>
+        )
       }
       trailing={
         <>
-          <MicrophoneButton
-            onTranscriptionComplete={(text) => {
-              appendTranscription(setMessage, textareaRef, text);
-              onDictation();
-            }}
-          />
+          {capabilities.voice && (
+            <MicrophoneButton
+              onTranscriptionComplete={(text) => {
+                appendTranscription(setMessage, textareaRef, text);
+                onDictation();
+              }}
+            />
+          )}
           <SendButton
             inFlight={inFlight}
             canSend={canSend}

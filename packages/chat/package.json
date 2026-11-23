@@ -11,7 +11,9 @@
     "./composer": "./src/composer/ChatComposer.tsx",
     "./composer.css": "./src/composer/chat-input-glow.css",
     "./history": "./src/history/index.ts",
-    "./messages": "./src/messages/index.ts"
+    "./messages": "./src/messages/index.ts",
+    "./surface": "./src/surface.ts",
+    "./surface.css": "./src/content-scroll.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

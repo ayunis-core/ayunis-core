@@ -21,8 +21,8 @@
     "openapi:update": "pnpm run openapi:fetch && pnpm run openapi:format && pnpm run openapi:generate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "deps:check": "dependency-cruiser src --config .dependency-cruiser.cjs --ignore-known",
-    "deps:check:strict": "dependency-cruiser src --config .dependency-cruiser.cjs"
+    "deps:check": "dependency-cruiser src ../packages/chat/src --config .dependency-cruiser.cjs --ignore-known",
+    "deps:check:strict": "dependency-cruiser src ../packages/chat/src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
     "@appsignal/javascript": "^1.6.1",

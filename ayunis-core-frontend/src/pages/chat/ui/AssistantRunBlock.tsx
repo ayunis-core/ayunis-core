@@ -5,7 +5,7 @@ import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
 import ReadAloudButton from './ReadAloudButton';
 import { hasSpeakableText } from '@/pages/chat/lib/speakable-message-text';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
+import { useAppChatSurface } from '@/features/chat-surface';
 
 interface AssistantRunBlockProps {
   unit: AgentRunUnit;
@@ -21,10 +21,10 @@ function AssistantRunBlock({
   threadId,
   onOpenArtifact,
 }: Readonly<AssistantRunBlockProps>) {
-  const isEmbedded = useEmbedded();
+  const { capabilities } = useAppChatSurface();
   const hasText = unit.blocks.some((block) => block.kind === 'text');
   const canReadAloud =
-    !isEmbedded &&
+    capabilities.readAloud &&
     !unit.isStreaming &&
     unit.blocks.some(
       (block) => block.kind === 'text' && hasSpeakableText(block.content.text),

@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
+import type { ChatSlots, ChatSurfaceProps } from '@ayunis/chat/surface';
+import { useAppChatSurface } from '@/features/chat-surface';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
 import { useMessageSendWithOutlookTools } from '@/pages/chat/hooks/useMessageSendWithOutlookTools';
-import ChatHeader from './ChatHeader';
+import ChatHeader, { ChatArtifactPanelButton } from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
 import ProviderFaultNotice from './ProviderFaultNotice';
@@ -74,6 +76,7 @@ export default function ChatPage({
 }: ChatPageProps) {
   const { t } = useTranslation('chat');
   const isEmbedded = useEmbedded();
+  const { capabilities, transport } = useAppChatSurface();
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
   const {
@@ -225,6 +228,7 @@ export default function ChatPage({
     abort,
     outlookToolBridge,
   } = useMessageSendWithOutlookTools({
+    transport,
     threadId: thread.id,
     messages,
     isStreaming,
@@ -324,19 +328,29 @@ export default function ChatPage({
     setTimeout(() => setRenameDialogOpen(true), 0);
   }
 
-  const chatHeader = (
-    <ChatHeader
-      threadId={thread.id}
-      threadTitle={threadTitle}
-      isAnonymous={thread.isAnonymous}
-      workspaceId={thread.workspaceId}
-      origin={thread.origin}
-      isArtifactPanelOpen={sidePanelState.isOpen}
-      onToggleArtifactPanel={sidePanelTransitions.toggleArtifactPanel}
-      onRename={handleRenameThread}
-      onDelete={handleDeleteThread}
-    />
-  );
+  const slots: ChatSlots = {
+    header: (actions) => (
+      <ChatHeader
+        threadId={thread.id}
+        threadTitle={threadTitle}
+        isAnonymous={thread.isAnonymous}
+        workspaceId={thread.workspaceId}
+        origin={thread.origin}
+        actions={actions}
+        onRename={capabilities.rename ? handleRenameThread : undefined}
+        onDelete={capabilities.delete ? handleDeleteThread : undefined}
+      />
+    ),
+    actions: !isEmbedded && (
+      <ChatArtifactPanelButton
+        open={sidePanelState.isOpen}
+        onToggle={sidePanelTransitions.toggleArtifactPanel}
+      />
+    ),
+    onOpenArtifact: isEmbedded
+      ? undefined
+      : sidePanelTransitions.openArtifactPanel,
+  };
 
   const renderUnits = useRenderUnits(messages, {
     isStreaming,
@@ -350,7 +364,9 @@ export default function ChatPage({
   const showLoadingPlaceholder =
     pendingSubmission !== null || (isStreaming && lastUnitKind === 'user');
 
-  const chatContent = (
+  const renderChatContent: ChatSurfaceProps['renderContent'] = (
+    openArtifact,
+  ) => (
     <ToolCallConfirmationContext.Provider value={toolCallConfirmation}>
       <OutlookToolBridgeContext.Provider value={outlookToolBridge}>
         <ChatThreadContent
@@ -371,7 +387,7 @@ export default function ChatPage({
           showLoadingPlaceholder={
             showLoadingPlaceholder && !hasProcessingSources
           }
-          onOpenArtifact={sidePanelTransitions.openArtifactPanel}
+          onOpenArtifact={openArtifact}
         />
       </OutlookToolBridgeContext.Provider>
     </ToolCallConfirmationContext.Provider>
@@ -428,35 +444,36 @@ export default function ChatPage({
     </>
   );
 
-  const sidePanel = sidePanelState.isOpen ? (
-    <ChatSidePanel
-      threadId={thread.id}
-      view={sidePanelState.view}
-      artifactPanelRef={artifactPanelRef}
-      artifactPanelProps={{
-        ...artifactPanel,
-        onBack: () => sidePanelState.openTab('artifacts'),
-        onClose: sidePanelState.close,
-        onSave: handleSaveArtifact,
-        onRevert: handleRevertArtifact,
-        onExport: handleExportArtifact,
-        onLetterheadChange: handleLetterheadChange,
-        isExporting,
-      }}
-      onSelectArtifact={sidePanelTransitions.openArtifactPanel}
-      onTabChange={sidePanelTransitions.changeTab}
-      onClose={sidePanelTransitions.toggleArtifactPanel}
-    />
-  ) : undefined;
+  const sidePanel =
+    !isEmbedded && sidePanelState.isOpen ? (
+      <ChatSidePanel
+        threadId={thread.id}
+        view={sidePanelState.view}
+        artifactPanelRef={artifactPanelRef}
+        artifactPanelProps={{
+          ...artifactPanel,
+          onBack: () => sidePanelState.openTab('artifacts'),
+          onClose: sidePanelState.close,
+          onSave: handleSaveArtifact,
+          onRevert: handleRevertArtifact,
+          onExport: handleExportArtifact,
+          onLetterheadChange: handleLetterheadChange,
+          isExporting,
+        }}
+        onSelectArtifact={sidePanelTransitions.openArtifactPanel}
+        onTabChange={sidePanelTransitions.changeTab}
+        onClose={sidePanelTransitions.toggleArtifactPanel}
+      />
+    ) : undefined;
   return (
     <AppLayout>
       <ProductiveOutcomeProvider threadId={thread.id}>
         <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
           <SourceCitationController key={thread.id} threadId={thread.id}>
             <ChatInterfaceLayout
-              chatHeader={chatHeader}
-              chatContent={chatContent}
-              chatInput={chatInput}
+              slots={slots}
+              renderContent={renderChatContent}
+              composer={chatInput}
               resetKey={thread.id}
               sidePanel={sidePanel}
             />

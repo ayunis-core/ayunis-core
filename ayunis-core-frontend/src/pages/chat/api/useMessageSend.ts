@@ -21,7 +21,6 @@ import {
 } from '@ayunis/api-client/endpoints';
 import {
   activeThreadRunsQueryKey,
-  threadRunEndpoints,
   stopThreadRun,
   type StartedRunRequest,
 } from '@/features/thread-run';
@@ -30,8 +29,10 @@ import {
   createFrameCoalescer,
   executeRun,
   type RunEvent,
+  type RunEndpoints,
   type RunExecutionRequest,
 } from '@ayunis/chat/runs';
+import { threadRunEndpoints } from '@/features/chat-surface';
 import { createRunFunnelTracker } from '@/pages/chat/lib/run-funnel-tracking';
 
 export interface PendingImage {
@@ -166,7 +167,10 @@ function notifySendFailure(
   }
 }
 
-export function useMessageSend(params: UseMessageSendParams) {
+export function useMessageSend(
+  params: UseMessageSendParams,
+  transport: RunEndpoints = threadRunEndpoints,
+) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
   const currentParamsRef = useRef(params);
@@ -246,7 +250,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         }
       };
 
-      return executeRun(threadRunEndpoints, payload, {
+      return executeRun(transport, payload, {
         onEvent,
         onUnauthorized: redirectToLogin,
         onError: (error) => notifySendFailure(error, t, requestParams.onError),
@@ -266,7 +270,7 @@ export function useMessageSend(params: UseMessageSendParams) {
         },
       });
     },
-    [t, queryClient],
+    [t, queryClient, transport],
   );
 
   const sendTextMessage = useCallback(
@@ -334,13 +338,13 @@ export function useMessageSend(params: UseMessageSendParams) {
   );
 
   const abort = useCallback(() => {
-    stopThreadRun(params.threadId);
+    stopThreadRun(params.threadId, transport);
 
     // Don't invalidate queries immediately on abort
     // The backend will save the message asynchronously, and we'll get the update
     // through normal query invalidation in the finally block
     // This prevents race conditions where we refetch before backend finishes saving
-  }, [params.threadId]);
+  }, [params.threadId, transport]);
 
   return {
     sendTextMessage,
