@@ -14,6 +14,15 @@ export class ChildChunkRecord extends BaseRecord {
   })
   parent: ParentChunkRecord;
 
+  // Copy of the parent's relatedDocumentId, so search can filter child chunks
+  // without joining parent_chunks. A chunk never moves to another document,
+  // so the copy cannot go stale. No foreign key: rows are already removed
+  // through the parentId cascade. Nullable until production has been
+  // backfilled and runs only code that writes it (AYC-2055).
+  @Index()
+  @Column({ type: 'varchar', nullable: true })
+  relatedDocumentId: UUID | null;
+
   // !! IMPORTANT !!
   // We use two explicit columns to avoid mixing dimensions
   // If you add new dimensions, you need to update the embedding-dimensions.enum.ts

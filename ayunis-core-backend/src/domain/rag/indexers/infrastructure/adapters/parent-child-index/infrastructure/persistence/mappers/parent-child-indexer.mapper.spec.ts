@@ -11,6 +11,7 @@ describe('ParentChildIndexerMapper', () => {
       const embedding = Array.from({ length: dimensions }, (_, i) => i / 1000);
       const record = mapper.toChildChunkRecord(
         new ChildChunk({ parentId: randomUUID(), embedding }),
+        randomUUID(),
       );
 
       expect(mapper.toChildChunkEntity(record).embedding).toEqual(embedding);
