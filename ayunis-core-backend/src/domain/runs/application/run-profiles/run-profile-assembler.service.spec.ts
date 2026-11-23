@@ -19,9 +19,11 @@ import type { RunCapabilityInput } from 'src/domain/runs/application/run-capabil
 import {
   aCapabilityContext,
   aThread,
+  createAssembleToolUseCase,
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/runs/testing/run-capability.fixture';
+import { ToolLoaderCapability } from 'src/domain/runs/application/run-capabilities/capabilities/tool-loader.capability';
 import {
   DONE_WHEN_MODEL_STOPS,
   eager,
@@ -29,7 +31,10 @@ import {
   type ProfileCapability,
   type RunProfile,
 } from './run-profile';
-import { RunProfileAssembler } from './run-profile-assembler.service';
+import {
+  RunProfileAssembler,
+  type AssembledRunProfile,
+} from './run-profile-assembler.service';
 
 const tool = (name: string) => ({ name }) as Tool;
 
@@ -62,11 +67,15 @@ function buildAssembler(
     asksForToolConfirmation?: boolean;
     allowances?: McpToolAllowance[];
     loadedCapabilityIds?: string[];
+    loadedCapabilityIdsAfterRefresh?: string[];
     canUseTools?: boolean;
   } = {},
 ) {
   const thread = aThread({ loadedCapabilityIds: options.loadedCapabilityIds });
-  const refreshedThread = aThread({ id: thread.id });
+  const refreshedThread = aThread({
+    id: thread.id,
+    loadedCapabilityIds: options.loadedCapabilityIdsAfterRefresh,
+  });
   const createContext = jest.fn((input: RunCapabilityInput) =>
     Promise.resolve(
       aCapabilityContext({
@@ -86,6 +95,7 @@ function buildAssembler(
     { execute: findThread } as unknown as FindThreadUseCase,
     { toRuntimeTools } as unknown as BackendToolAdapter,
     { execute: findAllowances } as unknown as FindMcpToolAllowancesUseCase,
+    new ToolLoaderCapability(createAssembleToolUseCase()),
   );
   const profile: RunProfile = {
     id: 'chat',
@@ -388,7 +398,11 @@ describe('RunProfileAssembler', () => {
 
     function assembleWith(
       routines: RunCapability,
-      options: { loadedCapabilityIds?: string[]; canUseTools?: boolean } = {},
+      options: {
+        loadedCapabilityIds?: string[];
+        loadedCapabilityIdsAfterRefresh?: string[];
+        canUseTools?: boolean;
+      } = {},
     ) {
       const { assemble } = buildAssembler(
         [...eager(internet), ...onDemand(routines), ...eager(mcp)],
@@ -398,6 +412,21 @@ describe('RunProfileAssembler', () => {
     }
 
     const names = (tools: readonly Tool[]) => tools.map((t) => t.name);
+    const hookNames = (assembled: AssembledRunProfile) =>
+      assembled
+        .createHooks(new RuntimeToolIntegrationRegistry([]))
+        .map((hook) => hook.name);
+    const loaderHook = (assembled: AssembledRunProfile) =>
+      assembled
+        .createHooks(new RuntimeToolIntegrationRegistry([]))
+        .find((hook) => hook.name === 'ayunis-tool-loader')!;
+    const toolCallCtx = (name: string, isError = false) =>
+      ({
+        toolCall: { id: 'call-1', name, input: {} },
+        isError,
+        setTools: jest.fn(),
+        setInstructions: jest.fn(),
+      }) as const;
 
     beforeEach(() => {
       seenByMcp.length = 0;
@@ -409,12 +438,117 @@ describe('RunProfileAssembler', () => {
       expect(names(assembled.tools)).toEqual([
         'internet_search',
         'jira_search',
+        'load_tools',
       ]);
       expect(assembled.instructions).not.toContain(ROUTINE_USAGE);
       expect(assembled.capabilityCatalog).toEqual([routineCatalogEntry]);
-      expect(
-        assembled.createHooks(new RuntimeToolIntegrationRegistry([])),
-      ).toEqual([]);
+      expect(hookNames(assembled)).toEqual(['ayunis-tool-loader']);
+    });
+
+    it('offers load_tools for the unloaded groups and lists them in <available_tool_groups>', async () => {
+      const assembled = await assembleWith(routineManagement());
+
+      const loadTools = assembled.tools.find((t) => t.name === 'load_tools');
+      expect(loadTools?.parameters).toMatchObject({
+        properties: {
+          groups: { items: { enum: ['routine_management'] } },
+        },
+      });
+      expect(assembled.instructions).toContain('<available_tool_groups>');
+      expect(assembled.instructions).toContain(
+        '<id>routine_management</id>\n    <description>Create and edit routines.</description>',
+      );
+    });
+
+    it('offers neither load_tools nor the catalog section once every available group is loaded', async () => {
+      const assembled = await assembleWith(routineManagement(), {
+        loadedCapabilityIds: ['routine_management'],
+      });
+
+      expect(names(assembled.tools)).not.toContain('load_tools');
+      expect(assembled.instructions).not.toContain('<available_tool_groups>');
+      expect(hookNames(assembled)).toContain('ayunis-tool-loader');
+    });
+
+    it('offers neither load_tools nor the catalog section when no on-demand capability is available', async () => {
+      const assembled = await assembleWith(
+        routineManagement({ contribute: () => ({}) }),
+      );
+
+      expect(names(assembled.tools)).not.toContain('load_tools');
+      expect(assembled.instructions).not.toContain('<available_tool_groups>');
+    });
+
+    it('adds no tool loader to a profile without on-demand capabilities', async () => {
+      const { assemble } = buildAssembler(eager(internet, mcp));
+
+      const assembled = await assemble();
+
+      expect(names(assembled.tools)).not.toContain('load_tools');
+      expect(hookNames(assembled)).toEqual([]);
+    });
+
+    it('offers the tools and sections of a group in the same run once load_tools stored it', async () => {
+      const assembled = await assembleWith(routineManagement(), {
+        loadedCapabilityIdsAfterRefresh: ['routine_management'],
+      });
+      const hook = loaderHook(assembled);
+      const ctx = toolCallCtx('load_tools');
+
+      await hook.afterToolCall!(ctx as never);
+
+      expect(ctx.setTools).toHaveBeenCalledWith([
+        { name: 'runtime:internet_search' },
+        { name: 'runtime:create_routine' },
+        { name: 'runtime:edit_routine' },
+        { name: 'runtime:jira_search' },
+      ]);
+      const instructions = ctx.setInstructions.mock.calls[0][0] as string;
+      expect(instructions).toContain(ROUTINE_USAGE);
+      expect(instructions).not.toContain('<available_tool_groups>');
+    });
+
+    it.each([
+      ['a failed load_tools call', toolCallCtx('load_tools', true)],
+      ['another tool call', toolCallCtx('internet_search')],
+    ])('does not refresh after %s', async (_label, ctx) => {
+      const assembled = await assembleWith(routineManagement());
+
+      await loaderHook(assembled).afterToolCall!(ctx as never);
+
+      expect(ctx.setTools).not.toHaveBeenCalled();
+    });
+
+    it('names the group to load when the model calls a tool of an unloaded group', async () => {
+      const assembled = await assembleWith(routineManagement());
+
+      const description = await loaderHook(assembled).describeUnknownTool!({
+        iteration: 0,
+        toolCall: { id: 'call-1', name: 'edit_routine', input: {} },
+      });
+
+      expect(description).toContain(
+        'edit_routine is not available yet: it belongs to the tool group routine_management',
+      );
+      expect(description).toContain(
+        'Call load_tools with {"groups":["routine_management"]} first',
+      );
+    });
+
+    it('leaves the generic result for unknown tools outside the catalog and for groups loaded by a refresh', async () => {
+      const assembled = await assembleWith(routineManagement(), {
+        loadedCapabilityIdsAfterRefresh: ['routine_management'],
+      });
+      const hook = loaderHook(assembled);
+      const call = (name: string) =>
+        hook.describeUnknownTool!({
+          iteration: 0,
+          toolCall: { id: 'call-1', name, input: {} },
+        });
+
+      expect(await call('delete_routine')).toBeUndefined();
+      await hook.afterToolCall!(toolCallCtx('load_tools') as never);
+      expect(await call('edit_routine')).toBeUndefined();
     });
 
     it('contributes a capability the thread has loaded and leaves it out of the catalog', async () => {
@@ -434,7 +568,7 @@ describe('RunProfileAssembler', () => {
         assembled
           .createHooks(new RuntimeToolIntegrationRegistry([]))
           .map((hook) => hook.name),
-      ).toEqual(['routine-hook']);
+      ).toEqual(['routine-hook', 'ayunis-tool-loader']);
     });
 
     it('contributes a capability the context requires without a stored id', async () => {
@@ -473,6 +607,7 @@ describe('RunProfileAssembler', () => {
       expect(names(assembled.tools)).toEqual([
         'internet_search',
         'jira_search',
+        'load_tools',
       ]);
       expect(assembled.capabilityCatalog).toEqual([routineCatalogEntry]);
     });

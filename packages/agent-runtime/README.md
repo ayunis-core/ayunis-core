@@ -114,16 +114,17 @@ signal while retaining the terminal classified timeout.
 
 Hooks run sequentially in registration order.
 
-| Phase             | Frequency                     | Typical use                                     |
-| ----------------- | ----------------------------- | ----------------------------------------------- |
-| `runStart`        | once                          | guards and initial run-state mutation           |
-| `beforeModelTurn` | once per logical turn         | persistent message/tool/instruction transforms  |
-| `beforeModelCall` | before every actual call      | authorization and call-local request transforms |
-| `afterModelCall`  | exactly once per started call | usage persistence, diagnostics, telemetry       |
-| `afterModelTurn`  | exactly once per turn         | accepted/partial message persistence            |
-| `beforeToolCall`  | once per tool call            | approval and tool-call rewriting                |
-| `afterToolCall`   | once per tool call            | result persistence and next-turn mutation       |
-| `runEnd`          | exactly once                  | run-scoped cleanup and terminal telemetry       |
+| Phase                 | Frequency                     | Typical use                                     |
+| --------------------- | ----------------------------- | ----------------------------------------------- |
+| `runStart`            | once                          | guards and initial run-state mutation           |
+| `beforeModelTurn`     | once per logical turn         | persistent message/tool/instruction transforms  |
+| `beforeModelCall`     | before every actual call      | authorization and call-local request transforms |
+| `afterModelCall`      | exactly once per started call | usage persistence, diagnostics, telemetry       |
+| `afterModelTurn`      | exactly once per turn         | accepted/partial message persistence            |
+| `beforeToolCall`      | once per tool call            | approval and tool-call rewriting                |
+| `afterToolCall`       | once per tool call            | result persistence and next-turn mutation       |
+| `describeUnknownTool` | per call to an unknown tool   | host-specific error result for that call        |
+| `runEnd`              | exactly once                  | run-scoped cleanup and terminal telemetry       |
 
 Every call has a stable `modelCallId`, run ID, one-based turn and call sequence,
 trigger, and the actual `ModelProvider`. `afterModelCall` receives a
@@ -235,6 +236,11 @@ passed input validation. The `tool_result_message` event carries the same
 string or `{ result, isError }`. Tool output is capped at 200,000 characters.
 Malformed tool arguments are never executed. After recovery consumes the last
 retry, the final call disables tools and asks for a direct answer.
+
+A call to a tool that is not in the current tool set gets an error result:
+the first `describeUnknownTool` hook that returns a string supplies it, and
+otherwise the call gets a generic not-found result. The runtime never runs or
+adds a tool for such a call.
 
 A tool without `execute` is handled externally: its call gets the result
 `Tool execution is handled externally`, and the run completes once the tool

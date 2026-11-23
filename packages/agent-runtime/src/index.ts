@@ -42,6 +42,7 @@ export type {
   BeforeModelCallContext,
   BeforeModelTurnContext,
   BeforeToolCallContext,
+  DescribeUnknownToolContext,
   Hook,
   HookApi,
   HookControlApi,

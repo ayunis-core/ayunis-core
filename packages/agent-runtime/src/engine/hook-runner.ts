@@ -202,6 +202,20 @@ export class HookRunner {
     );
   }
 
+  async describeUnknownTool(info: {
+    iteration: number;
+    toolCall: ToolCallSummary;
+  }): Promise<string | undefined> {
+    for (const hook of this.deps.hooks) {
+      let description: string | undefined;
+      await this.invoke(hook, 'describeUnknownTool', async () => {
+        description = await hook.describeUnknownTool?.(info);
+      });
+      if (description !== undefined) return description;
+    }
+    return undefined;
+  }
+
   runEnd(info: {
     messages: readonly Message[];
     status: RunStatus;

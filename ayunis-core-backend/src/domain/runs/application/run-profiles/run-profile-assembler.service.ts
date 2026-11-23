@@ -23,10 +23,12 @@ import type {
   RunCapabilityInput,
 } from 'src/domain/runs/application/run-capabilities/run-capability-context';
 import { RunCapabilityContextFactory } from 'src/domain/runs/application/run-capabilities/run-capability-context.factory';
+import { ToolLoaderCapability } from 'src/domain/runs/application/run-capabilities/capabilities/tool-loader.capability';
 import { CapabilityAssembly } from './capability-assembly';
 import { composeRunInstructions } from './compose-run-instructions';
 import {
   CapabilityLoading,
+  eager,
   type ProfileCapability,
   type RunProfile,
 } from './run-profile';
@@ -60,6 +62,7 @@ export class RunProfileAssembler {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly backendToolAdapter: BackendToolAdapter,
     private readonly findMcpToolAllowancesUseCase: FindMcpToolAllowancesUseCase,
+    private readonly toolLoader: ToolLoaderCapability,
   ) {}
 
   async assemble(
@@ -81,7 +84,7 @@ export class RunProfileAssembler {
       instructions,
       capabilityCatalog: catalog,
       createHooks: (integrations) => {
-        const handle = this.createHandle(profile, input, integrations);
+        const handle = this.createHandle(profile, input, integrations, catalog);
         return hooks.map((createHook) => createHook(handle));
       },
     };
@@ -91,13 +94,17 @@ export class RunProfileAssembler {
     profile: RunProfile,
     input: RunCapabilityInput,
     integrations: RuntimeToolIntegrationRegistry,
+    initialCatalog: readonly CapabilityCatalogEntry[],
   ): RunProfileHandle {
+    let catalog = initialCatalog;
     return {
+      capabilityCatalog: () => catalog,
       refresh: async (target) => {
         const { thread } = await this.findThreadUseCase.execute(
           new FindThreadQuery(input.thread.id),
         );
         const rebuilt = await this.build(profile, { ...input, thread });
+        catalog = rebuilt.catalog;
         const runtimeTools = this.backendToolAdapter.toRuntimeTools(
           rebuilt.tools,
           rebuilt.toolsNeedingApproval,
@@ -119,7 +126,7 @@ export class RunProfileAssembler {
   ): Promise<ProfileBuild> {
     const context = await this.contextFactory.create(input);
     const assembly = new CapabilityAssembly();
-    for (const entry of profile.capabilities) {
+    for (const entry of this.withToolLoader(profile.capabilities)) {
       const contribution = await entry.capability.contribute(
         context,
         assembly.state(),
@@ -139,6 +146,18 @@ export class RunProfileAssembler {
       hooks,
       catalog,
     };
+  }
+
+  // Last, so the loader sees the catalog of every on-demand capability.
+  private withToolLoader(
+    capabilities: readonly ProfileCapability[],
+  ): readonly ProfileCapability[] {
+    const hasOnDemand = capabilities.some(
+      ({ loading }) => loading === CapabilityLoading.ON_DEMAND,
+    );
+    return hasOnDemand
+      ? [...capabilities, ...eager(this.toolLoader)]
+      : capabilities;
   }
 
   // Loaded on every build, so tools a refresh adds are checked too.

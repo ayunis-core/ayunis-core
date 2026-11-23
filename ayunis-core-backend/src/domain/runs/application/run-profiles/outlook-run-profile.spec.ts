@@ -1,3 +1,4 @@
+import { ToolLoaderCapability } from 'src/domain/runs/application/run-capabilities/capabilities/tool-loader.capability';
 import type { UUID } from 'crypto';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
@@ -124,6 +125,7 @@ function assembleOutlook() {
     resolved({}),
     { toRuntimeTools: jest.fn() } as never,
     resolved([]),
+    new ToolLoaderCapability(createAssembleToolUseCase()),
   );
   return assembler.assemble(buildOutlookProfile(), {
     profile: { id: 'outlook' },

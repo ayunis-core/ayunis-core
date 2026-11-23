@@ -126,6 +126,7 @@
         "edit_routine": "Routine bearbeitet",
         "add_anonymization_exception": "Ausnahme von der Anonymisierung vorgeschlagen",
         "activate_skill": "Fähigkeit aktiviert",
+        "load_tools": "Werkzeuge geladen",
         "get_memory": "Erinnerung gelesen",
         "set_memory": "Erinnerung aktualisiert",
         "chat_list": "Frühere Chats aufgelistet",
@@ -164,6 +165,7 @@
       "source_get_text": "Datei durchsuchen",
       "code_execution": "Berechnung ausführen",
       "activate_skill": "Fähigkeit aktivieren",
+      "load_tools": "Werkzeuge laden",
       "knowledge_query": "Wissen abrufen",
       "knowledge_get_text": "Wissen abrufen",
       "read_document": {

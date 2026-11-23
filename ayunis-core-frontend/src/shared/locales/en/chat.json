@@ -126,6 +126,7 @@
         "edit_routine": "Edited routine",
         "add_anonymization_exception": "Proposed an anonymization exception",
         "activate_skill": "Activated skill",
+        "load_tools": "Loaded tools",
         "get_memory": "Read memory",
         "set_memory": "Updated memory",
         "chat_list": "Listed past chats",
@@ -164,6 +165,7 @@
       "source_get_text": "Query file",
       "code_execution": "Calculate",
       "activate_skill": "Activate skill",
+      "load_tools": "Load tools",
       "knowledge_query": "Search knowledge base",
       "knowledge_get_text": "Read knowledge base document",
       "read_document": {

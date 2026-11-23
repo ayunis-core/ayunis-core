@@ -1,3 +1,5 @@
+import { createAssembleToolUseCase } from 'src/domain/runs/testing/run-capability.fixture';
+import { ToolLoaderCapability } from 'src/domain/runs/application/run-capabilities/capabilities/tool-loader.capability';
 import type { PersonalSkill as BackendSkill } from 'src/domain/skills/domain/personal-skill.entity';
 import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 import {
@@ -324,6 +326,7 @@ function buildHarness(overrides: HarnessOptions = {}): Harness {
     findThreadUseCase,
     backendToolAdapter,
     { execute: jest.fn().mockResolvedValue([]) } as never,
+    new ToolLoaderCapability(createAssembleToolUseCase()),
   );
   const anonymize = jest.fn().mockResolvedValue({
     anonymizedText: 'Hi {{pii:PERSON_1}}',
@@ -2641,7 +2644,11 @@ describe('ExecuteRunUseCase', () => {
       expect.objectContaining({
         thread: expect.objectContaining({ id: threadId }),
       }),
-      { reservedToolNames: new Set(), loadableToolNames: new Set() },
+      {
+        reservedToolNames: new Set(),
+        loadableToolNames: new Set(),
+        capabilityCatalog: [],
+      },
     );
     expect(provider.requests[0].instructions).toBe('system prompt');
   });

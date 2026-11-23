@@ -37,6 +37,8 @@ export interface RunProfileHandle {
    * the resulting tools and instructions into the running loop.
    */
   refresh(target: RunInstructionsTarget): Promise<void>;
+  /** The catalog of the run's latest assembly, initial or refreshed. */
+  capabilityCatalog(): readonly CapabilityCatalogEntry[];
 }
 
 export type CapabilityHookFactory = (run: RunProfileHandle) => Hook;
@@ -61,6 +63,8 @@ export interface CapabilityAssemblyState {
    * on-demand capability that is available but not loaded.
    */
   readonly loadableToolNames: ReadonlySet<string>;
+  /** The on-demand capabilities before this one that the run could load. */
+  readonly capabilityCatalog: readonly CapabilityCatalogEntry[];
 }
 
 /** An on-demand capability that this run could load but has not loaded. */
