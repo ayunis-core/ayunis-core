@@ -55,6 +55,7 @@ artifacts/
 │   │   └── user-content-masking.service.ts
 │   └── use-cases/
 │       ├── apply-edits-to-artifact/
+│       ├── attach-artifact-to-thread/
 │       ├── create-artifact/
 │       ├── delete-artifact/
 │       ├── delete-thread-links-outside-scope/
@@ -88,6 +89,7 @@ artifacts/
 │       └── xlsx-spreadsheet-export.service.ts
 ├── presenters/http/
 │   ├── artifacts.controller.ts
+│   ├── thread-artifacts.controller.ts  # POST /threads/:id/artifacts/:artifactId
 │   ├── dtos/
 │   └── mappers/
 └── artifacts.module.ts
@@ -95,7 +97,7 @@ artifacts/
 
 ## Dependencies
 
-- **ThreadsModule** — Imported for the chat a new artifact is created in: its user, scope (owner) and anonymous flag. The threads module imports this module back (`forwardRef`) to drop a moved chat's links
+- **ThreadsModule** — Imported for the chat a new artifact is created in or an artifact is attached to: its user, scope (owner) and anonymous flag. The threads module imports this module back (`forwardRef`) to drop a moved chat's links
 - **ThreadPiiMasksModule** — Imported to read the chat's dictionary when a run writes and to allocate chat masks when a run reads
 - **AnonymizationSettingsModule** — Imported to detect values in user saves of anonymous artifacts with the org's whitelists (`AnonymizeTextForOrgUseCase`)
 - **WorkspacesModule** — Imported for workspace membership validation when listing a workspace's artifacts, and for `manage_workspace` when a member deletes a workspace artifact they did not create
@@ -112,10 +114,11 @@ artifacts/
 
 - Creating an artifact also creates version 1 and the link to the chat it was created in, in the same transaction. Its owner is the chat's scope: the chat's user for a personal chat, the chat's workspace for a workspace chat; the creating user becomes `creatorId`
 - Access follows the owner, for every read and write: a personal artifact is found only for its owner, a workspace artifact for every current member of the workspace, whoever created it. Non-members, org admins included, get `ARTIFACT_NOT_FOUND` (404) like for a missing artifact. The condition sits in the repository's lookups by id (`accessibleTo`, membership through the workspaces module's `memberWorkspace` condition), so detail, update, edits, revert and export all apply it; runs check as the chat's user
+- Attaching an artifact to a chat (`POST /threads/:id/artifacts/:artifactId`, `AttachArtifactToThreadUseCase`, 204) links it to one of the caller's chats (`FindThreadUseCase`; another user's chat is `THREAD_NOT_FOUND`) if the caller may read it (otherwise `ARTIFACT_NOT_FOUND`, 404). The artifact must belong to the chat's scope, the user's personal artifacts for a personal chat and that workspace's for a workspace chat (`ARTIFACT_OUTSIDE_CHAT_SCOPE`, 400), and have the chat's mode, anonymous for an anonymous chat and normal for a normal one (`ARTIFACT_CHAT_MODE_MISMATCH`, 400). Attaching an artifact that is linked already changes nothing. The link is written by one statement that re-checks scope and mode while it holds the chat and artifact rows (`linkToMatchingThread`, `FOR SHARE`), so a chat moving to another scope at the same time either waits and then deletes the new link with its other outside-scope links, or makes the attachment fail
 - A chat's artifact list (`GET /artifacts/thread/:threadId`, used by the chat's side panel and by the runs module's tool assembly) returns the artifacts linked to the chat that the caller may access, in the order they were linked; lookups through a chat (lists and run lookups) only find anything for the chat's own user
 - A workspace's artifact list (`GET /artifacts/workspace/:workspaceId`, the workspace's artifact tab) returns every artifact the workspace owns, after `AssertWorkspaceReadAccessUseCase` checked the caller's membership
 - The Ablage (`GET /artifacts/personal`, `FindPersonalArtifactsUseCase`) returns the caller's personal artifacts only, never workspace artifacts, not even the ones the caller created
-- Both lists (`findByOwner`) are ordered by last change (`updatedAt`, newest first), paginated (`limit` up to 100, `offset`), filtered by `type`, and searched by title case-insensitively. The search matches the title as users see it: for anonymous artifacts the title with the placeholders its dictionary knows replaced by their real values, resolved in SQL (`queries/apply-artifact-title-search.ts`); known placeholders do not match by their own text
+- Both lists (`findByOwner`) are ordered by last change (`updatedAt`, newest first), paginated (`limit` up to 100, `offset`), filtered by `type` and by `isAnonymous` (the composer's picker lists only the artifacts of the chat's mode), and searched by title case-insensitively. The search matches the title as users see it: for anonymous artifacts the title with the placeholders its dictionary knows replaced by their real values, resolved in SQL (`queries/apply-artifact-title-search.ts`); known placeholders do not match by their own text
 - Deleting an artifact (`DELETE /artifacts/:id`, `DeleteArtifactUseCase`) is allowed for a personal artifact to its owner and for a workspace artifact to its creator or to members holding `manage_workspace` in the workspace (`AssertWorkspaceWriteAccessUseCase`). Other members get `UNAUTHORIZED_ACCESS` (403) and the artifact stays; whoever cannot see the artifact (non-members, org admins included, and other users for personal artifacts) gets `ARTIFACT_NOT_FOUND` (404). Deleting removes its versions, dictionary and every chat link, so it leaves every chat's side panel and the tools of later runs. Responses carry `creatorId` so clients can offer delete only to those allowed
 - Moving a chat to another scope (personal ↔ workspace, workspace ↔ workspace) deletes its links to artifacts the new scope does not own (`DeleteThreadLinksOutsideScopeUseCase`, called by the threads module in the move's transaction); the artifacts stay with their owner
 - Lookups from a run (`ArtifactRun` on `ReadArtifactInRunQuery`, `UpdateArtifactCommand` and `ApplyEditsToArtifactCommand`) find an artifact only when it is linked to the run's chat and matches the run's mode (anonymous runs anonymous artifacts, normal runs normal ones; the runs module decides the mode: anonymous chat or a model with enforced anonymous mode), in addition to the user access rules; otherwise they fail with `ARTIFACT_NOT_FOUND` and nothing is written. Lookups from the HTTP API are not restricted by links or mode

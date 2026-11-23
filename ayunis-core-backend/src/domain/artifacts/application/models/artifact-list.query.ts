@@ -8,14 +8,19 @@ import type { ArtifactType } from 'src/domain/artifacts/domain/value-objects/art
 export interface ArtifactListParams {
   search?: string;
   type?: ArtifactType;
+  isAnonymous?: boolean;
   limit?: number;
   offset?: number;
 }
 
-/** A page of one owner's artifacts, optionally searched by title and typed. */
+/**
+ * A page of one owner's artifacts, optionally searched by title and narrowed
+ * to a type and to anonymous or normal artifacts.
+ */
 export abstract class ArtifactListQuery extends PaginatedQuery {
   readonly search?: string;
   readonly type?: ArtifactType;
+  readonly isAnonymous?: boolean;
 
   constructor(params: ArtifactListParams) {
     super({
@@ -27,5 +32,6 @@ export abstract class ArtifactListQuery extends PaginatedQuery {
     });
     this.search = params.search?.trim() || undefined;
     this.type = params.type;
+    this.isAnonymous = params.isAnonymous;
   }
 }

@@ -21075,6 +21075,73 @@ export function useArtifactsControllerExport<TData = Awaited<ReturnType<typeof a
 
 
 /**
+ * @summary Attach an artifact to a chat. Personal chats take the personal artifacts of their user, workspace chats the artifacts of their workspace; the artifact must have the chat’s mode (anonymous or normal)
+ */
+export const threadArtifactsControllerAttach = (
+    id: string,
+    artifactId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/threads/${id}/artifacts/${artifactId}`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getThreadArtifactsControllerAttachMutationKey = () => ['threadArtifactsControllerAttach'] as const;
+
+export const getThreadArtifactsControllerAttachMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadArtifactsControllerAttach>>, TError,ThreadArtifactsControllerAttachMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof threadArtifactsControllerAttach>>, TError,ThreadArtifactsControllerAttachMutationVariables, TContext> => {
+
+const mutationKey = getThreadArtifactsControllerAttachMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof threadArtifactsControllerAttach>>, ThreadArtifactsControllerAttachMutationVariables> = (props) => {
+          const {id,artifactId} = props ?? {};
+
+          return  threadArtifactsControllerAttach(id,artifactId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ThreadArtifactsControllerAttachMutationResult = NonNullable<Awaited<ReturnType<typeof threadArtifactsControllerAttach>>>
+
+    export type ThreadArtifactsControllerAttachMutationError = void
+    export type ThreadArtifactsControllerAttachMutationVariables = {id: string;artifactId: string}
+
+    /**
+ * @summary Attach an artifact to a chat. Personal chats take the personal artifacts of their user, workspace chats the artifacts of their workspace; the artifact must have the chat’s mode (anonymous or normal)
+ */
+export const useThreadArtifactsControllerAttach = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof threadArtifactsControllerAttach>>, TError,ThreadArtifactsControllerAttachMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof threadArtifactsControllerAttach>>,
+        TError,
+        ThreadArtifactsControllerAttachMutationVariables,
+        TContext
+      > => {
+      return useMutation(getThreadArtifactsControllerAttachMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Create a new letterhead
  */
 export const letterheadsControllerCreate = (

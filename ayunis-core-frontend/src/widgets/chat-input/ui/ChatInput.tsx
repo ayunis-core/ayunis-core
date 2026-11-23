@@ -42,6 +42,7 @@ import { showError } from '@/shared/lib/toast';
 import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import './chat-input-glow.css';
 import type {
+  ArtifactSummary,
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
@@ -76,6 +77,10 @@ interface ChatInputProps {
   }[];
   knowledgeBases?: KnowledgeBaseSummary[];
   mcpIntegrations?: IntegrationSummary[];
+  /** Artifacts picked for the chat, linked to it when the message is sent. */
+  artifacts?: ArtifactSummary[];
+  /** The chat's workspace, whose artifacts are offered; personal artifacts when null. */
+  workspaceId?: string | null;
   /** Default `'idle'`. See {@link ChatInputSubmissionState}. */
   submissionState?: ChatInputSubmissionState;
   /**
@@ -92,6 +97,11 @@ interface ChatInputProps {
   onRemoveKnowledgeBase?: (knowledgeBaseId: string) => void;
   onAddIntegration?: (integration: IntegrationSummary) => void;
   onRemoveIntegration?: (integrationId: string) => void;
+  /** Offers the artifact picker in the plus menu. */
+  onAddArtifact?: (artifact: ArtifactSummary) => void;
+  onRemoveArtifact?: (artifactId: string) => void;
+  /** Artifacts already linked to the chat, left out of the picker. */
+  linkedArtifactIds?: string[];
   onSend: (
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
@@ -120,6 +130,8 @@ interface ChatInputProps {
   initialMessage?: string;
   /** Replaces the default "How can I help?" prompt. */
   placeholder?: string;
+  /** Default `true`; pages with content above the composer keep their scroll position with `false`. */
+  autoFocus?: boolean;
   draftChatId?: string;
   /** The thread's sent prompts, oldest first, recalled with ArrowUp/ArrowDown. */
   sentPrompts?: readonly string[];
@@ -140,6 +152,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       sources,
       knowledgeBases,
       mcpIntegrations,
+      artifacts,
+      workspaceId = null,
       submissionState = 'idle',
       isSendDisabled,
       isModelChangeDisabled,
@@ -151,6 +165,9 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onRemoveKnowledgeBase,
       onAddIntegration,
       onRemoveIntegration,
+      onAddArtifact,
+      onRemoveArtifact,
+      linkedArtifactIds,
       onSend,
       onCancel,
       isCancelDisabled = false,
@@ -165,6 +182,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onSkillSelect,
       initialMessage,
       placeholder,
+      autoFocus = true,
       draftChatId,
       sentPrompts = NO_PROMPTS,
     },
@@ -318,7 +336,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     const hasAttachmentChips =
       sources.length > 0 ||
       (knowledgeBases?.length ?? 0) > 0 ||
-      (mcpIntegrations?.length ?? 0) > 0;
+      (mcpIntegrations?.length ?? 0) > 0 ||
+      (artifacts?.length ?? 0) > 0;
     const hasPendingImages = pendingImages.length > 0;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
@@ -359,9 +378,13 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                         sources={sources}
                         knowledgeBases={knowledgeBases}
                         mcpIntegrations={mcpIntegrations}
+                        artifacts={artifacts}
                         onRemove={onRemoveSource}
                         onRemoveKnowledgeBase={onRemoveKnowledgeBase}
                         onRemoveIntegration={onRemoveIntegration}
+                        onRemoveArtifact={
+                          isSubmitting ? undefined : onRemoveArtifact
+                        }
                       />
                     </ChatInputExpandable>
                   )}
@@ -385,7 +408,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     minRows={1}
                     maxRows={10}
                     value={message}
-                    autoFocus
+                    autoFocus={autoFocus}
                     readOnly={isSubmitting}
                     onChange={(e) => setMessage(e.target.value)}
                     onPaste={handlePaste}
@@ -417,6 +440,15 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                     onImageSelect={handleImageSelect}
                     onAddKnowledgeBase={onAddKnowledgeBase}
                     onAddIntegration={onAddIntegration}
+                    onAddArtifact={onAddArtifact}
+                    attachedArtifactIds={[
+                      ...(linkedArtifactIds ?? []),
+                      ...(artifacts ?? []).map((artifact) => artifact.id),
+                    ]}
+                    artifactScope={{
+                      workspaceId,
+                      isAnonymous: isAnonymous || !!isAnonymousEnforced,
+                    }}
                     isAnonymous={isAnonymous}
                     onAnonymousChange={onAnonymousChange}
                     isAnonymousChangeDisabled={isAnonymousChangeDisabled}

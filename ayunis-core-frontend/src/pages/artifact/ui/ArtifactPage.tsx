@@ -10,15 +10,20 @@ import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { useWorkspace } from '@/features/workspaces';
 import type { ArtifactResponseDto } from '@/shared/api';
+import { ChatStarter, type ChatStarterDefaults } from '@/widgets/chat-starter';
 import { useDeleteArtifact } from '@/pages/artifact/api/useDeleteArtifact';
 import { canDeleteArtifact } from '@/pages/artifact/lib/can-delete-artifact';
 import { DeleteArtifactButton } from './DeleteArtifactButton';
 
 interface ArtifactPageProps {
   readonly artifactId: string;
+  readonly chatStarter: ChatStarterDefaults;
 }
 
-export default function ArtifactPage({ artifactId }: ArtifactPageProps) {
+export default function ArtifactPage({
+  artifactId,
+  chatStarter,
+}: ArtifactPageProps) {
   const { t } = useTranslation('artifacts');
   const {
     artifactPanel,
@@ -29,11 +34,13 @@ export default function ArtifactPage({ artifactId }: ArtifactPageProps) {
     handleLetterheadChange,
   } = useArtifactActions(artifactId);
   const panelRef = useRef<ArtifactPanelHandle>(null);
-  const deletedRef = useRef(false);
+  // Set when the page is left for a deleted artifact or a started chat, whose
+  // unsaved edits were already dealt with.
+  const leavingRef = useRef(false);
   useBlocker({
     shouldBlockFn: () =>
       new Promise<boolean>((resolve) => {
-        if (!panelRef.current || deletedRef.current) {
+        if (!panelRef.current || leavingRef.current) {
           resolve(false);
           return;
         }
@@ -47,8 +54,22 @@ export default function ArtifactPage({ artifactId }: ArtifactPageProps) {
     enableBeforeUnload: false,
   });
 
+  // The chat opens on another page, so unsaved edits are settled first, not
+  // after the chat and its run already exist.
+  const settleUnsavedEdits = () =>
+    new Promise<boolean>((resolve) => {
+      if (!panelRef.current) {
+        resolve(true);
+        return;
+      }
+      panelRef.current.requestExit(
+        () => resolve(true),
+        () => resolve(false),
+      );
+    });
+
   const deleteAction = useArtifactDeleteAction(artifactPanel.artifact, () => {
-    deletedRef.current = true;
+    leavingRef.current = true;
   });
 
   return (
@@ -67,21 +88,39 @@ export default function ArtifactPage({ artifactId }: ArtifactPageProps) {
           />
         }
         contentArea={
-          // The editors draw a left border to sit next to the chat; here the
-          // frame borders them on every side instead.
-          <div
-            className="flex h-[75dvh] min-h-96 flex-col overflow-hidden rounded-lg border *:border-l-0"
-            data-testid="artifact-page"
-          >
-            <ArtifactPanel
-              ref={panelRef}
-              {...artifactPanel}
-              onSave={handleSaveArtifact}
-              onRevert={handleRevertArtifact}
-              onExport={handleExportArtifact}
-              onLetterheadChange={handleLetterheadChange}
-              isExporting={isExporting}
-            />
+          <div className="flex flex-col gap-6">
+            {/* The editors draw a left border to sit next to the chat; here
+                the frame borders them on every side instead. */}
+            <div
+              className="flex h-[75dvh] min-h-96 flex-col overflow-hidden rounded-lg border *:border-l-0"
+              data-testid="artifact-page"
+            >
+              <ArtifactPanel
+                ref={panelRef}
+                {...artifactPanel}
+                onSave={handleSaveArtifact}
+                onRevert={handleRevertArtifact}
+                onExport={handleExportArtifact}
+                onLetterheadChange={handleLetterheadChange}
+                isExporting={isExporting}
+              />
+            </div>
+            {artifactPanel.artifact && (
+              <div data-testid="artifact-chat-starter">
+                <ChatStarter
+                  workspaceId={artifactPanel.artifact.workspaceId}
+                  artifact={artifactPanel.artifact}
+                  placeholder={t('page.chatPlaceholder')}
+                  autoFocus={false}
+                  confirmStart={settleUnsavedEdits}
+                  onStarted={() => {
+                    leavingRef.current = true;
+                  }}
+                  selectedModelId={chatStarter.selectedModelId}
+                  isEmbeddingModelEnabled={chatStarter.isEmbeddingModelEnabled}
+                />
+              </div>
+            )}
           </div>
         }
       />

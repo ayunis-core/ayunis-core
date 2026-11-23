@@ -15,7 +15,14 @@ import {
   TooltipContent,
 } from '@ayunis/ui/components/tooltip';
 import { Badge } from '@ayunis/ui/components/badge';
-import { AudioLines, Brain, Loader2, Paperclip, Plus } from 'lucide-react';
+import {
+  AudioLines,
+  Brain,
+  Files,
+  Loader2,
+  Paperclip,
+  Plus,
+} from 'lucide-react';
 import { Input } from '@ayunis/ui/components/input';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { useKnowledgeBases } from '@/widgets/chat-input/api/useKnowledgeBases';
@@ -30,10 +37,13 @@ import {
   ACCEPTED_AUDIO_PICKER_TYPES,
 } from '@/widgets/chat-input/utils/fileHandlers';
 import type {
+  ArtifactScope,
+  ArtifactSummary,
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
+import { ArtifactPickerDialog } from './ArtifactPickerDialog';
 import { SkillsSubmenu } from './SkillsSubmenu';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
@@ -49,6 +59,9 @@ interface PlusButtonProps {
   attachedIntegrationIds?: string[];
   onSkillSelect?: (skillId: string, skillName: string) => void;
   selectedSkillId?: string;
+  onArtifactSelect?: (artifact: ArtifactSummary) => void;
+  attachedArtifactIds?: string[];
+  artifactScope?: ArtifactScope;
 }
 
 export default function PlusButton({
@@ -63,9 +76,13 @@ export default function PlusButton({
   attachedIntegrationIds = [],
   onSkillSelect,
   selectedSkillId,
+  onArtifactSelect,
+  attachedArtifactIds = [],
+  artifactScope,
 }: Readonly<PlusButtonProps>) {
   const isEmbedded = useEmbedded();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isArtifactPickerOpen, setIsArtifactPickerOpen] = useState(false);
   if (isSubmitting && menuOpen) setMenuOpen(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
@@ -130,8 +147,12 @@ export default function PlusButton({
             <Button
               size="icon"
               variant="outline"
-              disabled={isSubmitting || (isUploadDisabled && !onSkillSelect)}
+              disabled={
+                isSubmitting ||
+                (isUploadDisabled && !onSkillSelect && !onArtifactSelect)
+              }
               aria-label={t('chatInput.addButtonTooltip')}
+              data-testid="chat-plus-button"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -222,8 +243,30 @@ export default function PlusButton({
               attachedIntegrationIds={attachedIntegrationIds}
             />
           )}
+          {onArtifactSelect && artifactScope && (
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                data-testid="chat-attach-artifact"
+                // Opens once the menu has closed, so the menu does not take
+                // the focus back from the dialog.
+                onClick={() => setTimeout(() => setIsArtifactPickerOpen(true))}
+              >
+                <Files className="h-4 w-4" />
+                <span>{t('chatInput.attachArtifact')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
+      {onArtifactSelect && artifactScope && (
+        <ArtifactPickerDialog
+          open={isArtifactPickerOpen}
+          onOpenChange={setIsArtifactPickerOpen}
+          scope={artifactScope}
+          attachedArtifactIds={attachedArtifactIds}
+          onSelect={onArtifactSelect}
+        />
+      )}
       <Input
         data-testid="chat-file-upload-input"
         type="file"

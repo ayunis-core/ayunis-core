@@ -10,6 +10,8 @@ import { SkillBadge } from './SkillBadge';
 import { MicrophoneButton } from './MicrophoneButton';
 import { ChatInputToolbar } from './ChatInputToolbar';
 import type {
+  ArtifactScope,
+  ArtifactSummary,
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
@@ -26,6 +28,9 @@ interface ChatInputActionBarProps {
   onImageSelect: (files: FileList | null) => void;
   onAddKnowledgeBase?: (knowledgeBase: KnowledgeBaseSummary) => void;
   onAddIntegration?: (integration: IntegrationSummary) => void;
+  onAddArtifact?: (artifact: ArtifactSummary) => void;
+  attachedArtifactIds: string[];
+  artifactScope: ArtifactScope;
   isAnonymous: boolean;
   onAnonymousChange?: (isAnonymous: boolean) => void;
   isAnonymousChangeDisabled?: boolean;
@@ -83,6 +88,9 @@ export function ChatInputActionBar({
   onImageSelect,
   onAddKnowledgeBase,
   onAddIntegration,
+  onAddArtifact,
+  attachedArtifactIds,
+  artifactScope,
   isAnonymous,
   onAnonymousChange,
   isAnonymousChangeDisabled,
@@ -104,7 +112,8 @@ export function ChatInputActionBar({
   onDictation,
 }: Readonly<ChatInputActionBarProps>) {
   const { t } = useTranslation('common');
-  // AYC-510 keeps knowledge bases and integrations out of the Outlook pane.
+  // AYC-510 keeps knowledge bases and integrations out of the Outlook pane,
+  // and artifacts, which it has no side panel for.
   const isEmbedded = useEmbedded();
 
   return (
@@ -128,6 +137,9 @@ export function ChatInputActionBar({
               )}
               onSkillSelect={onSkillSelect}
               selectedSkillId={selectedSkillId}
+              onArtifactSelect={isEmbedded ? undefined : onAddArtifact}
+              attachedArtifactIds={attachedArtifactIds}
+              artifactScope={artifactScope}
             />
           </OnboardingTourTarget>
           <OnboardingTourTarget name={TOUR_TARGET.anonymousMode} settleMs={900}>

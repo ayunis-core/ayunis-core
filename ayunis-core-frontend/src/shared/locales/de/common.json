@@ -105,6 +105,17 @@
     "integrationNotAuthorized": "Autorisieren Sie diese Integration zuerst unter Einstellungen → Integrationen",
     "shared": "Freigegeben",
     "createKnowledgeBase": "Wissenssammlung erstellen",
+    "attachArtifact": "Inhalt anhängen",
+    "removeArtifact": "Inhalt {{title}} entfernen",
+    "artifactPicker": {
+      "title": "Inhalt anhängen",
+      "descriptionPersonal": "Ihre persönlichen Inhalte aus der Ablage.",
+      "descriptionWorkspace": "Die Inhalte dieses Arbeitsbereichs.",
+      "searchPlaceholder": "Nach Titel suchen",
+      "loadError": "Inhalte konnten nicht geladen werden",
+      "empty": "Keine Inhalte zum Anhängen",
+      "noResults": "Keine passenden Inhalte"
+    },
     "noEmbeddingModelEnabled": "Um Dokumente hochzuladen, muss ein Embedding-Modell aktiviert sein.",
     "cancelTooltip": "Abbrechen",
     "sendTooltip": "Senden",

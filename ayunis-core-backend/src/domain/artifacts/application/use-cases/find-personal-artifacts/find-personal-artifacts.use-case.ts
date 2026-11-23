@@ -32,6 +32,7 @@ export class FindPersonalArtifactsUseCase {
       {
         search: query.search,
         type: query.type,
+        isAnonymous: query.isAnonymous,
         limit: query.limit,
         offset: query.offset,
       },

@@ -104,6 +104,37 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     await this.threadLinkRepo.insert({ threadId, artifactId });
   }
 
+  async linkToMatchingThread(
+    threadId: UUID,
+    artifactId: UUID,
+    userId: UUID,
+  ): Promise<boolean> {
+    this.logger.log({ threadId, artifactId }, 'linkToMatchingThread');
+    // FOR SHARE orders this against a concurrent move of the chat: either the
+    // move waits and then deletes the new link with the chat's other links
+    // outside its new scope, or this statement waits and re-checks the moved
+    // chat.
+    const [{ linked }] = await this.threadLinkRepo.query<{ linked: boolean }[]>(
+      `WITH "target" AS (
+        SELECT t."id" AS "threadId", a."id" AS "artifactId"
+        FROM "threads" t
+        JOIN "artifacts" a ON a."id" = $2
+        WHERE t."id" = $1 AND t."userId" = $3
+          AND a."isAnonymous" = t."isAnonymous"
+          AND (a."workspaceId" = t."workspaceId"
+            OR (t."workspaceId" IS NULL AND a."userId" = t."userId"))
+        FOR SHARE OF t, a
+      ), "inserted" AS (
+        INSERT INTO "thread_artifacts" ("threadId", "artifactId")
+        SELECT "threadId", "artifactId" FROM "target"
+        ON CONFLICT DO NOTHING
+      )
+      SELECT EXISTS (SELECT 1 FROM "target") AS "linked"`,
+      [threadId, artifactId, userId],
+    );
+    return linked;
+  }
+
   /**
    * A personal artifact is accessible to its owner, a workspace artifact to
    * the workspace's members. Through a chat only the chat's user finds it.
@@ -201,6 +232,11 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     if (options.type) {
       queryBuilder.andWhere('artifact.type = :artifactType', {
         artifactType: options.type,
+      });
+    }
+    if (options.isAnonymous !== undefined) {
+      queryBuilder.andWhere('artifact.isAnonymous = :isAnonymous', {
+        isAnonymous: options.isAnonymous,
       });
     }
 

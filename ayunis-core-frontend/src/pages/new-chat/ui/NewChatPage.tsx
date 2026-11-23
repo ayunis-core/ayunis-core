@@ -1,6 +1,9 @@
 import { Lock } from 'lucide-react';
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
-import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
+import ChatInput, {
+  type ChatInputRef,
+  usePendingArtifacts,
+} from '@/widgets/chat-input';
 import { cn } from '@ayunis/ui/lib/cn';
 import {
   useInitiateChat,
@@ -142,6 +145,10 @@ export default function NewChatPage({
     mode: selectedMode,
     isAnonymousEnforced,
   } = useSelectedModel(modelId, models, isAnonymous);
+  const pendingArtifacts = usePendingArtifacts({
+    workspaceId,
+    isAnonymous: isAnonymous || isAnonymousEnforced,
+  });
 
   const isVisionEnabled = selectedModel?.canVision ?? false;
   const onboarding = onboardingStage
@@ -220,6 +227,7 @@ export default function NewChatPage({
       sources,
       knowledgeBases: selectedKnowledgeBases,
       mcpIntegrations: selectedIntegrations,
+      artifactIds: pendingArtifacts.artifacts.map(({ id }) => id),
       isAnonymous,
       workspaceId: workspaceId ?? undefined,
       skillId,
@@ -368,6 +376,10 @@ export default function NewChatPage({
               sources={sources}
               knowledgeBases={selectedKnowledgeBases}
               mcpIntegrations={selectedIntegrations}
+              artifacts={pendingArtifacts.artifacts}
+              workspaceId={workspaceId}
+              onAddArtifact={pendingArtifacts.add}
+              onRemoveArtifact={pendingArtifacts.remove}
               submissionState={isCreating ? 'submitting' : 'idle'}
               isSendDisabled={isAcademyGated || !resolvedModelId}
               onModelChange={handleModelChange}

@@ -142,7 +142,11 @@ test('opens documents, diagrams and spreadsheets from the workspace tab on their
     expect(await downloadedText(await exportSpreadsheet())).toContain('Strom');
 
     await page.getByRole('button', { name: 'Zeilen hinzufügen' }).click();
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    // Scoped to the popover: the chat starter's plus button has the same name.
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Hinzufügen', exact: true })
+      .click();
     await page.getByRole('button', { name: 'Speichern' }).click();
     await expect
       .poll(async () => {

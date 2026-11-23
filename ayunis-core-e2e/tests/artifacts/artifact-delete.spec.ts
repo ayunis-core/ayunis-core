@@ -1,10 +1,7 @@
 import type { APIRequestContext } from '@playwright/test';
 import { callArtifactTool } from '../../src/clients/api/artifact-tools.client';
 import { generatedApi } from '../../src/clients/api/generated-api';
-import {
-  countArtifactRows,
-  linkArtifactToChat,
-} from '../../src/clients/artifacts.database.client';
+import { countArtifactRows } from '../../src/clients/artifacts.database.client';
 import { createMemberSession } from '../../src/factories/user.factory';
 import { createProjectThread } from '../../src/factories/workspace-context.factory';
 import { expect, test } from '../../src/fixtures/test';
@@ -63,7 +60,11 @@ test('lets the creator and members who may manage the workspace delete a workspa
       },
       { api: creator.api },
     );
-    await linkArtifactToChat(colleagueChat.id, artifact.id);
+    await generatedApi.threadArtifactsControllerAttach(
+      colleagueChat.id,
+      artifact.id,
+      { api: colleague.api },
+    );
     const readInChat = () =>
       callArtifactTool(creator.api, creatorChat.id, 'read_document', {
         artifact_id: artifact.id,

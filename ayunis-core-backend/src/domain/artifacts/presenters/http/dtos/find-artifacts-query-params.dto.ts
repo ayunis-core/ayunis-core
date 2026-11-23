@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import {
   ARTIFACT_DEFAULT_LIST_LIMIT,
   ARTIFACT_MAX_LIST_LIMIT,
@@ -17,6 +24,20 @@ export class FindArtifactsQueryParamsDto {
   @IsOptional()
   @IsEnum(ArtifactType)
   type?: ArtifactType;
+
+  @ApiPropertyOptional({
+    description:
+      'Only anonymous artifacts when true, only normal artifacts when false',
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  isAnonymous?: boolean;
 
   @ApiPropertyOptional({ description: 'Maximum number of artifacts to return' })
   @IsOptional()

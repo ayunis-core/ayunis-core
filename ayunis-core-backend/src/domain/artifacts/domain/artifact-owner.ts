@@ -18,3 +18,13 @@ export function artifactOwnerOfChat(chat: {
     ? { type: 'workspace', workspaceId: chat.workspaceId }
     : { type: 'personal', userId: chat.userId };
 }
+
+export function isSameArtifactOwner(
+  a: ArtifactOwner,
+  b: ArtifactOwner,
+): boolean {
+  if (a.type === 'personal') {
+    return b.type === 'personal' && a.userId === b.userId;
+  }
+  return b.type === 'workspace' && a.workspaceId === b.workspaceId;
+}

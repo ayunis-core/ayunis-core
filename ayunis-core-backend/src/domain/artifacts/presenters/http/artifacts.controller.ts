@@ -152,6 +152,7 @@ export class ArtifactsController {
   })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'type', required: false, enum: ArtifactType })
+  @ApiQuery({ name: 'isAnonymous', required: false, type: Boolean })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   async findPersonal(
@@ -162,6 +163,7 @@ export class ArtifactsController {
       new FindPersonalArtifactsQuery({
         search: queryParams.search,
         type: queryParams.type,
+        isAnonymous: queryParams.isAnonymous,
         ...queryParams.toPagination(),
       }),
     );
@@ -256,6 +258,7 @@ export class ArtifactsController {
   })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'type', required: false, enum: ArtifactType })
+  @ApiQuery({ name: 'isAnonymous', required: false, type: Boolean })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   async findByWorkspace(
@@ -269,6 +272,7 @@ export class ArtifactsController {
         workspaceId,
         search: queryParams.search,
         type: queryParams.type,
+        isAnonymous: queryParams.isAnonymous,
         ...pagination,
       }),
     );
