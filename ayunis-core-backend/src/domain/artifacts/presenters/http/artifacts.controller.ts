@@ -47,6 +47,8 @@ import { RevertArtifactCommand } from 'src/domain/artifacts/application/use-case
 import { ExportArtifactCommand } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.command';
 import { FindPersonalArtifactsQuery } from 'src/domain/artifacts/application/use-cases/find-personal-artifacts/find-personal-artifacts.query';
 import { DeleteArtifactCommand } from 'src/domain/artifacts/application/use-cases/delete-artifact/delete-artifact.command';
+import { ConvertArtifactToNormalUseCase } from 'src/domain/artifacts/application/use-cases/convert-artifact-to-normal/convert-artifact-to-normal.use-case';
+import { ConvertArtifactToNormalCommand } from 'src/domain/artifacts/application/use-cases/convert-artifact-to-normal/convert-artifact-to-normal.command';
 
 import { CreateArtifactDto } from './dtos/create-artifact.dto';
 import { UpdateArtifactDto } from './dtos/update-artifact.dto';
@@ -66,7 +68,7 @@ export class ArtifactsController {
   private readonly logger = new Logger(ArtifactsController.name);
 
   // NestJS injects each use case explicitly to keep the HTTP adapter composition visible.
-  // eslint-disable-next-line max-params
+
   constructor(
     private readonly createArtifactUseCase: CreateArtifactUseCase,
     private readonly updateArtifactUseCase: UpdateArtifactUseCase,
@@ -77,6 +79,7 @@ export class ArtifactsController {
     private readonly exportArtifactUseCase: ExportArtifactUseCase,
     private readonly findPersonalArtifactsUseCase: FindPersonalArtifactsUseCase,
     private readonly deleteArtifactUseCase: DeleteArtifactUseCase,
+    private readonly convertArtifactToNormalUseCase: ConvertArtifactToNormalUseCase,
     private readonly artifactDtoMapper: ArtifactDtoMapper,
   ) {}
 
@@ -217,6 +220,36 @@ export class ArtifactsController {
     this.logger.log({ artifactId: id }, 'delete');
     await this.deleteArtifactUseCase.execute(
       new DeleteArtifactCommand({ artifactId: id }),
+    );
+  }
+
+  @Post(':id/convert-to-normal')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary:
+      'Convert an anonymous artifact to a normal one: all versions get the real values of its dictionary, which is deleted, and its links to anonymous chats are deleted. Allowed to those who may delete it. A normal artifact stays as it is',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the artifact',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({ status: 204, description: 'The artifact is normal' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'A workspace member who neither created the artifact nor may manage the workspace',
+  })
+  @ApiResponse({ status: 404, description: 'Artifact not found' })
+  @ApiResponse({
+    status: 409,
+    description: 'The artifact was changed meanwhile; nothing was converted',
+  })
+  async convertToNormal(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log({ artifactId: id }, 'convertToNormal');
+    await this.convertArtifactToNormalUseCase.execute(
+      new ConvertArtifactToNormalCommand({ artifactId: id }),
     );
   }
 

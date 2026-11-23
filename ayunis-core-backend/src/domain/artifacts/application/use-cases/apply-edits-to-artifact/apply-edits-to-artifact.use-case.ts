@@ -97,7 +97,11 @@ export class ApplyEditsToArtifactUseCase {
         ),
       );
     if (!artifact.isAnonymous || !command.run) {
-      return this.addVersion(command, userId, edit(command.edits), []);
+      return this.addVersion(command, userId, {
+        content: edit(command.edits),
+        isAnonymous: artifact.isAnonymous,
+        piiMasks: [],
+      });
     }
     const draft = await this.artifactPlaceholdersService.fromChat(
       command.run.threadId,
@@ -113,20 +117,26 @@ export class ApplyEditsToArtifactUseCase {
       artifact.id,
       draft,
       (content, piiMasks) =>
-        this.addVersion(
-          command,
-          userId,
-          this.validateContentLength(content),
+        this.addVersion(command, userId, {
+          content: this.validateContentLength(content),
+          isAnonymous: true,
           piiMasks,
-        ),
+        }),
     );
   }
 
+  /**
+   * `isAnonymous` is the mode of the artifact the edits were applied to,
+   * checked again when the version is stored.
+   */
   private async addVersion(
     command: ApplyEditsToArtifactCommand,
     userId: UUID,
-    content: string,
-    piiMasks: ArtifactPiiMask[],
+    {
+      content,
+      isAnonymous,
+      piiMasks,
+    }: { content: string; isAnonymous: boolean; piiMasks: ArtifactPiiMask[] },
   ): Promise<ArtifactVersion> {
     return addVersionWithRetry({
       repository: this.artifactsRepository,
@@ -146,6 +156,7 @@ export class ApplyEditsToArtifactUseCase {
         this.assertExpectedVersion(command, freshArtifact);
         return {
           expectedCurrentVersionNumber: freshArtifact.currentVersionNumber,
+          isAnonymous,
           piiMasks,
           version: new ArtifactVersion({
             artifactId: freshArtifact.id,

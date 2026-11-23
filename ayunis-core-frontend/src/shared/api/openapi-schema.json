@@ -10089,6 +10089,39 @@
         "tags": ["artifacts"]
       }
     },
+    "/artifacts/{id}/convert-to-normal": {
+      "post": {
+        "operationId": "ArtifactsController_convertToNormal",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The artifact is normal"
+          },
+          "403": {
+            "description": "A workspace member who neither created the artifact nor may manage the workspace"
+          },
+          "404": {
+            "description": "Artifact not found"
+          },
+          "409": {
+            "description": "The artifact was changed meanwhile; nothing was converted"
+          }
+        },
+        "summary": "Convert an anonymous artifact to a normal one: all versions get the real values of its dictionary, which is deleted, and its links to anonymous chats are deleted. Allowed to those who may delete it. A normal artifact stays as it is",
+        "tags": ["artifacts"]
+      }
+    },
     "/artifacts/thread/{threadId}": {
       "get": {
         "operationId": "ArtifactsController_findByThread",

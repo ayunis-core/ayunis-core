@@ -151,5 +151,15 @@
     "notFound": "Dieser Inhalt existiert nicht mehr.",
     "forbidden": "Nur die Person, die den Inhalt erstellt hat, und Mitglieder, die den Arbeitsbereich verwalten dürfen, können ihn löschen.",
     "error": "Inhalt konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+  },
+  "conversion": {
+    "confirmTitle": "Ohne Anonymisierung verwenden?",
+    "confirmDescription": "„{{title}}“ ist anonymisiert. Um ihn in einem normalen Chat zu verwenden, wird er in einen nicht anonymisierten Inhalt mit den echten Daten umgewandelt. In anonymen Chats steht er danach nicht mehr zur Verfügung.",
+    "confirmText": "Umwandeln",
+    "cancelText": "Abbrechen",
+    "forbidden": "Nur die Person, die den Inhalt erstellt hat, und Mitglieder, die den Arbeitsbereich verwalten dürfen, können diesen anonymisierten Inhalt in einem normalen Chat verwenden.",
+    "notFound": "Dieser Inhalt existiert nicht mehr.",
+    "conflict": "Der Inhalt wurde gerade geändert. Bitte versuchen Sie es erneut.",
+    "error": "Inhalt konnte nicht umgewandelt werden. Bitte versuchen Sie es erneut."
   }
 }

@@ -6,6 +6,7 @@ import { ArtifactNotFoundError } from 'src/domain/artifacts/application/artifact
 import type { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
+import { ArtifactManageAccessService } from 'src/domain/artifacts/application/services/artifact-manage-access.service';
 import type { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
 import { DeleteArtifactCommand } from './delete-artifact.command';
 import { DeleteArtifactUseCase } from './delete-artifact.use-case';
@@ -42,7 +43,7 @@ function setup(artifact: Artifact | null, caller: UUID) {
   } as unknown as ContextService;
   const useCase = new DeleteArtifactUseCase(
     repository,
-    workspaceWriteAccess,
+    new ArtifactManageAccessService(workspaceWriteAccess),
     context,
   );
   const deleteAs = (id: UUID) =>

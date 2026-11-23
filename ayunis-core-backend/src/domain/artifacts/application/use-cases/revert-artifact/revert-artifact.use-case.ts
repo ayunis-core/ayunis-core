@@ -49,6 +49,7 @@ export class RevertArtifactUseCase {
     userId: UUID,
   ): Promise<{
     expectedCurrentVersionNumber: number;
+    isAnonymous: boolean;
     version: ArtifactVersion;
   }> {
     const artifact = await this.artifactsRepository.findByIdWithVersions(
@@ -76,6 +77,7 @@ export class RevertArtifactUseCase {
 
     return {
       expectedCurrentVersionNumber: artifact.currentVersionNumber,
+      isAnonymous: artifact.isAnonymous,
       version: new ArtifactVersion({
         artifactId: artifact.id,
         versionNumber: artifact.currentVersionNumber + 1,

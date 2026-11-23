@@ -20710,6 +20710,72 @@ export function useArtifactsControllerFindPersonal<TData = Awaited<ReturnType<ty
 
 
 /**
+ * @summary Convert an anonymous artifact to a normal one: all versions get the real values of its dictionary, which is deleted, and its links to anonymous chats are deleted. Allowed to those who may delete it. A normal artifact stays as it is
+ */
+export const artifactsControllerConvertToNormal = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/artifacts/${id}/convert-to-normal`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getArtifactsControllerConvertToNormalMutationKey = () => ['artifactsControllerConvertToNormal'] as const;
+
+export const getArtifactsControllerConvertToNormalMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerConvertToNormal>>, TError,ArtifactsControllerConvertToNormalMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerConvertToNormal>>, TError,ArtifactsControllerConvertToNormalMutationVariables, TContext> => {
+
+const mutationKey = getArtifactsControllerConvertToNormalMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof artifactsControllerConvertToNormal>>, ArtifactsControllerConvertToNormalMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  artifactsControllerConvertToNormal(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArtifactsControllerConvertToNormalMutationResult = NonNullable<Awaited<ReturnType<typeof artifactsControllerConvertToNormal>>>
+
+    export type ArtifactsControllerConvertToNormalMutationError = void
+    export type ArtifactsControllerConvertToNormalMutationVariables = {id: string}
+
+    /**
+ * @summary Convert an anonymous artifact to a normal one: all versions get the real values of its dictionary, which is deleted, and its links to anonymous chats are deleted. Allowed to those who may delete it. A normal artifact stays as it is
+ */
+export const useArtifactsControllerConvertToNormal = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof artifactsControllerConvertToNormal>>, TError,ArtifactsControllerConvertToNormalMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof artifactsControllerConvertToNormal>>,
+        TError,
+        ArtifactsControllerConvertToNormalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArtifactsControllerConvertToNormalMutationOptions(options), queryClient);
+    }
+
+/**
  * @summary Get all artifacts for a thread
  */
 export const artifactsControllerFindByThread = (

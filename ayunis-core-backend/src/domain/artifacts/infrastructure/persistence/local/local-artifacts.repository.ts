@@ -374,10 +374,11 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   async addVersionAndUpdateArtifact(params: {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
+    isAnonymous: boolean;
     letterheadId?: UUID | null;
     piiMasks?: ArtifactPiiMask[];
   }): Promise<ArtifactVersion> {
-    const { version, expectedCurrentVersionNumber, letterheadId } = params;
+    const { version, letterheadId } = params;
 
     this.logVersionUpdate(params);
 
@@ -387,29 +388,25 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       const saved = await this.versionRepo.save(record);
       const createdVersion = this.versionMapper.toDomain(saved);
 
+      // The mode is checked with the version: a conversion to normal leaves
+      // the version number as it is, but content prepared in placeholders
+      // must not land in the converted artifact.
+      const expected = {
+        id: version.artifactId,
+        currentVersionNumber: params.expectedCurrentVersionNumber,
+        isAnonymous: params.isAnonymous,
+      };
       const result =
         letterheadId === undefined
-          ? await this.artifactRepo.update(
-              {
-                id: version.artifactId,
-                currentVersionNumber: expectedCurrentVersionNumber,
-              },
-              {
-                currentVersionNumber: version.versionNumber,
-                updatedAt: new Date(),
-              },
-            )
-          : await this.documentArtifactRepo.update(
-              {
-                id: version.artifactId,
-                currentVersionNumber: expectedCurrentVersionNumber,
-              },
-              {
-                currentVersionNumber: version.versionNumber,
-                letterheadId,
-                updatedAt: new Date(),
-              },
-            );
+          ? await this.artifactRepo.update(expected, {
+              currentVersionNumber: version.versionNumber,
+              updatedAt: new Date(),
+            })
+          : await this.documentArtifactRepo.update(expected, {
+              currentVersionNumber: version.versionNumber,
+              letterheadId,
+              updatedAt: new Date(),
+            });
 
       if (result.affected !== 1) {
         throw new ArtifactVersionConflictError(version.artifactId);
@@ -427,6 +424,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   private logVersionUpdate(params: {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
+    isAnonymous: boolean;
     letterheadId?: UUID | null;
     piiMasks?: ArtifactPiiMask[];
   }): void {
@@ -435,10 +433,56 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
         artifactId: params.version.artifactId,
         versionNumber: params.version.versionNumber,
         expectedCurrentVersionNumber: params.expectedCurrentVersionNumber,
+        isAnonymous: params.isAnonymous,
         shouldUpdateLetterhead: params.letterheadId !== undefined,
         newPiiMaskCount: params.piiMasks?.length ?? 0,
       },
       'addVersionAndUpdateArtifact',
+    );
+  }
+
+  @Transactional()
+  async convertToNormal(params: {
+    artifactId: UUID;
+    expectedCurrentVersionNumber: number;
+    title: string;
+    versions: { id: UUID; content: string }[];
+  }): Promise<void> {
+    const { artifactId } = params;
+    this.logger.log(
+      { artifactId, resolvedVersionCount: params.versions.length },
+      'convertToNormal',
+    );
+    // Locks the row first: a concurrent write then either committed before,
+    // which moved the version number and fails this update, or waits and
+    // fails its own update on the cleared flag.
+    const result = await this.artifactRepo.update(
+      {
+        id: artifactId,
+        isAnonymous: true,
+        currentVersionNumber: params.expectedCurrentVersionNumber,
+      },
+      { isAnonymous: false, title: params.title },
+    );
+    if (result.affected !== 1) {
+      throw new ArtifactVersionConflictError(artifactId);
+    }
+    if (params.versions.length > 0) {
+      await this.versionRepo.query(
+        `UPDATE "artifact_versions" AS v SET "content" = d."content"
+        FROM unnest($2::varchar[], $3::text[]) AS d("id", "content")
+        WHERE v."id" = d."id" AND v."artifactId" = $1`,
+        [
+          artifactId,
+          params.versions.map((version) => version.id),
+          params.versions.map((version) => version.content),
+        ],
+      );
+    }
+    await this.piiMaskRepo.delete({ artifactId });
+    await this.threadLinkRepo.query(
+      `DELETE FROM "thread_artifacts" WHERE "artifactId" = $1 AND "threadId" IN (SELECT "id" FROM "threads" WHERE "isAnonymous")`,
+      [artifactId],
     );
   }
 

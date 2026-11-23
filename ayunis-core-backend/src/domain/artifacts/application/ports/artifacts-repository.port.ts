@@ -90,14 +90,32 @@ export abstract class ArtifactsRepository {
    * does not poison the caller's transaction context.
    *
    * @throws ArtifactVersionConflictError when the version number already exists
-   * or when the artifact was concurrently modified.
+   * or when the artifact was concurrently modified, including when it was
+   * converted to a normal artifact after its content was prepared in
+   * placeholders (`isAnonymous`).
    */
   abstract addVersionAndUpdateArtifact(params: {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
+    /** The mode of the artifact the content was prepared for. */
+    isAnonymous: boolean;
     letterheadId?: UUID | null;
     piiMasks?: ArtifactPiiMask[];
   }): Promise<ArtifactVersion>;
+  /**
+   * Makes an anonymous artifact normal in one transaction: stores its title
+   * and the given versions with real values, deletes its dictionary and its
+   * links to anonymous chats.
+   *
+   * @throws ArtifactVersionConflictError unless the artifact is still
+   * anonymous and at `expectedCurrentVersionNumber`; nothing is changed then.
+   */
+  abstract convertToNormal(params: {
+    artifactId: UUID;
+    expectedCurrentVersionNumber: number;
+    title: string;
+    versions: { id: UUID; content: string }[];
+  }): Promise<void>;
   abstract updateLetterheadId(
     artifactId: UUID,
     letterheadId: UUID | null,

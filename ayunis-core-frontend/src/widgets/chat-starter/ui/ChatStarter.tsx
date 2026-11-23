@@ -12,6 +12,10 @@ import {
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
 import { useSelectedModel } from '@/widgets/model-select-options';
+import {
+  useArtifactConversion,
+  type ConvertibleArtifact,
+} from '@/widgets/artifact-panel';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { showError } from '@/shared/lib/toast';
 import { generateUUID } from '@/shared/lib/uuid';
@@ -34,8 +38,11 @@ interface ChatStarterProps extends ChatStarterDefaults {
   workspaceId?: string;
   origin?: CreateThreadOrigin;
   placeholder?: string;
-  /** Links the chat to the artifact; the chat takes its mode. */
-  artifact?: { id: string; isAnonymous: boolean };
+  /**
+   * Links the chat to the artifact; the chat takes its mode. A normal chat
+   * about an anonymous artifact converts the artifact first.
+   */
+  artifact?: ConvertibleArtifact & { isAnonymous: boolean };
   autoFocus?: boolean;
   /**
    * Asked before the chat is created, e.g. to settle unsaved edits on the
@@ -128,6 +135,9 @@ export function ChatStarter({
   // cannot take a normal artifact.
   const isArtifactModeBlocked =
     !!artifact && !artifact.isAnonymous && isAnonymousEnforced;
+  const requestConversion = useArtifactConversion(workspaceId ?? null);
+  const isArtifactConversionNeeded =
+    !!artifact?.isAnonymous && !isAnonymous && !isAnonymousEnforced;
 
   function handleFileUpload(files: File[]) {
     const newSources: LocalSource[] = files.map((file) => ({
@@ -180,6 +190,13 @@ export function ChatStarter({
 
   async function startChat(params: Parameters<typeof initiateChat>[0]) {
     if (confirmStart && !(await confirmStart())) return;
+    if (
+      artifact &&
+      isArtifactConversionNeeded &&
+      !(await requestConversion(artifact))
+    ) {
+      return;
+    }
     await initiateChat(params);
   }
 
@@ -250,7 +267,7 @@ export function ChatStarter({
         isEmbeddingModelEnabled={isEmbeddingModelEnabled}
         isAnonymous={isAnonymous}
         onAnonymousChange={setIsAnonymous}
-        isAnonymousChangeDisabled={!!artifact}
+        isAnonymousChangeDisabled={!!artifact && !artifact.isAnonymous}
         isAnonymousEnforced={isAnonymousEnforced}
         isVisionEnabled={isVisionEnabled}
         placeholder={placeholder}

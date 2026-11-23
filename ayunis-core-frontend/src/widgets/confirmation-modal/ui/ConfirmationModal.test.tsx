@@ -47,4 +47,53 @@ describe('ConfirmationModal', () => {
     expect(onConfirm).toHaveBeenCalledOnce();
     expect(onCancel).not.toHaveBeenCalled();
   });
+
+  it('keeps open a confirmation that the confirmed one opened, e.g. a warning after the unsaved-changes prompt', async () => {
+    const onSecondConfirm = vi.fn();
+    function ChainHarness() {
+      const { confirm } = useConfirmation();
+      return (
+        <button
+          onClick={() =>
+            confirm({
+              title: 'Save?',
+              description: '',
+              onConfirm: () => {
+                // The first confirmation resolves a promise; its continuation
+                // asks the next question.
+                void Promise.resolve().then(() =>
+                  confirm({
+                    title: 'Convert?',
+                    description: '',
+                    onConfirm: onSecondConfirm,
+                  }),
+                );
+              },
+            })
+          }
+        >
+          open
+        </button>
+      );
+    }
+    render(
+      <ConfirmationProvider>
+        <ChainHarness />
+        <ConfirmationModal />
+      </ConfirmationProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'open' }));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('confirmation-confirm'));
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole('dialog').textContent).toContain('Convert?');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('confirmation-confirm'));
+      await Promise.resolve();
+    });
+    expect(onSecondConfirm).toHaveBeenCalledOnce();
+  });
 });

@@ -15,8 +15,9 @@ interface UseAttachableArtifactsParams {
 
 /**
  * The artifacts a chat of the scope may take, most recently changed first:
- * the user's personal artifacts or the workspace's, never both, and only
- * those of the chat's mode.
+ * the user's personal artifacts or the workspace's, never both. An anonymous
+ * chat takes only anonymous ones; a normal chat also lists anonymous ones,
+ * which are converted to normal ones when picked.
  */
 export function useAttachableArtifacts({
   scope,
@@ -25,7 +26,7 @@ export function useAttachableArtifacts({
 }: UseAttachableArtifactsParams) {
   const params = {
     search,
-    isAnonymous: scope.isAnonymous,
+    isAnonymous: scope.isAnonymous ? true : undefined,
     limit: PICKER_PAGE_SIZE,
   };
   const query = { placeholderData: keepPreviousData };

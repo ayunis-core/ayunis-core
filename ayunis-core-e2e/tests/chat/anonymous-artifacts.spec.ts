@@ -126,6 +126,59 @@ test.describe('Anonymous artifacts', () => {
     });
   });
 
+  test('an artifact converted to normal leaves the anonymous chat that wrote it, whose messages and masks stay, and a normal chat reads its real values', async ({
+    api,
+  }) => {
+    test.setTimeout(180_000);
+    const anonymousChat = await createChat(
+      api,
+      (await defaultModel(api)).id,
+      true,
+    );
+    expect(
+      await callArtifactTool(api, anonymousChat, 'create_document', {
+        title: 'Antwort an Anna Schmidt',
+        content: '<p>Sehr geehrte Frau Anna Schmidt</p>',
+      }),
+    ).toBe(ARTIFACT_WRITE_SUCCEEDED);
+    const [created] = await generatedApi.artifactsControllerFindByThread(
+      anonymousChat,
+      { api },
+    );
+    const before = await getThread(api, anonymousChat);
+
+    await generatedApi.artifactsControllerConvertToNormal(created.id, { api });
+
+    const after = await getThread(api, anonymousChat);
+    expect(after.messages).toEqual(before.messages);
+    expect(after.piiMasks).toEqual(before.piiMasks);
+    expect(
+      await generatedApi.artifactsControllerFindByThread(anonymousChat, {
+        api,
+      }),
+    ).toEqual([]);
+    expect(after.piiMasks.length).toBeGreaterThan(0);
+    expect(
+      await callArtifactTool(api, anonymousChat, 'read_document', {
+        artifact_id: created.id,
+      }),
+    ).toContain(`Artifact with ID '${created.id}' not found`);
+
+    const normalChat = await createChat(api);
+    await generatedApi.threadArtifactsControllerAttach(normalChat, created.id, {
+      api,
+    });
+    const normalReading = JSON.parse(
+      await callArtifactTool(api, normalChat, 'read_document', {
+        artifact_id: created.id,
+      }),
+    ) as { title: string; content: string };
+    expect(normalReading).toMatchObject({
+      title: 'Antwort an Anna Schmidt',
+      content: '<p>Sehr geehrte Frau Anna Schmidt</p>',
+    });
+  });
+
   test('runs only see artifacts of their own mode, also in a normal chat whose model is anonymous-only', async ({
     api,
   }) => {
