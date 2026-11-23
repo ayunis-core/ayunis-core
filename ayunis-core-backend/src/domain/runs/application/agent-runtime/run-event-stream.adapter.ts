@@ -69,6 +69,7 @@ interface StreamingTurn {
 export interface RunEventStreamOptions {
   integrations?: RuntimeToolIntegrationRegistry;
   models?: RuntimeModelRegistry;
+  answeringModelName?: string;
   throttle?: SnapshotThrottle;
   awaitingClientResultToolNames?: ReadonlySet<string>;
 }
@@ -119,6 +120,7 @@ class RunEventTranslator {
     this.assistant = new AssistantTurnAccumulator(
       threadId,
       options.integrations,
+      options.answeringModelName,
     );
   }
 
@@ -206,6 +208,7 @@ class AssistantTurnAccumulator {
   constructor(
     private readonly threadId: UUID,
     private readonly integrations?: RuntimeToolIntegrationRegistry,
+    private readonly answeringModelName?: string,
   ) {}
 
   /** Folds a streaming event into the turn; false for any other event. */
@@ -242,7 +245,12 @@ class AssistantTurnAccumulator {
   takeUnsentSnapshot(): AssistantMessage | null {
     if (!this.unsent || !this.turn) return null;
     this.unsent = false;
-    return buildStreamingMessage(this.turn, this.threadId, this.integrations);
+    return buildStreamingMessage(
+      this.turn,
+      this.threadId,
+      this.integrations,
+      this.answeringModelName,
+    );
   }
 
   complete(event: RunEvent): AssistantMessage | null {
@@ -253,6 +261,7 @@ class AssistantTurnAccumulator {
       this.threadId,
       id,
       this.integrations,
+      this.answeringModelName,
     );
     appendInvalidToolCalls(message, this.turn, this.integrations);
     this.turn = null;
@@ -327,6 +336,7 @@ function buildStreamingMessage(
   turn: StreamingTurn,
   threadId: UUID,
   integrations?: RuntimeToolIntegrationRegistry,
+  answeringModelName?: string,
 ): AssistantMessage {
   const content: Array<
     TextMessageContent | ThinkingMessageContent | ToolUseMessageContent
@@ -341,7 +351,12 @@ function buildStreamingMessage(
   for (const [, call] of [...toolCalls].sort(([a], [b]) => a - b)) {
     content.push(toStreamingToolUseContent(call, integrations));
   }
-  return new AssistantMessage({ id: turn.id, threadId, content });
+  return new AssistantMessage({
+    id: turn.id,
+    threadId,
+    content,
+    answeringModelName,
+  });
 }
 
 function toPlaceholderSnapshot(start: ToolCallStart): ToolCallSnapshot {

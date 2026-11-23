@@ -4,6 +4,11 @@ import { ChevronDown, CircleCheck } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
 import { Markdown } from '@/widgets/markdown';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -107,20 +112,31 @@ const RunBlock = memo(function RunBlock({
       />
     );
   }
-  return <AnswerText text={block.content.text} isStreaming={isStreaming} />;
+  return (
+    <AnswerText
+      text={block.content.text}
+      isStreaming={isStreaming}
+      answeringModelName={block.answeringModelName}
+    />
+  );
 });
 
 function AnswerText({
   text,
   isStreaming,
-}: Readonly<{ text: string; isStreaming: boolean }>) {
+  answeringModelName,
+}: Readonly<{
+  text: string;
+  isStreaming: boolean;
+  answeringModelName?: string;
+}>) {
   const trackOutcome = useTrackProductiveOutcome();
   const trackCodeCopied = useCallback(
     () => trackOutcome({ outcome_type: 'code_copied', output_type: 'code' }),
     [trackOutcome],
   );
-  return (
-    <div data-copyable="true">
+  const answer = (
+    <div data-copyable="true" tabIndex={answeringModelName ? 0 : undefined}>
       <Markdown
         isStreaming={isStreaming}
         renderLegalReferences
@@ -131,6 +147,14 @@ function AnswerText({
         {text}
       </Markdown>
     </div>
+  );
+  if (!answeringModelName) return answer;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{answer}</TooltipTrigger>
+      <TooltipContent sideOffset={6}>{answeringModelName}</TooltipContent>
+    </Tooltip>
   );
 }
 

@@ -75,6 +75,9 @@ export class MessageRecord extends BaseRecord {
   })
   role: MessageRole;
 
+  @Column({ type: 'text', nullable: true })
+  answeringModelName: string | null;
+
   @Column({ type: 'jsonb' })
   content: MessageContentData[];
 }

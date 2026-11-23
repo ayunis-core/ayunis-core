@@ -1,17 +1,20 @@
-import type { TextMessageContent } from '../message-contents/text-message-content.entity';
-import type { ToolUseMessageContent } from '../message-contents/tool-use.message-content.entity';
-import { Message } from '../message.entity';
-import { MessageRole } from '../value-objects/message-role.object';
+import type { TextMessageContent } from 'src/domain/messages/domain/message-contents/text-message-content.entity';
+import type { ToolUseMessageContent } from 'src/domain/messages/domain/message-contents/tool-use.message-content.entity';
+import { Message } from 'src/domain/messages/domain/message.entity';
+import { MessageRole } from 'src/domain/messages/domain/value-objects/message-role.object';
 import type { UUID } from 'crypto';
-import type { ThinkingMessageContent } from '../message-contents/thinking-message-content.entity';
+import type { ThinkingMessageContent } from 'src/domain/messages/domain/message-contents/thinking-message-content.entity';
 
 export class AssistantMessage extends Message<
   TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
 > {
+  readonly answeringModelName?: string;
+
   constructor(params: {
     id?: UUID;
     threadId: UUID;
     createdAt?: Date;
+    answeringModelName?: string;
     content: Array<
       TextMessageContent | ToolUseMessageContent | ThinkingMessageContent
     >;
@@ -23,5 +26,6 @@ export class AssistantMessage extends Message<
       createdAt: params.createdAt,
       content: params.content,
     });
+    this.answeringModelName = params.answeringModelName;
   }
 }

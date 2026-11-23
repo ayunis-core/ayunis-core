@@ -28,10 +28,14 @@ function userMessage(text: string): Message {
   } as unknown as Message;
 }
 
-function assistantMessage(blocks: AssistantContentBlock[]): Message {
+function assistantMessage(
+  blocks: AssistantContentBlock[],
+  answeringModelName?: string,
+): Message {
   return {
     id: nextId(),
     role: 'assistant',
+    answeringModelName,
     content: blocks.map((block) => {
       if (block.type === 'text') return { type: 'text', text: block.text };
       if (block.type === 'thinking')
@@ -59,6 +63,28 @@ function toolResultMessage(toolId: string, result: string): Message {
 }
 
 describe('groupMessagesIntoRuns', () => {
+  it('keeps attribution with the source reply when a run groups multiple messages', () => {
+    const [run] = groupMessagesIntoRuns(
+      [
+        assistantMessage([{ type: 'text', text: 'Earlier reply' }]),
+        assistantMessage([{ type: 'text', text: 'First reply' }], 'Model A'),
+        assistantMessage([{ type: 'text', text: 'Later reply' }], 'Model B'),
+      ],
+      { isStreaming: false },
+    );
+
+    if (run.kind !== 'agent-run') throw new Error('expected agent-run');
+    expect(run.blocks).toMatchObject([
+      {
+        kind: 'text',
+        content: { text: 'Earlier reply' },
+        answeringModelName: undefined,
+      },
+      { kind: 'text', answeringModelName: 'Model A' },
+      { kind: 'text', answeringModelName: 'Model B' },
+    ]);
+  });
+
   it('preserves text, tool, and later text in chronological render order', () => {
     const messages = [
       userMessage('find it'),

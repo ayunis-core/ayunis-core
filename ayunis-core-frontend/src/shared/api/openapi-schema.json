@@ -20297,6 +20297,10 @@
             "example": "assistant",
             "enum": ["assistant"]
           },
+          "answeringModelName": {
+            "type": "string",
+            "description": "Display name of the model that generated this reply in Auto mode"
+          },
           "content": {
             "type": "array",
             "description": "Array of content items for assistant messages (text or tool use)",
