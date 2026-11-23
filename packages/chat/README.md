@@ -7,3 +7,10 @@ successive operations on the same artifact by family.
 
 Cards receive the tool call, its result, streaming state and an optional
 `onOpenArtifact` callback. The host decides how to open an artifact.
+
+`@ayunis/chat/runs` provides run execution, event streaming, local cancellation,
+and first-message handoff. A host supplies its send endpoint and can supply
+follow and cancel endpoints when available. The authenticated adapter connects
+to the existing thread run endpoints through the host's API transport.
+Authentication recovery, cache refreshes, analytics, and notifications stay
+with the host.

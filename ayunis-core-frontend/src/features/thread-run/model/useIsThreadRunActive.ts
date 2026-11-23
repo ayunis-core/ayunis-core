@@ -3,7 +3,7 @@ import {
   getActiveThreadRunIds,
   isThreadRunActive,
   subscribeToActiveThreadRuns,
-} from './active-thread-run';
+} from '@ayunis/chat/runs';
 
 export function useIsThreadRunActive(threadId: string): boolean {
   const getSnapshot = useCallback(

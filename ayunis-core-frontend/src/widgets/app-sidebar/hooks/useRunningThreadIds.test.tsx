@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   registerActiveThreadRun,
   unregisterActiveThreadRun,
-} from '@/features/thread-run/model/active-thread-run';
+} from '@ayunis/chat/runs';
 import type * as ThreadRun from '@/features/thread-run';
 import { useRunningThreadIds } from './useRunningThreadIds';
 
