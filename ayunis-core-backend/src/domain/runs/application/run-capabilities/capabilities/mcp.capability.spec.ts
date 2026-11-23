@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { McpToolAssemblerService } from 'src/domain/runs/application/services/mcp-tool-assembler.service';
 import {
   aCapabilityContext,
+  anAssemblyState,
   aThread,
   toolNames,
 } from 'src/domain/runs/testing/run-capability.fixture';
@@ -49,9 +50,7 @@ describe('McpCapability', () => {
   it('warns about an unavailable integration instead of silently dropping it', async () => {
     const { capability, discover } = buildCapability([]);
     discover.mockRejectedValue(new McpRuntimeConnectionError('unavailable'));
-    const result = await capability.contribute(context(), {
-      reservedToolNames: new Set(),
-    });
+    const result = await capability.contribute(context(), anAssemblyState());
     expect(result).toMatchObject({
       tools: [],
       warnings: [{ integrationId, integrationName: 'Notion' }],
@@ -62,20 +61,17 @@ describe('McpCapability', () => {
     const { capability } = buildCapability(['Search Notion']);
 
     expect(
-      toolNames(
-        await capability.contribute(context(), {
-          reservedToolNames: new Set(),
-        }),
-      ),
+      toolNames(await capability.contribute(context(), anAssemblyState())),
     ).toEqual([mcpName]);
   });
 
   it('drops MCP tools whose names are already taken', async () => {
     const { capability } = buildCapability(['Search Notion']);
 
-    const contribution = await capability.contribute(context(), {
-      reservedToolNames: new Set([mcpName]),
-    });
+    const contribution = await capability.contribute(
+      context(),
+      anAssemblyState([mcpName]),
+    );
 
     expect(contribution.tools).toEqual([]);
   });
@@ -83,9 +79,7 @@ describe('McpCapability', () => {
   it('keeps only the first MCP tool when two share a name', async () => {
     const { capability } = buildCapability(['first', 'second']);
 
-    const { tools } = await capability.contribute(context(), {
-      reservedToolNames: new Set(),
-    });
+    const { tools } = await capability.contribute(context(), anAssemblyState());
 
     expect(tools?.map((tool) => tool.description)).toEqual([
       expect.stringContaining('first'),
@@ -96,9 +90,7 @@ describe('McpCapability', () => {
     const { capability, discover } = buildCapability(['Search Notion']);
 
     expect(
-      await capability.contribute(context(false), {
-        reservedToolNames: new Set(),
-      }),
+      await capability.contribute(context(false), anAssemblyState()),
     ).toEqual({});
     expect(discover).not.toHaveBeenCalled();
   });
@@ -170,7 +162,7 @@ describe('McpCapability', () => {
           canUseTools: true,
           thread: aThread({ mcpIntegrationIds: threadIntegrationIds }),
         }),
-        { reservedToolNames },
+        anAssemblyState(reservedToolNames),
       );
 
     it('keeps working integration instructions while warning about a failed neighbor', async () => {

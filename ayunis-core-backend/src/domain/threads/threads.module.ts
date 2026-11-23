@@ -35,6 +35,7 @@ import { RemoveSourceFromThreadUseCase } from './application/use-cases/remove-so
 import { GetThreadSourcesUseCase } from './application/use-cases/get-thread-sources/get-thread-sources.use-case';
 import { ResolveThreadFileUseCase } from './application/use-cases/resolve-thread-file/resolve-thread-file.use-case';
 import { UpdateThreadTitleUseCase } from './application/use-cases/update-thread-title/update-thread-title.use-case';
+import { AddLoadedCapabilitiesToThreadUseCase } from './application/use-cases/add-loaded-capabilities-to-thread/add-loaded-capabilities-to-thread.use-case';
 import { AssignThreadToWorkspaceUseCase } from './application/use-cases/assign-thread-to-workspace/assign-thread-to-workspace.use-case';
 import { GenerateAndSetThreadTitleUseCase } from './application/use-cases/generate-and-set-thread-title/generate-and-set-thread-title.use-case';
 import { LocalThreadsRepository } from './infrastructure/persistence/local/local-threads.repository';
@@ -132,6 +133,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     GetThreadSourcesUseCase,
     ResolveThreadFileUseCase,
     UpdateThreadTitleUseCase,
+    AddLoadedCapabilitiesToThreadUseCase,
     AssignThreadToWorkspaceUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
@@ -184,6 +186,7 @@ import { NotificationsModule } from 'src/domain/notifications/notifications.modu
     GetThreadSourcesUseCase,
     ResolveThreadFileUseCase,
     UpdateThreadTitleUseCase,
+    AddLoadedCapabilitiesToThreadUseCase,
     GenerateAndSetThreadTitleUseCase,
     ReplaceModelWithUserDefaultUseCase,
     FindAllThreadsByOrgWithSourcesUseCase,

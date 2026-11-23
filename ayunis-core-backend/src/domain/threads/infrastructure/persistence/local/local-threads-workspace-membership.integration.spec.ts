@@ -33,6 +33,12 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     routineId: { type: 'varchar', nullable: true },
     sourceNotificationId: { type: 'varchar', nullable: true },
     client: { type: 'varchar', nullable: true },
+    loadedCapabilityIds: {
+      name: 'loaded_capability_ids',
+      type: 'text',
+      array: true,
+      default: () => "'{}'",
+    },
     createdAt: { type: 'timestamp', createDate: true },
   },
   relations: {
@@ -315,6 +321,11 @@ describe('Workspace chats require current membership (PostgreSQL)', () => {
             maxSources: 10,
           }),
         ),
+      loadCapabilities: () =>
+        threads.addLoadedCapabilityIds({
+          ...ref,
+          capabilityIds: ['routine_management'],
+        }),
       move: () => threads.assignToWorkspace({ ...ref, workspaceId: null }),
     };
   }

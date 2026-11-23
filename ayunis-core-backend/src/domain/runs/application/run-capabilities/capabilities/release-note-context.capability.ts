@@ -21,6 +21,9 @@ import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
  */
 @Injectable()
 export class ReleaseNoteContextCapability implements RunCapability {
+  readonly id = 'release_note_context';
+  readonly description = 'The product update this chat is about.';
+
   constructor(
     private readonly findReleaseNoteUseCase: FindReleaseNoteUseCase,
     private readonly configService: ConfigService,

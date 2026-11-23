@@ -50,11 +50,40 @@ export interface CapabilityContribution {
 }
 
 export interface CapabilityAssemblyState {
-  /** Names of the tools contributed by the capabilities before this one. */
+  /**
+   * Names of the tools contributed by the capabilities before this one,
+   * including the tools of on-demand capabilities that this run could load,
+   * so a name stays taken once its capability is loaded.
+   */
   readonly reservedToolNames: ReadonlySet<string>;
+  /**
+   * The reserved names that this run does not offer yet: they belong to an
+   * on-demand capability that is available but not loaded.
+   */
+  readonly loadableToolNames: ReadonlySet<string>;
+}
+
+/** An on-demand capability that this run could load but has not loaded. */
+export interface CapabilityCatalogEntry {
+  readonly id: string;
+  readonly description: string;
+  /** The tools the capability contributes once loaded. */
+  readonly toolNames: readonly string[];
 }
 
 export interface RunCapability {
+  /**
+   * Stable snake_case id. Threads store the ids of the capabilities they
+   * loaded, so it must never be renamed.
+   */
+  readonly id: string;
+  /** Tells the model when to load the capability. */
+  readonly description: string;
+  /**
+   * Whether the run's context needs this capability, so a profile that offers
+   * it on demand loads it without the thread having loaded it.
+   */
+  isRequiredBy?(context: RunCapabilityContext): boolean | Promise<boolean>;
   contribute(
     context: RunCapabilityContext,
     state: CapabilityAssemblyState,

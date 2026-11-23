@@ -21,6 +21,10 @@ chat_list, chat_grep and chat_read give you the user's earlier chats with you; i
  */
 @Injectable()
 export class ChatHistoryCapability implements RunCapability {
+  readonly id = 'chat_history';
+  readonly description =
+    "List, search and read the user's earlier chats when they refer to a previous conversation.";
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

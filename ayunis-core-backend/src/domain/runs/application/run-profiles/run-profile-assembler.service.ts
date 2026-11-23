@@ -14,14 +14,22 @@ import { BackendToolAdapter } from 'src/domain/runs/application/agent-runtime/ba
 import type { RuntimeToolIntegrationRegistry } from 'src/domain/runs/application/agent-runtime/runtime-tool-integration.registry';
 import { requiresApproval } from 'src/domain/runs/application/agent-runtime/runtime-tool-policy';
 import type {
+  CapabilityCatalogEntry,
   CapabilityHookFactory,
-  PromptSection,
   RunProfileHandle,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
-import type { RunCapabilityInput } from 'src/domain/runs/application/run-capabilities/run-capability-context';
+import type {
+  RunCapabilityContext,
+  RunCapabilityInput,
+} from 'src/domain/runs/application/run-capabilities/run-capability-context';
 import { RunCapabilityContextFactory } from 'src/domain/runs/application/run-capabilities/run-capability-context.factory';
+import { CapabilityAssembly } from './capability-assembly';
 import { composeRunInstructions } from './compose-run-instructions';
-import type { RunProfile } from './run-profile';
+import {
+  CapabilityLoading,
+  type ProfileCapability,
+  type RunProfile,
+} from './run-profile';
 
 export interface AssembledRunProfile {
   readonly warnings?: readonly IntegrationWarning[];
@@ -29,6 +37,8 @@ export interface AssembledRunProfile {
   /** Names of the tools whose calls wait for the user's confirmation. */
   readonly toolsNeedingApproval: ReadonlySet<string>;
   readonly instructions: string;
+  /** On-demand capabilities this run could load; their tools are not offered. */
+  readonly capabilityCatalog: readonly CapabilityCatalogEntry[];
   /** The integrations registry is the run's; a refresh replaces its tools. */
   createHooks(integrations: RuntimeToolIntegrationRegistry): Hook[];
 }
@@ -39,6 +49,7 @@ interface ProfileBuild {
   toolsNeedingApproval: ReadonlySet<string>;
   instructions: string;
   hooks: CapabilityHookFactory[];
+  catalog: CapabilityCatalogEntry[];
 }
 
 /** Builds a run's tools, instructions and profile hooks from its capabilities. */
@@ -55,13 +66,20 @@ export class RunProfileAssembler {
     profile: RunProfile,
     input: RunCapabilityInput,
   ): Promise<AssembledRunProfile> {
-    const { tools, toolsNeedingApproval, instructions, hooks, warnings } =
-      await this.build(profile, input);
+    const {
+      tools,
+      toolsNeedingApproval,
+      instructions,
+      hooks,
+      warnings,
+      catalog,
+    } = await this.build(profile, input);
     return {
       tools,
       warnings,
       toolsNeedingApproval,
       instructions,
+      capabilityCatalog: catalog,
       createHooks: (integrations) => {
         const handle = this.createHandle(profile, input, integrations);
         return hooks.map((createHook) => createHook(handle));
@@ -100,25 +118,26 @@ export class RunProfileAssembler {
     input: RunCapabilityInput,
   ): Promise<ProfileBuild> {
     const context = await this.contextFactory.create(input);
-    const tools: Tool[] = [];
-    const warnings: IntegrationWarning[] = [];
-    const sections: PromptSection[] = [];
-    const hooks: CapabilityHookFactory[] = [];
-    for (const capability of profile.capabilities) {
-      const contribution = await capability.contribute(context, {
-        reservedToolNames: new Set(tools.map((tool) => tool.name)),
-      });
-      tools.push(...(contribution.tools ?? []));
-      warnings.push(...(contribution.warnings ?? []));
-      sections.push(...(contribution.sections ?? []));
-      hooks.push(...(contribution.hooks ?? []));
+    const assembly = new CapabilityAssembly();
+    for (const entry of profile.capabilities) {
+      const contribution = await entry.capability.contribute(
+        context,
+        assembly.state(),
+      );
+      if (await isDeferred(entry, context)) {
+        assembly.defer(entry.capability, contribution);
+      } else {
+        assembly.add(contribution);
+      }
     }
+    const { tools, warnings, sections, hooks, catalog } = assembly;
     return {
       tools,
       warnings,
       toolsNeedingApproval: await this.findToolsNeedingApproval(profile, tools),
       instructions: composeRunInstructions(profile, sections, tools),
       hooks,
+      catalog,
     };
   }
 
@@ -144,4 +163,19 @@ export class RunProfileAssembler {
         .map((tool) => tool.name),
     );
   }
+}
+
+/**
+ * An on-demand capability contributes only once the thread loaded it or the
+ * context requires it. A model without tools could never load one, so it
+ * gets every capability as before.
+ */
+async function isDeferred(
+  { capability, loading }: ProfileCapability,
+  context: RunCapabilityContext,
+): Promise<boolean> {
+  if (loading !== CapabilityLoading.ON_DEMAND) return false;
+  if (!context.model.canUseTools) return false;
+  if (context.loadedCapabilityIds.has(capability.id)) return false;
+  return !(await capability.isRequiredBy?.(context));
 }

@@ -134,6 +134,15 @@ export class ThreadRecord extends BaseRecord {
   @Column({ type: 'varchar', nullable: true })
   client: SessionClient | null;
 
+  /** Run capability ids, never renamed; the runs module ignores unknown ones. */
+  @Column({
+    name: 'loaded_capability_ids',
+    type: 'text',
+    array: true,
+    default: () => "'{}'",
+  })
+  loadedCapabilityIds: string[];
+
   /**
    * Timestamp of the most recent conversation activity (last message added).
    * Drives admin-defined data-retention deletion, which keys off inactivity

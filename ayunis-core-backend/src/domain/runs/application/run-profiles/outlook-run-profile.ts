@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { RunCapability } from 'src/domain/runs/application/run-capabilities/run-capability';
 import { AnonymizationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization.capability';
 import { BehaviorCapability } from 'src/domain/runs/application/run-capabilities/capabilities/behavior.capability';
 import { CustomInstructionsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/custom-instructions.capability';
@@ -18,6 +17,8 @@ import { WorkspaceInstructionsCapability } from 'src/domain/runs/application/run
 import {
   AYUNIS_PREAMBLE,
   DONE_WHEN_MODEL_STOPS,
+  eager,
+  type ProfileCapability,
   type RunCompletionPolicy,
   type RunProfile,
 } from './run-profile';
@@ -38,7 +39,7 @@ export class OutlookRunProfile implements RunProfile {
   readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
   readonly maxIterations = 50;
   readonly asksForToolConfirmation = true;
-  readonly capabilities: readonly RunCapability[];
+  readonly capabilities: readonly ProfileCapability[];
 
   constructor(
     dateTime: DateTimeCapability,
@@ -57,7 +58,7 @@ export class OutlookRunProfile implements RunProfile {
     workspaceInstructions: WorkspaceInstructionsCapability,
     mcp: McpCapability,
   ) {
-    this.capabilities = [
+    this.capabilities = eager(
       dateTime,
       dataHandling,
       anonymization,
@@ -73,6 +74,6 @@ export class OutlookRunProfile implements RunProfile {
       releaseNoteContext,
       workspaceInstructions,
       mcp,
-    ];
+    );
   }
 }

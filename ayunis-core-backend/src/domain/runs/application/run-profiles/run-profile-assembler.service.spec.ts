@@ -22,7 +22,13 @@ import {
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/runs/testing/run-capability.fixture';
-import { DONE_WHEN_MODEL_STOPS, type RunProfile } from './run-profile';
+import {
+  DONE_WHEN_MODEL_STOPS,
+  eager,
+  onDemand,
+  type ProfileCapability,
+  type RunProfile,
+} from './run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
 const tool = (name: string) => ({ name }) as Tool;
@@ -38,17 +44,37 @@ const mcpTool = (name: string, integrationId: UUID) =>
     null,
   );
 
+type TestCapability = Pick<RunCapability, 'contribute'> &
+  Partial<RunCapability>;
+
+const capability = (definition: TestCapability): RunCapability => ({
+  id: 'test_capability',
+  description: 'Used by the test.',
+  ...definition,
+});
+
+const eagerly = (...definitions: TestCapability[]) =>
+  eager(...definitions.map(capability));
+
 function buildAssembler(
-  capabilities: RunCapability[],
+  capabilities: ProfileCapability[],
   options: {
     asksForToolConfirmation?: boolean;
     allowances?: McpToolAllowance[];
+    loadedCapabilityIds?: string[];
+    canUseTools?: boolean;
   } = {},
 ) {
-  const thread = aThread();
+  const thread = aThread({ loadedCapabilityIds: options.loadedCapabilityIds });
   const refreshedThread = aThread({ id: thread.id });
   const createContext = jest.fn((input: RunCapabilityInput) =>
-    Promise.resolve(aCapabilityContext({ thread: input.thread })),
+    Promise.resolve(
+      aCapabilityContext({
+        thread: input.thread,
+        loadedCapabilityIds: new Set(input.thread.loadedCapabilityIds),
+        canUseTools: options.canUseTools,
+      }),
+    ),
   );
   const findThread = jest.fn().mockResolvedValue({ thread: refreshedThread });
   const toRuntimeTools = jest.fn((tools: Tool[]) =>
@@ -92,22 +118,24 @@ function buildAssembler(
 
 describe('RunProfileAssembler', () => {
   it('merges tools and instructions in capability order', async () => {
-    const { assemble } = buildAssembler([
-      {
-        contribute: () => ({
-          tools: [tool('code_execution')],
-          sections: [
-            { slot: PromptSlot.POLICIES, content: '<data_handling/>' },
-          ],
-        }),
-      },
-      {
-        contribute: () => ({
-          tools: [tool('internet_search')],
-          sections: [{ slot: PromptSlot.FRAMING, content: '<context/>' }],
-        }),
-      },
-    ]);
+    const { assemble } = buildAssembler(
+      eagerly(
+        {
+          contribute: () => ({
+            tools: [tool('code_execution')],
+            sections: [
+              { slot: PromptSlot.POLICIES, content: '<data_handling/>' },
+            ],
+          }),
+        },
+        {
+          contribute: () => ({
+            tools: [tool('internet_search')],
+            sections: [{ slot: PromptSlot.FRAMING, content: '<context/>' }],
+          }),
+        },
+      ),
+    );
 
     const assembled = await assemble();
 
@@ -129,20 +157,22 @@ describe('RunProfileAssembler', () => {
     const seen: string[][] = [];
     const record = (state: CapabilityAssemblyState) =>
       seen.push([...state.reservedToolNames]);
-    const { assemble } = buildAssembler([
-      {
-        contribute: (_ctx, state) => {
-          record(state);
-          return { tools: [tool('code_execution'), tool('map')] };
+    const { assemble } = buildAssembler(
+      eagerly(
+        {
+          contribute: (_ctx, state) => {
+            record(state);
+            return { tools: [tool('code_execution'), tool('map')] };
+          },
         },
-      },
-      {
-        contribute: (_ctx, state) => {
-          record(state);
-          return {};
+        {
+          contribute: (_ctx, state) => {
+            record(state);
+            return {};
+          },
         },
-      },
-    ]);
+      ),
+    );
 
     await assemble();
 
@@ -151,10 +181,12 @@ describe('RunProfileAssembler', () => {
 
   it('builds all capabilities from one shared context', async () => {
     const contexts: unknown[] = [];
-    const { assemble, createContext } = buildAssembler([
-      { contribute: (ctx) => (contexts.push(ctx), {}) },
-      { contribute: (ctx) => (contexts.push(ctx), {}) },
-    ]);
+    const { assemble, createContext } = buildAssembler(
+      eagerly(
+        { contribute: (ctx) => (contexts.push(ctx), {}) },
+        { contribute: (ctx) => (contexts.push(ctx), {}) },
+      ),
+    );
 
     await assemble();
 
@@ -182,7 +214,7 @@ describe('RunProfileAssembler', () => {
         ],
       });
     const { assemble, findThread, createContext, thread, refreshedThread } =
-      buildAssembler([{ contribute }]);
+      buildAssembler(eagerly({ contribute }));
     const assembled = await assemble();
     const integrations = new RuntimeToolIntegrationRegistry(assembled.tools);
     const replaceTools = jest.spyOn(integrations, 'replaceTools');
@@ -226,7 +258,7 @@ describe('RunProfileAssembler', () => {
         ],
       })
       .mockReturnValueOnce({ warnings: [warning] });
-    const { assemble } = buildAssembler([{ contribute }]);
+    const { assemble } = buildAssembler(eagerly({ contribute }));
     const assembled = await assemble();
     assembled.createHooks(new RuntimeToolIntegrationRegistry([]));
     const emit = jest.fn();
@@ -242,9 +274,8 @@ describe('RunProfileAssembler', () => {
   });
 
   describe('tool confirmation', () => {
-    const offering = (...tools: Tool[]): RunCapability[] => [
-      { contribute: () => ({ tools }) },
-    ];
+    const offering = (...tools: Tool[]) =>
+      eagerly({ contribute: () => ({ tools }) });
     const allowed = (integrationId: UUID, toolName: string) =>
       new McpToolAllowance({
         userId: TEST_USER_ID,
@@ -300,7 +331,9 @@ describe('RunProfileAssembler', () => {
           ],
         })
         .mockReturnValueOnce({ tools: [tool('activate_skill'), added] });
-      const { assemble, toRuntimeTools } = buildAssembler([{ contribute }]);
+      const { assemble, toRuntimeTools } = buildAssembler(
+        eagerly({ contribute }),
+      );
       const assembled = await assemble();
       assembled.createHooks(new RuntimeToolIntegrationRegistry([]));
 
@@ -313,6 +346,168 @@ describe('RunProfileAssembler', () => {
         [tool('activate_skill'), added],
         new Set([added.name]),
       );
+    });
+  });
+
+  describe('on-demand capabilities', () => {
+    const ROUTINE_USAGE = '<routine_usage/>';
+    const routineManagement = (overrides: Partial<RunCapability> = {}) =>
+      capability({
+        id: 'routine_management',
+        description: 'Create and edit routines.',
+        contribute: () => ({
+          tools: [tool('create_routine'), tool('edit_routine')],
+          sections: [{ slot: PromptSlot.TOOL_USAGE, content: ROUTINE_USAGE }],
+          hooks: [() => ({ name: 'routine-hook' })],
+        }),
+        ...overrides,
+      });
+    const internet = capability({
+      id: 'internet',
+      description: 'Search the web.',
+      contribute: () => ({ tools: [tool('internet_search')] }),
+    });
+    const seenByMcp: CapabilityAssemblyState[] = [];
+    const mcp = capability({
+      id: 'mcp',
+      description: 'Integration tools.',
+      contribute: (_ctx, state) => {
+        seenByMcp.push(state);
+        return {
+          tools: [tool('create_routine'), tool('jira_search')].filter(
+            (t) => !state.reservedToolNames.has(t.name),
+          ),
+        };
+      },
+    });
+    const routineCatalogEntry = {
+      id: 'routine_management',
+      description: 'Create and edit routines.',
+      toolNames: ['create_routine', 'edit_routine'],
+    };
+
+    function assembleWith(
+      routines: RunCapability,
+      options: { loadedCapabilityIds?: string[]; canUseTools?: boolean } = {},
+    ) {
+      const { assemble } = buildAssembler(
+        [...eager(internet), ...onDemand(routines), ...eager(mcp)],
+        options,
+      );
+      return assemble();
+    }
+
+    const names = (tools: readonly Tool[]) => tools.map((t) => t.name);
+
+    beforeEach(() => {
+      seenByMcp.length = 0;
+    });
+
+    it('offers nothing of an unloaded capability but lists it in the catalog with its tools', async () => {
+      const assembled = await assembleWith(routineManagement());
+
+      expect(names(assembled.tools)).toEqual([
+        'internet_search',
+        'jira_search',
+      ]);
+      expect(assembled.instructions).not.toContain(ROUTINE_USAGE);
+      expect(assembled.capabilityCatalog).toEqual([routineCatalogEntry]);
+      expect(
+        assembled.createHooks(new RuntimeToolIntegrationRegistry([])),
+      ).toEqual([]);
+    });
+
+    it('contributes a capability the thread has loaded and leaves it out of the catalog', async () => {
+      const assembled = await assembleWith(routineManagement(), {
+        loadedCapabilityIds: ['routine_management'],
+      });
+
+      expect(names(assembled.tools)).toEqual([
+        'internet_search',
+        'create_routine',
+        'edit_routine',
+        'jira_search',
+      ]);
+      expect(assembled.instructions).toContain(ROUTINE_USAGE);
+      expect(assembled.capabilityCatalog).toEqual([]);
+      expect(
+        assembled
+          .createHooks(new RuntimeToolIntegrationRegistry([]))
+          .map((hook) => hook.name),
+      ).toEqual(['routine-hook']);
+    });
+
+    it('contributes a capability the context requires without a stored id', async () => {
+      const assembled = await assembleWith(
+        routineManagement({ isRequiredBy: () => Promise.resolve(true) }),
+      );
+
+      expect(names(assembled.tools)).toContain('edit_routine');
+      expect(assembled.instructions).toContain(ROUTINE_USAGE);
+      expect(assembled.capabilityCatalog).toEqual([]);
+    });
+
+    it('leaves an unavailable capability, which contributes no tools, out of the tools and the catalog and reserves none of its names', async () => {
+      const assembled = await assembleWith(
+        routineManagement({
+          contribute: () => ({
+            sections: [{ slot: PromptSlot.TOOL_USAGE, content: ROUTINE_USAGE }],
+          }),
+        }),
+      );
+
+      expect(names(assembled.tools)).toEqual([
+        'internet_search',
+        'create_routine',
+        'jira_search',
+      ]);
+      expect(assembled.instructions).not.toContain(ROUTINE_USAGE);
+      expect(assembled.capabilityCatalog).toEqual([]);
+    });
+
+    it('ignores stored ids that are unknown or name an eager capability', async () => {
+      const assembled = await assembleWith(routineManagement(), {
+        loadedCapabilityIds: ['routines_v0', 'internet', 'mcp'],
+      });
+
+      expect(names(assembled.tools)).toEqual([
+        'internet_search',
+        'jira_search',
+      ]);
+      expect(assembled.capabilityCatalog).toEqual([routineCatalogEntry]);
+    });
+
+    it('keeps the tool names of an unloaded capability reserved and reports them as loadable', async () => {
+      await assembleWith(routineManagement());
+
+      expect([...seenByMcp[0].reservedToolNames]).toEqual([
+        'internet_search',
+        'create_routine',
+        'edit_routine',
+      ]);
+      expect([...seenByMcp[0].loadableToolNames]).toEqual([
+        'create_routine',
+        'edit_routine',
+      ]);
+    });
+
+    it('reports no loadable tool names once the capability is loaded', async () => {
+      await assembleWith(routineManagement(), {
+        loadedCapabilityIds: ['routine_management'],
+      });
+
+      expect(seenByMcp[0].reservedToolNames).toContain('create_routine');
+      expect(seenByMcp[0].loadableToolNames.size).toBe(0);
+    });
+
+    it('contributes every capability as before when the model cannot use tools', async () => {
+      const assembled = await assembleWith(routineManagement(), {
+        canUseTools: false,
+      });
+
+      expect(names(assembled.tools)).toContain('edit_routine');
+      expect(assembled.instructions).toContain(ROUTINE_USAGE);
+      expect(assembled.capabilityCatalog).toEqual([]);
     });
   });
 });

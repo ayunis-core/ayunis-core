@@ -34,6 +34,9 @@ If users ask about platform-wide information you don't have access to, explain t
 
 @Injectable()
 export class DataHandlingCapability implements RunCapability {
+  readonly id = 'data_handling';
+  readonly description = 'Rules for handling data and sources.';
+
   contribute(): CapabilityContribution {
     return {
       sections: [{ slot: PromptSlot.POLICIES, content: DATA_HANDLING }],

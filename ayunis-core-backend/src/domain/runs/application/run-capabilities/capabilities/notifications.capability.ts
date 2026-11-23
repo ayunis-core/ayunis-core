@@ -20,6 +20,9 @@ import type {
 /** `send_notification`, a routine run's way to reach its owner's inbox. */
 @Injectable()
 export class NotificationsCapability implements RunCapability {
+  readonly id = 'notifications';
+  readonly description = "Send a notification to the routine owner's inbox.";
+
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,
     private readonly configService: ConfigService,

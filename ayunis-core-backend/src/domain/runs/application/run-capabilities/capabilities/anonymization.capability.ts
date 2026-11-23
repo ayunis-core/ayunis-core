@@ -19,6 +19,9 @@ Rules for handling these placeholders:
 
 @Injectable()
 export class AnonymizationCapability implements RunCapability {
+  readonly id = 'anonymization';
+  readonly description = 'Rules for chats whose personal data is anonymized.';
+
   contribute(context: RunCapabilityContext): CapabilityContribution {
     if (!context.isAnonymous) return {};
     return {

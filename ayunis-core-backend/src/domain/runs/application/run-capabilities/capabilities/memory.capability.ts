@@ -28,6 +28,9 @@ const MEMORY_NUDGE_TEXT = `Memory check-in: compare what you remember about this
  */
 @Injectable()
 export class MemoryCapability implements RunCapability {
+  readonly id = 'memory';
+  readonly description = 'Read and update what you remember about the user.';
+
   private readonly logger = new Logger(MemoryCapability.name);
 
   constructor(

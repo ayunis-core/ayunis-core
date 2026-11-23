@@ -35,14 +35,49 @@ export const DONE_WHEN_MODEL_STOPS: RunCompletionPolicy = {
   decide: () => ({ status: 'done' }),
 };
 
+export enum CapabilityLoading {
+  /** Contributes to every run. */
+  EAGER = 'eager',
+  /**
+   * Contributes only once the thread has loaded it or the run's context
+   * requires it; until then the run only lists it in its capability catalog.
+   */
+  ON_DEMAND = 'on_demand',
+}
+
+export interface ProfileCapability {
+  readonly capability: RunCapability;
+  readonly loading: CapabilityLoading;
+}
+
+export function eager(...capabilities: RunCapability[]): ProfileCapability[] {
+  return capabilities.map((capability) => ({
+    capability,
+    loading: CapabilityLoading.EAGER,
+  }));
+}
+
+export function onDemand(
+  ...capabilities: RunCapability[]
+): ProfileCapability[] {
+  return capabilities.map((capability) => ({
+    capability,
+    loading: CapabilityLoading.ON_DEMAND,
+  }));
+}
+
 export interface RunProfile {
   readonly id: RunProfileId;
   /** Always the first section of the system prompt. */
   readonly preamble: string;
   /** Rendered after the custom instructions, before any run notes. */
   readonly closing?: string;
-  /** Ordered: decides tool order and section order within each prompt slot. */
-  readonly capabilities: readonly RunCapability[];
+  /**
+   * Ordered: decides tool order and section order within each prompt slot.
+   * MCP must stay the last tool-contributing capability, because it drops
+   * tools whose names are already reserved.
+   */
+  readonly capabilities: readonly ProfileCapability[];
   readonly completionPolicy: RunCompletionPolicy;
   /** Model-and-tool iterations allowed in one run. */
   readonly maxIterations: number;

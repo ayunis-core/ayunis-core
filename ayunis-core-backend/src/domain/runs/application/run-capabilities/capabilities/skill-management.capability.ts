@@ -28,6 +28,10 @@ import { Permission } from 'src/iam/permissions/domain/value-objects/permission.
  */
 @Injectable()
 export class SkillManagementCapability implements RunCapability {
+  readonly id = 'skill_management';
+  readonly description =
+    'Create and edit skills, and search and install skills from the marketplace.';
+
   constructor(
     @Inject(marketplaceConfig.KEY)
     private readonly marketplace: ConfigType<typeof marketplaceConfig>,

@@ -10,6 +10,9 @@ import { InternetCapability } from './internet.capability';
 /** The chat's web tools, only for routines with internet access turned on. */
 @Injectable()
 export class RoutineInternetCapability implements RunCapability {
+  readonly id = 'routine_internet';
+  readonly description = 'Search the web and read web pages in a routine run.';
+
   constructor(private readonly internetCapability: InternetCapability) {}
 
   async contribute(

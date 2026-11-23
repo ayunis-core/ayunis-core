@@ -9,6 +9,7 @@ import type {
   SkillCatalog,
 } from 'src/domain/runs/application/run-capabilities/run-capability-context';
 import type {
+  CapabilityAssemblyState,
   CapabilityContribution,
   PromptSlot,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
@@ -46,10 +47,18 @@ export function aCapabilityContext(
     personalContext: { memory: false, chatHistory: false },
     now: new Date('2026-11-06T10:23:45.000Z'),
     threadSources: [],
+    loadedCapabilityIds: new Set(),
     knowledgeBases: () => Promise.resolve([]),
     skillCatalog: () => Promise.resolve(anEmptySkillCatalog()),
     ...rest,
   };
+}
+
+/** The state a capability sees when `reserved` names are offered before it. */
+export function anAssemblyState(
+  reserved: Iterable<string> = [],
+): CapabilityAssemblyState {
+  return { reservedToolNames: new Set(reserved), loadableToolNames: new Set() };
 }
 
 export function anEmptySkillCatalog(): SkillCatalog {

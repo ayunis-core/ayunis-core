@@ -2,6 +2,7 @@ import { FeatureFlag } from 'src/config/features.config';
 import { PromptSlot } from 'src/domain/runs/application/run-capabilities/run-capability';
 import {
   aCapabilityContext,
+  anAssemblyState,
   aThread,
   sectionsIn,
   TEST_ORG_ID,
@@ -50,7 +51,7 @@ describe('FeatureGuideCapability', () => {
   }
 
   function tools(...names: ToolType[]) {
-    return { reservedToolNames: new Set<string>(names) };
+    return anAssemblyState(names);
   }
 
   async function guideFor(

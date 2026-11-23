@@ -2,14 +2,16 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { PromptSlot } from 'src/domain/runs/application/run-capabilities/run-capability';
 import {
   aCapabilityContext,
+  anAssemblyState,
   sectionsIn,
 } from 'src/domain/runs/testing/run-capability.fixture';
 import { AdoptionCapability } from './adoption.capability';
 
 function contribute(toolNames: string[]) {
-  return new AdoptionCapability().contribute(aCapabilityContext(), {
-    reservedToolNames: new Set(toolNames),
-  });
+  return new AdoptionCapability().contribute(
+    aCapabilityContext(),
+    anAssemblyState(toolNames),
+  );
 }
 
 describe('AdoptionCapability', () => {

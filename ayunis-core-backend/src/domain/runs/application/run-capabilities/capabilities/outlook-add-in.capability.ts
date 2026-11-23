@@ -33,6 +33,10 @@ Call one outlook__ tool at a time. Ayunis never sends email: the user reviews, e
  */
 @Injectable()
 export class OutlookAddInCapability implements RunCapability {
+  readonly id = 'outlook_add_in';
+  readonly description =
+    'Read the open email and its attachments, and draft replies in Outlook.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(

@@ -8,6 +8,9 @@ import {
 
 @Injectable()
 export class DateTimeCapability implements RunCapability {
+  readonly id = 'date_time';
+  readonly description = 'The current date.';
+
   // Date only, no time of day: this section sits at the top of the system
   // prompt, and prompt caching is a byte-exact prefix match — a timestamp
   // here would invalidate the provider cache on every request.

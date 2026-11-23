@@ -12,6 +12,9 @@ import type {
 /** `finish_routine`, the only way an unattended routine run ends successfully. */
 @Injectable()
 export class FinishRoutineCapability implements RunCapability {
+  readonly id = 'finish_routine';
+  readonly description = 'End the routine run.';
+
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
   async contribute(
