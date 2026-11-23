@@ -9,6 +9,7 @@ import { UrlRetrieverHandler } from './application/ports/url-retriever.handler';
 import { RetrieveUrlUseCase } from './application/use-cases/retrieve-url/retrieve-url.use-case';
 import { CrawlUrlUseCase } from './application/use-cases/crawl-url/crawl-url.use-case';
 import { GetPdfVersionUseCase } from './application/use-cases/get-pdf-version/get-pdf-version.use-case';
+import { DownloadPdfUseCase } from './application/use-cases/download-pdf/download-pdf.use-case';
 import { CrawlDomainGrantsModule } from 'src/domain/crawl-domain-grants/crawl-domain-grants.module';
 import { FileRetrieverModule } from 'src/domain/retrievers/file-retrievers/file-retriever.module';
 
@@ -31,8 +32,9 @@ import { FileRetrieverModule } from 'src/domain/retrievers/file-retrievers/file-
     RetrieveUrlUseCase,
     CrawlUrlUseCase,
     GetPdfVersionUseCase,
+    DownloadPdfUseCase,
     CheerioUrlRetrieverHandler,
   ],
-  exports: [RetrieveUrlUseCase, CrawlUrlUseCase],
+  exports: [RetrieveUrlUseCase, CrawlUrlUseCase, DownloadPdfUseCase],
 })
 export class UrlRetrieverModule {}

@@ -23,6 +23,7 @@ import {
 } from 'src/domain/knowledge-base-sync/application/models/sync-source-results';
 import { SyncSource } from 'src/domain/knowledge-base-sync/application/ports/sync-source.port';
 import type { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 
 const SKIP_REASONS: Record<
@@ -65,6 +66,7 @@ export class ConnectorSyncSource extends SyncSource<ConnectorSyncedLocation> {
       outcome: SyncSourceOutcome.CHANGES,
       items: changes.items.map(toSyncItem),
       removedItemIds: changes.removedItemIds,
+      keptItemIds: [],
       cursor: changes.cursor,
       fullListing: changes.fullListing,
     };
@@ -72,14 +74,14 @@ export class ConnectorSyncSource extends SyncSource<ConnectorSyncedLocation> {
 
   async fetchItemContent(
     location: ConnectorSyncedLocation,
-    itemId: string,
+    file: SyncedFile,
   ): Promise<SyncItemContentResult> {
     const content = await this.fetchContentUseCase.execute(
       new FetchConnectorItemContentCommand({
         connectorId: location.connectorId,
         orgId: location.orgId,
         location: location.location,
-        itemId,
+        itemId: file.externalId,
       }),
     );
     switch (content.outcome) {

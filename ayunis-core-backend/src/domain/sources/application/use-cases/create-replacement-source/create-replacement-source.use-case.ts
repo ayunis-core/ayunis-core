@@ -41,7 +41,7 @@ export class CreateReplacementSourceUseCase {
     const replacement = new FileSource({
       id: command.id,
       name: command.name,
-      fileType: fileTypeFromName(command.name),
+      fileType: fileTypeFromName(command.fileName ?? command.name),
       type: TextType.FILE,
       status: SourceStatus.PROCESSING,
       processingStartedAt: null,

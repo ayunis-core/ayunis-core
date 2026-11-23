@@ -265,8 +265,8 @@ describe('Knowledge-base capacity across source writers', () => {
     });
     await acquired;
     const createSources = {
-      execute: async ({ fileNames }: { fileNames: string[] }) => {
-        const ids = fileNames.map(() => randomUUID());
+      execute: async ({ files }: { files: unknown[] }) => {
+        const ids = files.map(() => randomUUID());
         await transactions
           .getStore()!
           .getRepository(SourceRecord)
@@ -285,7 +285,11 @@ describe('Knowledge-base capacity across source writers', () => {
     ).execute(
       new AddSyncedDocumentsToKnowledgeBaseCommand(
         knowledgeBaseId,
-        Array.from({ length: 20 }, (_, index) => `Plan ${index}.pdf`),
+        Array.from({ length: 20 }, (_, index) => ({
+          name: `Plan ${index}.pdf`,
+          fileName: null,
+          url: null,
+        })),
         randomUUID(),
       ),
     );

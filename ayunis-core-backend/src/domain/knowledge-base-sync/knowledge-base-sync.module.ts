@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ContextModule } from 'src/common/context/context.module';
 import { ConnectorsModule } from 'src/domain/connectors/connectors.module';
+import { CrawlDomainGrantsModule } from 'src/domain/crawl-domain-grants/crawl-domain-grants.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { UrlRetrieverModule } from 'src/domain/retrievers/url-retrievers/url-retriever.module';
 import { SourcesModule } from 'src/domain/sources/sources.module';
 import { StorageModule } from 'src/domain/storage/storage.module';
 import { OrgsModule } from 'src/iam/orgs/orgs.module';
@@ -10,13 +12,16 @@ import { SyncPlanApplier } from './application/services/sync-plan-applier.servic
 import { SyncedLocationLocks } from './application/services/synced-location-locks.service';
 import { SyncedFileDocuments } from './application/services/synced-file-documents.service';
 import { ConnectorSyncSource } from './application/services/connector-sync-source.service';
+import { WebSyncSource } from './application/services/web-sync-source.service';
 import { SyncSources } from './application/services/sync-sources.service';
+import { SyncedLocationRegistrar } from './application/services/synced-location-registrar.service';
 import { EnabledSyncProviders } from './application/services/enabled-sync-providers.service';
 import { FailedSourcesDeletedListener } from './application/listeners/failed-sources-deleted.listener';
 import { StartSyncedFileProcessingUseCase } from './application/use-cases/start-synced-file-processing/start-synced-file-processing.use-case';
 import { CompleteSyncedFileProcessingUseCase } from './application/use-cases/complete-synced-file-processing/complete-synced-file-processing.use-case';
 import { FailSyncedFileProcessingUseCase } from './application/use-cases/fail-synced-file-processing/fail-synced-file-processing.use-case';
 import { AddSyncedLocationUseCase } from './application/use-cases/add-synced-location/add-synced-location.use-case';
+import { AddWebSyncedLocationUseCase } from './application/use-cases/add-web-synced-location/add-web-synced-location.use-case';
 import { RemoveSyncedLocationUseCase } from './application/use-cases/remove-synced-location/remove-synced-location.use-case';
 import { SyncLocationUseCase } from './application/use-cases/sync-location/sync-location.use-case';
 import { NextSyncedFileBatchUseCase } from './application/use-cases/next-synced-file-batch/next-synced-file-batch.use-case';
@@ -34,6 +39,8 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     LocalSyncedLocationsRepositoryModule,
     KnowledgeBaseSyncQueueModule,
     ConnectorsModule,
+    CrawlDomainGrantsModule,
+    UrlRetrieverModule,
     KnowledgeBasesModule,
     SourcesModule,
     StorageModule,
@@ -47,10 +54,13 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     SyncedLocationLocks,
     SyncedFileDocuments,
     ConnectorSyncSource,
+    WebSyncSource,
     SyncSources,
+    SyncedLocationRegistrar,
     EnabledSyncProviders,
     FailedSourcesDeletedListener,
     AddSyncedLocationUseCase,
+    AddWebSyncedLocationUseCase,
     RemoveSyncedLocationUseCase,
     SyncLocationUseCase,
     NextSyncedFileBatchUseCase,
@@ -67,6 +77,7 @@ import { KnowledgeBaseSyncQueueModule } from './infrastructure/queue/knowledge-b
     // The queue, for the consumer in IngestionConsumersModule.
     KnowledgeBaseSyncQueueModule,
     AddSyncedLocationUseCase,
+    AddWebSyncedLocationUseCase,
     RemoveSyncedLocationUseCase,
     SyncLocationUseCase,
     NextSyncedFileBatchUseCase,

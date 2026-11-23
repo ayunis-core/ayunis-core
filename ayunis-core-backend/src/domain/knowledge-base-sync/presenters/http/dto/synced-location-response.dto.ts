@@ -43,14 +43,15 @@ export class SyncedLocationResponseDto {
   product: ConnectorProduct | null;
 
   @ApiProperty({
-    description: 'The URL that is synced',
+    description:
+      'The URL that is synced, e.g. a SharePoint folder or a website',
     example: 'https://contoso.sharepoint.com/sites/bauamt',
   })
   location: string;
 
   @ApiProperty({
     description:
-      'Whether the connector still reaches the location; its documents stay when it does not',
+      'Whether the location was reached at its last sync (a connector still has access, a website answered); its documents stay when it was not',
     enum: SyncedLocationState,
     enumName: 'SyncedLocationState',
   })

@@ -13,6 +13,7 @@ import {
   ORG_ID,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
 import type { SyncRunRequest } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
+import { SyncedLocationRegistrar } from 'src/domain/knowledge-base-sync/application/services/synced-location-registrar.service';
 import { AddSyncedLocationCommand } from './add-synced-location.command';
 import { AddSyncedLocationUseCase } from './add-synced-location.use-case';
 
@@ -33,7 +34,6 @@ describe('AddSyncedLocationUseCase', () => {
     const repository = new InMemorySyncedLocationsRepository();
     const queued: SyncRunRequest[] = [];
     const useCase = new AddSyncedLocationUseCase(
-      repository,
       {
         execute: () =>
           options.writable === false
@@ -48,12 +48,12 @@ describe('AddSyncedLocationUseCase', () => {
               )
             : Promise.resolve({ id: CONNECTOR_ID }),
       } as never,
-      {
+      new SyncedLocationRegistrar(repository, {
         enqueue: (runs: SyncRunRequest[]) => {
           queued.push(...runs);
           return Promise.resolve();
         },
-      } as never,
+      } as never),
       enabledProviders(options.connectorsEnabled ?? true),
     );
     return { repository, useCase, queued };

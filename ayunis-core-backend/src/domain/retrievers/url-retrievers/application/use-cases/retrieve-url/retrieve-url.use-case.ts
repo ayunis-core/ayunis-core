@@ -4,6 +4,10 @@ import { PdfExtractionCachePort } from 'src/domain/retrievers/url-retrievers/app
 import { UrlRetrievalCachePort } from 'src/domain/retrievers/url-retrievers/application/ports/url-retrieval-cache.port';
 import { Injectable, Logger } from '@nestjs/common';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
+import {
+  isPdfResponse,
+  PDF_MIME_TYPE,
+} from 'src/domain/retrievers/url-retrievers/domain/pdf-link';
 import { RetrieveUrlCommand } from './retrieve-url.command';
 import {
   RawUrlResponse,
@@ -24,8 +28,6 @@ import { RetrieveFileContentUseCase } from 'src/domain/retrievers/file-retriever
 import { RetrieveFileContentCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/retrieve-file-content/retrieve-file-content.command';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
-
-const PDF_MIME_TYPE = 'application/pdf';
 
 @Injectable()
 export class RetrieveUrlUseCase {
@@ -127,7 +129,7 @@ export class RetrieveUrlUseCase {
     requestedUrl: string,
     orgId: UUID,
   ): Promise<UrlRetrieverResult> {
-    if (this.isPdf(raw.contentType, raw.finalUrl, requestedUrl)) {
+    if (isPdfResponse(raw.contentType, raw.finalUrl, requestedUrl)) {
       return this.pdfExtractionCache.getOrLoad(orgId, raw, () =>
         this.parsePdf(raw),
       );
@@ -182,46 +184,6 @@ export class RetrieveUrlUseCase {
         url,
       },
     );
-  }
-
-  /**
-   * A response is treated as a PDF when the server says so, or when the server
-   * sends a generic/absent content type but a candidate URL ends in `.pdf`
-   * (some hosts serve PDFs as application/octet-stream or with no content type
-   * at all). Both the originally-requested URL and the post-redirect final URL
-   * are candidates: a `.pdf` link often redirects to a signed CDN URL whose
-   * path no longer carries the extension.
-   */
-  private isPdf(contentType: string, ...urls: string[]): boolean {
-    // `application/x-pdf` is a legacy alias some servers still send.
-    if (
-      contentType.includes(PDF_MIME_TYPE) ||
-      contentType.includes('application/x-pdf')
-    ) {
-      return true;
-    }
-    const isGenericType =
-      contentType === '' ||
-      contentType.includes('application/octet-stream') ||
-      contentType.includes('binary/octet-stream');
-    return isGenericType && urls.some((url) => this.hasPdfExtension(url));
-  }
-
-  private hasPdfExtension(url: string): boolean {
-    try {
-      const pathname = new URL(url).pathname;
-      // Decode percent-encoding so `/report%2Epdf` is recognized. Falls back to
-      // the raw pathname if the encoding is malformed.
-      let decoded = pathname;
-      try {
-        decoded = decodeURIComponent(pathname);
-      } catch {
-        // Malformed percent-encoding — check the raw pathname instead.
-      }
-      return decoded.toLowerCase().endsWith('.pdf');
-    } catch {
-      return false;
-    }
   }
 
   /**
@@ -303,7 +265,7 @@ export class RetrieveUrlUseCase {
     finalUrl: string,
     requestedUrl: string,
   ): void {
-    if (this.isPdf(contentType, finalUrl, requestedUrl)) {
+    if (isPdfResponse(contentType, finalUrl, requestedUrl)) {
       return;
     }
     this.assertSupportedContentType(contentType, finalUrl);

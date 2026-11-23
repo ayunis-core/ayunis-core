@@ -9,8 +9,8 @@ import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity
 import { CreateProcessingFileSourcesCommand } from './create-processing-file-sources.command';
 
 /**
- * Creates PROCESSING file sources in a knowledge base, typed by their names.
- * The caller holds the knowledge base's capacity lock.
+ * Creates PROCESSING file sources in a knowledge base, typed by their file
+ * names. The caller holds the knowledge base's capacity lock.
  */
 @Injectable()
 export class CreateProcessingFileSourcesUseCase {
@@ -25,15 +25,16 @@ export class CreateProcessingFileSourcesUseCase {
     this.logger.log(
       {
         knowledgeBaseId: command.knowledgeBaseId,
-        count: command.fileNames.length,
+        count: command.files.length,
       },
       'Creating processing file sources',
     );
-    const sources = command.fileNames.map(
-      (name) =>
+    const sources = command.files.map(
+      ({ name, fileName, url }) =>
         new FileSource({
           name,
-          fileType: fileTypeFromName(name),
+          fileType: fileTypeFromName(fileName ?? name),
+          url,
           type: TextType.FILE,
           knowledgeBaseId: command.knowledgeBaseId,
           syncedLocationId: command.syncedLocationId,

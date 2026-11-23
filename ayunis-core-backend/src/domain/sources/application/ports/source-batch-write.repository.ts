@@ -1,6 +1,13 @@
 import type { UUID } from 'crypto';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 
+export interface SourceRename {
+  sourceId: UUID;
+  name: string;
+  /** Where a citation opens it; `null` when citations open the stored file. */
+  url: string | null;
+}
+
 export interface ReplacedSource {
   id: UUID;
   storageKey: string | null;
@@ -13,8 +20,11 @@ export interface ReplacedSource {
 export abstract class SourceBatchWriteRepository {
   /** Inserts new file sources with empty details, as the pipeline expects. */
   abstract insertFileSources(files: FileSource[]): Promise<void>;
-  /** Renames the sources that still exist; others are left out silently. */
-  abstract rename(renames: { sourceId: UUID; name: string }[]): Promise<void>;
+  /**
+   * Renames the sources that still exist and sets where their citations
+   * open; others are left out silently.
+   */
+  abstract rename(renames: SourceRename[]): Promise<void>;
   /**
    * Locks the sources that still exist until the transaction ends, by ID,
    * and returns their IDs.

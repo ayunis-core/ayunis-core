@@ -25711,7 +25711,7 @@
       },
       "SyncedLocationProvider": {
         "type": "string",
-        "enum": ["connector"],
+        "enum": ["connector", "web"],
         "description": "Where the files come from"
       },
       "ConnectorProduct": {
@@ -25721,7 +25721,7 @@
       "SyncedLocationState": {
         "type": "string",
         "enum": ["active", "no_longer_accessible"],
-        "description": "Whether the connector still reaches the location; its documents stay when it does not"
+        "description": "Whether the location was reached at its last sync (a connector still has access, a website answered); its documents stay when it was not"
       },
       "SyncedFileSkipReason": {
         "type": "string",
@@ -25781,11 +25781,11 @@
           },
           "location": {
             "type": "string",
-            "description": "The URL that is synced",
+            "description": "The URL that is synced, e.g. a SharePoint folder or a website",
             "example": "https://contoso.sharepoint.com/sites/bauamt"
           },
           "state": {
-            "description": "Whether the connector still reaches the location; its documents stay when it does not",
+            "description": "Whether the location was reached at its last sync (a connector still has access, a website answered); its documents stay when it was not",
             "allOf": [
               {
                 "$ref": "#/components/schemas/SyncedLocationState"

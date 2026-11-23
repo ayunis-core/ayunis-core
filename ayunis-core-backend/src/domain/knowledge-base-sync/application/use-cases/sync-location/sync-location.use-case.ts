@@ -112,7 +112,7 @@ export class SyncLocationUseCase {
   ): Promise<SyncedFileSkipReason | null> {
     const rejection = await this.checkAcceptance.execute(
       new CheckSourceFileAcceptanceQuery({
-        fileName: item.name,
+        fileName: item.fileName ?? item.name,
         size: item.size,
         maxFileSizeBytes: KnowledgeBasesConstants.MAX_FILE_SIZE_BYTES,
       }),

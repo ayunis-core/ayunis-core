@@ -8,12 +8,15 @@ import type { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain
 export interface ListedChanges {
   items: SyncItem[];
   removedItemIds: string[];
+  keptItemIds: string[];
   fullListing: boolean;
 }
 
 interface ItemChange {
   contentChanged: boolean;
   renamed: boolean;
+  /** Its citation opens another URL. */
+  relinked: boolean;
   /** Renamed or moved. */
   relabelled: boolean;
   rejectedWhileWaiting: boolean;
@@ -27,7 +30,8 @@ export interface SyncPlan {
   removed: SyncedFile[];
   /** Documents of removed files and of files that can no longer be processed. */
   documentsToRemove: UUID[];
-  renames: { sourceId: UUID; name: string }[];
+  /** Documents with a new name or citation URL. */
+  renames: { sourceId: UUID; name: string; url: string | null }[];
   /** Renamed or moved without a new version. */
   relabelled: number;
   /** Files whose document holds an older version of their content. */
@@ -41,7 +45,8 @@ export interface SyncPlan {
 /**
  * The reconciliation rules: a listing against the files known so far. Items
  * are matched by ID, so renames and moves keep their document; deletions of
- * unknown IDs are ignored, as providers report deletions by ID only.
+ * unknown IDs are ignored, as providers report deletions by ID only. Items
+ * the source could not read this time keep their files as they are.
  */
 @Injectable()
 export class SyncReconciler {
@@ -112,7 +117,8 @@ export class SyncReconciler {
     const candidates = changes.fullListing
       ? [...known.keys()]
       : changes.removedItemIds;
-    return candidates.filter((id) => !listed.has(id));
+    const kept = new Set(changes.keptItemIds);
+    return candidates.filter((id) => !listed.has(id) && !kept.has(id));
   }
 
   private newFile(
@@ -125,6 +131,8 @@ export class SyncReconciler {
       externalId: item.id,
       name: item.name,
       path: item.path,
+      fileName: item.fileName,
+      url: item.url,
       version: item.version,
       size: item.size,
       state: rejection
@@ -143,9 +151,7 @@ export class SyncReconciler {
     const change = this.changeOf(file, item, rejection);
     if (!change) return;
     plan.changed.add(file);
-    file.name = item.name;
-    file.path = item.path;
-    file.size = item.size;
+    this.takeLabels(file, item);
     if (change.contentChanged) {
       file.version = item.version;
       this.applyNewVersion(plan, file, rejection);
@@ -153,8 +159,21 @@ export class SyncReconciler {
       if (change.relabelled) plan.relabelled++;
       if (rejection && change.rejectedWhileWaiting) file.skip(rejection);
     }
-    if (change.renamed && file.sourceId)
-      plan.renames.push({ sourceId: file.sourceId, name: item.name });
+    if ((change.renamed || change.relinked) && file.sourceId)
+      plan.renames.push({
+        sourceId: file.sourceId,
+        name: item.name,
+        url: file.url,
+      });
+  }
+
+  /** Everything the listing says about the file but its version. */
+  private takeLabels(file: SyncedFile, item: SyncItem): void {
+    file.name = item.name;
+    file.path = item.path;
+    file.fileName = item.fileName ?? null;
+    file.url = item.url ?? null;
+    file.size = item.size;
   }
 
   private changeOf(
@@ -166,6 +185,7 @@ export class SyncReconciler {
     const change: ItemChange = {
       contentChanged: file.version !== item.version,
       renamed,
+      relinked: file.url !== (item.url ?? null),
       relabelled: renamed || file.path !== item.path,
       // A file still waiting for a document is held to the current
       // rejection even without a new version; a skipped one is retried
@@ -175,6 +195,7 @@ export class SyncReconciler {
     const changed =
       change.contentChanged ||
       change.relabelled ||
+      change.relinked ||
       change.rejectedWhileWaiting ||
       file.size !== item.size;
     return changed ? change : null;

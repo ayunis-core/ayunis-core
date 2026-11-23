@@ -5574,6 +5574,7 @@ export type SyncedLocationProvider = typeof SyncedLocationProvider[keyof typeof 
 
 export const SyncedLocationProvider = {
   connector: 'connector',
+  web: 'web',
 } as const;
 
 export type ConnectorProduct = typeof ConnectorProduct[keyof typeof ConnectorProduct];
@@ -5584,7 +5585,7 @@ export const ConnectorProduct = {
 } as const;
 
 /**
- * Whether the connector still reaches the location; its documents stay when it does not
+ * Whether the location was reached at its last sync (a connector still has access, a website answered); its documents stay when it was not
  */
 export type SyncedLocationState = typeof SyncedLocationState[keyof typeof SyncedLocationState];
 
@@ -5620,9 +5621,9 @@ export interface SyncedLocationResponseDto {
   /** Where the files come from */
   provider: SyncedLocationProvider;
   product: ConnectorProduct | null;
-  /** The URL that is synced */
+  /** The URL that is synced, e.g. a SharePoint folder or a website */
   location: string;
-  /** Whether the connector still reaches the location; its documents stay when it does not */
+  /** Whether the location was reached at its last sync (a connector still has access, a website answered); its documents stay when it was not */
   state: SyncedLocationState;
   /**
      * When the location was last synced; null before its first sync

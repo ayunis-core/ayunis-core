@@ -6,6 +6,7 @@ export enum KnowledgeBaseSyncErrorCode {
   KNOWLEDGE_BASE_SYNC_DISABLED = 'KNOWLEDGE_BASE_SYNC_DISABLED',
   SYNCED_LOCATION_NOT_FOUND = 'SYNCED_LOCATION_NOT_FOUND',
   SYNCED_LOCATION_ALREADY_EXISTS = 'SYNCED_LOCATION_ALREADY_EXISTS',
+  INVALID_SYNCED_LOCATION = 'INVALID_SYNCED_LOCATION',
   UNEXPECTED_KNOWLEDGE_BASE_SYNC_ERROR = 'UNEXPECTED_KNOWLEDGE_BASE_SYNC_ERROR',
 }
 
@@ -41,6 +42,17 @@ export class SyncedLocationAlreadyExistsError extends ApplicationError {
       KnowledgeBaseSyncErrorCode.SYNCED_LOCATION_ALREADY_EXISTS,
       409,
       { knowledgeBaseId },
+    );
+  }
+}
+
+/** Not a location that can be synced, e.g. a website's URL without http(s). */
+export class InvalidSyncedLocationError extends ApplicationError {
+  constructor(reason: string) {
+    super(
+      `Invalid synced location: ${reason}`,
+      KnowledgeBaseSyncErrorCode.INVALID_SYNCED_LOCATION,
+      400,
     );
   }
 }

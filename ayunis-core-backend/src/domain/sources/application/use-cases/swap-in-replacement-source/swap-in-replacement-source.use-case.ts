@@ -13,7 +13,8 @@ import { SwapInReplacementSourceCommand } from './swap-in-replacement-source.com
 
 /**
  * Swaps a settled replacement in for the source it replaces, in one
- * transaction: it takes that source's place in its knowledge base, and the
+ * transaction: it takes that source's place in its knowledge base, under
+ * its synced location and with its citation URL, and the
  * source is deleted with its index entries. Search finds the old version
  * until the commit and only the new one after it; the document count stays
  * the same. A failed replacement takes the place only of a source without an

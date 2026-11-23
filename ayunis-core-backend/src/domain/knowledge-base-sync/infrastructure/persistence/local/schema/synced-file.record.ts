@@ -50,6 +50,12 @@ export class SyncedFileRecord extends BaseRecord {
   @Column({ type: 'text' })
   path: string;
 
+  @Column({ type: 'text', nullable: true })
+  fileName: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  url: string | null;
+
   @Column({ type: 'text' })
   version: string;
 

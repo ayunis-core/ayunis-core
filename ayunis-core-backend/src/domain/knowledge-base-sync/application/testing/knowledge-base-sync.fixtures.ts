@@ -20,6 +20,8 @@ import { SyncPlanApplier } from 'src/domain/knowledge-base-sync/application/serv
 import { ConnectorSyncSource } from 'src/domain/knowledge-base-sync/application/services/connector-sync-source.service';
 import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
+import { WebSyncSource } from 'src/domain/knowledge-base-sync/application/services/web-sync-source.service';
+import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { InMemorySyncedLocationsRepository } from './in-memory-synced-locations.fixtures';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { NextSyncedFileBatchQuery } from 'src/domain/knowledge-base-sync/application/use-cases/next-synced-file-batch/next-synced-file-batch.query';
@@ -194,6 +196,10 @@ export class FakeSourceSystem {
 
 export interface FakeDocument {
   name: string;
+  /** The name its type is read from, when not `name`. */
+  fileName?: string | null;
+  /** Where a citation opens it. */
+  url?: string | null;
   /** `null` for a hidden replacement. */
   knowledgeBaseId: UUID | null;
   status?: SourceStatus;
@@ -241,25 +247,33 @@ export class FakeKnowledgeBase {
   readonly addSyncedDocuments = {
     execute: ({
       knowledgeBaseId,
-      fileNames,
+      documents,
     }: {
       knowledgeBaseId: UUID;
-      fileNames: string[];
+      documents: {
+        name: string;
+        fileName: string | null;
+        url: string | null;
+      }[];
     }) => {
       const room =
         KnowledgeBasesConstants.MAX_SOURCES -
         [...this.documents.values()].filter(
           (document) => document.knowledgeBaseId === knowledgeBaseId,
         ).length;
-      const created = fileNames.slice(0, Math.max(0, room)).map((name) => {
-        const id = randomUUID();
-        this.documents.set(id, {
-          name,
-          knowledgeBaseId,
-          status: SourceStatus.PROCESSING,
+      const created = documents
+        .slice(0, Math.max(0, room))
+        .map(({ name, fileName, url }) => {
+          const id = randomUUID();
+          this.documents.set(id, {
+            name,
+            fileName,
+            url,
+            knowledgeBaseId,
+            status: SourceStatus.PROCESSING,
+          });
+          return { id };
         });
-        return { id };
-      });
       return Promise.resolve(created);
     },
   };
@@ -272,10 +286,14 @@ export class FakeKnowledgeBase {
   };
 
   readonly renameSources = {
-    execute: ({ renames }: { renames: { sourceId: UUID; name: string }[] }) => {
-      for (const { sourceId, name } of renames) {
+    execute: ({
+      renames,
+    }: {
+      renames: { sourceId: UUID; name: string; url: string | null }[];
+    }) => {
+      for (const { sourceId, name, url } of renames) {
         const document = this.documents.get(sourceId);
-        if (document) document.name = name;
+        if (document) Object.assign(document, { name, url });
       }
       return Promise.resolve();
     },
@@ -303,7 +321,7 @@ export function enabledProviders(
   } as unknown as ConfigService);
 }
 
-interface FakeQueue {
+export interface FakeQueue {
   jobs: SyncedFileJobData[];
   failing: boolean;
 }
@@ -316,8 +334,19 @@ export function syncedLocationLocks(
   return new SyncedLocationLocks(repository, noLock, noLock, noLock);
 }
 
-/** The sync sources, with the connectors module answering from `system`. */
-export function connectorSyncSources(system: FakeSourceSystem): SyncSources {
+/** Answers every call as if no website were configured. */
+const NO_WEBSITE = {
+  execute: () => Promise.reject(new Error('No website in this harness')),
+} as never;
+
+/**
+ * The sync sources, with the connectors module answering from `system` and,
+ * if given, the URL crawler from `web`.
+ */
+export function connectorSyncSources(
+  system: FakeSourceSystem,
+  web: WebSyncSource = new WebSyncSource(NO_WEBSITE, NO_WEBSITE, NO_WEBSITE),
+): SyncSources {
   return new SyncSources(
     new ConnectorSyncSource(
       {
@@ -328,18 +357,19 @@ export function connectorSyncSources(system: FakeSourceSystem): SyncSources {
         execute: ({ itemId }: { itemId: string }) => system.fetch(itemId),
       } as never,
     ),
+    web,
   );
 }
 
 function syncLocationUseCase(
   repository: InMemorySyncedLocationsRepository,
   knowledgeBase: FakeKnowledgeBase,
-  system: FakeSourceSystem,
+  sources: SyncSources,
   connectorsEnabled: boolean,
 ): SyncLocationUseCase {
   return new SyncLocationUseCase(
     repository,
-    connectorSyncSources(system),
+    sources,
     new CheckSourceFileAcceptanceUseCase(
       { maxUploadBytes: 200 * 1024 * 1024 } as never,
       { pdfMaxBytes: 100 * 1024 * 1024 },
@@ -389,22 +419,34 @@ async function feedAll(
 export function createSyncHarness(
   options: { connectorsEnabled?: boolean } = {},
 ) {
-  const repository = new InMemorySyncedLocationsRepository();
-  const knowledgeBase = new FakeKnowledgeBase(() => repository);
   const system = new FakeSourceSystem();
-  const queue: FakeQueue = { jobs: [], failing: false };
   const location = new ConnectorSyncedLocation({
     orgId: ORG_ID,
     knowledgeBaseId: KNOWLEDGE_BASE_ID,
     connectorId: CONNECTOR_ID,
     location: 'https://municipality.sharepoint.com/sites/bauamt/Dokumente',
   });
+  return {
+    ...harnessFor(location, connectorSyncSources(system), options),
+    system,
+  };
+}
+
+/** The sync engine around `location`, listed and read through `sources`. */
+export function harnessFor<L extends SyncedLocation>(
+  location: L,
+  sources: SyncSources,
+  options: { connectorsEnabled?: boolean } = {},
+) {
+  const repository = new InMemorySyncedLocationsRepository();
+  const knowledgeBase = new FakeKnowledgeBase(() => repository);
+  const queue: FakeQueue = { jobs: [], failing: false };
   void repository.create(location);
   const connectorsEnabled = options.connectorsEnabled ?? true;
   const syncLocation = syncLocationUseCase(
     repository,
     knowledgeBase,
-    system,
+    sources,
     connectorsEnabled,
   );
   const nextBatch = new NextSyncedFileBatchUseCase(
@@ -414,7 +456,7 @@ export function createSyncHarness(
   return {
     repository,
     knowledgeBase,
-    system,
+    sources,
     queue,
     jobs: queue.jobs,
     location,

@@ -6,6 +6,7 @@ import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/sy
 /** The feature flag a provider's locations need; `null` for none. */
 const PROVIDER_FLAGS: Record<SyncedLocationProvider, FeatureFlag | null> = {
   [SyncedLocationProvider.CONNECTOR]: FeatureFlag.Connectors,
+  [SyncedLocationProvider.WEB]: null,
 };
 
 /**
