@@ -28,6 +28,7 @@
     "@appsignal/javascript": "^1.6.1",
     "@appsignal/plugin-window-events": "^1.0.26",
     "@ayunis/api-client": "workspace:*",
+    "@ayunis/chat": "workspace:*",
     "@ayunis/ui": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

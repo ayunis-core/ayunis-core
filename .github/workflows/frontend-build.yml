@@ -6,6 +6,7 @@ on:
       - 'ayunis-core-frontend/**'
       - 'packages/ui/**'
       - 'packages/api-client/**'
+      - 'packages/chat/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/frontend-build.yml'
       - '.github/actions/setup-node-pnpm/action.yml'
@@ -15,6 +16,7 @@ on:
       - 'ayunis-core-frontend/**'
       - 'packages/ui/**'
       - 'packages/api-client/**'
+      - 'packages/chat/**'
       - 'pnpm-lock.yaml'
 
 permissions:
@@ -39,6 +41,10 @@ jobs:
 
       - name: Check API client package
         working-directory: packages/api-client
+        run: pnpm run typecheck && pnpm run lint && pnpm run deps:check
+
+      - name: Check chat package
+        working-directory: packages/chat
         run: pnpm run typecheck && pnpm run lint && pnpm run deps:check
 
       - name: Run production build

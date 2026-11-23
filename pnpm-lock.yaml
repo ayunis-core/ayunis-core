@@ -599,6 +599,9 @@ importers:
       '@ayunis/api-client':
         specifier: workspace:*
         version: link:../packages/api-client
+      '@ayunis/chat':
+        specifier: workspace:*
+        version: link:../packages/chat
       '@ayunis/ui':
         specifier: workspace:*
         version: link:../packages/ui
@@ -1029,6 +1032,49 @@ importers:
       orval:
         specifier: ^8.28.1
         version: 8.28.1(prettier@3.9.6)(typescript@6.0.3)
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.6
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      typescript-eslint:
+        specifier: ^8.68.0
+        version: 8.69.0(eslint@10.9.1(jiti@2.7.0))(typescript@6.0.3)
+
+  packages/chat:
+    dependencies:
+      '@ayunis/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+    devDependencies:
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.9.1(jiti@2.7.0))
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      eslint:
+        specifier: ^10.9.1
+        version: 10.9.1(jiti@2.7.0)
+      eslint-config-prettier:
+        specifier: ^10.1.8
+        version: 10.1.8(eslint@10.9.1(jiti@2.7.0))
+      eslint-plugin-prettier:
+        specifier: ^5.5.4
+        version: 5.5.6(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.9.1(jiti@2.7.0)))(eslint@10.9.1(jiti@2.7.0))(prettier@3.9.6)
+      eslint-plugin-sonarjs:
+        specifier: ^4.2.1
+        version: 4.2.1(eslint@10.9.1(jiti@2.7.0))
+      globals:
+        specifier: ^16.5.0
+        version: 16.5.0
+      madge:
+        specifier: ^8.0.0
+        version: 8.0.0(typescript@6.0.3)
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
