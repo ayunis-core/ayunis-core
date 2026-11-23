@@ -54,3 +54,49 @@ export async function makeArtifactAnonymous(params: {
     await client.end();
   }
 }
+
+/** Links an artifact to a further chat, as attaching it to the chat will. */
+export async function linkArtifactToChat(
+  threadId: string,
+  artifactId: string,
+): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    await client.query(
+      `INSERT INTO thread_artifacts ("threadId", "artifactId") VALUES ($1, $2)`,
+      [threadId, artifactId],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
+/** How many rows of each table still reference the artifact. */
+export async function countArtifactRows(
+  artifactId: string,
+): Promise<{ artifacts: number; versions: number; links: number }> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    const result = await client.query<{
+      artifacts: string;
+      versions: string;
+      links: string;
+    }>(
+      `SELECT
+         (SELECT COUNT(*) FROM artifacts WHERE id = $1) AS artifacts,
+         (SELECT COUNT(*) FROM artifact_versions WHERE "artifactId" = $1) AS versions,
+         (SELECT COUNT(*) FROM thread_artifacts WHERE "artifactId" = $1) AS links`,
+      [artifactId],
+    );
+    const row = result.rows[0];
+    return {
+      artifacts: Number(row.artifacts),
+      versions: Number(row.versions),
+      links: Number(row.links),
+    };
+  } finally {
+    await client.end();
+  }
+}

@@ -22,6 +22,7 @@ export class ArtifactDtoMapper {
     } else {
       dto.workspaceId = artifact.owner.workspaceId;
     }
+    dto.creatorId = artifact.creatorId;
     dto.title = artifact.title;
     dto.isAnonymous = artifact.isAnonymous;
     dto.letterheadId =

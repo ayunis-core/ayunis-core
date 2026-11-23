@@ -41,6 +41,7 @@ function artifact(
     type: 'spreadsheet',
     ownerType: 'personal',
     userId: 'user-id',
+    creatorId: 'user-id',
     title: id,
     isAnonymous: false,
     currentVersionNumber,

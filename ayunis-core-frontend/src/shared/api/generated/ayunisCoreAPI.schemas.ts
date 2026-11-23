@@ -5090,6 +5090,11 @@ export interface ArtifactResponseDto {
   userId?: string;
   /** The owning workspace of a workspace artifact */
   workspaceId?: string;
+  /**
+     * The user who created the artifact; null once their account is deleted
+     * @nullable
+     */
+  creatorId: string | null;
   /** Title of the document */
   title: string;
   /**
@@ -7907,6 +7912,34 @@ type?: NotificationType;
  */
 unread?: boolean;
 };
+
+export type ArtifactsControllerFindPersonalParams = {
+/**
+ * Search artifacts by title
+ */
+search?: string;
+/**
+ * Filter by type
+ */
+type?: ArtifactsControllerFindPersonalType;
+/**
+ * Maximum number of artifacts to return
+ */
+limit?: number;
+/**
+ * Number of artifacts to skip
+ */
+offset?: number;
+};
+
+export type ArtifactsControllerFindPersonalType = typeof ArtifactsControllerFindPersonalType[keyof typeof ArtifactsControllerFindPersonalType];
+
+
+export const ArtifactsControllerFindPersonalType = {
+  document: 'document',
+  diagram: 'diagram',
+  spreadsheet: 'spreadsheet',
+} as const;
 
 export type ArtifactsControllerFindByWorkspaceParams = {
 /**

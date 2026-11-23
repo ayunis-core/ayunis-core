@@ -78,6 +78,7 @@ function artifact(
     type,
     ownerType: 'personal',
     userId: 'user-id',
+    creatorId: 'user-id',
     title,
     isAnonymous: false,
     currentVersionNumber: 1,

@@ -65,6 +65,7 @@ const artifact = {
   type: 'document',
   ownerType: 'personal',
   userId: 'user-id',
+  creatorId: 'user-id',
   title: 'Document',
   isAnonymous: false,
   currentVersionNumber: 1,

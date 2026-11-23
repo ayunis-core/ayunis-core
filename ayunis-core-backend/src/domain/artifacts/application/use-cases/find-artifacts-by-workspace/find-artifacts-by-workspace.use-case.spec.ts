@@ -19,7 +19,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
 
   beforeEach(async () => {
     const repository = {
-      findByWorkspaceId: jest.fn(),
+      findByOwner: jest.fn(),
     } as unknown as jest.Mocked<ArtifactsRepository>;
     const workspaceReadAccessMock = {
       execute: jest.fn().mockResolvedValue({}),
@@ -59,15 +59,15 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
       offset: 0,
       total: 1,
     });
-    artifactsRepository.findByWorkspaceId.mockResolvedValue(paginatedArtifacts);
+    artifactsRepository.findByOwner.mockResolvedValue(paginatedArtifacts);
 
     const result = await useCase.execute(
       new FindArtifactsByWorkspaceQuery({ workspaceId }),
     );
 
     expect(result).toEqual(paginatedArtifacts);
-    expect(artifactsRepository.findByWorkspaceId).toHaveBeenCalledWith(
-      workspaceId,
+    expect(artifactsRepository.findByOwner).toHaveBeenCalledWith(
+      { type: 'workspace', workspaceId },
       {
         search: undefined,
         type: undefined,
@@ -78,7 +78,7 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
   });
 
   it('returns an empty list when the workspace has no artifacts', async () => {
-    artifactsRepository.findByWorkspaceId.mockResolvedValue(
+    artifactsRepository.findByOwner.mockResolvedValue(
       new Paginated({ data: [], limit: 20, offset: 0, total: 0 }),
     );
 
@@ -97,6 +97,6 @@ describe('FindArtifactsByWorkspaceUseCase', () => {
     await expect(
       useCase.execute(new FindArtifactsByWorkspaceQuery({ workspaceId })),
     ).rejects.toThrow(WorkspaceNotFoundError);
-    expect(artifactsRepository.findByWorkspaceId).not.toHaveBeenCalled();
+    expect(artifactsRepository.findByOwner).not.toHaveBeenCalled();
   });
 });

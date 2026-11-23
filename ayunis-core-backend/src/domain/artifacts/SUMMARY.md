@@ -7,7 +7,7 @@ Manages versioned artifacts (documents, diagrams, and spreadsheets), owned by a 
 ## Domain Concepts
 
 - **Artifact** — A named, typed artifact. Tracks the current version number; only document artifacts can have an optional `letterheadId` used for DOCX and PDF exports.
-- **Owner** (`ArtifactOwner`, `domain/artifact-owner.ts`, in the vocabulary of the ownership module's `ResourceOwner`) — Exactly one of: the user, for an artifact created in a personal chat (`userId`), or the workspace, for one created in a workspace chat (`workspaceId`); a check constraint (`num_nonnulls("userId", "workspaceId") = 1`) enforces it. Artifacts never change owner, not even when their chat moves. The user who created the artifact is kept as `creatorId` (for delete rights later) and cleared when that user is deleted. The artifact does not remember the chat it was created in.
+- **Owner** (`ArtifactOwner`, `domain/artifact-owner.ts`, in the vocabulary of the ownership module's `ResourceOwner`) — Exactly one of: the user, for an artifact created in a personal chat (`userId`), or the workspace, for one created in a workspace chat (`workspaceId`); a check constraint (`num_nonnulls("userId", "workspaceId") = 1`) enforces it. Artifacts never change owner, not even when their chat moves. The user who created the artifact is kept as `creatorId` (for delete rights) and cleared when that user is deleted. The artifact does not remember the chat it was created in.
 - **Anonymous artifact** — An artifact created in an anonymous run (`isAnonymous`). Its stored title and content hold `{{pii:CATEGORY_n}}` placeholders numbered in its own dictionary, independent of any chat's.
 - **ArtifactPiiMask** — One entry of an anonymous artifact's dictionary (`artifact_pii_masks`, unique `(artifactId, category, maskIndex)` and `(artifactId, category, value)`, deleted with the artifact): the real value behind one placeholder. There is no manual unmasking for artifacts; a chat's unmasking (AYC-807) stays with the chat.
 - **DocumentArtifact** — An artifact whose version content is sanitized HTML and may be exported to DOCX or PDF.
@@ -42,6 +42,7 @@ artifacts/
 │   │   ├── sanitize-html-content.ts
 │   │   └── user-edit-placeholders.ts
 │   ├── models/
+│   │   ├── artifact-list.query.ts     # search, type and page of an owner's list
 │   │   ├── artifact-run.ts            # the run a lookup or write comes from
 │   │   └── placeholder-draft.ts
 │   ├── ports/
@@ -55,11 +56,13 @@ artifacts/
 │   └── use-cases/
 │       ├── apply-edits-to-artifact/
 │       ├── create-artifact/
+│       ├── delete-artifact/
 │       ├── delete-thread-links-outside-scope/
 │       ├── update-artifact/
 │       ├── find-artifacts-by-thread/
 │       ├── find-artifacts-by-workspace/
 │       ├── find-artifacts-for-run/
+│       ├── find-personal-artifacts/
 │       ├── find-artifact-with-versions/
 │       ├── read-artifact-in-run/
 │       ├── revert-artifact/
@@ -68,6 +71,7 @@ artifacts/
 │   ├── persistence/local/
 │   │   ├── schema/
 │   │   ├── mappers/
+│   │   ├── queries/
 │   │   ├── testing/
 │   │   ├── local-artifacts.repository.ts
 │   │   └── local-artifacts-repository.module.ts
@@ -94,7 +98,7 @@ artifacts/
 - **ThreadsModule** — Imported for the chat a new artifact is created in: its user, scope (owner) and anonymous flag. The threads module imports this module back (`forwardRef`) to drop a moved chat's links
 - **ThreadPiiMasksModule** — Imported to read the chat's dictionary when a run writes and to allocate chat masks when a run reads
 - **AnonymizationSettingsModule** — Imported to detect values in user saves of anonymous artifacts with the org's whitelists (`AnonymizeTextForOrgUseCase`)
-- **WorkspacesModule** — Imported for workspace membership validation when listing a workspace's artifacts
+- **WorkspacesModule** — Imported for workspace membership validation when listing a workspace's artifacts, and for `manage_workspace` when a member deletes a workspace artifact they did not create
 - **LetterheadsModule** — Imported for letterhead validation when creating or updating artifacts
 - **StorageModule** — Imported for downloading letterhead PDFs during export
 
@@ -110,6 +114,9 @@ artifacts/
 - Access follows the owner, for every read and write: a personal artifact is found only for its owner, a workspace artifact for every current member of the workspace, whoever created it. Non-members, org admins included, get `ARTIFACT_NOT_FOUND` (404) like for a missing artifact. The condition sits in the repository's lookups by id (`accessibleTo`, membership through the workspaces module's `memberWorkspace` condition), so detail, update, edits, revert and export all apply it; runs check as the chat's user
 - A chat's artifact list (`GET /artifacts/thread/:threadId`, used by the chat's side panel and by the runs module's tool assembly) returns the artifacts linked to the chat that the caller may access, in the order they were linked; lookups through a chat (lists and run lookups) only find anything for the chat's own user
 - A workspace's artifact list (`GET /artifacts/workspace/:workspaceId`, the workspace's artifact tab) returns every artifact the workspace owns, after `AssertWorkspaceReadAccessUseCase` checked the caller's membership
+- The Ablage (`GET /artifacts/personal`, `FindPersonalArtifactsUseCase`) returns the caller's personal artifacts only, never workspace artifacts, not even the ones the caller created
+- Both lists (`findByOwner`) are ordered by last change (`updatedAt`, newest first), paginated (`limit` up to 100, `offset`), filtered by `type`, and searched by title case-insensitively. The search matches the title as users see it: for anonymous artifacts the title with the placeholders its dictionary knows replaced by their real values, resolved in SQL (`queries/apply-artifact-title-search.ts`); known placeholders do not match by their own text
+- Deleting an artifact (`DELETE /artifacts/:id`, `DeleteArtifactUseCase`) is allowed for a personal artifact to its owner and for a workspace artifact to its creator or to members holding `manage_workspace` in the workspace (`AssertWorkspaceWriteAccessUseCase`). Other members get `UNAUTHORIZED_ACCESS` (403) and the artifact stays; whoever cannot see the artifact (non-members, org admins included, and other users for personal artifacts) gets `ARTIFACT_NOT_FOUND` (404). Deleting removes its versions, dictionary and every chat link, so it leaves every chat's side panel and the tools of later runs. Responses carry `creatorId` so clients can offer delete only to those allowed
 - Moving a chat to another scope (personal ↔ workspace, workspace ↔ workspace) deletes its links to artifacts the new scope does not own (`DeleteThreadLinksOutsideScopeUseCase`, called by the threads module in the move's transaction); the artifacts stay with their owner
 - Lookups from a run (`ArtifactRun` on `ReadArtifactInRunQuery`, `UpdateArtifactCommand` and `ApplyEditsToArtifactCommand`) find an artifact only when it is linked to the run's chat and matches the run's mode (anonymous runs anonymous artifacts, normal runs normal ones; the runs module decides the mode: anonymous chat or a model with enforced anonymous mode), in addition to the user access rules; otherwise they fail with `ARTIFACT_NOT_FOUND` and nothing is written. Lookups from the HTTP API are not restricted by links or mode
 - An artifact created by a run gets the run's mode; one created through the HTTP API the mode of its chat

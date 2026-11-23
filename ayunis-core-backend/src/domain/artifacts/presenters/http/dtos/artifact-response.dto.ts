@@ -108,6 +108,15 @@ export class ArtifactResponseDto {
   workspaceId?: string;
 
   @ApiProperty({
+    description:
+      'The user who created the artifact; null once their account is deleted',
+    type: 'string',
+    format: 'uuid',
+    nullable: true,
+  })
+  creatorId: string | null;
+
+  @ApiProperty({
     description: 'Title of the document',
     example: 'Meeting Notes Q1 2026',
   })

@@ -26,6 +26,8 @@ import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits
 import { ReadArtifactInRunUseCase } from './application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
 import { FindArtifactsForRunUseCase } from './application/use-cases/find-artifacts-for-run/find-artifacts-for-run.use-case';
 import { DeleteThreadLinksOutsideScopeUseCase } from './application/use-cases/delete-thread-links-outside-scope/delete-thread-links-outside-scope.use-case';
+import { FindPersonalArtifactsUseCase } from './application/use-cases/find-personal-artifacts/find-personal-artifacts.use-case';
+import { DeleteArtifactUseCase } from './application/use-cases/delete-artifact/delete-artifact.use-case';
 import { UserContentMaskingService } from './application/services/user-content-masking.service';
 import { ArtifactPlaceholdersService } from './application/services/artifact-placeholders.service';
 import { ArtifactMaskAllocationLock } from './application/services/artifact-mask-allocation-lock.service';
@@ -63,6 +65,8 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     RevertArtifactUseCase,
     ExportArtifactUseCase,
     DeleteThreadLinksOutsideScopeUseCase,
+    FindPersonalArtifactsUseCase,
+    DeleteArtifactUseCase,
     // Services
     UserContentMaskingService,
     ArtifactPlaceholdersService,

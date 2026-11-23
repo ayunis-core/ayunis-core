@@ -26,11 +26,14 @@ export class FindArtifactsByWorkspaceUseCase {
     );
     await this.workspaceReadAccess.execute({ workspaceId: query.workspaceId });
 
-    return this.artifactsRepository.findByWorkspaceId(query.workspaceId, {
-      search: query.search,
-      type: query.type,
-      limit: query.limit,
-      offset: query.offset,
-    });
+    return this.artifactsRepository.findByOwner(
+      { type: 'workspace', workspaceId: query.workspaceId },
+      {
+        search: query.search,
+        type: query.type,
+        limit: query.limit,
+        offset: query.offset,
+      },
+    );
   }
 }

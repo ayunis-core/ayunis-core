@@ -7,8 +7,8 @@ import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 
 import {
+  ArtifactListOptions,
   ArtifactLookupOptions,
-  ArtifactsByWorkspaceListOptions,
   ArtifactsRepository,
 } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
 import { ArtifactVersionConflictError } from 'src/domain/artifacts/application/artifacts.errors';
@@ -27,6 +27,7 @@ import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 import { ArtifactPiiMaskMapper } from './mappers/artifact-pii-mask.mapper';
 import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Paginated } from 'src/common/pagination/paginated.entity';
+import { applyArtifactTitleSearch } from './queries/apply-artifact-title-search';
 import { memberWorkspace } from 'src/domain/workspaces/infrastructure/persistence/local/queries/member-workspace';
 
 @Injectable()
@@ -176,21 +177,26 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     }
   }
 
-  async findByWorkspaceId(
-    workspaceId: UUID,
-    options: ArtifactsByWorkspaceListOptions,
+  async findByOwner(
+    owner: ArtifactOwner,
+    options: ArtifactListOptions,
   ): Promise<Paginated<Artifact>> {
     const queryBuilder = this.artifactRepo
       .createQueryBuilder('artifact')
-      .where('artifact.workspaceId = :workspaceId', { workspaceId })
+      .where(
+        owner.type === 'personal'
+          ? 'artifact.userId = :ownerId'
+          : 'artifact.workspaceId = :ownerId',
+        {
+          ownerId: owner.type === 'personal' ? owner.userId : owner.workspaceId,
+        },
+      )
       .andWhere('artifact.type IN (:...artifactTypes)', {
         artifactTypes: Object.values(ArtifactType),
       });
 
     if (options.search) {
-      queryBuilder.andWhere('artifact.title ILIKE :search', {
-        search: `%${options.search}%`,
-      });
+      applyArtifactTitleSearch(queryBuilder, options.search);
     }
     if (options.type) {
       queryBuilder.andWhere('artifact.type = :artifactType', {
@@ -401,6 +407,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
   }
 
   async delete(id: UUID): Promise<void> {
+    this.logger.log({ id }, 'delete');
     await this.artifactRepo.delete({ id });
   }
 }

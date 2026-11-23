@@ -9991,6 +9991,93 @@
         },
         "summary": "Get an artifact by ID with all versions",
         "tags": ["artifacts"]
+      },
+      "delete": {
+        "operationId": "ArtifactsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the artifact",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The artifact has been deleted"
+          },
+          "403": {
+            "description": "A workspace member who neither created the artifact nor may manage the workspace"
+          },
+          "404": {
+            "description": "Artifact not found"
+          }
+        },
+        "summary": "Delete an artifact with its versions and its links to chats. Personal artifacts: the owner; workspace artifacts: the creator or members with manage_workspace",
+        "tags": ["artifacts"]
+      }
+    },
+    "/artifacts/personal": {
+      "get": {
+        "operationId": "ArtifactsController_findPersonal",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search artifacts by title",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "description": "Filter by type",
+            "schema": {
+              "enum": ["document", "diagram", "spreadsheet"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Maximum number of artifacts to return",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "Number of artifacts to skip",
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The personal artifacts, most recently changed first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List the caller's personal artifacts (not workspace artifacts)",
+        "tags": ["artifacts"]
       }
     },
     "/artifacts/thread/{threadId}": {
@@ -24010,6 +24097,12 @@
             "description": "The owning workspace of a workspace artifact",
             "format": "uuid"
           },
+          "creatorId": {
+            "type": "string",
+            "description": "The user who created the artifact; null once their account is deleted",
+            "format": "uuid",
+            "nullable": true
+          },
           "title": {
             "type": "string",
             "description": "Title of the document",
@@ -24061,6 +24154,7 @@
           "id",
           "type",
           "ownerType",
+          "creatorId",
           "title",
           "isAnonymous",
           "currentVersionNumber",

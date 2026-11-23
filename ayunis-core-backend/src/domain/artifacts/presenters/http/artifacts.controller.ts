@@ -3,6 +3,8 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
+  HttpCode,
   Param,
   Body,
   Query,
@@ -33,6 +35,8 @@ import { FindArtifactsByWorkspaceUseCase } from 'src/domain/artifacts/applicatio
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { RevertArtifactUseCase } from 'src/domain/artifacts/application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.use-case';
+import { FindPersonalArtifactsUseCase } from 'src/domain/artifacts/application/use-cases/find-personal-artifacts/find-personal-artifacts.use-case';
+import { DeleteArtifactUseCase } from 'src/domain/artifacts/application/use-cases/delete-artifact/delete-artifact.use-case';
 
 import { CreateArtifactCommand } from 'src/domain/artifacts/application/use-cases/create-artifact/create-artifact.command';
 import { UpdateArtifactCommand } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.command';
@@ -41,12 +45,14 @@ import { FindArtifactsByWorkspaceQuery } from 'src/domain/artifacts/application/
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { RevertArtifactCommand } from 'src/domain/artifacts/application/use-cases/revert-artifact/revert-artifact.command';
 import { ExportArtifactCommand } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.command';
+import { FindPersonalArtifactsQuery } from 'src/domain/artifacts/application/use-cases/find-personal-artifacts/find-personal-artifacts.query';
+import { DeleteArtifactCommand } from 'src/domain/artifacts/application/use-cases/delete-artifact/delete-artifact.command';
 
 import { CreateArtifactDto } from './dtos/create-artifact.dto';
 import { UpdateArtifactDto } from './dtos/update-artifact.dto';
 import { RevertArtifactDto } from './dtos/revert-artifact.dto';
 import { ExportArtifactQueryDto } from './dtos/export-artifact.dto';
-import { FindArtifactsByWorkspaceQueryParamsDto } from './dtos/find-artifacts-by-workspace-query-params.dto';
+import { FindArtifactsQueryParamsDto } from './dtos/find-artifacts-query-params.dto';
 import {
   ArtifactResponseDto,
   ArtifactVersionResponseDto,
@@ -69,6 +75,8 @@ export class ArtifactsController {
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly revertArtifactUseCase: RevertArtifactUseCase,
     private readonly exportArtifactUseCase: ExportArtifactUseCase,
+    private readonly findPersonalArtifactsUseCase: FindPersonalArtifactsUseCase,
+    private readonly deleteArtifactUseCase: DeleteArtifactUseCase,
     private readonly artifactDtoMapper: ArtifactDtoMapper,
   ) {}
 
@@ -132,6 +140,34 @@ export class ArtifactsController {
     res.status(HttpStatus.NO_CONTENT);
   }
 
+  // Declared before `:id`, which would otherwise match `personal`.
+  @Get('personal')
+  @ApiOperation({
+    summary: "List the caller's personal artifacts (not workspace artifacts)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The personal artifacts, most recently changed first',
+    type: ArtifactListResponseDto,
+  })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'type', required: false, enum: ArtifactType })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  async findPersonal(
+    @Query() queryParams: FindArtifactsQueryParamsDto,
+  ): Promise<ArtifactListResponseDto> {
+    this.logger.log({ type: queryParams.type }, 'findPersonal');
+    const page = await this.findPersonalArtifactsUseCase.execute(
+      new FindPersonalArtifactsQuery({
+        search: queryParams.search,
+        type: queryParams.type,
+        ...queryParams.toPagination(),
+      }),
+    );
+    return this.toArtifactListDto(page);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get an artifact by ID with all versions' })
   @ApiParam({
@@ -154,6 +190,32 @@ export class ArtifactsController {
       new FindArtifactWithVersionsQuery({ artifactId: id }),
     );
     return this.artifactDtoMapper.toDto(artifact);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary:
+      'Delete an artifact with its versions and its links to chats. Personal artifacts: the owner; workspace artifacts: the creator or members with manage_workspace',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The UUID of the artifact',
+    type: 'string',
+    format: 'uuid',
+  })
+  @ApiResponse({ status: 204, description: 'The artifact has been deleted' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'A workspace member who neither created the artifact nor may manage the workspace',
+  })
+  @ApiResponse({ status: 404, description: 'Artifact not found' })
+  async delete(@Param('id', ParseUUIDPipe) id: UUID): Promise<void> {
+    this.logger.log({ artifactId: id }, 'delete');
+    await this.deleteArtifactUseCase.execute(
+      new DeleteArtifactCommand({ artifactId: id }),
+    );
   }
 
   @Get('thread/:threadId')
@@ -198,7 +260,7 @@ export class ArtifactsController {
   @ApiQuery({ name: 'offset', required: false, type: Number })
   async findByWorkspace(
     @Param('workspaceId', ParseUUIDPipe) workspaceId: UUID,
-    @Query() queryParams: FindArtifactsByWorkspaceQueryParamsDto,
+    @Query() queryParams: FindArtifactsQueryParamsDto,
   ): Promise<ArtifactListResponseDto> {
     this.logger.log({ workspaceId }, 'findByWorkspace');
     const pagination = queryParams.toPagination();
