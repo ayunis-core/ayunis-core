@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.82.0](https://github.com/ayunis-core/ayunis-core/compare/v2.81.0...v2.82.0) (2026-11-22)
+
+
+### Features
+
+* **memory:** confirm before deleting a memory entry (AYC-2014) ([#2464](https://github.com/ayunis-core/ayunis-core/issues/2464)) ([20fe981](https://github.com/ayunis-core/ayunis-core/commit/20fe9819de593c8c2520743d40ece70fb39bfcea))
+
 ## [2.81.0](https://github.com/ayunis-core/ayunis-core/compare/v2.80.0...v2.81.0) (2026-11-22)
 
 
