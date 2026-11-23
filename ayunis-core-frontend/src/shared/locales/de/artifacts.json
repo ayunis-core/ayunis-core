@@ -9,7 +9,8 @@
     "loadErrorDescription": "Der Inhalt konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
     "notFoundTitle": "Inhalt nicht gefunden",
     "notFoundDescription": "Dieser Inhalt existiert möglicherweise nicht mehr.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "anonymized": "Anonymisiert"
   },
   "unsavedChanges": {
     "title": "Ungespeicherte Änderungen",

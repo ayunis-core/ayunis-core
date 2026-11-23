@@ -15,6 +15,7 @@ import {
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useThreadArtifacts } from '@/pages/chat/api/useThreadArtifacts';
+import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
 import type {
   ArtifactResponseDto,
   ArtifactResponseDtoType,
@@ -133,7 +134,7 @@ function ArtifactListItem({
         </ItemMedia>
         <ItemContent className="min-w-0 text-left">
           <ItemTitle className="max-w-full truncate">
-            {artifact.title}
+            {resolveArtifactTitle(artifact)}
           </ItemTitle>
           <ItemDescription>
             {t(`chat.artifactPanel.type.${artifact.type}`)}

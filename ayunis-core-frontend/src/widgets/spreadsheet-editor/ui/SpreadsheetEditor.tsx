@@ -12,7 +12,10 @@ import { SpreadsheetGrid } from './SpreadsheetGrid';
 import { SpreadsheetToolbar } from './SpreadsheetToolbar';
 import { SpreadsheetExportMenu } from './SpreadsheetExportMenu';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
-import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
+import {
+  ArtifactPanelHeader,
+  ArtifactTitle,
+} from '@/widgets/artifact-panel-header';
 
 interface SpreadsheetEditorProps {
   readonly artifact: ArtifactResponseDto;
@@ -111,11 +114,7 @@ export const SpreadsheetEditor = forwardRef<
       className="flex h-full flex-col overflow-hidden border-l"
     >
       <ArtifactPanelHeader
-        title={
-          <h3 className="truncate text-sm font-semibold" title={artifact.title}>
-            {artifact.title}
-          </h3>
-        }
+        title={<ArtifactTitle artifact={artifact} />}
         actions={
           <>
             <SpreadsheetExportMenu

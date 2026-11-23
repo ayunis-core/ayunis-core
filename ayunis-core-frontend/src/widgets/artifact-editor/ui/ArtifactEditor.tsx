@@ -28,8 +28,12 @@ import { ArtifactPdfPreview } from './ArtifactPdfPreview';
 import { LetterheadPicker } from './LetterheadPicker';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
+import {
+  ArtifactPanelHeader,
+  ArtifactTitle,
+} from '@/widgets/artifact-panel-header';
 import { useDocumentTypography } from '@/widgets/artifact-editor/model/useDocumentTypography';
+import { resolveDocumentPlaceholders } from '@/widgets/artifact-editor/lib/resolve-document-placeholders';
 
 interface ArtifactEditorProps {
   readonly artifact: ArtifactResponseDto;
@@ -86,7 +90,10 @@ export const ArtifactEditor = forwardRef<
       ParagraphSpacing,
       ...TEXT_COLOR_EXTENSIONS,
     ],
-    content: currentVersion?.content ?? '',
+    content: resolveDocumentPlaceholders(
+      currentVersion?.content ?? '',
+      artifact.piiMasks,
+    ),
     editorProps: {
       attributes: {
         'data-testid': 'artifact-document-content',
@@ -107,10 +114,17 @@ export const ArtifactEditor = forwardRef<
 
     if (loadedVersionRef.current !== artifact.currentVersionNumber) {
       loadedVersionRef.current = artifact.currentVersionNumber;
-      editor.commands.setContent(currentVersion.content);
+      editor.commands.setContent(
+        resolveDocumentPlaceholders(currentVersion.content, artifact.piiMasks),
+      );
       loadedHtmlRef.current = editor.getHTML();
     }
-  }, [editor, currentVersion, artifact.currentVersionNumber]);
+  }, [
+    editor,
+    currentVersion,
+    artifact.currentVersionNumber,
+    artifact.piiMasks,
+  ]);
 
   const handleSave = useCallback(async () => {
     await onSave(editor.getHTML());
@@ -152,11 +166,7 @@ export const ArtifactEditor = forwardRef<
   return (
     <div className="flex h-full flex-col overflow-hidden border-l">
       <ArtifactPanelHeader
-        title={
-          <h3 className="truncate text-sm font-semibold" title={artifact.title}>
-            {artifact.title}
-          </h3>
-        }
+        title={<ArtifactTitle artifact={artifact} />}
         actions={
           <>
             {artifact.letterheadId && currentVersion && (

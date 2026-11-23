@@ -143,7 +143,7 @@ export class ArtifactResponseDto {
 
   @ApiPropertyOptional({
     description:
-      "The anonymous artifact's own placeholder dictionary (included with the versions)",
+      "The anonymous artifact's own placeholder dictionary: every entry with the versions, in lists the entries its title uses",
     type: [ArtifactPiiMaskResponseDto],
   })
   piiMasks?: ArtifactPiiMaskResponseDto[];

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import type { ArtifactResponseDto } from '@/shared/api';
+import type {
+  ArtifactPiiMaskResponseDto,
+  ArtifactResponseDto,
+} from '@/shared/api';
 import type { GridRow, GridState } from './spreadsheet-grid-state';
 import {
   addRows,
@@ -17,6 +20,7 @@ import {
   serializeSpreadsheetContent,
 } from './spreadsheet-content-format';
 import { computeDisplayValues } from './formula-engine';
+import { resolveSpreadsheetPlaceholders } from './resolve-spreadsheet-placeholders';
 import {
   canRedo,
   canUndo,
@@ -27,12 +31,18 @@ import {
   type EditHistory,
 } from './edit-history';
 
-function loadGridState(content: string | undefined): {
+function loadGridState(
+  content: string | undefined,
+  piiMasks: readonly ArtifactPiiMaskResponseDto[] | undefined,
+): {
   state: GridState;
   isValid: boolean;
 } {
   const { data, isValid } = parseSpreadsheetContent(content ?? '');
-  return { state: toGridState(data), isValid };
+  return {
+    state: toGridState(resolveSpreadsheetPlaceholders(data, piiMasks)),
+    isValid,
+  };
 }
 
 interface EditorHistoryState {
@@ -93,7 +103,9 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
     (v) => v.versionNumber === displayedVersionNumber,
   );
 
-  const [loaded] = useState(() => loadGridState(currentVersion?.content));
+  const [loaded] = useState(() =>
+    loadGridState(currentVersion?.content, artifact.piiMasks),
+  );
   const [{ history, saved }, dispatch] = useReducer(
     editorHistoryReducer,
     loaded.state,
@@ -123,16 +135,24 @@ export function useSpreadsheetEditorState(artifact: ArtifactResponseDto) {
         versionNumber: artifact.currentVersionNumber,
         content: currentContent,
       };
-      const reloaded = loadGridState(currentContent);
+      const reloaded = loadGridState(currentContent, artifact.piiMasks);
       setUserSelectedVersion(null);
       dispatch({ type: 'reset', state: reloaded.state });
       setIsValid(reloaded.isValid);
     }
-  }, [artifact.id, artifact.currentVersionNumber, currentContent]);
+  }, [
+    artifact.id,
+    artifact.currentVersionNumber,
+    currentContent,
+    artifact.piiMasks,
+  ]);
 
   const historicalContentState = useMemo(
-    () => (isViewingHistory ? loadGridState(selectedVersion?.content) : null),
-    [isViewingHistory, selectedVersion],
+    () =>
+      isViewingHistory
+        ? loadGridState(selectedVersion?.content, artifact.piiMasks)
+        : null,
+    [isViewingHistory, selectedVersion, artifact.piiMasks],
   );
 
   const displayedGridState = historicalContentState?.state ?? gridState;

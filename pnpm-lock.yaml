@@ -244,6 +244,9 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
+      diff:
+        specifier: ^9.0.0
+        version: 9.0.0
       docx:
         specifier: ^9.6.1
         version: 9.7.1

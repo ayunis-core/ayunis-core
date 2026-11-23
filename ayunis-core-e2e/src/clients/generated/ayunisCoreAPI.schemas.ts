@@ -5103,7 +5103,7 @@ export interface ArtifactResponseDto {
   currentVersionNumber: number;
   /** All versions of this artifact (included when fetching by ID) */
   versions?: ArtifactVersionResponseDto[];
-  /** The anonymous artifact's own placeholder dictionary (included with the versions) */
+  /** The anonymous artifact's own placeholder dictionary: every entry with the versions, in lists the entries its title uses */
   piiMasks?: ArtifactPiiMaskResponseDto[];
   /** When the artifact was created */
   createdAt: string;

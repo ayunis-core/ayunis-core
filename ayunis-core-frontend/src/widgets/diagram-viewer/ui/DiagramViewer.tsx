@@ -1,14 +1,14 @@
-import type {
-  ArtifactPiiMaskResponseDto,
-  ArtifactResponseDto,
-} from '@/shared/api';
+import type { ArtifactResponseDto } from '@/shared/api';
 import { useRef, useState } from 'react';
 import { MermaidRenderer } from './MermaidRenderer';
 import { DiagramExportButtons } from './DiagramExportButtons';
 import { VersionHistory } from '@/widgets/artifact-editor';
-import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
-
-const NO_PII_MASKS: ArtifactPiiMaskResponseDto[] = [];
+import {
+  ArtifactPanelHeader,
+  ArtifactTitle,
+  resolveArtifactTitle,
+} from '@/widgets/artifact-panel-header';
+import { resolveDiagramPlaceholders } from '@/widgets/diagram-viewer/lib/resolve-diagram-placeholders';
 
 interface DiagramViewerProps {
   readonly artifact: ArtifactResponseDto;
@@ -40,16 +40,11 @@ export function DiagramViewer({
   return (
     <div className="flex h-full flex-col overflow-hidden border-l">
       <ArtifactPanelHeader
-        title={
-          <h3 className="truncate text-sm font-semibold" title={artifact.title}>
-            {artifact.title}
-          </h3>
-        }
+        title={<ArtifactTitle artifact={artifact} />}
         actions={
           <DiagramExportButtons
             containerRef={containerRef}
-            fileName={artifact.title}
-            piiMasks={artifact.piiMasks ?? NO_PII_MASKS}
+            fileName={resolveArtifactTitle(artifact)}
           />
         }
         onBack={onBack}
@@ -59,7 +54,10 @@ export function DiagramViewer({
 
       <div className="flex-1 overflow-hidden">
         <MermaidRenderer
-          source={selectedVersion?.content ?? ''}
+          source={resolveDiagramPlaceholders(
+            selectedVersion?.content ?? '',
+            artifact.piiMasks,
+          )}
           containerRef={containerRef}
         />
       </div>

@@ -1111,52 +1111,145 @@ describe('UpdateArtifactUseCase', () => {
       });
     });
 
-    it('does not run detection again on spreadsheet strings the current version already stores', async () => {
-      givenArtifact(
-        new SpreadsheetArtifact({
-          id: mockArtifactId,
-          owner: { type: 'personal', userId: mockUserId },
-          creatorId: mockUserId,
-          title: 'Kontakte',
-          isAnonymous: true,
-          currentVersionNumber: 4,
-        }),
-      );
+    const givenStoredVersion = (content: string) =>
       artifactsRepository.findVersion.mockResolvedValue(
         new ArtifactVersion({
           artifactId: mockArtifactId,
-          versionNumber: 4,
-          content: JSON.stringify({
-            format: SPREADSHEET_CONTENT_FORMAT,
-            columns: ['Name'],
-            rows: [['{{pii:PERSON_NAME_1}}']],
-          }),
+          versionNumber: 1,
+          content,
           authorType: AuthorType.ASSISTANT,
           authorId: null,
         }),
       );
 
-      await useCase.execute(
+    const detectedTexts = () =>
+      anonymizeTextForOrgUseCase.execute.mock.calls.map(
+        ([command]: [AnonymizeTextForOrgCommand]) => command.text,
+      );
+
+    const spreadsheetArtifact = () =>
+      new SpreadsheetArtifact({
+        id: mockArtifactId,
+        owner: { type: 'personal', userId: mockUserId },
+        creatorId: mockUserId,
+        title: 'Kontakte',
+        isAnonymous: true,
+        currentVersionNumber: 1,
+      });
+
+    it('stores the same content when a user saves the real values the editor showed without changes, and detects nothing', async () => {
+      const stored =
+        '<p>{{pii:PERSON_NAME_1}}s Annahme bei Max Mustermann, {{pii:ORGANIZATION_1}}</p>';
+      givenArtifact(documentArtifact(), [
+        artifactMask(PiiCategory.PERSON_NAME, 1, 'Anna'),
+        artifactMask(PiiCategory.ORGANIZATION, 1, 'Müller & Söhne'),
+      ]);
+      givenStoredVersion(stored);
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content:
+            '<p>Annas Annahme bei Max Mustermann, Müller &amp; Söhne</p>',
+          authorType: AuthorType.USER,
+        }),
+      )) as ArtifactVersion;
+
+      expect(result.content).toBe(stored);
+      expect(storedMasks()).toEqual([]);
+      expect(anonymizeTextForOrgUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('keeps the placeholder of a known value the user edited around and gives a newly typed value a new one', async () => {
+      givenArtifact(documentArtifact(), [
+        artifactMask(PiiCategory.PERSON_NAME, 1, 'Erika Musterfrau'),
+      ]);
+      givenStoredVersion('<p>Hallo {{pii:PERSON_NAME_1}}.</p>');
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content:
+            '<p>Hallo liebe Erika Musterfrau, hier Max Mustermann. Gruß an Erika Musterfrau</p>',
+          authorType: AuthorType.USER,
+        }),
+      )) as ArtifactVersion;
+
+      expect(result.content).toBe(
+        '<p>Hallo liebe {{pii:PERSON_NAME_1}}, hier {{pii:PERSON_NAME_2}}. Gruß an {{pii:PERSON_NAME_1}}</p>',
+      );
+      expect(storedMasks()).toEqual([
+        ['{{pii:PERSON_NAME_2}}', 'Max Mustermann'],
+      ]);
+    });
+
+    it('masks a detected value as a whole when it contains a known value, so no part of it is stored unmasked', async () => {
+      givenArtifact(documentArtifact(), [
+        artifactMask(PiiCategory.PERSON_NAME, 1, 'Max'),
+      ]);
+      givenStoredVersion('<p>Hallo.</p>');
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content: '<p>Hallo Max, hier Max Mustermann.</p>',
+          authorType: AuthorType.USER,
+        }),
+      )) as ArtifactVersion;
+
+      expect(result.content).toBe(
+        '<p>Hallo {{pii:PERSON_NAME_1}}, hier {{pii:PERSON_NAME_2}}.</p>',
+      );
+      expect(storedMasks()).toEqual([
+        ['{{pii:PERSON_NAME_2}}', 'Max Mustermann'],
+      ]);
+    });
+
+    it('gives spreadsheet strings shown unchanged their stored placeholders back and masks only changed strings', async () => {
+      givenArtifact(spreadsheetArtifact(), [
+        artifactMask(PiiCategory.PERSON_NAME, 1, 'Erika Musterfrau'),
+      ]);
+      givenStoredVersion(
+        JSON.stringify({
+          format: SPREADSHEET_CONTENT_FORMAT,
+          columns: ['Name'],
+          rows: [
+            ['{{pii:PERSON_NAME_1}}'],
+            ['=IF(A2="{{pii:PERSON_NAME_1}}",1,0)'],
+          ],
+        }),
+      );
+
+      const result = (await useCase.execute(
         new UpdateArtifactCommand({
           artifactId: mockArtifactId,
           content: JSON.stringify({
             format: SPREADSHEET_CONTENT_FORMAT,
             columns: ['Name'],
-            rows: [['{{pii:PERSON_NAME_1}}'], ['Max Mustermann']],
+            rows: [
+              ['Erika Musterfrau'],
+              ['=IF(A2="Erika Musterfrau",1,0)'],
+              ['Frau Erika Musterfrau und Max Mustermann'],
+              ['=IF(A2="Erika Musterfrau",2,0)'],
+            ],
           }),
           authorType: AuthorType.USER,
         }),
-      );
+      )) as ArtifactVersion;
 
-      expect(artifactsRepository.findVersion).toHaveBeenCalledWith(
-        mockArtifactId,
-        4,
-      );
-      expect(
-        anonymizeTextForOrgUseCase.execute.mock.calls.map(
-          ([command]: [AnonymizeTextForOrgCommand]) => command.text,
-        ),
-      ).toEqual(['Max Mustermann']);
+      expect(JSON.parse(result.content)).toEqual({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Name'],
+        rows: [
+          ['{{pii:PERSON_NAME_1}}'],
+          ['=IF(A2="{{pii:PERSON_NAME_1}}",1,0)'],
+          ['Frau {{pii:PERSON_NAME_1}} und {{pii:PERSON_NAME_2}}'],
+          ['=IF(A2="{{pii:PERSON_NAME_1}}",2,0)'],
+        ],
+      });
+      expect(detectedTexts()).toEqual([
+        'Frau Erika Musterfrau und Max Mustermann',
+      ]);
     });
   });
 });

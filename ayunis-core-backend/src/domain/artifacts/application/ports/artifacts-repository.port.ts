@@ -33,14 +33,17 @@ export abstract class ArtifactsRepository {
   ): Promise<Artifact | null>;
   /**
    * The artifacts linked to the chat; with `isAnonymous`, only those of that
-   * mode, anonymous ones loaded with their mask dictionaries.
+   * mode. Anonymous ones are loaded with their mask dictionaries.
    */
   abstract findByThreadId(
     threadId: UUID,
     userId: UUID,
     options?: Pick<ArtifactLookupOptions, 'isAnonymous'>,
   ): Promise<Artifact[]>;
-  /** Every artifact of the workspace; callers check membership first. */
+  /**
+   * Every artifact of the workspace, anonymous ones with their mask
+   * dictionaries; callers check membership first.
+   */
   abstract findByWorkspaceId(
     workspaceId: UUID,
     options: ArtifactsByWorkspaceListOptions,

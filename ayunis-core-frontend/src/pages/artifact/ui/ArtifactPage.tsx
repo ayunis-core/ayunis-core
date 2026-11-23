@@ -6,6 +6,7 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { ArtifactPanel, useArtifactActions } from '@/widgets/artifact-panel';
+import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
 
 interface ArtifactPageProps {
   readonly artifactId: string;
@@ -45,7 +46,11 @@ export default function ArtifactPage({ artifactId }: ArtifactPageProps) {
         contentHeader={
           <ContentAreaHeader
             breadcrumbs={[
-              { label: artifactPanel.artifact?.title ?? t('panel.title') },
+              {
+                label: artifactPanel.artifact
+                  ? resolveArtifactTitle(artifactPanel.artifact)
+                  : t('panel.title'),
+              },
             ]}
           />
         }
