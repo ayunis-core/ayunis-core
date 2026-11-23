@@ -5,14 +5,17 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
-import { ArtifactPanel, useArtifactActions } from '@/widgets/artifact-panel';
+import {
+  ArtifactPanel,
+  canManageArtifact,
+  useArtifactActions,
+} from '@/widgets/artifact-panel';
 import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
 import { useWorkspace } from '@/features/workspaces';
 import type { ArtifactResponseDto } from '@/shared/api';
 import { ChatStarter, type ChatStarterDefaults } from '@/widgets/chat-starter';
 import { useDeleteArtifact } from '@/pages/artifact/api/useDeleteArtifact';
-import { canDeleteArtifact } from '@/pages/artifact/lib/can-delete-artifact';
 import { DeleteArtifactButton } from './DeleteArtifactButton';
 
 interface ArtifactPageProps {
@@ -153,7 +156,7 @@ function useArtifactDeleteAction(
     }
   });
 
-  if (!artifact || !canDeleteArtifact(artifact, user?.id, workspace)) {
+  if (!artifact || !canManageArtifact(artifact, user?.id, workspace)) {
     return undefined;
   }
   return (

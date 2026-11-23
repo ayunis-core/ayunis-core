@@ -5,7 +5,7 @@ import { makeArtifactAnonymous } from '../../src/clients/artifacts.database.clie
 import { createProjectThread } from '../../src/factories/workspace-context.factory';
 import { expect, test } from '../../src/fixtures/test';
 
-test('starts a chat from an artifact’s page in the artifact’s workspace, linked to the artifact, and offers an anonymous artifact only an anonymous chat', async ({
+test('starts a chat from an artifact’s page in the artifact’s workspace, linked to the artifact, and starts a normal chat about an anonymous artifact only after converting it', async ({
   page,
   api,
 }) => {
@@ -60,9 +60,30 @@ test('starts a chat from an artifact’s page in the artifact’s workspace, lin
   expect(linked.map(({ id }) => id)).toEqual([statute.id]);
 
   await page.goto(`/artifacts/${notice.id}`);
-  const anonymousToggle = page
-    .getByTestId('artifact-chat-starter')
-    .getByTestId('chat-anonymous-toggle');
+  const noticeStarter = page.getByTestId('artifact-chat-starter');
+  const anonymousToggle = noticeStarter.getByTestId('chat-anonymous-toggle');
   await expect(anonymousToggle).toHaveAttribute('aria-pressed', 'true');
-  await expect(anonymousToggle).toBeDisabled();
+  await anonymousToggle.click();
+  await expect(anonymousToggle).toHaveAttribute('aria-pressed', 'false');
+  await noticeStarter.getByTestId('input').fill('Bitte den Bescheid prüfen');
+  await noticeStarter.getByTestId('send').click();
+  await page.getByTestId('confirmation-confirm').click();
+
+  await expect(page).toHaveURL(/\/chats\/[0-9a-f-]+/);
+  const normalThreadId = /\/chats\/([0-9a-f-]+)/.exec(page.url())?.[1] ?? '';
+  expect(await getThread(api, normalThreadId)).toMatchObject({
+    isAnonymous: false,
+  });
+  const linkedToNormal = await generatedApi.artifactsControllerFindByThread(
+    normalThreadId,
+    { api },
+  );
+  expect(linkedToNormal.map(({ id }) => id)).toEqual([notice.id]);
+  const converted = await generatedApi.artifactsControllerFindOne(notice.id, {
+    api,
+  });
+  expect(converted).toMatchObject({
+    isAnonymous: false,
+    title: `Bescheid ${suffix} an Jonas Weber`,
+  });
 });

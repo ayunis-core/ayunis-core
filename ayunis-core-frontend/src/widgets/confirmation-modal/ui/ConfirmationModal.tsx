@@ -19,7 +19,7 @@ export default function ConfirmationModal() {
     try {
       setIsLoading(true);
       await options.onConfirm();
-      hideConfirmation();
+      hideConfirmation(options);
     } catch (error) {
       console.error('Error in confirmation callback:', error);
     } finally {
@@ -32,7 +32,7 @@ export default function ConfirmationModal() {
     // must not report a cancel for it.
     if (isLoading) return;
     options?.onCancel?.();
-    hideConfirmation();
+    hideConfirmation(options ?? undefined);
   };
 
   const isDangerous = options?.variant === 'destructive';

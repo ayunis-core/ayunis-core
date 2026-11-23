@@ -151,5 +151,15 @@
     "notFound": "This content no longer exists.",
     "forbidden": "Only its creator and members who may manage the workspace can delete this content.",
     "error": "Content could not be deleted. Please try again."
+  },
+  "conversion": {
+    "confirmTitle": "Use without anonymization?",
+    "confirmDescription": "“{{title}}” is anonymized. To use it in a normal chat, it will be converted to content that is not anonymized and contains the real data. It will then no longer be available in anonymous chats.",
+    "confirmText": "Convert",
+    "cancelText": "Cancel",
+    "forbidden": "Only its creator and members who may manage the workspace can use this anonymized content in a normal chat.",
+    "notFound": "This content no longer exists.",
+    "conflict": "The content was just changed. Please try again.",
+    "error": "Content could not be converted. Please try again."
   }
 }

@@ -30,6 +30,8 @@ import { DeleteThreadLinksOutsideScopeUseCase } from './application/use-cases/de
 import { FindPersonalArtifactsUseCase } from './application/use-cases/find-personal-artifacts/find-personal-artifacts.use-case';
 import { DeleteArtifactUseCase } from './application/use-cases/delete-artifact/delete-artifact.use-case';
 import { AttachArtifactToThreadUseCase } from './application/use-cases/attach-artifact-to-thread/attach-artifact-to-thread.use-case';
+import { ConvertArtifactToNormalUseCase } from './application/use-cases/convert-artifact-to-normal/convert-artifact-to-normal.use-case';
+import { ArtifactManageAccessService } from './application/services/artifact-manage-access.service';
 import { UserContentMaskingService } from './application/services/user-content-masking.service';
 import { ArtifactPlaceholdersService } from './application/services/artifact-placeholders.service';
 import { ArtifactMaskAllocationLock } from './application/services/artifact-mask-allocation-lock.service';
@@ -70,7 +72,9 @@ import { ArtifactMaskAllocationLock } from './application/services/artifact-mask
     FindPersonalArtifactsUseCase,
     DeleteArtifactUseCase,
     AttachArtifactToThreadUseCase,
+    ConvertArtifactToNormalUseCase,
     // Services
+    ArtifactManageAccessService,
     UserContentMaskingService,
     ArtifactPlaceholdersService,
     ArtifactMaskAllocationLock,

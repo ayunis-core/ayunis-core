@@ -55,6 +55,56 @@ export async function makeArtifactAnonymous(params: {
   }
 }
 
+/** Replaces the stored content of one version, e.g. an earlier one. */
+export async function setArtifactVersionContent(params: {
+  artifactId: string;
+  versionNumber: number;
+  content: string;
+}): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    await client.query(
+      `UPDATE artifact_versions SET content = $3
+       WHERE "artifactId" = $1 AND "versionNumber" = $2`,
+      [params.artifactId, params.versionNumber, params.content],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Adds an entry to a chat's mask dictionary, as an anonymous run does;
+ * `unmasked` as after the user unmasked it in the chat.
+ */
+export async function addThreadPiiMask(params: {
+  threadId: string;
+  category: string;
+  maskIndex: number;
+  value: string;
+  unmasked?: boolean;
+}): Promise<void> {
+  const client = createDatabaseClient();
+  await client.connect();
+  try {
+    await client.query(
+      `INSERT INTO thread_pii_masks (id, "threadId", category, "maskIndex", value, unmasked)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        randomUUID(),
+        params.threadId,
+        params.category,
+        params.maskIndex,
+        params.value,
+        params.unmasked ?? false,
+      ],
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 /** How many rows of each table still reference the artifact. */
 export async function countArtifactRows(
   artifactId: string,

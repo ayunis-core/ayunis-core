@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, GitBranch, Loader2, Search, Table2 } from 'lucide-react';
+import {
+  FileText,
+  GitBranch,
+  Loader2,
+  Search,
+  ShieldCheck,
+  Table2,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Dialog,
@@ -23,6 +30,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
+import { Badge } from '@ayunis/ui/components/badge';
 import type {
   ArtifactResponseDto,
   ArtifactResponseDtoType,
@@ -34,6 +42,7 @@ import type {
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { formatDate } from '@/shared/lib/format-date';
 import { resolveArtifactTitle } from '@/widgets/artifact-panel-header';
+import { useArtifactConversion } from '@/widgets/artifact-panel';
 import { useAttachableArtifacts } from '@/widgets/chat-input/api/useAttachableArtifacts';
 
 const artifactIcons: Record<ArtifactResponseDtoType, LucideIcon> = {
@@ -53,9 +62,28 @@ interface ArtifactPickerDialogProps {
 export function ArtifactPickerDialog({
   open,
   onOpenChange,
+  onSelect,
   ...props
 }: Readonly<ArtifactPickerDialogProps>) {
   const { t } = useTranslation('common');
+  const requestConversion = useArtifactConversion(props.scope.workspaceId);
+
+  /** A normal chat takes an anonymous artifact once it is converted. */
+  async function select(artifact: ArtifactResponseDto) {
+    if (
+      artifact.isAnonymous &&
+      !props.scope.isAnonymous &&
+      !(await requestConversion(artifact))
+    ) {
+      return;
+    }
+    onSelect({
+      id: artifact.id,
+      title: resolveArtifactTitle(artifact),
+      type: artifact.type,
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="artifact-picker">
@@ -72,8 +100,10 @@ export function ArtifactPickerDialog({
         <ArtifactPickerContent
           {...props}
           onSelect={(artifact) => {
-            props.onSelect(artifact);
             onOpenChange(false);
+            // Warns once the picker has closed, so the picker does not take
+            // the focus back from the warning.
+            setTimeout(() => void select(artifact));
           }}
         />
       </DialogContent>
@@ -85,7 +115,11 @@ function ArtifactPickerContent({
   scope,
   attachedArtifactIds,
   onSelect,
-}: Readonly<Omit<ArtifactPickerDialogProps, 'open' | 'onOpenChange'>>) {
+}: Readonly<
+  Omit<ArtifactPickerDialogProps, 'open' | 'onOpenChange' | 'onSelect'> & {
+    onSelect: (artifact: ArtifactResponseDto) => void;
+  }
+>) {
   const { t } = useTranslation('common');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search.trim(), 300);
@@ -115,6 +149,7 @@ function ArtifactPickerContent({
       </InputGroup>
       <ArtifactPickerList
         artifacts={available}
+        showsAnonymized={!scope.isAnonymous}
         isLoading={isLoading}
         hasError={!!error}
         isSearching={debouncedSearch !== ''}
@@ -126,16 +161,19 @@ function ArtifactPickerContent({
 
 function ArtifactPickerList({
   artifacts,
+  showsAnonymized,
   isLoading,
   hasError,
   isSearching,
   onSelect,
 }: Readonly<{
   artifacts: ArtifactResponseDto[];
+  /** Marks the anonymous artifacts among normal ones. */
+  showsAnonymized: boolean;
   isLoading: boolean;
   hasError: boolean;
   isSearching: boolean;
-  onSelect: (artifact: ArtifactSummary) => void;
+  onSelect: (artifact: ArtifactResponseDto) => void;
 }>) {
   const { t } = useTranslation('common');
   if (isLoading) {
@@ -174,6 +212,7 @@ function ArtifactPickerList({
           <ArtifactPickerItem
             key={artifact.id}
             artifact={artifact}
+            showsAnonymized={showsAnonymized}
             onSelect={onSelect}
           />
         ))}
@@ -184,10 +223,12 @@ function ArtifactPickerList({
 
 function ArtifactPickerItem({
   artifact,
+  showsAnonymized,
   onSelect,
 }: Readonly<{
   artifact: ArtifactResponseDto;
-  onSelect: (artifact: ArtifactSummary) => void;
+  showsAnonymized: boolean;
+  onSelect: (artifact: ArtifactResponseDto) => void;
 }>) {
   const { t } = useTranslation('artifacts');
   const Icon = artifactIcons[artifact.type];
@@ -202,9 +243,7 @@ function ArtifactPickerItem({
       <button
         type="button"
         data-testid={`artifact-picker-item-${artifact.id}`}
-        onClick={() =>
-          onSelect({ id: artifact.id, title, type: artifact.type })
-        }
+        onClick={() => onSelect(artifact)}
       >
         <ItemMedia variant="icon">
           <Icon />
@@ -212,6 +251,16 @@ function ArtifactPickerItem({
         <ItemContent className="min-w-0 text-left">
           <ItemTitle className="max-w-full">
             <span className="truncate">{title}</span>
+            {showsAnonymized && artifact.isAnonymous && (
+              <Badge
+                variant="secondary"
+                className="shrink-0"
+                data-testid="artifact-picker-item-anonymized"
+              >
+                <ShieldCheck />
+                {t('panel.anonymized')}
+              </Badge>
+            )}
           </ItemTitle>
           <ItemDescription>
             {t(`library.type.${artifact.type}`)} ·{' '}

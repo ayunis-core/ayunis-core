@@ -20,6 +20,7 @@ export async function addVersionWithRetry(params: {
   buildVersion: () => Promise<{
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
+    isAnonymous: boolean;
     letterheadId?: UUID | null;
     piiMasks?: ArtifactPiiMask[];
   }>;

@@ -11,6 +11,7 @@ import type { RevertArtifactUseCase } from 'src/domain/artifacts/application/use
 import type { ExportArtifactUseCase } from 'src/domain/artifacts/application/use-cases/export-artifact/export-artifact.use-case';
 import type { FindPersonalArtifactsUseCase } from 'src/domain/artifacts/application/use-cases/find-personal-artifacts/find-personal-artifacts.use-case';
 import type { DeleteArtifactUseCase } from 'src/domain/artifacts/application/use-cases/delete-artifact/delete-artifact.use-case';
+import type { ConvertArtifactToNormalUseCase } from 'src/domain/artifacts/application/use-cases/convert-artifact-to-normal/convert-artifact-to-normal.use-case';
 import type { CreateArtifactDto } from 'src/domain/artifacts/presenters/http/dtos/create-artifact.dto';
 import type { UpdateArtifactDto } from 'src/domain/artifacts/presenters/http/dtos/update-artifact.dto';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -32,6 +33,7 @@ function setup() {
     {} as ExportArtifactUseCase,
     {} as FindPersonalArtifactsUseCase,
     {} as DeleteArtifactUseCase,
+    {} as ConvertArtifactToNormalUseCase,
     {
       toDto: jest.fn(),
       toVersionDto: jest.fn(),

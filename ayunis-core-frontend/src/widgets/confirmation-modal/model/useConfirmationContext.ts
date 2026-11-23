@@ -3,7 +3,11 @@ import type { ConfirmationOptions } from './types';
 
 export interface ConfirmationContextType {
   showConfirmation: (options: ConfirmationOptions) => void;
-  hideConfirmation: () => void;
+  /**
+   * Closes the confirmation; given the options it was shown with, only while
+   * no other confirmation has replaced it.
+   */
+  hideConfirmation: (shown?: ConfirmationOptions) => void;
   isOpen: boolean;
   options: ConfirmationOptions | null;
 }

@@ -12,6 +12,7 @@ import { ChatStarter } from './ChatStarter';
 
 const mocks = vi.hoisted(() => ({
   initiateChat: vi.fn(),
+  requestConversion: vi.fn(),
   models: [{ id: 'medium', anonymousOnly: false }],
 }));
 vi.mock('react-i18next', () => ({
@@ -37,6 +38,9 @@ vi.mock('@/features/academy', () => ({
   useAcademyAccessStatus: () => ({ isGated: false }),
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
+vi.mock('@/widgets/artifact-panel', () => ({
+  useArtifactConversion: () => mocks.requestConversion,
+}));
 vi.mock('@/widgets/academy-gate-notice', () => ({
   AcademyGateNotice: () => null,
 }));
@@ -50,15 +54,30 @@ vi.mock('@/widgets/chat-input', () => ({
   default: ({
     onSend,
     isSendDisabled,
+    onAnonymousChange,
   }: {
     onSend: (message: string) => void;
     isSendDisabled?: boolean;
+    onAnonymousChange: (isAnonymous: boolean) => void;
   }) => (
-    <button disabled={isSendDisabled} onClick={() => onSend('Hello')}>
-      Send
-    </button>
+    <>
+      <button onClick={() => onAnonymousChange(false)}>Normal</button>
+      <button disabled={isSendDisabled} onClick={() => onSend('Hello')}>
+        Send
+      </button>
+    </>
   ),
 }));
+
+function artifact(isAnonymous: boolean) {
+  return {
+    id: 'artifact-id',
+    title: 'Bescheid',
+    ownerType: 'personal' as const,
+    creatorId: 'user-id',
+    isAnonymous,
+  };
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -121,7 +140,7 @@ describe('ChatStarter', () => {
     mocks.models = [{ id: 'medium', anonymousOnly: true }];
     render(
       <ChatStarter
-        artifact={{ id: 'artifact-id', isAnonymous: false }}
+        artifact={artifact(false)}
         selectedModelId="medium"
         isEmbeddingModelEnabled={false}
       />,
@@ -136,10 +155,10 @@ describe('ChatStarter', () => {
     ).toBeTruthy();
   });
 
-  it('starts a chat about an artifact linked to it, in the artifact’s mode', () => {
+  it('starts a chat about an artifact linked to it, in the artifact’s mode', async () => {
     render(
       <ChatStarter
-        artifact={{ id: 'artifact-id', isAnonymous: true }}
+        artifact={artifact(true)}
         selectedModelId="medium"
         isEmbeddingModelEnabled={false}
       />,
@@ -147,11 +166,58 @@ describe('ChatStarter', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(mocks.initiateChat).toHaveBeenCalledWith(
-      expect.objectContaining({
-        artifactIds: ['artifact-id'],
-        isAnonymous: true,
-      }),
+    await waitFor(() =>
+      expect(mocks.initiateChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifactIds: ['artifact-id'],
+          isAnonymous: true,
+        }),
+      ),
+    );
+    expect(mocks.requestConversion).not.toHaveBeenCalled();
+  });
+
+  it('creates no normal chat about an anonymous artifact that was not converted, which the chat could not take', async () => {
+    mocks.requestConversion.mockResolvedValue(false);
+    render(
+      <ChatStarter
+        artifact={artifact(true)}
+        selectedModelId="medium"
+        isEmbeddingModelEnabled={false}
+      />,
+      { wrapper },
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Normal' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() =>
+      expect(mocks.requestConversion).toHaveBeenCalledWith(artifact(true)),
+    );
+    expect(mocks.initiateChat).not.toHaveBeenCalled();
+  });
+
+  it('starts a normal chat about an anonymous artifact once it is converted', async () => {
+    mocks.requestConversion.mockResolvedValue(true);
+    render(
+      <ChatStarter
+        artifact={artifact(true)}
+        selectedModelId="medium"
+        isEmbeddingModelEnabled={false}
+      />,
+      { wrapper },
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Normal' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() =>
+      expect(mocks.initiateChat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artifactIds: ['artifact-id'],
+          isAnonymous: false,
+        }),
+      ),
     );
   });
 
@@ -159,7 +225,7 @@ describe('ChatStarter', () => {
     const confirmStart = vi.fn().mockResolvedValue(false);
     render(
       <ChatStarter
-        artifact={{ id: 'artifact-id', isAnonymous: false }}
+        artifact={artifact(false)}
         confirmStart={confirmStart}
         selectedModelId="medium"
         isEmbeddingModelEnabled={false}

@@ -95,14 +95,22 @@ export class UpdateArtifactUseCase {
     const content = prepareContentForWrite(artifact.type, rawContent);
     this.validateContentLength(content);
     if (!artifact.isAnonymous) {
-      return this.addContentVersion(command, userId, content, []);
+      return this.addContentVersion(command, userId, {
+        content,
+        isAnonymous: false,
+        piiMasks: [],
+      });
     }
     return this.artifactPlaceholdersService.write(
       artifact.id,
       await this.draftAnonymousContent(artifact, content, context),
       (anonymized, piiMasks) => {
         this.validateContentLength(anonymized);
-        return this.addContentVersion(command, userId, anonymized, piiMasks);
+        return this.addContentVersion(command, userId, {
+          content: anonymized,
+          isAnonymous: true,
+          piiMasks,
+        });
       },
     );
   }
@@ -176,11 +184,18 @@ export class UpdateArtifactUseCase {
     }
   }
 
+  /**
+   * `isAnonymous` is the mode the content was prepared for, checked again
+   * when the version is stored.
+   */
   private async addContentVersion(
     command: UpdateArtifactCommand,
     userId: UUID,
-    content: string,
-    piiMasks: ArtifactPiiMask[],
+    {
+      content,
+      isAnonymous,
+      piiMasks,
+    }: { content: string; isAnonymous: boolean; piiMasks: ArtifactPiiMask[] },
   ): Promise<ArtifactVersion> {
     const authorType = command.authorType ?? AuthorType.USER;
 
@@ -201,6 +216,7 @@ export class UpdateArtifactUseCase {
 
         return {
           expectedCurrentVersionNumber: freshArtifact.currentVersionNumber,
+          isAnonymous,
           letterheadId: command.letterheadId,
           piiMasks,
           version: new ArtifactVersion({

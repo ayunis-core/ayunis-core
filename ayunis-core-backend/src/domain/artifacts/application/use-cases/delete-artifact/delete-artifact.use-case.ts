@@ -7,7 +7,7 @@ import {
   UnexpectedArtifactError,
 } from 'src/domain/artifacts/application/artifacts.errors';
 import { ArtifactsRepository } from 'src/domain/artifacts/application/ports/artifacts-repository.port';
-import { AssertWorkspaceWriteAccessUseCase } from 'src/domain/workspaces/application/use-cases/assert-workspace-write-access/assert-workspace-write-access.use-case';
+import { ArtifactManageAccessService } from 'src/domain/artifacts/application/services/artifact-manage-access.service';
 import { DeleteArtifactCommand } from './delete-artifact.command';
 
 /**
@@ -22,7 +22,7 @@ export class DeleteArtifactUseCase {
 
   constructor(
     private readonly artifactsRepository: ArtifactsRepository,
-    private readonly workspaceWriteAccess: AssertWorkspaceWriteAccessUseCase,
+    private readonly manageAccess: ArtifactManageAccessService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -37,11 +37,7 @@ export class DeleteArtifactUseCase {
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
     }
-    if (artifact.owner.type === 'workspace' && artifact.creatorId !== userId) {
-      await this.workspaceWriteAccess.execute({
-        workspaceId: artifact.owner.workspaceId,
-      });
-    }
+    await this.manageAccess.assertCanManage(artifact, userId);
     await this.artifactsRepository.delete(artifact.id);
   }
 }
