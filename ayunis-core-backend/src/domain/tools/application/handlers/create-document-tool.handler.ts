@@ -39,6 +39,7 @@ export class CreateDocumentToolHandler extends ToolExecutionHandler {
           title: validatedInput.title,
           content: validatedInput.content,
           authorType: AuthorType.ASSISTANT,
+          isAnonymous: context.isAnonymous ?? false,
           letterheadId,
         }),
       );

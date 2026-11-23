@@ -6,8 +6,9 @@ import {
 } from 'src/domain/tools/application/ports/execution.handler';
 import { ReadDiagramTool } from 'src/domain/tools/domain/tools/read-diagram-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
-import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
-import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
+import { ReadArtifactInRunUseCase } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
+import { ReadArtifactInRunQuery } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.query';
+import { artifactRunOf } from 'src/domain/tools/application/utils/artifact-run.utils';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { UUID } from 'crypto';
 import toolsConfig from 'src/config/tools.config';
@@ -21,7 +22,7 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(ReadDiagramToolHandler.name);
 
   constructor(
-    private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
+    private readonly readArtifactInRunUseCase: ReadArtifactInRunUseCase,
     @Inject(toolsConfig.KEY)
     private readonly config: ConfigType<typeof toolsConfig>,
   ) {
@@ -37,7 +38,7 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
     this.logger.log('Executing read_diagram tool');
 
     try {
-      return await this.readDiagram(tool, input, context.threadId);
+      return await this.readDiagram(tool, input, context);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -54,7 +55,7 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
   private async readDiagram(
     tool: ReadDiagramTool,
     input: Record<string, unknown>,
-    threadId: UUID,
+    context: ToolExecutionContext,
   ): Promise<string> {
     const {
       artifact_id: artifactId,
@@ -62,17 +63,20 @@ export class ReadDiagramToolHandler extends ToolExecutionHandler {
       numLines = this.config.sourceGetText.maxLines,
     } = tool.validateParams(input);
 
-    const artifact = await this.findArtifactWithVersionsUseCase.execute(
-      new FindArtifactWithVersionsQuery({
+    const read = await this.readArtifactInRunUseCase.execute(
+      new ReadArtifactInRunQuery({
         artifactId: artifactId as UUID,
-        linkedThreadId: threadId,
+        run: artifactRunOf(context),
       }),
     );
-    assertArtifactType(artifact, ArtifactType.DIAGRAM, tool.name);
+    if (read.threadPiiMasks) {
+      context.onPiiMasks?.(read.threadPiiMasks);
+    }
+    assertArtifactType(read.artifact, ArtifactType.DIAGRAM, tool.name);
 
     return readTextArtifactPage({
       toolName: tool.name,
-      artifact,
+      read,
       startLine,
       numLines,
       ...this.config.sourceGetText,

@@ -50,12 +50,17 @@ export function applyMaskReplacements(
   return { anonymizedText, newMasks: registry.newMasks };
 }
 
-interface MaskRegistry {
+export interface MaskRegistry {
   resolve(category: PiiCategory, value: string): PiiMask;
   newMasks: PiiMask[];
 }
 
-function createMaskRegistry(existingMasks: PiiMask[]): MaskRegistry {
+/**
+ * Looks up the mask of a (category, value) pair among existing masks and
+ * numbers a new one after the highest index of its category when there is
+ * none. Values resolved again get the mask created for them before.
+ */
+export function createMaskRegistry(existingMasks: PiiMask[]): MaskRegistry {
   const masksByValue = new Map<string, PiiMask>(
     existingMasks.map((mask) => [maskKey(mask.category, mask.value), mask]),
   );

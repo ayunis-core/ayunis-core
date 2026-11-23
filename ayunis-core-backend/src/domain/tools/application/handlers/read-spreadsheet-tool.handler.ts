@@ -6,8 +6,9 @@ import {
 } from 'src/domain/tools/application/ports/execution.handler';
 import { ReadSpreadsheetTool } from 'src/domain/tools/domain/tools/read-spreadsheet-tool.entity';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
-import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
-import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
+import { ReadArtifactInRunUseCase } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
+import { ReadArtifactInRunQuery } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.query';
+import { artifactRunOf } from 'src/domain/tools/application/utils/artifact-run.utils';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { UUID } from 'crypto';
 import toolsConfig from 'src/config/tools.config';
@@ -21,7 +22,7 @@ export class ReadSpreadsheetToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(ReadSpreadsheetToolHandler.name);
 
   constructor(
-    private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
+    private readonly readArtifactInRunUseCase: ReadArtifactInRunUseCase,
     @Inject(toolsConfig.KEY)
     private readonly config: ConfigType<typeof toolsConfig>,
   ) {
@@ -37,7 +38,7 @@ export class ReadSpreadsheetToolHandler extends ToolExecutionHandler {
     this.logger.log('Executing read_spreadsheet tool');
 
     try {
-      return await this.readSpreadsheet(tool, input, context.threadId);
+      return await this.readSpreadsheet(tool, input, context);
     } catch (error) {
       if (error instanceof ToolExecutionFailedError) {
         throw error;
@@ -57,7 +58,7 @@ export class ReadSpreadsheetToolHandler extends ToolExecutionHandler {
   private async readSpreadsheet(
     tool: ReadSpreadsheetTool,
     input: Record<string, unknown>,
-    threadId: UUID,
+    context: ToolExecutionContext,
   ): Promise<string> {
     const {
       artifact_id: artifactId,
@@ -65,17 +66,20 @@ export class ReadSpreadsheetToolHandler extends ToolExecutionHandler {
       numRows = this.config.sourceGetText.maxLines,
     } = tool.validateParams(input);
 
-    const artifact = await this.findArtifactWithVersionsUseCase.execute(
-      new FindArtifactWithVersionsQuery({
+    const read = await this.readArtifactInRunUseCase.execute(
+      new ReadArtifactInRunQuery({
         artifactId: artifactId as UUID,
-        linkedThreadId: threadId,
+        run: artifactRunOf(context),
       }),
     );
-    assertArtifactType(artifact, ArtifactType.SPREADSHEET, tool.name);
+    if (read.threadPiiMasks) {
+      context.onPiiMasks?.(read.threadPiiMasks);
+    }
+    assertArtifactType(read.artifact, ArtifactType.SPREADSHEET, tool.name);
 
     return readSpreadsheetArtifactPage({
       toolName: tool.name,
-      artifact,
+      read,
       startRow,
       numRows,
       maxRows: this.config.sourceGetText.maxLines,

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 
 export class ArtifactVersionResponseDto {
   @ApiProperty({
@@ -48,6 +49,29 @@ export class ArtifactVersionResponseDto {
   createdAt: string;
 }
 
+export class ArtifactPiiMaskResponseDto {
+  @ApiProperty({
+    description:
+      'The placeholder as it appears in the artifact content, e.g. {{pii:PERSON_NAME_1}}',
+    example: '{{pii:PERSON_NAME_1}}',
+  })
+  token: string;
+
+  @ApiProperty({
+    description: 'The real value the placeholder stands for',
+    example: 'Max Mustermann',
+  })
+  value: string;
+
+  @ApiProperty({
+    description: 'PII category of the value',
+    enum: PiiCategory,
+    enumName: 'PiiCategory',
+    example: PiiCategory.PERSON_NAME,
+  })
+  category: PiiCategory;
+}
+
 export class ArtifactResponseDto {
   @ApiProperty({
     description: 'Unique identifier of the artifact',
@@ -90,6 +114,13 @@ export class ArtifactResponseDto {
   letterheadId: string | null;
 
   @ApiProperty({
+    description:
+      'Whether the artifact was created in an anonymous run; its content then holds {{pii:…}} placeholders resolved by piiMasks',
+    example: false,
+  })
+  isAnonymous: boolean;
+
+  @ApiProperty({
     description: 'Current version number',
     example: 3,
   })
@@ -100,6 +131,13 @@ export class ArtifactResponseDto {
     type: [ArtifactVersionResponseDto],
   })
   versions?: ArtifactVersionResponseDto[];
+
+  @ApiPropertyOptional({
+    description:
+      "The anonymous artifact's own placeholder dictionary (included with the versions)",
+    type: [ArtifactPiiMaskResponseDto],
+  })
+  piiMasks?: ArtifactPiiMaskResponseDto[];
 
   @ApiProperty({
     description: 'When the artifact was created',

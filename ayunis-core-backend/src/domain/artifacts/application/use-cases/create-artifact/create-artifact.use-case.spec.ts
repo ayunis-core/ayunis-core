@@ -39,6 +39,14 @@ import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/appli
 import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ProviderServerError } from 'src/common/errors/provider.errors';
+import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
+import { ArtifactMaskAllocationLock } from 'src/domain/artifacts/application/services/artifact-mask-allocation-lock.service';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { AllocateThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/allocate-thread-pii-masks/allocate-thread-pii-masks.use-case';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import { ArtifactUnknownPlaceholderError } from 'src/domain/artifacts/application/artifacts.errors';
+import type { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 
 describe('CreateArtifactUseCase', () => {
   let useCase: CreateArtifactUseCase;
@@ -46,6 +54,7 @@ describe('CreateArtifactUseCase', () => {
   let findThreadUseCase: jest.Mocked<FindThreadUseCase>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
   let anonymizeTextForThreadUseCase: { execute: jest.Mock };
+  let getThreadPiiMasksUseCase: { execute: jest.Mock };
   let logger: LoggerMock;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -62,6 +71,8 @@ describe('CreateArtifactUseCase', () => {
       findVersion: jest.fn(),
       addVersion: jest.fn(),
       addThreadLink: jest.fn(),
+      findPiiMasks: jest.fn().mockResolvedValue([]),
+      addPiiMasks: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       delete: jest.fn(),
     };
@@ -81,6 +92,7 @@ describe('CreateArtifactUseCase', () => {
     };
 
     anonymizeTextForThreadUseCase = { execute: jest.fn() };
+    getThreadPiiMasksUseCase = { execute: jest.fn().mockResolvedValue([]) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -97,6 +109,13 @@ describe('CreateArtifactUseCase', () => {
           provide: AnonymizeTextForThreadUseCase,
           useValue: anonymizeTextForThreadUseCase,
         },
+        ArtifactPlaceholdersService,
+        ArtifactMaskAllocationLock,
+        {
+          provide: GetThreadPiiMasksUseCase,
+          useValue: getThreadPiiMasksUseCase,
+        },
+        { provide: AllocateThreadPiiMasksUseCase, useValue: {} },
       ],
     }).compile();
 
@@ -110,6 +129,29 @@ describe('CreateArtifactUseCase', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  function chatMask(maskIndex: number, value: string): ThreadPiiMask {
+    return new ThreadPiiMask({
+      threadId: mockThreadId,
+      category: PiiCategory.PERSON_NAME,
+      maskIndex,
+      value,
+    });
+  }
+
+  function storedMasks(): [string, string, string][] {
+    return artifactsRepository.addPiiMasks.mock.calls.flatMap(
+      ([masks]: [ArtifactPiiMask[]]) =>
+        masks.map(
+          (mask) =>
+            [mask.artifactId, mask.token, mask.value] as [
+              string,
+              string,
+              string,
+            ],
+        ),
+    );
+  }
 
   it('should create an artifact with version 1', async () => {
     const command = new CreateArtifactCommand({
@@ -202,7 +244,7 @@ describe('CreateArtifactUseCase', () => {
     expect(result.versions[0].authorId).toBe(mockUserId);
   });
 
-  it('stores real values a user typed into an artifact of an anonymous chat as placeholders', async () => {
+  it('stores real values a user typed into the title and content of an artifact of an anonymous chat as placeholders of the artifact’s own dictionary', async () => {
     findThreadUseCase.execute.mockResolvedValue({
       thread: new Thread({
         id: mockThreadId,
@@ -212,14 +254,27 @@ describe('CreateArtifactUseCase', () => {
       }),
       isLongChat: false,
     });
+    // Stands in for the chat's detection, which finds the typed name.
     anonymizeTextForThreadUseCase.execute.mockImplementation(
-      (command: AnonymizeTextForThreadCommand) =>
-        Promise.resolve({
-          anonymizedText: command.text.replace(
-            'Max Mustermann',
-            '{{pii:PERSON_NAME_1}}',
-          ),
-        }),
+      (command: AnonymizeTextForThreadCommand) => {
+        const start = command.text.indexOf('Max Mustermann');
+        return Promise.resolve({
+          anonymizedText: command.text,
+          replacements:
+            start === -1
+              ? []
+              : [
+                  {
+                    entityType: 'PERSON',
+                    category: PiiCategory.PERSON_NAME,
+                    originalValue: 'Max Mustermann',
+                    start,
+                    end: start + 'Max Mustermann'.length,
+                    score: 0.9,
+                  },
+                ],
+        });
+      },
     );
     artifactsRepository.create.mockImplementation(async (artifact) => artifact);
     artifactsRepository.addVersion.mockImplementation(
@@ -229,13 +284,105 @@ describe('CreateArtifactUseCase', () => {
     const result = await useCase.execute(
       new CreateArtifactCommand({
         threadId: mockThreadId,
-        title: 'Brief',
+        title: 'Brief an Max Mustermann',
         content: '<p>Max Mustermann</p>',
         authorType: AuthorType.USER,
       }),
     );
 
+    expect(result.isAnonymous).toBe(true);
+    expect(result.title).toBe('Brief an {{pii:PERSON_NAME_1}}');
     expect(result.versions[0].content).toBe('<p>{{pii:PERSON_NAME_1}}</p>');
+    expect(storedMasks()).toEqual([
+      [result.id, '{{pii:PERSON_NAME_1}}', 'Max Mustermann'],
+    ]);
+  });
+
+  it('translates the chat’s placeholders of an anonymous run in title and content into the new artifact’s own', async () => {
+    getThreadPiiMasksUseCase.execute.mockResolvedValue([
+      chatMask(2, 'Bernd Bauer'),
+      chatMask(3, 'Anna Schmidt'),
+    ]);
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+
+    const result = await useCase.execute(
+      new CreateArtifactCommand({
+        threadId: mockThreadId,
+        title: 'Brief an {{pii:PERSON_NAME_3}}',
+        content:
+          '<p>Sehr geehrte {{pii:PERSON_NAME_3}}, Gruß {{pii:PERSON_NAME_2}}</p>',
+        authorType: AuthorType.ASSISTANT,
+        isAnonymous: true,
+      }),
+    );
+
+    expect(result.isAnonymous).toBe(true);
+    expect(result.title).toBe('Brief an {{pii:PERSON_NAME_1}}');
+    expect(result.versions[0].content).toBe(
+      '<p>Sehr geehrte {{pii:PERSON_NAME_1}}, Gruß {{pii:PERSON_NAME_2}}</p>',
+    );
+    expect(storedMasks()).toEqual([
+      [result.id, '{{pii:PERSON_NAME_1}}', 'Anna Schmidt'],
+      [result.id, '{{pii:PERSON_NAME_2}}', 'Bernd Bauer'],
+    ]);
+  });
+
+  it('rejects a title placeholder the chat does not know and creates nothing', async () => {
+    getThreadPiiMasksUseCase.execute.mockResolvedValue([
+      chatMask(3, 'Anna Schmidt'),
+    ]);
+
+    await expect(
+      useCase.execute(
+        new CreateArtifactCommand({
+          threadId: mockThreadId,
+          title: 'Brief an {{pii:PERSON_NAME_7}}',
+          content: '<p>{{pii:PERSON_NAME_3}}</p>',
+          authorType: AuthorType.ASSISTANT,
+          isAnonymous: true,
+        }),
+      ),
+    ).rejects.toThrow(ArtifactUnknownPlaceholderError);
+    expect(artifactsRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a placeholder the chat does not know and creates nothing', async () => {
+    getThreadPiiMasksUseCase.execute.mockResolvedValue([
+      chatMask(3, 'Anna Schmidt'),
+    ]);
+
+    await expect(
+      useCase.execute(
+        new CreateArtifactCommand({
+          threadId: mockThreadId,
+          title: 'Brief',
+          content: '<p>{{pii:PERSON_NAME_3}} und {{pii:PERSON_NAME_9}}</p>',
+          authorType: AuthorType.ASSISTANT,
+          isAnonymous: true,
+        }),
+      ),
+    ).rejects.toThrow(ArtifactUnknownPlaceholderError);
+    expect(artifactsRepository.create).not.toHaveBeenCalled();
+    expect(artifactsRepository.addPiiMasks).not.toHaveBeenCalled();
+  });
+
+  it('stores a normal run’s content as written and gives the artifact no dictionary', async () => {
+    artifactsRepository.create.mockImplementation(async (artifact) => artifact);
+
+    const result = await useCase.execute(
+      new CreateArtifactCommand({
+        threadId: mockThreadId,
+        title: 'Brief',
+        content: '<p>{{pii:PERSON_NAME_3}}</p>',
+        authorType: AuthorType.ASSISTANT,
+        isAnonymous: false,
+      }),
+    );
+
+    expect(result.isAnonymous).toBe(false);
+    expect(result.versions[0].content).toBe('<p>{{pii:PERSON_NAME_3}}</p>');
+    expect(storedMasks()).toEqual([]);
+    expect(getThreadPiiMasksUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('creates nothing when masking a user-created artifact of an anonymous chat fails', async () => {
@@ -300,6 +447,7 @@ describe('CreateArtifactUseCase', () => {
           useValue: findLetterheadUseCase,
         },
         { provide: UserContentMaskingService, useValue: {} },
+        { provide: ArtifactPlaceholdersService, useValue: {} },
       ],
     }).compile();
 

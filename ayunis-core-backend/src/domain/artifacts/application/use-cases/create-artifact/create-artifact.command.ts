@@ -9,6 +9,8 @@ export class CreateArtifactCommand {
   readonly content: string;
   readonly authorType: AuthorType;
   readonly letterheadId?: UUID;
+  /** Whether the artifact is created in an anonymous run; defaults to the chat's mode. */
+  readonly isAnonymous?: boolean;
 
   constructor(params: {
     threadId: UUID;
@@ -17,6 +19,7 @@ export class CreateArtifactCommand {
     content: string;
     authorType: AuthorType;
     letterheadId?: UUID;
+    isAnonymous?: boolean;
   }) {
     this.threadId = params.threadId;
     this.type = params.type ?? ArtifactType.DOCUMENT;
@@ -24,5 +27,6 @@ export class CreateArtifactCommand {
     this.content = params.content;
     this.authorType = params.authorType;
     this.letterheadId = params.letterheadId;
+    this.isAnonymous = params.isAnonymous;
   }
 }

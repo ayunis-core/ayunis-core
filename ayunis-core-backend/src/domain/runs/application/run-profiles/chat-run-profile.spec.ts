@@ -74,7 +74,7 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
   });
   const artifactTools = new ArtifactToolAssemblerService(
     assembleTool,
-    resolved([]) as never,
+    resolved({ artifacts: [], threadPiiMasks: null }) as never,
     resolved(null) as never,
     resolved([]) as never,
   );

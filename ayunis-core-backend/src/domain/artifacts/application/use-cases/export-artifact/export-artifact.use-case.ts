@@ -39,8 +39,6 @@ import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { GetDocumentDefaultsUseCase } from 'src/domain/letterheads/application/use-cases/get-document-defaults/get-document-defaults.use-case';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
-import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
-import { GetThreadPiiMasksQuery } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.query';
 import { deanonymizeText } from 'src/common/anonymization/domain/deanonymize-text';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 
@@ -62,7 +60,6 @@ export class ExportArtifactUseCase {
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
     private readonly getDocumentDefaultsUseCase: GetDocumentDefaultsUseCase,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
-    private readonly getThreadPiiMasksUseCase: GetThreadPiiMasksUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
@@ -83,22 +80,18 @@ export class ExportArtifactUseCase {
       command.format,
     );
     const version = this.requireVersion(artifact, command.versionNumber);
-    const safeTitle = this.buildSafeTitle(artifact.title);
+    const safeTitle = this.buildSafeTitle(
+      this.deanonymize(artifact, artifact.title),
+    );
 
     if (artifact instanceof SpreadsheetArtifact) {
-      const data = await this.prepareSpreadsheetExportData(
-        artifact.threadId,
-        version.content,
-      );
+      const data = this.prepareSpreadsheetExportData(artifact, version.content);
       return command.format === 'xlsx'
         ? await this.exportXlsx(data, safeTitle)
         : await this.exportCsv(data, safeTitle);
     }
 
-    const content = await this.deanonymizeContent(
-      artifact.threadId,
-      version.content,
-    );
+    const content = this.deanonymize(artifact, version.content);
 
     if (command.format === 'docx') {
       return await this.exportDocx(artifact, content, safeTitle);
@@ -150,16 +143,14 @@ export class ExportArtifactUseCase {
   }
 
   /**
-   * Replaces `{{pii:...}}` tokens in the artifact content with the thread's
-   * original values so the exported file is de-anonymized. Stored content stays
-   * masked; this resolution happens only at export egress.
+   * Replaces `{{pii:...}}` tokens in the artifact's content or title with the
+   * original values from the artifact's own dictionary so the exported file
+   * is de-anonymized. Stored text stays masked; this resolution happens only
+   * at export egress.
    */
-  private async deanonymizeContent(
-    threadId: UUID,
-    content: string,
-  ): Promise<string> {
-    const tokenToValue = await this.resolveTokenMap(threadId);
-    return tokenToValue ? deanonymizeText(content, tokenToValue) : content;
+  private deanonymize(artifact: Artifact, text: string): string {
+    const tokenToValue = this.resolveTokenMap(artifact);
+    return tokenToValue ? deanonymizeText(text, tokenToValue) : text;
   }
 
   /**
@@ -167,34 +158,28 @@ export class ExportArtifactUseCase {
    * per string cell after parsing, never on the raw JSON string, because PII
    * values containing quotes or backslashes would corrupt it.
    */
-  private async prepareSpreadsheetExportData(
-    threadId: UUID,
+  private prepareSpreadsheetExportData(
+    artifact: Artifact,
     content: string,
-  ): Promise<SpreadsheetExportInput> {
+  ): SpreadsheetExportInput {
     const storedData = parseSpreadsheetContent(content);
-    const tokenToValue = await this.resolveTokenMap(threadId);
+    const tokenToValue = this.resolveTokenMap(artifact);
     const grid: SpreadsheetContentV1 = tokenToValue
       ? mapSpreadsheetStrings(storedData, (value) =>
           deanonymizeText(value, tokenToValue),
         )
       : storedData;
-
     return {
       grid,
       formulaCells: storedData.rows.map((row) => row.map(isFormulaCell)),
     };
   }
 
-  private async resolveTokenMap(
-    threadId: UUID,
-  ): Promise<Map<string, string> | null> {
-    const masks = await this.getThreadPiiMasksUseCase.execute(
-      new GetThreadPiiMasksQuery(threadId),
-    );
-    if (masks.length === 0) {
+  private resolveTokenMap(artifact: Artifact): Map<string, string> | null {
+    if (artifact.piiMasks.length === 0) {
       return null;
     }
-    return new Map(masks.map((mask) => [mask.token, mask.value]));
+    return new Map(artifact.piiMasks.map((mask) => [mask.token, mask.value]));
   }
 
   private buildSafeTitle(title: string): string {

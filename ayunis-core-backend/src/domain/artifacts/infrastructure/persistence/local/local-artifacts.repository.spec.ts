@@ -9,6 +9,7 @@ import type { ArtifactRecord } from './schema/artifact.record';
 import type { ArtifactVersionRecord } from './schema/artifact-version.record';
 import type { DocumentArtifactRecord } from './schema/document-artifact.record';
 import type { ThreadArtifactRecord } from './schema/thread-artifact.record';
+import type { ArtifactPiiMaskRecord } from './schema/artifact-pii-mask.record';
 
 describe('LocalArtifactsRepository', () => {
   it('lists only supported artifact types for a workspace', async () => {
@@ -36,6 +37,7 @@ describe('LocalArtifactsRepository', () => {
       documentArtifactRepository,
       versionRepository,
       {} as Repository<ThreadArtifactRecord>,
+      {} as Repository<ArtifactPiiMaskRecord>,
       artifactMapper,
       versionMapper,
       {

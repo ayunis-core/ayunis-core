@@ -30,8 +30,7 @@ import { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/
 import { DownloadObjectCommand } from 'src/domain/storage/application/use-cases/download-object/download-object.command';
 import { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
-import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
-import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { HtmlDocumentExportService } from 'src/domain/artifacts/infrastructure/export/html-document-export.service';
 import { PdfLetterheadCompositor } from 'src/domain/artifacts/infrastructure/export/pdf-letterhead-compositor';
@@ -52,7 +51,6 @@ describe('ExportArtifactUseCase', () => {
   const unspecifiedTypography = { fontFamily: null, fontSizePt: null };
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
   let downloadObjectUseCase: jest.Mocked<DownloadObjectUseCase>;
-  let getThreadPiiMasksUseCase: jest.Mocked<GetThreadPiiMasksUseCase>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
   const mockOrgId = '423e4567-e89b-12d3-a456-426614174000' as UUID;
@@ -95,10 +93,6 @@ describe('ExportArtifactUseCase', () => {
       execute: jest.fn(),
     };
 
-    const mockGetThreadPiiMasks = {
-      execute: jest.fn().mockResolvedValue([]),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ExportArtifactUseCase,
@@ -114,7 +108,6 @@ describe('ExportArtifactUseCase', () => {
           },
         },
         { provide: DownloadObjectUseCase, useValue: mockDownloadObject },
-        { provide: GetThreadPiiMasksUseCase, useValue: mockGetThreadPiiMasks },
       ],
     }).compile();
 
@@ -125,7 +118,6 @@ describe('ExportArtifactUseCase', () => {
     findLetterheadUseCase = module.get(FindLetterheadUseCase);
     getDocumentDefaults = module.get(GetDocumentDefaultsUseCase);
     downloadObjectUseCase = module.get(DownloadObjectUseCase);
-    getThreadPiiMasksUseCase = module.get(GetThreadPiiMasksUseCase);
   });
 
   afterEach(() => {
@@ -510,10 +502,6 @@ describe('ExportArtifactUseCase', () => {
         { provide: FindLetterheadUseCase, useValue: findLetterheadUseCase },
         { provide: GetDocumentDefaultsUseCase, useValue: getDocumentDefaults },
         { provide: DownloadObjectUseCase, useValue: downloadObjectUseCase },
-        {
-          provide: GetThreadPiiMasksUseCase,
-          useValue: getThreadPiiMasksUseCase,
-        },
       ],
     }).compile();
 
@@ -531,12 +519,27 @@ describe('ExportArtifactUseCase', () => {
     );
   });
 
-  it('should de-anonymize PII tokens in the content before DOCX export', async () => {
+  it('should de-anonymize PII tokens in content and file name with the artifact’s own dictionary before DOCX export', async () => {
     const artifact = new DocumentArtifact({
       id: mockArtifactId,
       threadId: mockThreadId,
       userId: mockUserId,
-      title: 'Anonymous Notes',
+      title: 'Notiz {{pii:PERSON_NAME_1}}',
+      isAnonymous: true,
+      piiMasks: [
+        new ArtifactPiiMask({
+          artifactId: mockArtifactId,
+          category: PiiCategory.PERSON_NAME,
+          maskIndex: 1,
+          value: 'Max Mustermann',
+        }),
+        new ArtifactPiiMask({
+          artifactId: mockArtifactId,
+          category: PiiCategory.EMAIL_ADDRESS,
+          maskIndex: 1,
+          value: 'max@example.de',
+        }),
+      ],
       currentVersionNumber: 1,
       versions: [
         new ArtifactVersion({
@@ -551,28 +554,12 @@ describe('ExportArtifactUseCase', () => {
 
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
     documentExportPort.exportToDocx.mockResolvedValue(Buffer.from('docx'));
-    getThreadPiiMasksUseCase.execute.mockResolvedValue([
-      new ThreadPiiMask({
-        threadId: mockThreadId,
-        category: PiiCategory.PERSON_NAME,
-        maskIndex: 1,
-        value: 'Max Mustermann',
-      }),
-      new ThreadPiiMask({
-        threadId: mockThreadId,
-        category: PiiCategory.EMAIL_ADDRESS,
-        maskIndex: 1,
-        value: 'max@example.de',
-      }),
-    ]);
 
-    await useCase.execute(
+    const result = await useCase.execute(
       new ExportArtifactCommand({ artifactId: mockArtifactId, format: 'docx' }),
     );
 
-    expect(getThreadPiiMasksUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ threadId: mockThreadId }),
-    );
+    expect(result.fileName).toBe('Notiz Max Mustermann.docx');
     expect(documentExportPort.exportToDocx).toHaveBeenCalledWith(
       '<p>Kontaktieren Sie Max Mustermann unter max@example.de</p>',
       undefined,
@@ -580,11 +567,10 @@ describe('ExportArtifactUseCase', () => {
     );
   });
 
-  it('should leave content unchanged when the thread has no PII masks', async () => {
+  it('should leave content unchanged when the artifact has no PII masks', async () => {
     const artifact = createArtifact();
     artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
     documentExportPort.exportToDocx.mockResolvedValue(Buffer.from('docx'));
-    getThreadPiiMasksUseCase.execute.mockResolvedValue([]);
 
     await useCase.execute(
       new ExportArtifactCommand({ artifactId: mockArtifactId, format: 'docx' }),
@@ -641,12 +627,15 @@ describe('ExportArtifactUseCase', () => {
       content?: string,
       currentVersionNumber = 1,
       versions?: ArtifactVersion[],
+      piiMasks: ArtifactPiiMask[] = [],
     ): SpreadsheetArtifact {
       return new SpreadsheetArtifact({
         id: mockArtifactId,
         threadId: mockThreadId,
         userId: mockUserId,
         title: 'Budget 2026',
+        isAnonymous: piiMasks.length > 0,
+        piiMasks,
         currentVersionNumber,
         versions: versions ?? [
           new ArtifactVersion({
@@ -805,23 +794,22 @@ describe('ExportArtifactUseCase', () => {
         ],
       });
       artifactsRepository.findByIdWithVersions.mockResolvedValue(
-        createSpreadsheetArtifact(content),
+        createSpreadsheetArtifact(content, 1, undefined, [
+          new ArtifactPiiMask({
+            artifactId: mockArtifactId,
+            category: PiiCategory.PERSON_NAME,
+            maskIndex: 1,
+            value: 'Mustermann, "Max"',
+          }),
+          new ArtifactPiiMask({
+            artifactId: mockArtifactId,
+            category: PiiCategory.EMAIL_ADDRESS,
+            maskIndex: 1,
+            value: 'max@example.de',
+          }),
+        ]),
       );
       spreadsheetExportPort.exportToXlsx.mockResolvedValue(Buffer.from('x'));
-      getThreadPiiMasksUseCase.execute.mockResolvedValue([
-        new ThreadPiiMask({
-          threadId: mockThreadId,
-          category: PiiCategory.PERSON_NAME,
-          maskIndex: 1,
-          value: 'Mustermann, "Max"',
-        }),
-        new ThreadPiiMask({
-          threadId: mockThreadId,
-          category: PiiCategory.EMAIL_ADDRESS,
-          maskIndex: 1,
-          value: 'max@example.de',
-        }),
-      ]);
 
       await useCase.execute(
         new ExportArtifactCommand({
@@ -853,17 +841,16 @@ describe('ExportArtifactUseCase', () => {
         rows: [['{{pii:PERSON_NAME_1}}', '=SUM(1,2)']],
       });
       artifactsRepository.findByIdWithVersions.mockResolvedValue(
-        createSpreadsheetArtifact(content),
+        createSpreadsheetArtifact(content, 1, undefined, [
+          new ArtifactPiiMask({
+            artifactId: mockArtifactId,
+            category: PiiCategory.PERSON_NAME,
+            maskIndex: 1,
+            value: '=SUM(9,9)',
+          }),
+        ]),
       );
       spreadsheetExportPort.exportToXlsx.mockResolvedValue(Buffer.from('x'));
-      getThreadPiiMasksUseCase.execute.mockResolvedValue([
-        new ThreadPiiMask({
-          threadId: mockThreadId,
-          category: PiiCategory.PERSON_NAME,
-          maskIndex: 1,
-          value: '=SUM(9,9)',
-        }),
-      ]);
 
       await useCase.execute(
         new ExportArtifactCommand({

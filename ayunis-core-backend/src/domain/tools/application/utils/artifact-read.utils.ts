@@ -1,4 +1,5 @@
 import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
+import type { ArtifactInRun } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
@@ -80,31 +81,20 @@ export function assertArtifactType(
   });
 }
 
-function currentVersionContent(artifact: Artifact): string {
-  const currentVersion = artifact.versions.find(
-    (version) => version.versionNumber === artifact.currentVersionNumber,
-  );
-  if (!currentVersion) {
-    throw new Error(
-      `Current version ${artifact.currentVersionNumber} not found for artifact ${artifact.id}`,
-    );
-  }
-  return currentVersion.content;
-}
-
 /** One line-addressable page of a text artifact's current version. */
 export function readTextArtifactPage(params: {
   toolName: string;
-  artifact: Artifact;
+  read: ArtifactInRun;
   startLine: number;
   numLines: number;
   maxLines: number;
   maxChars: number;
 }): string {
-  const { toolName, artifact, startLine, numLines } = params;
+  const { toolName, read, startLine, numLines } = params;
+  const { artifact } = read;
   const page = paginateText({
     toolName,
-    text: currentVersionContent(artifact),
+    text: read.content,
     startLine,
     numLines,
     maxLines: params.maxLines,
@@ -112,7 +102,7 @@ export function readTextArtifactPage(params: {
   });
   const result: TextArtifactPage = {
     artifactId: artifact.id,
-    title: artifact.title,
+    title: read.title,
     version: artifact.currentVersionNumber,
     totalLines: page.totalLines,
     requestedStartLine: startLine,
@@ -139,16 +129,15 @@ export function readTextArtifactPage(params: {
  */
 export function readSpreadsheetArtifactPage(params: {
   toolName: string;
-  artifact: Artifact;
+  read: ArtifactInRun;
   startRow: number;
   numRows: number;
   maxRows: number;
   maxChars: number;
 }): string {
-  const { toolName, artifact, startRow, numRows } = params;
-  const { columns, rows } = parseSpreadsheetContent(
-    currentVersionContent(artifact),
-  );
+  const { toolName, read, startRow, numRows } = params;
+  const { artifact } = read;
+  const { columns, rows } = parseSpreadsheetContent(read.content);
   assertRowRange({ ...params, totalRows: rows.length });
 
   const selected = selectRows({
@@ -163,7 +152,7 @@ export function readSpreadsheetArtifactPage(params: {
   const nextStartRow = actualEndRow < rows.length ? actualEndRow + 1 : null;
   const result: SpreadsheetArtifactPage = {
     artifactId: artifact.id,
-    title: artifact.title,
+    title: read.title,
     version: artifact.currentVersionNumber,
     columns,
     totalRows: rows.length,

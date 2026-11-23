@@ -18,19 +18,22 @@ import {
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import { prepareContentForWrite } from 'src/domain/artifacts/application/helpers/prepare-content-for-write';
+import { mapContentText } from 'src/domain/artifacts/application/helpers/map-content-text';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { addVersionWithRetry } from 'src/domain/artifacts/application/helpers/add-version-with-retry';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { FindLetterheadQuery } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
-import { FindThreadsByIdsUseCase } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
-import { FindThreadsByIdsQuery } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.query';
+import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
+import { runLookup } from 'src/domain/artifacts/application/models/artifact-run';
+import type { PlaceholderDraft } from 'src/domain/artifacts/application/models/placeholder-draft';
+import type { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 
 interface ContentWriteContext {
-  userId: UUID;
   orgId: UUID;
-  authorType: AuthorType;
+  userId: UUID;
+  command: UpdateArtifactCommand;
 }
 
 @Injectable()
@@ -41,8 +44,8 @@ export class UpdateArtifactUseCase {
     private readonly artifactsRepository: ArtifactsRepository,
     private readonly contextService: ContextService,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
-    private readonly findThreadsByIdsUseCase: FindThreadsByIdsUseCase,
     private readonly userContentMaskingService: UserContentMaskingService,
+    private readonly artifactPlaceholdersService: ArtifactPlaceholdersService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
@@ -62,7 +65,7 @@ export class UpdateArtifactUseCase {
     const artifact = await this.artifactsRepository.findById(
       command.artifactId,
       userId,
-      { linkedThreadId: command.linkedThreadId },
+      runLookup(command.run),
     );
     if (!artifact) {
       throw new ArtifactNotFoundError(command.artifactId);
@@ -75,44 +78,57 @@ export class UpdateArtifactUseCase {
       return await this.updateLetterheadOnly(command);
     }
 
-    const content = await this.prepareContent(command.content, artifact, {
-      userId,
+    this.assertExpectedVersion(command, artifact);
+    return await this.writeContent(command.content, artifact, {
       orgId,
-      authorType: command.authorType ?? AuthorType.USER,
+      userId,
+      command,
     });
-    return await this.addContentVersion(command, userId, content);
   }
 
-  private async prepareContent(
+  private async writeContent(
     rawContent: string,
     artifact: Artifact,
     context: ContentWriteContext,
-  ): Promise<string> {
+  ): Promise<ArtifactVersion> {
+    const { command, userId } = context;
     const content = prepareContentForWrite(artifact.type, rawContent);
     this.validateContentLength(content);
-    if (context.authorType !== AuthorType.USER) {
-      return content;
+    if (!artifact.isAnonymous) {
+      return this.addContentVersion(command, userId, content, []);
     }
-    const masked = await this.userContentMaskingService.mask({
-      thread: await this.findArtifactThread(artifact, context.userId),
-      orgId: context.orgId,
+    return this.artifactPlaceholdersService.write(
+      artifact.id,
+      await this.draftAnonymousContent(artifact, content, context),
+      (anonymized, piiMasks) => {
+        this.validateContentLength(anonymized);
+        return this.addContentVersion(command, userId, anonymized, piiMasks);
+      },
+    );
+  }
+
+  /**
+   * A run writes in its chat's placeholders, which are translated; anything
+   * else, such as an editor save, is masked like a chat message.
+   */
+  private async draftAnonymousContent(
+    artifact: Artifact,
+    content: string,
+    { orgId, command }: ContentWriteContext,
+  ): Promise<PlaceholderDraft> {
+    if (command.run) {
+      return this.artifactPlaceholdersService.fromChat(
+        command.run.threadId,
+        (translate) => mapContentText(artifact.type, content, translate),
+      );
+    }
+    return this.userContentMaskingService.mask({
+      threadId: artifact.threadId,
+      orgId,
       type: artifact.type,
       content,
       currentArtifact: artifact,
     });
-    this.validateContentLength(masked);
-    return masked;
-  }
-
-  private async findArtifactThread(artifact: Artifact, userId: UUID) {
-    const threads = await this.findThreadsByIdsUseCase.execute(
-      new FindThreadsByIdsQuery(userId, [artifact.threadId]),
-    );
-    const thread = threads.at(0);
-    if (!thread) {
-      throw new ArtifactNotFoundError(artifact.id);
-    }
-    return thread;
   }
 
   private validateContentLength(content: string): void {
@@ -134,6 +150,22 @@ export class UpdateArtifactUseCase {
     }
   }
 
+  private assertExpectedVersion(
+    command: UpdateArtifactCommand,
+    artifact: Artifact,
+  ): void {
+    if (
+      command.expectedVersionNumber !== undefined &&
+      command.expectedVersionNumber !== artifact.currentVersionNumber
+    ) {
+      throw new ArtifactExpectedVersionMismatchError(
+        artifact,
+        command.expectedVersionNumber,
+        artifact.currentVersionNumber,
+      );
+    }
+  }
+
   private async updateLetterheadOnly(
     command: UpdateArtifactCommand,
   ): Promise<void> {
@@ -149,6 +181,7 @@ export class UpdateArtifactUseCase {
     command: UpdateArtifactCommand,
     userId: UUID,
     content: string,
+    piiMasks: ArtifactPiiMask[],
   ): Promise<ArtifactVersion> {
     const authorType = command.authorType ?? AuthorType.USER;
 
@@ -160,26 +193,17 @@ export class UpdateArtifactUseCase {
         const freshArtifact = await this.artifactsRepository.findById(
           command.artifactId,
           userId,
-          { linkedThreadId: command.linkedThreadId },
+          runLookup(command.run),
         );
         if (!freshArtifact) {
           throw new ArtifactNotFoundError(command.artifactId);
         }
-
-        if (
-          command.expectedVersionNumber !== undefined &&
-          command.expectedVersionNumber !== freshArtifact.currentVersionNumber
-        ) {
-          throw new ArtifactExpectedVersionMismatchError(
-            freshArtifact,
-            command.expectedVersionNumber,
-            freshArtifact.currentVersionNumber,
-          );
-        }
+        this.assertExpectedVersion(command, freshArtifact);
 
         return {
           expectedCurrentVersionNumber: freshArtifact.currentVersionNumber,
           letterheadId: command.letterheadId,
+          piiMasks,
           version: new ArtifactVersion({
             artifactId: freshArtifact.id,
             versionNumber: freshArtifact.currentVersionNumber + 1,

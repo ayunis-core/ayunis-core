@@ -22,7 +22,11 @@ import { FindArtifactWithVersionsUseCase } from './application/use-cases/find-ar
 import { RevertArtifactUseCase } from './application/use-cases/revert-artifact/revert-artifact.use-case';
 import { ExportArtifactUseCase } from './application/use-cases/export-artifact/export-artifact.use-case';
 import { ApplyEditsToArtifactUseCase } from './application/use-cases/apply-edits-to-artifact/apply-edits-to-artifact.use-case';
+import { ReadArtifactInRunUseCase } from './application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
+import { FindArtifactsForRunUseCase } from './application/use-cases/find-artifacts-for-run/find-artifacts-for-run.use-case';
 import { UserContentMaskingService } from './application/services/user-content-masking.service';
+import { ArtifactPlaceholdersService } from './application/services/artifact-placeholders.service';
+import { ArtifactMaskAllocationLock } from './application/services/artifact-mask-allocation-lock.service';
 
 @Module({
   imports: [
@@ -51,10 +55,14 @@ import { UserContentMaskingService } from './application/services/user-content-m
     FindArtifactsByThreadUseCase,
     FindArtifactsByWorkspaceUseCase,
     FindArtifactWithVersionsUseCase,
+    ReadArtifactInRunUseCase,
+    FindArtifactsForRunUseCase,
     RevertArtifactUseCase,
     ExportArtifactUseCase,
     // Services
     UserContentMaskingService,
+    ArtifactPlaceholdersService,
+    ArtifactMaskAllocationLock,
     // Mappers
     ArtifactDtoMapper,
   ],
@@ -62,6 +70,8 @@ import { UserContentMaskingService } from './application/services/user-content-m
     FindArtifactsByThreadUseCase,
     FindArtifactsByWorkspaceUseCase,
     FindArtifactWithVersionsUseCase,
+    ReadArtifactInRunUseCase,
+    FindArtifactsForRunUseCase,
     CreateArtifactUseCase,
     UpdateArtifactUseCase,
     ApplyEditsToArtifactUseCase,

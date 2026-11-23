@@ -1,17 +1,21 @@
 import { Button } from '@ayunis/ui/components/button';
 import { Download } from 'lucide-react';
-import { useCallback, type RefObject } from 'react';
+import { useCallback, useMemo, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTrackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
-import { usePiiMasks, resolvePiiTokens } from '@/widgets/markdown';
-import type { PiiMaskEntry } from '@/widgets/markdown';
+import type { ArtifactPiiMaskResponseDto } from '@/shared/api';
+import { resolvePiiTokens } from '@/widgets/markdown';
 
 interface DiagramExportButtonsProps {
   readonly containerRef: RefObject<HTMLDivElement | null>;
   readonly fileName: string;
+  /** The artifact's own placeholder dictionary (anonymous artifacts only). */
+  readonly piiMasks: readonly ArtifactPiiMaskResponseDto[];
 }
+
+type PiiMaskValues = ReadonlyMap<string, { value: string }>;
 
 function safeTitle(input: string): string {
   return input.replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'diagram';
@@ -37,15 +41,12 @@ function computeSvgDimensions(svg: SVGSVGElement): {
 }
 
 /**
- * Replaces `{{pii:...}}` tokens with their original values in every text node of
- * the (cloned) SVG, so exported files carry real values while the on-screen
- * viewer stays masked. A token wrapped across multiple <tspan>s won't match, but
+ * Replaces `{{pii:...}}` tokens with their original values from the artifact's
+ * dictionary in every text node of the (cloned) SVG, so exported files carry
+ * real values while the on-screen viewer stays masked. A token wrapped across multiple <tspan>s won't match, but
  * tokens are short single words so this is unlikely.
  */
-function deanonymizeSvgText(
-  root: SVGSVGElement,
-  masks: ReadonlyMap<string, PiiMaskEntry>,
-): void {
+function deanonymizeSvgText(root: SVGSVGElement, masks: PiiMaskValues): void {
   if (masks.size === 0) return;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node = walker.nextNode();
@@ -65,7 +66,7 @@ function svgToDataUrl(
   svg: SVGSVGElement,
   width: number,
   height: number,
-  masks: ReadonlyMap<string, PiiMaskEntry>,
+  masks: PiiMaskValues,
 ) {
   const cloned = svg.cloneNode(true) as SVGSVGElement;
   deanonymizeSvgText(cloned, masks);
@@ -113,9 +114,13 @@ function rasteriseToPng(
 export function DiagramExportButtons({
   containerRef,
   fileName,
+  piiMasks,
 }: DiagramExportButtonsProps) {
   const { t } = useTranslation('artifacts');
-  const masks = usePiiMasks();
+  const masks = useMemo(
+    () => new Map(piiMasks.map((mask) => [mask.token, mask])),
+    [piiMasks],
+  );
   const trackOutcome = useTrackProductiveOutcome();
 
   const handleSvgExport = useCallback(() => {
@@ -126,7 +131,7 @@ export function DiagramExportButtons({
     const serializer = new XMLSerializer();
     const svgString = serializer.serializeToString(cloned);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
-    saveBlobAs(blob, `${safeTitle(fileName)}.svg`);
+    saveBlobAs(blob, `${safeTitle(resolvePiiTokens(fileName, masks))}.svg`);
     trackOutcome({
       outcome_type: 'visual_downloaded',
       output_type: 'diagram',
@@ -147,7 +152,10 @@ export function DiagramExportButtons({
       rasteriseToPng(img, width, height)
         .then((pngBlob) => {
           if (pngBlob) {
-            saveBlobAs(pngBlob, `${safeTitle(fileName)}.png`);
+            saveBlobAs(
+              pngBlob,
+              `${safeTitle(resolvePiiTokens(fileName, masks))}.png`,
+            );
             trackOutcome({
               outcome_type: 'visual_downloaded',
               output_type: 'diagram',

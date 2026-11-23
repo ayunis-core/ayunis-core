@@ -10,11 +10,14 @@ import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ArtifactVersionConflictError } from 'src/domain/artifacts/application/artifacts.errors';
+import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
 import { LocalArtifactsRepository } from './local-artifacts.repository';
 import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ThreadArtifactRecord } from './schema/thread-artifact.record';
+import { ArtifactPiiMaskRecord } from './schema/artifact-pii-mask.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
 
@@ -52,6 +55,20 @@ const versionSchema = new EntitySchema<ArtifactVersionRecord>({
   },
 });
 
+const piiMaskSchema = new EntitySchema<ArtifactPiiMaskRecord>({
+  name: 'ArtifactPiiMaskRecord',
+  target: ArtifactPiiMaskRecord,
+  tableName: 'artifact_pii_masks',
+  columns: {
+    id: { type: 'uuid', primary: true },
+    artifactId: { type: 'uuid' },
+    category: { type: String },
+    maskIndex: { type: Number },
+    value: { type: String },
+    createdAt: { type: 'timestamp', createDate: true },
+  },
+});
+
 describe('Artifact version transaction', () => {
   let db: DataSource;
   let schema: string;
@@ -64,7 +81,7 @@ describe('Artifact version transaction', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [artifactSchema, documentSchema, versionSchema],
+      entities: [artifactSchema, documentSchema, versionSchema, piiMaskSchema],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -106,6 +123,10 @@ describe('Artifact version transaction', () => {
           useValue: db.getRepository(ArtifactVersionRecord),
         },
         { provide: getRepositoryToken(ThreadArtifactRecord), useValue: {} },
+        {
+          provide: getRepositoryToken(ArtifactPiiMaskRecord),
+          useValue: db.getRepository(ArtifactPiiMaskRecord),
+        },
         { provide: TransactionHost, useValue: txHost },
       ],
     }).compile();
@@ -137,28 +158,45 @@ describe('Artifact version transaction', () => {
     });
   }
 
-  it('rolls back the inserted version when the expected artifact version is stale', async () => {
+  function piiMask(): ArtifactPiiMask {
+    return new ArtifactPiiMask({
+      artifactId,
+      category: PiiCategory.PERSON_NAME,
+      maskIndex: 1,
+      value: 'Anna Schmidt',
+    });
+  }
+
+  it('rolls back the inserted version and dictionary entries when the expected artifact version is stale', async () => {
     await expect(
       repository.addVersionAndUpdateArtifact({
         version: version(),
         expectedCurrentVersionNumber: 0,
+        piiMasks: [piiMask()],
       }),
     ).rejects.toBeInstanceOf(ArtifactVersionConflictError);
     expect(
       await db.getRepository(ArtifactVersionRecord).countBy({ artifactId }),
     ).toBe(0);
     expect(
+      await db.getRepository(ArtifactPiiMaskRecord).countBy({ artifactId }),
+    ).toBe(0);
+    expect(
       await db.getRepository(ArtifactRecord).findOneBy({ id: artifactId }),
     ).toMatchObject({ currentVersionNumber: 1 });
   });
 
-  it('commits the version and artifact pointer together', async () => {
+  it('commits the version, its dictionary entries and the artifact pointer together', async () => {
     await repository.addVersionAndUpdateArtifact({
       version: version(),
       expectedCurrentVersionNumber: 1,
+      piiMasks: [piiMask()],
     });
     expect(
       await db.getRepository(ArtifactVersionRecord).countBy({ artifactId }),
+    ).toBe(1);
+    expect(
+      await db.getRepository(ArtifactPiiMaskRecord).countBy({ artifactId }),
     ).toBe(1);
     expect(
       await db.getRepository(ArtifactRecord).findOneBy({ id: artifactId }),

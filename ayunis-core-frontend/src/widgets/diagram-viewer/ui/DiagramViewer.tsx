@@ -1,9 +1,14 @@
-import type { ArtifactResponseDto } from '@/shared/api';
+import type {
+  ArtifactPiiMaskResponseDto,
+  ArtifactResponseDto,
+} from '@/shared/api';
 import { useRef, useState } from 'react';
 import { MermaidRenderer } from './MermaidRenderer';
 import { DiagramExportButtons } from './DiagramExportButtons';
 import { VersionHistory } from '@/widgets/artifact-editor';
 import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
+
+const NO_PII_MASKS: ArtifactPiiMaskResponseDto[] = [];
 
 interface DiagramViewerProps {
   readonly artifact: ArtifactResponseDto;
@@ -44,6 +49,7 @@ export function DiagramViewer({
           <DiagramExportButtons
             containerRef={containerRef}
             fileName={artifact.title}
+            piiMasks={artifact.piiMasks ?? NO_PII_MASKS}
           />
         }
         onBack={onBack}

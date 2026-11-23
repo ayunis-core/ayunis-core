@@ -11,6 +11,7 @@ import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-typ
 import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/application/artifacts.errors';
 import { UUID } from 'crypto';
 
+import { artifactRunOf } from 'src/domain/tools/application/utils/artifact-run.utils';
 @Injectable()
 export class UpdateDocumentToolHandler extends ToolExecutionHandler {
   private readonly logger = new Logger(UpdateDocumentToolHandler.name);
@@ -40,7 +41,7 @@ export class UpdateDocumentToolHandler extends ToolExecutionHandler {
           content: validatedInput.content,
           authorType: AuthorType.ASSISTANT,
           expectedVersionNumber: validatedInput.expected_version,
-          linkedThreadId: context.threadId,
+          run: artifactRunOf(context),
           letterheadId,
         }),
       );

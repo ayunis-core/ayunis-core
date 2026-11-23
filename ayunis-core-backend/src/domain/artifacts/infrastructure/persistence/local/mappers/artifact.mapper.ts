@@ -5,11 +5,12 @@ import {
   DocumentArtifact,
   SpreadsheetArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
-import { ArtifactRecord } from '../schema/artifact.record';
-import { DocumentArtifactRecord } from '../schema/document-artifact.record';
-import { DiagramArtifactRecord } from '../schema/diagram-artifact.record';
-import { SpreadsheetArtifactRecord } from '../schema/spreadsheet-artifact.record';
+import { ArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/artifact.record';
+import { DocumentArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/document-artifact.record';
+import { DiagramArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/diagram-artifact.record';
+import { SpreadsheetArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/spreadsheet-artifact.record';
 import { ArtifactVersionMapper } from './artifact-version.mapper';
+import { ArtifactPiiMaskMapper } from './artifact-pii-mask.mapper';
 
 @Injectable()
 export class ArtifactMapper {
@@ -20,42 +21,29 @@ export class ArtifactMapper {
   toDomain(record: SpreadsheetArtifactRecord): SpreadsheetArtifact;
   toDomain(record: ArtifactRecord): Artifact;
   toDomain(record: ArtifactRecord): Artifact {
+    const base = {
+      id: record.id,
+      threadId: record.threadId,
+      userId: record.userId,
+      title: record.title,
+      isAnonymous: record.isAnonymous,
+      currentVersionNumber: record.currentVersionNumber,
+      versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
+      piiMasks: record.piiMasks?.map((m) => ArtifactPiiMaskMapper.toDomain(m)),
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
     if (record instanceof DocumentArtifactRecord) {
       return new DocumentArtifact({
-        id: record.id,
-        threadId: record.threadId,
-        userId: record.userId,
-        title: record.title,
+        ...base,
         letterheadId: record.letterheadId,
-        currentVersionNumber: record.currentVersionNumber,
-        versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
       });
     }
     if (record instanceof DiagramArtifactRecord) {
-      return new DiagramArtifact({
-        id: record.id,
-        threadId: record.threadId,
-        userId: record.userId,
-        title: record.title,
-        currentVersionNumber: record.currentVersionNumber,
-        versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      });
+      return new DiagramArtifact(base);
     }
     if (record instanceof SpreadsheetArtifactRecord) {
-      return new SpreadsheetArtifact({
-        id: record.id,
-        threadId: record.threadId,
-        userId: record.userId,
-        title: record.title,
-        currentVersionNumber: record.currentVersionNumber,
-        versions: record.versions?.map((v) => this.versionMapper.toDomain(v)),
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-      });
+      return new SpreadsheetArtifact(base);
     }
     throw new Error('Invalid artifact record type');
   }
@@ -71,6 +59,7 @@ export class ArtifactMapper {
       record.threadId = domain.threadId;
       record.userId = domain.userId;
       record.title = domain.title;
+      record.isAnonymous = domain.isAnonymous;
       record.letterheadId = domain.letterheadId;
       record.currentVersionNumber = domain.currentVersionNumber;
       record.versions = domain.versions.map((v) =>
@@ -84,6 +73,7 @@ export class ArtifactMapper {
       record.threadId = domain.threadId;
       record.userId = domain.userId;
       record.title = domain.title;
+      record.isAnonymous = domain.isAnonymous;
       record.currentVersionNumber = domain.currentVersionNumber;
       record.versions = domain.versions.map((v) =>
         this.versionMapper.toRecord(v),
@@ -96,6 +86,7 @@ export class ArtifactMapper {
       record.threadId = domain.threadId;
       record.userId = domain.userId;
       record.title = domain.title;
+      record.isAnonymous = domain.isAnonymous;
       record.currentVersionNumber = domain.currentVersionNumber;
       record.versions = domain.versions.map((v) =>
         this.versionMapper.toRecord(v),

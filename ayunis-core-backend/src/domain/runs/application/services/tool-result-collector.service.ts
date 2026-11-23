@@ -411,10 +411,11 @@ export class ToolResultCollectorService {
     threadId: UUID,
     isAnonymous: boolean,
   ): Promise<ProcessedToolResult> {
-    const context = { orgId, threadId, isAnonymous };
+    let piiMasks: ThreadPiiMask[] | null = null;
+    const onPiiMasks = (masks: ThreadPiiMask[]) => (piiMasks = masks);
+    const context = { orgId, threadId, isAnonymous, onPiiMasks };
     const outcome = await this.callBackendTool(tool, content, context);
     let result = outcome.result;
-    let piiMasks: ThreadPiiMask[] | null = null;
     if (isAnonymous && tool.returnsPii) {
       const limited = truncateAnonymousToolResult(result);
       const anonymized = await this.anonymizeText(
@@ -444,7 +445,7 @@ export class ToolResultCollectorService {
   private async callBackendTool(
     tool: Tool,
     content: ToolUseMessageContent,
-    context: ToolProcessingContext,
+    context: ExecuteToolCommand['context'],
   ): Promise<{
     result: string;
     succeeded: boolean;

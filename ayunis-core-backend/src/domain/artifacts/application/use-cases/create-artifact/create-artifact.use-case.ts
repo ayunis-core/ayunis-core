@@ -26,7 +26,20 @@ import {
 } from 'src/domain/artifacts/application/artifacts.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
-import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
+import { mapContentText } from 'src/domain/artifacts/application/helpers/map-content-text';
+import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
+import type { PiiMask } from 'src/common/anonymization/domain/pii-mask';
+import {
+  combineDrafts,
+  type PlaceholderDraft,
+} from 'src/domain/artifacts/application/models/placeholder-draft';
+
+interface WrittenArtifact {
+  title: string;
+  content: string;
+  newMasks: PiiMask[];
+}
 
 @Injectable()
 export class CreateArtifactUseCase {
@@ -38,6 +51,7 @@ export class CreateArtifactUseCase {
     private readonly findThreadUseCase: FindThreadUseCase,
     private readonly findLetterheadUseCase: FindLetterheadUseCase,
     private readonly userContentMaskingService: UserContentMaskingService,
+    private readonly artifactPlaceholdersService: ArtifactPlaceholdersService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedArtifactError)
@@ -61,13 +75,26 @@ export class CreateArtifactUseCase {
       );
     }
 
-    const content = await this.maskUserContent(
+    const isAnonymous = command.isAnonymous ?? thread.isAnonymous;
+    const written = isAnonymous
+      ? await this.anonymize(command, orgId, preparedContent)
+      : { title: command.title, content: preparedContent, newMasks: [] };
+    const artifact = this.buildArtifact(
       command,
-      thread,
-      orgId,
-      preparedContent,
+      userId,
+      isAnonymous,
+      written.title,
     );
-    return await this.persistArtifact(command, userId, content);
+    const piiMasks = written.newMasks.map((mask) =>
+      ArtifactPiiMask.fromPiiMask(artifact.id, mask),
+    );
+    return await this.persistArtifact(
+      command,
+      artifact,
+      userId,
+      written.content,
+      piiMasks,
+    );
   }
 
   // Masking calls the anonymize service, so it runs before the transaction
@@ -75,12 +102,12 @@ export class CreateArtifactUseCase {
   @Transactional()
   private async persistArtifact(
     command: CreateArtifactCommand,
+    artifact: Artifact,
     userId: UUID,
     content: string,
+    piiMasks: ArtifactPiiMask[],
   ): Promise<Artifact> {
-    const createdArtifact = await this.artifactsRepository.create(
-      this.buildArtifact(command, userId),
-    );
+    const createdArtifact = await this.artifactsRepository.create(artifact);
 
     const version = new ArtifactVersion({
       artifactId: createdArtifact.id,
@@ -91,31 +118,49 @@ export class CreateArtifactUseCase {
     });
 
     await this.artifactsRepository.addVersion(version);
+    await this.artifactsRepository.addPiiMasks(piiMasks);
     await this.artifactsRepository.addThreadLink(
       command.threadId,
       createdArtifact.id,
     );
 
-    return this.withVersion(createdArtifact, version);
+    return this.withVersion(createdArtifact, version, piiMasks);
   }
 
-  private async maskUserContent(
+  /**
+   * An anonymous artifact stores placeholders numbered in its own
+   * dictionary, in its title as in its content: what a user typed is masked,
+   * what the model wrote in the chat's placeholders is translated.
+   */
+  private async anonymize(
     command: CreateArtifactCommand,
-    thread: Thread,
     orgId: UUID,
     content: string,
-  ): Promise<string> {
-    if (command.authorType !== AuthorType.USER) {
-      return content;
-    }
-    const masked = await this.userContentMaskingService.mask({
-      thread,
-      orgId,
-      type: command.type,
-      content,
-    });
-    this.validateContentLength(masked);
-    return masked;
+  ): Promise<WrittenArtifact> {
+    const chat = { threadId: command.threadId, orgId };
+    const draft: PlaceholderDraft<[string, string]> =
+      command.authorType === AuthorType.USER
+        ? combineDrafts(
+            await this.userContentMaskingService.maskText(command.title, chat),
+            await this.userContentMaskingService.mask({
+              ...chat,
+              type: command.type,
+              content,
+            }),
+          )
+        : await this.artifactPlaceholdersService.fromChat(
+            command.threadId,
+            (translate): [string, string] => [
+              translate(command.title),
+              mapContentText(command.type, content, translate),
+            ],
+          );
+    const {
+      value: [title, anonymizedContent],
+      newMasks,
+    } = draft([]);
+    this.validateContentLength(anonymizedContent);
+    return { title, content: anonymizedContent, newMasks };
   }
 
   private validateContentLength(content: string): void {
@@ -130,11 +175,14 @@ export class CreateArtifactUseCase {
   private buildArtifact(
     command: CreateArtifactCommand,
     userId: UUID,
+    isAnonymous: boolean,
+    title: string,
   ): Artifact {
     const base = {
       threadId: command.threadId,
       userId,
-      title: command.title,
+      title,
+      isAnonymous,
       currentVersionNumber: 1,
     };
     switch (command.type) {
@@ -150,14 +198,20 @@ export class CreateArtifactUseCase {
     }
   }
 
-  private withVersion(artifact: Artifact, version: ArtifactVersion): Artifact {
+  private withVersion(
+    artifact: Artifact,
+    version: ArtifactVersion,
+    piiMasks: ArtifactPiiMask[],
+  ): Artifact {
     const base = {
       id: artifact.id,
       threadId: artifact.threadId,
       userId: artifact.userId,
       title: artifact.title,
+      isAnonymous: artifact.isAnonymous,
       currentVersionNumber: artifact.currentVersionNumber,
       versions: [version],
+      piiMasks,
       createdAt: artifact.createdAt,
       updatedAt: artifact.updatedAt,
     };

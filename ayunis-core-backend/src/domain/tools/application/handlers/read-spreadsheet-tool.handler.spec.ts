@@ -2,7 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
 import { ReadSpreadsheetToolHandler } from './read-spreadsheet-tool.handler';
-import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
+import { ReadArtifactInRunUseCase } from 'src/domain/artifacts/application/use-cases/read-artifact-in-run/read-artifact-in-run.use-case';
+import { readInRun } from 'src/domain/tools/application/testing/artifact-read.fixtures';
 import { ReadSpreadsheetTool } from 'src/domain/tools/domain/tools/read-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import {
@@ -21,7 +22,7 @@ import toolsConfig from 'src/config/tools.config';
 
 describe('ReadSpreadsheetToolHandler', () => {
   let handler: ReadSpreadsheetToolHandler;
-  let findArtifactUseCase: jest.Mocked<FindArtifactWithVersionsUseCase>;
+  let findArtifactUseCase: jest.Mocked<ReadArtifactInRunUseCase>;
 
   const threadId = randomUUID();
   const orgId = randomUUID();
@@ -32,13 +33,13 @@ describe('ReadSpreadsheetToolHandler', () => {
   beforeEach(async () => {
     findArtifactUseCase = {
       execute: jest.fn(),
-    } as unknown as jest.Mocked<FindArtifactWithVersionsUseCase>;
+    } as unknown as jest.Mocked<ReadArtifactInRunUseCase>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReadSpreadsheetToolHandler,
         {
-          provide: FindArtifactWithVersionsUseCase,
+          provide: ReadArtifactInRunUseCase,
           useValue: findArtifactUseCase,
         },
         {
@@ -92,7 +93,7 @@ describe('ReadSpreadsheetToolHandler', () => {
       ['Summe', '=SUM(B2:B3)', null],
     ];
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(3, columns, rows),
+      readInRun(spreadsheet(3, columns, rows)),
     );
 
     const result = await read({});
@@ -123,7 +124,7 @@ describe('ReadSpreadsheetToolHandler', () => {
       index + 1,
     ]);
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(2, ['Posten', 'Betrag'], rows),
+      readInRun(spreadsheet(2, ['Posten', 'Betrag'], rows)),
     );
 
     const firstPage = await read({});
@@ -151,7 +152,7 @@ describe('ReadSpreadsheetToolHandler', () => {
       `${index + 1} ${'x'.repeat(500)}`,
     ]);
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(1, ['Notiz'], rows),
+      readInRun(spreadsheet(1, ['Notiz'], rows)),
     );
 
     const firstPage = await read({});
@@ -165,7 +166,7 @@ describe('ReadSpreadsheetToolHandler', () => {
   it('names a data row too large for any page and keeps the rows after it readable', async () => {
     const rows = [['Miete'], ['x'.repeat(31_000)], ['Strom']];
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(4, ['Posten'], rows),
+      readInRun(spreadsheet(4, ['Posten'], rows)),
     );
 
     const firstPage = await read({ numRows: 1 });
@@ -187,7 +188,7 @@ describe('ReadSpreadsheetToolHandler', () => {
 
   it('names column headers too large for any page instead of asking for fewer rows', async () => {
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(1, ['x'.repeat(31_000)], [['Miete']]),
+      readInRun(spreadsheet(1, ['x'.repeat(31_000)], [['Miete']])),
     );
 
     await expect(read({})).rejects.toThrow(
@@ -197,7 +198,7 @@ describe('ReadSpreadsheetToolHandler', () => {
 
   it('returns an empty page for a spreadsheet without data rows', async () => {
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(1, ['Posten'], []),
+      readInRun(spreadsheet(1, ['Posten'], [])),
     );
 
     await expect(read({})).resolves.toMatchObject({
@@ -211,7 +212,7 @@ describe('ReadSpreadsheetToolHandler', () => {
 
   it('rejects a start row past the last data row', async () => {
     findArtifactUseCase.execute.mockResolvedValue(
-      spreadsheet(1, ['Posten'], [['Miete']]),
+      readInRun(spreadsheet(1, ['Posten'], [['Miete']])),
     );
 
     await expect(read({ startRow: 2 })).rejects.toThrow(
@@ -221,20 +222,22 @@ describe('ReadSpreadsheetToolHandler', () => {
 
   it('points the model to read_diagram when the artifact is a diagram', async () => {
     findArtifactUseCase.execute.mockResolvedValue(
-      new DiagramArtifact({
-        id: artifactId,
-        threadId,
-        userId,
-        title: 'Ablauf',
-        versions: [
-          new ArtifactVersion({
-            artifactId,
-            versionNumber: 1,
-            content: 'flowchart TD\n  A --> B',
-            authorType: AuthorType.ASSISTANT,
-          }),
-        ],
-      }),
+      readInRun(
+        new DiagramArtifact({
+          id: artifactId,
+          threadId,
+          userId,
+          title: 'Ablauf',
+          versions: [
+            new ArtifactVersion({
+              artifactId,
+              versionNumber: 1,
+              content: 'flowchart TD\n  A --> B',
+              authorType: AuthorType.ASSISTANT,
+            }),
+          ],
+        }),
+      ),
     );
 
     await expect(read({})).rejects.toThrow('Use read_diagram to read it');

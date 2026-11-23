@@ -17,12 +17,19 @@ import { DocumentArtifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
-import { UpdateArtifactUseCase } from 'src/domain/artifacts/application/use-cases/update-artifact/update-artifact.use-case';
+import { ArtifactPlaceholdersService } from 'src/domain/artifacts/application/services/artifact-placeholders.service';
+import { ArtifactMaskAllocationLock } from 'src/domain/artifacts/application/services/artifact-mask-allocation-lock.service';
+import { GetThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/get-thread-pii-masks/get-thread-pii-masks.use-case';
+import { AllocateThreadPiiMasksUseCase } from 'src/domain/thread-pii-masks/application/use-cases/allocate-thread-pii-masks/allocate-thread-pii-masks.use-case';
+import { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
+import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
+import { PiiCategory } from 'src/common/anonymization/domain/pii-category.enum';
+import { ArtifactUnknownPlaceholderError } from 'src/domain/artifacts/application/artifacts.errors';
 
 describe('ApplyEditsToArtifactUseCase', () => {
   let useCase: ApplyEditsToArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
-  let updateArtifactUseCase: jest.Mocked<UpdateArtifactUseCase>;
+  let getThreadPiiMasksUseCase: { execute: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -38,7 +45,9 @@ describe('ApplyEditsToArtifactUseCase', () => {
       findByIdWithVersions: jest.fn(),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
-      addVersionAndUpdateArtifact: jest.fn(),
+      addVersionAndUpdateArtifact: jest.fn(async ({ version }) => version),
+      findPiiMasks: jest.fn().mockResolvedValue([]),
+      addPiiMasks: jest.fn(),
       delete: jest.fn(),
     };
 
@@ -48,16 +57,20 @@ describe('ApplyEditsToArtifactUseCase', () => {
       ),
     } as unknown as jest.Mocked<ContextService>;
 
-    const mockUpdateUseCase = {
-      execute: jest.fn(),
-    };
+    getThreadPiiMasksUseCase = { execute: jest.fn().mockResolvedValue([]) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplyEditsToArtifactUseCase,
         { provide: ArtifactsRepository, useValue: mockRepository },
         { provide: ContextService, useValue: mockContextService },
-        { provide: UpdateArtifactUseCase, useValue: mockUpdateUseCase },
+        ArtifactPlaceholdersService,
+        ArtifactMaskAllocationLock,
+        {
+          provide: GetThreadPiiMasksUseCase,
+          useValue: getThreadPiiMasksUseCase,
+        },
+        { provide: AllocateThreadPiiMasksUseCase, useValue: {} },
       ],
     }).compile();
 
@@ -65,11 +78,21 @@ describe('ApplyEditsToArtifactUseCase', () => {
       ApplyEditsToArtifactUseCase,
     );
     artifactsRepository = module.get(ArtifactsRepository);
-    updateArtifactUseCase = module.get(UpdateArtifactUseCase);
   });
+
+  function storedContent(): string {
+    return artifactsRepository.addVersionAndUpdateArtifact.mock.calls[0][0]
+      .version.content;
+  }
+
+  function givenArtifact(artifact: DocumentArtifact): void {
+    artifactsRepository.findByIdWithVersions.mockResolvedValue(artifact);
+    artifactsRepository.findById.mockResolvedValue(artifact);
+  }
 
   function createArtifactWithVersions(
     currentContent: string,
+    params: { isAnonymous?: boolean; piiMasks?: ArtifactPiiMask[] } = {},
   ): DocumentArtifact {
     const currentVersion = new ArtifactVersion({
       artifactId: mockArtifactId,
@@ -84,6 +107,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
       threadId: mockThreadId,
       userId: mockUserId,
       title: 'Test Document',
+      ...params,
       currentVersionNumber: 1,
       versions: [currentVersion],
       createdAt: new Date(),
@@ -96,16 +120,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
       const originalContent = '<p>Hello world</p>';
       const mockArtifact = createArtifactWithVersions(originalContent);
 
-      const mockVersion = new ArtifactVersion({
-        artifactId: mockArtifactId,
-        versionNumber: 2,
-        content: '<p>Hello universe</p>',
-        authorType: AuthorType.ASSISTANT,
-        authorId: null,
-      });
-
-      artifactsRepository.findByIdWithVersions.mockResolvedValue(mockArtifact);
-      updateArtifactUseCase.execute.mockResolvedValue(mockVersion);
+      givenArtifact(mockArtifact);
 
       const command = new ApplyEditsToArtifactCommand({
         artifactId: mockArtifactId,
@@ -115,35 +130,20 @@ describe('ApplyEditsToArtifactUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(artifactsRepository.findByIdWithVersions).toHaveBeenCalledWith(
-        mockArtifactId,
-        mockUserId,
-        { linkedThreadId: undefined },
-      );
-      expect(updateArtifactUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          artifactId: mockArtifactId,
-          content: '<p>Hello universe</p>',
-          authorType: AuthorType.ASSISTANT,
-        }),
-      );
-      expect(result).toBe(mockVersion);
+      expect(result).toMatchObject({
+        artifactId: mockArtifactId,
+        versionNumber: 2,
+        content: '<p>Hello universe</p>',
+        authorType: AuthorType.ASSISTANT,
+        authorId: null,
+      });
     });
 
     it('should successfully apply multiple sequential edits', async () => {
       const originalContent = '<p>The quick brown fox</p>';
       const mockArtifact = createArtifactWithVersions(originalContent);
 
-      const mockVersion = new ArtifactVersion({
-        artifactId: mockArtifactId,
-        versionNumber: 2,
-        content: '<p>The slow red cat</p>',
-        authorType: AuthorType.ASSISTANT,
-        authorId: null,
-      });
-
-      artifactsRepository.findByIdWithVersions.mockResolvedValue(mockArtifact);
-      updateArtifactUseCase.execute.mockResolvedValue(mockVersion);
+      givenArtifact(mockArtifact);
 
       const command = new ApplyEditsToArtifactCommand({
         artifactId: mockArtifactId,
@@ -157,11 +157,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(updateArtifactUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: '<p>The slow red cat</p>',
-        }),
-      );
+      expect(storedContent()).toBe('<p>The slow red cat</p>');
     });
 
     it('should throw ArtifactEditNotFoundError when old_text is not found', async () => {
@@ -256,16 +252,7 @@ describe('ApplyEditsToArtifactUseCase', () => {
       const originalContent = '<p>Hello world</p>';
       const mockArtifact = createArtifactWithVersions(originalContent);
 
-      const mockVersion = new ArtifactVersion({
-        artifactId: mockArtifactId,
-        versionNumber: 2,
-        content: '<p>Hello universe</p>',
-        authorType: AuthorType.ASSISTANT,
-        authorId: null,
-      });
-
-      artifactsRepository.findByIdWithVersions.mockResolvedValue(mockArtifact);
-      updateArtifactUseCase.execute.mockResolvedValue(mockVersion);
+      givenArtifact(mockArtifact);
 
       const command = new ApplyEditsToArtifactCommand({
         artifactId: mockArtifactId,
@@ -275,7 +262,36 @@ describe('ApplyEditsToArtifactUseCase', () => {
       });
 
       const result = await useCase.execute(command);
-      expect(result).toBe(mockVersion);
+      expect(result.versionNumber).toBe(2);
+    });
+
+    it('rejects the edit instead of overwriting a version written while it was prepared', async () => {
+      artifactsRepository.findByIdWithVersions.mockResolvedValue(
+        createArtifactWithVersions('<p>Hello world</p>'),
+      );
+      artifactsRepository.findById.mockResolvedValue(
+        new DocumentArtifact({
+          id: mockArtifactId,
+          threadId: mockThreadId,
+          userId: mockUserId,
+          title: 'Test Document',
+          currentVersionNumber: 2,
+        }),
+      );
+
+      await expect(
+        useCase.execute(
+          new ApplyEditsToArtifactCommand({
+            artifactId: mockArtifactId,
+            edits: [{ oldText: 'world', newText: 'universe' }],
+            authorType: AuthorType.ASSISTANT,
+            expectedVersionNumber: 1,
+          }),
+        ),
+      ).rejects.toThrow(ArtifactExpectedVersionMismatchError);
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
     });
 
     it('should throw ArtifactNotFoundError when artifact does not exist', async () => {
@@ -290,6 +306,140 @@ describe('ApplyEditsToArtifactUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         ArtifactNotFoundError,
       );
+    });
+  });
+
+  describe('anonymous artifacts', () => {
+    const run = { threadId: mockThreadId, isAnonymous: true };
+
+    const person = (maskIndex: number, value: string) => ({
+      category: PiiCategory.PERSON_NAME,
+      maskIndex,
+      value,
+    });
+
+    beforeEach(() => {
+      givenArtifact(
+        createArtifactWithVersions(
+          '<p>Sehr geehrte {{pii:PERSON_NAME_1}},</p>',
+          {
+            isAnonymous: true,
+          },
+        ),
+      );
+      artifactsRepository.findPiiMasks.mockResolvedValue([
+        new ArtifactPiiMask({
+          artifactId: mockArtifactId,
+          ...person(1, 'Anna Schmidt'),
+        }),
+      ]);
+      getThreadPiiMasksUseCase.execute.mockResolvedValue([
+        new ThreadPiiMask({
+          threadId: mockThreadId,
+          ...person(3, 'Anna Schmidt'),
+        }),
+        new ThreadPiiMask({
+          threadId: mockThreadId,
+          ...person(4, 'Bernd Bauer'),
+        }),
+      ]);
+    });
+
+    it('matches old_text and writes new_text of a run in the artifact’s placeholders', async () => {
+      await useCase.execute(
+        new ApplyEditsToArtifactCommand({
+          artifactId: mockArtifactId,
+          edits: [
+            {
+              oldText: '{{pii:PERSON_NAME_3}},',
+              newText: '{{pii:PERSON_NAME_3}} und {{pii:PERSON_NAME_4}},',
+            },
+          ],
+          authorType: AuthorType.ASSISTANT,
+          run,
+        }),
+      );
+
+      expect(storedContent()).toBe(
+        '<p>Sehr geehrte {{pii:PERSON_NAME_1}} und {{pii:PERSON_NAME_2}},</p>',
+      );
+      const [[{ piiMasks }]] =
+        artifactsRepository.addVersionAndUpdateArtifact.mock.calls;
+      expect(piiMasks?.map((mask) => [mask.token, mask.value])).toEqual([
+        ['{{pii:PERSON_NAME_2}}', 'Bernd Bauer'],
+      ]);
+    });
+
+    it('rejects an edit with a placeholder the chat does not know and stores nothing', async () => {
+      await expect(
+        useCase.execute(
+          new ApplyEditsToArtifactCommand({
+            artifactId: mockArtifactId,
+            edits: [
+              { oldText: '{{pii:PERSON_NAME_9}}', newText: 'Frau Schmidt' },
+            ],
+            authorType: AuthorType.ASSISTANT,
+            run,
+          }),
+        ),
+      ).rejects.toThrow(ArtifactUnknownPlaceholderError);
+      expect(artifactsRepository.addPiiMasks).not.toHaveBeenCalled();
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('adds no dictionary entries for an edit that does not match', async () => {
+      await expect(
+        useCase.execute(
+          new ApplyEditsToArtifactCommand({
+            artifactId: mockArtifactId,
+            edits: [
+              { oldText: '{{pii:PERSON_NAME_4}}', newText: 'Herr Bauer' },
+            ],
+            authorType: AuthorType.ASSISTANT,
+            run,
+          }),
+        ),
+      ).rejects.toThrow(ArtifactEditNotFoundError);
+      expect(artifactsRepository.addPiiMasks).not.toHaveBeenCalled();
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('adds no dictionary entries when a version written meanwhile rejects the edit', async () => {
+      artifactsRepository.findById.mockResolvedValue(
+        new DocumentArtifact({
+          id: mockArtifactId,
+          threadId: mockThreadId,
+          userId: mockUserId,
+          title: 'Test Document',
+          isAnonymous: true,
+          currentVersionNumber: 2,
+        }),
+      );
+
+      await expect(
+        useCase.execute(
+          new ApplyEditsToArtifactCommand({
+            artifactId: mockArtifactId,
+            edits: [
+              {
+                oldText: '{{pii:PERSON_NAME_3}},',
+                newText: '{{pii:PERSON_NAME_3}} und {{pii:PERSON_NAME_4}},',
+              },
+            ],
+            authorType: AuthorType.ASSISTANT,
+            expectedVersionNumber: 1,
+            run,
+          }),
+        ),
+      ).rejects.toThrow(ArtifactExpectedVersionMismatchError);
+      expect(artifactsRepository.addPiiMasks).not.toHaveBeenCalled();
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
     });
   });
 });

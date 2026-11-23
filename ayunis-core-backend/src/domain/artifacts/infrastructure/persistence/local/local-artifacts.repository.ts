@@ -3,7 +3,7 @@ import type { EntityManager } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUID } from 'crypto';
 
 import {
@@ -14,13 +14,16 @@ import {
 import { ArtifactVersionConflictError } from 'src/domain/artifacts/application/artifacts.errors';
 import { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { ArtifactPiiMask } from 'src/domain/artifacts/domain/artifact-pii-mask.entity';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 import { ArtifactRecord } from './schema/artifact.record';
 import { DocumentArtifactRecord } from './schema/document-artifact.record';
 import { ArtifactVersionRecord } from './schema/artifact-version.record';
 import { ThreadArtifactRecord } from './schema/thread-artifact.record';
+import { ArtifactPiiMaskRecord } from './schema/artifact-pii-mask.record';
 import { ArtifactMapper } from './mappers/artifact.mapper';
 import { ArtifactVersionMapper } from './mappers/artifact-version.mapper';
+import { ArtifactPiiMaskMapper } from './mappers/artifact-pii-mask.mapper';
 import { isUniqueConstraintViolation } from 'src/common/util/unique-constraint.util';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import { personalOrMemberWorkspace } from 'src/domain/threads/infrastructure/persistence/local/queries/personal-or-member-workspace';
@@ -38,6 +41,8 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     private readonly defaultVersionRepo: Repository<ArtifactVersionRecord>,
     @InjectRepository(ThreadArtifactRecord)
     private readonly defaultThreadLinkRepo: Repository<ThreadArtifactRecord>,
+    @InjectRepository(ArtifactPiiMaskRecord)
+    private readonly defaultPiiMaskRepo: Repository<ArtifactPiiMaskRecord>,
     private readonly artifactMapper: ArtifactMapper,
     private readonly versionMapper: ArtifactVersionMapper,
     private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
@@ -72,6 +77,13 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     );
   }
 
+  private get piiMaskRepo(): Repository<ArtifactPiiMaskRecord> {
+    const manager = this.txHost.tx as EntityManager | undefined;
+    return (
+      manager?.getRepository(ArtifactPiiMaskRecord) ?? this.defaultPiiMaskRepo
+    );
+  }
+
   async create(artifact: Artifact): Promise<Artifact> {
     this.logger.log(
       {
@@ -97,6 +109,9 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       ...(options.linkedThreadId && {
         threadLinks: { threadId: options.linkedThreadId },
       }),
+      ...(options.isAnonymous !== undefined && {
+        isAnonymous: options.isAnonymous,
+      }),
     };
   }
 
@@ -111,12 +126,33 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     return record ? this.artifactMapper.toDomain(record) : null;
   }
 
-  async findByThreadId(threadId: UUID, userId: UUID): Promise<Artifact[]> {
+  async findByThreadId(
+    threadId: UUID,
+    userId: UUID,
+    options: Pick<ArtifactLookupOptions, 'isAnonymous'> = {},
+  ): Promise<Artifact[]> {
     const records = await this.artifactRepo.find({
-      where: this.accessibleTo(userId, { linkedThreadId: threadId }),
+      where: this.accessibleTo(userId, {
+        linkedThreadId: threadId,
+        isAnonymous: options.isAnonymous,
+      }),
       order: { threadLinks: { createdAt: 'ASC' }, createdAt: 'ASC' },
     });
+    if (options.isAnonymous) {
+      await this.attachPiiMasks(records);
+    }
     return records.map((r) => this.artifactMapper.toDomain(r));
+  }
+
+  private async attachPiiMasks(records: ArtifactRecord[]): Promise<void> {
+    if (records.length === 0) return;
+    const masks = await this.piiMaskRepo.find({
+      where: { artifactId: In(records.map((record) => record.id)) },
+      order: { category: 'ASC', maskIndex: 'ASC' },
+    });
+    for (const record of records) {
+      record.piiMasks = masks.filter((mask) => mask.artifactId === record.id);
+    }
   }
 
   async findByWorkspaceId(
@@ -169,7 +205,50 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
       relations: { versions: true },
       order: { versions: { versionNumber: 'ASC' } },
     });
-    return record ? this.artifactMapper.toDomain(record) : null;
+    if (!record) return null;
+    // Loaded apart from the versions: a join would repeat every version's
+    // content once per dictionary entry.
+    if (record.isAnonymous) {
+      record.piiMasks = await this.findPiiMaskRecords(record.id);
+    }
+    return this.artifactMapper.toDomain(record);
+  }
+
+  async findPiiMasks(artifactId: UUID): Promise<ArtifactPiiMask[]> {
+    const records = await this.findPiiMaskRecords(artifactId);
+    return records.map((record) => ArtifactPiiMaskMapper.toDomain(record));
+  }
+
+  private findPiiMaskRecords(
+    artifactId: UUID,
+  ): Promise<ArtifactPiiMaskRecord[]> {
+    return this.piiMaskRepo.find({
+      where: { artifactId },
+      order: { category: 'ASC', maskIndex: 'ASC' },
+    });
+  }
+
+  async addPiiMasks(masks: ArtifactPiiMask[]): Promise<void> {
+    if (masks.length === 0) return;
+    this.logger.log(
+      { artifactId: masks[0].artifactId, count: masks.length },
+      'addPiiMasks',
+    );
+    await this.insertPiiMasks(masks);
+  }
+
+  private async insertPiiMasks(masks: ArtifactPiiMask[]): Promise<void> {
+    if (masks.length === 0) return;
+    await this.piiMaskRepo.insert(
+      masks.map((mask) => ({
+        id: mask.id,
+        artifactId: mask.artifactId,
+        category: mask.category,
+        maskIndex: mask.maskIndex,
+        value: mask.value,
+        createdAt: mask.createdAt,
+      })),
+    );
   }
 
   async findVersion(
@@ -220,12 +299,14 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
+    piiMasks?: ArtifactPiiMask[];
   }): Promise<ArtifactVersion> {
     const { version, expectedCurrentVersionNumber, letterheadId } = params;
 
     this.logVersionUpdate(params);
 
     try {
+      await this.insertPiiMasks(params.piiMasks ?? []);
       const record = this.versionMapper.toRecord(version);
       const saved = await this.versionRepo.save(record);
       const createdVersion = this.versionMapper.toDomain(saved);
@@ -271,6 +352,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
     version: ArtifactVersion;
     expectedCurrentVersionNumber: number;
     letterheadId?: UUID | null;
+    piiMasks?: ArtifactPiiMask[];
   }): void {
     this.logger.log(
       {
@@ -278,6 +360,7 @@ export class LocalArtifactsRepository extends ArtifactsRepository {
         versionNumber: params.version.versionNumber,
         expectedCurrentVersionNumber: params.expectedCurrentVersionNumber,
         shouldUpdateLetterhead: params.letterheadId !== undefined,
+        newPiiMaskCount: params.piiMasks?.length ?? 0,
       },
       'addVersionAndUpdateArtifact',
     );

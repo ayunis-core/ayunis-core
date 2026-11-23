@@ -4,8 +4,8 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { AssembleToolCommand } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.command';
 import { Thread } from 'src/domain/threads/domain/thread.entity';
-import { FindArtifactsByThreadUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.use-case';
-import { FindArtifactsByThreadQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-by-thread/find-artifacts-by-thread.query';
+import { FindArtifactsForRunUseCase } from 'src/domain/artifacts/application/use-cases/find-artifacts-for-run/find-artifacts-for-run.use-case';
+import { FindArtifactsForRunQuery } from 'src/domain/artifacts/application/use-cases/find-artifacts-for-run/find-artifacts-for-run.query';
 import { FindArtifactWithVersionsUseCase } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.use-case';
 import { FindArtifactWithVersionsQuery } from 'src/domain/artifacts/application/use-cases/find-artifact-with-versions/find-artifact-with-versions.query';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
@@ -15,9 +15,27 @@ import {
   DocumentArtifact,
   SpreadsheetArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
+import type { ThreadPiiMask } from 'src/domain/thread-pii-masks/domain/thread-pii-mask.entity';
 import { FindAllLetterheadsUseCase } from 'src/domain/letterheads/application/use-cases/find-all-letterheads/find-all-letterheads.use-case';
 import type { Letterhead } from 'src/domain/letterheads/domain/letterhead.entity';
 import { buildLetterheadSuffix } from './letterhead-suffix.helper';
+
+/** An artifact with its title as the run reads it. */
+interface ListedArtifact {
+  artifact: Artifact;
+  title: string;
+}
+
+export interface AssembledArtifactTools {
+  tools: Tool[];
+  /** The chat's full dictionary, for streaming, when listed titles reference chat masks. */
+  threadPiiMasks: ThreadPiiMask[] | null;
+}
+
+const ofType =
+  <T extends Artifact>(type: abstract new (...args: never[]) => T) =>
+  (listed: ListedArtifact): boolean =>
+    listed.artifact instanceof type;
 
 /**
  * Assembles artifact-related tools (document + diagram + spreadsheet) for a
@@ -29,51 +47,67 @@ export class ArtifactToolAssemblerService {
 
   constructor(
     private readonly assembleToolsUseCase: AssembleToolUseCase,
-    private readonly findArtifactsByThreadUseCase: FindArtifactsByThreadUseCase,
+    private readonly findArtifactsForRunUseCase: FindArtifactsForRunUseCase,
     private readonly findArtifactWithVersionsUseCase: FindArtifactWithVersionsUseCase,
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
   ) {}
 
-  async assembleArtifactTools(thread: Thread): Promise<Tool[]> {
+  /**
+   * A run only gets the linked artifacts of its own mode: anonymous runs
+   * (anonymous chat, or a model with enforced anonymous mode) anonymous
+   * artifacts, normal runs normal ones. Anonymous artifacts are listed with
+   * their titles in the chat's placeholders.
+   */
+  async assembleArtifactTools(
+    thread: Thread,
+    isAnonymous: boolean,
+  ): Promise<AssembledArtifactTools> {
     const letterheads = await this.fetchLetterheadsSafe();
     const letterheadSuffix = buildLetterheadSuffix(letterheads);
-    const threadArtifacts = await this.findArtifactsByThreadUseCase.execute(
-      new FindArtifactsByThreadQuery({ threadId: thread.id }),
-    );
+    const { artifacts, threadPiiMasks } =
+      await this.findArtifactsForRunUseCase.execute(
+        new FindArtifactsForRunQuery({
+          run: { threadId: thread.id, isAnonymous },
+        }),
+      );
 
-    return [
+    const tools = [
       await this.assembleCreateDocumentTool(letterheadSuffix),
       ...(await this.assembleDocumentEditTools(
-        threadArtifacts,
+        artifacts.filter(ofType(DocumentArtifact)),
         letterheadSuffix,
       )),
       await this.assembleCreateTool(ToolType.CREATE_DIAGRAM),
       ...(await this.assembleExistingArtifactTools(
-        threadArtifacts.filter((a) => a instanceof DiagramArtifact),
+        artifacts.filter(ofType(DiagramArtifact)),
         [ToolType.UPDATE_DIAGRAM, ToolType.READ_DIAGRAM],
         'diagrams',
-        (a) => `- ${a.id}: "${a.title}"`,
+        ({ artifact, title }) => `- ${artifact.id}: "${title}"`,
       )),
       await this.assembleCreateTool(ToolType.CREATE_SPREADSHEET),
       ...(await this.assembleExistingArtifactTools(
-        threadArtifacts.filter((a) => a instanceof SpreadsheetArtifact),
+        artifacts.filter(ofType(SpreadsheetArtifact)),
         [ToolType.UPDATE_SPREADSHEET, ToolType.READ_SPREADSHEET],
         'spreadsheets',
-        async (a) => {
-          const full = await this.findArtifactWithVersionsUseCase.execute(
-            new FindArtifactWithVersionsQuery({ artifactId: a.id }),
-          );
-          const currentVersion = full.versions.find(
-            (v) => v.versionNumber === full.currentVersionNumber,
-          );
-          const warning =
-            currentVersion?.authorType === AuthorType.USER
-              ? ' (⚠ user-edited — use read_spreadsheet before updating)'
-              : '';
-          return `- ${a.id}: "${a.title}" (current version ${a.currentVersionNumber})${warning}`;
+        async ({ artifact, title }) => {
+          const warning = (await this.isUserEdited(artifact))
+            ? ' (⚠ user-edited — use read_spreadsheet before updating)'
+            : '';
+          return `- ${artifact.id}: "${title}" (current version ${artifact.currentVersionNumber})${warning}`;
         },
       )),
     ];
+    return { tools, threadPiiMasks };
+  }
+
+  private async isUserEdited(artifact: Artifact): Promise<boolean> {
+    const full = await this.findArtifactWithVersionsUseCase.execute(
+      new FindArtifactWithVersionsQuery({ artifactId: artifact.id }),
+    );
+    const current = full.versions.find(
+      (v) => v.versionNumber === full.currentVersionNumber,
+    );
+    return current?.authorType === AuthorType.USER;
   }
 
   private async assembleCreateTool(type: ToolType): Promise<Tool> {
@@ -91,26 +125,15 @@ export class ArtifactToolAssemblerService {
   }
 
   private async assembleDocumentEditTools(
-    threadArtifacts: Artifact[],
+    documents: ListedArtifact[],
     letterheadSuffix: string,
   ): Promise<Tool[]> {
-    const documents = threadArtifacts.filter(
-      (a) => a instanceof DocumentArtifact,
-    );
-
     const artifactLines: string[] = [];
-    for (const a of documents) {
-      const full = await this.findArtifactWithVersionsUseCase.execute(
-        new FindArtifactWithVersionsQuery({ artifactId: a.id }),
-      );
-      const cur = full.versions.find(
-        (v) => v.versionNumber === full.currentVersionNumber,
-      );
-      const warn =
-        cur?.authorType === AuthorType.USER
-          ? ' (⚠ user-edited — use read_document before editing)'
-          : '';
-      artifactLines.push(`- ${a.id}: "${a.title}"${warn}`);
+    for (const { artifact, title } of documents) {
+      const warn = (await this.isUserEdited(artifact))
+        ? ' (⚠ user-edited — use read_document before editing)'
+        : '';
+      artifactLines.push(`- ${artifact.id}: "${title}"${warn}`);
     }
 
     const suffix =
@@ -141,17 +164,17 @@ export class ArtifactToolAssemblerService {
   }
 
   private async assembleExistingArtifactTools(
-    artifacts: Artifact[],
+    artifacts: ListedArtifact[],
     toolTypes: ToolType[],
     label: string,
-    formatLine: (artifact: Artifact) => string | Promise<string>,
+    formatLine: (listed: ListedArtifact) => string | Promise<string>,
   ): Promise<Tool[]> {
     if (artifacts.length === 0) {
       return [];
     }
 
     const artifactLines = await Promise.all(
-      artifacts.map(async (artifact) => formatLine(artifact)),
+      artifacts.map(async (listed) => formatLine(listed)),
     );
     const suffix = `\n\nAvailable ${label} in this conversation:\n${artifactLines.join('\n')}`;
 

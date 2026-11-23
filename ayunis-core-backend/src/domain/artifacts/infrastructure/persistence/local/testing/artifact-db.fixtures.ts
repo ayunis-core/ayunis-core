@@ -13,6 +13,7 @@ import { ArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/
 import { ArtifactVersionRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/artifact-version.record';
 import { DocumentArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/document-artifact.record';
 import { ThreadArtifactRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/thread-artifact.record';
+import { ArtifactPiiMaskRecord } from 'src/domain/artifacts/infrastructure/persistence/local/schema/artifact-pii-mask.record';
 
 // ts-jest drops the column types of the records, so the tables the queries
 // touch are declared explicitly. Ids are varchar, as in the real schema.
@@ -36,6 +37,7 @@ export const artifactSchema = new EntitySchema<ArtifactRecord>({
     threadId: { type: 'varchar' },
     userId: { type: 'varchar' },
     title: { type: 'varchar' },
+    isAnonymous: { type: 'boolean', default: false },
     currentVersionNumber: { type: Number, default: 1 },
     createdAt: { type: 'timestamp', createDate: true },
   },
@@ -53,6 +55,11 @@ export const artifactSchema = new EntitySchema<ArtifactRecord>({
     threadLinks: {
       type: 'one-to-many',
       target: 'ThreadArtifactRecord',
+      inverseSide: 'artifact',
+    },
+    piiMasks: {
+      type: 'one-to-many',
+      target: 'ArtifactPiiMaskRecord',
       inverseSide: 'artifact',
     },
   },
@@ -94,9 +101,36 @@ const threadLinkSchema = new EntitySchema<ThreadArtifactRecord>({
   },
 });
 
+export const piiMaskSchema = new EntitySchema<ArtifactPiiMaskRecord>({
+  name: 'ArtifactPiiMaskRecord',
+  target: ArtifactPiiMaskRecord,
+  tableName: 'artifact_pii_masks',
+  columns: {
+    id,
+    artifactId: { type: 'varchar' },
+    category: { type: 'varchar' },
+    maskIndex: { type: Number },
+    value: { type: 'text' },
+    createdAt: { type: 'timestamp', createDate: true },
+  },
+  uniques: [
+    { columns: ['artifactId', 'category', 'maskIndex'] },
+    { columns: ['artifactId', 'category', 'value'] },
+  ],
+  relations: {
+    artifact: {
+      type: 'many-to-one',
+      target: 'ArtifactRecord',
+      joinColumn: { name: 'artifactId' },
+      inverseSide: 'piiMasks',
+      onDelete: 'CASCADE',
+    },
+  },
+});
+
 /**
- * A data source on a fresh schema with chats, artifacts, their versions and
- * chat links, plus `workspace_members` for the workspace membership condition.
+ * A data source on a fresh schema with chats, artifacts, their versions,
+ * chat links and mask dictionaries, plus `workspace_members` for the workspace membership condition.
  */
 export async function createArtifactTestDb(
   prefix: string,
@@ -105,7 +139,13 @@ export async function createArtifactTestDb(
   const db = new DataSource({
     ...(typeormConfigRaw as PostgresConnectionOptions),
     schema,
-    entities: [threadSchema, artifactSchema, versionSchema, threadLinkSchema],
+    entities: [
+      threadSchema,
+      artifactSchema,
+      versionSchema,
+      threadLinkSchema,
+      piiMaskSchema,
+    ],
     migrations: [],
     migrationsRun: false,
     logging: false,
@@ -145,6 +185,7 @@ export function createArtifactsRepository(
     db.getRepository(DocumentArtifactRecord),
     db.getRepository(ArtifactVersionRecord),
     db.getRepository(ThreadArtifactRecord),
+    db.getRepository(ArtifactPiiMaskRecord),
     {
       toDomain: (record: ArtifactRecord) => record,
     } as unknown as ArtifactMapper,
@@ -172,6 +213,7 @@ export async function insertArtifact(
   db: DataSource,
   userId: UUID,
   threadId: UUID,
+  isAnonymous = false,
 ): Promise<UUID> {
   const artifactId = randomUUID();
   await db.getRepository(artifactSchema).insert({
@@ -179,6 +221,7 @@ export async function insertArtifact(
     threadId,
     userId,
     title: 'Beschlussvorlage',
+    isAnonymous,
   });
   await db
     .getRepository(versionSchema)
