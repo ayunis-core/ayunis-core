@@ -25860,12 +25860,6 @@
             "example": "123e4567-e89b-12d3-a456-426614174000",
             "format": "uuid"
           },
-          "authorType": {
-            "type": "string",
-            "description": "Who authored this version",
-            "enum": ["USER", "ASSISTANT"],
-            "example": "ASSISTANT"
-          },
           "letterheadId": {
             "type": "string",
             "description": "Optional letterhead to apply to this artifact",
@@ -25873,7 +25867,7 @@
             "format": "uuid"
           }
         },
-        "required": ["title", "content", "threadId", "authorType"]
+        "required": ["title", "content", "threadId"]
       },
       "ArtifactVersionResponseDto": {
         "type": "object",
@@ -26002,12 +25996,6 @@
             "type": "string",
             "description": "Updated HTML content of the document. When omitted, no new version is created.",
             "example": "<p>Updated meeting notes...</p>"
-          },
-          "authorType": {
-            "type": "string",
-            "description": "Who authored this version. Required when content is provided.",
-            "enum": ["USER", "ASSISTANT"],
-            "example": "USER"
           },
           "letterheadId": {
             "type": "string",

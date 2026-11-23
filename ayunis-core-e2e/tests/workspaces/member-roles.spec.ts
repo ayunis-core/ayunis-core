@@ -334,7 +334,6 @@ test("workspace members get what their workspace role allows, never more", async
           title: "Entwurf Haushaltsrede",
           content: "<p>Sehr geehrte Damen und Herren</p>",
           threadId: thread.id,
-          authorType: "USER",
         },
         as(ben),
       );

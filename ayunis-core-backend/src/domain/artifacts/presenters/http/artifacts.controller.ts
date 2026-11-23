@@ -22,6 +22,7 @@ import {
 import { Response } from 'express';
 import { UUID } from 'crypto';
 import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
+import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import type { Paginated } from 'src/common/pagination/paginated.entity';
 import type { Artifact } from 'src/domain/artifacts/domain/artifact.entity';
 
@@ -86,7 +87,7 @@ export class ArtifactsController {
         threadId: dto.threadId,
         title: dto.title,
         content: dto.content,
-        authorType: dto.authorType,
+        authorType: AuthorType.USER,
         letterheadId: dto.letterheadId,
       }),
     );
@@ -121,7 +122,7 @@ export class ArtifactsController {
       new UpdateArtifactCommand({
         artifactId: id,
         content: dto.content,
-        authorType: dto.authorType,
+        authorType: AuthorType.USER,
         letterheadId: dto.letterheadId,
       }),
     );

@@ -23,3 +23,12 @@ export function deanonymizeText(
 export function containsPiiToken(text: string): boolean {
   return text.search(PII_TOKEN_REGEX) !== -1;
 }
+
+export function findPiiTokenRanges(
+  text: string,
+): { start: number; end: number }[] {
+  return Array.from(text.matchAll(PII_TOKEN_REGEX), (match) => ({
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
+}

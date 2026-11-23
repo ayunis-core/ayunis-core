@@ -20,16 +20,24 @@ import {
   SpreadsheetArtifact,
 } from 'src/domain/artifacts/domain/artifact.entity';
 import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
-import type { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
+import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.entity';
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ContextService } from 'src/common/context/services/context.service';
 import { FindLetterheadUseCase } from 'src/domain/letterheads/application/use-cases/find-letterhead/find-letterhead.use-case';
 import { LetterheadNotFoundError } from 'src/domain/letterheads/application/letterheads.errors';
+import { UserContentMaskingService } from 'src/domain/artifacts/application/services/user-content-masking.service';
+import { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
+import type { AnonymizeTextForThreadCommand } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.command';
+import { FindThreadsByIdsUseCase } from 'src/domain/threads/application/use-cases/find-threads-by-ids/find-threads-by-ids.use-case';
+import { Thread } from 'src/domain/threads/domain/thread.entity';
+import { ProviderServerError } from 'src/common/errors/provider.errors';
 
 describe('UpdateArtifactUseCase', () => {
   let useCase: UpdateArtifactUseCase;
   let artifactsRepository: jest.Mocked<ArtifactsRepository>;
   let findLetterheadUseCase: jest.Mocked<FindLetterheadUseCase>;
+  let findThreadsByIdsUseCase: { execute: jest.Mock };
+  let anonymizeTextForThreadUseCase: { execute: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000' as UUID;
 
@@ -43,6 +51,7 @@ describe('UpdateArtifactUseCase', () => {
       findById: jest.fn(),
       findByThreadId: jest.fn(),
       findByIdWithVersions: jest.fn(),
+      findVersion: jest.fn().mockResolvedValue(null),
       addVersion: jest.fn(),
       updateCurrentVersionNumber: jest.fn(),
       addVersionAndUpdateArtifact: jest.fn(),
@@ -60,6 +69,15 @@ describe('UpdateArtifactUseCase', () => {
       execute: jest.fn().mockResolvedValue({}),
     };
 
+    findThreadsByIdsUseCase = {
+      execute: jest
+        .fn()
+        .mockResolvedValue([
+          new Thread({ id: mockThreadId, userId: mockUserId, messages: [] }),
+        ]),
+    };
+    anonymizeTextForThreadUseCase = { execute: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateArtifactUseCase,
@@ -68,6 +86,12 @@ describe('UpdateArtifactUseCase', () => {
         {
           provide: FindLetterheadUseCase,
           useValue: mockFindLetterheadUseCase,
+        },
+        { provide: FindThreadsByIdsUseCase, useValue: findThreadsByIdsUseCase },
+        UserContentMaskingService,
+        {
+          provide: AnonymizeTextForThreadUseCase,
+          useValue: anonymizeTextForThreadUseCase,
         },
       ],
     }).compile();
@@ -434,6 +458,8 @@ describe('UpdateArtifactUseCase', () => {
           provide: FindLetterheadUseCase,
           useValue: findLetterheadUseCase,
         },
+        { provide: FindThreadsByIdsUseCase, useValue: findThreadsByIdsUseCase },
+        { provide: UserContentMaskingService, useValue: {} },
       ],
     }).compile();
 
@@ -839,6 +865,224 @@ describe('UpdateArtifactUseCase', () => {
       const result = (await useCase.execute(command)) as ArtifactVersion;
 
       expect(JSON.parse(result.content).rows).toEqual([['a < b > c']]);
+    });
+  });
+
+  describe('user saves in an anonymous chat', () => {
+    const maskedValues: Record<string, string> = {
+      'Max Mustermann': '{{pii:PERSON_NAME_2}}',
+      'max@example.org': '{{pii:EMAIL_ADDRESS_1}}',
+    };
+
+    // Stands in for the chat's detection: replaces every known real value.
+    const maskKnownValues = (command: AnonymizeTextForThreadCommand) =>
+      Promise.resolve({
+        anonymizedText: Object.entries(maskedValues).reduce(
+          (text, [value, token]) => text.replaceAll(value, token),
+          command.text,
+        ),
+      });
+
+    const givenArtifact = (
+      artifact: DocumentArtifact | SpreadsheetArtifact,
+    ) => {
+      artifactsRepository.findById.mockResolvedValue(artifact);
+      artifactsRepository.addVersionAndUpdateArtifact.mockImplementation(
+        async ({ version }) => version,
+      );
+    };
+
+    const documentArtifact = () =>
+      new DocumentArtifact({
+        id: mockArtifactId,
+        threadId: mockThreadId,
+        userId: mockUserId,
+        title: 'Brief',
+        currentVersionNumber: 1,
+      });
+
+    beforeEach(() => {
+      findThreadsByIdsUseCase.execute.mockResolvedValue([
+        new Thread({
+          id: mockThreadId,
+          userId: mockUserId,
+          messages: [],
+          isAnonymous: true,
+        }),
+      ]);
+      anonymizeTextForThreadUseCase.execute.mockImplementation(maskKnownValues);
+    });
+
+    it('stores typed real values as placeholders so the model cannot read them', async () => {
+      givenArtifact(documentArtifact());
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content:
+            '<p>Hallo {{pii:PERSON_NAME_1}}, hier Max Mustermann, max@example.org</p>',
+          authorType: AuthorType.USER,
+        }),
+      )) as ArtifactVersion;
+
+      expect(result.content).toBe(
+        '<p>Hallo {{pii:PERSON_NAME_1}}, hier {{pii:PERSON_NAME_2}}, {{pii:EMAIL_ADDRESS_1}}</p>',
+      );
+    });
+
+    it('stores assistant writes unchanged because they already contain placeholders', async () => {
+      givenArtifact(documentArtifact());
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content: '<p>Max Mustermann</p>',
+          authorType: AuthorType.ASSISTANT,
+        }),
+      )) as ArtifactVersion;
+
+      expect(result.content).toBe('<p>Max Mustermann</p>');
+    });
+
+    it('stores user saves of a normal chat unchanged', async () => {
+      findThreadsByIdsUseCase.execute.mockResolvedValue([
+        new Thread({ id: mockThreadId, userId: mockUserId, messages: [] }),
+      ]);
+      givenArtifact(documentArtifact());
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content: '<p>Max Mustermann</p>',
+          authorType: AuthorType.USER,
+        }),
+      )) as ArtifactVersion;
+
+      expect(result.content).toBe('<p>Max Mustermann</p>');
+    });
+
+    it('stores no version when masking fails, so content is never stored unmasked', async () => {
+      givenArtifact(documentArtifact());
+      anonymizeTextForThreadUseCase.execute.mockRejectedValue(
+        new ProviderServerError({ provider: 'anonymize' }),
+      );
+
+      await expect(
+        useCase.execute(
+          new UpdateArtifactCommand({
+            artifactId: mockArtifactId,
+            content: '<p>Max Mustermann</p>',
+            authorType: AuthorType.USER,
+          }),
+        ),
+      ).rejects.toThrow(ProviderServerError);
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('stores no version when the chat cannot be found to decide on masking', async () => {
+      givenArtifact(documentArtifact());
+      findThreadsByIdsUseCase.execute.mockResolvedValue([]);
+
+      await expect(
+        useCase.execute(
+          new UpdateArtifactCommand({
+            artifactId: mockArtifactId,
+            content: '<p>Max Mustermann</p>',
+            authorType: AuthorType.USER,
+          }),
+        ),
+      ).rejects.toThrow(ArtifactNotFoundError);
+      expect(
+        artifactsRepository.addVersionAndUpdateArtifact,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('masks spreadsheet headers and string cells one by one and leaves formulas and numbers alone', async () => {
+      givenArtifact(
+        new SpreadsheetArtifact({
+          id: mockArtifactId,
+          threadId: mockThreadId,
+          userId: mockUserId,
+          title: 'Kontakte',
+          currentVersionNumber: 1,
+        }),
+      );
+      // A quote in a masked value must not leak into or break the JSON.
+      maskedValues['Max "Maxi" Mustermann'] = '{{pii:PERSON_NAME_3}}';
+
+      const result = (await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content: JSON.stringify({
+            format: SPREADSHEET_CONTENT_FORMAT,
+            columns: ['Name', 'E-Mail', 'Betrag'],
+            rows: [
+              ['Max "Maxi" Mustermann', 'max@example.org', 120],
+              ['=A2', '=IF(B2="max@example.org",1,0)', '=SUM(C2:C2)'],
+            ],
+          }),
+          authorType: AuthorType.USER,
+        }),
+      )) as ArtifactVersion;
+      delete maskedValues['Max "Maxi" Mustermann'];
+
+      expect(JSON.parse(result.content)).toEqual({
+        format: SPREADSHEET_CONTENT_FORMAT,
+        columns: ['Name', 'E-Mail', 'Betrag'],
+        rows: [
+          ['{{pii:PERSON_NAME_3}}', '{{pii:EMAIL_ADDRESS_1}}', 120],
+          ['=A2', '=IF(B2="max@example.org",1,0)', '=SUM(C2:C2)'],
+        ],
+      });
+    });
+
+    it('does not run detection again on spreadsheet strings the current version already stores', async () => {
+      givenArtifact(
+        new SpreadsheetArtifact({
+          id: mockArtifactId,
+          threadId: mockThreadId,
+          userId: mockUserId,
+          title: 'Kontakte',
+          currentVersionNumber: 4,
+        }),
+      );
+      artifactsRepository.findVersion.mockResolvedValue(
+        new ArtifactVersion({
+          artifactId: mockArtifactId,
+          versionNumber: 4,
+          content: JSON.stringify({
+            format: SPREADSHEET_CONTENT_FORMAT,
+            columns: ['Name'],
+            rows: [['{{pii:PERSON_NAME_1}}']],
+          }),
+          authorType: AuthorType.ASSISTANT,
+          authorId: null,
+        }),
+      );
+
+      await useCase.execute(
+        new UpdateArtifactCommand({
+          artifactId: mockArtifactId,
+          content: JSON.stringify({
+            format: SPREADSHEET_CONTENT_FORMAT,
+            columns: ['Name'],
+            rows: [['{{pii:PERSON_NAME_1}}'], ['Max Mustermann']],
+          }),
+          authorType: AuthorType.USER,
+        }),
+      );
+
+      expect(artifactsRepository.findVersion).toHaveBeenCalledWith(
+        mockArtifactId,
+        4,
+      );
+      expect(
+        anonymizeTextForThreadUseCase.execute.mock.calls.map(
+          ([command]: [AnonymizeTextForThreadCommand]) => command.text,
+        ),
+      ).toEqual(['Max Mustermann']);
     });
   });
 });

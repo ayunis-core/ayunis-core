@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -8,7 +7,6 @@ import {
   MaxLength,
 } from 'class-validator';
 import { UUID } from 'crypto';
-import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ARTIFACT_MAX_CONTENT_LENGTH } from 'src/domain/artifacts/application/artifacts.errors';
 
 export class CreateArtifactDto {
@@ -38,14 +36,6 @@ export class CreateArtifactDto {
   })
   @IsUUID()
   threadId: UUID;
-
-  @ApiProperty({
-    description: 'Who authored this version',
-    enum: AuthorType,
-    example: AuthorType.ASSISTANT,
-  })
-  @IsEnum(AuthorType)
-  authorType: AuthorType;
 
   @ApiPropertyOptional({
     description: 'Optional letterhead to apply to this artifact',

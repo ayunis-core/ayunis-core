@@ -47,7 +47,6 @@ test("completes multi-document and multi-website research with bounded tool resu
           title: `Research document ${index + 1}`,
           content: `<p>${"Document research ".repeat(12_000)}</p>`,
           threadId: thread.id,
-          authorType: "USER",
         },
         { api },
       ),
