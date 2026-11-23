@@ -12,6 +12,7 @@ import { mockOutlookToolResponse } from './mock-outlook-tool-response';
 import { mockSlowResponse } from './mock-slow-response';
 import { mockMemoryResponse } from './mock-memory-response';
 import { mockPastChatsResponse } from './mock-past-chats-response';
+import { mockArtifactToolsResponse } from './mock-artifact-tools-response';
 import {
   mockNotifyRoutineResponse,
   mockQuoteNotificationResponse,
@@ -37,7 +38,8 @@ import type { Model } from 'src/domain/models/domain/model.entity';
  * about, routine widget proposals, an anonymization exception, a call to
  * the E2E MCP server's tool,
  * the Outlook pane's quick actions, a slow answer, a recording search,
- * memory writes and reports, past-chat tool calls and reports);
+ * memory writes and reports, past-chat tool calls and reports, artifact
+ * tool calls);
  * a routine task's trigger ends the routine run, optionally after sending
  * a notification.
  *
@@ -134,7 +136,8 @@ function mockExternalToolResponse(
     mockMcpToolResponse(request, userText) ??
     mockOutlookToolResponse(request, userText) ??
     mockMemoryResponse(request, userText) ??
-    mockPastChatsResponse(request, userText)
+    mockPastChatsResponse(request, userText) ??
+    mockArtifactToolsResponse(request, userText)
   );
 }
 

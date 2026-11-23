@@ -1,5 +1,6 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 
 /** Maximum allowed artifact content length in characters (~500 KB). */
 export const ARTIFACT_MAX_CONTENT_LENGTH = 512_000;
@@ -71,20 +72,32 @@ export class ArtifactVersionConflictError extends ArtifactError {
   }
 }
 
+const READ_TOOL_BY_ARTIFACT_TYPE: Record<ArtifactType, string> = {
+  [ArtifactType.DOCUMENT]: 'read_document',
+  [ArtifactType.DIAGRAM]: 'read_diagram',
+  [ArtifactType.SPREADSHEET]: 'read_spreadsheet',
+};
+
 export class ArtifactExpectedVersionMismatchError extends ArtifactError {
   constructor(
-    artifactId: string,
+    artifact: { id: string; type: ArtifactType },
     expectedVersion: number,
     actualVersion: number,
     metadata?: ErrorMetadata,
   ) {
     super(
-      `Version conflict: you expected version ${expectedVersion} but the document is at version ${actualVersion}. ` +
-        `The document has been edited since you last saw it. ` +
-        `Use read_document to get the current content and version, then retry your edit.`,
+      `Version conflict: you expected version ${expectedVersion} but the ${artifact.type} is at version ${actualVersion}. ` +
+        `The ${artifact.type} has been edited since you last saw it. ` +
+        `Use ${READ_TOOL_BY_ARTIFACT_TYPE[artifact.type]} to get the current content and version, then apply your change to that content and retry.`,
       ArtifactErrorCode.ARTIFACT_EXPECTED_VERSION_MISMATCH,
       409,
-      { artifactId, expectedVersion, actualVersion, ...metadata },
+      {
+        artifactId: artifact.id,
+        artifactType: artifact.type,
+        expectedVersion,
+        actualVersion,
+        ...metadata,
+      },
     );
   }
 }

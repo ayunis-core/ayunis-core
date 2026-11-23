@@ -9,6 +9,7 @@ import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-typ
 import { SPREADSHEET_CONTENT_FORMAT } from 'src/domain/artifacts/application/helpers/spreadsheet-content-format';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/application/artifacts.errors';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 
 describe('UpdateSpreadsheetToolHandler', () => {
   let handler: UpdateSpreadsheetToolHandler;
@@ -103,9 +104,13 @@ describe('UpdateSpreadsheetToolHandler', () => {
     expect(result).toContain('version: 2');
   });
 
-  it('should throw ToolExecutionFailedError with exposeToLLM when version mismatch occurs', async () => {
+  it('should tell the model to recover a version conflict with read_spreadsheet', async () => {
     mockUpdateArtifactUseCase.execute.mockRejectedValue(
-      new ArtifactExpectedVersionMismatchError(mockArtifactId, 1, 3),
+      new ArtifactExpectedVersionMismatchError(
+        { id: mockArtifactId, type: ArtifactType.SPREADSHEET },
+        1,
+        3,
+      ),
     );
 
     const tool = new UpdateSpreadsheetTool();
@@ -121,7 +126,7 @@ describe('UpdateSpreadsheetToolHandler', () => {
       expect(error).toBeInstanceOf(ToolExecutionFailedError);
       expect((error as ToolExecutionFailedError).exposeToLLM).toBe(true);
       expect((error as ToolExecutionFailedError).message).toContain(
-        'Version conflict',
+        'Use read_spreadsheet ',
       );
     }
   });

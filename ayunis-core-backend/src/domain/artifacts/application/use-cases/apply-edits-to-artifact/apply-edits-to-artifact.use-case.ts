@@ -56,7 +56,7 @@ export class ApplyEditsToArtifactUseCase {
       command.expectedVersionNumber !== artifact.currentVersionNumber
     ) {
       throw new ArtifactExpectedVersionMismatchError(
-        command.artifactId,
+        artifact,
         command.expectedVersionNumber,
         artifact.currentVersionNumber,
       );

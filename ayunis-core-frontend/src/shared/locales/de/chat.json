@@ -112,8 +112,10 @@
         "read_document": "Dokument gelesen",
         "create_diagram": "Diagramm erstellt",
         "update_diagram": "Diagramm aktualisiert",
+        "read_diagram": "Diagramm gelesen",
         "create_spreadsheet": "Tabelle erstellt",
         "update_spreadsheet": "Tabelle aktualisiert",
+        "read_spreadsheet": "Tabelle gelesen",
         "chart": "Diagramm erstellt",
         "map": "Karte erstellt",
         "generate_image": "Bild generiert",
@@ -289,6 +291,13 @@
         "generating": "Aktualisierung wird generiert…",
         "openInEditor": "Diagramm öffnen"
       },
+      "read_diagram": {
+        "title": "Diagramm",
+        "reading": "Diagramm wird gelesen…",
+        "available": "Diagramm verfügbar",
+        "unavailable": "Diagramm konnte nicht geöffnet werden",
+        "openInEditor": "Diagramm öffnen"
+      },
       "create_spreadsheet": {
         "title": "Tabelle",
         "created": "Tabelle erstellt",
@@ -301,6 +310,13 @@
         "updated": "Tabelle aktualisiert",
         "updating": "Tabelle wird aktualisiert…",
         "generating": "Aktualisierung wird generiert…",
+        "openInEditor": "Tabelle öffnen"
+      },
+      "read_spreadsheet": {
+        "title": "Tabelle",
+        "reading": "Tabelle wird gelesen…",
+        "available": "Tabelle verfügbar",
+        "unavailable": "Tabelle konnte nicht geöffnet werden",
         "openInEditor": "Tabelle öffnen"
       },
       "create_calendar_event": {

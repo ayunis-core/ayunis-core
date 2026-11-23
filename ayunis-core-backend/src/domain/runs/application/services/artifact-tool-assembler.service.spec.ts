@@ -122,15 +122,17 @@ describe('ArtifactToolAssemblerService', () => {
     expect(names).toContain(ToolType.CREATE_SPREADSHEET);
   });
 
-  it('should not offer update_diagram or update_spreadsheet on an empty thread', async () => {
+  it('should not offer diagram or spreadsheet update and read tools on an empty thread', async () => {
     const tools = await service.assembleArtifactTools(thread);
 
     const names = toolNames(tools);
     expect(names).not.toContain(ToolType.UPDATE_DIAGRAM);
+    expect(names).not.toContain(ToolType.READ_DIAGRAM);
     expect(names).not.toContain(ToolType.UPDATE_SPREADSHEET);
+    expect(names).not.toContain(ToolType.READ_SPREADSHEET);
   });
 
-  it('should offer update_diagram only when the thread has diagram artifacts', async () => {
+  it('should offer update_diagram and read_diagram only when the thread has diagram artifacts', async () => {
     findArtifactsByThreadUseCase.execute.mockResolvedValue([
       makeArtifact('diagram'),
     ]);
@@ -139,10 +141,12 @@ describe('ArtifactToolAssemblerService', () => {
 
     const names = toolNames(tools);
     expect(names).toContain(ToolType.UPDATE_DIAGRAM);
+    expect(names).toContain(ToolType.READ_DIAGRAM);
     expect(names).not.toContain(ToolType.UPDATE_SPREADSHEET);
+    expect(names).not.toContain(ToolType.READ_SPREADSHEET);
   });
 
-  it('should offer update_spreadsheet only when the thread has spreadsheet artifacts', async () => {
+  it('should offer update_spreadsheet and read_spreadsheet only when the thread has spreadsheet artifacts', async () => {
     findArtifactsByThreadUseCase.execute.mockResolvedValue([
       makeArtifact('spreadsheet'),
     ]);
@@ -151,8 +155,34 @@ describe('ArtifactToolAssemblerService', () => {
 
     const names = toolNames(tools);
     expect(names).toContain(ToolType.UPDATE_SPREADSHEET);
+    expect(names).toContain(ToolType.READ_SPREADSHEET);
     expect(names).not.toContain(ToolType.UPDATE_DIAGRAM);
+    expect(names).not.toContain(ToolType.READ_DIAGRAM);
   });
+
+  it.each([
+    ['diagram', ToolType.UPDATE_DIAGRAM, ToolType.READ_DIAGRAM],
+    ['spreadsheet', ToolType.UPDATE_SPREADSHEET, ToolType.READ_SPREADSHEET],
+  ] as const)(
+    'should list the same %s artifacts in the read tool as in the update tool',
+    async (kind, updateType, readType) => {
+      const first = makeArtifact(kind, { title: 'Ablauf' });
+      const second = makeArtifact(kind, { title: 'Zuständigkeiten' });
+      findArtifactsByThreadUseCase.execute.mockResolvedValue([first, second]);
+
+      const tools = await service.assembleArtifactTools(thread);
+
+      const updateList = findTool(tools, updateType)?.descriptionLong?.split(
+        'Available',
+      )[1];
+      const readList = findTool(tools, readType)?.descriptionLong?.split(
+        'Available',
+      )[1];
+      expect(readList).toContain(first.id);
+      expect(readList).toContain(second.id);
+      expect(readList).toBe(updateList);
+    },
+  );
 
   it('should list spreadsheet artifacts with their current version in the tool description', async () => {
     const spreadsheet = makeArtifact('spreadsheet', {
@@ -193,7 +223,7 @@ describe('ArtifactToolAssemblerService', () => {
 
     const updateTool = findTool(tools, ToolType.UPDATE_SPREADSHEET);
     expect(updateTool?.descriptionLong).toContain(
-      'user-edited — ask the user for the latest values before updating',
+      'user-edited — use read_spreadsheet before updating',
     );
   });
 

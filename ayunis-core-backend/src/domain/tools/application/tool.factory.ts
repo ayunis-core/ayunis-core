@@ -41,8 +41,10 @@ import { ReadDocumentTool } from 'src/domain/tools/domain/tools/read-document-to
 import { GenerateImageTool } from 'src/domain/tools/domain/tools/generate-image-tool.entity';
 import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
+import { ReadDiagramTool } from 'src/domain/tools/domain/tools/read-diagram-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
+import { ReadSpreadsheetTool } from 'src/domain/tools/domain/tools/read-spreadsheet-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { MarketplaceSearchTool } from 'src/domain/tools/domain/tools/marketplace-search-tool.entity';
 import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
@@ -86,8 +88,10 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.GENERATE_IMAGE]: () => new GenerateImageTool(),
   [ToolType.CREATE_DIAGRAM]: () => new CreateDiagramTool(),
   [ToolType.UPDATE_DIAGRAM]: () => new UpdateDiagramTool(),
+  [ToolType.READ_DIAGRAM]: () => new ReadDiagramTool(),
   [ToolType.CREATE_SPREADSHEET]: () => new CreateSpreadsheetTool(),
   [ToolType.UPDATE_SPREADSHEET]: () => new UpdateSpreadsheetTool(),
+  [ToolType.READ_SPREADSHEET]: () => new ReadSpreadsheetTool(),
   [ToolType.MARKETPLACE_SEARCH]: () => new MarketplaceSearchTool(),
   [ToolType.INSTALL_MARKETPLACE_SKILL]: () => new InstallMarketplaceSkillTool(),
   [ToolType.GET_MEMORY]: () => new GetMemoryTool(),

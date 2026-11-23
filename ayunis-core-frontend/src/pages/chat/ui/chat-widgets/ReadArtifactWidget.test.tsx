@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import ReadDocumentWidget from './ReadDocumentWidget';
+import ReadArtifactWidget from './ReadArtifactWidget';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -18,11 +18,12 @@ function readDocumentCall(): ToolUseMessageContent {
   };
 }
 
-describe('ReadDocumentWidget', () => {
+describe('ReadArtifactWidget', () => {
   it('opens the document returned by a successful read', () => {
     const onOpenArtifact = vi.fn();
     render(
-      <ReadDocumentWidget
+      <ReadArtifactWidget
+        family="document"
         content={readDocumentCall()}
         result={JSON.stringify({
           artifactId: 'artifact-11',
@@ -44,7 +45,8 @@ describe('ReadDocumentWidget', () => {
 
   it('does not expose a completed document when the read result is invalid', () => {
     render(
-      <ReadDocumentWidget
+      <ReadArtifactWidget
+        family="document"
         content={readDocumentCall()}
         result="Document could not be read"
       />,

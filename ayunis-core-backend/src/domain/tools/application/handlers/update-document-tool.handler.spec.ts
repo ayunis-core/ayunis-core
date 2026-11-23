@@ -8,6 +8,7 @@ import { ArtifactVersion } from 'src/domain/artifacts/domain/artifact-version.en
 import { AuthorType } from 'src/domain/artifacts/domain/value-objects/author-type.enum';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ArtifactExpectedVersionMismatchError } from 'src/domain/artifacts/application/artifacts.errors';
+import { ArtifactType } from 'src/domain/artifacts/domain/value-objects/artifact-type.enum';
 
 describe('UpdateDocumentToolHandler', () => {
   let handler: UpdateDocumentToolHandler;
@@ -166,7 +167,11 @@ describe('UpdateDocumentToolHandler', () => {
 
   it('should throw ToolExecutionFailedError with exposeToLLM when version mismatch occurs', async () => {
     mockUpdateArtifactUseCase.execute.mockRejectedValue(
-      new ArtifactExpectedVersionMismatchError(mockArtifactId, 1, 3),
+      new ArtifactExpectedVersionMismatchError(
+        { id: mockArtifactId, type: ArtifactType.DOCUMENT },
+        1,
+        3,
+      ),
     );
 
     const tool = new UpdateDocumentTool();

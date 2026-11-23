@@ -4,11 +4,17 @@ import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import CreateDocumentWidget from './CreateDocumentWidget';
 import UpdateDocumentWidget from './UpdateDocumentWidget';
 import EditDocumentWidget from './EditDocumentWidget';
-import ReadDocumentWidget from './ReadDocumentWidget';
+import ReadArtifactWidget from './ReadArtifactWidget';
 import CreateDiagramWidget from './CreateDiagramWidget';
 import UpdateDiagramWidget from './UpdateDiagramWidget';
 import CreateSpreadsheetWidget from './CreateSpreadsheetWidget';
 import UpdateSpreadsheetWidget from './UpdateSpreadsheetWidget';
+
+const READ_TOOL_FAMILIES = {
+  read_document: 'document',
+  read_diagram: 'diagram',
+  read_spreadsheet: 'spreadsheet',
+} as const;
 
 /**
  * Renders the chat widget for any document- or diagram-related tool call.
@@ -64,15 +70,20 @@ export function renderArtifactToolWidget(params: {
         />
       );
     case 'read_document':
+    case 'read_diagram':
+    case 'read_spreadsheet': {
+      const family = READ_TOOL_FAMILIES[content.name];
       return (
-        <ReadDocumentWidget
-          key={`read-document-${keySuffix}`}
+        <ReadArtifactWidget
+          key={`read-${family}-${keySuffix}`}
+          family={family}
           content={content}
           result={result}
           isStreaming={isStreaming}
           onOpenArtifact={onOpenArtifact}
         />
       );
+    }
     case 'create_diagram':
       return (
         <CreateDiagramWidget

@@ -169,7 +169,7 @@ export class UpdateArtifactUseCase {
           command.expectedVersionNumber !== freshArtifact.currentVersionNumber
         ) {
           throw new ArtifactExpectedVersionMismatchError(
-            command.artifactId,
+            freshArtifact,
             command.expectedVersionNumber,
             freshArtifact.currentVersionNumber,
           );
