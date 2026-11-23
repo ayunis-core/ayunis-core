@@ -3,6 +3,7 @@
 @import './scroll-region.css';
 @import './interactions.css';
 @import './scrollbar.css';
+@source '../../../packages/chat/src';
 
 html,
 body {

@@ -1,5 +1,5 @@
-import type { SourceCitation } from '@/widgets/markdown/lib/source-citation';
-import { useSourceCitationClick } from '@/widgets/markdown/model/source-citation-context';
+import type { SourceCitation } from './source-citation';
+import { useSourceCitationClick } from './source-citation-context';
 
 interface SourceCitationInlineProps {
   readonly citation: SourceCitation;

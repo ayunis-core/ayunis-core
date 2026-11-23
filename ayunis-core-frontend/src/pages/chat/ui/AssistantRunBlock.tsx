@@ -1,5 +1,5 @@
-import { memo, useRef } from 'react';
-import { cn } from '@ayunis/ui/lib/cn';
+import { memo } from 'react';
+import { AssistantMessageFrame } from '@ayunis/chat/messages';
 import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
 import CopyAssistantTextButton from './CopyAssistantTextButton';
@@ -21,7 +21,6 @@ function AssistantRunBlock({
   threadId,
   onOpenArtifact,
 }: Readonly<AssistantRunBlockProps>) {
-  const contentRef = useRef<HTMLDivElement>(null);
   const isEmbedded = useEmbedded();
   const hasText = unit.blocks.some((block) => block.kind === 'text');
   const canReadAloud =
@@ -32,34 +31,30 @@ function AssistantRunBlock({
     );
 
   return (
-    <div
-      className={cn(
-        'flex flex-col items-start gap-2',
-        !isGroupedWithPrevious && 'mt-4',
-      )}
+    <AssistantMessageFrame
+      grouped={isGroupedWithPrevious}
+      actions={
+        hasText
+          ? (contentRef) => (
+              <>
+                <CopyAssistantTextButton contentRef={contentRef} />
+                {canReadAloud && (
+                  <ReadAloudButton
+                    messageKey={unit.key}
+                    contentRef={contentRef}
+                  />
+                )}
+              </>
+            )
+          : undefined
+      }
     >
-      <div className="max-w-2xl min-w-0 space-y-1 w-full">
-        <div
-          ref={contentRef}
-          className="space-y-2 overflow-hidden w-full"
-          data-testid="assistant-message"
-        >
-          <AgentRunTimeline
-            unit={unit}
-            threadId={threadId}
-            onOpenArtifact={onOpenArtifact}
-          />
-        </div>
-        {hasText && (
-          <div className="flex items-center gap-0.5">
-            <CopyAssistantTextButton contentRef={contentRef} />
-            {canReadAloud && (
-              <ReadAloudButton messageKey={unit.key} contentRef={contentRef} />
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+      <AgentRunTimeline
+        unit={unit}
+        threadId={threadId}
+        onOpenArtifact={onOpenArtifact}
+      />
+    </AssistantMessageFrame>
   );
 }
 

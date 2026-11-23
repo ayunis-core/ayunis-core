@@ -5,30 +5,47 @@
   "type": "module",
   "exports": {
     "./tool-cards": "./src/tool-cards.ts",
-    "./runs": "./src/runs.ts"
+    "./runs": "./src/runs.ts",
+    "./markdown": "./src/markdown/index.ts",
+    "./markdown/*": "./src/markdown/*.ts",
+    "./composer": "./src/composer/ChatComposer.tsx",
+    "./composer.css": "./src/composer/chat-input-glow.css",
+    "./history": "./src/history/index.ts",
+    "./messages": "./src/messages/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
-    "deps:check": "madge --circular --extensions ts src"
+    "deps:check": "madge --circular --extensions ts,tsx src"
   },
   "dependencies": {
-    "@ayunis/api-client": "workspace:*"
+    "@ayunis/api-client": "workspace:*",
+    "@ayunis/ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.2",
+    "react-textarea-autosize": "^8.5.9",
+    "remark-gfm": "^4.0.1"
   },
   "peerDependencies": {
-    "react": "^19.3.1"
+    "i18next": "^26.4.0",
+    "react": "^19.3.1",
+    "react-i18next": "^15.5.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.3.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-sonarjs": "^4.2.1",
     "globals": "^16.5.0",
+    "i18next": "^26.4.0",
     "madge": "^8.0.0",
     "prettier": "^3.9.6",
     "react": "catalog:",
+    "react-i18next": "^15.5.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.68.0"
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rehypePiiMasks } from './rehype-pii-masks';
+import { rehypePiiMasks } from '@ayunis/chat/markdown/rehype-pii-masks';
 
 interface TestNode {
   type: string;

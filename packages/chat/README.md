@@ -14,3 +14,16 @@ follow and cancel endpoints when available. The authenticated adapter connects
 to the existing thread run endpoints through the host's API transport.
 Authentication recovery, cache refreshes, analytics, and notifications stay
 with the host.
+
+The package also provides shared chat views:
+
+- `@ayunis/chat/messages` renders the message list, message bubbles, image
+  previews, and assistant message frame. The app supplies message actions,
+  authenticated image URLs, and rich run content.
+- `@ayunis/chat/markdown` renders Markdown, citations, and PII reveal controls.
+  The app supplies callbacks through the existing citation and mask providers.
+- `@ayunis/chat/composer` renders the composer field and attachment previews.
+  The app supplies input state, controls, and handlers. Import
+  `@ayunis/chat/composer.css` for the composer styles.
+- `@ayunis/chat/history` renders history lists and entries. The app supplies
+  links, row actions, empty states, and pagination.

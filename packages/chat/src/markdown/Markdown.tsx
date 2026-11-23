@@ -1,0 +1,321 @@
+import { createContext, memo, useContext } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useTranslation } from 'react-i18next';
+import DefaultCodeBlock, { type CodeBlockProps } from './Codeblock';
+import PiiMaskInline from './PiiMaskInline';
+import SourceCitationInline from './SourceCitationInline';
+import UrlReferenceInline from './UrlReferenceInline';
+import {
+  protectUrlReferences,
+  rehypeUrlReferences,
+} from './rehype-url-references';
+import { rehypePiiMasks } from './rehype-pii-masks';
+import { resolvePiiTokens } from './pii-token';
+import { usePiiMasks } from './pii-mask-context';
+import { rehypeLegalMarkers } from './rehype-legal-markers';
+import { rehypeSourceCitations } from './rehype-source-citations';
+import { protectSourceCitationPipes } from './protect-source-citation-pipes';
+import { remarkOpenCodeFences } from './remark-open-code-fences';
+
+// Module constants so react-markdown doesn't re-parse on every render.
+const REMARK_PLUGINS = [remarkGfm];
+const STREAMING_REMARK_PLUGINS = [remarkGfm, remarkOpenCodeFences];
+const REHYPE_PLUGINS = [rehypePiiMasks];
+const LEGAL_REHYPE_PLUGINS = [rehypePiiMasks, rehypeLegalMarkers];
+
+export interface MarkdownProps {
+  readonly codeBlock?: ComponentType<CodeBlockProps>;
+  children: string;
+  className?: string;
+  /** Defers highlighting of a trailing code block until its fence closes. */
+  isStreaming?: boolean;
+  renderLegalReferences?: boolean;
+  renderSourceCitations?: boolean;
+  renderUrlReferences?: boolean;
+  renderImages?: boolean;
+  /** Called once a code block's copy reached the clipboard. */
+  onCodeCopied?: () => void;
+}
+
+interface SpanComponentProps {
+  children?: ReactNode;
+  // react-markdown delivers hast data attributes in kebab-case.
+  'data-pii-token'?: string;
+  'data-source-citation'?: string;
+  'data-source-chunk-id'?: string;
+  'data-source-label'?: string;
+}
+
+interface CodeComponentProps {
+  inline?: boolean;
+  className?: string;
+  children?: ReactNode;
+  'data-fence-open'?: string;
+}
+
+interface ImageComponentProps {
+  src?: string;
+  alt?: string;
+  title?: string;
+}
+
+interface TableComponentProps {
+  children?: ReactNode;
+}
+
+interface AnchorComponentProps {
+  href?: string;
+  children?: ReactNode;
+  'data-legal-reference'?: string;
+  'data-url-reference'?: string;
+  title?: string;
+}
+
+const RenderImagesContext = createContext(true);
+const CodeBlockContext =
+  createContext<ComponentType<CodeBlockProps>>(DefaultCodeBlock);
+const CodeCopiedContext = createContext<(() => void) | undefined>(undefined);
+
+function MarkdownSpan(props: Readonly<SpanComponentProps>) {
+  const token = props['data-pii-token'];
+  if (typeof token === 'string') {
+    return <PiiMaskInline token={token} />;
+  }
+  const isSourceCitation = props['data-source-citation'] === 'true';
+  const chunkId = props['data-source-chunk-id'];
+  const label = props['data-source-label'];
+  if (
+    isSourceCitation &&
+    typeof chunkId === 'string' &&
+    typeof label === 'string'
+  ) {
+    return <SourceCitationInline citation={{ chunkId, label }} />;
+  }
+  return <span>{props.children}</span>;
+}
+
+function MarkdownCode({
+  inline,
+  className,
+  children,
+  'data-fence-open': fenceOpen,
+}: Readonly<CodeComponentProps>) {
+  const onCodeCopied = useContext(CodeCopiedContext);
+  const CodeBlock = useContext(CodeBlockContext);
+  const masks = usePiiMasks();
+  // Convert children to string safely
+  const childrenStr =
+    typeof children === 'string' || typeof children === 'number'
+      ? String(children)
+      : '';
+
+  if (isInlineCode(inline, className, childrenStr)) {
+    return (
+      <span className="not-prose">
+        <code
+          className="bg-muted px-1 py-0.5 rounded text-sm font-mono"
+          style={{ display: 'inline' }}
+        >
+          {childrenStr}
+        </code>
+      </span>
+    );
+  }
+
+  // For block code
+  const match = /language-(\w+)/.exec(className ?? '');
+  const language = match ? match[1] : '';
+
+  return (
+    <CodeBlock
+      language={language}
+      inline={false}
+      className={className ?? ''}
+      highlight={fenceOpen !== 'true'}
+      onCopied={onCodeCopied}
+    >
+      {/* Code blocks are excluded from read-aloud, so original values never reach the speech provider. */}
+      {resolvePiiTokens(childrenStr, masks)}
+    </CodeBlock>
+  );
+}
+
+function isInlineCode(
+  inline: boolean | undefined,
+  className: string | undefined,
+  text: string,
+) {
+  return (
+    inline === true ||
+    (inline !== false &&
+      !className?.startsWith('language-') &&
+      !text.includes('\n'))
+  );
+}
+
+function MarkdownImage({ src, alt, title }: Readonly<ImageComponentProps>) {
+  const renderImages = useContext(RenderImagesContext);
+  const { t } = useTranslation('common');
+  if (!renderImages) {
+    return (
+      <span className="text-muted-foreground">
+        {t('markdown.imagePlaceholder')}
+      </span>
+    );
+  }
+  return <img src={src} alt={alt ?? ''} title={title} />;
+}
+
+function MarkdownPre({ children }: Readonly<TableComponentProps>) {
+  return (
+    <div className="my-4" data-speech-text="">
+      {children}
+    </div>
+  );
+}
+
+function MarkdownTable({ children }: Readonly<TableComponentProps>) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full table-auto text-left">{children}</table>
+    </div>
+  );
+}
+
+function MarkdownTh({ children }: Readonly<TableComponentProps>) {
+  return (
+    <th className="px-2 py-2 font-semibold text-foreground text-left">
+      {children}
+    </th>
+  );
+}
+
+function MarkdownTd({ children }: Readonly<TableComponentProps>) {
+  return <td className="px-2 py-2 text-foreground">{children}</td>;
+}
+
+function MarkdownAnchor({
+  href,
+  children,
+  'data-legal-reference': legalReference,
+  'data-url-reference': urlReference,
+  title,
+}: Readonly<AnchorComponentProps>) {
+  const isLegalReference = legalReference === 'true';
+  if (urlReference === 'true') {
+    return <UrlReferenceInline href={href}>{children}</UrlReferenceInline>;
+  }
+  return (
+    <a
+      href={href}
+      title={title}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={
+        isLegalReference
+          ? 'bg-muted text-foreground px-1 py-0.5 rounded font-medium'
+          : undefined
+      }
+      data-testid={isLegalReference ? 'legal-reference' : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
+// Module scope so every render hands react-markdown the same component types;
+// inline definitions would remount every custom node on each streamed update.
+const COMPONENTS: Components = {
+  span: MarkdownSpan,
+  code: MarkdownCode,
+  img: MarkdownImage,
+  pre: MarkdownPre,
+  table: MarkdownTable,
+  th: MarkdownTh,
+  td: MarkdownTd,
+  a: MarkdownAnchor,
+};
+
+function Markdown({
+  children,
+  codeBlock = DefaultCodeBlock,
+  className = '',
+  isStreaming = false,
+  renderLegalReferences = false,
+  renderSourceCitations = false,
+  renderUrlReferences = false,
+  renderImages = true,
+  onCodeCopied,
+}: Readonly<MarkdownProps>) {
+  const { prepared, references } = prepareMarkdown(
+    children,
+    renderUrlReferences,
+    renderSourceCitations,
+  );
+  return (
+    <div
+      className={`text leading-relaxed prose prose-sm max-w-none dark:prose-invert ${className}`}
+    >
+      <RenderImagesContext.Provider value={renderImages}>
+        <CodeBlockContext.Provider value={codeBlock}>
+          <CodeCopiedContext.Provider value={onCodeCopied}>
+            <ReactMarkdown
+              remarkPlugins={
+                isStreaming ? STREAMING_REMARK_PLUGINS : REMARK_PLUGINS
+              }
+              rehypePlugins={resolveRehypePlugins(
+                renderLegalReferences,
+                renderSourceCitations,
+                prepared.separator,
+                references,
+              )}
+              components={COMPONENTS}
+            >
+              {prepared.markdown}
+            </ReactMarkdown>
+          </CodeCopiedContext.Provider>
+        </CodeBlockContext.Provider>
+      </RenderImagesContext.Provider>
+    </div>
+  );
+}
+
+function prepareMarkdown(
+  children: string,
+  renderUrlReferences: boolean,
+  renderSourceCitations: boolean,
+) {
+  const urls = protectUrlReferences(renderUrlReferences ? children : '');
+  const markdown = renderUrlReferences ? urls.markdown : children;
+  const prepared = renderSourceCitations
+    ? protectSourceCitationPipes(markdown)
+    : { markdown };
+  return { prepared, references: urls.references };
+}
+
+function resolveRehypePlugins(
+  renderLegalReferences: boolean,
+  renderSourceCitations: boolean,
+  separator?: string,
+  references: ReturnType<typeof protectUrlReferences>['references'] = new Map(),
+) {
+  const base = renderLegalReferences ? LEGAL_REHYPE_PLUGINS : REHYPE_PLUGINS;
+  const urlPlugin: [
+    typeof rehypeUrlReferences,
+    { references: typeof references },
+  ] = [rehypeUrlReferences, { references }];
+  const plugins = [...base];
+  if (renderSourceCitations) {
+    const sourcePlugin: [typeof rehypeSourceCitations, { separator?: string }] =
+      [rehypeSourceCitations, { separator }];
+    return references.size
+      ? [...plugins, sourcePlugin, urlPlugin]
+      : [...plugins, sourcePlugin];
+  }
+  return references.size ? [...plugins, urlPlugin] : plugins;
+}
+
+export default memo(Markdown);

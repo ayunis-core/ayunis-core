@@ -54,12 +54,10 @@ export function PiiMaskProvider({
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components -- context hook belongs with its provider by repo convention
 export function usePiiMasks(): ReadonlyMap<string, PiiMaskEntry> {
   return useContext(PiiMaskContext).masks;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components -- context hook belongs with its provider by repo convention
 export function usePiiUnmaskRequest(): PiiUnmaskRequestHandler | undefined {
   return useContext(PiiMaskContext).onUnmaskRequest;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rehypeLegalMarkers } from './rehype-legal-markers';
+import { rehypeLegalMarkers } from '@ayunis/chat/markdown/rehype-legal-markers';
 
 interface TestNode {
   type: string;

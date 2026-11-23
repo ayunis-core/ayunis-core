@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { splitPiiTokens } from '../lib/pii-token';
+import { splitPiiTokens } from './pii-token';
 import PiiMaskInline from './PiiMaskInline';
 
 interface PiiTextProps {

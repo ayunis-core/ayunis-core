@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import Markdown from './Markdown';
-import { SourceCitationProvider } from '@/widgets/markdown/model/source-citation-context';
+import { SourceCitationProvider } from '@ayunis/chat/markdown';
 
 vi.mock('./Codeblock', () => ({
   default: ({ children }: { children: string }) => <pre>{children}</pre>,

@@ -1,122 +1,45 @@
-import { memo, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@ayunis/ui/components/dialog';
-import type {
-  Message,
-  ImageMessageContentResponseDto,
-} from '@/pages/chat/model/openapi';
+import { memo } from 'react';
+import { MessageImage, UserMessage } from '@ayunis/chat/messages';
+import type { Message } from '@/pages/chat/model/openapi';
 import { useApiImageSrc } from '@/shared/hooks/useApiImageSrc';
 import { Markdown, usePiiMasks } from '@/widgets/markdown';
 import { resolvedPromptText } from '@/pages/chat/lib/sent-prompts';
-import type { TextMessageContentResponseDto } from '@ayunis/api-client/schemas';
 import RoutineNudgeNotice from './RoutineNudgeNotice';
 import CopyMessageButton from './CopyMessageButton';
 
-interface ChatMessageProps {
-  readonly message: Message;
+function AuthenticatedMessageImage({
+  imagePath,
+  altText,
+}: {
+  readonly imagePath: string;
+  readonly altText?: string;
+}) {
+  return (
+    <MessageImage imageUrl={useApiImageSrc(imagePath)} altText={altText} />
+  );
 }
 
-function ChatMessage({ message }: ChatMessageProps) {
-  const piiMasks = usePiiMasks();
-  if (message.role !== 'user' && message.role !== 'system') return null;
-
-  const images = message.content.filter(
-    (c) => c.type === 'image',
-  ) as ImageMessageContentResponseDto[];
-  const texts = (
-    message.content.filter(
-      (c) => c.type !== 'image',
-    ) as TextMessageContentResponseDto[]
-  ).filter((c) => !c.isSkillInstruction);
-
-  if (
-    images.length === 0 &&
-    texts.length > 0 &&
-    texts.every((c) => c.isNudge)
-  ) {
-    return <RoutineNudgeNotice text={texts.map((c) => c.text).join('\n\n')} />;
-  }
+function ChatMessage({ message }: { readonly message: Message }) {
+  const masks = usePiiMasks();
 
   return (
-    <div className="flex flex-col items-end">
-      <div
-        className="max-w-2xl min-w-0 space-y-2 overflow-hidden rounded-2xl bg-muted py-2.5 px-4"
-        data-testid="user-message"
-      >
-        {images.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {images.map((imageContent) => (
-              <ImageThumbnail
-                key={`image-${imageContent.index}`}
-                imageContent={imageContent}
-                imagePath={`/threads/${message.threadId}/messages/${message.id}/images/${imageContent.index}`}
-              />
-            ))}
-          </div>
-        )}
-        {texts.map((textContent, index) => (
-          <Markdown
-            key={`text-${index}-${textContent.text.slice(0, 50)}`}
-            className="[&_p]:!my-0"
-          >
-            {textContent.text}
-          </Markdown>
-        ))}
-      </div>
-      {texts.length > 0 && (
-        <CopyMessageButton
-          getContent={() => ({
-            text: resolvedPromptText(message, piiMasks),
-          })}
+    <UserMessage
+      message={message}
+      renderImage={(image) => (
+        <AuthenticatedMessageImage
+          imagePath={`/threads/${message.threadId}/messages/${message.id}/images/${image.index}`}
+          altText={image.altText}
         />
       )}
-    </div>
+      renderText={(text) => <Markdown className="[&_p]:!my-0">{text}</Markdown>}
+      renderNudge={(text) => <RoutineNudgeNotice text={text} />}
+      actions={
+        <CopyMessageButton
+          getContent={() => ({ text: resolvedPromptText(message, masks) })}
+        />
+      }
+    />
   );
 }
 
 export default memo(ChatMessage);
-
-function ImageThumbnail({
-  imageContent,
-  imagePath,
-}: {
-  readonly imageContent: ImageMessageContentResponseDto;
-  readonly imagePath: string;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const imageUrl = useApiImageSrc(imagePath);
-
-  return (
-    <>
-      <div
-        className="rounded-lg h-14.5 w-14.5 my-2 overflow-hidden border border-border cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => setIsOpen(true)}
-      >
-        <img
-          src={imageUrl}
-          alt={imageContent.altText}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent
-          className="max-w-[90vw] max-h-[90vh] p-0"
-          aria-describedby={undefined}
-        >
-          <DialogTitle className="sr-only">
-            {imageContent.altText ?? 'Image preview'}
-          </DialogTitle>
-          <img
-            src={imageUrl}
-            alt={imageContent.altText}
-            className="w-full h-full max-h-[90vh] object-contain rounded-lg"
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
