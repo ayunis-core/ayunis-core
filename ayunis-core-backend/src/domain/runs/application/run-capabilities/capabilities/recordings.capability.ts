@@ -20,7 +20,7 @@ import type {
 export class RecordingsCapability implements RunCapability {
   readonly id = 'recordings';
   readonly description =
-    'Search the transcripts and summaries of meeting recordings when the user asks about meetings or what was said in them.';
+    'Search the transcripts and summaries of meeting recordings. Load it when the user asks about a meeting or what was said or decided in it (Besprechung, Sitzung, Meeting, Protokoll, Aufnahme).';
 
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,

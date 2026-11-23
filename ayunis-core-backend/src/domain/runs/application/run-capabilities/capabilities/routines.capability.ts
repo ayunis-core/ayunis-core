@@ -18,7 +18,7 @@ import type {
 export class RoutinesCapability implements RunCapability {
   readonly id = 'routine_management';
   readonly description =
-    "Create and edit routines: tasks that run unattended every day and report to the user's inbox.";
+    "Create and edit routines: tasks that run unattended once a day at a fixed time and report to the user's inbox. Load it when the user wants something done for them every day, such as a morning news summary (Routine, täglich, jeden Morgen, automatisch).";
 
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,

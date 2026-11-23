@@ -1,4 +1,5 @@
 import type { ProviderChunk, ProviderRequest } from '@ayunis/inference';
+import { mockLoadToolsFirst } from './mock-load-tools-response';
 
 const PREFIX = 'E2E search recordings';
 const TOOL_NAME = 'recording_search';
@@ -22,6 +23,8 @@ export function mockRecordingSearchResponse(
   prompt: string,
 ): AsyncIterable<ProviderChunk> | null {
   if (!prompt.startsWith(PREFIX)) return null;
+  const loading = mockLoadToolsFirst(request, TOOL_NAME);
+  if (loading) return loading;
   if (!request.tools.some((tool) => tool.name === TOOL_NAME)) {
     return textResponse('recording-search::unavailable');
   }

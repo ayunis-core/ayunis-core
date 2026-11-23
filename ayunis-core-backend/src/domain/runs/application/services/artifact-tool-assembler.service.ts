@@ -34,6 +34,13 @@ export class ArtifactToolAssemblerService {
     private readonly findAllLetterheadsUseCase: FindAllLetterheadsUseCase,
   ) {}
 
+  async threadHasArtifacts(thread: Thread): Promise<boolean> {
+    const artifacts = await this.findArtifactsByThreadUseCase.execute(
+      new FindArtifactsByThreadQuery({ threadId: thread.id }),
+    );
+    return artifacts.length > 0;
+  }
+
   async assembleArtifactTools(thread: Thread): Promise<Tool[]> {
     const letterheads = await this.fetchLetterheadsSafe();
     const letterheadSuffix = buildLetterheadSuffix(letterheads);

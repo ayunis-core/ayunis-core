@@ -19,7 +19,7 @@ import type {
 export class AnonymizationExceptionCapability implements RunCapability {
   readonly id = 'anonymization_exceptions';
   readonly description =
-    'Exempt a term from anonymization when the user wants a word or name to stay readable in anonymous chats.';
+    'Exempt a term from anonymization. Load it when the user wants a word or name to stay readable in anonymous chats (Anonymisierung, Ausnahme, nicht anonymisieren).';
 
   constructor(
     private readonly assembleToolUseCase: AssembleToolUseCase,

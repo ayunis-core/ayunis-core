@@ -5,6 +5,7 @@ import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { OnboardingStage } from 'src/iam/onboarding/domain/value-objects/onboarding-stage.enum';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
+import { loadToolsHints } from 'src/domain/runs/application/run-capabilities/load-tools-hint.helper';
 import {
   PromptSlot,
   type CapabilityAssemblyState,
@@ -15,9 +16,9 @@ import {
 /**
  * What an onboarding chat is for, by its stage. It brings no tools: a profile
  * chat writes memory through `MemoryCapability`, skills are created through
- * `SkillManagementCapability`, so each stage only applies while the run
- * actually has those tools. It reads the tools contributed before it, so it
- * must come after the skill management capability.
+ * `SkillManagementCapability`, so each stage only applies while the run has
+ * those tools or could load them. It reads the tools contributed before it,
+ * so it must come after the skill management capability.
  */
 @Injectable()
 export class OnboardingCapability implements RunCapability {
@@ -34,12 +35,13 @@ export class OnboardingCapability implements RunCapability {
     if (origin.kind !== ThreadOriginKind.ONBOARDING || !this.isEnabled()) {
       return {};
     }
-    const canCreateSkills = state.reservedToolNames.has(ToolType.CREATE_SKILL);
-    const instructions = instructionsFor(
-      origin.stage,
-      context,
-      canCreateSkills,
-    );
+    const skillBuilding = state.reservedToolNames.has(ToolType.CREATE_SKILL)
+      ? [
+          SKILL_BUILDING,
+          ...loadToolsHints(state, [ToolType.CREATE_SKILL]),
+        ].join('\n')
+      : null;
+    const instructions = instructionsFor(origin.stage, context, skillBuilding);
     if (!instructions) return {};
     return {
       sections: [{ slot: PromptSlot.RESOURCES, content: instructions }],
@@ -53,28 +55,29 @@ export class OnboardingCapability implements RunCapability {
   }
 }
 
+/** `skillBuilding` is null when the run can neither offer nor load create_skill. */
 function instructionsFor(
   stage: OnboardingStage,
   context: RunCapabilityContext,
-  canCreateSkills: boolean,
+  skillBuilding: string | null,
 ): string | null {
   if (!context.model.canUseTools) return null;
   switch (stage) {
     case OnboardingStage.PROFILE:
       return context.personalContext.memory
-        ? profileInstructions(canCreateSkills)
+        ? profileInstructions(skillBuilding)
         : null;
     case OnboardingStage.FIRST_SKILL:
-      return canCreateSkills ? FIRST_SKILL_INSTRUCTIONS : null;
+      return skillBuilding ? firstSkillInstructions(skillBuilding) : null;
   }
 }
 
-function profileInstructions(withSkills: boolean): string {
-  const intro = withSkills
+function profileInstructions(skillBuilding: string | null): string {
+  const intro = skillBuilding
     ? `${PROFILE_INTRO} ${PROFILE_SKILLS_INTRO}`
     : PROFILE_INTRO;
-  const steps = withSkills
-    ? `${PROFILE_STEPS}\n${PROFILE_SKILL_STEPS}`
+  const steps = skillBuilding
+    ? `${PROFILE_STEPS}\n${PROFILE_SKILL_STEPS}\n${skillBuilding}`
     : PROFILE_STEPS;
   return `<onboarding>\n${intro}\n\n${steps}\n</onboarding>`;
 }
@@ -92,13 +95,14 @@ const PROFILE_STEPS = `- Find out who they are and what they do: their role, dep
 - If <user_instructions> are present, the user wrote them earlier. Treat them as what you already know about the user: sum up briefly what they say and check with the user whether it is still accurate instead of asking everything from scratch.
 - Build on what your <memory> already holds instead of asking for it again.`;
 
-const PROFILE_SKILL_STEPS = `- Once the profile is saved, move on to skills: pick the most important of the recurring tasks they mentioned, suggest a concrete skill for it and say in a sentence what it would save them. If they are up for it, build it with them as described below, and offer the next one afterwards for as long as they want. If they would rather stop, close the chat warmly.
-${SKILL_BUILDING}`;
+const PROFILE_SKILL_STEPS = `- Once the profile is saved, move on to skills: pick the most important of the recurring tasks they mentioned, suggest a concrete skill for it and say in a sentence what it would save them. If they are up for it, build it with them as described below, and offer the next one afterwards for as long as they want. If they would rather stop, close the chat warmly.`;
 
-const FIRST_SKILL_INSTRUCTIONS = `<onboarding>
+function firstSkillInstructions(skillBuilding: string): string {
+  return `<onboarding>
 The user started this chat to set up skills for their work. You already know who they are from your <memory>, so don't get to know them again. A skill holds the instructions for a recurring task, so the user does not have to explain the task again in every chat.
 
 - From what you remember, pick the most important task that recurs in their work, suggest a concrete skill for it and say in a sentence why it would help. If nothing fits, or they would rather have something else, ask which tasks they do again and again.
 - Once a skill is created, offer the next one for another important task, for as long as the user wants. If they would rather stop, close the chat warmly.
-${SKILL_BUILDING}
+${skillBuilding}
 </onboarding>`;
+}

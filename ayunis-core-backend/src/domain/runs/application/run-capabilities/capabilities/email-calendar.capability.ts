@@ -12,7 +12,7 @@ import type {
 export class EmailCalendarCapability implements RunCapability {
   readonly id = 'email_calendar';
   readonly description =
-    'Prepare an email or a calendar event that the user reviews and sends.';
+    'Draft an email or a calendar event that the user reviews and sends from their own mail program. Load it when the user asks to write, answer or send an email or to put an appointment into their calendar (E-Mail, Mail schreiben, antworten, Termin, Einladung, Kalender).';
 
   constructor(private readonly assembleToolUseCase: AssembleToolUseCase) {}
 
