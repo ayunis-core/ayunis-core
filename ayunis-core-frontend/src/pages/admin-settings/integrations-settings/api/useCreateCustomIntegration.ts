@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerCreateCustom,
   getMcpIntegrationsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   CreateCustomIntegrationFormData,
   McpIntegration,
 } from '@/pages/admin-settings/integrations-settings/model/types';
-import type { CreateCustomIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateCustomIntegrationDto } from '@ayunis/api-client/schemas';
 import { upsertIntegration } from '@/pages/admin-settings/integrations-settings/lib/integration-pages';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';

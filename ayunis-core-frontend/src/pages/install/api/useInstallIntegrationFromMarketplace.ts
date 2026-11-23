@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerInstallFromMarketplace,
   getMcpIntegrationsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { trackProbedIntegrationConnection } from '@/shared/lib/openpanel-integrations';

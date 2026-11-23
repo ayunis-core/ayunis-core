@@ -6,7 +6,7 @@ import { useCreatedArtifactId } from './useCreatedArtifactId';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 
 const THREAD_ID = 'thread-id';
 const ARTIFACT = {

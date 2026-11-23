@@ -1,0 +1,45 @@
+{
+  "name": "@ayunis/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./endpoints": "./src/generated/ayunisCoreAPI.ts",
+    "./schemas": "./src/generated/ayunisCoreAPI.schemas.ts",
+    "./request": "./src/request.ts",
+    "./transport": "./src/transport.ts",
+    "./openapi-schema.json": "./openapi-schema.json",
+    "./request-endpoint-templates.json": "./src/request-endpoint-templates.json"
+  },
+  "scripts": {
+    "openapi:fetch": "node scripts/fetch-openapi-schema.mjs",
+    "openapi:format": "prettier --write openapi-schema.json",
+    "openapi:generate": "orval --config orval.config.ts && node scripts/generate-request-endpoint-templates.mjs",
+    "openapi:update": "pnpm run openapi:fetch && pnpm run openapi:format && pnpm run openapi:generate",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "deps:check": "madge --circular --extensions ts --exclude '^generated/' src"
+  },
+  "dependencies": {
+    "axios": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.104.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tanstack/react-query": "catalog:",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-sonarjs": "^4.2.1",
+    "globals": "^16.5.0",
+    "madge": "^8.0.0",
+    "orval": "^8.28.1",
+    "prettier": "^3.9.6",
+    "react": "catalog:",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.68.0"
+  }
+}

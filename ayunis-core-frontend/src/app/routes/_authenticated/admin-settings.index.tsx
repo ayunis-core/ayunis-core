@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { createAuthorization } from '@/features/permissions';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/')({
   beforeLoad: ({ context: { user } }) => {

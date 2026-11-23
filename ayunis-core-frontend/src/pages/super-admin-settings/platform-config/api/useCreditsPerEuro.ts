@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { useSuperAdminPlatformConfigControllerGetCreditsPerEuro } from '@/shared/api';
+import { useSuperAdminPlatformConfigControllerGetCreditsPerEuro } from '@ayunis/api-client';
 
 function isNotFoundError(error: unknown): boolean {
   return error instanceof AxiosError && error.response?.status === 404;

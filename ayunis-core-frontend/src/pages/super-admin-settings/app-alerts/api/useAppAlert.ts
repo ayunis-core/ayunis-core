@@ -1,4 +1,4 @@
-import { useAppAlertControllerGetAppAlert } from '@/shared/api';
+import { useAppAlertControllerGetAppAlert } from '@ayunis/api-client';
 
 export default function useAppAlert() {
   const { data, isLoading, isError } = useAppAlertControllerGetAppAlert();

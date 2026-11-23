@@ -1,10 +1,10 @@
-import type { SourceProcessingStage } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SourceProcessingStage } from '@ayunis/api-client/schemas';
 import type {
   Message,
   ToolUseMessageContent,
   TextMessageContent,
 } from '@/pages/chat/model/openapi';
-import type { ToolCallDecision } from '@/shared/api';
+import type { ToolCallDecision } from '@ayunis/api-client';
 
 export type StepStatus = 'in_progress' | 'done' | 'error';
 

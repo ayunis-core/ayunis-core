@@ -1,6 +1,6 @@
 import type { useSetSuperAdminSsoEnabled } from '@/pages/super-admin-settings/org/api/useSetSuperAdminSsoEnabled';
 import EnableSsoDialog from '@/pages/super-admin-settings/org/ui/EnableSsoDialog';
-import type { OrgSsoConnectionResponseDto } from '@/shared/api';
+import type { OrgSsoConnectionResponseDto } from '@ayunis/api-client';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 

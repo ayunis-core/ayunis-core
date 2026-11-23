@@ -26,7 +26,7 @@ import {
 import {
   Microsoft365ConnectionTestOutcome,
   type Microsoft365ConnectionTestResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { showsPermissions } from '@/pages/admin-settings/microsoft-365-connector/lib/microsoft-365-connection-test';
 
 interface Microsoft365ConnectionTestCardProps {

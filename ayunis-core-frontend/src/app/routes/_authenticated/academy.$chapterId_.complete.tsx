@@ -8,7 +8,7 @@ import {
   getAcademyChaptersControllerGetChaptersQueryKey,
   getAcademyProgressControllerGetProgressQueryKey,
   getAddonsControllerListQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { findModulesBlockingConfirmation } from '@/pages/academy-chapter-confirmation/lib/findModulesBlockingConfirmation';
 
 export const Route = createFileRoute(

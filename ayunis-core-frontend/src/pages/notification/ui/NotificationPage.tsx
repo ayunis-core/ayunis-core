@@ -15,7 +15,7 @@ import { useMyPermissions } from '@/features/permissions';
 import {
   NotificationType,
   type NotificationResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import config from '@/shared/config';
 import { useNotification } from '@/pages/notification/api/useNotification';
 

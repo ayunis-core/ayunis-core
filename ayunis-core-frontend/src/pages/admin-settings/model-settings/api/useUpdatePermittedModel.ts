@@ -7,7 +7,7 @@ import {
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   type ModelWithConfigResponseDto,
   type UpdatePermittedModelDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { modelModeQueryKeys } from './modelModeQueryKeys';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';

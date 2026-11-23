@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { InviteResponseDto } from '@/shared/api';
+import type { InviteResponseDto } from '@ayunis/api-client';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useDeleteSuperAdminInvite } from '@/pages/super-admin-settings/org/api/useDeleteSuperAdminInvite';
 import { useDeleteAllSuperAdminInvites } from '@/pages/super-admin-settings/org/api/useDeleteAllSuperAdminInvites';

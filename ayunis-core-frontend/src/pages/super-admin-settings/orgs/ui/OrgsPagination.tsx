@@ -1,4 +1,4 @@
-import type { OrgLifecycleFilter, OrgsSortField } from '@/shared/api';
+import type { OrgLifecycleFilter, OrgsSortField } from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { SearchPagination } from '@/widgets/pagination';
 

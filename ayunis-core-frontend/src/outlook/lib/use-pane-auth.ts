@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 import {
   SessionExpiredError,
   type PaneSession,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { PiiCategory } from '@/shared/api';
+import { PiiCategory } from '@ayunis/api-client';
 import { buildRows, toEntries, validateRows } from './rows';
-import { PII_CATEGORIES } from '../model/types';
+import { PII_CATEGORIES } from '@/pages/admin-settings/anonymization-settings/model/types';
 
 describe('buildRows', () => {
   it('marks all categories disabled when there are no entries', () => {

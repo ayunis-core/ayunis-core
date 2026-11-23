@@ -5,6 +5,7 @@ on:
     paths:
       - 'ayunis-core-frontend/**'
       - 'packages/ui/**'
+      - 'packages/api-client/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/frontend-build.yml'
       - '.github/actions/setup-node-pnpm/action.yml'
@@ -13,6 +14,7 @@ on:
     paths:
       - 'ayunis-core-frontend/**'
       - 'packages/ui/**'
+      - 'packages/api-client/**'
       - 'pnpm-lock.yaml'
 
 permissions:
@@ -34,6 +36,10 @@ jobs:
 
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
+
+      - name: Check API client package
+        working-directory: packages/api-client
+        run: pnpm run typecheck && pnpm run lint && pnpm run deps:check
 
       - name: Run production build
         working-directory: ayunis-core-frontend

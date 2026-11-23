@@ -7,7 +7,7 @@ import {
   getFavoritesControllerFindAllQueryKey,
   getWorkspacesControllerFindAllQueryKey,
   getWorkspacesControllerFindOneQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';

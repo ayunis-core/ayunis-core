@@ -1,4 +1,4 @@
-import { useSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds } from '@/shared/api';
+import { useSuperAdminPlatformConfigControllerGetAcademyMinimumModuleSeconds } from '@ayunis/api-client';
 
 export default function useAcademyMinimumModuleSeconds() {
   const { data, isLoading, isError } =

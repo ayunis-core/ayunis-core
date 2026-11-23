@@ -7,7 +7,7 @@ import { normalizeLanguageModelFormData } from '@/pages/super-admin-settings/mod
 import type {
   LanguageModelResponseDto,
   UpdateLanguageModelRequestDtoProvider,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';

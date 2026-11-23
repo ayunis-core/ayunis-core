@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   getFavoritesControllerFindAllQueryKey,
   useFavoritesControllerReorder,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError } from '@/shared/lib/toast';
 
 export function useReorderFavorites() {

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import type { AcademyChapterResponseDto } from '@/shared/api';
+import type { AcademyChapterResponseDto } from '@ayunis/api-client';
 import {
   Card,
   CardContent,

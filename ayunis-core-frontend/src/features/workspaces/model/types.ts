@@ -1,3 +1,3 @@
-import type { WorkspaceResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { WorkspaceResponseDto } from '@ayunis/api-client/schemas';
 
 export type Workspace = WorkspaceResponseDto;

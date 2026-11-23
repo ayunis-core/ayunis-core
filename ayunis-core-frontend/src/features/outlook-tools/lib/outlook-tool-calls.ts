@@ -2,7 +2,7 @@ import type {
   AssistantMessageResponseDto,
   GetThreadResponseDto,
   ToolUseMessageContentResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import {
   isOutlookTool,
   type OutlookToolName,

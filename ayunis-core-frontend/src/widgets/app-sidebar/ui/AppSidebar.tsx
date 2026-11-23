@@ -41,7 +41,7 @@ import { useNavigate } from '@tanstack/react-router';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';
 import brandFullDark from '@/shared/assets/brand/brand-full-dark.svg';
 import { useTheme } from '@/features/theme';
-import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { MeResponseDtoSystemRole } from '@ayunis/api-client/schemas';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { InboxSidebarItem } from './InboxSidebarItem';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';

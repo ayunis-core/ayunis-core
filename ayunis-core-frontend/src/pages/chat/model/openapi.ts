@@ -6,7 +6,7 @@ import type {
   ToolUseMessageContentResponseDto,
   ThinkingMessageContentResponseDto,
   ImageMessageContentResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export type Thread = GetThreadResponseDto;
 export type Message = GetThreadResponseDto['messages'][number];

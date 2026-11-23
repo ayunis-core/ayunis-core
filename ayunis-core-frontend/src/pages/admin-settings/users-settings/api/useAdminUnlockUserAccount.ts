@@ -5,7 +5,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import {
   getUserControllerGetUsersInOrganizationQueryKey,
   useAdminUserAccountLockControllerUnlock,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useAdminUnlockUserAccount() {

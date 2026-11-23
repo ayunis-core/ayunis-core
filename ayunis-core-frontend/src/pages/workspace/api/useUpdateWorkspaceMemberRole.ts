@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useWorkspaceMembersControllerUpdateRole } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspaceMembersControllerUpdateRole } from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceMembership } from '@/pages/workspace/api/useInvalidateWorkspaceMembership';

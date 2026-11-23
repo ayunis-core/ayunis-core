@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
-import type { CourseModuleResponseDto } from '@/shared/api';
+import type { CourseModuleResponseDto } from '@ayunis/api-client';
 import {
   Item,
   ItemActions,

@@ -3,13 +3,13 @@ import { AlertCircle, CheckCircle2, LoaderCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import type { CompleteMcpOAuthDto } from '@/shared/api';
+import type { CompleteMcpOAuthDto } from '@ayunis/api-client';
 import { Button } from '@ayunis/ui/components/button';
-import { useCompleteMcpOAuth } from '../api/useCompleteMcpOAuth';
+import { useCompleteMcpOAuth } from '@/pages/settings/integration-oauth-callback/api/useCompleteMcpOAuth';
 import {
   resolveOAuthCallbackCopy,
   type OAuthCallbackStatus,
-} from '../lib/resolve-callback-copy';
+} from '@/pages/settings/integration-oauth-callback/lib/resolve-callback-copy';
 
 function resolveCallbackStatus(status: {
   isSuccess: boolean;

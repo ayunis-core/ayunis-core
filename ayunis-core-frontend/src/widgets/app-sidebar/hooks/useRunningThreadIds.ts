@@ -4,7 +4,7 @@ import {
   useActiveThreadRuns,
   useLocalActiveThreadRunIds,
 } from '@/features/thread-run';
-import { getThreadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { getThreadsControllerFindAllQueryKey } from '@ayunis/api-client/endpoints';
 
 /**
  * The threads with a run in progress: the ones this tab is streaming, shown

@@ -22,7 +22,10 @@ import { useDeleteAllInvites } from '@/pages/admin-settings/users-settings/api/u
 import { useInviteResend } from '@/pages/admin-settings/users-settings/api/useInviteResend';
 import { useResendExpiredInvites } from '@/pages/admin-settings/users-settings/api/useResendExpiredInvites';
 import type { Invite } from '@/pages/admin-settings/users-settings/model/openapi';
-import type { InviteResponseDtoRole, InvitesSortField } from '@/shared/api';
+import type {
+  InviteResponseDtoRole,
+  InvitesSortField,
+} from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { InviteStatusBadge } from '@/shared/ui/invite-status-badge';

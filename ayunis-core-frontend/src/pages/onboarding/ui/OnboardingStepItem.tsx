@@ -27,7 +27,7 @@ import {
 import {
   useKnowledgeBasesControllerFindAll,
   useSkillsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { useWorkspaces } from '@/features/workspaces';

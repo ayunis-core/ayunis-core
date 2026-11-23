@@ -1,4 +1,4 @@
-import { useMcpToolAllowancesControllerList } from '@/shared/api';
+import { useMcpToolAllowancesControllerList } from '@ayunis/api-client';
 
 export function useMcpToolAllowances() {
   const { data, isLoading, isError, refetch } =

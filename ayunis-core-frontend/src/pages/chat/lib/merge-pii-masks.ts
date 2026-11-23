@@ -1,4 +1,4 @@
-import type { PiiMaskResponseDto } from '@/shared/api';
+import type { PiiMaskResponseDto } from '@ayunis/api-client';
 
 /**
  * Merges an incoming full mask dictionary (SSE `masks` event) into the local

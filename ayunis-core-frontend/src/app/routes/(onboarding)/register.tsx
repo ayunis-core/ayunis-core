@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import RegisterPage from '@/pages/auth/register';
-import { appControllerIsCloud } from '@/shared/api';
+import { appControllerIsCloud } from '@ayunis/api-client';
 
 export const Route = createFileRoute('/(onboarding)/register')({
   component: RouteComponent,

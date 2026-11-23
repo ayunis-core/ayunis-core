@@ -93,7 +93,7 @@ import { MyPagePage } from '@/pages/<page-name>';
 import {
   getMyEntitiesControllerFindAllQueryKey,
   myEntitiesControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client';
 
 export const Route = createFileRoute('/_authenticated/<page-name>/')({
   component: RouteComponent,
@@ -121,7 +121,7 @@ import { MyDetailPage } from '@/pages/<page-name>';
 import {
   getMyEntitiesControllerFindOneQueryKey,
   myEntitiesControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client';
 
 export const Route = createFileRoute('/_authenticated/<page-name>/$id')({
   component: RouteComponent,
@@ -172,7 +172,7 @@ One hook per operation. Each encapsulates a TanStack Query mutation with cache i
 import {
   useMyEntitiesControllerCreate,
   getMyEntitiesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -212,7 +212,7 @@ Re-export types from the generated API client for cleaner imports within the pag
 // src/pages/<page-name>/model/openapi.ts
 export type {
   MyEntityResponseDto as MyEntity,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 ```
 
 ## Internationalization
@@ -262,7 +262,7 @@ A page **cannot** import from:
 ## Available Layouts
 
 | Layout | Use Case |
-|--------|----------|
+| ------ | -------- |
 | `AppLayout` | Standard authenticated page with sidebar |
 | `ContentAreaLayout` | Page with header + scrollable content area |
 | `FullScreenMessageLayout` | Centered message (empty states, errors) |

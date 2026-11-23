@@ -3,7 +3,7 @@ import {
   getSkillsControllerFindAllQueryKey,
   getThreadAiContextControllerGetAiContextQueryKey,
   getWorkspaceContextControllerFindContextQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   personalSkillListParams,
   workspaceSkillListParams,

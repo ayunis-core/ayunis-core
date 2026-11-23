@@ -18,8 +18,8 @@ import {
   useAcademyAccessStatus,
   useAcademyProgress,
 } from '@/features/academy';
-import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { AcademyChapterResponseDto } from '@ayunis/api-client/schemas';
+import { AcademyAccessMode } from '@ayunis/api-client/schemas';
 import { ModuleVideo } from './ModuleVideo';
 import { ChapterModuleList } from './ChapterModuleList';
 import { useProgressWhileWatching } from '@/pages/academy-chapter/lib/useProgressWhileWatching';

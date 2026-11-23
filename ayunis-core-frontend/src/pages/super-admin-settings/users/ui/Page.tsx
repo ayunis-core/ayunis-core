@@ -6,8 +6,8 @@ import { useUserExport } from '@/pages/super-admin-settings/users/api/useUserExp
 import type {
   PaginationDto,
   SuperAdminUserListItemResponseDto,
-} from '@/shared/api';
-import type { SuperAdminUsersSortField } from '@/shared/api';
+} from '@ayunis/api-client';
+import type { SuperAdminUsersSortField } from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { UsersTable } from './UsersTable';
 

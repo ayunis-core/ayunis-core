@@ -4,8 +4,8 @@ import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerCreate,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { CreateInviteResponseDto } from '@ayunis/api-client/schemas';
 import type { InviteCreateData } from '@/pages/admin-settings/users-settings/model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';

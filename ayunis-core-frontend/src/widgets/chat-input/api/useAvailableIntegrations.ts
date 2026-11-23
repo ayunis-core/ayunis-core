@@ -1,4 +1,4 @@
-import { useMcpIntegrationsControllerListAvailable } from '@/shared/api/generated/ayunisCoreAPI';
+import { useMcpIntegrationsControllerListAvailable } from '@ayunis/api-client/endpoints';
 
 interface UseAvailableIntegrationsOptions {
   enabled?: boolean;

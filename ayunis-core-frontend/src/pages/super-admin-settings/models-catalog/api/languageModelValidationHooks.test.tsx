@@ -25,7 +25,7 @@ vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: mocks.invalidateRouter }),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey: () => [
     'catalog-models',
   ],

@@ -1,4 +1,4 @@
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 import type { OpenPanel } from '@openpanel/web';
 import type { OpenPanelGlobalProperties } from './openpanel-events';
 import { openPanel } from './openpanel';

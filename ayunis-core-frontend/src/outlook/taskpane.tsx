@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import appI18n from '@/i18n';
-import { setEmbeddedSession } from '@/shared/api/embedded-session';
+import { configureAppApi } from '@/shared/api/client';
 import { createPaneSession } from '@/outlook/api/pane-session';
 import { applyOutlookLanguage, createOutlookI18n } from '@/outlook/lib/i18n';
 import {
@@ -18,7 +18,7 @@ import { EmbeddedApp } from '@/outlook/ui/EmbeddedApp';
 // its display language the browser's is used.
 export function mountPane(): void {
   const session = createPaneSession();
-  setEmbeddedSession(session);
+  configureAppApi(session.transport);
   const i18n = createOutlookI18n(officeDisplayLanguage());
   applyOutlookLanguage(appI18n, officeDisplayLanguage());
   void officeReady().then(
@@ -34,7 +34,9 @@ export function mountPane(): void {
     <StrictMode>
       <I18nextProvider i18n={i18n}>
         <TaskPane session={session} officeAvailable={officeDialogAvailable}>
-          {(user) => <EmbeddedApp userId={user.id} />}
+          {(user) => (
+            <EmbeddedApp userId={user.id} onSignOut={session.signOut} />
+          )}
         </TaskPane>
       </I18nextProvider>
     </StrictMode>,

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { SkillTemplateResponseDto } from '@/shared/api';
+import type { SkillTemplateResponseDto } from '@ayunis/api-client';
 import {
   Item,
   ItemContent,

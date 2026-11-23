@@ -28,7 +28,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError: mocks.showError }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useMfaLoginControllerVerify: (options: { mutation: MutationOptions }) => {
     mocks.verifyOptions = options.mutation;
     return {

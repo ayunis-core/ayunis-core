@@ -10,7 +10,7 @@ const { changeSkillOwner, changeKnowledgeBaseOwner } = vi.hoisted(() => ({
   changeKnowledgeBaseOwner: vi.fn(),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', async (importOriginal) => ({
+vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   skillsControllerChangeOwner: changeSkillOwner,
   knowledgeBaseOwnerControllerChangeOwner: changeKnowledgeBaseOwner,

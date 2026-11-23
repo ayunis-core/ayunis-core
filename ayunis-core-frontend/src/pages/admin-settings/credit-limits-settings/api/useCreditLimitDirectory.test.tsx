@@ -28,7 +28,7 @@ const api = vi.hoisted(() => ({
   defaultLimit: vi.fn(),
   userUsage: vi.fn(),
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   useUserControllerGetUsersInOrganization: api.users,
   useTeamsControllerListTeams: api.teams,
   useCreditLimitsControllerGetUserLimits: api.userLimits,

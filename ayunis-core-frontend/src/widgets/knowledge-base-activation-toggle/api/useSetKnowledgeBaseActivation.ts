@@ -5,7 +5,7 @@ import {
   getKnowledgeBasesControllerFindAllQueryKey,
   getKnowledgeBasesControllerFindOneQueryKey,
   knowledgeBasesControllerSetActivation,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';

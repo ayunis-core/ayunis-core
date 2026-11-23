@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   getSuperAdminOrgsControllerGetOrgByIdQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgLifecycleQueries } from './invalidateOrgLifecycleQueries';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';

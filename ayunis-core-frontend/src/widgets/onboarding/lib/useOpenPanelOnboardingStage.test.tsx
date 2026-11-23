@@ -6,11 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getAuthenticationControllerMeQueryKey,
   getOnboardingControllerGetOnboardingQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   MeResponseDto,
   OnboardingResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import {
   clearOpenPanelIdentity,

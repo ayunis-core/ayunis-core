@@ -13,7 +13,7 @@ import {
 import type {
   RecordingResponseDto,
   RecordingSummaryStateDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { formatDate } from '@/shared/lib/format-date';
 import { Markdown } from '@/widgets/markdown';
 import {

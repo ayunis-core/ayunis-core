@@ -9,7 +9,7 @@ import { abortActiveThreadRun, isThreadRunActive } from './active-thread-run';
 const { cancelRun } = vi.hoisted(() => ({
   cancelRun: vi.fn(() => Promise.resolve()),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   activeRunsControllerCancel: cancelRun,
 }));
 

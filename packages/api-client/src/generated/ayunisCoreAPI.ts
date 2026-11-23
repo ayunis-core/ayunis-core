@@ -383,9 +383,9 @@ import type {
   WorkspaceResponseDto,
   WorkspaceRolePermissionsResponseDto,
   WorkspacesControllerFindAllParams
-} from './ayunisCoreAPI.schemas.ts';
+} from './ayunisCoreAPI.schemas';
 
-import { customAxiosInstance } from '../client.ts';
+import { customAxiosInstance } from '../request';
 
 
 

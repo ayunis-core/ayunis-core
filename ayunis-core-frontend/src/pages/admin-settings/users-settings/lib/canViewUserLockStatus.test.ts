@@ -1,4 +1,4 @@
-import { MeResponseDtoRole, MeResponseDtoSystemRole } from '@/shared/api';
+import { MeResponseDtoRole, MeResponseDtoSystemRole } from '@ayunis/api-client';
 import { describe, expect, it } from 'vitest';
 import { canViewUserLockStatus } from './canViewUserLockStatus';
 

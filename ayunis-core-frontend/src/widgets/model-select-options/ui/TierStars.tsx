@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { cn } from '@ayunis/ui/lib/cn';
-import { ModelWithConfigResponseDtoTier } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { ModelWithConfigResponseDtoTier } from '@ayunis/api-client/schemas';
 
 const TIER_FILLED_COUNT: Record<ModelWithConfigResponseDtoTier, number> = {
   [ModelWithConfigResponseDtoTier.zero]: 0,

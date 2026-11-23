@@ -1,4 +1,4 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 import type { QueryClient } from '@tanstack/react-query';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';

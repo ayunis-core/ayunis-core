@@ -12,7 +12,7 @@ import {
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { Switch } from '@ayunis/ui/components/switch';
 import { Label } from '@ayunis/ui/components/label';
-import type { AddonType } from '@/shared/api';
+import type { AddonType } from '@ayunis/api-client';
 import { useSuperAdminAddons } from '@/pages/super-admin-settings/org/api/useSuperAdminAddons';
 import { useSuperAdminActivateAddon } from '@/pages/super-admin-settings/org/api/useSuperAdminActivateAddon';
 import { useSuperAdminDeactivateAddon } from '@/pages/super-admin-settings/org/api/useSuperAdminDeactivateAddon';

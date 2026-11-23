@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/pages/workspace/ui/WorkspaceSkillDetailPage', () => ({
   WorkspaceSkillDetailPage: () => null,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getModelsControllerIsEmbeddingModelEnabledQueryKey: () => [
     '/models/embedding/enabled',
   ],

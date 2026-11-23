@@ -23,7 +23,7 @@ vi.mock('@/pages/chat/api/useThreadWorkspaceId', () => ({
   useThreadWorkspaceId: () => threadWorkspace.id,
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   skillsControllerCreate: createSkill,
   getSkillsControllerFindAllQueryKey: (params: unknown) => ['/skills', params],
   getThreadAiContextControllerGetAiContextQueryKey: (id: string) => [

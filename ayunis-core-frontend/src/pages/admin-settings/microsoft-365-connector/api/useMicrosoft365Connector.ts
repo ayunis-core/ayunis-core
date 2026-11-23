@@ -1,7 +1,7 @@
 import {
   useConnectorsControllerGetMicrosoft365,
   getConnectorsControllerGetMicrosoft365QueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useMicrosoft365Connector() {
   const { data, isLoading, error, refetch } =

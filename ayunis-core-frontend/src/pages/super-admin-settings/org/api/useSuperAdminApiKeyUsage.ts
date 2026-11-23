@@ -1,7 +1,7 @@
 import {
   useSuperAdminUsageDataControllerGetApiKeyUsage,
   type SuperAdminUsageDataControllerGetApiKeyUsageParams,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useSuperAdminApiKeyUsage(
   orgId: string,

@@ -1,5 +1,5 @@
 import type { useSetSuperAdminSsoEnabled } from '@/pages/super-admin-settings/org/api/useSetSuperAdminSsoEnabled';
-import type { OrgSsoConnectionResponseDto } from '@/shared/api';
+import type { OrgSsoConnectionResponseDto } from '@ayunis/api-client';
 import {
   AlertDialog,
   AlertDialogAction,

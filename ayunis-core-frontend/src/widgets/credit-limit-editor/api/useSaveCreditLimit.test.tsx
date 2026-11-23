@@ -1,4 +1,4 @@
-import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { CreditLimitScope } from '@ayunis/api-client/schemas';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -17,7 +17,7 @@ const api = vi.hoisted(() => ({
   setDefault: vi.fn(),
   removeDefault: vi.fn(),
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   creditLimitsControllerSetTeamLimit: api.setTeam,
   creditLimitsControllerSetUserLimit: api.setUser,
   creditLimitsControllerRemoveTeamLimit: api.removeTeam,

@@ -16,7 +16,7 @@ import { useConnectors } from '@/pages/admin-settings/integrations-settings/api/
 import {
   ConnectorStatus,
   type ConnectorProduct,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 const connectorPages = {
   microsoft_365: '/admin-settings/integrations/microsoft-365',

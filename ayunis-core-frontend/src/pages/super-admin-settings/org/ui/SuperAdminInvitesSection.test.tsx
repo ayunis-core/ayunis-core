@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { InviteResponseDto } from '@/shared/api';
+import type { InviteResponseDto } from '@ayunis/api-client';
 import SuperAdminInvitesSection from './SuperAdminInvitesSection';
 
 vi.mock('react-i18next', () => ({

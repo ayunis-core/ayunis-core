@@ -4,7 +4,7 @@ import {
   threadSourcesControllerCompleteUpload,
   threadSourcesControllerCreateUpload,
   threadSourcesControllerGetThreadSources,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type { AttachmentSourceApi } from '@/features/outlook-tools';
 
 /** The thread source endpoints an Outlook attachment is uploaded through. */

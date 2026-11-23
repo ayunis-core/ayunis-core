@@ -1,4 +1,4 @@
-import type { McpToolAllowanceResponseDto } from '@/shared/api';
+import type { McpToolAllowanceResponseDto } from '@ayunis/api-client';
 
 export interface ToolAllowanceGroup {
   integrationId: string;

@@ -1,10 +1,10 @@
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
-import { getLetterheadsControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import { customAxiosInstance } from '@/shared/api';
+import { getLetterheadsControllerFindAllQueryKey } from '@ayunis/api-client/endpoints';
+import { customAxiosInstance } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
-import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { LetterheadResponseDto } from '@ayunis/api-client/schemas';
 import type { PageMargins } from '@/pages/admin-settings/letterheads-settings/model/types';
 
 import {

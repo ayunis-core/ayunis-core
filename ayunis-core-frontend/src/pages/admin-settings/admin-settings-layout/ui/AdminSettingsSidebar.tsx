@@ -21,7 +21,7 @@ import {
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsAcademyAddonActive } from '@/features/academy';
 import { useHasCreditBudget } from '@/features/credit-limits';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import {
   allowedSettingsSections,
   useAuthorization,

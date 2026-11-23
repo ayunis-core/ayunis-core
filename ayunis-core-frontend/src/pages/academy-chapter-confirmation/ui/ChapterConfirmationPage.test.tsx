@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   AcademyChapterResponseDto,
   AcademyProgressResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import ChapterConfirmationPage from './ChapterConfirmationPage';
 
 const { useAcademyProgress } = vi.hoisted(() => ({

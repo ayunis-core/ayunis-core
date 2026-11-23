@@ -1,10 +1,10 @@
 import {
   useSuperAdminOrgsControllerCreateOrg,
   type CreateOrgRequestDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { getSuperAdminOrgsControllerGetAllOrgsQueryKey } from '@/shared/api';
+import { getSuperAdminOrgsControllerGetAllOrgsQueryKey } from '@ayunis/api-client';
 import { useTranslation } from 'react-i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';
 

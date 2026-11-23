@@ -5,11 +5,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   getModelModesControllerGetModelModesQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { getModelModeDefaultQueryKey } from '@/features/model-mode-defaults';
 import { useUpdatePermittedModel } from './useUpdatePermittedModel';
 
-vi.mock('@/shared/api', async (importOriginal) => {
+vi.mock('@ayunis/api-client', async (importOriginal) => {
   const actual = await importOriginal<object>();
   const { useMutation } = await import('@tanstack/react-query');
   return {

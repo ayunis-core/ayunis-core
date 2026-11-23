@@ -3,7 +3,7 @@ import { ReleaseNotesPage } from '@/pages/release-notes';
 import {
   getReleaseNotesControllerFindAllQueryKey,
   releaseNotesControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { getFeatureToggles } from './-routines-enabled-query';
 
 export const Route = createFileRoute('/_authenticated/news/')({

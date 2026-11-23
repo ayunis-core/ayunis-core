@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { CalendarClock, CircleAlert } from 'lucide-react';
-import type { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { NotificationType } from '@ayunis/api-client/schemas';
 
 interface NotificationTypeAppearance {
   icon: LucideIcon;

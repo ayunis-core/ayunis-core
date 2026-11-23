@@ -1,8 +1,11 @@
 import {
   getThreadsControllerFindOneQueryKey,
   useThreadsControllerUnmaskPiiMask,
-} from '@/shared/api';
-import type { GetThreadResponseDto, PiiMaskResponseDto } from '@/shared/api';
+} from '@ayunis/api-client';
+import type {
+  GetThreadResponseDto,
+  PiiMaskResponseDto,
+} from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';

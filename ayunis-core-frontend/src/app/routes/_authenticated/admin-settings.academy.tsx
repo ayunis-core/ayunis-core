@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AcademySettingsPage } from '@/pages/admin-settings/academy-settings';
 import { isAcademyAddonActive } from '@/features/academy';
 import { createAuthorization } from '@/features/permissions';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import {
   addonsControllerList,
   getAddonsControllerListQueryKey,
@@ -11,8 +11,8 @@ import {
   getAcademyAccessControllerListOrgCertificatesQueryKey,
   academyAccessControllerGetOrgSettings,
   getAcademyAccessControllerGetOrgSettingsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { CertificateValidityStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { CertificateValidityStatus } from '@ayunis/api-client/schemas';
 import { isStatusReachable } from '@/pages/admin-settings/academy-settings';
 import { searchParamString } from '@/shared/lib/search-params';
 

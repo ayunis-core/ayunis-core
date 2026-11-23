@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import type { WorkspaceAccess } from '@/features/workspaces';
-import { useAuthenticationControllerMe } from '@/shared/api';
+import { useAuthenticationControllerMe } from '@ayunis/api-client';
 import { useRemoveWorkspaceMember } from '@/pages/workspace/api/useRemoveWorkspaceMember';
 import {
   canRemoveWorkspaceMember,

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   getModelModesControllerGetModelModesQueryKey,
   modelModesControllerGetModelModes,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 /** Which model each mode currently resolves to for the signed-in user. */
 export function useModelModes() {

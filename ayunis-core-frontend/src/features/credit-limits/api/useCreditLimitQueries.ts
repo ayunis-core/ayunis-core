@@ -5,7 +5,7 @@ import {
   useCreditLimitsControllerGetUserLimits,
   useCreditLimitsControllerGetUserUsage,
   useUsageControllerGetCreditUsage,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useCreditLimitBudget() {
   const query = useUsageControllerGetCreditUsage();

@@ -1,4 +1,4 @@
-import type { SuperAdminCatalogModelsControllerGetAllCatalogModels200Item } from '@/shared/api';
+import type { SuperAdminCatalogModelsControllerGetAllCatalogModels200Item } from '@ayunis/api-client';
 import { isLanguageModel, isEmbeddingModel } from '@/features/models';
 import {
   Item,

@@ -11,7 +11,7 @@ import de from '@/shared/locales/de/admin-settings-users.json';
 import { useBulkInviteCreate } from './useBulkInviteCreate';
 
 const mocks = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', async () => {
+vi.mock('@ayunis/api-client/endpoints', async () => {
   const { useMutation } = await import('@tanstack/react-query');
   const useCreate = (options: { mutation: Record<string, unknown> }) =>
     useMutation({ mutationFn: mocks.request, ...options.mutation });

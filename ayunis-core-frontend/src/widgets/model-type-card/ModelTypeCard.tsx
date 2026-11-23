@@ -12,7 +12,7 @@ import { Separator } from '@ayunis/ui/components/separator';
 import type {
   ModelWithConfigResponseDto,
   UpdatePermittedModelDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useTranslation } from 'react-i18next';
 import {
   Item,

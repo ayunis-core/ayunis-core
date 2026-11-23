@@ -21,8 +21,8 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { ConnectorStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { Microsoft365ConnectorResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { ConnectorStatus } from '@ayunis/api-client/schemas';
+import type { Microsoft365ConnectorResponseDto } from '@ayunis/api-client/schemas';
 import { useSaveMicrosoft365Connector } from '@/pages/admin-settings/microsoft-365-connector/api/useSaveMicrosoft365Connector';
 import { useRemoveMicrosoft365Connector } from '@/pages/admin-settings/microsoft-365-connector/api/useRemoveMicrosoft365Connector';
 import {

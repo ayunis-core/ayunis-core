@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
-import { MeResponseDtoRole, useAuthenticationControllerMe } from '@/shared/api';
+import {
+  MeResponseDtoRole,
+  useAuthenticationControllerMe,
+} from '@ayunis/api-client';
 import type { OpenPanelGlobalProperties } from '@/shared/lib/openpanel-events';
 import { setOpenPanelOnboardingStage } from '@/shared/lib/openpanel-identity';
 import { createAuthorization } from '@/features/permissions';

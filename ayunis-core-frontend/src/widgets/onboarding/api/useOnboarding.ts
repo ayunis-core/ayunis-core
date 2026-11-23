@@ -1,7 +1,7 @@
 import {
   useOnboardingControllerGetOnboarding,
   getOnboardingControllerGetOnboardingQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useOnboarding() {
   const { data, dataUpdatedAt, isLoading, error } =

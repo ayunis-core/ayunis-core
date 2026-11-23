@@ -1,7 +1,7 @@
 import {
   useSuperAdminUsageControllerGetUsageStats,
   type SuperAdminUsageControllerGetUsageStatsParams,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useSuperAdminUsageStats(
   orgId: string,

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   threadSourcesControllerGetProcessingProgress,
   getThreadSourcesControllerGetProcessingProgressQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useSourceProcessingProgress(
   threadId: string,

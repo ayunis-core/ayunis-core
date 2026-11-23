@@ -1,7 +1,7 @@
 import {
   useSuperAdminCrawlDomainsControllerRevoke,
   getSuperAdminCrawlDomainsControllerListQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useQueryClient } from '@tanstack/react-query';

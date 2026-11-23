@@ -1,5 +1,5 @@
-import { sourceUploadsControllerAbort } from '@/shared/api/generated/ayunisCoreAPI';
-import type { SourceUploadSessionResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { sourceUploadsControllerAbort } from '@ayunis/api-client/endpoints';
+import type { SourceUploadSessionResponseDto } from '@ayunis/api-client/schemas';
 import {
   transferSourceFile,
   type SignUploadRequest,

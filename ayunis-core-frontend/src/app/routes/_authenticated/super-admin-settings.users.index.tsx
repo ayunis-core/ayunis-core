@@ -5,7 +5,7 @@ import {
   getSuperAdminUserListControllerGetAllUsersQueryKey,
   superAdminUserListControllerGetAllUsers,
   SuperAdminUsersSortField,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { sortFieldSchema, sortOrderSchema } from '@/shared/lib/table-sort';
 import { searchParamString } from '@/shared/lib/search-params';
 

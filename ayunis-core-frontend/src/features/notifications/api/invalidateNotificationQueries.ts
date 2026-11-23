@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   getNotificationsControllerCountUnreadQueryKey,
   getNotificationsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 /** Refreshes the inbox list and the sidebar's unread badge. */
 export function invalidateNotificationQueries(queryClient: QueryClient): void {

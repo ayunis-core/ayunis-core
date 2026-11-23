@@ -17,7 +17,7 @@ import {
 } from '@ayunis/ui/components/item';
 import { Badge } from '@ayunis/ui/components/badge';
 import { cn } from '@ayunis/ui/lib/cn';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 
 export interface McpIntegrationsHook {
   availableIntegrations: McpIntegrationResponseDto[] | undefined;

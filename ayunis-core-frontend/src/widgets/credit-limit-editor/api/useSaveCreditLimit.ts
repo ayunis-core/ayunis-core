@@ -1,4 +1,4 @@
-import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { CreditLimitScope } from '@ayunis/api-client/schemas';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +12,7 @@ import {
   getCreditLimitsControllerGetDefaultUserLimitQueryKey,
   getCreditLimitsControllerGetTeamLimitsQueryKey,
   getCreditLimitsControllerGetUserLimitsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';

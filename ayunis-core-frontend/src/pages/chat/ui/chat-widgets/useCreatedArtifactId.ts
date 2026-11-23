@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getArtifactsControllerFindByThreadQueryKey,
   type ArtifactResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useThreadArtifacts } from '@/pages/chat/api/useThreadArtifacts';
 import { findLatestArtifactId } from '@/pages/chat/lib/find-latest-artifact-id';
 

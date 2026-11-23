@@ -10,8 +10,8 @@ import {
   getTeamsControllerListMyTeamsQueryKey,
   myPermissionsControllerGetMine,
   getMyPermissionsControllerGetMineQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { CreateSkillShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { CreateSkillShareDtoEntityType } from '@ayunis/api-client/schemas';
 import { createFileRoute } from '@tanstack/react-router';
 import { SkillPage } from '@/pages/skill';
 import { z } from 'zod';

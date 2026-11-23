@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form';
 import {
   getAuthenticationControllerMeQueryKey,
   useUserControllerUpdateUserName,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import {
   updateUserNameFormSchema,
   type UpdateUserNameFormValues,
-} from '../model/updateUserNameSchema';
+} from '@/pages/settings/account-settings/model/updateUserNameSchema';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';

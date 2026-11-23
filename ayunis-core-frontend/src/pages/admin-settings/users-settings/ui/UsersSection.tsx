@@ -48,7 +48,7 @@ import type {
 import type {
   OrgUsersSortField,
   UserResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { useConfirmation } from '@/widgets/confirmation-modal';

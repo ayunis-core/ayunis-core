@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ayunis/ui/components/select';
-import { CreateLanguageModelRequestDtoTier } from '@/shared/api';
-import type { LanguageModelFormData } from '../model/types';
+import { CreateLanguageModelRequestDtoTier } from '@ayunis/api-client';
+import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
 
 // Radix Select disallows empty string values; converted to undefined before reaching form state.
 const TIER_UNSET_VALUE = '__unset__';

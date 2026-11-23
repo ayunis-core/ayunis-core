@@ -6,7 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ayunis/ui/components/tabs';
-import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
 import { useUploadRecordingAudio } from '@/features/recording-audio';
 import { RecordingSummaryCard } from './RecordingSummaryCard';
 import { RecordingTranscriptCard } from './RecordingTranscriptCard';

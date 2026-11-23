@@ -1,4 +1,4 @@
-import { useUsageControllerGetCreditUsage } from '@/shared/api/generated/ayunisCoreAPI';
+import { useUsageControllerGetCreditUsage } from '@ayunis/api-client/endpoints';
 
 /**
  * `GET /usage/credits` is admin-only, so callers rendered for non-admins must

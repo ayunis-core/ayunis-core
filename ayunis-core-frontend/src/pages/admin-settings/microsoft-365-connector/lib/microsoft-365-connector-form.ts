@@ -1,7 +1,7 @@
 import type {
   Microsoft365ConnectorResponseDto,
   SaveMicrosoft365ConnectorDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { Microsoft365ConnectorFormValues } from '@/pages/admin-settings/microsoft-365-connector/model/microsoft365ConnectorFormSchema';
 
 /** The stored secret is never shown, so its field always starts empty. */

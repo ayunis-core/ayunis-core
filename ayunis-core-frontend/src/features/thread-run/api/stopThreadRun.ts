@@ -1,4 +1,4 @@
-import { activeRunsControllerCancel } from '@/shared/api/generated/ayunisCoreAPI';
+import { activeRunsControllerCancel } from '@ayunis/api-client/endpoints';
 import { abortActiveThreadRun } from '@/features/thread-run/model/active-thread-run';
 import {
   markThreadRunStopped,

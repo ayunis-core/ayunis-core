@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerUpdate,
   getMcpIntegrationsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   McpIntegration,
   UpdateIntegrationFormData,

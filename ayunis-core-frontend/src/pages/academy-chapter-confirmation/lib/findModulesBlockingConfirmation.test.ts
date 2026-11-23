@@ -3,7 +3,7 @@ import type {
   AcademyChapterResponseDto,
   AcademyProgressResponseDto,
   CourseModuleResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { findModulesBlockingConfirmation } from './findModulesBlockingConfirmation';
 
 function courseModule(id: string, position: number): CourseModuleResponseDto {

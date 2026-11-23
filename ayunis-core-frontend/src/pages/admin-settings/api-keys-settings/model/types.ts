@@ -1,7 +1,7 @@
 import type {
   ApiKeyCreditLimitItemDto,
   ApiKeyResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export type ApiKey = ApiKeyResponseDto;
 export type ApiKeyCreditLimit = ApiKeyCreditLimitItemDto;

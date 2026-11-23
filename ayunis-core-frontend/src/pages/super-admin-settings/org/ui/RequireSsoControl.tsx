@@ -1,5 +1,5 @@
 import type { useSetSuperAdminLocalPasswordLogin } from '@/pages/super-admin-settings/org/api/useSetSuperAdminLocalPasswordLogin';
-import type { OrgSsoConnectionResponseDto } from '@/shared/api';
+import type { OrgSsoConnectionResponseDto } from '@ayunis/api-client';
 import {
   AlertDialog,
   AlertDialogAction,

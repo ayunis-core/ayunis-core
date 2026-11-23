@@ -1,5 +1,5 @@
 import SharedBillingInfoSection from '@/widgets/billing/ui/BillingInfoSection';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import BillingInfoUpdateDialog from './BillingInfoUpdateDialog';
 
 interface BillingInfoSectionProps {

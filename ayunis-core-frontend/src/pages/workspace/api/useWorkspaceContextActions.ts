@@ -8,8 +8,8 @@ import {
   skillsControllerDelete,
   skillsControllerPin,
   workspaceContextControllerUpdateInstruction,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreateSkillDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { CreateSkillDto } from '@ayunis/api-client/schemas';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';

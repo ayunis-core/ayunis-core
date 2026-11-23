@@ -13,7 +13,7 @@ const { request, client } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('./openpanel', () => ({
   get openPanel() {
     return client.current;

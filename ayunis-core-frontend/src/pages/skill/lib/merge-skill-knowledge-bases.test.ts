@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseResponseDto } from '@ayunis/api-client/schemas';
 import { mergeSkillKnowledgeBases } from './merge-skill-knowledge-bases';
 
 const makeKb = (

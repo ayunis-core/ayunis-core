@@ -3,7 +3,7 @@ import type {
   PiiMaskResponseDto,
   RunMasksResponseDto,
   RunMessageResponseDtoMessage,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import type { Message, Thread } from '@/pages/chat/model/openapi';
 import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
 import { reconcileMessages } from '@/pages/chat/lib/reconcile-thread-messages';

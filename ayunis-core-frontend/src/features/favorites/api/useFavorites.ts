@@ -1,8 +1,8 @@
 import {
   getFavoritesControllerFindAllQueryKey,
   useFavoritesControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { FavoritesControllerFindAll200Item } from '@/shared/api';
+} from '@ayunis/api-client/endpoints';
+import type { FavoritesControllerFindAll200Item } from '@ayunis/api-client';
 
 export type Favorite = FavoritesControllerFindAll200Item;
 export type FavoriteReferenceType = Favorite['referenceType'];

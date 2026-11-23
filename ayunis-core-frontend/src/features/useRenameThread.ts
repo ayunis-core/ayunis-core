@@ -4,7 +4,7 @@ import {
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
   threadsControllerUpdateTitle,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 interface RenameThreadParams {
   threadId: string;

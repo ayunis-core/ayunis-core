@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { Button } from '@ayunis/ui/components/button';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { Label } from '@ayunis/ui/components/label';
@@ -17,10 +17,10 @@ import {
   useIpAllowlistControllerUpdate,
   useIpAllowlistControllerRemove,
   getIpAllowlistControllerGetQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showSuccess, showError } from '@/shared/lib/toast';
-import { isValidCidrOrIp } from '../lib/validate-cidr';
+import { isValidCidrOrIp } from '@/pages/admin-settings/security-settings/lib/validate-cidr';
 import { MfaRequirementCard } from './MfaRequirementCard';
 import { RemoveRestrictionsDialog } from './RemoveRestrictionsDialog';
 import { AlertCircle, Info, Loader2 } from 'lucide-react';

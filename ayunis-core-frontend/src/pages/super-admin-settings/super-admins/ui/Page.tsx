@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import AddSuperAdminDialog from './AddSuperAdminDialog';
 import SuperAdminsTable from './SuperAdminsTable';
-import type { SuperAdminUserResponseDto } from '@/shared/api';
+import type { SuperAdminUserResponseDto } from '@ayunis/api-client';
 
 interface SuperAdminSuperAdminsPageProps {
   superAdmins: SuperAdminUserResponseDto[];

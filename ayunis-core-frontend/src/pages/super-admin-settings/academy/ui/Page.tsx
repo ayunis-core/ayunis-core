@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import type {
   AcademyChapterResponseDto,
   CourseModuleResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import { Button } from '@ayunis/ui/components/button';
 import { useConfirmation } from '@/widgets/confirmation-modal';

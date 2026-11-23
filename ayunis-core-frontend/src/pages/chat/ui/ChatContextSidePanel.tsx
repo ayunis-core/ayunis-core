@@ -17,7 +17,7 @@ import { useThreadAiContext } from '@/pages/chat/api/useThreadAiContext';
 import type {
   ThreadAiContextKnowledgeBaseResponseDto,
   ThreadAiContextSkillResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 interface ChatContextSidePanelProps {
   readonly threadId: string;

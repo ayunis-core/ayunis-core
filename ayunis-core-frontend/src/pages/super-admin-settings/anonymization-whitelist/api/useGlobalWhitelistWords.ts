@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useSuperAdminAnonymizationWhitelistControllerList } from '@/shared/api';
-import { groupWordsByCategory } from '../lib/group-words';
+import { useSuperAdminAnonymizationWhitelistControllerList } from '@ayunis/api-client';
+import { groupWordsByCategory } from '@/pages/super-admin-settings/anonymization-whitelist/lib/group-words';
 
 export function useGlobalWhitelistWords() {
   const { data, isLoading, isError, refetch } =

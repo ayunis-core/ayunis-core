@@ -3,7 +3,7 @@ import SuperAdminSuperAdminsPage from '@/pages/super-admin-settings/super-admins
 import {
   getSuperAdminManagementControllerListSuperAdminsQueryKey,
   superAdminManagementControllerListSuperAdmins,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export const Route = createFileRoute(
   '/_authenticated/super-admin-settings/super-admins/',

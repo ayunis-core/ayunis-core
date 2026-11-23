@@ -40,7 +40,7 @@ vi.mock('@tanstack/react-query', () => ({
     setQueryData: mocks.setQueryData,
   }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getMcpIntegrationsControllerListQueryKey: () => ['integrations'],
   useMcpIntegrationsControllerUpdate: (options: {
     mutation: {

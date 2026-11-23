@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useTeamPermittedModelsControllerCreateTeamPermittedModel } from '@/shared/api';
+import { useTeamPermittedModelsControllerCreateTeamPermittedModel } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';

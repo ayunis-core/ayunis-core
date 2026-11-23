@@ -12,7 +12,7 @@ vi.mock('@/pages/inbox', () => ({
   InboxNoSelection: () => null,
   notificationsPageParams: (page: number, type?: string) => ({ page, type }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   appControllerFeatureToggles: mocks.featureToggles,
   getAppControllerFeatureTogglesQueryKey: () => ['feature-toggles'],
   notificationsControllerFindAll: mocks.findNotifications,

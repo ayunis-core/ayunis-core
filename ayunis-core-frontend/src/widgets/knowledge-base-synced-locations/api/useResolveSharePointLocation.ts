@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useSharePointLocationsControllerResolve } from '@/shared/api/generated/ayunisCoreAPI';
-import type { SharePointLocationResolutionResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useSharePointLocationsControllerResolve } from '@ayunis/api-client/endpoints';
+import type { SharePointLocationResolutionResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError } from '@/shared/lib/toast';

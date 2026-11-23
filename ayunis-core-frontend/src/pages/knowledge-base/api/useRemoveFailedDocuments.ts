@@ -5,7 +5,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import {
   useKnowledgeBasesControllerRemoveFailedDocuments,
   getKnowledgeBasesControllerListDocumentsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useRemoveFailedDocuments(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');

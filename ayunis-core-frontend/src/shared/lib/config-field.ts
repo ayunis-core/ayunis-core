@@ -1,4 +1,4 @@
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MarketplaceIntegrationConfigFieldDto } from '@ayunis/api-client/schemas';
 
 /**
  * Frontend mirror of the backend `ConfigField` semantics

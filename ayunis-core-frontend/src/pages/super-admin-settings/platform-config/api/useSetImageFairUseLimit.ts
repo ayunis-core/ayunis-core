@@ -5,7 +5,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import {
   useSuperAdminPlatformConfigControllerSetImageFairUseLimit,
   getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { windowHoursToMs } from './fair-use-limits-conversion';
 
 export interface SetImageFairUseLimitInput {

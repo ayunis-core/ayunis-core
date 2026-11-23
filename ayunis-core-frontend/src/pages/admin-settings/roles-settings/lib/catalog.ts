@@ -1,4 +1,4 @@
-import type { FeatureTogglesResponseDto } from '@/shared/api';
+import type { FeatureTogglesResponseDto } from '@ayunis/api-client';
 import type {
   Permission,
   PermissionGroup,

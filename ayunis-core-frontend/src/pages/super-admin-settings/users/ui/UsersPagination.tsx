@@ -1,5 +1,5 @@
 import { SearchPagination } from '@/widgets/pagination';
-import type { SuperAdminUsersSortField } from '@/shared/api';
+import type { SuperAdminUsersSortField } from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 
 interface UsersPaginationProps {

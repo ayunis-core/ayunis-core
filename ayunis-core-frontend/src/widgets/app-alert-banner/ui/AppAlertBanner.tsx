@@ -1,4 +1,4 @@
-import { useAppAlertControllerGetAppAlert } from '@/shared/api';
+import { useAppAlertControllerGetAppAlert } from '@ayunis/api-client';
 import { AppBannerStrip } from '@/shared/ui/app-banner-strip';
 
 /**

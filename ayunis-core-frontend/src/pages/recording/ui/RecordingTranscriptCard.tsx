@@ -12,7 +12,7 @@ import {
 import type {
   RecordingResponseDto,
   RecordingTranscriptTurnDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useRecordingTranscript } from '@/pages/recording/api';
 import { formatTranscriptTime } from '@/shared/lib/format-transcript-time';
 import {

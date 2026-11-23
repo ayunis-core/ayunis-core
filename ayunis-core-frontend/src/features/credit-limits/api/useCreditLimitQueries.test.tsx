@@ -13,7 +13,7 @@ const { query } = vi.hoisted(() => ({
     isFetchedAfterMount: false,
   },
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   useCreditLimitsControllerGetUserLimits: () => query,
   useCreditLimitsControllerGetTeamLimits: () => query,
 }));

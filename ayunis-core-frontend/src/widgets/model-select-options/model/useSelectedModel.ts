@@ -3,7 +3,7 @@ import { useModelModes } from '@/features/useModelModes';
 import {
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   type DefaultModelSelectionResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { resolveSelectedModel } from '@/widgets/model-select-options/lib/model-modes';
 
 /**

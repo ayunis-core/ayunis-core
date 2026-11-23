@@ -6,12 +6,12 @@ import { Progress } from '@ayunis/ui/components/progress';
 import { Button } from '@ayunis/ui/components/button';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { useMe } from '@/widgets/app-sidebar/api/useMe';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
 import { createAuthorization } from '@/features/permissions';
-import { useUpdateOnboarding } from '../api/useUpdateOnboarding';
+import { useUpdateOnboarding } from '@/pages/onboarding/api/useUpdateOnboarding';
 import brandIconDark from '@/shared/assets/brand/brand-icon-round-dark.svg';
 import OnboardingCategoryCard from './OnboardingCategoryCard';
 

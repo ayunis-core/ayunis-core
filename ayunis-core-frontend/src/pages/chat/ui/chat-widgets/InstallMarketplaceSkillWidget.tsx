@@ -18,7 +18,7 @@ import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 import { useInstallMarketplaceSkillFromChat } from '@/pages/chat/api/useInstallMarketplaceSkillFromChat';
 import { useInstalledMarketplaceSkill } from '@/pages/chat/api/useInstalledMarketplaceSkill';
 import { useMarketplaceSkillEntry } from '@/pages/chat/api/useMarketplaceSkillEntry';
-import type { MarketplaceSkillResponseDto } from '@/shared/api';
+import type { MarketplaceSkillResponseDto } from '@ayunis/api-client';
 
 // Model-supplied name and reason are never rendered: only the fetched
 // catalogue entry is, so a mismatched identifier cannot be approved under a

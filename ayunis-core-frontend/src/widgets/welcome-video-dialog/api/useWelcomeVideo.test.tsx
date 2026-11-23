@@ -22,7 +22,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getOnboardingControllerGetOnboardingQueryKey: () => ['onboarding'],
   onboardingControllerMarkWelcomeVideoSeen: markWelcomeVideoSeen,
   onboardingControllerUpdateOnboarding: updateOnboarding,

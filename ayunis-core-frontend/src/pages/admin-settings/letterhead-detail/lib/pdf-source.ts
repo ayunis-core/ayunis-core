@@ -1,6 +1,6 @@
 import config from '@/shared/config';
 import type { PdfSource } from '@/widgets/margin-editor';
-import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { LetterheadResponseDto } from '@ayunis/api-client/schemas';
 
 export function buildPdfUrl(
   letterheadId: string,

@@ -6,7 +6,7 @@ import {
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   getTeamPermittedModelsControllerListTeamImageGenerationModelsQueryKey,
   getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';
 
 describe(invalidateTeamModelAccessQueries.name, () => {

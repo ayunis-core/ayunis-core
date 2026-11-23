@@ -2,7 +2,7 @@ import { OpenPanel } from '@openpanel/web';
 import { QueryClient } from '@tanstack/react-query';
 import { isRedirect } from '@tanstack/react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { clearOpenPanelIdentity } from '@/shared/lib/openpanel-identity';
 
@@ -13,7 +13,7 @@ const { me, client } = vi.hoisted(() => ({
 
 vi.mock('@/layouts/authenticated-layout', () => ({ default: () => null }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   authenticationControllerMe: me,
   getAuthenticationControllerMeQueryKey: () => ['/auth/me'],
   appControllerIsCloud: () => Promise.resolve({ isCloud: true }),

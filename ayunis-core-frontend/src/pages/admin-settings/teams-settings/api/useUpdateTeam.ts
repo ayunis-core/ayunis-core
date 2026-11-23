@@ -4,8 +4,8 @@ import {
   useTeamsControllerUpdateTeam,
   getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpdateTeamFormData } from '../model/types';
+} from '@ayunis/api-client/endpoints';
+import type { UpdateTeamFormData } from '@/pages/admin-settings/teams-settings/model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';

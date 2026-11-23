@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PiiCategory, type PiiMaskResponseDto } from '@/shared/api';
+import { PiiCategory, type PiiMaskResponseDto } from '@ayunis/api-client';
 import type { Message, Thread } from '@/pages/chat/model/openapi';
 import { useChatThreadState } from './useChatThreadState';
 

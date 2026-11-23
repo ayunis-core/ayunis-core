@@ -14,7 +14,7 @@ vi.mock('@/features/sso', () => ({
   beginSso,
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useInvitesControllerAcceptInvite: () => ({
     mutate,
     isPending: false,

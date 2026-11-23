@@ -1,4 +1,4 @@
-import { useSuperAdminSubscriptionsControllerUncancelSubscription } from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerUncancelSubscription } from '@ayunis/api-client';
 import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import { useTranslation } from 'react-i18next';
 import { showError, showSuccess } from '@/shared/lib/toast';

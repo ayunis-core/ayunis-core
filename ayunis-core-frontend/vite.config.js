@@ -77,6 +77,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    setupFiles: ["./src/shared/api/test-setup.ts"],
     // Node 25+ defines its own global localStorage (undefined without
     // --localstorage-file), which shadows jsdom's. The flag is valid on 24 too.
     execArgv: ["--no-experimental-webstorage"],

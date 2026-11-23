@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from '@tanstack/react-router';
-import { useInvitesControllerAcceptInvite } from '@/shared/api/generated/ayunisCoreAPI';
+import { useInvitesControllerAcceptInvite } from '@ayunis/api-client/endpoints';
 import type { Invite } from '@/pages/auth/invite-accept/model/openapi';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';

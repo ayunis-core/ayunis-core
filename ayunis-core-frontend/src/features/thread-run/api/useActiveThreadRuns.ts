@@ -3,8 +3,8 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   getActiveRunsControllerFindActiveQueryKey,
   useActiveRunsControllerFindActive,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { ActiveThreadRunResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { ActiveThreadRunResponseDto } from '@ayunis/api-client/schemas';
 import { forgetStoppedThreadRunsExcept } from '@/features/thread-run/model/stopped-thread-runs';
 import {
   expectThreadRunSoon,

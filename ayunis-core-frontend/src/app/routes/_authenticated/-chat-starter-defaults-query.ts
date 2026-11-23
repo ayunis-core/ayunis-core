@@ -3,7 +3,7 @@ import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-defa
 import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type { ChatStarterDefaults } from '@/widgets/chat-starter';
 import {
   defaultModelSelectionQueryOptions,

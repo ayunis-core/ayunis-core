@@ -1,11 +1,11 @@
 import Uppy from '@uppy/core';
 import AwsS3 from '@uppy/aws-s3';
-import { sourceUploadsControllerSign } from '@/shared/api/generated/ayunisCoreAPI';
+import { sourceUploadsControllerSign } from '@ayunis/api-client/endpoints';
 import type {
   SignSourceUploadRequestDto,
   SignedUploadUrlResponseDto,
   SourceUploadSessionResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 /**
  * Signs one storage request of the upload. The Outlook pane passes its own,

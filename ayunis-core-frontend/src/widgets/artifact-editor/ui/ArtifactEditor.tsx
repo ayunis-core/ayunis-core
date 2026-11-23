@@ -1,4 +1,4 @@
-import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
 import { Button } from '@ayunis/ui/components/button';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';

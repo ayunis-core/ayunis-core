@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUpdateImageGenerationModel } from '../api/useUpdateImageGenerationModel';
-import type { ImageGenerationModelFormData } from '../model/types';
-import type { ImageGenerationModelResponseDto } from '@/shared/api';
+import { useUpdateImageGenerationModel } from '@/pages/super-admin-settings/models-catalog/api/useUpdateImageGenerationModel';
+import type { ImageGenerationModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
+import type { ImageGenerationModelResponseDto } from '@ayunis/api-client';
 import { IMAGE_GENERATION_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { ModelPricingFields } from './ModelPricingFields';

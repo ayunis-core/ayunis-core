@@ -1,5 +1,5 @@
-import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
-import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useKnowledgeBasesControllerFindAll } from '@ayunis/api-client/endpoints';
+import type { KnowledgeBaseResponseDto } from '@ayunis/api-client/schemas';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 interface UseKnowledgeBasesOptions {

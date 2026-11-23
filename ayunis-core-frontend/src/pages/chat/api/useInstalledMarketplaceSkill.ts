@@ -1,4 +1,4 @@
-import { useSkillsControllerFindInstalledFromMarketplace } from '@/shared/api';
+import { useSkillsControllerFindInstalledFromMarketplace } from '@ayunis/api-client';
 
 export function useInstalledMarketplaceSkill(identifier: string) {
   const query = useSkillsControllerFindInstalledFromMarketplace(identifier, {

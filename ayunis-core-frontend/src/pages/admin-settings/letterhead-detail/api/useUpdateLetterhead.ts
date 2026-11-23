@@ -5,10 +5,10 @@ import { useRouter } from '@tanstack/react-router';
 import {
   getLetterheadsControllerFindAllQueryKey,
   getLetterheadsControllerFindOneQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { customAxiosInstance } from '@/shared/api';
+} from '@ayunis/api-client/endpoints';
+import { customAxiosInstance } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
-import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { LetterheadResponseDto } from '@ayunis/api-client/schemas';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';
 
 import {

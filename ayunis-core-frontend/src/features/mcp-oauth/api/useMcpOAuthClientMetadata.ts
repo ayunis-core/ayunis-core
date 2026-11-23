@@ -1,4 +1,4 @@
-import { useMcpOAuthMetadataControllerGetClientMetadata } from '@/shared/api';
+import { useMcpOAuthMetadataControllerGetClientMetadata } from '@ayunis/api-client';
 import { getOAuthCallbackUri } from '@/shared/lib/mcp-oauth';
 
 export function useMcpOAuthClientMetadata() {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useMfaLoginControllerVerify } from '@/shared/api/generated/ayunisCoreAPI';
+import { useMfaLoginControllerVerify } from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';

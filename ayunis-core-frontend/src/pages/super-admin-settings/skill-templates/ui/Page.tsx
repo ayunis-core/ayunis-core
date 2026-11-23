@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { SkillTemplateResponseDto } from '@/shared/api';
-import SuperAdminSettingsLayout from '../../super-admin-settings-layout';
+import type { SkillTemplateResponseDto } from '@ayunis/api-client';
+import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import { SkillTemplateItem } from './SkillTemplateItem';
 import { CreateSkillTemplateDialog } from './CreateSkillTemplateDialog';
 import { EditSkillTemplateDialog } from './EditSkillTemplateDialog';
-import { useDeleteSkillTemplate } from '../api/useDeleteSkillTemplate';
-import { useToggleSkillTemplate } from '../api/useToggleSkillTemplate';
+import { useDeleteSkillTemplate } from '@/pages/super-admin-settings/skill-templates/api/useDeleteSkillTemplate';
+import { useToggleSkillTemplate } from '@/pages/super-admin-settings/skill-templates/api/useToggleSkillTemplate';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { Button } from '@ayunis/ui/components/button';
 import {

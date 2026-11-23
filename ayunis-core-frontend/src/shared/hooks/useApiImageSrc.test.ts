@@ -1,14 +1,14 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  setEmbeddedSession,
-  type EmbeddedSession,
-} from '@/shared/api/embedded-session';
+  configureApiTransport,
+  createApiTransport,
+} from '@ayunis/api-client/transport';
 import { useApiImageSrc } from '@/shared/hooks/useApiImageSrc';
 
 describe(useApiImageSrc.name, () => {
   afterEach(() => {
-    setEmbeddedSession(null);
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -21,9 +21,14 @@ describe(useApiImageSrc.name, () => {
           answerBlob = resolve;
         }),
     } as unknown as Response;
-    setEmbeddedSession({
-      request: vi.fn().mockResolvedValue(response),
-    } as unknown as EmbeddedSession);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+    configureApiTransport(
+      createApiTransport({
+        baseUrl: '/api',
+        credentials: 'omit',
+        authorization: { getHeader: () => 'Bearer test-token' },
+      }),
+    );
     const createObjectURL = vi
       .spyOn(URL, 'createObjectURL')
       .mockReturnValue('blob:image');

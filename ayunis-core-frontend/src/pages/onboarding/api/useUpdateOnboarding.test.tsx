@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getOnboardingControllerGetOnboardingQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpdateOnboardingDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { getOnboardingControllerGetOnboardingQueryKey } from '@ayunis/api-client/endpoints';
+import type { UpdateOnboardingDto } from '@ayunis/api-client/schemas';
 import { useUpdateOnboarding } from './useUpdateOnboarding';
 
 const { request, client } = vi.hoisted(() => ({
@@ -11,7 +11,7 @@ const { request, client } = vi.hoisted(() => ({
   client: { track: vi.fn() },
 }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 vi.mock('react-i18next', () => ({

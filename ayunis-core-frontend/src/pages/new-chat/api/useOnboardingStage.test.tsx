@@ -8,7 +8,7 @@ import {
 } from './useOnboardingStage';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 
 afterEach(() => {
   cleanup();

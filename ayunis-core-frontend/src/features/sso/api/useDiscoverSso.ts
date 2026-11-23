@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useSsoLoginControllerDiscover } from '@/shared/api/generated/ayunisCoreAPI';
-import type { SsoDiscoveryResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useSsoLoginControllerDiscover } from '@ayunis/api-client/endpoints';
+import type { SsoDiscoveryResponseDto } from '@ayunis/api-client/schemas';
 
 export function useDiscoverSso() {
   const { mutateAsync, isPending } = useSsoLoginControllerDiscover({

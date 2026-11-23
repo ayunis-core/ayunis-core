@@ -11,7 +11,7 @@ import {
   subscriptionsControllerHasActiveSubscription,
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
 import {

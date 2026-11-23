@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import { createAuthorization } from './authorization';
 
 describe('createAuthorization', () => {

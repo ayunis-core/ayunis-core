@@ -1,4 +1,4 @@
-import { RecordingSummaryFailure as Failure } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { RecordingSummaryFailure as Failure } from '@ayunis/api-client/schemas';
 
 type RecordingSummaryFailureReason =
   | 'noModel'

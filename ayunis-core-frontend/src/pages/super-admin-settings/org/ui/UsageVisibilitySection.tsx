@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ayunis/ui/components/card';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgResponseDto } from '@ayunis/api-client';
 import UsageVisibilityItem from './UsageVisibilityItem';
 
 export default function UsageVisibilitySection({

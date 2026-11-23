@@ -1,4 +1,4 @@
-import { PiiCategory } from '@/shared/api';
+import { PiiCategory } from '@ayunis/api-client';
 
 /**
  * Fixed display order of all PII categories, shared by the org admin and

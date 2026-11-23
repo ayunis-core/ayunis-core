@@ -20,7 +20,7 @@ const {
   showError: vi.fn(),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useLogoutControllerLogout: () => ({ mutate, isPending: false }),
 }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));

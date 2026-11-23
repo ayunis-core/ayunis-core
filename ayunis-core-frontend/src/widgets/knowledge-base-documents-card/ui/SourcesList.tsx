@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 import { ItemGroup, ItemSeparator } from '@ayunis/ui/components/item';
-import type { KnowledgeBaseDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseDocumentResponseDto } from '@ayunis/api-client/schemas';
 import { partitionDocuments } from '@/widgets/knowledge-base-documents-card/lib/partition-documents';
 import type { SyncedSources } from '@/widgets/knowledge-base-documents-card/model/synced-sources';
 import { DocumentItem } from './DocumentItem';

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@ayunis/ui/components/badge';
-import { CertificateValidityStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { CERTIFICATE_STATUS_LABEL_KEYS } from '../model/statuses';
+import { CertificateValidityStatus } from '@ayunis/api-client/schemas';
+import { CERTIFICATE_STATUS_LABEL_KEYS } from '@/pages/admin-settings/academy-settings/model/statuses';
 
 type BadgeVariant = 'secondary' | 'destructive' | 'outline';
 

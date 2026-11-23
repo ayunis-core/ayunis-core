@@ -14,7 +14,7 @@ const { request, navigate, invalidate } = vi.hoisted(() => ({
   invalidate: vi.fn(),
 }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/toast', () => ({
   showError: vi.fn(),
   showSuccess: vi.fn(),

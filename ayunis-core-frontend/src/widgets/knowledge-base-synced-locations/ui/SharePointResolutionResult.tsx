@@ -9,7 +9,7 @@ import {
   SharePointResolutionOutcome,
   type SharePointGrantResponseDto,
   type SharePointLocationResolutionResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { CopyButton } from '@/shared/ui/copy-button';
 
 export function SharePointResolutionResult({

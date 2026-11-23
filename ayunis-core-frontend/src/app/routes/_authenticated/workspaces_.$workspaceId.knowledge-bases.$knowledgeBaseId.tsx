@@ -6,7 +6,7 @@ import {
   knowledgeBasesControllerFindOne,
   knowledgeBasesControllerListDocuments,
   workspacesControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { WorkspaceKnowledgeBaseDetailPage } from '@/pages/workspace/ui/WorkspaceKnowledgeBaseDetailPage';
 
 export const Route = createFileRoute(

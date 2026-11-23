@@ -1,8 +1,8 @@
 import {
   getThreadAiContextControllerGetAiContextQueryKey,
   useThreadAiContextControllerGetAiContext,
-} from '@/shared/api';
-import type { ThreadAiContextResponseDto } from '@/shared/api';
+} from '@ayunis/api-client';
+import type { ThreadAiContextResponseDto } from '@ayunis/api-client';
 
 export function useThreadAiContext(threadId: string) {
   const query = useThreadAiContextControllerGetAiContext<

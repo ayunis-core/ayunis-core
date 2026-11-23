@@ -1,7 +1,7 @@
 import {
   useMcpIntegrationsControllerListAvailable,
   useSkillMcpIntegrationsControllerListSkillMcpIntegrations,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 /**
  * Hook to fetch both available and assigned MCP integrations for a skill

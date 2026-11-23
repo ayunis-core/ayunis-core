@@ -10,7 +10,10 @@ import {
   ItemFooter,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { GlobalPiiWhitelistWordDto, PiiCategory } from '@/shared/api';
+import type {
+  GlobalPiiWhitelistWordDto,
+  PiiCategory,
+} from '@ayunis/api-client';
 import { useAddGlobalWhitelistWords } from '@/pages/super-admin-settings/anonymization-whitelist/api/useAddGlobalWhitelistWords';
 import { useDeleteGlobalWhitelistWord } from '@/pages/super-admin-settings/anonymization-whitelist/api/useDeleteGlobalWhitelistWord';
 import { parseWordsInput } from '@/pages/super-admin-settings/anonymization-whitelist/lib/parse-words-input';

@@ -1,4 +1,4 @@
-import type { SkillsControllerFindAllParams } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SkillsControllerFindAllParams } from '@ayunis/api-client/schemas';
 
 export const personalSkillListParams = {
   ownerType: 'personal',

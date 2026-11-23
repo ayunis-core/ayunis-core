@@ -1,5 +1,5 @@
-import type { SourceCitationResponseDto } from '@/shared/api';
-import { useThreadSourceCitationsControllerGetSourceCitation } from '@/shared/api/generated/ayunisCoreAPI';
+import type { SourceCitationResponseDto } from '@ayunis/api-client';
+import { useThreadSourceCitationsControllerGetSourceCitation } from '@ayunis/api-client/endpoints';
 
 interface SourceCitationState {
   citation: SourceCitationResponseDto | null;

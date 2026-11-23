@@ -5,7 +5,7 @@ import type {
   ModelMode,
   OnboardingStage,
   ToggleFavoriteDtoReferenceType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { OpenPanel } from '@openpanel/web';
 import { openPanel } from './openpanel';
 

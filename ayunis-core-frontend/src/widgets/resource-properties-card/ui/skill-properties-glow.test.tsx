@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   improveText: vi.fn(),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   skillsControllerImproveText: mocks.improveText,
 }));
 

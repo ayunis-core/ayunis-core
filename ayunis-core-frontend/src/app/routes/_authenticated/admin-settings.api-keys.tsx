@@ -7,8 +7,8 @@ import {
   getCreditLimitsControllerGetApiKeyLimitsQueryKey,
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { ActiveSubscriptionResponseDtoSubscriptionType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { ActiveSubscriptionResponseDtoSubscriptionType } from '@ayunis/api-client/schemas';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/api-keys')(
   {

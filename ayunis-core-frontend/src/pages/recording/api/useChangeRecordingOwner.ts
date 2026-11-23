@@ -9,7 +9,7 @@ import {
   getRecordingsControllerFindAllQueryKey,
   getRecordingsControllerFindOneQueryKey,
   recordingsControllerChangeOwner,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useChangeRecordingOwner(recordingId: string) {

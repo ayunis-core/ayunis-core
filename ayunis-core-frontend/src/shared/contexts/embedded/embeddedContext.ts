@@ -7,3 +7,11 @@ export const EmbeddedContext = createContext(false);
 export function useEmbedded(): boolean {
   return useContext(EmbeddedContext);
 }
+
+export const EmbeddedSignOutContext = createContext<
+  (() => Promise<void>) | undefined
+>(undefined);
+
+export function useEmbeddedSignOut(): (() => Promise<void>) | undefined {
+  return useContext(EmbeddedSignOutContext);
+}

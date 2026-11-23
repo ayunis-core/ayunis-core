@@ -5,7 +5,7 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   type ModelWithConfigResponseDto,
   useModelsDefaultsControllerManageOrgDefaultModel,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   clearModelModeDefaultCache,
   getModelModeDefaultQueryKey,

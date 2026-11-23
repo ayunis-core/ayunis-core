@@ -9,7 +9,7 @@ import { useSuperAdminProviderUsageChart } from '@/pages/super-admin-settings/or
 import { useSuperAdminUserUsage } from '@/pages/super-admin-settings/org/api/useSuperAdminUserUsage';
 import { useSuperAdminApiKeyUsage } from '@/pages/super-admin-settings/org/api/useSuperAdminApiKeyUsage';
 import useSuperAdminCreditUsage from '@/pages/super-admin-settings/org/api/useSuperAdminCreditUsage';
-import { useSuperAdminPermittedModelsControllerGetPermittedModels } from '@/shared/api';
+import { useSuperAdminPermittedModelsControllerGetPermittedModels } from '@ayunis/api-client';
 
 function useSuperAdminCreditUsageView(orgId: string): CreditUsageView {
   const { creditUsage, isLoading, isError } = useSuperAdminCreditUsage({

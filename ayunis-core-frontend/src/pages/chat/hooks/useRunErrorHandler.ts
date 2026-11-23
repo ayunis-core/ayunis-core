@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { RunErrorResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RunErrorResponseDto } from '@ayunis/api-client/schemas';
 import { showError } from '@/shared/lib/toast';
 
 export function useRunErrorHandler(_threadId: string) {

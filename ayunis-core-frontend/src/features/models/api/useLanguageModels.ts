@@ -1,5 +1,5 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
-import { useModelsControllerGetAvailableLanguageModels } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
+import { useModelsControllerGetAvailableLanguageModels } from '@ayunis/api-client';
 
 export function useLanguageModels() {
   const { data, isLoading, isError, error, refetch } =

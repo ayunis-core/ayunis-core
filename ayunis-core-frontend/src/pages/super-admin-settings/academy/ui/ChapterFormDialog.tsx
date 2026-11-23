@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import type { AcademyChapterResponseDto } from '@/shared/api';
+import type { AcademyChapterResponseDto } from '@ayunis/api-client';
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,9 @@ import { Button } from '@ayunis/ui/components/button';
 import {
   createChapterFormSchema,
   type ChapterFormValues,
-} from '../model/chapterFormSchema';
-import { useCreateChapter } from '../api/useCreateChapter';
-import { useUpdateChapter } from '../api/useUpdateChapter';
+} from '@/pages/super-admin-settings/academy/model/chapterFormSchema';
+import { useCreateChapter } from '@/pages/super-admin-settings/academy/api/useCreateChapter';
+import { useUpdateChapter } from '@/pages/super-admin-settings/academy/api/useUpdateChapter';
 
 interface ChapterFormDialogProps {
   open: boolean;

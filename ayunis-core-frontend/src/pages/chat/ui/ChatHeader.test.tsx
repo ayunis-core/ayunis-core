@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 import ChatHeader from './ChatHeader';
 
 vi.mock('react-i18next', () => ({

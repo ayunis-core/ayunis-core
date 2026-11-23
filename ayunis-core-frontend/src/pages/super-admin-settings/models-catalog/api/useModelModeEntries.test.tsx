@@ -10,7 +10,7 @@ const server = vi.hoisted(() => ({
   rejects: [] as (() => void)[],
   load: null as Promise<never> | null,
 }));
-vi.mock('@/shared/api', async (importOriginal) => ({
+vi.mock('@ayunis/api-client', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   superAdminModelModesControllerGetEntries: () =>
     server.load ?? Promise.resolve(server.entries),

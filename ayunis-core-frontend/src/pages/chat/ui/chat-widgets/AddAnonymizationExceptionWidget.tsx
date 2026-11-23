@@ -11,7 +11,7 @@ import {
 } from '@ayunis/ui/components/item';
 import { cn } from '@ayunis/ui/lib/cn';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import type { PiiWhitelistEntryDto } from '@/shared/api';
+import type { PiiWhitelistEntryDto } from '@ayunis/api-client';
 import { usePiiMasks } from '@/widgets/markdown';
 import { useOrgPiiWhitelist } from '@/pages/chat/api/useOrgPiiWhitelist';
 import { useSaveAnonymizationException } from '@/pages/chat/api/useSaveAnonymizationException';

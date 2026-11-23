@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { AcademyAccessMode } from '@ayunis/api-client/schemas';
 import { useAcademyAccessStatus } from '@/features/academy';
 import type { CertificateExpiryNoticeLevel } from '@/features/academy';
 import { resolveCertificateExpiryNotice } from '@/features/academy';

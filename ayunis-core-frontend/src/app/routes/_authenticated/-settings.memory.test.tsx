@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/pages/settings/memory-settings', () => ({
   MemorySettingsPage: () => null,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   appControllerFeatureToggles: mocks.featureToggles,
   getAppControllerFeatureTogglesQueryKey: () => ['feature-toggles'],
 }));

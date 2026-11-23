@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mocks.navigate,
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   useUserPasswordResetControllerForgotPassword: (options: {
     mutation: ForgotPasswordMutationOptions;
   }) => {

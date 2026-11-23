@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type { SyncedLocationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SyncedLocationResponseDto } from '@ayunis/api-client/schemas';
 
 /** How many of a location's documents finished processing, of all it has. */
 export interface SyncProgress {

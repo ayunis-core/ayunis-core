@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   ModelWithConfigResponseDto,
   PermittedLanguageModelResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { buildTeamModelsForCard } from './buildTeamModelsForCard';
 
 const candidate = (

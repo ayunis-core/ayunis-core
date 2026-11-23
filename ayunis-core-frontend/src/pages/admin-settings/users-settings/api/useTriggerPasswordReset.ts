@@ -1,4 +1,4 @@
-import { useUserPasswordResetControllerTriggerPasswordResetForUser } from '@/shared/api/generated/ayunisCoreAPI';
+import { useUserPasswordResetControllerTriggerPasswordResetForUser } from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 

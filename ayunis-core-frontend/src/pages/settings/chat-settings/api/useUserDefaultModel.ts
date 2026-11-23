@@ -4,11 +4,11 @@ import {
   useModelsDefaultsControllerDeleteUserDefaultModel,
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   PermittedLanguageModelResponseDtoNullable,
   SetUserDefaultModelDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   clearModelModeDefaultCache,

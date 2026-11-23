@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { academyCertificateControllerGetCertificate } from '@/shared/api';
+import { academyCertificateControllerGetCertificate } from '@ayunis/api-client';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 

@@ -12,7 +12,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: vi.fn() }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getInvitesControllerGetInvitesQueryKey: () => ['invites'],
   useInvitesControllerCreate: () => ({
     mutate: mocks.mutate,

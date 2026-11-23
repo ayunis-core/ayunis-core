@@ -1,18 +1,14 @@
-import axios, {
-  type AxiosRequestConfig,
-  type AxiosError,
-  type InternalAxiosRequestConfig,
+import type {
+  AxiosError,
+  AxiosInstance,
+  InternalAxiosRequestConfig,
 } from 'axios';
+import {
+  configureApiTransport,
+  createApiTransport,
+  type ApiTransport,
+} from '@ayunis/api-client/transport';
 import config from '@/shared/config';
-import { getEmbeddedSession } from '@/shared/api/embedded-session';
-
-const axiosInstance = axios.create({
-  baseURL: config.api.baseUrl,
-  withCredentials: true,
-  // The backend's query parser does not expand `key[]=` brackets, so array
-  // params go out as repeated keys (`userIds=a&userIds=b`).
-  paramsSerializer: { indexes: null },
-});
 
 // The proxy answers 502-504 while the single app container restarts during a
 // deploy (AYC-1186). Only reads are retried: a failed write may already have
@@ -45,7 +41,7 @@ export function subscribeToDeployGap(listener: () => void) {
   };
 }
 
-async function retryThroughDeployGap(error: AxiosError) {
+async function retryThroughDeployGap(client: AxiosInstance, error: AxiosError) {
   const requestConfig = error.config as RetryableConfig | undefined;
   const attempt = requestConfig?.deployGapRetries ?? 0;
   if (
@@ -59,17 +55,18 @@ async function retryThroughDeployGap(error: AxiosError) {
   // Later attempts re-enter this interceptor nested inside the first one's
   // await, so only the first attempt counts the request as in flight.
   if (attempt > 0) {
-    return retryAfterDelay(requestConfig, attempt);
+    return retryAfterDelay(client, requestConfig, attempt);
   }
   setDeployGapRetriesInFlight(deployGapRetriesInFlight + 1);
   try {
-    return await retryAfterDelay(requestConfig, attempt);
+    return await retryAfterDelay(client, requestConfig, attempt);
   } finally {
     setDeployGapRetriesInFlight(deployGapRetriesInFlight - 1);
   }
 }
 
 async function retryAfterDelay(
+  client: AxiosInstance,
   requestConfig: RetryableConfig,
   attempt: number,
 ) {
@@ -83,7 +80,7 @@ async function retryAfterDelay(
     ...requestConfig,
     deployGapRetries: attempt + 1,
   };
-  return axiosInstance(retryConfig);
+  return client(retryConfig);
 }
 
 // Gateway errors have already been retried by the client, so query-level
@@ -99,77 +96,17 @@ export function shouldRetryQuery(failureCount: number, error: unknown) {
   return failureCount < 3;
 }
 
-type AuthRetryableConfig = InternalAxiosRequestConfig & {
-  embeddedAuthRetried?: boolean;
-};
-
-// In the Outlook pane, every call carries the pane's Bearer token and no
-// cookies. XHR sends same-origin cookies whatever `withCredentials` says;
-// fetch with `withCredentials: false` sends `credentials: 'omit'`.
-axiosInstance.interceptors.request.use(async (requestConfig) => {
-  const session = getEmbeddedSession();
-  if (!session) return requestConfig;
-  requestConfig.adapter = 'fetch';
-  requestConfig.withCredentials = false;
-  requestConfig.headers.set(
-    'Authorization',
-    `Bearer ${await session.accessToken()}`,
-  );
-  return requestConfig;
-});
-
-// The backend refreshes cookie sessions inline; the pane's token is
-// refreshed here, once per request.
-async function retryWithRefreshedToken(error: AxiosError) {
-  const session = getEmbeddedSession();
-  const requestConfig = error.config as AuthRetryableConfig | undefined;
-  if (
-    !session ||
-    !requestConfig ||
-    error.response?.status !== 401 ||
-    requestConfig.embeddedAuthRetried
-  ) {
-    return undefined;
-  }
-  const rejected = requestConfig.headers
-    .get('Authorization')
-    ?.toString()
-    .replace(/^Bearer /, '');
-  if (rejected) await session.refreshRejected(rejected);
-  const retryConfig: AuthRetryableConfig = {
-    ...requestConfig,
-    embeddedAuthRetried: true,
-  };
-  return axiosInstance(retryConfig);
+export function configureAppApi(
+  transport: ApiTransport = createApiTransport({
+    baseUrl: config.api.baseUrl,
+    credentials: 'include',
+  }),
+): void {
+  const client = transport.axios;
+  client.interceptors.response.use(undefined, async (error: AxiosError) => {
+    const retry = await retryThroughDeployGap(client, error);
+    if (retry) return retry;
+    throw error instanceof Error ? error : new Error(String(error));
+  });
+  configureApiTransport(transport);
 }
-
-// Response interceptor
-axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async (error: AxiosError) => {
-    const reauthorized = await retryWithRefreshedToken(error);
-    if (reauthorized) {
-      return reauthorized;
-    }
-    const retried = await retryThroughDeployGap(error);
-    if (retried) {
-      return retried;
-    }
-    return Promise.reject(
-      error instanceof Error ? error : new Error(String(error)),
-    );
-  },
-);
-
-// Orval mutator function
-export async function customAxiosInstance<T>(
-  config: AxiosRequestConfig,
-): Promise<T> {
-  const response = await axiosInstance(config);
-  return response.data as T;
-}
-
-export { axiosInstance };
-export default axiosInstance;

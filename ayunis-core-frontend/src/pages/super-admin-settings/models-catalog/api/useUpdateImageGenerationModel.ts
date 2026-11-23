@@ -4,11 +4,11 @@ import {
   useSuperAdminImageGenerationCatalogModelsControllerUpdateImageGenerationModel,
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
   type UpdateImageGenerationModelRequestDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { resolveModelErrorToastKey } from '../lib/resolveModelErrorToastKey';
+import { resolveModelErrorToastKey } from '@/pages/super-admin-settings/models-catalog/lib/resolveModelErrorToastKey';
 
 export function useUpdateImageGenerationModel(onSuccess?: () => void) {
   const { t } = useTranslation('super-admin-settings-org');

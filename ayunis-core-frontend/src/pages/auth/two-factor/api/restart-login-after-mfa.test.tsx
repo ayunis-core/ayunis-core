@@ -24,7 +24,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useMfaLoginControllerVerify: () => ({
     mutate: mocks.verify,
     isPending: false,

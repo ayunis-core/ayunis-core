@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { skillsControllerCreate } from '@/shared/api';
+import { skillsControllerCreate } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError, showSuccess } from '@/shared/lib/toast';

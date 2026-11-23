@@ -3,7 +3,7 @@ import {
   getFlagCodeByProvider,
   type ProviderFlagCode,
 } from '@/shared/lib/model-provider-metadata';
-import type { ModelProviderInfoResponseDtoProvider } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ModelProviderInfoResponseDtoProvider } from '@ayunis/api-client/schemas';
 
 // Flags are drawn as inline SVGs instead of Unicode flag emoji. Windows
 // (Microsoft Edge and Chrome) does not ship glyphs for regional-indicator

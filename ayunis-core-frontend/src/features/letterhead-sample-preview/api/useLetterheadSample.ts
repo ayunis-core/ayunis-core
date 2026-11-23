@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { letterheadsControllerPreview } from '@/shared/api/generated/ayunisCoreAPI';
+import { letterheadsControllerPreview } from '@ayunis/api-client/endpoints';
 import type { LetterheadSampleDraft } from '@/features/letterhead-sample-preview/model/letterhead-sample-draft';
 
 export function useLetterheadSample(

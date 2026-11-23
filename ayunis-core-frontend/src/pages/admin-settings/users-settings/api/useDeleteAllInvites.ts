@@ -1,7 +1,7 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerDeleteAllPending,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';

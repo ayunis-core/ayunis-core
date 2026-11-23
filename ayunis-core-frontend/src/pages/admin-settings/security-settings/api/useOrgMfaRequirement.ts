@@ -2,7 +2,7 @@ import {
   useMfaControllerGetOrgRequirement,
   useMfaControllerUpdateOrgRequirement,
   getMfaControllerGetOrgRequirementQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';

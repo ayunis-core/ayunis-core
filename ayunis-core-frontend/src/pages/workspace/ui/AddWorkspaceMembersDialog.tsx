@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
 import { Label } from '@ayunis/ui/components/label';
-import { useWorkspaceMembersControllerListCandidates } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspaceMembersControllerListCandidates } from '@ayunis/api-client/endpoints';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { MemberRoleSelect } from '@/widgets/member-role-select';
 import { useAddWorkspaceMembers } from '@/pages/workspace/api/useAddWorkspaceMembers';

@@ -1,10 +1,10 @@
-import type { RolePermissionSetDto } from '@/shared/api';
-import { EDITABLE_ROLES } from '../model/types';
+import type { RolePermissionSetDto } from '@ayunis/api-client';
+import { EDITABLE_ROLES } from '@/pages/admin-settings/roles-settings/model/types';
 import type {
   EditableRole,
   Permission,
   RolePermissionsDraft,
-} from '../model/types';
+} from '@/pages/admin-settings/roles-settings/model/types';
 
 export function buildDraft(
   roles: RolePermissionSetDto[],

@@ -1,5 +1,5 @@
-import { useSuperAdminCrawlDomainsControllerList } from '@/shared/api';
-import type { CrawlDomainGrantResponseDto } from '@/shared/api';
+import { useSuperAdminCrawlDomainsControllerList } from '@ayunis/api-client';
+import type { CrawlDomainGrantResponseDto } from '@ayunis/api-client';
 
 export function useSuperAdminCrawlDomains(orgId: string) {
   const { data, isLoading, isError } =

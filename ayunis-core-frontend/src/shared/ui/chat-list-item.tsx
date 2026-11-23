@@ -9,7 +9,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
 
 export function ChatListItem({
   chat,

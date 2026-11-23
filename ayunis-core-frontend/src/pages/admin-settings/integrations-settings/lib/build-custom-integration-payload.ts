@@ -2,7 +2,7 @@ import type {
   CreateCustomIntegrationFormData,
   CustomConfigFieldFormData,
 } from '@/pages/admin-settings/integrations-settings/model/types';
-import type { CreateCustomIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateCustomIntegrationDto } from '@ayunis/api-client/schemas';
 import { buildInstructionsForCreate } from './integration-instructions';
 import {
   parseOAuthScopes,

@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey } from '@/shared/api';
+import { getTeamPermittedModelsControllerListTeamPermittedModelsQueryKey } from '@ayunis/api-client';
 import { getModelModeDefaultQueryKey } from '@/features/model-mode-defaults';
 import { useSetTeamDefaultModel } from './useSetTeamDefaultModel';
 
 const request = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('@/shared/api', async (importOriginal) => {
+vi.mock('@ayunis/api-client', async (importOriginal) => {
   const actual = await importOriginal<object>();
   const { useMutation } = await import('@tanstack/react-query');
   return {

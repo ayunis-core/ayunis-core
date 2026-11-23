@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import SubscriptionCancellationSection from './SubscriptionCancellationSection';
 
 vi.mock('react-i18next', () => ({
@@ -9,12 +9,18 @@ vi.mock('react-i18next', () => ({
 vi.mock('@/widgets/confirmation-modal', () => ({
   useConfirmation: () => ({ confirm: vi.fn() }),
 }));
-vi.mock('../api/useSuperAdminSubscriptionCancel', () => ({
-  default: () => ({ cancelSubscription: vi.fn() }),
-}));
-vi.mock('../api/useSuperAdminSubscriptionUncancel', () => ({
-  default: () => ({ uncancelSubscription: vi.fn() }),
-}));
+vi.mock(
+  '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionCancel',
+  () => ({
+    default: () => ({ cancelSubscription: vi.fn() }),
+  }),
+);
+vi.mock(
+  '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionUncancel',
+  () => ({
+    default: () => ({ uncancelSubscription: vi.fn() }),
+  }),
+);
 vi.mock('./SubscriptionStartDateUpdateDialog', () => ({ default: () => null }));
 
 const subscription: SubscriptionResponseDto = {

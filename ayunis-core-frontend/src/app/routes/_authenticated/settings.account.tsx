@@ -4,7 +4,7 @@ import {
   authenticationControllerMe,
   getAuthenticationControllerMeQueryKey,
   ssoLoginControllerDiscover,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { queryOptions } from '@tanstack/react-query';
 
 export const Route = createFileRoute('/_authenticated/settings/account')({

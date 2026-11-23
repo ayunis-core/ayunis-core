@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SessionHandoffRequestDtoClient } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SessionHandoffRequestDtoClient } from '@ayunis/api-client/schemas';
 
 export const OUTLOOK_CLIENT = SessionHandoffRequestDtoClient.outlook;
 

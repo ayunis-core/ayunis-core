@@ -6,7 +6,7 @@ import {
   getSuperAdminUserListControllerGetAllUsersQueryKey,
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
   useSuperAdminUsersControllerDeleteUser,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useSuperAdminDeleteUser(orgId: string) {

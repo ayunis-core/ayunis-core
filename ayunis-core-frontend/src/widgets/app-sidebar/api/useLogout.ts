@@ -1,4 +1,4 @@
-import { useLogoutControllerLogout } from '@/shared/api/generated/ayunisCoreAPI';
+import { useLogoutControllerLogout } from '@ayunis/api-client/endpoints';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { clearAppsignalTags } from '@/shared/lib/appsignal';

@@ -21,7 +21,7 @@ import type {
   LanguageModelResponseDto,
   EmbeddingModelResponseDto,
   ImageGenerationModelResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useDeleteModel } from '@/pages/super-admin-settings/models-catalog/api/useDeleteModel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { isLanguageModel } from '@/features/models';

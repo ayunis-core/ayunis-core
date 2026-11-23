@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { SkillTemplateResponseDto } from '@/shared/api';
+import type { SkillTemplateResponseDto } from '@ayunis/api-client';
 import { useUpdateSkillTemplate } from './useUpdateSkillTemplate';
 
 export function useToggleSkillTemplate() {

@@ -2,8 +2,8 @@ import {
   useSuperAdminPermittedModelsControllerGetAvailableLanguageModels,
   useSuperAdminPermittedModelsControllerGetAvailableEmbeddingModels,
   useSuperAdminPermittedModelsControllerGetAvailableImageGenerationModels,
-} from '@/shared/api';
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+} from '@ayunis/api-client';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 
 export function useSuperAdminModels(orgId: string) {
   const {

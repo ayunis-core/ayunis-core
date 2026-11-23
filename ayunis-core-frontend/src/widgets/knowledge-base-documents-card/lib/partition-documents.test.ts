@@ -3,7 +3,7 @@ import type {
   KnowledgeBaseDocumentResponseDto,
   KnowledgeBaseDocumentResponseDtoStatus,
   SyncedLocationResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { partitionDocuments } from './partition-documents';
 
 const doc = (

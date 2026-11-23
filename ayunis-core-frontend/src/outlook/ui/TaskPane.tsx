@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import brandFullLight from '@/shared/assets/brand/brand-full-light.svg';

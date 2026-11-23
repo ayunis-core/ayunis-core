@@ -7,7 +7,7 @@ import {
 } from '@ayunis/ui/components/alert';
 import { Button } from '@ayunis/ui/components/button';
 import { Textarea } from '@ayunis/ui/components/textarea';
-import { useWorkspaceContextControllerFindContext } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspaceContextControllerFindContext } from '@ayunis/api-client/endpoints';
 import { useWorkspaceContextActions } from '@/pages/workspace/api/useWorkspaceContextActions';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 

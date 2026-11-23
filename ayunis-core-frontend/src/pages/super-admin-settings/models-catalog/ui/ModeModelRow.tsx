@@ -12,7 +12,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { LanguageModelResponseDto } from '@/shared/api';
+import type { LanguageModelResponseDto } from '@ayunis/api-client';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
 
 interface ModeModelRowProps {

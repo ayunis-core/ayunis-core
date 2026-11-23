@@ -2,7 +2,7 @@ import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import {
   orgChatSettingsControllerGetChatStartDefaults,
   getOrgChatSettingsControllerGetChatStartDefaultsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function anonymousModeDefaultQueryOptions() {
   return queryOptions({

@@ -16,7 +16,7 @@ import type {
   OrgUsersSortField,
   UserResponseDto,
   PaginationDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { TableSort } from '@/shared/lib/table-sort';
 
 interface UsersSettingsPageProps {

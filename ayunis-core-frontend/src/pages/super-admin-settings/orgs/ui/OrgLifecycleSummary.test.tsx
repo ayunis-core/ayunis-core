@@ -4,7 +4,7 @@ import { I18nextProvider } from 'react-i18next';
 import { afterEach, describe, expect, it } from 'vitest';
 import de from '@/shared/locales/de/super-admin-settings-orgs.json';
 import en from '@/shared/locales/en/super-admin-settings-orgs.json';
-import type { OrgLifecycleCountsDto } from '@/shared/api';
+import type { OrgLifecycleCountsDto } from '@ayunis/api-client';
 import OrgLifecycleSummary from './OrgLifecycleSummary';
 
 const NS = 'super-admin-settings-orgs';

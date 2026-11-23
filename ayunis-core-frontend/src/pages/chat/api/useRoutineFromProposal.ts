@@ -1,7 +1,7 @@
 import {
   getRoutinesControllerFindAllQueryKey,
   useRoutinesControllerFindAll,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useRoutineFromProposal(toolCallId: string) {
   const query = useRoutinesControllerFindAll({

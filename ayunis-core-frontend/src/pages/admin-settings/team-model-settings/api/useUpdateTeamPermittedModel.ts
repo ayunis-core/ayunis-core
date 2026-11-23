@@ -5,7 +5,7 @@ import {
   useTeamPermittedModelsControllerUpdateTeamPermittedModel,
   type PermittedLanguageModelResponseDto,
   type UpdatePermittedModelDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { applyPolicyUpdate } from '@/widgets/permitted-model-mutations/lib/applyPolicyUpdate';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';

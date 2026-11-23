@@ -13,8 +13,8 @@ import type {
   CertificateValidityStatus,
   OrgCertificateStatusResponseDto,
   PaginationDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
+import { AcademyAccessMode } from '@ayunis/api-client/schemas';
 import { useDownloadMemberCertificate } from '@/pages/admin-settings/academy-settings/api/useDownloadMemberCertificate';
 import { useExportCertificateOverview } from '@/pages/admin-settings/academy-settings/api/useExportCertificateOverview';
 import { CertificateOverviewFilters } from './CertificateOverviewFilters';

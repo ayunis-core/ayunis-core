@@ -5,7 +5,7 @@ import {
   getWorkspacesControllerFindOneQueryKey,
   workspaceMembersControllerList,
   workspacesControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export const Route = createFileRoute(
   '/_authenticated/workspaces_/$workspaceId/members',

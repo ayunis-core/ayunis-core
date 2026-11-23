@@ -11,7 +11,7 @@ import { useInstallIntegrationFromMarketplace } from '@/pages/install/api/useIns
 import { InstallErrorState } from './InstallErrorState';
 import { InstallLoadingSkeleton } from './InstallLoadingSkeleton';
 import type { MarketplaceIntegrationResponseDto } from '@/pages/install/api/useFetchMarketplaceIntegration';
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MarketplaceIntegrationConfigFieldDto } from '@ayunis/api-client/schemas';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Card,

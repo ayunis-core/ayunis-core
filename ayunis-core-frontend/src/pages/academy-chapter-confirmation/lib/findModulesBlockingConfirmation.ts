@@ -2,7 +2,7 @@ import type {
   AcademyChapterResponseDto,
   AcademyProgressResponseDto,
   CourseModuleResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function findModulesBlockingConfirmation(
   chapter: AcademyChapterResponseDto,

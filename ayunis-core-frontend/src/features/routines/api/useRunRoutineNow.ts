@@ -4,7 +4,7 @@ import {
   getRoutinesControllerFindAllQueryKey,
   getRoutinesControllerFindOneQueryKey,
   routinesControllerRunNow,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { expectActiveThreadRun } from '@/features/thread-run';
 import { showError, showSuccess } from '@/shared/lib/toast';

@@ -1,5 +1,5 @@
 import { AxiosError, AxiosHeaders } from 'axios';
-import type * as SharedApi from '@/shared/api';
+import type * as SharedApi from '@ayunis/api-client';
 import { act, renderHook } from '@testing-library/react';
 import type { UseFormReturn } from 'react-hook-form';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -22,7 +22,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: mocks.invalidateRouter }),
 }));
-vi.mock('@/shared/api', async (importOriginal) => ({
+vi.mock('@ayunis/api-client', async (importOriginal) => ({
   ...(await importOriginal<typeof SharedApi>()),
   getSuperAdminOrgsControllerGetAllOrgsQueryKey: () => ['orgs'],
   getSuperAdminOrgsControllerGetOrgByIdQueryKey: (id: string) => ['org', id],

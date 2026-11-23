@@ -6,7 +6,7 @@ import {
   getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
   useAuthenticationControllerMe,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useAuthorization } from '@/features/permissions';
 
 /**

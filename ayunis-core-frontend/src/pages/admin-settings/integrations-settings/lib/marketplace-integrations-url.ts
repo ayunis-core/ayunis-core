@@ -1,4 +1,4 @@
-import type { MarketplaceConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MarketplaceConfigResponseDto } from '@ayunis/api-client/schemas';
 
 export function marketplaceIntegrationsUrl({
   enabled,

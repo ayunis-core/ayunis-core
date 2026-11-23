@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { cn } from '@ayunis/ui/lib/cn';
-import type { NotificationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { NotificationResponseDto } from '@ayunis/api-client/schemas';
 import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
 import { InboxListItem } from './InboxListItem';
 import { InboxListPager } from './InboxListPager';

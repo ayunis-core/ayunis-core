@@ -5,7 +5,7 @@ import {
   isThreadRunStopped,
   markThreadRunStopped,
 } from '@/features/thread-run/model/stopped-thread-runs';
-import type { ActiveThreadRunResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ActiveThreadRunResponseDto } from '@ayunis/api-client/schemas';
 import { useThreadRunReattach } from './useThreadRunReattach';
 
 const threadId = '00000000-0000-0000-0000-000000000001';

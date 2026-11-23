@@ -12,11 +12,11 @@ import { Label } from '@ayunis/ui/components/label';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import useFairUseLimitEditor from '@/features/fair-use-limit-editor/useFairUseLimitEditor';
-import { SetFairUseLimitRequestDtoTier as Tier } from '@/shared/api';
+import { SetFairUseLimitRequestDtoTier as Tier } from '@ayunis/api-client';
 import useFairUseLimits, {
   type FairUseTierLimit,
-} from '../api/useFairUseLimits';
-import useSetFairUseLimit from '../api/useSetFairUseLimit';
+} from '@/pages/super-admin-settings/platform-config/api/useFairUseLimits';
+import useSetFairUseLimit from '@/pages/super-admin-settings/platform-config/api/useSetFairUseLimit';
 
 interface TierRowProps {
   readonly tier: Tier;

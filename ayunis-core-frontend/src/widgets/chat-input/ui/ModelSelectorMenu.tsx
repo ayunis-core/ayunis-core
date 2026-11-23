@@ -10,7 +10,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
-import type { PermittedLanguageModelResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { PermittedLanguageModelResponseDto } from '@ayunis/api-client/schemas';
 import { ProviderFlag } from '@/shared/ui/provider-flag';
 import {
   MODEL_MODES,

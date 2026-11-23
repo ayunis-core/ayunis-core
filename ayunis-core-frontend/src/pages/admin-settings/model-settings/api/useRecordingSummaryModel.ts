@@ -1,7 +1,7 @@
 import {
   getRecordingSummaryModelControllerGetRecordingSummaryModelQueryKey,
   useRecordingSummaryModelControllerGetRecordingSummaryModel,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useRecordingSummaryModel() {
   const { data, isLoading, error } =

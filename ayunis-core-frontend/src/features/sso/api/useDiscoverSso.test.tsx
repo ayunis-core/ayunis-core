@@ -10,7 +10,7 @@ const { mutateAsync, useSsoLoginControllerDiscover } = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useSsoLoginControllerDiscover,
 }));
 

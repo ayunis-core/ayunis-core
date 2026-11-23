@@ -1,7 +1,7 @@
 import {
   useLetterheadsControllerFindAll,
   getLetterheadsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useLetterheads() {
   const {

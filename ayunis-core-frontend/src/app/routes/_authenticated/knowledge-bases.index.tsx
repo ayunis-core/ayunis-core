@@ -7,7 +7,7 @@ import {
   getTeamsControllerListMyTeamsQueryKey,
   myPermissionsControllerGetMine,
   getMyPermissionsControllerGetMineQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 

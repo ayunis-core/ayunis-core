@@ -1,4 +1,4 @@
-import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { AcademyAccessMode } from '@ayunis/api-client/schemas';
 
 interface AcademyAccessModeOption {
   value: AcademyAccessMode;

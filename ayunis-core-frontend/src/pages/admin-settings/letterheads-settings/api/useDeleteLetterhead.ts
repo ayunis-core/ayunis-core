@@ -5,7 +5,7 @@ import extractErrorData from '@/shared/api/extract-error-data';
 import {
   useLetterheadsControllerRemove,
   getLetterheadsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useDeleteLetterhead(onSuccess?: () => void) {
   const queryClient = useQueryClient();

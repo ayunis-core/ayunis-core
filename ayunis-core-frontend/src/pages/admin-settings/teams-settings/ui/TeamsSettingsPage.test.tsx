@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { getMyPermissionsControllerGetMineQueryKey } from '@/shared/api';
+import { getMyPermissionsControllerGetMineQueryKey } from '@ayunis/api-client';
 import { TeamsSettingsPage } from './TeamsSettingsPage';
 import type { Team } from '@/pages/admin-settings/teams-settings/model/types';
 
@@ -39,7 +39,7 @@ vi.mock('@/features/permissions', () => ({
   ),
 }));
 
-vi.mock('../../admin-settings-layout', () => ({
+vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({
   default: ({
     children,
     action,
@@ -69,7 +69,7 @@ vi.mock('./EditTeamDialog', () => ({
   EditTeamDialog: () => null,
 }));
 
-vi.mock('../api/useDeleteTeam', () => ({
+vi.mock('@/pages/admin-settings/teams-settings/api/useDeleteTeam', () => ({
   useDeleteTeam: () => ({
     deleteTeam: vi.fn(),
     isDeleting: false,

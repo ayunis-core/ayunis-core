@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/pages/knowledge-base', () => ({
   KnowledgeBasePage: () => null,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getKnowledgeBasesControllerFindOneQueryKey: (id: string) => [
     `/knowledge-bases/${id}`,
   ],
@@ -23,7 +23,7 @@ vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
   sharesControllerGetShares: mocks.getShares,
   teamsControllerListMyTeams: mocks.listTeams,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI.schemas', () => ({
+vi.mock('@ayunis/api-client/schemas', () => ({
   CreateKnowledgeBaseShareDtoEntityType: {
     knowledge_base: 'knowledge_base',
   },

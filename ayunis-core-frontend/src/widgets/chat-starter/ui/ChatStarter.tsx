@@ -16,7 +16,7 @@ import { generateUUID } from '@/shared/lib/uuid';
 import {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,

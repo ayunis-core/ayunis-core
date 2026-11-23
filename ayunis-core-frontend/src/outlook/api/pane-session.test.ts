@@ -64,7 +64,7 @@ describe('createPaneSession', () => {
     const session = createPaneSession('/api');
     await session.signIn(tokens(1));
 
-    await session.request('/threads', {
+    await session.transport.fetch('/threads', {
       headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 
@@ -84,8 +84,8 @@ describe('createPaneSession', () => {
     });
 
     const responses = await Promise.all([
-      session.request('/threads'),
-      session.request('/models/default-selection'),
+      session.transport.fetch('/threads'),
+      session.transport.fetch('/models/default-selection'),
     ]);
 
     expect(responses.map((response) => response.status)).toEqual([200, 200]);
@@ -142,7 +142,7 @@ describe('createPaneSession', () => {
     await session.signIn(tokens(1));
 
     window.localStorage.removeItem(REFRESH_TOKEN_KEY);
-    await expect(session.request('/threads')).rejects.toBeInstanceOf(
+    await expect(session.transport.fetch('/threads')).rejects.toBeInstanceOf(
       SessionExpiredError,
     );
 
@@ -163,7 +163,7 @@ describe('createPaneSession', () => {
         answer = resolve;
       }),
     );
-    const inFlight = session.request('/threads');
+    const inFlight = session.transport.fetch('/threads');
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     fetchMock.mockResolvedValueOnce(json(200));
     await session.signOut();
@@ -193,7 +193,7 @@ describe('createPaneSession', () => {
       return Promise.resolve(json(401));
     });
     const signingOut = session.signOut();
-    await expect(session.request('/threads')).rejects.toBeInstanceOf(
+    await expect(session.transport.fetch('/threads')).rejects.toBeInstanceOf(
       SessionExpiredError,
     );
     finishLogout?.(json(200));
@@ -214,7 +214,7 @@ describe('createPaneSession', () => {
         answer = resolve;
       }),
     );
-    const earlier = session.request('/threads');
+    const earlier = session.transport.fetch('/threads');
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     fetchMock
       .mockResolvedValueOnce(json(200))
@@ -255,14 +255,14 @@ describe('createPaneSession', () => {
       const ends: string[] = [];
       session.onEnd((reason) => ends.push(reason));
       await session.signIn(tokens(1));
-      const earlier = session.request('/threads');
+      const earlier = session.transport.fetch('/threads');
       await vi.waitFor(() => expect(answerRefresh).toBeDefined());
 
       await session.signOut();
       await session.signIn(tokens(2));
       answerRefresh?.(refreshAnswer());
       await expect(earlier).rejects.toBeInstanceOf(SessionExpiredError);
-      await session.request('/threads');
+      await session.transport.fetch('/threads');
 
       expect(ends).toEqual(['signedOut']);
       expect(window.localStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-2');

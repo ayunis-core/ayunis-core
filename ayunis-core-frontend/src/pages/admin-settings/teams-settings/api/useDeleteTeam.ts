@@ -4,7 +4,7 @@ import {
   useTeamsControllerDeleteTeam,
   getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';

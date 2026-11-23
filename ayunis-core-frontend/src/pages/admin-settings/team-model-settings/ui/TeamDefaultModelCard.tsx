@@ -1,4 +1,4 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 import { useModelModeDefault } from '@/features/model-mode-defaults';
 import { OrgDefaultModelCardWidget } from '@/widgets/org-default-model-card/ui/OrgDefaultModelCardWidget';
 import { useSetTeamDefaultModel } from '@/pages/admin-settings/team-model-settings/api/useSetTeamDefaultModel';

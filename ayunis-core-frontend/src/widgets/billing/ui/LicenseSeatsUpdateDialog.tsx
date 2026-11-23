@@ -10,7 +10,7 @@ import {
 } from '@ayunis/ui/components/dialog';
 import { Loader2, Minus, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import { useState } from 'react';
 
 interface LicenseSeatsUpdateDialogProps {

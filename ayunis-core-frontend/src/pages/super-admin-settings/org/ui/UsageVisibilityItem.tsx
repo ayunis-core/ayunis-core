@@ -6,7 +6,7 @@ import {
   ItemContent,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgResponseDto } from '@ayunis/api-client';
 import { useSetOrgUsageVisibility } from '@/pages/super-admin-settings/org/api/useSetOrgUsageVisibility';
 
 export default function UsageVisibilityItem({

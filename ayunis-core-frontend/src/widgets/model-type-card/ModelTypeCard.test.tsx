@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 import ModelTypeCard, { type ModelActions } from './ModelTypeCard';
 
 vi.mock('react-i18next', () => ({

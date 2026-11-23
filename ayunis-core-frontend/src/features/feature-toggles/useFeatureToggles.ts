@@ -1,4 +1,4 @@
-import { useAppControllerFeatureToggles } from '@/shared/api/generated/ayunisCoreAPI';
+import { useAppControllerFeatureToggles } from '@ayunis/api-client/endpoints';
 
 export function useFeatureToggles() {
   const { data, isLoading, error, refetch } = useAppControllerFeatureToggles();

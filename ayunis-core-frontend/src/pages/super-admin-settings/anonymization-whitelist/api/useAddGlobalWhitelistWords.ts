@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 import {
   useSuperAdminAnonymizationWhitelistControllerAdd,
   getSuperAdminAnonymizationWhitelistControllerListQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import type {
   AddGlobalPiiWhitelistWordsResponseDto,
   PiiCategory,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showSuccess, showError } from '@/shared/lib/toast';
 

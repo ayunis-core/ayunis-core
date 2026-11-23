@@ -7,8 +7,8 @@ import type {
   FileSourceResponseDtoFileType,
   SourceResponseDtoType,
   SourceResponseDtoCreatedBy,
-} from '@/shared/api';
-import { SourceResponseDtoStatus } from '@/shared/api';
+} from '@ayunis/api-client';
+import { SourceResponseDtoStatus } from '@ayunis/api-client';
 
 // Utils
 import { cn } from '@ayunis/ui/lib/cn';

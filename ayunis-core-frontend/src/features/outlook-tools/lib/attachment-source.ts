@@ -4,7 +4,7 @@ import type {
   FileSourceResponseDto,
   SourceUploadSessionResponseDto,
   UrlSourceResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { SignUploadRequest } from '@/shared/lib/source-upload/transfer-source-file';
 
 type ThreadSourceResponse =

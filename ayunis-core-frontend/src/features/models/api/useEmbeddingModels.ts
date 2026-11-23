@@ -1,5 +1,5 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
-import { useModelsControllerGetAvailableEmbeddingModels } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
+import { useModelsControllerGetAvailableEmbeddingModels } from '@ayunis/api-client';
 
 export function useEmbeddingModels() {
   const { data, isLoading, isError, error, refetch } =

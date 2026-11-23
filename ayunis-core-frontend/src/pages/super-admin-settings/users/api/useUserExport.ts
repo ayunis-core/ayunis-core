@@ -1,4 +1,4 @@
-import { superAdminUserExportsControllerExportUsers } from '@/shared/api';
+import { superAdminUserExportsControllerExportUsers } from '@ayunis/api-client';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 import { useCallback, useState } from 'react';

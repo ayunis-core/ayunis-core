@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SortOrder } from '@/shared/api';
+import { SortOrder } from '@ayunis/api-client';
 
 export interface TableSort<Field extends string> {
   sortBy?: Field;

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import SubscriptionsTab from './SubscriptionsTab';
 import AddonsSection from './AddonsSection';
 

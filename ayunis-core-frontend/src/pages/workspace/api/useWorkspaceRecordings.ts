@@ -5,7 +5,7 @@ import {
   recordingsControllerCreate,
   recordingsControllerDelete,
   useRecordingsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { workspaceRecordingListParams } from '@/shared/api/recording-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';

@@ -5,7 +5,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
-import type { PermittedLanguageModelResponseDto } from '@/shared/api';
+import type { PermittedLanguageModelResponseDto } from '@ayunis/api-client';
 import { ModelSelectorMenu } from './ModelSelectorMenu';
 
 const resolutions = vi.hoisted(() => ({ current: [] as unknown[] }));

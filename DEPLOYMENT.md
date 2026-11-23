@@ -544,6 +544,10 @@ Encryption happens transparently; no application code changes needed for key rot
 
 ## Outlook Add-in
 
+The frontend build bundles the [shared API client](packages/api-client/README.md)
+for both web chat and the Outlook pane. The pane configures bearer authorization
+when it loads.
+
 The add-in is off unless `FEATURE_OUTLOOK_ADDIN_ENABLED=true` is set: without
 it the manifest below answers 404 and an installed add-in cannot sign in. Turn
 it on per deployment, for example on an instance your own Microsoft 365 tenant

@@ -1,4 +1,4 @@
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import type { AppPermission, Authorization } from './authorization';
 
 const ALL_SETTINGS = '/admin-settings';

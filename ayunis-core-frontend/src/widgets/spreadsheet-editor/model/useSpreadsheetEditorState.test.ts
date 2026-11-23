@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { ArtifactResponseDto } from '@/shared/api';
-import { ArtifactVersionResponseDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
+import { ArtifactVersionResponseDtoAuthorType } from '@ayunis/api-client/schemas';
 import { useSpreadsheetEditorState } from './useSpreadsheetEditorState';
 
 function content(columns: string[], rows: unknown[][]): string {

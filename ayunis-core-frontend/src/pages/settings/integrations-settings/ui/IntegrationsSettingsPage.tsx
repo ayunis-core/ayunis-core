@@ -15,7 +15,7 @@ import {
 } from '@ayunis/ui/components/item';
 import { UserConfigDialog } from '@/widgets/mcp-user-config';
 import { AlwaysAllowedToolsCard } from './AlwaysAllowedToolsCard';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 import { useUserIntegrations } from '@/pages/settings/integrations-settings/api/useUserIntegrations';
 import {
   useAuthorizeMcpOAuth,

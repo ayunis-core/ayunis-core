@@ -4,7 +4,7 @@ import { RoutinePage, ROUTINE_TABS } from '@/pages/routine';
 import {
   getRoutinesControllerFindOneQueryKey,
   routinesControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { canManageRoutines } from './-manage-routines-access';
 
 const searchSchema = z.object({

@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import ResetPasswordPage from '@/pages/auth/reset-password';
 import { TokenExpiredPage } from '@/pages/auth/reset-password/ui/TokenExpiredPage';
 import { z } from 'zod';
-import { userPasswordResetControllerValidateResetToken } from '@/shared/api/generated/ayunisCoreAPI';
+import { userPasswordResetControllerValidateResetToken } from '@ayunis/api-client/endpoints';
 import { searchParamString } from '@/shared/lib/search-params';
 
 const searchSchema = z.object({

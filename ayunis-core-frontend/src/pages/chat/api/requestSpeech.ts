@@ -1,5 +1,5 @@
-import { apiFetch } from '@/shared/api/embedded-session';
-import type { SynthesizeSpeechDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { apiFetch } from '@ayunis/api-client/transport';
+import type { SynthesizeSpeechDto } from '@ayunis/api-client/schemas';
 
 // SynthesizeSpeechDto's limit on the backend.
 export const MAX_SPEECH_TEXT_LENGTH = 30_000;

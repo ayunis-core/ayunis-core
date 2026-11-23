@@ -11,10 +11,10 @@ import {
   ItemFooter,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { PiiCategory } from '@/shared/api';
-import type { CategoryRowState } from '../model/types';
-import { MAX_PATTERN_LENGTH } from '../lib/validate-regex';
-import type { RegexValidationError } from '../lib/validate-regex';
+import type { PiiCategory } from '@ayunis/api-client';
+import type { CategoryRowState } from '@/pages/admin-settings/anonymization-settings/model/types';
+import { MAX_PATTERN_LENGTH } from '@/pages/admin-settings/anonymization-settings/lib/validate-regex';
+import type { RegexValidationError } from '@/pages/admin-settings/anonymization-settings/lib/validate-regex';
 
 interface PiiCategoryRowProps {
   category: PiiCategory;

@@ -1,4 +1,4 @@
-import { OrgErrorCode } from '@/shared/api';
+import { OrgErrorCode } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 export function orgLifecycleErrorKey(error: unknown): string {
   try {

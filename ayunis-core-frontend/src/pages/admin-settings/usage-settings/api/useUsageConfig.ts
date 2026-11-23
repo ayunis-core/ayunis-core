@@ -1,4 +1,4 @@
-import { useUsageControllerGetUsageConfig } from '@/shared/api';
+import { useUsageControllerGetUsageConfig } from '@ayunis/api-client';
 
 export function useUsageConfig() {
   return useUsageControllerGetUsageConfig({

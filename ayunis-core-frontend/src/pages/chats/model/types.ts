@@ -1,1 +1,1 @@
-export type { GetThreadsResponseDtoItem as ChatListItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+export type { GetThreadsResponseDtoItem as ChatListItem } from '@ayunis/api-client/schemas';

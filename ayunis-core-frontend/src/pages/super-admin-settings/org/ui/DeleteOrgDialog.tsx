@@ -14,7 +14,7 @@ import {
 } from '@ayunis/ui/components/dialog';
 import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgResponseDto } from '@ayunis/api-client';
 import type { DeleteOrgFormData } from '@/pages/super-admin-settings/org/model/types';
 import { useDeleteOrg } from '@/pages/super-admin-settings/org/api/useDeleteOrg';
 

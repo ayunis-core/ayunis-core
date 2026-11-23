@@ -4,8 +4,8 @@ import type {
   PaginatedTeamMembersResponseDto,
   PermittedLanguageModelResponseDto,
   TeamRolePermissionSetDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { UpdateTeamMemberRoleDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
+import { UpdateTeamMemberRoleDtoRole } from '@ayunis/api-client/schemas';
 
 export type TeamDetail = TeamResponseDto;
 export type TeamMember = TeamMemberResponseDto;

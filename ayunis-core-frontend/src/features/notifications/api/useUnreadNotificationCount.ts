@@ -1,8 +1,8 @@
 import {
   getNotificationsControllerCountUnreadQueryKey,
   useNotificationsControllerCountUnread,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { UnreadNotificationTypeCountResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { UnreadNotificationTypeCountResponseDto } from '@ayunis/api-client/schemas';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 
 /** Routines post notifications in the background, so the count is polled. */

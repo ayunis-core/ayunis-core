@@ -9,7 +9,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useUsageConfig } from './useUsageConfig';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 let client: QueryClient;
 let hidden = false;
 function wrapper({ children }: { children: ReactNode }) {

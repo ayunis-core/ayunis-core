@@ -1,4 +1,4 @@
-import { useArtifactsControllerFindByThread } from '@/shared/api';
+import { useArtifactsControllerFindByThread } from '@ayunis/api-client';
 
 export function useThreadArtifacts(threadId: string) {
   const query = useArtifactsControllerFindByThread(threadId, {

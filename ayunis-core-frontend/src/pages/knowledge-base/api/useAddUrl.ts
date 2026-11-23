@@ -4,7 +4,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useKnowledgeBasesControllerAddUrl,
   getKnowledgeBasesControllerListDocumentsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useAddUrl(knowledgeBaseId: string) {

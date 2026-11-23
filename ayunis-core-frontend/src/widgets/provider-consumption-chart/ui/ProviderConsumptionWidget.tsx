@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
-import type { ProviderTimeSeriesRowDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { buildProviderChartData } from '../lib/buildProviderChartData';
+import type { ProviderTimeSeriesRowDto } from '@ayunis/api-client/schemas';
+import { buildProviderChartData } from '@/widgets/provider-consumption-chart/lib/buildProviderChartData';
 import { ProviderConsumptionChart } from './ProviderConsumptionChart';
 import { ProviderConsumptionLoading } from './ProviderConsumptionLoading';
 import { ProviderConsumptionError } from './ProviderConsumptionError';

@@ -24,7 +24,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   entityControllerDelete,
   getEntityControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 
@@ -81,7 +81,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   entityControllerCreate,
   getEntityControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 
@@ -156,7 +156,7 @@ For data fetching. Query hooks are simpler — error handling happens at render 
 import {
   useEntityControllerFindAll,
   getEntityControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client';
 
 export function useEntities() {
   const { data, isLoading, error, refetch } = useEntityControllerFindAll(
@@ -291,16 +291,16 @@ export default function UsersPage() {
 }
 ```
 
-### 7. Always use the generated client from `@/shared/api`
+### 7. Always use the generated client from `@ayunis/api-client`
 
-Never hand-write a request path with `axiosInstance.get`/`post`. Import the Orval-generated function (e.g. `entityControllerExport`) from `@/shared/api`. The generated client is the single source of truth for URLs, typing, and the request/response contract — hand-written paths drift silently when the backend changes.
+Never hand-write a request path with `axiosInstance.get`/`post`. Import the Orval-generated function (e.g. `entityControllerExport`) from `@ayunis/api-client`. The generated client is the single source of truth for URLs, typing, and the request/response contract — hand-written paths drift silently when the backend changes.
 
 ```typescript
 // WRONG ✗ — bypasses Orval, hand-written path + untyped response
 const blob = await axiosInstance.get('/admin/users/export', { responseType: 'blob' });
 
 // CORRECT ✓ — generated, typed function
-import { entityControllerExport } from '@/shared/api';
+import { entityControllerExport } from '@ayunis/api-client';
 const blob = await entityControllerExport();
 ```
 
@@ -315,4 +315,4 @@ When creating or modifying a hook, verify:
 - [ ] `void` used for fire-and-forget `invalidateQueries`/`router.invalidate()`
 - [ ] User-facing strings go through `useTranslation`, not hardcoded
 - [ ] No API/blob-download logic inlined in a page — it lives in a hook in `api/`
-- [ ] Uses the generated client from `@/shared/api`, not a hand-written `axiosInstance` path
+- [ ] Uses the generated client from `@ayunis/api-client`, not a hand-written `axiosInstance` path

@@ -8,7 +8,7 @@ import {
 import type {
   MyTeamResponseDto,
   ShareResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import SharesTab from './SharesTab';
 
 /** A detail page's configuration next to its shares, for shareable items. */

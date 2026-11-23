@@ -14,7 +14,7 @@ import MemorySettingsPage from './MemorySettingsPage';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@/pages/settings/settings-layout', () => ({
   SettingsLayout: ({ children }: { children: ReactNode }) => children,
 }));

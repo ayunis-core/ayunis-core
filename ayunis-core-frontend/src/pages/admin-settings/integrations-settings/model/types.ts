@@ -3,7 +3,7 @@ import type {
   PredefinedConfigResponseDto,
   CreatePredefinedIntegrationDto,
   UpdateMcpIntegrationDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { McpOAuthClientInput } from '@/shared/lib/mcp-oauth';
 
 export type McpIntegration = McpIntegrationResponseDto;

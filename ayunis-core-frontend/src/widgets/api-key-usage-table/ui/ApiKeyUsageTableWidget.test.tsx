@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { ApiKeyUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ApiKeyUsageDto } from '@ayunis/api-client/schemas';
 import { ApiKeyUsageTableWidget } from './ApiKeyUsageTableWidget';
 
 vi.mock('react-i18next', () => ({

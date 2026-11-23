@@ -1,4 +1,4 @@
-import type { RecordingsControllerFindAllParams } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RecordingsControllerFindAllParams } from '@ayunis/api-client/schemas';
 
 export const personalRecordingListParams = {
   ownerType: 'personal',

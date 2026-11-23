@@ -12,7 +12,7 @@ import {
   releaseNoteImageUrl,
   useMarkReleaseNoteRead,
 } from '@/features/release-notes';
-import type { ReleaseNoteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ReleaseNoteResponseDto } from '@ayunis/api-client/schemas';
 import { useReleaseNote } from '@/pages/release-note/api/useReleaseNote';
 
 interface ReleaseNotePageProps {

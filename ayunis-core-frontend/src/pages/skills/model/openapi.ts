@@ -1,3 +1,3 @@
-import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SkillResponseDto } from '@ayunis/api-client/schemas';
 
 export type Skill = SkillResponseDto;

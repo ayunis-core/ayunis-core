@@ -20,7 +20,7 @@ import {
   KnowledgeBaseDocumentResponseDtoTextType,
   type KnowledgeBaseDocumentResponseDto,
   type SourceProcessingErrorCode,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { formatDate } from '@/shared/lib/format-date';
 import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-error';
 

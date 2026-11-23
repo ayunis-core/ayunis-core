@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ayunis/ui/components/table';
-import type { ApiKeyUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ApiKeyUsageDto } from '@ayunis/api-client/schemas';
 import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
 import { ApiKeyUsageTableRow } from './ApiKeyUsageTableRow';
 

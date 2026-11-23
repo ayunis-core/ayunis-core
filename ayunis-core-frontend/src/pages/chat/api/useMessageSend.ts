@@ -7,7 +7,7 @@ import type {
   RunMasksResponseDto,
   RunIntegrationWarningResponseDto,
   ToolCallDecisionDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { showError, showInfo } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useLayoutEffect, useRef } from 'react';
@@ -19,7 +19,7 @@ import {
   getThreadAiContextControllerGetAiContextQueryKey,
   getMcpToolAllowancesControllerListQueryKey,
   getMcpIntegrationsControllerListAvailableQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import {
   activeThreadRunsQueryKey,
   attachThreadRun,

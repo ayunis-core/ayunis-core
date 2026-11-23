@@ -1,7 +1,7 @@
 import {
   getWorkspacesControllerFindOneQueryKey,
   useWorkspacesControllerFindOne,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useWorkspace(workspaceId: string | null) {
   const id = workspaceId ?? '';

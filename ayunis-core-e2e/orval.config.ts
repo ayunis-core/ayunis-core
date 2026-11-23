@@ -3,7 +3,7 @@ import { defineConfig } from 'orval';
 export default defineConfig({
   api: {
     input: {
-      target: '../ayunis-core-frontend/src/shared/api/openapi-schema.json',
+      target: '../packages/api-client/openapi-schema.json',
     },
     output: {
       target: './src/clients/generated',

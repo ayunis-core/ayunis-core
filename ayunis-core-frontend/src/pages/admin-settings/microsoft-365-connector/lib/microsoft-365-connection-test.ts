@@ -1,4 +1,4 @@
-import { Microsoft365ConnectionTestOutcome } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { Microsoft365ConnectionTestOutcome } from '@ayunis/api-client/schemas';
 import { GUID_PATTERN } from '@/pages/admin-settings/microsoft-365-connector/model/microsoft365ConnectorFormSchema';
 
 /** Without a token, nothing is known about the granted permissions. */

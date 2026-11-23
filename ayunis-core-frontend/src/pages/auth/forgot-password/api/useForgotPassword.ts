@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useUserPasswordResetControllerForgotPassword } from '@/shared/api';
+import { useUserPasswordResetControllerForgotPassword } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import * as z from 'zod';
 

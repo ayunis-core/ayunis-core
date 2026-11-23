@@ -32,7 +32,7 @@ vi.mock('@/pages/chat/api/useThreadWorkspaceId', () => ({
   useThreadWorkspaceId: () => null,
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   skillsControllerCreate: createSkill,
   skillsControllerUpdate: updateSkill,
   getSkillsControllerFindAllQueryKey: (params: unknown) => ['/skills', params],

@@ -10,7 +10,7 @@ import {
 } from '@ayunis/ui/components/table';
 import { CheckCircle, Download, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateBulkInvitesResponseDto } from '@ayunis/api-client/schemas';
 
 interface BulkInviteResultsContentProps {
   results: CreateBulkInvitesResponseDto;

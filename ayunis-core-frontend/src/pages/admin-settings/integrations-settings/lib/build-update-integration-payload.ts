@@ -2,7 +2,7 @@ import type {
   McpIntegration,
   UpdateIntegrationFormData,
 } from '@/pages/admin-settings/integrations-settings/model/types';
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MarketplaceIntegrationConfigFieldDto } from '@ayunis/api-client/schemas';
 import { buildInstructionsUpdate } from './integration-instructions';
 
 interface ConfigSchema {

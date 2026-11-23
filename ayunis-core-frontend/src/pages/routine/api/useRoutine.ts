@@ -4,7 +4,7 @@ import {
   getRoutinesControllerFindOneQueryKey,
   getThreadsControllerFindAllQueryKey,
   useRoutinesControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { invalidateNotificationQueries } from '@/features/notifications';
 import { routinesRefetchInterval, type Routine } from '@/features/routines';
 

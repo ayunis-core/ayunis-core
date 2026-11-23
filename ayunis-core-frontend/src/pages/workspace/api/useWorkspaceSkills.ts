@@ -1,4 +1,4 @@
-import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
+import { useSkillsControllerFindAll } from '@ayunis/api-client/endpoints';
 import { workspaceSkillListParams } from '@/shared/api/skill-scopes';
 
 interface WorkspaceSkillListOptions {

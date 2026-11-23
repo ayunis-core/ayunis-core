@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { OrgLifecycleCountsDto } from '@/shared/api';
+import type { OrgLifecycleCountsDto } from '@ayunis/api-client';
 
 const STATUS_ORDER = [
   'paying',

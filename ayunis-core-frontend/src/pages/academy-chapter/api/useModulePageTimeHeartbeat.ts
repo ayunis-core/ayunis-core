@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   academyProgressControllerRecordModuleHeartbeat,
   getAcademyProgressControllerGetProgressQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 // Must match MODULE_HEARTBEAT_INTERVAL_SECONDS in the backend: the server
 // credits at most one interval per heartbeat.

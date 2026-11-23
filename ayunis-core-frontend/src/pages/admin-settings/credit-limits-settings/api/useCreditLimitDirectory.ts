@@ -1,7 +1,7 @@
 import {
   useTeamsControllerListTeams,
   useUserControllerGetUsersInOrganization,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   useDefaultUserLimit,
   useTeamLimitOverview,

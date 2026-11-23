@@ -22,7 +22,7 @@ vi.mock('@/shared/api/extract-error-data', () => ({
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useAuthenticationControllerLogin: () => ({
     mutate: login,
     isPending: false,

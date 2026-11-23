@@ -7,7 +7,7 @@ import {
   getWorkspacesControllerFindAllQueryKey,
   getWorkspacesControllerFindOneQueryKey,
   getThreadsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 

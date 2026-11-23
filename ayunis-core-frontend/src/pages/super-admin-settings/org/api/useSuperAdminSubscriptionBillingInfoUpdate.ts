@@ -1,7 +1,7 @@
 import {
   useSuperAdminSubscriptionsControllerUpdateBillingInfo,
   type UpdateBillingInfoDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';

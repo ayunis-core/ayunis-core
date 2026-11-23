@@ -9,7 +9,6 @@
     "src/**/*.{ts,tsx}"
   ],
   "ignore": [
-    "src/shared/api/generated/**",
     "src/app/routeTree.gen.ts",
     "src/features/feature-toggles/**"
   ],

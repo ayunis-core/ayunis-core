@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import z from 'zod';
 import LoginPage from '@/pages/auth/login';
 import { meQueryOptions } from '@/shared/api/me-query-options';
-import { SessionHandoffRequestDtoClient } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SessionHandoffRequestDtoClient } from '@ayunis/api-client/schemas';
 
 const searchSchema = z.object({
   client: z.enum(SessionHandoffRequestDtoClient),

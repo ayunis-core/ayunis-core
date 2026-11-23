@@ -5,7 +5,7 @@ import {
   useUsageControllerGetUserUsage,
   useApiKeyUsageControllerGetApiKeyUsage,
   useModelsControllerGetPermittedLanguageModels,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import type { UsageOverviewHooks } from '@/widgets/usage-overview';
 import { useCreditUsage } from '@/pages/admin-settings/usage-settings/api/useCreditUsage';
 

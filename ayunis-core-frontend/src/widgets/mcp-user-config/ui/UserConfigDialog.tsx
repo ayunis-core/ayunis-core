@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
 import { UserConfigForm } from './UserConfigForm';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 
 interface UserConfigDialogProps {
   readonly integration: McpIntegrationResponseDto | null;

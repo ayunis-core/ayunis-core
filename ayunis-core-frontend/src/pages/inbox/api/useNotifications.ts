@@ -4,8 +4,8 @@ import {
   getNotificationsControllerCountUnreadQueryKey,
   getNotificationsControllerFindAllQueryKey,
   useNotificationsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { NotificationType } from '@ayunis/api-client/schemas';
 import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
 
 /**

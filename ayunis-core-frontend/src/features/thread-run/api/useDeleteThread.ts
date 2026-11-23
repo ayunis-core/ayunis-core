@@ -2,7 +2,7 @@ import {
   useThreadsControllerDelete,
   getThreadsControllerFindAllQueryKey,
   getFavoritesControllerFindAllQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { abortActiveThreadRun } from '@/features/thread-run/model/active-thread-run';

@@ -6,7 +6,7 @@ import { useRenameThread } from './useRenameThread';
 
 const { updateTitle } = vi.hoisted(() => ({ updateTitle: vi.fn() }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   threadsControllerUpdateTitle: updateTitle,
   getThreadsControllerFindAllQueryKey: () => ['threads'],
   getThreadsControllerFindOneQueryKey: (id: string) => ['threads', id],

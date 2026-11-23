@@ -69,7 +69,7 @@ vi.mock('@/widgets/onboarding', async (importOriginal) => {
   };
 });
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useKnowledgeBasesControllerFindAll: () => ({
     data: mocks.knowledgeBases && { data: mocks.knowledgeBases },
   }),

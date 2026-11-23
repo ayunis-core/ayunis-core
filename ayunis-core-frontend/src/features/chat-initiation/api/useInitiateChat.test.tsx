@@ -41,7 +41,7 @@ vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mocks.navigate,
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useThreadsControllerCreate: () => ({
     mutateAsync: mocks.createThread,
     isPending: false,

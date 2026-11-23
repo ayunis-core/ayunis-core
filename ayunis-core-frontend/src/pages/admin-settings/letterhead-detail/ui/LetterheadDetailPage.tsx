@@ -17,7 +17,7 @@ import { MarginEditor, useDinLetterPresets } from '@/widgets/margin-editor';
 import type { PdfSource } from '@/widgets/margin-editor';
 import { useUpdateLetterhead } from '@/pages/admin-settings/letterhead-detail/api/useUpdateLetterhead';
 import type { PageMargins } from '@/shared/lib/letterhead-margins';
-import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { LetterheadResponseDto } from '@ayunis/api-client/schemas';
 import {
   buildPdfUrl,
   getContinuationPageSource,

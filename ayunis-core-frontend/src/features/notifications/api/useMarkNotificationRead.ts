@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   getNotificationsControllerFindOneQueryKey,
   notificationsControllerMarkRead,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { invalidateNotificationQueries } from './invalidateNotificationQueries';

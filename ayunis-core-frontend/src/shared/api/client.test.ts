@@ -1,11 +1,33 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { setEmbeddedSession } from '@/shared/api/embedded-session';
 import {
-  axiosInstance,
+  AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from 'axios';
+import { createApiTransport } from '@ayunis/api-client/transport';
+import {
+  configureAppApi,
   isRetryingThroughDeployGap,
   shouldRetryQuery,
 } from './client';
+
+let axiosInstance: AxiosInstance;
+
+function configureTestTransport(
+  transport: ReturnType<typeof createApiTransport>,
+) {
+  configureAppApi(transport);
+  axiosInstance = transport.axios;
+}
+
+beforeEach(() => {
+  configureTestTransport(
+    createApiTransport({
+      baseUrl: 'http://localhost:3000/api',
+      credentials: 'include',
+    }),
+  );
+});
 
 function respondWith(statuses: number[]) {
   const calls: InternalAxiosRequestConfig[] = [];
@@ -127,26 +149,29 @@ describe('deploy-gap retry', () => {
   });
 });
 
-describe('embedded session', () => {
+describe('bearer transport', () => {
   const fetchMock = vi.fn<typeof fetch>();
   let token = 'access-1';
-  const refreshRejected = vi.fn(async () => {
+  const refreshRejected = vi.fn(async (_token: string) => {
     token = 'access-2';
   });
 
   beforeEach(() => {
     token = 'access-1';
     vi.stubGlobal('fetch', fetchMock);
-    setEmbeddedSession({
-      accessToken: async () => token,
-      refreshRejected,
-      request: vi.fn(),
-      signOut: vi.fn(),
-    });
+    configureTestTransport(
+      createApiTransport({
+        baseUrl: 'http://localhost:3000/api',
+        credentials: 'omit',
+        authorization: {
+          getHeader: async () => `Bearer ${token}`,
+          refresh: (header) => refreshRejected(header.replace(/^Bearer /, '')),
+        },
+      }),
+    );
   });
 
   afterEach(() => {
-    setEmbeddedSession(null);
     vi.unstubAllGlobals();
     fetchMock.mockReset();
     refreshRejected.mockClear();

@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Dialog,
@@ -15,12 +15,12 @@ import {
 } from '@ayunis/ui/components/dialog';
 import { Form } from '@ayunis/ui/components/form';
 import { Loader2 } from 'lucide-react';
-import useSuperAdminSubscriptionStartDateUpdate from '../api/useSuperAdminSubscriptionStartDateUpdate';
+import useSuperAdminSubscriptionStartDateUpdate from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionStartDateUpdate';
 import {
   buildSubscriptionStartDateSchema,
   toCalendarDateKey,
-} from '../lib/subscription-start-date';
-import type { UpdateSubscriptionStartDateFormData } from '../model/types';
+} from '@/pages/super-admin-settings/org/lib/subscription-start-date';
+import type { UpdateSubscriptionStartDateFormData } from '@/pages/super-admin-settings/org/model/types';
 import SubscriptionStartDateField from './SubscriptionStartDateField';
 
 interface SubscriptionStartDateUpdateDialogProps {

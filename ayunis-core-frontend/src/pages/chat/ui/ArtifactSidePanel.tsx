@@ -8,8 +8,8 @@ import {
   AlertDescription,
   AlertTitle,
 } from '@ayunis/ui/components/alert';
-import type { ArtifactResponseDto } from '@/shared/api';
-import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
+import type { ArtifactsControllerExportFormat } from '@ayunis/api-client/schemas';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { ArtifactPanelHeader } from '@/widgets/artifact-panel-header';
 import ArtifactSidePanelSkeleton from './ArtifactSidePanelSkeleton';

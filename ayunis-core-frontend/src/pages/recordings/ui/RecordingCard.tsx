@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from '@tanstack/react-router';
 import { Button } from '@ayunis/ui/components/button';
 import { useResourceOwnership } from '@/features/resource-ownership';
-import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
 import { RecordingListItem } from '@/shared/ui/recording-list-item';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { useDeleteRecording } from '@/pages/recordings/api/useDeleteRecording';

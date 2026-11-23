@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/pages/workspace/ui/WorkspaceKnowledgeBaseDetailPage', () => ({
   WorkspaceKnowledgeBaseDetailPage: () => null,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getKnowledgeBasesControllerFindOneQueryKey: (id: string) => [
     `/knowledge-bases/${id}`,
   ],

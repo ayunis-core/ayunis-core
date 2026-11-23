@@ -2,7 +2,7 @@ import { getSsoErrorKey } from '@/pages/super-admin-settings/org/api/ssoMutation
 import {
   getSuperAdminSsoConnectionsControllerGetQueryKey,
   useSuperAdminSsoConnectionsControllerSetEnabled,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';

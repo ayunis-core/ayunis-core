@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
 import type { GridRow, GridState } from './spreadsheet-grid-state';
 import {
   addRows,

@@ -14,7 +14,7 @@ vi.mock('@/shared/config', () => ({
   default: { features: { announcableOrgId: 'org-id' } },
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useOnboardingControllerGetOnboarding: () => onboardingState,
 }));
 

@@ -4,7 +4,7 @@ import { showError, showSuccess } from '@/shared/lib/toast';
 import {
   useSuperAdminPlatformConfigControllerSetRecordingFairUseLimit,
   getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { windowHoursToMs } from './fair-use-limits-conversion';
 import type { FairUseTierLimit } from './useFairUseLimits';
 

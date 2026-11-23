@@ -18,7 +18,7 @@ import { AddTeamMemberDialog } from './AddTeamMemberDialog';
 import { TeamCreditLimitCard } from './TeamCreditLimitCard';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { useHasCreditBudget } from '@/features/credit-limits';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import type {
   TeamDetail,
   PaginatedTeamMembers,

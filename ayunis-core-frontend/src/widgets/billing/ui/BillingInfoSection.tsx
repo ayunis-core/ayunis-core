@@ -8,7 +8,7 @@ import {
 import { Button } from '@ayunis/ui/components/button';
 import { Building, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import type { ReactNode } from 'react';
 
 interface BillingInfoSectionProps {

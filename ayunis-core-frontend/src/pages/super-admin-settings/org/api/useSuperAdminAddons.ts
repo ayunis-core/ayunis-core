@@ -1,5 +1,5 @@
-import { useSuperAdminAddonsControllerList } from '@/shared/api';
-import type { AddonStatusResponseDto } from '@/shared/api';
+import { useSuperAdminAddonsControllerList } from '@ayunis/api-client';
+import type { AddonStatusResponseDto } from '@ayunis/api-client';
 
 export function useSuperAdminAddons(orgId: string) {
   const { data, isLoading, isError } = useSuperAdminAddonsControllerList(orgId);

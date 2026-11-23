@@ -1,4 +1,4 @@
-import { SourceProcessingErrorCode as Code } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SourceProcessingErrorCode as Code } from '@ayunis/api-client/schemas';
 
 export type SourceProcessingErrorReason =
   | 'unreadable'

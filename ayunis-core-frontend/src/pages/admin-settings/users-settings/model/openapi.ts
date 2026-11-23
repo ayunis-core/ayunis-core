@@ -4,7 +4,7 @@ import type {
   InviteListItemResponseDto,
   UpdateUserRoleDtoRole,
   UserResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export type InviteCreateData = CreateInviteDto;
 export type Invite = InviteListItemResponseDto;

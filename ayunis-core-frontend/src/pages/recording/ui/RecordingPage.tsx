@@ -19,7 +19,7 @@ import {
 import type {
   RecordingResponseDto,
   WorkspaceResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { ResourceOwnerCard } from '@/widgets/resource-owner-card';

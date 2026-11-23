@@ -20,7 +20,7 @@ import type {
   SourceResponseDtoCreatedBy,
   SourceResponseDtoStatus,
   SourceResponseDtoType,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   usePendingImages,
   type PendingImage,

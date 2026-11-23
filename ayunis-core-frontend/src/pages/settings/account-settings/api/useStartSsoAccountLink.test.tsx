@@ -10,7 +10,7 @@ const { start, navigate, showError } = vi.hoisted(() => ({
   navigate: vi.fn(),
   showError: vi.fn(),
 }));
-vi.mock('@/shared/api', () => ({ ssoLoginControllerStartLink: start }));
+vi.mock('@ayunis/api-client', () => ({ ssoLoginControllerStartLink: start }));
 vi.mock('@/features/sso', () => ({ navigateToExternalUrl: navigate }));
 vi.mock('@/shared/lib/toast', () => ({ showError }));
 vi.mock('react-i18next', () => ({

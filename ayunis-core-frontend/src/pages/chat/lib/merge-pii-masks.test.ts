@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PiiMaskResponseDto } from '@/shared/api';
+import type { PiiMaskResponseDto } from '@ayunis/api-client';
 import { mergePiiMasks } from './merge-pii-masks';
 
 function mask(overrides: Partial<PiiMaskResponseDto>): PiiMaskResponseDto {

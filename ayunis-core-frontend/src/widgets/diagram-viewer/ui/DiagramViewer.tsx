@@ -1,4 +1,4 @@
-import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
 import { useRef, useState } from 'react';
 import { MermaidRenderer } from './MermaidRenderer';
 import { DiagramExportButtons } from './DiagramExportButtons';

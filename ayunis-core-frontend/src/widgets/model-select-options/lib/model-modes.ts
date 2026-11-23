@@ -4,7 +4,7 @@ import {
   type DefaultModelSelectionResponseDto,
   type ModelModeResolutionResponseDto,
   type PermittedLanguageModelResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export { ModelMode };
 export const MODEL_MODES = Object.values(ModelMode);

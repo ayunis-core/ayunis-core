@@ -18,7 +18,7 @@ import { useThreadArtifacts } from '@/pages/chat/api/useThreadArtifacts';
 import type {
   ArtifactResponseDto,
   ArtifactResponseDtoType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 const artifactIcons: Record<ArtifactResponseDtoType, LucideIcon> = {
   document: FileText,

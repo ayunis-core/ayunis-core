@@ -1,4 +1,4 @@
-import { useSuperAdminPlatformConfigControllerGetFairUseLimits } from '@/shared/api';
+import { useSuperAdminPlatformConfigControllerGetFairUseLimits } from '@ayunis/api-client';
 import { windowMsToHours } from './fair-use-limits-conversion';
 import type { FairUseTierLimit } from './useFairUseLimits';
 

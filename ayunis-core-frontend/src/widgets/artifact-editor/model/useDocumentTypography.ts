@@ -1,7 +1,7 @@
 import {
   useDocumentDefaultsControllerFind,
   useLetterheadsControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { DOCUMENT_FONT_STACKS } from '@/shared/lib/document-typography';
 
 export function useDocumentTypography(letterheadId: string | null | undefined) {

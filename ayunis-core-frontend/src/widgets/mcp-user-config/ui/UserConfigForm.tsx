@@ -12,7 +12,7 @@ import {
 import type {
   McpIntegrationResponseDto,
   MarketplaceIntegrationConfigFieldDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
 import { isUserEditableField } from '@/shared/lib/config-field';
 import { trackUserCredentialsConnection } from '@/shared/lib/openpanel-integrations';

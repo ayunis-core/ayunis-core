@@ -11,7 +11,7 @@ import type {
 import { useApiImageSrc } from '@/shared/hooks/useApiImageSrc';
 import { Markdown, usePiiMasks } from '@/widgets/markdown';
 import { resolvedPromptText } from '@/pages/chat/lib/sent-prompts';
-import type { TextMessageContentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { TextMessageContentResponseDto } from '@ayunis/api-client/schemas';
 import RoutineNudgeNotice from './RoutineNudgeNotice';
 import CopyMessageButton from './CopyMessageButton';
 

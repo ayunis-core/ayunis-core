@@ -3,7 +3,7 @@ import {
   getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey,
   type ModelWithConfigResponseDto,
   useSuperAdminPermittedModelsControllerManageOrgDefaultModel,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';

@@ -1,4 +1,4 @@
-import type { KnowledgeBasesControllerFindAllParams } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBasesControllerFindAllParams } from '@ayunis/api-client/schemas';
 
 export const personalKnowledgeBaseListParams = {
   ownerType: 'personal',

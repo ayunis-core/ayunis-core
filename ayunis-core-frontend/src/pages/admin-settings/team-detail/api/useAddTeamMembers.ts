@@ -7,7 +7,7 @@ import {
   getTeamsControllerGetTeamQueryKey,
   getTeamsControllerListTeamsQueryKey,
   getTeamsControllerListMyTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showInfo, showSuccess } from '@/shared/lib/toast';
 
 export function useAddTeamMembers(teamId: string, onSuccess?: () => void) {

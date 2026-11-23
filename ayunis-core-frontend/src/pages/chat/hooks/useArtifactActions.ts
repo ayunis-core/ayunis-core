@@ -4,8 +4,8 @@ import { useArtifact } from '@/pages/chat/api/useArtifact';
 import { useUpdateArtifact } from '@/pages/chat/api/useUpdateArtifact';
 import { useRevertArtifact } from '@/pages/chat/api/useRevertArtifact';
 import { useExportArtifact } from '@/pages/chat/api/useExportArtifact';
-import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { UpdateArtifactDtoAuthorType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ArtifactsControllerExportFormat } from '@ayunis/api-client/schemas';
+import { UpdateArtifactDtoAuthorType } from '@ayunis/api-client/schemas';
 import { showSuccess } from '@/shared/lib/toast';
 
 export function useArtifactActions(

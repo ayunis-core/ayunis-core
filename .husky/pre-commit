@@ -34,7 +34,7 @@ BE_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-backend/(src|
 E2E_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-e2e/.*\.(ts|tsx|json|md)$|^ayunis-core-e2e/(package\.json|orval\.config\.ts)$' || true)
 
 # Workspace packages (packages/*): staged TS/TSX files, plus the distinct package dirs touched
-PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.(ts|tsx)$' || true)
+PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.(ts|tsx)$' | grep -v '/generated/' || true)
 PKG_DIRS=$(printf "%s\n" "$PKG_TS_STAGED" | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
 
 # Complexity gate scope: ALL staged backend + workspace-package TS/TSX files. This

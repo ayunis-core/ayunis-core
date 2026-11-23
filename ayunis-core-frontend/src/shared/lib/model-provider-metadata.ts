@@ -3,7 +3,7 @@ import {
   ModelProviderInfoResponseDtoProvider,
   type ModelProviderInfoResponseDtoHostedIn as HostedIn,
   type ModelProviderInfoResponseDtoProvider as ModelProvider,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 const PROVIDER_HOSTED_IN: Record<ModelProvider, HostedIn> = {
   [ModelProviderInfoResponseDtoProvider.otc]:

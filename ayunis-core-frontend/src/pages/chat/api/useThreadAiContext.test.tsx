@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   getQueryKey: vi.fn((threadId: string) => ['ai-context', threadId]),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getThreadAiContextControllerGetAiContextQueryKey: mocks.getQueryKey,
   useThreadAiContextControllerGetAiContext: mocks.useAiContext,
 }));

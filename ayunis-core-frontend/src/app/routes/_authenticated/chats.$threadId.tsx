@@ -7,7 +7,7 @@ import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   getModelsControllerGetPermittedLanguageModelsQueryOptions,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import ChatPage from '@/pages/chat/';
 import { searchParamString } from '@/shared/lib/search-params';
 

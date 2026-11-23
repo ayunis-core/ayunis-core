@@ -5,7 +5,7 @@ import {
   getInvitesControllerGetInviteByTokenQueryKey,
   invitesControllerGetInviteByToken,
   appControllerIsCloud,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { z } from 'zod';
 import { searchParamString } from '@/shared/lib/search-params';
 

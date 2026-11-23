@@ -1,4 +1,4 @@
-import { useAuthenticationControllerMe } from '@/shared/api';
+import { useAuthenticationControllerMe } from '@ayunis/api-client';
 import { createAuthorization } from '@/features/permissions/lib/authorization';
 import { useMyPermissions } from './useMyPermissions';
 import { useMyTeams } from './useMyTeams';

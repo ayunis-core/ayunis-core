@@ -4,7 +4,7 @@ import {
   getMcpIntegrationsControllerListAvailableQueryKey,
   mcpIntegrationsControllerCompleteOAuth,
   type CompleteMcpOAuthDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { trackOAuthIntegrationConnected } from '@/shared/lib/openpanel-integrations';
 
 export function useCompleteMcpOAuth(data: CompleteMcpOAuthDto) {

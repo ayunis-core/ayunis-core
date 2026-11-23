@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
-import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SkillResponseDto } from '@ayunis/api-client/schemas';
 import { SkillListItem } from '@/shared/ui/skill-list-item';
 import {
   WorkspaceContextEmpty,

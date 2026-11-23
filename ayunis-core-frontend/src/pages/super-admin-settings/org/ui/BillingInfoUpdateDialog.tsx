@@ -1,6 +1,6 @@
 import SharedBillingInfoUpdateDialog from '@/widgets/billing/ui/BillingInfoUpdateDialog';
-import type { UpdateBillingInfoDto } from '@/shared/api';
-import useSuperAdminSubscriptionBillingInfoUpdate from '../api/useSuperAdminSubscriptionBillingInfoUpdate';
+import type { UpdateBillingInfoDto } from '@ayunis/api-client';
+import useSuperAdminSubscriptionBillingInfoUpdate from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionBillingInfoUpdate';
 
 interface BillingInfoUpdateDialogProps {
   currentBillingInfo: UpdateBillingInfoDto;

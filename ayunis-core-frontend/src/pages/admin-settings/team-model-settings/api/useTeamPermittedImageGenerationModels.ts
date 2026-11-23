@@ -1,4 +1,4 @@
-import { useTeamPermittedModelsControllerListTeamImageGenerationModels } from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamPermittedModelsControllerListTeamImageGenerationModels } from '@ayunis/api-client/endpoints';
 
 export function useTeamPermittedImageGenerationModels(teamId: string) {
   const {
