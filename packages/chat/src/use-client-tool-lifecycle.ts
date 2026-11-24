@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from 'react';
 import {
   answeredToolCallIds,
@@ -20,6 +19,7 @@ import {
   type ClientToolDispatch,
   type ClientToolResult,
 } from './client-tool-dispatch';
+import { useRuntimeSession } from './use-runtime-session';
 import type { ChatRunLifecycle } from './run-lifecycle';
 import type { ClientToolCall } from './client-tools';
 
@@ -145,22 +145,6 @@ function canResumeInScope(previous: Scope | null, scope: Scope): boolean {
   return (
     previous === null ||
     (previous.session === scope.session && previous.threadId !== scope.threadId)
-  );
-}
-
-function useRuntimeSession(lifecycle: ChatRunLifecycle): AbortSignal {
-  const signal = lifecycle.getSessionSignal();
-  const subscribe = useCallback(
-    (notify: () => void) => {
-      signal.addEventListener('abort', notify);
-      return () => signal.removeEventListener('abort', notify);
-    },
-    [signal],
-  );
-  return useSyncExternalStore(
-    subscribe,
-    lifecycle.getSessionSignal,
-    lifecycle.getSessionSignal,
   );
 }
 

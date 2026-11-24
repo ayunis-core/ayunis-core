@@ -11,3 +11,12 @@ export {
   type ClientToolRegistration,
 } from './client-tools';
 export { useContentScrollHeader } from './use-content-scroll-header';
+export { ChatConversation } from './chat-conversation';
+export type {
+  ChatConversationAdapters,
+  ChatConversationProps,
+  ChatConversationSlots,
+  ChatModelAdapter,
+  ChatThreadSnapshot,
+} from './chat-conversation-config';
+export type { ChatHistoryConfig } from './configured-history';

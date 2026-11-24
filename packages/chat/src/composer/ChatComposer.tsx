@@ -83,3 +83,15 @@ function ComposerTextarea({
     />
   );
 }
+
+export { canSubmitMessage } from './can-submit-message';
+export { useChatDraft, type ChatDraftStorage } from './use-chat-draft';
+export { usePendingImages } from './use-pending-images';
+export { useVoiceRecording } from './use-voice-recording';
+export {
+  MAX_IMAGES,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MIB,
+  MAX_TOTAL_IMAGE_SIZE_BYTES,
+  MAX_TOTAL_IMAGE_SIZE_MIB,
+} from './image-upload-policy';

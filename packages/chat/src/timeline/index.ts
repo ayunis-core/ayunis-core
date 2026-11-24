@@ -24,3 +24,5 @@ export type {
   SourceProcessingTimelineStep,
   ToolTimelineStep,
 } from './types';
+export { findCallsAwaitingConfirmation } from './calls-awaiting-confirmation';
+export { useToolCallDecisions } from './useToolCallDecisions';
