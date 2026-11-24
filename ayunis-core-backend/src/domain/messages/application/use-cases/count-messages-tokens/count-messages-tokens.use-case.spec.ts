@@ -16,6 +16,8 @@ describe('CountMessagesTokensUseCase', () => {
   const useCase = new CountMessagesTokensUseCase();
   const estimate = estimatedTokens();
   const threadId = randomUUID();
+  const countParts = (...texts: string[]): number =>
+    texts.reduce((total, text) => total + estimate.countText(text), 0);
 
   it('counts the text of every message with the shared estimate', () => {
     const question = 'Wie beantrage ich Wohngeld?';
@@ -34,7 +36,7 @@ describe('CountMessagesTokensUseCase', () => {
       ]),
     );
 
-    expect(tokens).toBe(estimate.countText(`${question}\n${answer}`));
+    expect(tokens).toBe(countParts(question, answer));
   });
 
   it('prices an image as its reference label plus the fixed image cost, like the context budget', () => {
@@ -47,9 +49,8 @@ describe('CountMessagesTokensUseCase', () => {
     const tokens = useCase.execute(new CountMessagesTokensCommand([message]));
 
     expect(tokens).toBe(
-      estimate.countText(
-        `Was steht hier?\n${getImageReferenceLabel(image, message.id)}`,
-      ) + estimate.tokensPerImage,
+      countParts('Was steht hier?', getImageReferenceLabel(image, message.id)) +
+        estimate.tokensPerImage,
     );
   });
 
@@ -73,11 +74,15 @@ it('includes thinking, tool arguments, and tool results in the warning estimate'
       new ToolResultMessageContent('call-1', 'search', 'Wohngeldgesetz § 3'),
     ],
   });
-  const expectedText =
-    'Prüfe die Rechtsgrundlage.\ncall-1 search {"query":"Wohngeld"}\ncall-1 search Wohngeldgesetz § 3';
+  const estimate = estimatedTokens();
+  const expected = [
+    'Prüfe die Rechtsgrundlage.',
+    'call-1 search {"query":"Wohngeld"}',
+    'call-1 search Wohngeldgesetz § 3',
+  ].reduce((total, text) => total + estimate.countText(text), 0);
   expect(
     new CountMessagesTokensUseCase().execute(
       new CountMessagesTokensCommand([message, resultMessage]),
     ),
-  ).toBe(estimatedTokens().countText(expectedText));
+  ).toBe(expected);
 });
