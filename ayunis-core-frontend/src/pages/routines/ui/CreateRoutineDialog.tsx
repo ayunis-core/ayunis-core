@@ -11,6 +11,7 @@ import {
 import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import {
+  EMPTY_ROUTINE_FORM,
   formFieldsToCreateDto,
   RoutineFormFieldset,
   useCreateRoutine,
@@ -19,18 +20,17 @@ import {
 import { RoutineModelField } from '@/widgets/routine-model-field';
 
 interface CreateRoutineDialogProps {
-  /** The fields to start from: empty, or a premade routine, whose other settings are kept. */
-  initialValues: RoutineFormFields;
   onClose: () => void;
 }
 
 export function CreateRoutineDialog({
-  initialValues,
   onClose,
 }: Readonly<CreateRoutineDialogProps>) {
   const { t } = useTranslation('routines');
   const navigate = useNavigate();
-  const form = useForm<RoutineFormFields>({ defaultValues: initialValues });
+  const form = useForm<RoutineFormFields>({
+    defaultValues: EMPTY_ROUTINE_FORM,
+  });
   const { createRoutine, isCreating } = useCreateRoutine(form, (routine) => {
     onClose();
     void navigate({

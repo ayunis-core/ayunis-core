@@ -1,21 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, FileText, PenLine, Plus } from 'lucide-react';
+import { ChevronDown, PenLine, Plus, Store } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
+import { useRoutineMarketplaceUrl } from '@/features/marketplace';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
-import {
-  EMPTY_ROUTINE_FORM,
-  type RoutineFormFields,
-} from '@/features/routines';
-import { VERKUENDUNGSPLATTFORM_ROUTINE } from '@/pages/routines/model/premade-routines';
 import { CreateRoutineDialog } from './CreateRoutineDialog';
 
 interface CreateRoutineMenuProps {
@@ -26,14 +20,10 @@ export default function CreateRoutineMenu({
   buttonText,
 }: Readonly<CreateRoutineMenuProps>) {
   const { t } = useTranslation('routines');
-  const [initialValues, setInitialValues] = useState<RoutineFormFields | null>(
-    null,
-  );
+  const marketplaceUrl = useRoutineMarketplaceUrl();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
-
-  const open = (values: RoutineFormFields) =>
-    requestDialogOpen(() => setInitialValues(values));
 
   return (
     <>
@@ -51,27 +41,26 @@ export default function CreateRoutineMenu({
         >
           <DropdownMenuItem
             data-testid="create-routine-blank"
-            onClick={() => open(EMPTY_ROUTINE_FORM)}
+            onClick={() => requestDialogOpen(() => setIsDialogOpen(true))}
           >
             <PenLine />
             <span>{t('createMenu.blank')}</span>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>{t('createMenu.premade')}</DropdownMenuLabel>
-          <DropdownMenuItem
-            data-testid="create-routine-premade-verkuendungsplattform"
-            onClick={() => open(VERKUENDUNGSPLATTFORM_ROUTINE)}
-          >
-            <FileText />
-            <span>{VERKUENDUNGSPLATTFORM_ROUTINE.name}</span>
-          </DropdownMenuItem>
+          {marketplaceUrl && (
+            <DropdownMenuItem
+              data-testid="create-routine-marketplace"
+              onClick={() =>
+                window.open(marketplaceUrl, '_blank', 'noopener,noreferrer')
+              }
+            >
+              <Store />
+              <span>{t('createMenu.marketplace')}</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
-      {initialValues && (
-        <CreateRoutineDialog
-          initialValues={initialValues}
-          onClose={() => setInitialValues(null)}
-        />
+      {isDialogOpen && (
+        <CreateRoutineDialog onClose={() => setIsDialogOpen(false)} />
       )}
     </>
   );

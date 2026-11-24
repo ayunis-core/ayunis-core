@@ -6,7 +6,7 @@
     "button": "Neue Routine",
     "first": "Erste Routine erstellen",
     "blank": "Leere Routine",
-    "premade": "Vorlagen"
+    "marketplace": "Aus dem Marketplace"
   },
   "emptyState": {
     "title": "Wiederkehrende Arbeit an die KI abgeben",
@@ -15,7 +15,7 @@
     "steps": {
       "describe": {
         "title": "Aufgabe beschreiben",
-        "description": "Schreiben Sie, was die Routine tun soll, oder starten Sie mit einer Vorlage."
+        "description": "Schreiben Sie, was die Routine tun soll."
       },
       "schedule": {
         "title": "Zeitplan wählen",
@@ -33,7 +33,7 @@
     "namePlaceholder": "z. B. Amtsblatt",
     "prompt": "Aufgabe",
     "promptPlaceholder": "Beschreiben Sie, was die Routine bei jedem Lauf tun soll.",
-    "promptDescription": "Die Routine erledigt diese Aufgabe ohne Sie. Ersetzen Sie die Angaben in eckigen Klammern.",
+    "promptDescription": "Die Routine erledigt diese Aufgabe ohne Sie.",
     "model": "Modell",
     "defaultModel": "Mein Standardmodell",
     "schedule": "Zeitplan",
