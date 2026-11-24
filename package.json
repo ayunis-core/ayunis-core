@@ -2,7 +2,8 @@
   "private": true,
   "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build:surfaces": "pnpm --filter core-frontend-tanstack run build && pnpm --filter './apps/*' run build && node ayunis-core-frontend/src/shared/scripts/bundle-surfaces.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.7",

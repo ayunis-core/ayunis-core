@@ -19,6 +19,10 @@ export function frameOrigins(
   return origins.length > 0 ? origins : fallback;
 }
 
+export function isFrameOrigin(origin: string, production: boolean): boolean {
+  return (production ? HTTPS_ORIGIN : HTTP_OR_HTTPS_ORIGIN).test(origin);
+}
+
 export function validateFrameOrigins(
   env: Record<string, unknown>,
   envKey: string,
@@ -28,10 +32,9 @@ export function validateFrameOrigins(
     return [];
   }
   const isProduction = env.NODE_ENV === 'production';
-  const pattern = isProduction ? HTTPS_ORIGIN : HTTP_OR_HTTPS_ORIGIN;
   if (
     typeof value === 'string' &&
-    splitOrigins(value).every((o) => pattern.test(o))
+    splitOrigins(value).every((origin) => isFrameOrigin(origin, isProduction))
   ) {
     return [];
   }

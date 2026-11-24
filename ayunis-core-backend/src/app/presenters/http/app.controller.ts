@@ -27,8 +27,8 @@ export class AppController {
 
   // Serves the SPA's runtime environment (see frontend.config.ts). Loaded by
   // index.html before the app bundle; the route wins over the static
-  // dev-stub copy in dist/frontend because serve-static registers its
-  // handlers in onModuleInit, after controller routes. Excluded from the
+  // dev-stub copy because the surface handlers are registered in
+  // onModuleInit, after controller routes. Excluded from the
   // global /api prefix in main.ts and from the OpenAPI spec (not part of the
   // public API, keeps the schema-drift check quiet).
   @Public()
