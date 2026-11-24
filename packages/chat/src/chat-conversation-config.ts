@@ -1,0 +1,74 @@
+import type { ReactNode } from 'react';
+import type {
+  GetThreadResponseDto,
+  ImageMessageContentResponseDto,
+} from '@ayunis/api-client/schemas';
+import type { ChatDraftStorage } from '@ayunis/chat/composer';
+import type { ChatHistoryConfig } from './configured-history';
+import type { TimelinePresentation } from '@ayunis/chat/timeline';
+import type { ChatSlots, ChatSurfaceConfig } from './chat-surface-config';
+import type { ClientToolDispatch } from './client-tool-dispatch';
+import type { RunOutcome } from './run-execution';
+
+export type ChatThreadSnapshot = Pick<
+  GetThreadResponseDto,
+  'id' | 'title' | 'messages' | 'piiMasks'
+>;
+
+export interface ChatModelAdapter {
+  readonly selected?: string;
+  readonly available: readonly { id: string; name: string }[];
+  readonly select: (
+    threadId: string,
+    modelId: string,
+    signal: AbortSignal,
+  ) => Promise<void>;
+}
+
+export interface ChatConversationAdapters {
+  readonly drafts?: ChatDraftStorage;
+  readonly isSendDisabled?: boolean;
+  readonly imageAttachments?: boolean;
+  readonly uploadFiles?: (
+    threadId: string,
+    files: File[],
+    signal: AbortSignal,
+  ) => Promise<void>;
+  readonly transcribe?: (
+    audio: Blob,
+    filename: string,
+    signal: AbortSignal,
+  ) => Promise<string | null>;
+  readonly model?: ChatModelAdapter;
+  readonly onRunSettled?: (threadId: string, outcome: RunOutcome) => void;
+  readonly onUnauthorized?: () => void;
+  readonly onError?: (error: unknown) => void;
+}
+
+export interface ChatConversationSlots extends ChatSlots {
+  readonly attachments?: ReactNode;
+  readonly messageImage?: (
+    message: ChatThreadSnapshot['messages'][number],
+    image: ImageMessageContentResponseDto,
+  ) => ReactNode;
+  readonly skills?: ReactNode;
+  readonly knowledgeBases?: ReactNode;
+  readonly integrations?: ReactNode;
+}
+
+export interface ChatConversationProps<Context = unknown, Outcome = unknown> {
+  /** Change this when the authenticated principal changes. Scope supplied data and storage to the same principal. */
+  readonly sessionKey: string;
+  readonly config: ChatSurfaceConfig;
+  readonly thread: ChatThreadSnapshot;
+  readonly history?: ChatHistoryConfig;
+  readonly adapters?: ChatConversationAdapters;
+  readonly slots?: ChatConversationSlots;
+  readonly activeRun?: {
+    readonly run?: { readonly cancellable: boolean };
+    readonly dataUpdatedAt: number;
+    readonly isFetching: boolean;
+  };
+  readonly clientTools?: ClientToolDispatch<Context, Outcome>;
+  readonly timeline?: TimelinePresentation;
+}

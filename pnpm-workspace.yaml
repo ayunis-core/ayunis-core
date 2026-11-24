@@ -1,5 +1,6 @@
 packages:
   - "packages/*"
+  - "apps/*"
   - "ayunis-core-backend"
   - "ayunis-core-frontend"
   - "ayunis-core-e2e"

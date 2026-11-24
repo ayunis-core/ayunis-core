@@ -1,4 +1,3 @@
-import { registerActiveThreadRun } from './active-thread-run';
 import type { RunEndpoints } from './run-endpoints';
 import type { StartedRunRequest } from './run-execution';
 
@@ -18,17 +17,51 @@ export interface ThreadRunStart {
   voiceInput?: boolean;
 }
 
-const startedRuns = new Map<string, StartedThreadRun>();
+export function createStartedThreadRuns(
+  registerActiveThreadRun: (
+    threadId: string,
+    controller: AbortController,
+  ) => void,
+) {
+  const startedRuns = new Map<string, StartedThreadRun>();
 
-/**
- * Sends a new chat's first message before its chat page exists. The page
- * takes the run once it mounts and reads the response from the start, so no
- * stream event is lost while the new-chat animation is still playing.
- */
-export function startRun(
+  /**
+   * Sends a new chat's first message before its chat page exists. The page
+   * takes the run once it mounts and reads the response from the start, so no
+   * stream event is lost while the new-chat animation is still playing.
+   */
+  function startRun(request: ThreadRunStart, send: RunEndpoints['send']): void {
+    const started = sendFirstMessage(request, send);
+    registerActiveThreadRun(request.threadId, started.request.controller);
+    startedRuns.set(request.threadId, started);
+  }
+
+  function takeStartedThreadRun(threadId: string): StartedThreadRun | null {
+    const run = startedRuns.get(threadId) ?? null;
+    startedRuns.delete(threadId);
+    return run;
+  }
+
+  function cancelStartedRun(
+    threadId: string,
+    stop: (threadId: string) => void,
+  ): void {
+    if (!startedRuns.delete(threadId)) return;
+    stop(threadId);
+  }
+
+  return {
+    startRun,
+    takeStartedThreadRun,
+    cancelStartedRun,
+    clearStartedThreadRuns: () => startedRuns.clear(),
+  };
+}
+
+function sendFirstMessage(
   { threadId, text, images, skillId, voiceInput = false }: ThreadRunStart,
   send: RunEndpoints['send'],
-): void {
+): StartedThreadRun {
   const files = images.map((image) => image.file);
   const controller = new AbortController();
   const response = send(
@@ -46,27 +79,5 @@ export function startRun(
   );
   // The chat page handles a failed request once it takes the run.
   response.catch(() => undefined);
-  registerActiveThreadRun(threadId, controller);
-  startedRuns.set(threadId, {
-    text,
-    images: files,
-    voiceInput,
-    request: { controller, response },
-  });
-}
-
-export function takeStartedThreadRun(
-  threadId: string,
-): StartedThreadRun | null {
-  const run = startedRuns.get(threadId) ?? null;
-  startedRuns.delete(threadId);
-  return run;
-}
-
-export function cancelStartedRun(
-  threadId: string,
-  stop: (threadId: string) => void,
-): void {
-  if (!startedRuns.delete(threadId)) return;
-  stop(threadId);
+  return { text, images: files, voiceInput, request: { controller, response } };
 }

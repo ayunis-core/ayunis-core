@@ -1,9 +1,15 @@
 import { BaseModule } from './base.module';
 import { ConditionalModule } from '@nestjs/config';
 import { ingestionInApi } from 'src/config/ingestion.config';
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import {
+  Module,
+  MiddlewareConsumer,
+  NestModule,
+  OnModuleInit,
+} from '@nestjs/common';
 import { SubscriptionSyncModule } from 'src/integrations/core-connect/subscription-sync/subscription-sync.module';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, HttpAdapterHost } from '@nestjs/core';
+import type { Express } from 'express';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './presenters/http/app.controller';
 import { ModelsModule } from 'src/domain/models/models.module';
@@ -51,9 +57,8 @@ import { AuthProvider } from 'src/config/authentication.config';
 import { CookieParserMiddleware } from 'src/common/middleware/cookie-parser.middleware';
 import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers.middleware';
 import { AppsignalNamespaceMiddleware } from 'src/common/middleware/appsignal-namespace.middleware';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { serveFrontendOptions } from './presenters/http/serve-frontend.options';
+import { serveSurfaces } from './presenters/http/serve-surfaces';
 import { IsCloudUseCase } from './application/use-cases/is-cloud/is-cloud.use-case';
 import { IsRegistrationDisabledUseCase } from './application/use-cases/is-registration-disabled/is-registration-disabled.use-case';
 import { GetFrontendRuntimeConfigUseCase } from './application/use-cases/get-frontend-runtime-config/get-frontend-runtime-config.use-case';
@@ -73,9 +78,6 @@ import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-tel
       ingestionInApi(env),
     ),
     ScheduleModule.forRoot(),
-    ServeStaticModule.forRoot(
-      serveFrontendOptions(join(__dirname, '..', '..', 'frontend')),
-    ),
     IntegrationsModule,
     ContextModule, // Global
     ModelsModule,
@@ -147,7 +149,15 @@ import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-tel
     GetFrontendRuntimeConfigUseCase,
   ],
 })
-export class AppModule implements NestModule {
+export class AppModule implements NestModule, OnModuleInit {
+  constructor(private readonly adapterHost: HttpAdapterHost) {}
+
+  onModuleInit() {
+    // Controller routes, including /config.js, are registered before this hook.
+    const expressApp = this.adapterHost.httpAdapter.getInstance<Express>();
+    expressApp.use(serveSurfaces(join(__dirname, '..', '..', 'frontend')));
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(

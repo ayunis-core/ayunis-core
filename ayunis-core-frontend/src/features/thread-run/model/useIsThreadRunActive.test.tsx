@@ -4,7 +4,7 @@ import {
   abortActiveThreadRun,
   registerActiveThreadRun,
   unregisterActiveThreadRun,
-} from '@ayunis/chat/runs';
+} from '@/features/thread-run/model/thread-run-lifecycle';
 import { useIsThreadRunActive } from './useIsThreadRunActive';
 
 const threadA = '00000000-0000-0000-0000-000000000001';

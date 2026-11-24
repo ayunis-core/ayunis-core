@@ -1,3 +1,4 @@
+import { resetThreadRunSession } from '@/features/thread-run';
 import { useLogoutControllerLogout } from '@ayunis/api-client/endpoints';
 import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ export function useLogout() {
   const logoutMutation = useLogoutControllerLogout();
 
   function clearLocalState(): void {
+    resetThreadRunSession(queryClient);
     queryClient.clear();
     clearAppsignalTags();
     clearOpenPanelIdentity();

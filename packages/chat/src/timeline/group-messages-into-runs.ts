@@ -1,11 +1,11 @@
 import type {
-  Message,
-  AssistantMessage,
-  ThinkingMessageContent,
-  ToolResultMessageContent,
-  ToolUseMessageContent,
-  TextMessageContent,
-} from '@/pages/chat/model/openapi';
+  GetThreadResponseDto,
+  AssistantMessageResponseDto as AssistantMessage,
+  ThinkingMessageContentResponseDto,
+  TextMessageContentResponseDto,
+  ToolResultMessageContentResponseDto as ToolResultMessageContent,
+  ToolUseMessageContentResponseDto as ToolUseMessageContent,
+} from '@ayunis/api-client/schemas';
 import type {
   RenderUnit,
   AgentRunUnit,
@@ -13,29 +13,47 @@ import type {
   StepStatus,
   ToolTimelineStep,
   RichToolRunBlock,
-} from '@/pages/chat/ui/agent-run-timeline/model/types';
+} from './types';
 import {
   getArtifactToolFamily,
   getArtifactToolTarget,
-  isRichTool,
-} from './tool-classification';
-import type { ArtifactFamily } from './tool-classification';
+} from './artifact-tool-target';
+import { EMPTY_TOOL_CARDS, type ToolCards } from './tool-card-types';
 
-interface GroupingOptions {
+type Message = GetThreadResponseDto['messages'][number];
+
+export interface GroupingOptions {
   isStreaming: boolean;
   /** New user turn is pending outside `messages` (optimistic bubble only). */
   hasPendingUserTurn?: boolean;
+  toolCards?: ToolCards;
 }
 
 export function groupMessagesIntoRuns(
   messages: readonly Message[],
-  { isStreaming, hasPendingUserTurn = false }: GroupingOptions,
+  {
+    isStreaming,
+    hasPendingUserTurn = false,
+    toolCards = EMPTY_TOOL_CARDS,
+  }: GroupingOptions,
 ): RenderUnit[] {
-  const toolResultsByToolId = indexToolResults(messages);
   const isStreamingCurrentMessages = isStreaming && !hasPendingUserTurn;
-  const activeAssistantMessageIndex = isStreamingCurrentMessages
+  const activeIndex = isStreamingCurrentMessages
     ? findActiveAssistantMessageIndex(messages)
     : -1;
+  const units = buildRenderUnits(messages, toolCards, activeIndex);
+  const last = units.at(-1);
+  if (isStreamingCurrentMessages && last?.kind === 'agent-run')
+    last.isStreaming = true;
+  return units;
+}
+
+function buildRenderUnits(
+  messages: readonly Message[],
+  toolCards: ToolCards,
+  activeIndex: number,
+): RenderUnit[] {
+  const toolResultsByToolId = indexToolResults(messages);
   const units: RenderUnit[] = [];
   let currentRun: AgentRunUnit | null = null;
   let pendingSkillSteps: TimelineStep[] = [];
@@ -76,19 +94,13 @@ export function groupMessagesIntoRuns(
     pendingSkillSteps = [];
 
     appendAssistantMessage(run, message, {
-      isActiveAssistantMessage: i === activeAssistantMessageIndex,
+      isActiveAssistantMessage: i === activeIndex,
       toolResultsByToolId,
+      toolCards,
     });
   }
 
   closeRun();
-
-  if (isStreamingCurrentMessages && units.length > 0) {
-    const lastUnit = units[units.length - 1];
-    if (lastUnit.kind === 'agent-run') {
-      lastUnit.isStreaming = true;
-    }
-  }
 
   return units;
 }
@@ -104,13 +116,13 @@ function findActiveAssistantMessageIndex(messages: readonly Message[]): number {
 
 function indexToolResults(
   messages: readonly Message[],
-): Readonly<Record<string, ToolResultMessageContent>> {
-  const results: Record<string, ToolResultMessageContent> = {};
+): ReadonlyMap<string, ToolResultMessageContent> {
+  const results = new Map<string, ToolResultMessageContent>();
   for (const message of messages) {
     if (message.role !== 'tool') continue;
     for (const content of message.content) {
       if (content.type === 'tool_result') {
-        results[content.toolId] = content;
+        results.set(content.toolId, content);
       }
     }
   }
@@ -134,8 +146,9 @@ function collectSkillInstructionSteps(message: Message): TimelineStep[] {
 }
 
 interface AppendOptions {
+  toolCards: ToolCards;
   isActiveAssistantMessage: boolean;
-  toolResultsByToolId: Readonly<Record<string, ToolResultMessageContent>>;
+  toolResultsByToolId: ReadonlyMap<string, ToolResultMessageContent>;
 }
 
 function getToolStatus(
@@ -150,13 +163,15 @@ function getToolStatus(
 function appendAssistantMessage(
   run: AgentRunUnit,
   message: AssistantMessage,
-  { isActiveAssistantMessage, toolResultsByToolId }: AppendOptions,
+  options: AppendOptions,
 ): void {
-  const content = message.content;
-  const awaitsConfirmation = hasCallAwaitingConfirmation(
-    message,
-    toolResultsByToolId,
-  );
+  const callOptions = {
+    ...options,
+    awaitsConfirmation: hasCallAwaitingConfirmation(
+      message,
+      options.toolResultsByToolId,
+    ),
+  };
 
   let pendingThinking: { transcript: string; key: string } | null = null;
   const flushThinking = (status: 'in_progress' | 'done') => {
@@ -171,14 +186,14 @@ function appendAssistantMessage(
     }
   };
 
-  content.forEach((block, index) => {
+  message.content.forEach((block, index) => {
     if (block.type === 'thinking') {
-      const thinking = block as ThinkingMessageContent;
+      const { thinking } = block as ThinkingMessageContentResponseDto;
       if (pendingThinking) {
-        pendingThinking.transcript = `${pendingThinking.transcript}\n${thinking.thinking}`;
+        pendingThinking.transcript = `${pendingThinking.transcript}\n${thinking}`;
       } else {
         pendingThinking = {
-          transcript: thinking.thinking,
+          transcript: thinking,
           key: `${message.id}-thinking-${index}`,
         };
       }
@@ -187,68 +202,103 @@ function appendAssistantMessage(
 
     flushThinking('done');
 
-    if (block.type === 'tool_use') {
-      const toolUse = block as ToolUseMessageContent;
-      const result = toolResultsByToolId[toolUse.id] as
-        ToolResultMessageContent | undefined;
-      const status = getToolStatus(
-        toolUse,
-        result !== undefined,
-        isActiveAssistantMessage,
-      );
-      // The turn's other calls run only once its confirmations are decided.
-      const isHeldBack =
-        awaitsConfirmation &&
-        !toolUse.requiresConfirmation &&
-        result === undefined &&
-        status !== 'in_progress';
-      if (isHeldBack) return;
-      appendToolStep(run, {
-        kind: 'tool',
-        key: `${message.id}-tool-${toolUse.id}`,
-        toolUse,
-        result: result?.result,
-        decision: result?.decision,
-        status,
-      });
-      return;
-    }
-
-    if (block.type === 'text') {
-      run.blocks.push({
-        kind: 'text',
-        key: `${message.id}-text-${index}`,
-        content: block as TextMessageContent,
-      });
-    }
+    appendAssistantContent(run, block, message.id, index, callOptions);
   });
 
-  flushThinking(isActiveAssistantMessage ? 'in_progress' : 'done');
+  flushThinking(options.isActiveAssistantMessage ? 'in_progress' : 'done');
+}
+
+type ToolCallOptions = AppendOptions & { awaitsConfirmation: boolean };
+
+function appendAssistantContent(
+  run: AgentRunUnit,
+  block: AssistantMessage['content'][number],
+  messageId: string,
+  index: number,
+  callOptions: ToolCallOptions,
+): void {
+  if (block.type === 'tool_use') {
+    appendToolCall(run, messageId, block as ToolUseMessageContent, callOptions);
+    return;
+  }
+
+  if (block.type === 'text') {
+    run.blocks.push({
+      kind: 'text',
+      key: `${messageId}-text-${index}`,
+      content: block as TextMessageContentResponseDto,
+    });
+  }
+}
+
+function appendToolCall(
+  run: AgentRunUnit,
+  messageId: string,
+  toolUse: ToolUseMessageContent,
+  {
+    awaitsConfirmation,
+    isActiveAssistantMessage,
+    toolResultsByToolId,
+    toolCards,
+  }: ToolCallOptions,
+): void {
+  const result = toolResultsByToolId.get(toolUse.id);
+  const status = getToolStatus(
+    toolUse,
+    result !== undefined,
+    isActiveAssistantMessage,
+  );
+  // The turn's other calls run only once its confirmations are decided.
+  if (
+    awaitsConfirmation &&
+    !toolUse.requiresConfirmation &&
+    result === undefined &&
+    status !== 'in_progress'
+  )
+    return;
+  appendToolStep(run, toolCards, {
+    kind: 'tool',
+    key: `${messageId}-tool-${toolUse.id}`,
+    toolUse,
+    result: result?.result,
+    decision: result?.decision,
+    status,
+  });
 }
 
 function hasCallAwaitingConfirmation(
   message: AssistantMessage,
-  toolResultsByToolId: Readonly<Record<string, ToolResultMessageContent>>,
+  toolResultsByToolId: ReadonlyMap<string, ToolResultMessageContent>,
 ): boolean {
-  return message.content.some(
-    (block) =>
-      block.type === 'tool_use' &&
-      (block as ToolUseMessageContent).requiresConfirmation === true &&
-      !((block as ToolUseMessageContent).id in toolResultsByToolId),
-  );
+  return message.content.some((block) => {
+    if (block.type !== 'tool_use') return false;
+    const toolUse = block as ToolUseMessageContent;
+    return (
+      toolUse.requiresConfirmation === true &&
+      !toolResultsByToolId.has(toolUse.id)
+    );
+  });
 }
 
 const FINISH_ROUTINE_TOOL = 'finish_routine';
 
-function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
+function appendToolStep(
+  run: AgentRunUnit,
+  toolCards: ToolCards,
+  step: ToolTimelineStep,
+): void {
   const { toolUse, status } = step;
-  if (status !== 'error' && toolUse.name === FINISH_ROUTINE_TOOL) {
+  if (status === 'error') {
+    appendActivityStep(run, step);
+    return;
+  }
+  if (toolUse.name === FINISH_ROUTINE_TOOL) {
     run.blocks.push({ kind: 'routine-finished', key: step.key });
     return;
   }
   const isPendingTool =
     toolUse.name.length === 0 && toolUse.stream?.status === 'streaming';
-  if (status !== 'error' && isPendingTool) {
+  if (isPendingTool) {
     run.blocks.push({
       kind: 'pending-tool',
       key: step.key,
@@ -256,11 +306,8 @@ function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
     });
     return;
   }
-  if (
-    status !== 'error' &&
-    (isRichTool(toolUse.name) || toolUse.requiresConfirmation)
-  ) {
-    const mergeTarget = findSameArtifactRichBlock(run, toolUse);
+  if (toolCards.has(toolUse.name) || toolUse.requiresConfirmation) {
+    const mergeTarget = findSameArtifactRichBlock(run, toolCards, toolUse);
     if (mergeTarget) {
       mergeTarget.steps.push(step);
     } else {
@@ -290,13 +337,16 @@ function appendToolStep(run: AgentRunUnit, step: ToolTimelineStep): void {
  */
 function findSameArtifactRichBlock(
   run: AgentRunUnit,
+  toolCards: ToolCards,
   toolUse: ToolUseMessageContent,
 ): RichToolRunBlock | null {
-  const criteria = getMergeCriteria(toolUse);
+  const criteria = getMergeCriteria(toolCards, toolUse);
   if (!criteria) return null;
   const block = findTrailingRichBlock(run);
   const lastStep = block?.steps.at(-1);
-  const previous = lastStep ? getArtifactToolTarget(lastStep.toolUse) : null;
+  const previous = lastStep
+    ? getArtifactToolTarget(toolCards, lastStep.toolUse)
+    : null;
   if (previous?.family !== criteria.family) return null;
   const sameArtifact =
     criteria.artifactId === null || previous.artifactId === criteria.artifactId;
@@ -304,18 +354,19 @@ function findSameArtifactRichBlock(
 }
 
 interface MergeCriteria {
-  family: ArtifactFamily;
+  family: string;
   /** null while the call's arguments are still streaming: match family only. */
   artifactId: string | null;
 }
 
 function getMergeCriteria(
+  toolCards: ToolCards,
   toolUse: ToolUseMessageContent,
 ): MergeCriteria | null {
-  const target = getArtifactToolTarget(toolUse);
+  const target = getArtifactToolTarget(toolCards, toolUse);
   if (target) return target;
   if (toolUse.stream?.status !== 'streaming') return null;
-  const family = getArtifactToolFamily(toolUse.name);
+  const family = getArtifactToolFamily(toolCards, toolUse.name);
   return family ? { family, artifactId: null } : null;
 }
 

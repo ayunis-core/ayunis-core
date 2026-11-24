@@ -27924,9 +27924,24 @@
             "type": "string",
             "description": "User name",
             "example": "John Doe"
+          },
+          "scopes": {
+            "type": "array",
+            "description": "Scopes granted to the current token surface. Empty for browser sessions.",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceScope"
+            }
           }
         },
-        "required": ["id", "orgId", "email", "role", "systemRole", "name"]
+        "required": [
+          "id",
+          "orgId",
+          "email",
+          "role",
+          "systemRole",
+          "name",
+          "scopes"
+        ]
       },
       "MfaCodeRequestDto": {
         "type": "object",
@@ -28403,6 +28418,19 @@
           }
         },
         "required": ["success", "brokerLogoutUrl"]
+      },
+      "SurfaceScope": {
+        "type": "string",
+        "enum": [
+          "academy:read",
+          "chat",
+          "chat-settings:read",
+          "models:read",
+          "session",
+          "uploads",
+          "voice"
+        ],
+        "description": "Scopes granted to the current token surface. Empty for browser sessions."
       }
     }
   }

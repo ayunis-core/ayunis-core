@@ -35,6 +35,7 @@ export type OutlookToolOutcome =
   | { status: 'failed'; failure: OutlookWriteFailure; message?: string };
 
 export interface OutlookToolDependencies {
+  signal?: AbortSignal;
   extractAttachmentText?: ExtractAttachmentText;
   /**
    * The mail the run started on, null when none was open; the tool refuses
@@ -68,11 +69,26 @@ async function runReadTool(
       : await readAttachment(
           outlookItem,
           params,
-          dependencies.extractAttachmentText,
+          guardedAttachmentExtractor(dependencies),
         );
   } catch (error) {
     return toolError(errorMessage(error));
   }
+}
+
+function guardedAttachmentExtractor({
+  extractAttachmentText,
+  expectedItemKey,
+  signal,
+}: OutlookToolDependencies): ExtractAttachmentText | undefined {
+  if (!extractAttachmentText) return undefined;
+  return (file) => {
+    signal?.throwIfAborted();
+    if (movedToAnotherItem(expectedItemKey)) {
+      throw new Error('the open email changed since this request started');
+    }
+    return extractAttachmentText(file);
+  };
 }
 
 function writeAction(
@@ -80,14 +96,15 @@ function writeAction(
   outlookItem: OutlookItem,
   params: Record<string, unknown>,
   draftId?: string,
+  signal?: AbortSignal,
 ): Promise<OutlookWriteAction> {
   switch (name) {
     case OUTLOOK_TOOL.draftEmail:
-      return draftEmail(outlookItem, params, draftId);
+      return draftEmail(outlookItem, params, draftId, signal);
     case OUTLOOK_TOOL.moveEmailToComposer:
-      return moveEmailToComposer(outlookItem, params, draftId);
+      return moveEmailToComposer(outlookItem, params, draftId, signal);
     case OUTLOOK_TOOL.saveEmailToDraft:
-      return saveEmailToDraft(outlookItem);
+      return saveEmailToDraft(outlookItem, signal);
   }
 }
 
@@ -95,13 +112,14 @@ async function runWriteTool(
   name: Exclude<OutlookToolName, ReadToolName>,
   params: Record<string, unknown>,
   draftId?: string,
+  signal?: AbortSignal,
 ): Promise<OutlookToolOutcome> {
   const outlookItem = currentOutlookItem();
   if (!outlookItem) return { status: 'failed', failure: 'noItem' };
   try {
     return {
       status: 'done',
-      action: await writeAction(name, outlookItem, params, draftId),
+      action: await writeAction(name, outlookItem, params, draftId, signal),
     };
   } catch (error) {
     if (error instanceof NothingToSaveError) {
@@ -127,12 +145,17 @@ function movedToAnotherItem(expectedItemKey?: string | null): boolean {
   );
 }
 
+function itemChangedResult(): string {
+  return toolError('the open email changed since this request started');
+}
+
 export async function executeOutlookTool(
   name: OutlookToolName,
   params: Record<string, unknown>,
   dependencies: OutlookToolDependencies = {},
 ): Promise<OutlookToolOutcome> {
-  const { expectedItemKey, expectedReplySourceKey } = dependencies;
+  const { expectedItemKey, expectedReplySourceKey, signal } = dependencies;
+  signal?.throwIfAborted();
   if (
     movedToAnotherItem(expectedItemKey) ||
     (expectedReplySourceKey !== undefined &&
@@ -141,19 +164,20 @@ export async function executeOutlookTool(
     return isReadTool(name)
       ? {
           status: 'result',
-          result: toolError(
-            'the open email changed since this request started',
-          ),
+          result: itemChangedResult(),
         }
       : { status: 'failed', failure: 'itemChanged' };
   }
   if (isReadTool(name)) {
+    const result = await runReadTool(name, params, dependencies);
     return {
       status: 'result',
-      result: await runReadTool(name, params, dependencies),
+      result: movedToAnotherItem(expectedItemKey)
+        ? itemChangedResult()
+        : result,
     };
   }
-  return runWriteTool(name, params, dependencies.draftId);
+  return runWriteTool(name, params, dependencies.draftId, dependencies.signal);
 }
 
 /**

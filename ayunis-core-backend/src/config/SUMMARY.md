@@ -8,8 +8,9 @@ token disables service access without preventing the rest of Core from booting.
 `surface-registry.ts` declares sign-in, run capabilities, client tools, feature
 flags, static prefixes, framing and manifest paths for web, Outlook and the
 planned website surface. Session client IDs come from the token entries. The
-environment validator reads the framing origin keys from the registry and
-`features.config.ts` resolves the registered Outlook flag.
+server uses the registry keys to find the built surfaces and the prefixes to
+route requests. Framing can use a validated environment key or an asynchronous
+request resolver. `features.config.ts` resolves the registered Outlook flag.
 
 The other configuration files cover environment bootstrap and config factories.
 
@@ -38,3 +39,5 @@ The configuration module provides strongly-typed, namespaced configuration for e
 `connectors.config.ts` (the `connectors` namespace) reads `MICROSOFT_LOGIN_URL` (an http(s) URL, default `https://login.microsoftonline.com`) as `microsoftLoginOrigin`, the Microsoft Entra login endpoint the Microsoft 365 connector requests tokens from, and `MICROSOFT_GRAPH_URL` (default `https://graph.microsoft.com`) as `microsoftGraphOrigin`, the Microsoft Graph endpoint it syncs SharePoint through; only the e2e tests point them at stand-ins. `ANNOUNCABLE_URL`, `MICROSOFT_LOGIN_URL` and `MICROSOFT_GRAPH_URL` share `IsOptionalHttpUrl` (`is-optional-http-url.decorator.ts`), which validates them trimmed as http(s) URLs.
 
 `POSTGRES_CONNECTION_TIMEOUT_MS` limits database connection establishment and pool acquisition for every feature and deployment mode, independently of subscription management. It defaults to 10,000 ms; `0` disables the timeout. Startup accepts only nonnegative decimal integers up to 2,147,483,647 ms (the Node timer limit). It does not limit query execution (`POSTGRES_STATEMENT_TIMEOUT_MS`) or idle transactions (`POSTGRES_IDLE_TX_TIMEOUT_MS`). A timeout reports unavailable database capacity; it does not fix pool exhaustion. `isDatabaseUnavailableError` classifies pg-pool's acquisition and connect timeouts as database-unavailable, so boundaries that opt in via `HandleUnexpectedErrors({ databaseUnavailable })` (e.g. token refresh) return 503 instead of 500; `LocalOrgsRepository.findById` applies the same classification before wrapping other failures as `OrgRetrievalFailedError`, so the organisation guard on every authenticated request also returns 503.
+
+The surface registry grants API scopes to token surfaces. `SurfaceScopeGuard` and the current-user response both resolve grants from the verified session client.

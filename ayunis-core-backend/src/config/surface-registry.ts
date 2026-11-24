@@ -1,4 +1,6 @@
+import { SurfaceScope } from 'src/config/surface-scope';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { Request } from 'express';
 
 export interface SurfaceFeatureFlag {
   readonly name: string;
@@ -6,20 +8,30 @@ export interface SurfaceFeatureFlag {
   readonly defaultEnabled: boolean;
 }
 
-export interface SurfaceFraming {
+export type SurfaceFraming = {
   readonly documents: readonly string[];
-  readonly originsEnvKey: string;
-  readonly defaultOrigins: readonly string[];
-}
+} & (
+  | {
+      readonly originsEnvKey: string;
+      readonly defaultOrigins: readonly string[];
+    }
+  | {
+      readonly resolveOrigins: (
+        request: Request,
+      ) => readonly string[] | Promise<readonly string[]>;
+    }
+);
 
 export interface SurfaceDefinition {
   readonly signIn: 'cookie' | 'token' | 'visitor';
   readonly staticPrefix: string;
+  readonly scopes: readonly SurfaceScope[];
   readonly run: {
     readonly profile: { readonly id: string };
     readonly capabilities: readonly string[];
   } | null;
   readonly clientTools: readonly ToolType[];
+  readonly webShellPaths?: readonly string[];
   readonly featureFlag: SurfaceFeatureFlag | null;
   readonly framing: SurfaceFraming | null;
   readonly manifest: {
@@ -41,6 +53,7 @@ export const SURFACE_REGISTRY = {
   web: {
     signIn: 'cookie',
     staticPrefix: '/',
+    scopes: [],
     run: {
       profile: { id: 'chat' },
       capabilities: [
@@ -90,6 +103,15 @@ export const SURFACE_REGISTRY = {
   outlook: {
     signIn: 'token',
     staticPrefix: outlookPrefix,
+    scopes: [
+      SurfaceScope.ACADEMY_READ,
+      SurfaceScope.CHAT,
+      SurfaceScope.CHAT_SETTINGS_READ,
+      SurfaceScope.MODELS_READ,
+      SurfaceScope.SESSION,
+      SurfaceScope.UPLOADS,
+      SurfaceScope.VOICE,
+    ],
     run: {
       profile: { id: 'outlook' },
       capabilities: [
@@ -122,6 +144,7 @@ export const SURFACE_REGISTRY = {
       envKey: 'FEATURE_OUTLOOK_ADDIN_ENABLED',
       defaultEnabled: false,
     },
+    webShellPaths: ['/login', '/handoff'],
     framing: {
       documents: Object.values(outlookLaunchDocuments),
       originsEnvKey: 'OUTLOOK_ADDIN_FRAME_ORIGINS',
@@ -141,6 +164,7 @@ export const SURFACE_REGISTRY = {
   website: {
     signIn: 'visitor',
     staticPrefix: '/embed',
+    scopes: [],
     run: null,
     clientTools: [],
     featureFlag: null,
@@ -159,3 +183,9 @@ export type TokenSurfaceId = {
 export const TOKEN_SURFACES = (
   Object.keys(SURFACE_REGISTRY) as SurfaceId[]
 ).filter((id): id is TokenSurfaceId => SURFACE_REGISTRY[id].signIn === 'token');
+
+export function getTokenSurfaceScopes(
+  client: TokenSurfaceId | null,
+): readonly SurfaceScope[] {
+  return client ? SURFACE_REGISTRY[client].scopes : [];
+}
