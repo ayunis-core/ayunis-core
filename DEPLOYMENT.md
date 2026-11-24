@@ -196,6 +196,17 @@ Releases that need an operator action before or during the deploy. Entries
 stay until the next major version; everything else upgrades by pulling the
 new images and restarting.
 
+### 2.83.1: large installs build the search indexes before upgrading
+
+Two migrations add a column and indexes to `child_chunks`, the table of
+document vectors. They run at startup inside the migration transaction. On a
+large table that holds up startup and blocks writes to `child_chunks` for a
+long time: 17 min for 613k vectors in a test, hours for millions. If
+`child_chunks` holds more than about 100,000 rows, run
+[the search index runbook](docs/runbooks/child-chunk-search-indexes.md) on the
+running previous version first. The migrations then find the work done and
+finish in milliseconds. Smaller installs upgrade as usual.
+
 ### 2.77.0: other sites can no longer frame Ayunis
 
 Every HTML page now sends `Content-Security-Policy: frame-ancestors 'self'`,

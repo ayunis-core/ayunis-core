@@ -3,11 +3,11 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 const INDEX = 'IDX_010d0425e18fa71b492aa9b05c';
 
 // On production the column, the backfill and the index are created by hand
-// before the deploy (runbook in the PR of AYC-2055), with batched updates and
-// CREATE INDEX CONCURRENTLY, which a migration cannot run: migrations share
-// one transaction. Every step here is therefore idempotent, so on production
-// it only fills rows written between the runbook and the deploy, and on every
-// other database it does the whole job.
+// before the deploy (docs/runbooks/child-chunk-search-indexes.md), with
+// batched updates and CREATE INDEX CONCURRENTLY, which a migration cannot
+// run: migrations share one transaction. Every step here is therefore
+// idempotent, so on production it only fills rows written between the runbook
+// and the deploy, and on every other database it does the whole job.
 export class AddRelatedDocumentIdToChildChunks1795470331058 implements MigrationInterface {
   name = 'AddRelatedDocumentIdToChildChunks1795470331058';
 
