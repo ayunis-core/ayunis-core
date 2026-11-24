@@ -2,6 +2,8 @@
 
 Self-contained business logic modules shared across multiple pages and widgets.
 
+The shared chat lifecycle schedules registered client tools and cancels pending work when a run, thread or session is superseded. The Outlook host supplies Office.js execution, mail and reply identity checks, and draft actions.
+
 The `feature-toggles/` feature exposes `useFeatureToggles`, including `externalSubscriptionsEnabled` for billing controls, `routinesEnabled` for the routines page, the inbox, sidebar entries and routine chat filter, and `recordingsEnabled` for the recordings pages, their sidebar entry, the workspace Recordings tab and the recording permissions in the roles settings. It exposes loading, error, and retry state. The generic `useIsFeatureEnabled` defaults unknown features to disabled. Subscription editing uses the page-specific `useSubscriptionReadOnly` policy: controls stay blocked until configuration explicitly allows manual management, while a distinct loading or retry notice avoids claiming external ownership during a configuration failure.
 
 Feature modules and standalone hooks provide cross-cutting concerns: theme management (dark/light mode persistence), language switching (German/English via i18next), model/provider configuration with provider icon utilities, usage analytics data hooks for statistics, charts, and distribution metrics, skill action hooks for toggling skill active/pinned state, marketplace configuration for exposing marketplace availability and destination URLs, fair use limit editing for shared limit validation and edit state, permission gating for hiding UI controls the current user lacks access to, super-admin user mutations, and active thread-run cancellation.

@@ -31,6 +31,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
   const events = createRunEventRouting();
   const executor = createRunExecutor(activity, events);
   let sessionResetAt = 0;
+  let session = new AbortController();
 
   function stopThreadRun(threadId: string, transport = endpoints): void {
     stopRun(threadId, transport.cancel, {
@@ -56,8 +57,12 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
     cancelStartedThreadRun: (threadId: string) =>
       handoffs.cancelStartedRun(threadId, stopThreadRun),
     getSessionResetAt: () => sessionResetAt,
+    getSessionSignal: () => session.signal,
     reset() {
       sessionResetAt = Date.now();
+      const previousSession = session;
+      session = new AbortController();
+      previousSession.abort();
       executor.reset();
       events.clear();
       handoffs.clearStartedThreadRuns();
