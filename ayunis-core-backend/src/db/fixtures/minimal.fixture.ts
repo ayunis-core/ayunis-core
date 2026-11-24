@@ -388,6 +388,28 @@ export const minimalFixture = {
     },
   ],
 
+  // The OParl catalog is platform-wide. The `.invalid` host never resolves,
+  // so the system is only there to have bodies an org admin can link.
+  oparlSystems: [
+    {
+      url: 'https://ris.seed.invalid/oparl/v1.1/system',
+      name: 'Seed RIS',
+      vendor: 'Ayunis',
+      bodies: [
+        {
+          oparlId: 'https://ris.seed.invalid/oparl/v1.1/body/1',
+          name: 'Gemeinde Musterstadt',
+          shortName: 'Musterstadt',
+        },
+        {
+          oparlId: 'https://ris.seed.invalid/oparl/v1.1/body/2',
+          name: 'Ortsgemeinde Beispielhausen',
+          shortName: 'Beispielhausen',
+        },
+      ],
+    },
+  ],
+
   // Academy content is platform-wide, not per-org. Two chapters keep the
   // completion journey short while still proving that every chapter must be
   // confirmed before Core unlocks.

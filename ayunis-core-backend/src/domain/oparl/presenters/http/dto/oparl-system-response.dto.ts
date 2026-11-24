@@ -5,6 +5,17 @@ import {
   OparlSyncRunStatus,
 } from 'src/domain/oparl/domain/oparl-sync-run.entity';
 
+export class OparlLinkingOrgDto {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  linkedAt: Date;
+}
+
 export class OparlBodyResponseDto {
   @ApiProperty({ format: 'uuid' })
   id: string;
@@ -24,6 +35,12 @@ export class OparlBodyResponseDto {
     description: 'Web page in the RIS',
   })
   web: string | null;
+
+  @ApiProperty({
+    type: [OparlLinkingOrgDto],
+    description: 'Organizations that linked the body',
+  })
+  linkedOrgs: OparlLinkingOrgDto[];
 }
 
 export class OparlObjectCountsDto {

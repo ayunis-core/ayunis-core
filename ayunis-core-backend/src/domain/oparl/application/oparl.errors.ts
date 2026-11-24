@@ -12,6 +12,8 @@ export enum OparlErrorCode {
   SYNC_INTERRUPTED = 'OPARL_SYNC_INTERRUPTED',
   FILE_TOO_LARGE = 'OPARL_FILE_TOO_LARGE',
   EMBEDDING_MODEL_NOT_FOUND = 'OPARL_EMBEDDING_MODEL_NOT_FOUND',
+  BODY_NOT_FOUND = 'OPARL_BODY_NOT_FOUND',
+  BODY_NOT_LINKED = 'OPARL_BODY_NOT_LINKED',
   UNEXPECTED_ERROR = 'OPARL_UNEXPECTED_ERROR',
 }
 
@@ -132,6 +134,30 @@ export class OparlEmbeddingModelNotFoundError extends ApplicationError {
       OparlErrorCode.EMBEDDING_MODEL_NOT_FOUND,
       404,
       { modelId },
+    );
+  }
+}
+
+/** One of the bodies to link is not in the catalog; none was linked. */
+export class OparlBodyNotFoundError extends ApplicationError {
+  constructor(bodyIds: string[]) {
+    super(
+      'An OParl body is not in the catalog',
+      OparlErrorCode.BODY_NOT_FOUND,
+      404,
+      { bodyIds },
+    );
+  }
+}
+
+/** The organization has not linked the body. */
+export class OparlBodyNotLinkedError extends ApplicationError {
+  constructor(bodyId: string) {
+    super(
+      `OParl body ${bodyId} is not linked to the organization`,
+      OparlErrorCode.BODY_NOT_LINKED,
+      404,
+      { bodyId },
     );
   }
 }

@@ -53,7 +53,9 @@
     "running": "Running",
     "lastDelta": "Last changes",
     "lastFull": "Last full reconciliation",
-    "nextSync": "Next sync"
+    "nextSync": "Next sync",
+    "linkedBy": "Linked by {{orgs}}",
+    "notLinked": "Not linked"
   },
   "counts": {
     "body": "Bodies",

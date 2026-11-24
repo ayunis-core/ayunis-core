@@ -6,7 +6,7 @@ Everything here is behind the `oparlEnabled` feature flag (`FEATURE_OPARL_ENABLE
 
 ## Global data — an exception to org scoping
 
-The mirror is installation-wide, keyed by the system URL: no table here has an `orgId`, and one system is mirrored once however many organizations use it. Mirrors are never deleted automatically. Organizations will reach the data only through links to bodies (AYC-2060), checked on every access; nothing in this module serves mirrored data to non-super-admins.
+The mirror is installation-wide, keyed by the system URL: no table here has an `orgId`, and one system is mirrored once however many organizations use it. Mirrors are never deleted automatically. Organizations reach the data only through links to bodies (`oparl_body_links`, see Org links), which every org-facing access must check; the only org-facing data served here is the catalog of bodies (names and systems) for linking.
 
 ## Domain
 
@@ -52,6 +52,15 @@ Platform work: no org context, nothing charged to an org (extraction, OCR and em
 - **`HasOparlVectorsOfModelUseCase`** — whether any chunk holds a vector of a catalog embedding model; the models module's `UpdateEmbeddingModelUseCase` asks it before a name or dimensions change (resolved through `ModuleRef`, since this module imports the models module).
 - **Stats** — the system list adds per system the files by state (pending as of current metadata, extracted, failed, skipped per reason, the last error) and the index size (chunks, chunks embedded with the current model).
 
+## Org links
+
+- **`OparlBodyLink`** — `oparl_body_links`: one row per org and body (unique `(orgId, bodyId)`), `linkedByUserId` (set `NULL` when the user is deleted) and `createdAt` (when it was linked). Cascades with the org (deleting an org removes its links and nothing else) and with the body (a body deleted from the RIS takes its links along). Unlinking deletes the row only; the mirror stays. Links outlive the flag: switching it off keeps them.
+- **`ListOparlCatalogBodiesUseCase`** — every body of the catalog with its system's name and whether the current user's org linked it (`linkedAt`); nothing about other orgs' links.
+- **`LinkOparlBodiesUseCase`** — links bodies to the current user's org in one statement (`INSERT … ON CONFLICT DO NOTHING`): a body already linked keeps its link and date; a body not in the catalog fails the whole request with `OPARL_BODY_NOT_FOUND` (404) and links nothing.
+- **`UnlinkOparlBodyUseCase`** — deletes the current org's link only; `OPARL_BODY_NOT_LINKED` (404) when the org has none, so another org's link can never be removed.
+- **`FindLinkedOparlBodiesUseCase`** (exported) — an org's linked bodies with their system's name: the scope every org-facing read of the mirror (the chat capability, AYC-2061) must stay within.
+- The super-admin system list shows per body the orgs that linked it (`linkedOrgs`, joined through the link record's org relation).
+
 ## Outbound HTTP (`OparlHttpClient`)
 
 http(s) on public hosts only (`src/common/util/network-address-policy.ts`): every URL and every redirect target is resolved and checked before the request, and connections go only to checked addresses (the dispatcher's lookup checks again, so DNS rebinding cannot reach a private address). Identifying User-Agent (`OPARL_USER_AGENT`); at most two requests per host at once in a process (`HostRequestLimiter`, shared by all systems on a host); 120 s per request; responses up to 32 MB; files (`downloadFile`) up to the caller's limit (`OparlFileTooLargeError`, by the declared length or while streaming). 408, 429, 5xx and network failures are retried after 5 s, 30 s, 2 min and 5 min, or after `Retry-After` (up to 15 min). Requests and waits stop when the run's signal aborts.
@@ -62,7 +71,7 @@ http(s) on public hosts only (`src/common/util/network-address-policy.ts`): ever
 
 ## HTTP API
 
-Controllers: `SuperAdminOparlSystemsController` and `SuperAdminOparlEmbeddingModelController`, `@SystemRoles(SUPER_ADMIN)` (403 for everyone else) and `@RequireFeature(oparlEnabled)` (404 with the flag off).
+Controllers: `SuperAdminOparlSystemsController` and `SuperAdminOparlEmbeddingModelController`, `@SystemRoles(SUPER_ADMIN)` (403 for everyone else); `OparlBodiesController`, `@Roles(ADMIN)` (403 for members), scoped to the admin's own org. All `@RequireFeature(oparlEnabled)` (404 with the flag off).
 
 | Method | Path                                  | Description                                                                                                                     |
 | ------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -71,9 +80,12 @@ Controllers: `SuperAdminOparlSystemsController` and `SuperAdminOparlEmbeddingMod
 | POST   | `/super-admin/oparl/systems/:id/sync` | "Sync now" (202)                                                                                                                |
 | GET    | `/super-admin/oparl/embedding-model`  | `{ model }`, the OParl embedding model or `null`                                                                                |
 | PUT    | `/super-admin/oparl/embedding-model`  | `{ modelId }`; a change embeds every chunk again in the background                                                              |
+| GET    | `/oparl/bodies`                       | Org admin: the catalog's bodies with system name and `linked` / `linkedAt` for the own org                                      |
+| POST   | `/oparl/bodies/links`                 | Org admin: `{ bodyIds }` (1–100) linked to the own org (204)                                                                    |
+| DELETE | `/oparl/bodies/:id/link`              | Org admin: unlinks the body from the own org (204)                                                                              |
 
 ## Infrastructure
 
 - `PostgresOparlMirrorRepository` — set-based SQL built from `OPARL_TYPE_SPECS` (`oparl-mirror-sql.ts`, `oparl-mirror-tables.ts`): one `INSERT … SELECT FROM jsonb_to_recordset … ON CONFLICT DO UPDATE … WHERE <changed> RETURNING` per type and form, join rows replaced only for owners written, deletes and reconciliation as `WITH d AS (DELETE …) SELECT count(*)`. `oparl_sync_listed_objects` records what a full listing contained (per run, removed when it ends), so an interrupted reconciliation resumes.
 - `PostgresOparlDocumentsRepository` — raw SQL (`oparl-documents-sql.ts`); a write for an object deleted meanwhile (foreign-key violation) is dropped and done again by the next job.
-- `PostgresOparlSystemsRepository`, `PostgresOparlSyncRunsRepository` — TypeORM.
+- `PostgresOparlSystemsRepository`, `PostgresOparlSyncRunsRepository`, `PostgresOparlBodyLinksRepository` — TypeORM (the catalog and linked bodies as raw SQL joins).

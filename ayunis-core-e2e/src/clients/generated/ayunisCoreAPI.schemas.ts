@@ -5830,6 +5830,39 @@ export interface SharePointLocationResolutionResponseDto {
   grant: SharePointGrantResponseDto | null;
 }
 
+export interface OparlCatalogBodyResponseDto {
+  id: string;
+  /** @nullable */
+  name: string | null;
+  /** @nullable */
+  shortName: string | null;
+  /**
+     * Web page in the RIS
+     * @nullable
+     */
+  web: string | null;
+  /**
+     * Name of the OParl system
+     * @nullable
+     */
+  systemName: string | null;
+  /** Whether the organization linked the body */
+  linked: boolean;
+  /** @nullable */
+  linkedAt: string | null;
+}
+
+export interface LinkOparlBodiesDto {
+  /** Bodies of the catalog to link to the organization */
+  bodyIds: string[];
+}
+
+export interface OparlLinkingOrgDto {
+  id: string;
+  name: string;
+  linkedAt: string;
+}
+
 export interface OparlBodyResponseDto {
   id: string;
   /** The OParl ID (URL) of the body */
@@ -5843,6 +5876,8 @@ export interface OparlBodyResponseDto {
      * @nullable
      */
   web: string | null;
+  /** Organizations that linked the body */
+  linkedOrgs: OparlLinkingOrgDto[];
 }
 
 export interface OparlObjectCountsDto {

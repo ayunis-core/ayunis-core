@@ -61,12 +61,17 @@ export function toOparlSystemResponseDto({
     vendor: system.vendor,
     product: system.product,
     oparlVersion: system.oparlVersion,
-    bodies: bodies.map(({ id, oparlId, name, shortName, web }) => ({
+    bodies: bodies.map(({ id, oparlId, name, shortName, web, linkedOrgs }) => ({
       id,
       oparlId,
       name,
       shortName,
       web,
+      linkedOrgs: linkedOrgs.map((org) => ({
+        id: org.id,
+        name: org.name,
+        linkedAt: org.linkedAt,
+      })),
     })),
     counts: toCountsDto(counts),
     health: system.health,

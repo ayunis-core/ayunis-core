@@ -53,7 +53,9 @@
     "running": "Läuft",
     "lastDelta": "Letzte Änderungen",
     "lastFull": "Letzter Vollabgleich",
-    "nextSync": "Nächste Synchronisierung"
+    "nextSync": "Nächste Synchronisierung",
+    "linkedBy": "Verknüpft von {{orgs}}",
+    "notLinked": "Nicht verknüpft"
   },
   "counts": {
     "body": "Körperschaften",

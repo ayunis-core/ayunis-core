@@ -37,6 +37,7 @@ import { Route as AuthenticatedAdminSettingsAcademyRouteImport } from './routes/
 import { Route as AuthenticatedAdminSettingsAnonymizationRouteImport } from './routes/_authenticated/admin-settings.anonymization'
 import { Route as AuthenticatedAdminSettingsApiKeysRouteImport } from './routes/_authenticated/admin-settings.api-keys'
 import { Route as AuthenticatedAdminSettingsInstructionsRouteImport } from './routes/_authenticated/admin-settings.instructions'
+import { Route as AuthenticatedAdminSettingsOparlRouteImport } from './routes/_authenticated/admin-settings.oparl'
 import { Route as AuthenticatedAdminSettingsRetentionRouteImport } from './routes/_authenticated/admin-settings.retention'
 import { Route as AuthenticatedAdminSettingsRolesRouteImport } from './routes/_authenticated/admin-settings.roles'
 import { Route as AuthenticatedAdminSettingsSecurityRouteImport } from './routes/_authenticated/admin-settings.security'
@@ -243,6 +244,12 @@ const AuthenticatedAdminSettingsInstructionsRoute =
   AuthenticatedAdminSettingsInstructionsRouteImport.update({
     id: '/instructions',
     path: '/instructions',
+    getParentRoute: () => AuthenticatedAdminSettingsRoute,
+  } as any)
+const AuthenticatedAdminSettingsOparlRoute =
+  AuthenticatedAdminSettingsOparlRouteImport.update({
+    id: '/oparl',
+    path: '/oparl',
     getParentRoute: () => AuthenticatedAdminSettingsRoute,
   } as any)
 const AuthenticatedAdminSettingsRetentionRoute =
@@ -605,6 +612,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
+  '/admin-settings/oparl': typeof AuthenticatedAdminSettingsOparlRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -687,6 +695,7 @@ export interface FileRoutesByTo {
   '/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
+  '/admin-settings/oparl': typeof AuthenticatedAdminSettingsOparlRoute
   '/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -774,6 +783,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/anonymization': typeof AuthenticatedAdminSettingsAnonymizationRoute
   '/_authenticated/admin-settings/api-keys': typeof AuthenticatedAdminSettingsApiKeysRoute
   '/_authenticated/admin-settings/instructions': typeof AuthenticatedAdminSettingsInstructionsRoute
+  '/_authenticated/admin-settings/oparl': typeof AuthenticatedAdminSettingsOparlRoute
   '/_authenticated/admin-settings/retention': typeof AuthenticatedAdminSettingsRetentionRoute
   '/_authenticated/admin-settings/roles': typeof AuthenticatedAdminSettingsRolesRoute
   '/_authenticated/admin-settings/security': typeof AuthenticatedAdminSettingsSecurityRoute
@@ -861,6 +871,7 @@ export interface FileRouteTypes {
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
+    | '/admin-settings/oparl'
     | '/admin-settings/retention'
     | '/admin-settings/roles'
     | '/admin-settings/security'
@@ -943,6 +954,7 @@ export interface FileRouteTypes {
     | '/admin-settings/anonymization'
     | '/admin-settings/api-keys'
     | '/admin-settings/instructions'
+    | '/admin-settings/oparl'
     | '/admin-settings/retention'
     | '/admin-settings/roles'
     | '/admin-settings/security'
@@ -1029,6 +1041,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/anonymization'
     | '/_authenticated/admin-settings/api-keys'
     | '/_authenticated/admin-settings/instructions'
+    | '/_authenticated/admin-settings/oparl'
     | '/_authenticated/admin-settings/retention'
     | '/_authenticated/admin-settings/roles'
     | '/_authenticated/admin-settings/security'
@@ -1305,6 +1318,13 @@ declare module '@tanstack/react-router' {
       path: '/instructions'
       fullPath: '/admin-settings/instructions'
       preLoaderRoute: typeof AuthenticatedAdminSettingsInstructionsRouteImport
+      parentRoute: typeof AuthenticatedAdminSettingsRoute
+    }
+    '/_authenticated/admin-settings/oparl': {
+      id: '/_authenticated/admin-settings/oparl'
+      path: '/oparl'
+      fullPath: '/admin-settings/oparl'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsOparlRouteImport
       parentRoute: typeof AuthenticatedAdminSettingsRoute
     }
     '/_authenticated/admin-settings/retention': {
@@ -1707,6 +1727,7 @@ interface AuthenticatedAdminSettingsRouteChildren {
   AuthenticatedAdminSettingsAnonymizationRoute: typeof AuthenticatedAdminSettingsAnonymizationRoute
   AuthenticatedAdminSettingsApiKeysRoute: typeof AuthenticatedAdminSettingsApiKeysRoute
   AuthenticatedAdminSettingsInstructionsRoute: typeof AuthenticatedAdminSettingsInstructionsRoute
+  AuthenticatedAdminSettingsOparlRoute: typeof AuthenticatedAdminSettingsOparlRoute
   AuthenticatedAdminSettingsRetentionRoute: typeof AuthenticatedAdminSettingsRetentionRoute
   AuthenticatedAdminSettingsRolesRoute: typeof AuthenticatedAdminSettingsRolesRoute
   AuthenticatedAdminSettingsSecurityRoute: typeof AuthenticatedAdminSettingsSecurityRoute
@@ -1735,6 +1756,7 @@ const AuthenticatedAdminSettingsRouteChildren: AuthenticatedAdminSettingsRouteCh
       AuthenticatedAdminSettingsApiKeysRoute,
     AuthenticatedAdminSettingsInstructionsRoute:
       AuthenticatedAdminSettingsInstructionsRoute,
+    AuthenticatedAdminSettingsOparlRoute: AuthenticatedAdminSettingsOparlRoute,
     AuthenticatedAdminSettingsRetentionRoute:
       AuthenticatedAdminSettingsRetentionRoute,
     AuthenticatedAdminSettingsRolesRoute: AuthenticatedAdminSettingsRolesRoute,

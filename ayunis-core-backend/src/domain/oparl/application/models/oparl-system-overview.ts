@@ -5,10 +5,15 @@ import type {
 } from 'src/domain/oparl/domain/oparl-sync-run.entity';
 import type { OparlBodySummary } from './oparl-body-summary';
 import type { OparlDocumentStats } from './oparl-document';
+import type { OparlLinkingOrg } from './oparl-linked-body';
+
+export interface OparlBodyOverview extends OparlBodySummary {
+  linkedOrgs: OparlLinkingOrg[];
+}
 
 export interface OparlSystemOverview {
   system: OparlSystem;
-  bodies: OparlBodySummary[];
+  bodies: OparlBodyOverview[];
   /** Mirrored objects per type. */
   counts: OparlTypeCounts;
   /** The run in progress, if any. */
