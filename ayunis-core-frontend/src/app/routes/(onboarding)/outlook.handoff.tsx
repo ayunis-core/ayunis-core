@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import z from 'zod';
-import { SessionHandoffRequestDtoClient } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SessionHandoffRequestDtoClient } from '@ayunis/api-client/schemas';
 
 const searchSchema = z.object({
   client: z.enum(SessionHandoffRequestDtoClient),

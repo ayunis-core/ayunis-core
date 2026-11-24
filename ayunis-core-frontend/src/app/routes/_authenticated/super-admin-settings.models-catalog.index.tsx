@@ -3,7 +3,7 @@ import ModelsCatalogPage from '@/pages/super-admin-settings/models-catalog';
 import {
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey,
   superAdminCatalogModelsControllerGetAllCatalogModels,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export const Route = createFileRoute(
   '/_authenticated/super-admin-settings/models-catalog/',

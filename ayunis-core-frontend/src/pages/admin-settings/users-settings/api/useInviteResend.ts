@@ -1,5 +1,5 @@
-import { getInvitesControllerGetInvitesQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import { customAxiosInstance } from '@/shared/api/client';
+import { getInvitesControllerGetInvitesQueryKey } from '@ayunis/api-client/endpoints';
+import { customAxiosInstance } from '@ayunis/api-client/request';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';

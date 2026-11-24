@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { TableCell, TableRow } from '@ayunis/ui/components/table';
-import type { ApiKeyUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ApiKeyUsageDto } from '@ayunis/api-client/schemas';
 import { formatCompactNumber } from '@/shared/lib/formatCompactNumber';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import { getApiKeyStatus } from '@/shared/lib/api-key-status';

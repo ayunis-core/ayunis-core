@@ -2,7 +2,7 @@ import type {
   AcademyChapterResponseDto,
   AcademyProgressResponseDto,
   CourseModuleResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export type ModuleProgressState = 'notStarted' | 'inProgress' | 'complete';
 

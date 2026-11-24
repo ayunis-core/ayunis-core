@@ -1,5 +1,5 @@
-import { useRecordingsControllerTranscript } from '@/shared/api/generated/ayunisCoreAPI';
-import type { RecordingTranscriptTurnDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useRecordingsControllerTranscript } from '@ayunis/api-client/endpoints';
+import type { RecordingTranscriptTurnDto } from '@ayunis/api-client/schemas';
 
 export function useRecordingTranscript(
   recordingId: string,

@@ -1,4 +1,4 @@
-import { useTeamsControllerListMyTeams } from '@/shared/api';
+import { useTeamsControllerListMyTeams } from '@ayunis/api-client';
 
 /**
  * The current user's teams with their team role and the permissions they hold

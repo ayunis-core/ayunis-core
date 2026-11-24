@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { ItemGroup } from '@ayunis/ui/components/item';
-import type { KnowledgeBaseDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseDocumentResponseDto } from '@ayunis/api-client/schemas';
 import { paginateItems } from '@/shared/lib/paginate-items';
 import { DocumentItem } from './DocumentItem';
 

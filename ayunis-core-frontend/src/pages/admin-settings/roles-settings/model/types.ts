@@ -1,4 +1,4 @@
-import type { RolePermissionSetDtoPermissionsItem } from '@/shared/api';
+import type { RolePermissionSetDtoPermissionsItem } from '@ayunis/api-client';
 
 export type Permission = RolePermissionSetDtoPermissionsItem;
 

@@ -3,9 +3,9 @@ import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Progress } from '@ayunis/ui/components/progress';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { useMe } from '../api/useMe';
-import { useHideOnboarding } from '../api/useHideOnboarding';
-import { MeResponseDtoRole } from '@/shared/api';
+import { useMe } from '@/widgets/app-sidebar/api/useMe';
+import { useHideOnboarding } from '@/widgets/app-sidebar/api/useHideOnboarding';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import { useOnboarding, useOnboardingProgress } from '@/widgets/onboarding';
 import { createAuthorization } from '@/features/permissions';
 

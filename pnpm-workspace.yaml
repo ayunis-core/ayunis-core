@@ -11,6 +11,8 @@ packages:
 # (a store, a React context, a class identity). peerDependencies stay explicit:
 # a package's peer range is a compatibility floor, not a pin.
 catalog:
+  '@tanstack/react-query': ^5.104.5
+  axios: ^1.20.0
   react: ^19.3.1
   react-dom: ^19.3.1
   react-hook-form: ^7.86.0

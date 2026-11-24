@@ -16,7 +16,7 @@ import type {
   CreateCustomIntegrationFormData,
   McpIntegration,
 } from '@/pages/admin-settings/integrations-settings/model/types';
-import type { CustomMcpConfigSchemaDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CustomMcpConfigSchemaDto } from '@ayunis/api-client/schemas';
 import { useUpdateIntegration } from '@/pages/admin-settings/integrations-settings/api/useUpdateIntegration';
 import {
   buildCustomIntegrationUpdatePayload,

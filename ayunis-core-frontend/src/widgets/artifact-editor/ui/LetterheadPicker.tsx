@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ayunis/ui/components/select';
-import { useLetterheadsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
+import { useLetterheadsControllerFindAll } from '@ayunis/api-client/endpoints';
 import { useTranslation } from 'react-i18next';
 
 const NO_LETTERHEAD = '__none__';

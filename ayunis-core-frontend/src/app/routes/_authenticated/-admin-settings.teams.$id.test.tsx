@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/pages/admin-settings/team-detail', () => ({
   TeamDetailPage: () => null,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getTeamsControllerGetTeamQueryKey: (id: string) => ['teams', id],
   getTeamMembersControllerListTeamMembersQueryKey: (
     id: string,

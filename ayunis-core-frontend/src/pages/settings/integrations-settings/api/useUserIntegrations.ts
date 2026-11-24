@@ -1,5 +1,5 @@
-import { useMcpIntegrationsControllerListAvailable } from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useMcpIntegrationsControllerListAvailable } from '@ayunis/api-client/endpoints';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 import { isUserIntegrationVisible } from '@/pages/settings/integrations-settings/lib/is-user-integration-visible';
 
 /**

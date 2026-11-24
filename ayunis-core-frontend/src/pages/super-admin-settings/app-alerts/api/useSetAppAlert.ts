@@ -7,8 +7,8 @@ import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import {
   useSuperAdminPlatformConfigControllerSetAppAlert,
   getAppAlertControllerGetAppAlertQueryKey,
-} from '@/shared/api';
-import type { AppAlertFormFields } from '../model/types';
+} from '@ayunis/api-client';
+import type { AppAlertFormFields } from '@/pages/super-admin-settings/app-alerts/model/types';
 
 export default function useSetAppAlert(
   form: UseFormReturn<AppAlertFormFields>,

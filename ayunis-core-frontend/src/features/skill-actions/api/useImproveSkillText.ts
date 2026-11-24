@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { skillsControllerImproveText } from '@/shared/api/generated/ayunisCoreAPI';
-import type { ImproveSkillTextDtoField } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { skillsControllerImproveText } from '@ayunis/api-client/endpoints';
+import type { ImproveSkillTextDtoField } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getReleaseNotesControllerFindOneQueryKey,
   releaseNotesControllerMarkRead,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { invalidateReleaseNoteQueries } from './invalidateReleaseNoteQueries';
 
 /**

@@ -2,7 +2,7 @@ import {
   getThreadsControllerFindOneQueryKey,
   threadSourcesControllerCompleteUpload,
   threadSourcesControllerCreateUpload,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { useTranslation } from 'react-i18next';

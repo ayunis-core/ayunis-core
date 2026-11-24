@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import {
   useSkillMcpIntegrationsControllerUnassignMcpIntegration,
   getSkillMcpIntegrationsControllerListSkillMcpIntegrationsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
 

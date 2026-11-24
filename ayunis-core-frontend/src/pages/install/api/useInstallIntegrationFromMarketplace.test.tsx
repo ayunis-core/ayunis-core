@@ -16,7 +16,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ navigate: vi.fn() }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getMcpIntegrationsControllerListQueryKey: () => ['integrations'],
   useMcpIntegrationsControllerInstallFromMarketplace: (options: {
     mutation: { onError: (error: unknown) => void };

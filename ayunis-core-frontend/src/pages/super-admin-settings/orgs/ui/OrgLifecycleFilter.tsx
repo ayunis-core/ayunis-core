@@ -1,4 +1,4 @@
-import { OrgLifecycleFilter as OrgLifecycleFilterValue } from '@/shared/api';
+import { OrgLifecycleFilter as OrgLifecycleFilterValue } from '@ayunis/api-client';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {

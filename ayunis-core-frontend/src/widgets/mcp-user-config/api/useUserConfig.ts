@@ -1,5 +1,5 @@
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
-import type { UserConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { UserConfigResponseDto } from '@ayunis/api-client/schemas';
 import { useTranslation } from 'react-i18next';
 import {
   useMcpIntegrationsControllerGetUserConfig,
@@ -7,7 +7,7 @@ import {
   useMcpIntegrationsControllerDeleteUserConfig,
   getMcpIntegrationsControllerGetUserConfigQueryKey,
   getMcpIntegrationsControllerListAvailableQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
 

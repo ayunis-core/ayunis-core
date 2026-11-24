@@ -18,8 +18,8 @@ import {
 } from '@/widgets/workspace-settings-dialog';
 import { getWorkspaceAccess, type Workspace } from '@/features/workspaces';
 import { useDeleteChat } from '@/features/useDeleteChat';
-import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
-import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useArtifactsControllerFindByWorkspace } from '@ayunis/api-client/endpoints';
+import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
 import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
 import { useWorkspaceSkills } from '@/pages/workspace/api/useWorkspaceSkills';
 import { useWorkspaceRecordings } from '@/pages/workspace/api/useWorkspaceRecordings';

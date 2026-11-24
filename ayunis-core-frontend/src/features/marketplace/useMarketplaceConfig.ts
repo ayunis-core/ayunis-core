@@ -1,5 +1,5 @@
-import { useMarketplaceControllerGetConfig } from '@/shared/api/generated/ayunisCoreAPI';
-import type { MarketplaceConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useMarketplaceControllerGetConfig } from '@ayunis/api-client/endpoints';
+import type { MarketplaceConfigResponseDto } from '@ayunis/api-client/schemas';
 
 export function useMarketplaceConfig(): MarketplaceConfigResponseDto {
   const { data } = useMarketplaceControllerGetConfig();

@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   error: null as Error | null,
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useWorkspaceContextControllerFindContext: () => ({
     data: mocks.context,
     isLoading: mocks.isLoading,

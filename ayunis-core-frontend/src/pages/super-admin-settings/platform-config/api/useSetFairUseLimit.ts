@@ -6,7 +6,7 @@ import {
   useSuperAdminPlatformConfigControllerSetFairUseLimit,
   getSuperAdminPlatformConfigControllerGetFairUseLimitsQueryKey,
   type SetFairUseLimitRequestDtoTier,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { windowHoursToMs } from './fair-use-limits-conversion';
 
 export interface SetFairUseLimitInput {

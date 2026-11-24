@@ -12,7 +12,7 @@ import type {
   OrgLifecycleCountsDto,
   OrgLifecycleFilter as OrgLifecycleFilterValue,
   OrgsSortField,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { useNavigate } from '@tanstack/react-router';
 

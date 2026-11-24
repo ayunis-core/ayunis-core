@@ -1,3 +1,3 @@
-import type { InviteDetailResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { InviteDetailResponseDto } from '@ayunis/api-client/schemas';
 
 export type Invite = InviteDetailResponseDto;

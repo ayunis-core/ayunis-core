@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import type {
   AcademyChapterResponseDto,
   CourseModuleResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   Card,
   CardContent,

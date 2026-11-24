@@ -4,8 +4,8 @@ import {
   appControllerFeatureToggles,
   getAppControllerFeatureTogglesQueryKey,
   getMyPermissionsControllerGetMineQueryOptions,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 
 /** Routine management needs the routines feature and the manage routines permission. */
 export async function canManageRoutines(

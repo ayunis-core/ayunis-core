@@ -159,12 +159,17 @@ Application-independent components and theme tokens live in the private
 `shared` layer contains application-aware shared components and consumes the UI
 package as its design-system foundation.
 
+The [`@ayunis/api-client`](packages/api-client/README.md) workspace package
+owns the OpenAPI schema and generated requests and React Query hooks. The web
+and Outlook entry points each configure their request transport before mounting
+the app. The same transport handles streaming and generated requests.
+
 | Layer                                                    | Summary                           | Detail                                           |
 | -------------------------------------------------------- | --------------------------------- | ------------------------------------------------ |
 | [pages](ayunis-core-frontend/src/pages/SUMMARY.md)       | Routes                            | Auth, chat, skills, knowledge bases, settings    |
 | [features](ayunis-core-frontend/src/features/SUMMARY.md) | Business Logic                    | Theme, language, models, usage tracking          |
 | [widgets](ayunis-core-frontend/src/widgets/SUMMARY.md)   | Composites                        | Sidebar, chat input, markdown renderer           |
-| [shared](ayunis-core-frontend/src/shared/SUMMARY.md)     | Shared application infrastructure | Generated API client, i18n, app-aware components |
+| [shared](ayunis-core-frontend/src/shared/SUMMARY.md)     | Shared application infrastructure | API transport setup, i18n, app-aware components  |
 
 ---
 

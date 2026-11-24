@@ -1,7 +1,7 @@
 import {
   useAddonsControllerList,
   getAddonsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { isAcademyAddonActive } from './isAcademyAddonActive';
 
 /**

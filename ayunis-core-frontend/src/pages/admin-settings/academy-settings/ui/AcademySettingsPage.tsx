@@ -4,8 +4,8 @@ import type {
   CertificateValidityStatus,
   OrgCertificateStatusResponseDto,
   PaginationDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import SettingsLayout from '../../admin-settings-layout';
+} from '@ayunis/api-client/schemas';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { AcademyRequirementCard } from './AcademyRequirementCard';
 import { CertificateOverviewCard } from './CertificateOverviewCard';
 

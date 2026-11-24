@@ -1,4 +1,4 @@
-import type { PiiCategory } from '@/shared/api';
+import type { PiiCategory } from '@ayunis/api-client';
 
 export { PII_CATEGORIES } from '@/shared/lib/pii-categories';
 

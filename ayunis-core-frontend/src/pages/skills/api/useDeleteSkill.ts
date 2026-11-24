@@ -4,7 +4,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   skillsControllerDelete,
   getSkillsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';

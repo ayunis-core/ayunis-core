@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useCreateEmbeddingModel } from '../api/useCreateEmbeddingModel';
-import type { EmbeddingModelFormData } from '../model/types';
-import type { CreateEmbeddingModelRequestDtoProvider } from '@/shared/api';
+import { useCreateEmbeddingModel } from '@/pages/super-admin-settings/models-catalog/api/useCreateEmbeddingModel';
+import type { EmbeddingModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
+import type { CreateEmbeddingModelRequestDtoProvider } from '@ayunis/api-client';
 import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { EmbeddingDimensionsField } from './EmbeddingDimensionsField';

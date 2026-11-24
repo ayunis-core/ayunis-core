@@ -3,7 +3,7 @@ import type { useRouter } from '@tanstack/react-router';
 import {
   getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgLifecycleQueries } from './invalidateOrgLifecycleQueries';
 
 export function invalidateOrgSubscriptionQueries(

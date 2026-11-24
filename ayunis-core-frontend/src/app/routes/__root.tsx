@@ -1,7 +1,7 @@
 import { Outlet, createRootRouteWithContext } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 import { Toaster } from '@ayunis/ui/components/sonner';
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 import {
   ConfirmationProvider,
   ConfirmationModal,

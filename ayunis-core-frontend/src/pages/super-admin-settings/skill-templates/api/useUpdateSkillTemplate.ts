@@ -5,12 +5,12 @@ import {
   useSuperAdminSkillTemplatesControllerUpdate,
   getSuperAdminSkillTemplatesControllerFindAllQueryKey,
   type UpdateSkillTemplateDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
-import type { SkillTemplateFormData } from '../ui/SkillTemplateFormDialog';
+import type { SkillTemplateFormData } from '@/pages/super-admin-settings/skill-templates/ui/SkillTemplateFormDialog';
 
 export function useUpdateSkillTemplate(
   form?: UseFormReturn<SkillTemplateFormData>,

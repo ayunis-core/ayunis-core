@@ -1,7 +1,7 @@
 import { Save } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
 import { Button } from '@ayunis/ui/components/button';
 import { VersionHistory } from '@/widgets/artifact-editor';
 import { useConfirmation } from '@/widgets/confirmation-modal';

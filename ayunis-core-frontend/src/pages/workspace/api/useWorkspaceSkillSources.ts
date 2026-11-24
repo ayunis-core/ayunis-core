@@ -6,7 +6,7 @@ import {
   skillSourcesControllerCreateUpload,
   useSkillSourcesControllerGetSkillSources,
   useSkillSourcesControllerRemoveSource,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { showError, showSuccess } from '@/shared/lib/toast';

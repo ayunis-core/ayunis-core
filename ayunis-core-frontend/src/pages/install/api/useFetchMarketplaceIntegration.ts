@@ -3,6 +3,6 @@ export {
   getMarketplaceControllerGetIntegrationQueryKey,
   getMarketplaceControllerGetIntegrationQueryOptions,
   useMarketplaceControllerGetIntegration,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
-export type { MarketplaceIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+export type { MarketplaceIntegrationResponseDto } from '@ayunis/api-client/schemas';

@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { SkillTemplateResponseDto } from '@/shared/api';
-import { useUpdateSkillTemplate } from '../api/useUpdateSkillTemplate';
+import type { SkillTemplateResponseDto } from '@ayunis/api-client';
+import { useUpdateSkillTemplate } from '@/pages/super-admin-settings/skill-templates/api/useUpdateSkillTemplate';
 import { SkillTemplateFormDialog } from './SkillTemplateFormDialog';
 import type { SkillTemplateFormData } from './SkillTemplateFormDialog';
 

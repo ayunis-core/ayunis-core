@@ -8,8 +8,8 @@ import {
   getTeamsControllerListMyTeamsQueryKey,
   myPermissionsControllerGetMine,
   getMyPermissionsControllerGetMineQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { CreateKnowledgeBaseShareDtoEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { CreateKnowledgeBaseShareDtoEntityType } from '@ayunis/api-client/schemas';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { KnowledgeBasePage } from '@/pages/knowledge-base';
 import { z } from 'zod';

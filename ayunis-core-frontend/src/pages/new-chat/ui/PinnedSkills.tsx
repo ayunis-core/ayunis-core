@@ -10,7 +10,7 @@ import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import {
   useSkillsControllerFindAll,
   useWorkspaceContextControllerFindContext,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface PinnedSkillsProps {

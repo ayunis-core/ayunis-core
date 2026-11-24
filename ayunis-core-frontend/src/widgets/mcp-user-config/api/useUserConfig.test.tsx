@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getMcpIntegrationsControllerGetUserConfigQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import type { UserConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { getMcpIntegrationsControllerGetUserConfigQueryKey } from '@ayunis/api-client/endpoints';
+import type { UserConfigResponseDto } from '@ayunis/api-client/schemas';
 import { SECRET_MASK } from '@/shared/constants/secret-mask';
 import {
   useDeleteUserConfig,
@@ -12,7 +12,7 @@ import {
 } from './useUserConfig';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

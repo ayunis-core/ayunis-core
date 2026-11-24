@@ -8,7 +8,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { cn } from '@ayunis/ui/lib/cn';
-import type { OnboardingStage } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { OnboardingStage } from '@ayunis/api-client/schemas';
 import './onboarding-hint.css';
 
 const STAGE_ICON = { profile: Brain, first_skill: Sparkles };

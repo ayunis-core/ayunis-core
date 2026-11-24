@@ -9,7 +9,7 @@ import {
 import {
   NotificationMediaType,
   type ReleaseNoteResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 interface ReleaseNoteListItemProps {
   releaseNote: ReleaseNoteResponseDto;

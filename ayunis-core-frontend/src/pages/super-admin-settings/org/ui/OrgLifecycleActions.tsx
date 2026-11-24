@@ -16,7 +16,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgResponseDto } from '@ayunis/api-client';
 import { useSetOrgArchived } from '@/pages/super-admin-settings/org/api/useSetOrgArchived';
 import DeleteOrgDialog from './DeleteOrgDialog';
 export default function OrgLifecycleActions({

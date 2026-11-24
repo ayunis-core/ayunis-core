@@ -7,7 +7,7 @@ import {
 } from '@ayunis/ui/components/card';
 import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminTrialResponseDto } from '@/shared/api';
+import type { SuperAdminTrialResponseDto } from '@ayunis/api-client';
 import { format } from 'date-fns';
 import UpdateTrialDialog from './UpdateTrialDialog';
 

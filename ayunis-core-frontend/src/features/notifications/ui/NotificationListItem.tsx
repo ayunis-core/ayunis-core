@@ -12,7 +12,7 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { cn } from '@ayunis/ui/lib/cn';
 import { NotificationTypeIcon } from './NotificationTypeIcon';
 import { NotificationMarkReadButton } from './NotificationMarkReadButton';
-import { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { NotificationType } from '@ayunis/api-client/schemas';
 import type { Notification } from '@/features/notifications/model/openapi';
 import { formatNotificationTime } from '@/features/notifications/lib/format-notification-time';
 

@@ -9,8 +9,8 @@ import { InboxPage, notificationsPageParams } from '@/pages/inbox';
 import {
   getNotificationsControllerFindAllQueryKey,
   notificationsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { NotificationType } from '@ayunis/api-client/schemas';
 import { getFeatureToggles } from './-routines-enabled-query';
 
 const searchSchema = z.object({

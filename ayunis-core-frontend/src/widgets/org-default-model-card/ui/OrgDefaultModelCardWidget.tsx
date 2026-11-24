@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@ayunis/ui/components/select';
 import { useTranslation } from 'react-i18next';
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 import { useMemo } from 'react';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import {

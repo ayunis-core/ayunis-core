@@ -6,7 +6,7 @@ import {
   getReleaseNotesControllerFindOneQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   releaseNotesControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,

@@ -6,7 +6,7 @@ import {
   getSkillsControllerFindAllQueryKey,
   getSkillsControllerFindOneQueryKey,
   skillsControllerActivate,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
 

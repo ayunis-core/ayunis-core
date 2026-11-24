@@ -1,5 +1,5 @@
 import { cn } from '@ayunis/ui/lib/cn';
-import { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { NotificationType } from '@ayunis/api-client/schemas';
 import { NOTIFICATION_TYPE_APPEARANCE } from '@/features/notifications/model/notification-type-appearance';
 
 interface NotificationTypeIconProps {

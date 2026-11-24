@@ -14,7 +14,7 @@ import {
   getDocumentDefaultsControllerFindQueryKey,
   useDocumentDefaultsControllerFind,
   useDocumentDefaultsControllerUpdate,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type { DocumentTypography } from '@/shared/lib/document-typography';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { DocumentTypographyFields } from '@/shared/ui/document-typography-fields';

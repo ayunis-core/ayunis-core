@@ -1,4 +1,4 @@
-import { CreateInviteDtoRole } from '@/shared/api';
+import { CreateInviteDtoRole } from '@ayunis/api-client';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 
 export type CsvErrorCode =

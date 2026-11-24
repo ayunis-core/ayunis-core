@@ -1,11 +1,11 @@
 import {
   useThreadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import {
   ThreadType,
   type ThreadsControllerFindAllParams,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export interface SidebarThread {
   id: string;

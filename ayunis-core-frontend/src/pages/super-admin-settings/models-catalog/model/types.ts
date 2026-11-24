@@ -4,7 +4,7 @@ import type {
   CreateImageGenerationModelRequestDtoProvider,
   CreateLanguageModelRequestDtoProvider,
   CreateLanguageModelRequestDtoTier,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export interface ModelPricingFormData {
   inputTokenCost?: number;

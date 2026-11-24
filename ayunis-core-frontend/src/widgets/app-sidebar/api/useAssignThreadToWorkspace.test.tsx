@@ -17,7 +17,7 @@ vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: routerInvalidate }),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   threadsControllerAssignWorkspace: assignWorkspace,
   getThreadsControllerFindAllQueryKey: () => ['threads'],
   getThreadsControllerFindOneQueryKey: (id: string) => ['threads', id],

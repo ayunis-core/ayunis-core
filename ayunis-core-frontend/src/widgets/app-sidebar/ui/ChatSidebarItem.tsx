@@ -32,7 +32,7 @@ import { useOnboardingTour, type TourTargetName } from '@/widgets/onboarding';
 import { useWorkspaces } from '@/features/workspaces';
 import { useToggleFavorite } from '@/features/favorites';
 import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
-import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 
 interface ChatSidebarItemProps {

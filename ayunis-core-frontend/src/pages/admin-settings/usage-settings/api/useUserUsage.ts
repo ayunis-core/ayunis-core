@@ -1,4 +1,4 @@
 export {
   useUsageControllerGetUserUsage as useUserUsage,
   type UsageControllerGetUserUsageParams,
-} from '@/shared/api';
+} from '@ayunis/api-client';

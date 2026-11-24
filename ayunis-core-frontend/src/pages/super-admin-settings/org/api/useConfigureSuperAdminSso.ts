@@ -4,7 +4,7 @@ import {
   getSuperAdminSsoConnectionsControllerGetQueryKey,
   superAdminSsoConnectionsControllerConfigure,
   superAdminSsoConnectionsControllerSetIdp,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';

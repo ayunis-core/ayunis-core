@@ -1,4 +1,4 @@
-import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { CreditLimitScope } from '@ayunis/api-client/schemas';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';

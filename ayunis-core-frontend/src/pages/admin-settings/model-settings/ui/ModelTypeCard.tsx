@@ -1,8 +1,8 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client/schemas';
 import { ModelTypeCard as ModelTypeCardWidget } from '@/widgets/model-type-card';
-import { useDeletePermittedModel } from '../api/useDeletePermittedModel';
-import { useUpdatePermittedModel } from '../api/useUpdatePermittedModel';
-import { useEnableModel } from '../api/useEnableModel';
+import { useDeletePermittedModel } from '@/pages/admin-settings/model-settings/api/useDeletePermittedModel';
+import { useUpdatePermittedModel } from '@/pages/admin-settings/model-settings/api/useUpdatePermittedModel';
+import { useEnableModel } from '@/pages/admin-settings/model-settings/api/useEnableModel';
 
 interface ModelTypeCardProps {
   readonly type: 'language' | 'embedding' | 'image-generation';

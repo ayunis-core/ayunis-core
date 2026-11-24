@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PinnedSkills } from './PinnedSkills';
 
 const mocks = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: mocks.request }));
+vi.mock('@ayunis/api-client/request', () => ({
+  customAxiosInstance: mocks.request,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

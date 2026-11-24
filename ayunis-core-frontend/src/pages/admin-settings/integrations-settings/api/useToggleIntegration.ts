@@ -6,7 +6,7 @@ import {
   useMcpIntegrationsControllerEnable,
   useMcpIntegrationsControllerDisable,
   getMcpIntegrationsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
 import extractErrorData from '@/shared/api/extract-error-data';
 

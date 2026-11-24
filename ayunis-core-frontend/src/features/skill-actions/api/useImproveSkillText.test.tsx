@@ -4,10 +4,10 @@ import { createInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { skillsControllerImproveText } from '@/shared/api/generated/ayunisCoreAPI';
+import { skillsControllerImproveText } from '@ayunis/api-client/endpoints';
 import { useImproveSkillText } from './useImproveSkillText';
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   skillsControllerImproveText: vi
     .fn()
     .mockResolvedValue({ text: 'Rewritten skill' }),

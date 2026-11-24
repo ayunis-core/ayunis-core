@@ -1,4 +1,4 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 
 interface TeamModelGrant {
   readonly id: string;

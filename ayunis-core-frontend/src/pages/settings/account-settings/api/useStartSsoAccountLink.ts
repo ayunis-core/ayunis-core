@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ssoLoginControllerStartLink } from '@/shared/api';
+import { ssoLoginControllerStartLink } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { navigateToExternalUrl } from '@/features/sso';

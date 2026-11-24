@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SyncedLocationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SyncedLocationResponseDto } from '@ayunis/api-client/schemas';
 import {
   IDLE_POLL_MS,
   SYNCING_POLL_MS,

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import { ApiKeysSettingsPage } from './ApiKeysSettingsPage';
-import type { ActiveSubscriptionResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ActiveSubscriptionResponseDto } from '@ayunis/api-client/schemas';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

@@ -1,4 +1,4 @@
-import type { CreditLimitScope } from '@/shared/api';
+import type { CreditLimitScope } from '@ayunis/api-client';
 
 export interface CreditLimitFields {
   monthlyCredits: string;

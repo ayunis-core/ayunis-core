@@ -15,7 +15,7 @@ import {
   ItemGroup,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import { useArtifactsControllerFindByWorkspace } from '@/shared/api/generated/ayunisCoreAPI';
+import { useArtifactsControllerFindByWorkspace } from '@ayunis/api-client/endpoints';
 import { CONTEXT_PAGE_SIZE, pageTotal } from './WorkspaceContextList.model';
 import {
   WorkspaceContextEmpty,

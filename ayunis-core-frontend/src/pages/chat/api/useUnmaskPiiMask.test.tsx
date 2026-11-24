@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PiiCategory,
   type PiiMaskResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useUnmaskPiiMask } from './useUnmaskPiiMask';
 
 interface UnmaskVariables {
@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => ({
   mutationOptions: undefined as MutationOptions | undefined,
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getThreadsControllerFindOneQueryKey: (threadId: string) => [
     'thread',
     threadId,

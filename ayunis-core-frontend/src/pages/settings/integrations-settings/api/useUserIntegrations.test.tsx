@@ -6,12 +6,12 @@ import {
 } from '@tanstack/react-query';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getMcpIntegrationsControllerListAvailableQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { getMcpIntegrationsControllerListAvailableQueryKey } from '@ayunis/api-client/endpoints';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 import { useUserIntegrations } from './useUserIntegrations';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 
 const integration: McpIntegrationResponseDto = {
   id: 'personal-integration',

@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 
 // Types
-import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@ayunis/api-client/schemas';
 
 // UI
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';

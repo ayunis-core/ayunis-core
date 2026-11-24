@@ -3,8 +3,8 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useSharesControllerDeleteShare,
   getSharesControllerGetSharesQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { SharesControllerGetSharesEntityType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { SharesControllerGetSharesEntityType } from '@ayunis/api-client/schemas';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 

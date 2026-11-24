@@ -1,4 +1,4 @@
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MarketplaceIntegrationConfigFieldDto } from '@ayunis/api-client/schemas';
 import { isUserEditableField } from '@/shared/lib/config-field';
 import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
 

@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from '@ayunis/ui/components/select';
 import { Switch } from '@ayunis/ui/components/switch';
-import type { CreateSkillTemplateDtoDistributionMode } from '@/shared/api';
+import type { CreateSkillTemplateDtoDistributionMode } from '@ayunis/api-client';
 
 export interface SkillTemplateFormData {
   name: string;

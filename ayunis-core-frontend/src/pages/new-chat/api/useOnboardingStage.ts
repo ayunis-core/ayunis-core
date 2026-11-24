@@ -2,7 +2,7 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import {
   getOnboardingControllerGetOnboardingStageQueryKey,
   onboardingControllerGetOnboardingStage,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 /**
  * The route loader fetches the stage on every visit, so the hint never shows

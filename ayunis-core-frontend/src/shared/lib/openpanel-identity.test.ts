@@ -1,6 +1,6 @@
 import { OpenPanel } from '@openpanel/web';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MeResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MeResponseDto } from '@ayunis/api-client/schemas';
 import {
   clearOpenPanelIdentity,
   identifyOpenPanelUser,

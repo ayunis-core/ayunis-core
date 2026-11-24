@@ -1,4 +1,4 @@
-import { useWorkspacesControllerGetRolePermissions } from '@/shared/api/generated/ayunisCoreAPI';
+import { useWorkspacesControllerGetRolePermissions } from '@ayunis/api-client/endpoints';
 
 /**
  * What each workspace role grants. The role matrix is edited in another

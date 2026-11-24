@@ -6,7 +6,7 @@ import type { EmbeddingModelFormData } from '@/pages/super-admin-settings/models
 import type {
   EmbeddingModelResponseDto,
   UpdateEmbeddingModelRequestDtoProvider,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { EMBEDDING_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { EmbeddingDimensionsField } from './EmbeddingDimensionsField';

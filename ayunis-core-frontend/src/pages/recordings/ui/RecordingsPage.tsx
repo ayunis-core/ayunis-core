@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { OwnerSections } from '@/features/resource-ownership';
-import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import type { ChatStarterDefaults } from '@/widgets/chat-starter';
 import CreateRecordingDialog from './CreateRecordingDialog';

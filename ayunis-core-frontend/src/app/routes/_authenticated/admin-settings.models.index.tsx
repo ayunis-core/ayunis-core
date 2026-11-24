@@ -3,7 +3,7 @@ import {
   getModelsControllerGetAvailableLanguageModelsQueryOptions,
   getModelsControllerGetAvailableEmbeddingModelsQueryOptions,
   getModelsControllerGetAvailableImageGenerationModelsQueryOptions,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import ModelSettingsPage from '@/pages/admin-settings/model-settings';
 import { modelSettingsSearchSchema } from '@/pages/admin-settings/model-settings/model/search';
 

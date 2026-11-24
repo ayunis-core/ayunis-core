@@ -7,10 +7,10 @@ import {
   useSuperAdminAcademyCourseModulesControllerUpdateCourseModule,
   getSuperAdminAcademyChaptersControllerGetChaptersQueryKey,
   type UpdateCourseModuleRequestDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
-import type { ModuleFormValues } from '../model/moduleFormSchema';
+import type { ModuleFormValues } from '@/pages/super-admin-settings/academy/model/moduleFormSchema';
 
 export function useUpdateModule(
   form: UseFormReturn<ModuleFormValues>,

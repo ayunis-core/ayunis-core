@@ -1,7 +1,7 @@
 import CreateFileWidget from '@/pages/chat/ui/chat-widgets/CreateFileWidget';
 import type { ReactNode } from 'react';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import type { ToolCallDecision } from '@/shared/api';
+import type { ToolCallDecision } from '@ayunis/api-client';
 import ToolCallConfirmationCard from '@/pages/chat/ui/agent-run-timeline/ui/ToolCallConfirmationCard';
 
 import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';

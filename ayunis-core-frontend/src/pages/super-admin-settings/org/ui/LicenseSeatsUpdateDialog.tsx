@@ -1,6 +1,6 @@
 import SharedLicenseSeatsUpdateDialog from '@/widgets/billing/ui/LicenseSeatsUpdateDialog';
-import type { SubscriptionResponseDto } from '@/shared/api';
-import useSuperAdminSubscriptionSeatsUpdate from '../api/useSuperAdminSubscriptionSeatsUpdate';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
+import useSuperAdminSubscriptionSeatsUpdate from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionSeatsUpdate';
 
 interface LicenseSeatsUpdateDialogProps {
   subscription: SubscriptionResponseDto;

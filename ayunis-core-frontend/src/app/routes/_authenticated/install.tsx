@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import { useTranslation } from 'react-i18next';
 import { createAuthorization } from '@/features/permissions';
-import { MeResponseDtoRole } from '@/shared/api';
+import { MeResponseDtoRole } from '@ayunis/api-client';
 import { searchParamString } from '@/shared/lib/search-params';
 
 const searchSchema = z.object({

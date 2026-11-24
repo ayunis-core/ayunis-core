@@ -9,7 +9,9 @@ const { exportArtifact, client } = vi.hoisted(() => ({
   client: { track: vi.fn() },
 }));
 
-vi.mock('@/shared/api', () => ({ artifactsControllerExport: exportArtifact }));
+vi.mock('@ayunis/api-client', () => ({
+  artifactsControllerExport: exportArtifact,
+}));
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 vi.mock('@/shared/lib/save-blob-as', () => ({ saveBlobAs: vi.fn() }));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));

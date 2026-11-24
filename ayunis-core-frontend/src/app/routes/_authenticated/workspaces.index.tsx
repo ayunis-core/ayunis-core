@@ -5,7 +5,7 @@ import { WORKSPACES_PER_PAGE } from '@/features/workspaces';
 import {
   workspacesControllerFindAll,
   getWorkspacesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 
 const searchSchema = z.object({

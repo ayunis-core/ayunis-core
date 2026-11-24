@@ -1,7 +1,7 @@
 import {
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
   useSuperAdminTrialsControllerCreateTrial,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgLifecycleQueries } from './invalidateOrgLifecycleQueries';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';

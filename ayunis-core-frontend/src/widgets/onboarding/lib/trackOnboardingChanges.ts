@@ -1,4 +1,4 @@
-import type { UpdateOnboardingDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { UpdateOnboardingDto } from '@ayunis/api-client/schemas';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { ONBOARDING_CATEGORIES } from '@/widgets/onboarding/config/categories';
 

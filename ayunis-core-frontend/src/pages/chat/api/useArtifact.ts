@@ -1,4 +1,4 @@
-import { useArtifactsControllerFindOne } from '@/shared/api';
+import { useArtifactsControllerFindOne } from '@ayunis/api-client';
 
 export function useArtifact(artifactId: string | null) {
   const query = useArtifactsControllerFindOne(artifactId ?? '', {

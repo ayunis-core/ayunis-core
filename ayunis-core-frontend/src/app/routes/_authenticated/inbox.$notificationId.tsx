@@ -6,7 +6,7 @@ import {
   getNotificationsControllerFindOneQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
   notificationsControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,

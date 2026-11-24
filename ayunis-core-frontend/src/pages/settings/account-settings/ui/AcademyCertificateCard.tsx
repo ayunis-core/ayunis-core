@@ -16,7 +16,7 @@ import {
   useAcademyProgress,
   useIsAcademyAddonActive,
 } from '@/features/academy';
-import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { AcademyAccessMode } from '@ayunis/api-client/schemas';
 import { formatDate } from '@/shared/lib/format-date';
 import { SettingsFieldRow } from '@/pages/settings/settings-layout';
 

@@ -7,7 +7,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
 import { formatDate } from '@/shared/lib/format-date';
 
 export function RecordingListItem({

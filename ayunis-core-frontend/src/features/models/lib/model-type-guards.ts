@@ -2,7 +2,7 @@ import type {
   EmbeddingModelResponseDto,
   ImageGenerationModelResponseDto,
   LanguageModelResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 /**
  * Local discriminated union over the per-type catalog model DTOs.

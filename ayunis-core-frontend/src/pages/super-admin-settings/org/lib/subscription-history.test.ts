@@ -5,7 +5,7 @@ import {
   toLocalDateTime,
   toSubscriptionHistoryItem,
 } from './subscription-history';
-import type { OrgSubscriptionHistoryItemDto } from '@/shared/api';
+import type { OrgSubscriptionHistoryItemDto } from '@ayunis/api-client';
 
 describe('toLocalDateTime', () => {
   it('preserves millisecond precision in a local date-time input value', () => {

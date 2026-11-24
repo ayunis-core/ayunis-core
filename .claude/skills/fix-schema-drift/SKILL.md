@@ -14,6 +14,8 @@ The dev stack must be running (`./dev status`). Start with `./dev up` if needed.
 ```bash
 cd ayunis-core-frontend
 pnpm run openapi:update
+cd ..
+pnpm --filter ayunis-core-e2e run openapi:generate
 ```
 
 Then stage and commit the changed files per `git-workflow`: amend the branch that changed the backend, or commit them as their own change.
@@ -21,6 +23,6 @@ Then stage and commit the changed files per `git-workflow`: amend the branch tha
 ## Notes
 
 - Never hand-edit generated files — always regenerate via `pnpm run openapi:update`
-- `pnpm run openapi:update` runs `openapi:fetch` → `openapi:format` → `openapi:generate`. The format step (`prettier --write`) is required: `fetch-openapi-schema.js` writes via `JSON.stringify(_, null, 2)`, which puts every short array on multiple lines, but the canonical on-disk format is prettier's compact-when-fits style. Without the format step, schema regens produce ~2000 lines of whitespace-only churn.
+- The frontend command fetches using its `.env` and runs formatting and generation in `packages/api-client`. The format step keeps the schema in Prettier's compact-when-fits style.
 - If you ever need to format the schema by itself: `pnpm run openapi:format`
 - Formatting-only changes are normal — still commit them to keep CI green

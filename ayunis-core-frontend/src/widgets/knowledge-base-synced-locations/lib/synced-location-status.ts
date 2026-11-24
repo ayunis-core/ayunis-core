@@ -1,7 +1,7 @@
 import {
   SyncedLocationState,
   type SyncedLocationResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export type SyncedLocationStatus =
   | { kind: 'no_longer_accessible' }

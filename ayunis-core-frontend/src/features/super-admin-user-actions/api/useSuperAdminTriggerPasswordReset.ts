@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { useSuperAdminUsersControllerTriggerPasswordReset } from '@/shared/api/generated/ayunisCoreAPI';
+import { useSuperAdminUsersControllerTriggerPasswordReset } from '@ayunis/api-client/endpoints';
 import { showError } from '@/shared/lib/toast';
 
 interface UseSuperAdminTriggerPasswordResetOptions {

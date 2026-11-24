@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PiiCategory } from '@/shared/api';
-import type { GlobalPiiWhitelistWordDto } from '@/shared/api';
+import { PiiCategory } from '@ayunis/api-client';
+import type { GlobalPiiWhitelistWordDto } from '@ayunis/api-client';
 import { groupWordsByCategory } from './group-words';
 
 function word(category: PiiCategory, text: string): GlobalPiiWhitelistWordDto {

@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { abortActiveThreadRun } from '@/features/thread-run';
 import { showError, showInfo } from '@/shared/lib/toast';
-import type * as GeneratedApi from '@/shared/api/generated/ayunisCoreAPI';
+import type * as GeneratedApi from '@ayunis/api-client/endpoints';
 import { useMessageSend } from './useMessageSend';
 
 vi.mock('react-i18next', () => ({
@@ -19,7 +19,7 @@ vi.mock('@/shared/lib/toast', () => ({
 const { cancelRun } = vi.hoisted(() => ({
   cancelRun: vi.fn(() => Promise.resolve()),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', async (importOriginal) => ({
+vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
   ...(await importOriginal<typeof GeneratedApi>()),
   activeRunsControllerCancel: cancelRun,
 }));

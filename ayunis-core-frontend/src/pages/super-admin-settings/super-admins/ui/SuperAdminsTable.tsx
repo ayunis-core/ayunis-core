@@ -15,9 +15,9 @@ import {
 } from '@ayunis/ui/components/table';
 import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminUserResponseDto } from '@/shared/api';
-import { useAuthenticationControllerMe } from '@/shared/api';
-import { useRemoveSuperAdmin } from '../api/useRemoveSuperAdmin';
+import type { SuperAdminUserResponseDto } from '@ayunis/api-client';
+import { useAuthenticationControllerMe } from '@ayunis/api-client';
+import { useRemoveSuperAdmin } from '@/pages/super-admin-settings/super-admins/api/useRemoveSuperAdmin';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 
 interface SuperAdminsTableProps {

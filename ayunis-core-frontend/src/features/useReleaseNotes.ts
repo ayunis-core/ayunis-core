@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import config from '@/shared/config';
 import { patchAnnouncableMobileLayout } from '@/features/patchAnnouncableMobileLayout';
-import { useOnboardingControllerGetOnboarding } from '@/shared/api/generated/ayunisCoreAPI';
+import { useOnboardingControllerGetOnboarding } from '@ayunis/api-client/endpoints';
 
 interface AnnouncableInit {
   org_id: string;

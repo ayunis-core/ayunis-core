@@ -1,4 +1,4 @@
-import { useSuperAdminSsoConnectionsControllerGet } from '@/shared/api';
+import { useSuperAdminSsoConnectionsControllerGet } from '@ayunis/api-client';
 
 export function useSuperAdminSsoConnection(orgId: string) {
   const query = useSuperAdminSsoConnectionsControllerGet(orgId);

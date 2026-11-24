@@ -4,7 +4,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   knowledgeBasesControllerDelete,
   getKnowledgeBasesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useRouter } from '@tanstack/react-router';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';

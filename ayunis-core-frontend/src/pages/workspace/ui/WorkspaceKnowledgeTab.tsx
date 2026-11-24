@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useWorkspaceKnowledgeBases } from '@/pages/workspace/api/useWorkspaceKnowledgeBases';
-import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseResponseDto } from '@ayunis/api-client/schemas';
 import { KnowledgeBaseListItem } from '@/shared/ui/knowledge-base-list-item';
 import {
   WorkspaceContextEmpty,

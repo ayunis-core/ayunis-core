@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   getQueryKey: vi.fn((id: string) => ['workspace', id]),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   useWorkspacesControllerFindOne: mocks.useFindOne,
   getWorkspacesControllerFindOneQueryKey: mocks.getQueryKey,
 }));

@@ -24,12 +24,12 @@ import { getWorkspaceAccess } from '@/features/workspaces';
 import type {
   WorkspaceResponseDto,
   SkillResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import {
   skillKnowledgeBasesControllerAssignKnowledgeBase,
   skillKnowledgeBasesControllerUnassignKnowledgeBase,
   skillsControllerUpdate,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function WorkspaceSkillDetailPage({
   workspace,

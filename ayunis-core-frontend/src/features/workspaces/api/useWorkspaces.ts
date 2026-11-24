@@ -1,7 +1,7 @@
 import {
   useWorkspacesControllerFindAll,
   getWorkspacesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type { Workspace } from '@/features/workspaces/model/types';
 
 export function useWorkspaces() {

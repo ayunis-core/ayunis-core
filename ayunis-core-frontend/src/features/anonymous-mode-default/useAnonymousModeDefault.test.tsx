@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useAnonymousModeDefault } from './useAnonymousModeDefault';
 
 const { fetchDefaults } = vi.hoisted(() => ({ fetchDefaults: vi.fn() }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getOrgChatSettingsControllerGetChatStartDefaultsQueryKey: () => [
     'chat-start-defaults',
   ],

@@ -39,7 +39,7 @@ vi.mock('@/features/useRedirectNotification', () => ({
 
 vi.mock('@/shared/lib/toast', () => ({ showError }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useAuthenticationControllerLogin: () => ({
     mutate: login,
     isPending: loginState.isPending,

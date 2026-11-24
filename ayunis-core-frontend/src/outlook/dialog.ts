@@ -1,4 +1,5 @@
-import { sessionHandoffControllerHandoff } from '@/shared/api/generated/ayunisCoreAPI';
+import { sessionHandoffControllerHandoff } from '@ayunis/api-client/endpoints';
+import { configureAppApi } from '@/shared/api/client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import {
   OUTLOOK_CLIENT,
@@ -54,4 +55,5 @@ function errorCode(error: unknown): string {
   }
 }
 
+configureAppApi();
 void handOver();

@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
   getThreadsControllerFindOneQueryKey,
   threadsControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { SourceResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { SourceResponseDtoStatus } from '@ayunis/api-client/schemas';
 import {
   isSourcePending,
   useProcessingPollInterval,

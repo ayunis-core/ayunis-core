@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import LoginPage from '@/pages/auth/login';
-import { appControllerIsCloud } from '@/shared/api';
+import { appControllerIsCloud } from '@ayunis/api-client';
 import { meQueryOptions } from '@/shared/api/me-query-options';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';
 import z from 'zod';

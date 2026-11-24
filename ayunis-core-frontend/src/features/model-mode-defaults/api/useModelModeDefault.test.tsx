@@ -9,7 +9,7 @@ import {
 } from './useModelModeDefault';
 
 const api = vi.hoisted(() => ({ get: vi.fn(), set: vi.fn() }));
-vi.mock('@/shared/api', async (importOriginal) => ({
+vi.mock('@ayunis/api-client', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   modelModeDefaultsControllerGetUserModeDefault: api.get,
   modelModeDefaultsControllerSetUserModeDefault: api.set,

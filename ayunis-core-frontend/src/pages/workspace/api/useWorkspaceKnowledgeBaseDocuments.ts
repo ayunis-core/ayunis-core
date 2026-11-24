@@ -9,8 +9,8 @@ import {
   knowledgeBasesControllerAddUrl,
   knowledgeBasesControllerRemoveDocument,
   knowledgeBasesControllerRemoveFailedDocuments,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { KnowledgeBaseDocumentListResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { KnowledgeBaseDocumentListResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import type { KnowledgeBaseDocumentsController } from '@/widgets/knowledge-base-documents-card';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';

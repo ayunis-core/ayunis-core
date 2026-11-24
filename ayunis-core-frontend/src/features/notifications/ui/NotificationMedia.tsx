@@ -1,7 +1,7 @@
 import {
   NotificationMediaType,
   type NotificationMediaResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 interface NotificationMediaProps {
   media: NotificationMediaResponseDto | null;

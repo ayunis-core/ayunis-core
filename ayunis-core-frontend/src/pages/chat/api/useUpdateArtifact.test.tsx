@@ -11,7 +11,7 @@ const { updateArtifact, client } = vi.hoisted(() => ({
 
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   artifactsControllerUpdate: updateArtifact,
   getArtifactsControllerFindOneQueryKey: (artifactId: string) => [
     'artifact',

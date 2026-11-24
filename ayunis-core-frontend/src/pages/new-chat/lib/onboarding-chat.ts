@@ -2,7 +2,7 @@ import type {
   ModelMode,
   OnboardingStage,
   OnboardingStageResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export type ChatModel = { modelId: string } | { mode: ModelMode };
 

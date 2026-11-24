@@ -1,4 +1,4 @@
-import { useMfaControllerResetUser } from '@/shared/api/generated/ayunisCoreAPI';
+import { useMfaControllerResetUser } from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';

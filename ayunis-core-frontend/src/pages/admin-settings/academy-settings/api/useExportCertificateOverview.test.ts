@@ -8,7 +8,7 @@ const { exportCsv, saveBlobAs, showError } = vi.hoisted(() => ({
   saveBlobAs: vi.fn(),
   showError: vi.fn(),
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   academyAccessControllerExportOrgCertificates: exportCsv,
 }));
 vi.mock('@/shared/lib/save-blob-as', () => ({ saveBlobAs }));

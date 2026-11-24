@@ -34,7 +34,7 @@ import { LetterheadFormDialog } from './LetterheadFormDialog';
 import { DocumentDefaultsCard } from './DocumentDefaultsCard';
 import { useLetterheads } from '@/pages/admin-settings/letterheads-settings/api/useLetterheads';
 import { useDeleteLetterhead } from '@/pages/admin-settings/letterheads-settings/api/useDeleteLetterhead';
-import type { LetterheadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { LetterheadResponseDto } from '@ayunis/api-client/schemas';
 import { paginateItems } from '@/shared/lib/paginate-items';
 import { PaginationWidget } from '@/widgets/pagination';
 

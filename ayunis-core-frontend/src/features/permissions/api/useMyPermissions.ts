@@ -1,7 +1,7 @@
-import { useMyPermissionsControllerGetMine } from '@/shared/api';
-import { createAuthorization } from '../lib/authorization';
+import { useMyPermissionsControllerGetMine } from '@ayunis/api-client';
+import { createAuthorization } from '@/features/permissions/lib/authorization';
 
-export type { AppPermission } from '../lib/authorization';
+export type { AppPermission } from '@/features/permissions/lib/authorization';
 
 /**
  * The current user's effective permissions. Admins implicitly hold all of them

@@ -1,7 +1,7 @@
 import {
   getReleaseNotesControllerCountUnreadQueryKey,
   useReleaseNotesControllerCountUnread,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 
 /** Release notes are synced in the background, so the count is polled. */

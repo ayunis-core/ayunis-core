@@ -9,7 +9,7 @@ const { getCertificate, showError, saveBlobAs } = vi.hoisted(() => ({
   saveBlobAs: vi.fn(),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   academyAccessControllerGetOrgMemberCertificate: getCertificate,
 }));
 vi.mock('@/shared/lib/save-blob-as', () => ({ saveBlobAs }));

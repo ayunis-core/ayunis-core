@@ -16,8 +16,8 @@ import {
   useAnonymizationSettingsControllerGet,
   useAnonymizationSettingsControllerUpdate,
   getAnonymizationSettingsControllerGetQueryKey,
-} from '@/shared/api';
-import type { PiiCategory } from '@/shared/api';
+} from '@ayunis/api-client';
+import type { PiiCategory } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { PII_CATEGORIES } from '@/pages/admin-settings/anonymization-settings/model/types';

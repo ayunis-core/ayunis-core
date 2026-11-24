@@ -13,7 +13,7 @@ const { request, navigate, invalidate, client } = vi.hoisted(() => ({
   client: { track: vi.fn() },
 }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 vi.mock('@/shared/lib/toast', () => ({
   showError: vi.fn(),

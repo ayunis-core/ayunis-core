@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { WorkspaceResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { WorkspaceResponseDto } from '@ayunis/api-client/schemas';
 import {
   DEFAULT_WORKSPACE_ICON,
   defaultWorkspaceColor,
@@ -10,7 +10,7 @@ import {
   WorkspaceFormDialog,
   type WorkspaceFormData,
 } from '@/widgets/workspace-form-dialog';
-import { useCreateWorkspace } from '../api/useCreateWorkspace';
+import { useCreateWorkspace } from '@/widgets/create-workspace-dialog/api/useCreateWorkspace';
 
 interface CreateWorkspaceDialogProps {
   open: boolean;

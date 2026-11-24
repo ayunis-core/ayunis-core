@@ -1,4 +1,4 @@
-import { useAcademyProgressControllerGetProgress } from '@/shared/api';
+import { useAcademyProgressControllerGetProgress } from '@ayunis/api-client';
 
 /**
  * Per-chapter confirmation state plus the whole-academy completion date for the

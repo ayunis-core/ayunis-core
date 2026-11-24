@@ -5,7 +5,7 @@ import {
   getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetPermittedModelsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function invalidatePermittedModelQueries(
   queryClient: QueryClient,

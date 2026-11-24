@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { TeamModelSettingsPage } from '@/pages/admin-settings/team-model-settings';
-import { getTeamsControllerGetTeamQueryOptions } from '@/shared/api';
+import { getTeamsControllerGetTeamQueryOptions } from '@ayunis/api-client';
 import { searchParamString } from '@/shared/lib/search-params';
 
 export const Route = createFileRoute(

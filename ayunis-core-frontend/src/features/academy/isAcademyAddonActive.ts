@@ -1,5 +1,5 @@
-import { AddonType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import type { AddonStatusResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { AddonType } from '@ayunis/api-client/schemas';
+import type { AddonStatusResponseDto } from '@ayunis/api-client/schemas';
 
 /**
  * Whether the academy add-on is active in a list of org add-on statuses.

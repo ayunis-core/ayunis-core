@@ -2,7 +2,7 @@ import {
   MeResponseDtoRole,
   MeResponseDtoSystemRole,
   type MeResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 type AccountLockViewer = Pick<MeResponseDto, 'role' | 'systemRole'>;
 

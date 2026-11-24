@@ -1,4 +1,4 @@
-import type { CreateLanguageModelRequestDto } from '@/shared/api';
+import type { CreateLanguageModelRequestDto } from '@ayunis/api-client';
 import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
 
 export function normalizeLanguageModelFormData(

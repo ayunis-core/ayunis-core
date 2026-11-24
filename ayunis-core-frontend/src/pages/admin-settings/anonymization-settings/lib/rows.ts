@@ -1,6 +1,6 @@
-import type { PiiCategory, PiiWhitelistEntryDto } from '@/shared/api';
-import { PII_CATEGORIES } from '../model/types';
-import type { RowsState } from '../model/types';
+import type { PiiCategory, PiiWhitelistEntryDto } from '@ayunis/api-client';
+import { PII_CATEGORIES } from '@/pages/admin-settings/anonymization-settings/model/types';
+import type { RowsState } from '@/pages/admin-settings/anonymization-settings/model/types';
 import { validateRegexPattern } from './validate-regex';
 import type { RegexValidationError } from './validate-regex';
 

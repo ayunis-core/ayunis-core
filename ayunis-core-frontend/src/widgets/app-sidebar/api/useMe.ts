@@ -1,4 +1,4 @@
-import { useAuthenticationControllerMe } from '@/shared/api';
+import { useAuthenticationControllerMe } from '@ayunis/api-client';
 
 export const useMe = () => {
   const { data, isLoading, error } = useAuthenticationControllerMe();

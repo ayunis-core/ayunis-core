@@ -1,5 +1,5 @@
-import { apiFetch } from '@/shared/api/embedded-session';
-import type { ToolCallDecisionDto } from '@/shared/api';
+import { apiFetch } from '@ayunis/api-client/transport';
+import type { ToolCallDecisionDto } from '@ayunis/api-client';
 
 export interface RunMessagePayload {
   threadId: string;

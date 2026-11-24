@@ -1,8 +1,8 @@
 import {
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
   useSuperAdminUsersControllerCreateUser,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreateUserDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { CreateUserDto } from '@ayunis/api-client/schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';

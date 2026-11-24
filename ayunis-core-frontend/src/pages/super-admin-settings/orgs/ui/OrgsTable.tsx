@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import type {
   OrgsSortField,
   SuperAdminOrgOverviewResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 import { OrgLifecycleBadge } from '@/widgets/org-lifecycle-badge';

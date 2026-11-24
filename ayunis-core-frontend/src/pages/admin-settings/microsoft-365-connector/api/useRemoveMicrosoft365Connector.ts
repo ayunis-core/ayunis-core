@@ -4,7 +4,7 @@ import {
   useConnectorsControllerRemoveMicrosoft365,
   getConnectorsControllerGetMicrosoft365QueryKey,
   getConnectorsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useRemoveMicrosoft365Connector(onRemoved: () => void) {

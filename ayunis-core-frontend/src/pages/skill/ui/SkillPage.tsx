@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
-import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SkillResponseDto } from '@ayunis/api-client/schemas';
 import type {
   ShareResponseDto,
   MyTeamResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { SkillPropertiesCard } from '@/widgets/resource-properties-card';
@@ -32,7 +32,7 @@ import {
   skillsControllerUpdate,
   getSkillsControllerFindAllQueryKey,
   getSkillsControllerFindOneQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import {
   useSetSkillActivation,
   useSetSkillPin,

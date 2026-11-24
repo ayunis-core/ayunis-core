@@ -21,8 +21,8 @@ import { TriangleAlert } from 'lucide-react';
 import type {
   ModelWithConfigResponseDto,
   TeamResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { getTeamsControllerGetTeamQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/schemas';
+import { getTeamsControllerGetTeamQueryKey } from '@ayunis/api-client/endpoints';
 import { useTeamPermittedModels } from '@/pages/admin-settings/team-model-settings/api/useTeamPermittedModels';
 import { useTeamPermittedImageGenerationModels } from '@/pages/admin-settings/team-model-settings/api/useTeamPermittedImageGenerationModels';
 import { useCreateTeamPermittedModel } from '@/pages/admin-settings/team-model-settings/api/useCreateTeamPermittedModel';

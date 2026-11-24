@@ -36,7 +36,7 @@ import {
   createApiKeyFormSchema,
   type CreateApiKeyFormValues,
 } from '@/pages/admin-settings/api-keys-settings/model/createApiKeyFormSchema';
-import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateApiKeyResponseDto } from '@ayunis/api-client/schemas';
 
 interface CreateApiKeyDialogProps {
   open: boolean;

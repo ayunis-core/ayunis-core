@@ -15,8 +15,8 @@ import { officeReady } from '@/outlook/lib/office-ready';
 import {
   getThreadsControllerCreateMutationKey,
   getThreadsControllerFindOneQueryOptions,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 
 function watchOutlookItem(listener: () => void): () => void {
   try {

@@ -3,12 +3,12 @@ import {
   getArtifactsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
   getArtifactsControllerFindByWorkspaceQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   UpdateArtifactDtoAuthorType,
   type ArtifactResponseDtoType,
   type UpdateArtifactDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { trackProductiveOutcome } from '@/shared/lib/openpanel-outcomes';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

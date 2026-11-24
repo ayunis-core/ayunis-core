@@ -1,4 +1,4 @@
-import { CreditLimitScope } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { CreditLimitScope } from '@ayunis/api-client/schemas';
 import type { CreditLimitEditorTarget } from '@/widgets/credit-limit-editor/model/types';
 import {
   act,
@@ -28,7 +28,7 @@ const api = vi.hoisted(() => ({
   removeTeam: vi.fn(),
   showError: vi.fn(),
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   creditLimitsControllerSetUserLimit: api.setUser,
   creditLimitsControllerSetTeamLimit: api.setTeam,
   creditLimitsControllerRemoveUserLimit: api.removeUser,

@@ -8,7 +8,7 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import type { PiiWhitelistEntryDto } from '@/shared/api';
+import type { PiiWhitelistEntryDto } from '@ayunis/api-client';
 import { PiiMaskProvider } from '@/widgets/markdown';
 import AddAnonymizationExceptionWidget from './AddAnonymizationExceptionWidget';
 
@@ -17,7 +17,7 @@ const { request, showSuccess } = vi.hoisted(() => ({
   showSuccess: vi.fn(),
 }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

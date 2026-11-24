@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SourceProcessingErrorCode as Code } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SourceProcessingErrorCode as Code } from '@ayunis/api-client/schemas';
 import {
   getSourceProcessingErrorKey,
   getSourceProcessingErrorReason,

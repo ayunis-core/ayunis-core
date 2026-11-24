@@ -10,7 +10,7 @@ import {
   getKnowledgeBasesControllerFindOneQueryKey,
   knowledgeBaseOwnerControllerChangeOwner,
   knowledgeBaseOwnerControllerPreviewOwnerChange,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';
 

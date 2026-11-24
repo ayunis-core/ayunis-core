@@ -5,7 +5,7 @@ import { transferSourceFile } from './transfer-source-file';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 
 const mocks = vi.hoisted(() => ({ sign: vi.fn(), showError: vi.fn() }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   sourceUploadsControllerSign: mocks.sign,
 }));
 vi.mock('@/shared/lib/toast', () => ({ showError: mocks.showError }));

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from '@tanstack/react-router';
-import { useAuthenticationControllerLogin } from '@/shared/api/generated/ayunisCoreAPI';
+import { useAuthenticationControllerLogin } from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { safeRedirectPath } from '@/shared/lib/safe-redirect-path';

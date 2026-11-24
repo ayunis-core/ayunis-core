@@ -18,7 +18,7 @@ import {
 } from '@ayunis/ui/components/form';
 import { Input } from '@ayunis/ui/components/input';
 import { useTranslation } from 'react-i18next';
-import type { UpdateBillingInfoDto } from '@/shared/api';
+import type { UpdateBillingInfoDto } from '@ayunis/api-client';
 import { Loader2 } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
 

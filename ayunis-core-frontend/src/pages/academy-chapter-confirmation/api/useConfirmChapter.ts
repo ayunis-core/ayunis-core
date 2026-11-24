@@ -5,7 +5,7 @@ import {
   academyChaptersControllerConfirmChapter,
   getAcademyAccessControllerGetStatusQueryKey,
   getAcademyProgressControllerGetProgressQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { celebrateChapterCompletion } from '@/pages/academy-chapter-confirmation/lib/celebrateChapterCompletion';

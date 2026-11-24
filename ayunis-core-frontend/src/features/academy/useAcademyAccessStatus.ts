@@ -1,8 +1,8 @@
 import {
   useAcademyAccessControllerGetStatus,
   getAcademyAccessControllerGetStatusQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { AcademyAccessStatusResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { AcademyAccessStatusResponseDto } from '@ayunis/api-client/schemas';
 
 interface AcademyAccessStatus {
   status: AcademyAccessStatusResponseDto | undefined;

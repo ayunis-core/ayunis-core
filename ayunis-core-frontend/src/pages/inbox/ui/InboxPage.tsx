@@ -7,7 +7,7 @@ import { cn } from '@ayunis/ui/lib/cn';
 import type {
   NotificationResponseDto,
   NotificationType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import AppLayout from '@/layouts/app-layout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';

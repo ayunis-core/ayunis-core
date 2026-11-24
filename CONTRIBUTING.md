@@ -134,7 +134,7 @@ The frontend follows a **feature sliced design** architecture with:
 
 1. **Components**: Create reusable, composable components
 2. **State Management**: Use appropriate state management (React Context, etc.)
-3. **API Integration**: Use the generated API client from `shared/api/generated/`
+3. **API Integration**: Use the generated API client from `@ayunis/api-client`
 4. **Styling**: Follow the existing UI component patterns
 5. **Internationalization**: Use the localization system in `shared/locales/`
 

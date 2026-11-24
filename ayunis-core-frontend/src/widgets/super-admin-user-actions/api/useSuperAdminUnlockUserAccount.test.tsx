@@ -16,7 +16,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: mocks.invalidateRouter }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getSuperAdminUserListControllerGetAllUsersQueryKey: () => ['all-users'],
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey: (orgId: string) => [
     'org-users',

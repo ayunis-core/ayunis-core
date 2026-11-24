@@ -1,8 +1,8 @@
 import {
   recordingUploadsControllerCompleteUpload,
   recordingUploadsControllerCreateUpload,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
 import type { DirectSourceUploadTarget } from '@/shared/lib/source-upload';
 
 export function recordingAudioUploadTarget(

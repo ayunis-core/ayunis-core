@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { defaultParseSearch } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import type { TeamResponseDto } from '@/shared/api';
+import type { TeamResponseDto } from '@ayunis/api-client';
 import TeamModelSettingsPage from './TeamModelSettingsPage';
 
 vi.mock('@/pages/admin-settings/admin-settings-layout', () => ({

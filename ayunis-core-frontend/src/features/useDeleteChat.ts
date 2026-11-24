@@ -6,7 +6,7 @@ import {
   useThreadsControllerDelete,
   getThreadsControllerFindAllQueryKey,
   getFavoritesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { abortActiveThreadRun } from '@/features/thread-run';
 

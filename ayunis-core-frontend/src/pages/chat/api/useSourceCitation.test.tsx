@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { useThreadSourceCitationsControllerGetSourceCitation } from '@/shared/api/generated/ayunisCoreAPI';
+import { useThreadSourceCitationsControllerGetSourceCitation } from '@ayunis/api-client/endpoints';
 import { useSourceCitation } from './useSourceCitation';
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useThreadSourceCitationsControllerGetSourceCitation: vi.fn(),
 }));
 

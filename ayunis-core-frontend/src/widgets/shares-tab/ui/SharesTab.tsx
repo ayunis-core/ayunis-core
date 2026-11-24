@@ -5,8 +5,8 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import type {
   MyTeamResponseDto,
   ShareResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { ShareResponseDtoScopeType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
+import { ShareResponseDtoScopeType } from '@ayunis/api-client/schemas';
 import { useDeleteShare } from '@/widgets/shares-tab/api/useDeleteShare';
 import { useMyPermissions } from '@/features/permissions';
 import { SharingBlockedDialog } from './SharingBlockedDialog';

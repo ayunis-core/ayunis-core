@@ -3,7 +3,7 @@ import { LetterheadDetailPage } from '@/pages/admin-settings/letterhead-detail';
 import {
   letterheadsControllerFindOne,
   getLetterheadsControllerFindOneQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export const Route = createFileRoute(
   '/_authenticated/admin-settings/letterheads/$id',

@@ -1,7 +1,7 @@
 import { Input } from '@ayunis/ui/components/input';
 import { PasswordInput } from '@ayunis/ui/components/password-input';
 import { Label } from '@ayunis/ui/components/label';
-import type { MarketplaceIntegrationConfigFieldDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MarketplaceIntegrationConfigFieldDto } from '@ayunis/api-client/schemas';
 
 interface ConfigFieldInputProps {
   readonly field: MarketplaceIntegrationConfigFieldDto;

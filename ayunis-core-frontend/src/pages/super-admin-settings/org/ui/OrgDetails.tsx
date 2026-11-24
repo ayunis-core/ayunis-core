@@ -1,4 +1,4 @@
-import type { SuperAdminOrgOverviewResponseDto } from '@/shared/api';
+import type { SuperAdminOrgOverviewResponseDto } from '@ayunis/api-client';
 import { OrgLifecycleBadge } from '@/widgets/org-lifecycle-badge';
 import {
   Card,

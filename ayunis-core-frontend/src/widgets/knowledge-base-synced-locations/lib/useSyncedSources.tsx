@@ -4,7 +4,7 @@ import { FolderSync } from 'lucide-react';
 import {
   ConnectorProduct,
   type SyncedLocationResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { useRemoveSyncedLocation } from '@/widgets/knowledge-base-synced-locations/api/useRemoveSyncedLocation';
 import { useSyncLocationNow } from '@/widgets/knowledge-base-synced-locations/api/useSyncLocationNow';

@@ -1,4 +1,4 @@
-import { useThreadsControllerFindOne } from '@/shared/api';
+import { useThreadsControllerFindOne } from '@ayunis/api-client';
 
 /**
  * Chat widgets only receive the thread id. ChatPage keeps the thread itself in

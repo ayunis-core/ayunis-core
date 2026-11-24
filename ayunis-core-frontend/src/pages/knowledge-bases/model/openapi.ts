@@ -1,3 +1,3 @@
-import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseResponseDto } from '@ayunis/api-client/schemas';
 
 export type KnowledgeBase = KnowledgeBaseResponseDto;

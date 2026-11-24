@@ -41,7 +41,7 @@ import {
 } from '@/features/bulk-user-invite/api/useBulkInviteCreate';
 import { applyValidationErrors } from '@/features/bulk-user-invite/lib/apply-validation-errors';
 import BulkInviteResultsContent from './BulkInviteResultsContent';
-import type { CreateBulkInvitesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateBulkInvitesResponseDto } from '@ayunis/api-client/schemas';
 import { Badge } from '@ayunis/ui/components/badge';
 
 type DialogStep = 'upload' | 'preview' | 'submitting' | 'results';

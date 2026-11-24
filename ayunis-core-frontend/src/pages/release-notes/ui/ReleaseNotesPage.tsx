@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import type { ReleaseNoteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ReleaseNoteResponseDto } from '@ayunis/api-client/schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
 import { useReleaseNotes } from '@/pages/release-notes/api/useReleaseNotes';

@@ -1,4 +1,4 @@
-import type { FeatureTogglesResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { FeatureTogglesResponseDto } from '@ayunis/api-client/schemas';
 import { useFeatureToggles } from './useFeatureToggles';
 
 export function useIsFeatureEnabled(

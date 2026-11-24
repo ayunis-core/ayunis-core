@@ -4,7 +4,7 @@ import {
   getKnowledgeBasesControllerFindAllQueryKey,
   getWorkspaceContextControllerFindContextQueryKey,
   getSkillsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { workspaceKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { workspaceSkillListParams } from '@/shared/api/skill-scopes';
 

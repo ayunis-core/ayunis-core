@@ -20,7 +20,7 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Input } from '@ayunis/ui/components/input';
-import { SharePointResolutionOutcome } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { SharePointResolutionOutcome } from '@ayunis/api-client/schemas';
 import { useAddSyncedLocation } from '@/widgets/knowledge-base-synced-locations/api/useAddSyncedLocation';
 import { useResolveSharePointLocation } from '@/widgets/knowledge-base-synced-locations/api/useResolveSharePointLocation';
 import {

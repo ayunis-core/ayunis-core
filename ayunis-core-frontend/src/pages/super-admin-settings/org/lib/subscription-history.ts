@@ -1,4 +1,4 @@
-import type { OrgSubscriptionHistoryItemDto } from '@/shared/api';
+import type { OrgSubscriptionHistoryItemDto } from '@ayunis/api-client';
 import type {
   SubscriptionHistoryItem,
   SubscriptionHistoryStatus,

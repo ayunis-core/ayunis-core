@@ -5,7 +5,7 @@ import {
   skillsControllerUpdate,
   useSkillsControllerFindAll,
   useSkillsControllerFindOne,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 import { showError, showSuccess } from '@/shared/lib/toast';

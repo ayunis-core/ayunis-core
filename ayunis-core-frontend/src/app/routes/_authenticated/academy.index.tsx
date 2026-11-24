@@ -6,7 +6,7 @@ import {
   getAddonsControllerListQueryKey,
   academyChaptersControllerGetChapters,
   getAcademyChaptersControllerGetChaptersQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export const Route = createFileRoute('/_authenticated/academy/')({
   component: RouteComponent,

@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { useImproveSkillText } from '@/features/skill-actions';
-import type { ImproveSkillTextDtoField } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ImproveSkillTextDtoField } from '@ayunis/api-client/schemas';
 
 interface SkillImproveButtonProps {
   field: ImproveSkillTextDtoField;

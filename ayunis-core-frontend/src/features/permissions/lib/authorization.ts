@@ -2,7 +2,7 @@ import type {
   MeResponseDtoRole,
   MyPermissionsResponseDtoPermissionsItem,
   MyTeamResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export type AppPermission = MyPermissionsResponseDtoPermissionsItem;
 

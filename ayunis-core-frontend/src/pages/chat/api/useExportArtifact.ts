@@ -1,5 +1,5 @@
-import { artifactsControllerExport } from '@/shared/api';
-import type { ArtifactsControllerExportFormat } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { artifactsControllerExport } from '@ayunis/api-client';
+import type { ArtifactsControllerExportFormat } from '@ayunis/api-client/schemas';
 import {
   trackProductiveOutcome,
   type ProductiveOutcome,

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { notificationsControllerMarkAllRead } from '@/shared/api/generated/ayunisCoreAPI';
+import { notificationsControllerMarkAllRead } from '@ayunis/api-client/endpoints';
 import { showError } from '@/shared/lib/toast';
 import { invalidateNotificationQueries } from '@/features/notifications';
 

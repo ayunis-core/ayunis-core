@@ -3,7 +3,7 @@ import SkillTemplatesPage from '@/pages/super-admin-settings/skill-templates';
 import {
   getSuperAdminSkillTemplatesControllerFindAllQueryKey,
   superAdminSkillTemplatesControllerFindAll,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export const Route = createFileRoute(
   '/_authenticated/super-admin-settings/skills/',

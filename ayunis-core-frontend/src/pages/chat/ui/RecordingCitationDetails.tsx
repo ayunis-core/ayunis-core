@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
-import type { SourceCitationRecordingResponseDto } from '@/shared/api';
+import type { SourceCitationRecordingResponseDto } from '@ayunis/api-client';
 import { formatDate } from '@/shared/lib/format-date';
 import { formatTranscriptTime } from '@/shared/lib/format-transcript-time';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';

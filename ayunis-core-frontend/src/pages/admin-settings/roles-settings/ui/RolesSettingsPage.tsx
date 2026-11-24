@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@ayunis/ui/components/table';
-import { useRolePermissionsControllerGet } from '@/shared/api';
+import { useRolePermissionsControllerGet } from '@ayunis/api-client';
 import type {
   EditableRole,
   RolePermissionsDraft,

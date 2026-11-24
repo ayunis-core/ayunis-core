@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getKnowledgeBasesControllerFindAllQueryKey,
   getSkillsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { KnowledgeBaseDocumentResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { KnowledgeBaseDocumentResponseDto } from '@ayunis/api-client/schemas';
 import {
   personalKnowledgeBaseListParams,
   workspaceKnowledgeBaseListParams,
@@ -31,7 +31,7 @@ const { request, showError, showSuccess, invalidate, openPanel } = vi.hoisted(
     openPanel: { track: vi.fn() },
   }),
 );
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel }));
 vi.mock('@/shared/lib/toast', () => ({
   showError,

@@ -5,7 +5,7 @@ import {
   getSuperAdminPermittedModelsControllerGetAvailableLanguageModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableEmbeddingModelsQueryKey,
   getSuperAdminPermittedModelsControllerGetAvailableImageGenerationModelsQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';

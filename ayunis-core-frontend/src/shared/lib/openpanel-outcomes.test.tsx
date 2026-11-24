@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getThreadsControllerFindOneQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
-import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { getThreadsControllerFindOneQueryKey } from '@ayunis/api-client/endpoints';
+import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 import {
   ProductiveOutcomeProvider,
   useTrackProductiveOutcome,

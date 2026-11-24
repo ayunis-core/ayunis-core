@@ -2,4 +2,3 @@ node_modules
 dist
 build
 src/app/routeTree.gen.ts
-src/shared/api/generated

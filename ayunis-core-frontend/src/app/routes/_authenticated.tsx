@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import {
   appControllerIsCloud,
   getAppControllerIsCloudQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { meQueryOptions } from '@/shared/api/me-query-options';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { currentPathWithSearch } from '@/shared/lib/current-path-with-search';

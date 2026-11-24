@@ -3,7 +3,7 @@ import {
   CreateEmbeddingModelRequestDtoProvider,
   CreateImageGenerationModelRequestDtoProvider,
   type ModelProviderInfoResponseDtoProvider as ModelProvider,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 /**
  * Provider display labels derived from generated schema types.

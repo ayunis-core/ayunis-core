@@ -1,8 +1,8 @@
 import {
   getUserControllerGetUsersInOrganizationQueryKey,
   useAdminUserControllerAdminUpdateUser,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { AdminUpdateUserDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { AdminUpdateUserDto } from '@ayunis/api-client/schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { showError, showSuccess } from '@/shared/lib/toast';

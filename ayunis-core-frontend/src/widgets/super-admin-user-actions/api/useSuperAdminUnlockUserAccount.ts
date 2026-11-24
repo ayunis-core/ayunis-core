@@ -6,7 +6,7 @@ import {
   getSuperAdminUserListControllerGetAllUsersQueryKey,
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
   useSuperAdminUsersControllerUnlockUser,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { showError, showSuccess } from '@/shared/lib/toast';
 
 export function useSuperAdminUnlockUserAccount(orgId: string) {

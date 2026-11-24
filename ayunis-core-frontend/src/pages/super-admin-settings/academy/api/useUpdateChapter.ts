@@ -7,10 +7,10 @@ import {
   useSuperAdminAcademyChaptersControllerUpdateChapter,
   getSuperAdminAcademyChaptersControllerGetChaptersQueryKey,
   type UpdateChapterRequestDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
-import type { ChapterFormValues } from '../model/chapterFormSchema';
+import type { ChapterFormValues } from '@/pages/super-admin-settings/academy/model/chapterFormSchema';
 
 export function useUpdateChapter(
   form: UseFormReturn<ChapterFormValues>,

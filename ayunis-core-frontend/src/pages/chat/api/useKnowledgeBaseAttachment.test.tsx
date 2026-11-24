@@ -14,7 +14,7 @@ vi.mock('@tanstack/react-query', () => ({
   useQueryClient: () => ({ invalidateQueries: mocks.invalidateQueries }),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getThreadsControllerFindOneQueryKey: (id: string) => ['thread', id],
   getThreadAiContextControllerGetAiContextQueryKey: (id: string) => [
     'ai-context',

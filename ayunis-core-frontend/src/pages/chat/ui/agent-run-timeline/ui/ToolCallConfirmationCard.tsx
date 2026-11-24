@@ -15,7 +15,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import type { ToolCallDecision } from '@/shared/api';
+import type { ToolCallDecision } from '@ayunis/api-client';
 import { upstreamToolName } from '@/pages/chat/lib/format-tool-name';
 import { useToolCallConfirmation } from '@/pages/chat/ui/agent-run-timeline/model/tool-call-confirmation';
 

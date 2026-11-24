@@ -1,4 +1,4 @@
-import { useRoutinesControllerFindOne } from '@/shared/api';
+import { useRoutinesControllerFindOne } from '@ayunis/api-client';
 
 export function useRoutineToEdit(routineId?: string) {
   const routineQuery = useRoutinesControllerFindOne(routineId ?? '', {

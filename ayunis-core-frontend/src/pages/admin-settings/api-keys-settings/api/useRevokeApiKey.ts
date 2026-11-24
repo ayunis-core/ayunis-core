@@ -5,7 +5,7 @@ import {
   useApiKeysControllerRevokeApiKey,
   getApiKeysControllerListApiKeysQueryKey,
   getApiKeyUsageControllerGetApiKeyUsageQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';

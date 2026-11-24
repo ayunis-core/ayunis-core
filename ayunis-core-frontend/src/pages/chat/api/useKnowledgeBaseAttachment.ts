@@ -3,7 +3,7 @@ import {
   useThreadKnowledgeBasesControllerRemoveKnowledgeBase,
   getThreadsControllerFindOneQueryKey,
   getThreadAiContextControllerGetAiContextQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';

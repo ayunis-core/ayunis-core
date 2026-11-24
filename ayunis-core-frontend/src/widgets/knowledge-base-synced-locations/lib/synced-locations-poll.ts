@@ -1,4 +1,4 @@
-import type { SyncedLocationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SyncedLocationResponseDto } from '@ayunis/api-client/schemas';
 
 export const SYNCING_POLL_MS = 3000;
 /** Between syncs, so the hourly sync shows up while the page is open. */

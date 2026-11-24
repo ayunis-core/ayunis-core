@@ -1,8 +1,8 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
   useExpiredInvitesControllerResendAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { ResendExpiredInvitesResponseDto } from '@/shared/api';
+} from '@ayunis/api-client/endpoints';
+import type { ResendExpiredInvitesResponseDto } from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showInfo, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';

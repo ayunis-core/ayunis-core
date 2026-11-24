@@ -1,4 +1,4 @@
-import { useMarketplaceControllerGetSkill } from '@/shared/api';
+import { useMarketplaceControllerGetSkill } from '@ayunis/api-client';
 
 export function useMarketplaceSkillEntry(identifier: string) {
   const query = useMarketplaceControllerGetSkill(identifier, {

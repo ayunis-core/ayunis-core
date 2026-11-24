@@ -1,7 +1,7 @@
 import {
   useSuperAdminUsageDataControllerGetProviderUsageChart,
   type SuperAdminUsageDataControllerGetProviderUsageChartParams,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export function useSuperAdminProviderUsageChart(
   orgId: string,

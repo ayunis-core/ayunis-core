@@ -3,7 +3,7 @@ import type {
   AgentRunUnit,
   SourceProcessingTimelineStep,
 } from '@/pages/chat/ui/agent-run-timeline';
-import type { SourceProcessingProgressDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SourceProcessingProgressDto } from '@ayunis/api-client/schemas';
 
 /** One step per file that is still being processed. */
 export function sourceProcessingSteps(

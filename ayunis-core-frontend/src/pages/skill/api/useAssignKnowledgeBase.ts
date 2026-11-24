@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import {
   useSkillKnowledgeBasesControllerAssignKnowledgeBase,
   getSkillKnowledgeBasesControllerListSkillKnowledgeBasesQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { KnowledgeBaseResponseDto } from '@ayunis/api-client/schemas';
 import { showSuccess, showError } from '@/shared/lib/toast';
 
 /**

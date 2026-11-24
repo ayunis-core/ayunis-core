@@ -6,8 +6,8 @@ import {
   useApiKeysControllerCreateApiKey,
   getApiKeysControllerListApiKeysQueryKey,
   getApiKeyUsageControllerGetApiKeyUsageQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { CreateApiKeyResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { CreateApiKeyResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';

@@ -7,7 +7,7 @@ import {
   myPermissionsControllerGetMine,
   recordingsControllerFindAll,
   teamsControllerListMyTeams,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalRecordingListParams } from '@/shared/api/recording-scopes';
 import { requireRecordingsEnabled } from './-recordings-enabled';
 import { loadChatStarterDefaults } from './-chat-starter-defaults-query';

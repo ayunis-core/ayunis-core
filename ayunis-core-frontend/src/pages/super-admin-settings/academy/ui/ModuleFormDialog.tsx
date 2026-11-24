@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import type { CourseModuleResponseDto } from '@/shared/api';
+import type { CourseModuleResponseDto } from '@ayunis/api-client';
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,9 @@ import { Button } from '@ayunis/ui/components/button';
 import {
   createModuleFormSchema,
   type ModuleFormValues,
-} from '../model/moduleFormSchema';
-import { useCreateModule } from '../api/useCreateModule';
-import { useUpdateModule } from '../api/useUpdateModule';
+} from '@/pages/super-admin-settings/academy/model/moduleFormSchema';
+import { useCreateModule } from '@/pages/super-admin-settings/academy/api/useCreateModule';
+import { useUpdateModule } from '@/pages/super-admin-settings/academy/api/useUpdateModule';
 
 interface ModuleFormDialogProps {
   open: boolean;

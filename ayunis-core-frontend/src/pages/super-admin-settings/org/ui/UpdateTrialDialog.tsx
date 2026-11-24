@@ -20,8 +20,8 @@ import {
 import { Input } from '@ayunis/ui/components/input';
 import { Button } from '@ayunis/ui/components/button';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminTrialResponseDto } from '@/shared/api';
-import useSuperAdminTrialUpdate from '../api/useSuperAdminTrialUpdate';
+import type { SuperAdminTrialResponseDto } from '@ayunis/api-client';
+import useSuperAdminTrialUpdate from '@/pages/super-admin-settings/org/api/useSuperAdminTrialUpdate';
 
 interface UpdateTrialDialogProps {
   trigger: React.ReactNode;

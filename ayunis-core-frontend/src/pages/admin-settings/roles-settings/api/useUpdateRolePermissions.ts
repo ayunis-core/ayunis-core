@@ -1,16 +1,16 @@
 import {
   useRolePermissionsControllerUpdate,
   getRolePermissionsControllerGetQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '@/shared/lib/toast';
-import type { RolePermissionsDraft } from '../model/types';
+import type { RolePermissionsDraft } from '@/pages/admin-settings/roles-settings/model/types';
 import {
   changedRoles,
   hasEmptyRoleSelection,
-} from '../lib/role-permissions-draft';
+} from '@/pages/admin-settings/roles-settings/lib/role-permissions-draft';
 
 interface UseUpdateRolePermissionsOptions {
   // Called when the draft is no longer needed: on a successful save and when

@@ -4,7 +4,7 @@ import { showSuccess, showError } from '@/shared/lib/toast';
 import {
   useKnowledgeBasesControllerRemoveDocument,
   getKnowledgeBasesControllerListDocumentsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useRemoveDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');

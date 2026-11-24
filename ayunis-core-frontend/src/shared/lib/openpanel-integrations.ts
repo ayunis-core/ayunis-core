@@ -2,8 +2,8 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   getMcpIntegrationsControllerListAvailableQueryKey,
   mcpIntegrationsControllerListAvailable,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { McpIntegrationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { McpIntegrationResponseDto } from '@ayunis/api-client/schemas';
 import { hasOAuthConfiguration } from '@/shared/lib/mcp-oauth';
 import { openPanel } from '@/shared/lib/openpanel';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';

@@ -12,7 +12,7 @@ import {
   getAddonsControllerListQueryKey,
   academyChaptersControllerGetChapters,
   getAcademyChaptersControllerGetChaptersQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 const searchSchema = z.object({
   module: z.number().int().min(0).optional().catch(undefined),

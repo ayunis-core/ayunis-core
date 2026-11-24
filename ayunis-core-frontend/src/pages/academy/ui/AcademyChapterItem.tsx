@@ -11,7 +11,7 @@ import {
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Progress } from '@ayunis/ui/components/progress';
-import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { AcademyChapterResponseDto } from '@ayunis/api-client/schemas';
 import type { ChapterModuleProgress } from '@/features/academy';
 
 interface AcademyChapterItemProps {

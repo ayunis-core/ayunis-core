@@ -1,5 +1,5 @@
-import { useRecordingsControllerFindOne } from '@/shared/api/generated/ayunisCoreAPI';
-import type { RecordingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { useRecordingsControllerFindOne } from '@ayunis/api-client/endpoints';
+import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
 import { recordingRefetchInterval } from '@/pages/recording/lib/recording-polling';
 
 /** The recording as loaded by the route, kept current while it is transcribed. */

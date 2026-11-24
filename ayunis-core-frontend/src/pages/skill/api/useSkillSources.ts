@@ -3,8 +3,8 @@ import {
   skillSourcesControllerCreateUpload,
   useSkillSourcesControllerGetSkillSources,
   useSkillSourcesControllerRemoveSource,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { SkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { SkillResponseDto } from '@ayunis/api-client/schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 import { useQueryClient } from '@tanstack/react-query';

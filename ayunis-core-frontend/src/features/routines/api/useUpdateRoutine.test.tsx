@@ -18,7 +18,7 @@ vi.mock('@/shared/lib/toast', () => ({
   showError: vi.fn(),
   showSuccess: vi.fn(),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   getRoutinesControllerFindAllQueryKey: () => ['routines'],
   getRoutinesControllerFindOneQueryKey: (id: string) => ['routines', id],
   useRoutinesControllerUpdate: ({

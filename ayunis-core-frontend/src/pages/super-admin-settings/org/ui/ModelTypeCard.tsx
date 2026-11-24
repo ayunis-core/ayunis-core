@@ -1,8 +1,8 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client/schemas';
 import { ModelTypeCard as ModelTypeCardWidget } from '@/widgets/model-type-card';
-import { useSuperAdminDeletePermittedModel } from '../api/useSuperAdminDeletePermittedModel';
-import { useSuperAdminUpdatePermittedModel } from '../api/useSuperAdminUpdatePermittedModel';
-import { useSuperAdminEnableModel } from '../api/useSuperAdminEnableModel';
+import { useSuperAdminDeletePermittedModel } from '@/pages/super-admin-settings/org/api/useSuperAdminDeletePermittedModel';
+import { useSuperAdminUpdatePermittedModel } from '@/pages/super-admin-settings/org/api/useSuperAdminUpdatePermittedModel';
+import { useSuperAdminEnableModel } from '@/pages/super-admin-settings/org/api/useSuperAdminEnableModel';
 
 interface ModelTypeCardProps {
   readonly type: 'language' | 'embedding' | 'image-generation';

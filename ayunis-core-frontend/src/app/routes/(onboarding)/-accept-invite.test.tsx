@@ -11,7 +11,7 @@ vi.mock('@/pages/auth/invite-accept', () => ({
   InviteErrorPage: () => null,
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   appControllerIsCloud: isCloud,
   getInvitesControllerGetInviteByTokenQueryKey: (token: string) => [
     '/api/invites',

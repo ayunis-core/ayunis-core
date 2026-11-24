@@ -1,8 +1,8 @@
 import {
   getInvitesControllerGetInvitesQueryKey,
   useInvitesControllerDeleteInvite,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { PaginatedInvitesListResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { PaginatedInvitesListResponseDto } from '@ayunis/api-client/schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';

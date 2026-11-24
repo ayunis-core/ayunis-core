@@ -4,7 +4,7 @@ import {
   useOnboardingControllerGetOnboarding,
   getOnboardingControllerGetOnboardingQueryKey,
   onboardingControllerMarkWelcomeVideoSeen,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError } from '@/shared/lib/toast';

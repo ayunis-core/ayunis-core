@@ -28,9 +28,9 @@ import { Checkbox } from '@ayunis/ui/components/checkbox';
 import { Label } from '@ayunis/ui/components/label';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSuperAdminCreateUser } from '../api/useSuperAdminCreateUser';
+import { useSuperAdminCreateUser } from '@/pages/super-admin-settings/org/api/useSuperAdminCreateUser';
 import { useTranslation } from 'react-i18next';
-import type { CreateUserDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateUserDto } from '@ayunis/api-client/schemas';
 
 interface CreateUserDialogProps {
   orgId: string;

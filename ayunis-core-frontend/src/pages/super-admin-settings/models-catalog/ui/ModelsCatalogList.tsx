@@ -12,7 +12,7 @@ import type {
   LanguageModelResponseDto,
   EmbeddingModelResponseDto,
   ImageGenerationModelResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   isLanguageModel,
   isEmbeddingModel,

@@ -1,5 +1,5 @@
 import SharedLicenseSeatsSection from '@/widgets/billing/ui/LicenseSeatsSection';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import LicenseSeatsUpdateDialog from './LicenseSeatsUpdateDialog';
 
 interface LicenseSeatsSectionProps {

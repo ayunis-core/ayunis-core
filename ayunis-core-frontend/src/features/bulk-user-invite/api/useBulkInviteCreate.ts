@@ -4,11 +4,11 @@ import {
   getSuperAdminUsersControllerGetUsersByOrgIdQueryKey,
   useInvitesControllerCreateBulk,
   useSuperAdminInvitesControllerCreateBulk,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   CreateBulkInviteItemDto,
   CreateBulkInvitesResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useRouter } from '@tanstack/react-router';

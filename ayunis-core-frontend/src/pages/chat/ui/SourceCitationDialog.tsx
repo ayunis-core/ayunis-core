@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@ayunis/ui/components/dialog';
-import type { SourceCitationResponseDto } from '@/shared/api';
+import type { SourceCitationResponseDto } from '@ayunis/api-client';
 import { useSourceCitation } from '@/pages/chat/api/useSourceCitation';
 import { Markdown } from '@/widgets/markdown';
 import type { SourceCitation } from '@/widgets/markdown';

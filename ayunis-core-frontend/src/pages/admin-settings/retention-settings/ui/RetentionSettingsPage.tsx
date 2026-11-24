@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import SettingsLayout from '../../admin-settings-layout';
+import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { Button } from '@ayunis/ui/components/button';
 import { Label } from '@ayunis/ui/components/label';
 import {
@@ -34,11 +34,14 @@ import {
   useRetentionPoliciesControllerGet,
   useRetentionPoliciesControllerUpdate,
   getRetentionPoliciesControllerGetQueryKey,
-} from '@/shared/api';
-import type { UpdateRetentionPolicyRequestDtoRetentionDays } from '@/shared/api';
+} from '@ayunis/api-client';
+import type { UpdateRetentionPolicyRequestDtoRetentionDays } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showSuccess, showError } from '@/shared/lib/toast';
-import { formatRetentionPeriod, isMoreAggressive } from '../lib/format-period';
+import {
+  formatRetentionPeriod,
+  isMoreAggressive,
+} from '@/pages/admin-settings/retention-settings/lib/format-period';
 
 const KEEP_FOREVER = 'keep-forever';
 

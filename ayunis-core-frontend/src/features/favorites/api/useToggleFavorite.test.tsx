@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getFavoritesControllerFindAllQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { getFavoritesControllerFindAllQueryKey } from '@ayunis/api-client/endpoints';
 import type { Favorite } from './useFavorites';
 import { useToggleFavorite } from './useToggleFavorite';
 
@@ -11,7 +11,7 @@ const { request, client } = vi.hoisted(() => ({
   client: { track: vi.fn() },
 }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@/shared/lib/openpanel', () => ({ openPanel: client }));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
 vi.mock('@tanstack/react-router', () => ({

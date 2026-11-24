@@ -11,7 +11,7 @@ import { useRunRoutineNow } from './useRunRoutineNow';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

@@ -6,8 +6,8 @@ import {
   getKnowledgeBasesControllerListDocumentsQueryKey,
   knowledgeBaseUploadsControllerCompleteUpload,
   knowledgeBaseUploadsControllerCreateUpload,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { KnowledgeBaseDocumentResponseDtoStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { KnowledgeBaseDocumentResponseDtoStatus } from '@ayunis/api-client/schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
 

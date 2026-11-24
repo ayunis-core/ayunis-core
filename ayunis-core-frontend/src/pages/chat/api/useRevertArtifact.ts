@@ -3,7 +3,7 @@ import {
   getArtifactsControllerFindOneQueryKey,
   getArtifactsControllerFindByThreadQueryKey,
   getArtifactsControllerFindByWorkspaceQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UseRevertArtifactOptions {

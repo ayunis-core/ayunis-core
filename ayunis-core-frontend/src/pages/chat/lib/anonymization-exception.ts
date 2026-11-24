@@ -1,5 +1,5 @@
-import { PiiCategory } from '@/shared/api';
-import type { PiiWhitelistEntryDto } from '@/shared/api';
+import { PiiCategory } from '@ayunis/api-client';
+import type { PiiWhitelistEntryDto } from '@ayunis/api-client';
 import { resolvePiiTokens } from '@/widgets/markdown';
 
 const PII_TOKEN = /\{\{pii:[A-Z][A-Z0-9_]*_\d+\}\}/;

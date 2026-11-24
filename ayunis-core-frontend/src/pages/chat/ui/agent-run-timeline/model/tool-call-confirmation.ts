@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ToolCallDecisionDto } from '@/shared/api';
+import type { ToolCallDecisionDto } from '@ayunis/api-client';
 
 export interface ToolCallConfirmation {
   /** No decision can be made while a run is active on the thread. */

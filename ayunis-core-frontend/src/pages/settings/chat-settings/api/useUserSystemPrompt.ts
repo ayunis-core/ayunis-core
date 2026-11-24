@@ -3,8 +3,8 @@ import {
   useChatSettingsControllerUpsertSystemPrompt,
   useChatSettingsControllerDeleteSystemPrompt,
   getChatSettingsControllerGetSystemPromptQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { UpsertUserSystemPromptDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { UpsertUserSystemPromptDto } from '@ayunis/api-client/schemas';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { showSuccess, showError } from '@/shared/lib/toast';

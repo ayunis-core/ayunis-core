@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { axiosInstance } from '@/shared/api/client';
+import { getApiTransport } from '@ayunis/api-client/transport';
 
 interface TranscribeResult {
   text: string;
@@ -21,7 +21,7 @@ export function useTranscribe() {
         formData.append('language', language);
       }
 
-      const response = await axiosInstance.post<TranscribeResult>(
+      const response = await getApiTransport().axios.post<TranscribeResult>(
         '/transcriptions',
         formData,
         {

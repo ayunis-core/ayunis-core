@@ -1,9 +1,9 @@
 import {
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
   useSuperAdminTrialsControllerUpdateTrial,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgLifecycleQueries } from './invalidateOrgLifecycleQueries';
-import type { SuperAdminTrialResponseDto } from '@/shared/api';
+import type { SuperAdminTrialResponseDto } from '@ayunis/api-client';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';

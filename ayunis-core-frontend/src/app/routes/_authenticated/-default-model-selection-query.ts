@@ -2,7 +2,7 @@ import {
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   modelModeDefaultsControllerGetDefaultSelection,
   type DefaultModelSelectionResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { getModeValue } from '@/widgets/model-select-options';
 
 export function defaultModelSelectionQueryOptions() {

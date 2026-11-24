@@ -24,7 +24,7 @@ const { findThread } = vi.hoisted(() => ({ findThread: vi.fn() }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', async (importOriginal) => ({
+vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   threadsControllerFindOne: findThread,
 }));

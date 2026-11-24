@@ -19,7 +19,7 @@ import {
   type ModelMode,
   type ModelModeDefaultResponseDto,
   type SetModelModeDefaultDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 

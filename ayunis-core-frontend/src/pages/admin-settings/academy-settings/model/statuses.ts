@@ -1,7 +1,7 @@
 import {
   AcademyAccessMode,
   CertificateValidityStatus,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export interface CertificateStatusOption {
   value: CertificateValidityStatus;

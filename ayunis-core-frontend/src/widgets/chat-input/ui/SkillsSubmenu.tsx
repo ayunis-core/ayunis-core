@@ -7,7 +7,7 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { Check, Loader2, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useSkillsControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
+import { useSkillsControllerFindAll } from '@ayunis/api-client/endpoints';
 import { personalSkillListParams } from '@/shared/api/skill-scopes';
 
 interface SkillsSubmenuProps {

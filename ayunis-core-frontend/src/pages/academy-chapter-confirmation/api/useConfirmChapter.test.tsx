@@ -21,7 +21,7 @@ vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: routerInvalidate }),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   academyChaptersControllerConfirmChapter: confirmChapter,
   getAcademyProgressControllerGetProgressQueryKey: () => ['/academy/progress'],
   getAcademyAccessControllerGetStatusQueryKey: () => ['/academy-access/status'],

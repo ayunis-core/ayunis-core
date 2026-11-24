@@ -4,8 +4,8 @@ import { ChatsPage } from '@/pages/chats';
 import {
   threadsControllerFindAll,
   getThreadsControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { SessionClient } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import { SessionClient } from '@ayunis/api-client/schemas';
 import { searchParamString } from '@/shared/lib/search-params';
 
 const CHATS_PER_PAGE = 20;

@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';
 import { Button } from '@ayunis/ui/components/button';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
-import { ConnectorStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { ConnectorStatus } from '@ayunis/api-client/schemas';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
 import { useMicrosoft365Connector } from '@/pages/admin-settings/microsoft-365-connector/api/useMicrosoft365Connector';
 import { useTestMicrosoft365Connection } from '@/pages/admin-settings/microsoft-365-connector/api/useTestMicrosoft365Connection';

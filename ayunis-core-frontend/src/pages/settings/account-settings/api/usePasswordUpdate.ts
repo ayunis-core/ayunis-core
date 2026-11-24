@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useUserControllerUpdatePassword } from '@/shared/api/generated/ayunisCoreAPI';
+import { useUserControllerUpdatePassword } from '@ayunis/api-client/endpoints';
 import {
   createUpdatePasswordSchema,
   type UpdatePasswordFormValues,
-} from '../model/updatePasswordSchema';
+} from '@/pages/settings/account-settings/model/updatePasswordSchema';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';

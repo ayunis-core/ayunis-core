@@ -6,7 +6,7 @@ import type {
   SuperAdminTrialResponseDto,
   PaginationDto,
   InviteResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import UsersTable from './UsersTable';
 import OrgDetails from './OrgDetails';
 import ModelsSection from './ModelsSection';
@@ -30,7 +30,7 @@ import { useCallback } from 'react';
 import SuperAdminInvitesSection from './SuperAdminInvitesSection';
 import SuperAdminInvitesSearch from './SuperAdminInvitesSearch';
 import SuperAdminInvitesPagination from './SuperAdminInvitesPagination';
-import type { InvitesSortField, OrgUsersSortField } from '@/shared/api';
+import type { InvitesSortField, OrgUsersSortField } from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 
 interface SuperAdminSettingsOrgPageProps {

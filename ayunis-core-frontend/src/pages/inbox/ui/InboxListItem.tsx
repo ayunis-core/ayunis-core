@@ -17,7 +17,7 @@ import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import {
   NotificationType,
   type NotificationResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 interface InboxListItemProps {
   notification: NotificationResponseDto;

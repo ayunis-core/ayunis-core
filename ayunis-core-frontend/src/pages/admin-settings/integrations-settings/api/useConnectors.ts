@@ -1,7 +1,7 @@
 import {
   useConnectorsControllerList,
   getConnectorsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useConnectors() {
   const {

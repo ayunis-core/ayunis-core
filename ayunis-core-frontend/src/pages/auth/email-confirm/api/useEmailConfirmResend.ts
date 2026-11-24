@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useUserControllerResendEmailConfirmation } from '@/shared/api/generated/ayunisCoreAPI';
+import { useUserControllerResendEmailConfirmation } from '@ayunis/api-client/endpoints';
 import * as z from 'zod';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';

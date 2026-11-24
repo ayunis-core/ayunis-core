@@ -12,7 +12,7 @@ import {
 import {
   KnowledgeBaseDocumentResponseDtoStatus,
   type KnowledgeBaseDocumentResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { cn } from '@ayunis/ui/lib/cn';

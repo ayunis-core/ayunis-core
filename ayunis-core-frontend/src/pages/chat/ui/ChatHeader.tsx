@@ -32,7 +32,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 
 interface ChatHeaderProps {
   readonly threadId: string;

@@ -3,7 +3,7 @@ import AcademyPage from '@/pages/super-admin-settings/academy';
 import {
   getSuperAdminAcademyChaptersControllerGetChaptersQueryKey,
   superAdminAcademyChaptersControllerGetChapters,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export const Route = createFileRoute(
   '/_authenticated/super-admin-settings/academy/',

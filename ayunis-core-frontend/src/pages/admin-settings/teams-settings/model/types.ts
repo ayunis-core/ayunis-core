@@ -1,4 +1,4 @@
-import type { TeamResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { TeamResponseDto } from '@ayunis/api-client/schemas';
 
 export type Team = TeamResponseDto;
 

@@ -6,7 +6,7 @@ import {
 import { stopThreadRun } from './stopThreadRun';
 
 const { cancelRun } = vi.hoisted(() => ({ cancelRun: vi.fn() }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   activeRunsControllerCancel: cancelRun,
 }));
 

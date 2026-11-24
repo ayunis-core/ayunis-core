@@ -21,7 +21,6 @@ export default tseslint.config(
       // typed lint rules cannot load them
       'public/**',
       'src/app/routeTree.gen.ts',
-      'src/shared/api/generated/**',
       'src/shared/scripts/**',
       'vite.config.js',
       '*.config.js',

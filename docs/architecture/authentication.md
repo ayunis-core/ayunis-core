@@ -394,6 +394,11 @@ repeated valid notifications are idempotent.
 
 ## Token clients
 
+The [shared API client](../../packages/api-client/README.md) receives its
+transport from the app entry point. The web uses cookies, and the Outlook
+pane supplies bearer authorization and its single-flight refresh callback.
+The same transport supplies credentials for generated and streamed requests.
+
 Office add-ins run in a cross-site iframe or WebView where session cookies are
 blocked or partitioned, so they hold their session as tokens instead. The value
 identifying such a client (`outlook` today) comes from the token sign-in entries

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import type { ToolCallDecisionDto } from '@/shared/api';
+import type { ToolCallDecisionDto } from '@ayunis/api-client';
 import type { Message } from '@/pages/chat/model/openapi';
 import type { ToolCallConfirmation } from '@/pages/chat/ui/agent-run-timeline';
 import { findCallsAwaitingConfirmation } from '@/pages/chat/lib/calls-awaiting-confirmation';

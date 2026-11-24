@@ -31,7 +31,7 @@ import { useInviteCreate } from '@/pages/admin-settings/users-settings/api/useIn
 import { useTranslation } from 'react-i18next';
 import { Copy, Check } from 'lucide-react';
 import { showSuccess } from '@/shared/lib/toast';
-import type { CreateInviteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CreateInviteResponseDto } from '@ayunis/api-client/schemas';
 import { Label } from '@ayunis/ui/components/label';
 
 interface SingleInviteDialogProps {

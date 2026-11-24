@@ -1,4 +1,4 @@
-import { useTeamsControllerListTeams } from '@/shared/api';
+import { useTeamsControllerListTeams } from '@ayunis/api-client';
 
 export function useInviteTeams(enabled: boolean) {
   const query = useTeamsControllerListTeams({ query: { enabled } });

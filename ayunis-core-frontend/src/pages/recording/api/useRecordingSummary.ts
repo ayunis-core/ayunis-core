@@ -1,4 +1,4 @@
-import { useRecordingSummaryControllerSummary } from '@/shared/api/generated/ayunisCoreAPI';
+import { useRecordingSummaryControllerSummary } from '@ayunis/api-client/endpoints';
 
 export function useRecordingSummary(
   recordingId: string,

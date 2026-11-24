@@ -1,4 +1,4 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client/schemas';
 import { useCreatePermittedModel } from './useCreatePermittedModel';
 
 export function useEnableModel() {

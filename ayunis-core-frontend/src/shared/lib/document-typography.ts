@@ -1,5 +1,5 @@
 import './document-fonts.css';
-import type { DocumentTypographyDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { DocumentTypographyDto } from '@ayunis/api-client/schemas';
 
 export type DocumentTypography = DocumentTypographyDto;
 export type DocumentFontFamily = NonNullable<DocumentTypography['fontFamily']>;

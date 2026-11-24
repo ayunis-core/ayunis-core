@@ -35,7 +35,7 @@ function skill(id: string, name: string) {
   };
 }
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   skillsControllerUpdate: updateSkill,
   getSkillsControllerFindAllQueryKey: (params: unknown) => ['/skills', params],
   getSkillsControllerFindOneQueryKey: (id: string) => [`/skills/${id}`],

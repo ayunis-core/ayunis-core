@@ -6,7 +6,7 @@ const CHART_PALETTE = [
   'var(--chart-5)',
 ];
 
-import type { ProviderTimeSeriesRowDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ProviderTimeSeriesRowDto } from '@ayunis/api-client/schemas';
 
 export interface ProviderChartData {
   chartData: Array<Record<string, string | number>>;

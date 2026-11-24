@@ -9,7 +9,7 @@ import {
   useIsThreadRunActive,
 } from '@/features/thread-run';
 import { rememberChatItem } from '@/features/outlook-tools';
-import { getActiveRunsControllerFindActiveQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { getActiveRunsControllerFindActiveQueryKey } from '@ayunis/api-client/endpoints';
 import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
 import { EmbeddedContext } from '@/shared/contexts/embedded/embeddedContext';
 import type { Message } from '@/pages/chat/model/openapi';
@@ -20,7 +20,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 const request = vi.hoisted(() => vi.fn().mockResolvedValue([]));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 
 const threadId = '00000000-0000-0000-0000-000000000001';
 const otherThreadId = '00000000-0000-0000-0000-000000000002';

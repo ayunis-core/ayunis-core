@@ -10,7 +10,7 @@ import {
 import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
 import { Textarea } from '@ayunis/ui/components/textarea';
-import type { MemoryEntryResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { MemoryEntryResponseDto } from '@ayunis/api-client/schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 
 const MEMORY_CONTENT_MAX_LENGTH = 2000;

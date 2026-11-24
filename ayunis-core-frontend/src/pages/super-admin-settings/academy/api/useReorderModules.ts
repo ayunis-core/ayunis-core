@@ -5,7 +5,7 @@ import { showError } from '@/shared/lib/toast';
 import {
   useSuperAdminAcademyCourseModulesControllerReorderCourseModules,
   getSuperAdminAcademyChaptersControllerGetChaptersQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 
 export function useReorderModules() {

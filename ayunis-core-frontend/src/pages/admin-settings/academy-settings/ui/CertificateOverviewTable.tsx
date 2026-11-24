@@ -21,7 +21,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { FileDown, Loader2, Users } from 'lucide-react';
-import type { OrgCertificateStatusResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { OrgCertificateStatusResponseDto } from '@ayunis/api-client/schemas';
 import { formatDate } from '@/shared/lib/format-date';
 import { CertificateStatusBadge } from './CertificateStatusBadge';
 

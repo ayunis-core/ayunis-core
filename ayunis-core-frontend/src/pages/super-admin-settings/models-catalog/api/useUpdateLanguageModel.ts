@@ -8,7 +8,7 @@ import {
   getModelsControllerGetOrgPermittedLanguageModelsQueryKey,
   getModelsControllerGetAvailableLanguageModelsQueryKey,
   type UpdateLanguageModelRequestDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useRouter } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';

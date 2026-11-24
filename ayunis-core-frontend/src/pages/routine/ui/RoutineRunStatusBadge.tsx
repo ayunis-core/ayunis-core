@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import type { Routine } from '@/features/routines';
-import { RoutineRunStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { RoutineRunStatus } from '@ayunis/api-client/schemas';
 
 /** The last run status next to the routine name, visible on every tab. */
 export function RoutineRunStatusBadge({

@@ -5,7 +5,7 @@ import {
   getSuperAdminOrgsControllerGetOrgByIdQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionHistoryQueryKey,
   getSuperAdminSubscriptionsControllerGetSubscriptionQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';

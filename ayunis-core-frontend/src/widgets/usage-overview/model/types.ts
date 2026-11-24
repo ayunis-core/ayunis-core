@@ -4,7 +4,7 @@ import type {
   ModelDistributionResponseDto,
   ProviderUsageChartResponseDto,
   UserUsageResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 /** Current-month credit budget summary (already derived for display). */
 export interface CreditUsageView {

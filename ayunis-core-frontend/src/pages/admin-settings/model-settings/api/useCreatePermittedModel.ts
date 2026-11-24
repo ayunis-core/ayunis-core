@@ -6,7 +6,7 @@ import {
   getModelsDefaultsControllerGetUserSpecificDefaultModelQueryKey,
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   type ModelWithConfigResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import type { Model } from '@/pages/admin-settings/model-settings/model/openapi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';

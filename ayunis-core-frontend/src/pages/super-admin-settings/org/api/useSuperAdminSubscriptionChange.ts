@@ -1,5 +1,5 @@
-import type { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@/shared/api';
-import { useSuperAdminSubscriptionsControllerChangeSubscription } from '@/shared/api';
+import type { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@ayunis/api-client';
+import { useSuperAdminSubscriptionsControllerChangeSubscription } from '@ayunis/api-client';
 import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

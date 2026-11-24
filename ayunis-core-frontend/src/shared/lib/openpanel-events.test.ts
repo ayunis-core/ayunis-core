@@ -1,5 +1,5 @@
 import { afterEach, assertType, describe, expect, it, vi } from 'vitest';
-import type { GetThreadResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 import {
   threadInteractionContext,
   trackOpenPanelEvent,

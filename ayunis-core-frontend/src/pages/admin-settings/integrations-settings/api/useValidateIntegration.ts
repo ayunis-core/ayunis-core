@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { showSuccess, showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useMcpIntegrationsControllerValidate } from '@/shared/api/generated/ayunisCoreAPI';
+import { useMcpIntegrationsControllerValidate } from '@ayunis/api-client/endpoints';
 import type { McpIntegration } from '@/pages/admin-settings/integrations-settings/model/types';
 import { resolveValidateIntegrationErrorMessage } from '@/pages/admin-settings/integrations-settings/lib/resolve-validate-integration-error-message';
 import extractErrorData from '@/shared/api/extract-error-data';

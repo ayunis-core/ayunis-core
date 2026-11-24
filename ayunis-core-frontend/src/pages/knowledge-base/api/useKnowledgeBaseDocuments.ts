@@ -1,4 +1,4 @@
-import { useKnowledgeBasesControllerListDocuments } from '@/shared/api/generated/ayunisCoreAPI';
+import { useKnowledgeBasesControllerListDocuments } from '@ayunis/api-client/endpoints';
 import {
   isSourcePending,
   useProcessingPollInterval,

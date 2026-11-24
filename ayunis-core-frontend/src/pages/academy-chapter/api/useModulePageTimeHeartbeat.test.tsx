@@ -6,7 +6,7 @@ import { useModulePageTimeHeartbeat } from './useModulePageTimeHeartbeat';
 
 const { recordHeartbeat } = vi.hoisted(() => ({ recordHeartbeat: vi.fn() }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   academyProgressControllerRecordModuleHeartbeat: recordHeartbeat,
   getAcademyProgressControllerGetProgressQueryKey: () => ['/academy/progress'],
 }));

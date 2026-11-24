@@ -1,7 +1,7 @@
 import {
   getNotificationsControllerFindAllQueryKey,
   useNotificationsControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { ROUTINE_ITEMS_PER_PAGE } from '@/pages/routine/model/constants';
 
 export function useRoutineNotifications(routineId: string, page: number) {

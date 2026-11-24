@@ -1,4 +1,4 @@
-import type { RecordingStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RecordingStatus } from '@ayunis/api-client/schemas';
 
 const PROCESSING_POLL_MS = 5000;
 

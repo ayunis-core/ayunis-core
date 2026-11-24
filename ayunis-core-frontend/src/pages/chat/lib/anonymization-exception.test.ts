@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PiiWhitelistEntryDto } from '@/shared/api';
+import type { PiiWhitelistEntryDto } from '@ayunis/api-client';
 import {
   isExceptionAccepted,
   isWordExempt,

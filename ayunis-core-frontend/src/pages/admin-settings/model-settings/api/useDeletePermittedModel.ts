@@ -7,7 +7,7 @@ import {
   getModelsControllerGetPermittedLanguageModelsQueryKey,
   getThreadsControllerFindAllQueryKey,
   type ModelWithConfigResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { modelModeQueryKeys } from './modelModeQueryKeys';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';

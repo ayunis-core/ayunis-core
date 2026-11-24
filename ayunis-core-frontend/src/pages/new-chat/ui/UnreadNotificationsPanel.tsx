@@ -22,7 +22,7 @@ import {
 import type {
   NotificationResponseDto,
   NotificationType,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import { useUnreadNotifications } from '@/pages/new-chat/api/useUnreadNotifications';
 import { useViewportMaxHeight } from '@/pages/new-chat/lib/useViewportMaxHeight';

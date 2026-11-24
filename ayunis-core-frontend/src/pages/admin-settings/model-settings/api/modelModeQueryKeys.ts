@@ -1,7 +1,7 @@
 import {
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   getModelModesControllerGetModelModesQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { getModelModeDefaultQueryKey } from '@/features/model-mode-defaults';
 
 /** Which modes are available, and the model each resolves to, follow the org's model access. */

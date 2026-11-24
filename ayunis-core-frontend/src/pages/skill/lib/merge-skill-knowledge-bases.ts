@@ -1,4 +1,4 @@
-import type { KnowledgeBaseResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { KnowledgeBaseResponseDto } from '@ayunis/api-client/schemas';
 
 /**
  * Merges the viewer's accessible knowledge bases with the ones assigned to the

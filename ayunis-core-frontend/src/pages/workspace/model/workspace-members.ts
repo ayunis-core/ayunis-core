@@ -1,8 +1,8 @@
 import type {
   WorkspaceMemberResponseDto,
   WorkspaceRolePermissionSetDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { UpdateWorkspaceMemberRoleDtoRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
+import { UpdateWorkspaceMemberRoleDtoRole } from '@ayunis/api-client/schemas';
 import type { MemberRoleTranslation } from '@/widgets/member-role-select';
 import type { WorkspaceAccess } from '@/features/workspaces';
 

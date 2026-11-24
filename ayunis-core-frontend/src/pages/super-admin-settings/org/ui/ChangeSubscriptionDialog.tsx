@@ -20,9 +20,9 @@ import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import { ScrollArea } from '@ayunis/ui/components/scroll-area';
 import { SubscriptionFormFields } from '@/widgets/billing';
-import { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@/shared/api';
+import { ChangeSubscriptionRequestDtoOldSubscriptionDisposition } from '@ayunis/api-client';
 import { useTranslation } from 'react-i18next';
-import useSuperAdminSubscriptionChange from '../api/useSuperAdminSubscriptionChange';
+import useSuperAdminSubscriptionChange from '@/pages/super-admin-settings/org/api/useSuperAdminSubscriptionChange';
 
 interface ChangeSubscriptionDialogProps {
   trigger: React.ReactNode;

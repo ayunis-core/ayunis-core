@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { academyAccessControllerExportOrgCertificates } from '@/shared/api';
-import type { CertificateValidityStatus } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { academyAccessControllerExportOrgCertificates } from '@ayunis/api-client';
+import type { CertificateValidityStatus } from '@ayunis/api-client/schemas';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';

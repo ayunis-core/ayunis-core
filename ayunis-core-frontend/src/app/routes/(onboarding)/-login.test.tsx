@@ -6,7 +6,7 @@ const { me } = vi.hoisted(() => ({ me: vi.fn() }));
 
 vi.mock('@/pages/auth/login', () => ({ default: () => null }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   authenticationControllerMe: me,
   getAuthenticationControllerMeQueryKey: () => ['/auth/me'],
 }));

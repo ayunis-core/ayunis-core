@@ -5,7 +5,7 @@ import {
   getRoutinesControllerFindAllQueryKey,
   getThreadsControllerFindAllQueryKey,
   useRoutinesControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { routinesRefetchInterval } from '@/features/routines';
 
 /**

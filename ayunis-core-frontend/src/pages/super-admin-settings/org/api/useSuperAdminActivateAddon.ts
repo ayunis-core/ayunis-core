@@ -1,8 +1,8 @@
 import {
   useSuperAdminAddonsControllerActivate,
   getSuperAdminAddonsControllerListQueryKey,
-} from '@/shared/api';
-import type { AddonType } from '@/shared/api';
+} from '@ayunis/api-client';
+import type { AddonType } from '@ayunis/api-client';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { useQueryClient } from '@tanstack/react-query';

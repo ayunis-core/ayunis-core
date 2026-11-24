@@ -18,7 +18,7 @@ import { useConfirmation } from '@/widgets/confirmation-modal';
 import { SearchPagination } from '@/widgets/pagination';
 import { ChatListItem } from '@/shared/ui/chat-list-item';
 import { PinButton } from '@/shared/ui/pin-button';
-import type { GetThreadsResponseDtoItem } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
 
 interface WorkspaceChatsTabProps {
   chats: GetThreadsResponseDtoItem[];

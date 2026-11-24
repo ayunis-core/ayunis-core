@@ -6,7 +6,7 @@ import {
   getTeamsControllerGetTeamQueryKey,
   teamMembersControllerListTeamMembers,
   getTeamMembersControllerListTeamMembersQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 const TEAM_MEMBERS_PER_PAGE = 50;
 

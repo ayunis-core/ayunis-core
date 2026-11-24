@@ -1,5 +1,5 @@
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
-import { useTeamsControllerGetTeamRolePermissions } from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamsControllerGetTeamRolePermissions } from '@ayunis/api-client/endpoints';
 
 /**
  * What each team role grants within the team. The role matrix is edited in

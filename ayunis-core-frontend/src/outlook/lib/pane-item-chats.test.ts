@@ -1,12 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppRouter } from '@/app/app-router';
-import { getThreadsControllerCreateMutationOptions } from '@/shared/api/generated/ayunisCoreAPI';
+import { getThreadsControllerCreateMutationOptions } from '@ayunis/api-client/endpoints';
 import { createItemChats } from './item-chats';
 import { startPaneItemChats } from './pane-item-chats';
 
 const request = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 
 beforeEach(() => {
   window.localStorage.clear();

@@ -6,8 +6,8 @@ import {
   invitesControllerGetInvites,
   getUserControllerGetUsersInOrganizationQueryKey,
   userControllerGetUsersInOrganization,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import { InvitesSortField, OrgUsersSortField } from '@/shared/api';
+} from '@ayunis/api-client/endpoints';
+import { InvitesSortField, OrgUsersSortField } from '@ayunis/api-client';
 import { sortFieldSchema, sortOrderSchema } from '@/shared/lib/table-sort';
 import { searchParamString } from '@/shared/lib/search-params';
 

@@ -9,7 +9,7 @@ import {
 import { Button } from '@ayunis/ui/components/button';
 import { Badge } from '@ayunis/ui/components/badge';
 import type { TFunction } from 'i18next';
-import type { SubscriptionResponseDto } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 
 export interface SubscriptionCancellationActions {

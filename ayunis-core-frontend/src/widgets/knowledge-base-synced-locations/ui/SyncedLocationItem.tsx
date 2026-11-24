@@ -29,7 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import type { SyncedLocationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { SyncedLocationResponseDto } from '@ayunis/api-client/schemas';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { syncedLocationLabel } from '@/widgets/knowledge-base-synced-locations/lib/synced-location-label';

@@ -12,11 +12,11 @@ import { UsersSearchWidget } from '@/widgets/users-search/ui/UsersSearchWidget';
 import type {
   AcademyAccessMode,
   CertificateValidityStatus,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import {
   ALL_STATUSES_FILTER_VALUE,
   certificateStatusOptions,
-} from '../model/statuses';
+} from '@/pages/admin-settings/academy-settings/model/statuses';
 
 interface CertificateOverviewFiltersProps {
   search?: string;

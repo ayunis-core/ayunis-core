@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AxiosError } from 'axios';
-import { academyAccessControllerGetOrgMemberCertificate } from '@/shared/api';
+import { academyAccessControllerGetOrgMemberCertificate } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { saveBlobAs } from '@/shared/lib/save-blob-as';
 import { showError } from '@/shared/lib/toast';

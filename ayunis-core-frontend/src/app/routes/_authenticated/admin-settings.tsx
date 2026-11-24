@@ -2,7 +2,7 @@ import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
 import {
   getMyPermissionsControllerGetMineQueryOptions,
   getTeamsControllerListMyTeamsQueryOptions,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import {
   allowedSettingsSections,
   createAuthorization,

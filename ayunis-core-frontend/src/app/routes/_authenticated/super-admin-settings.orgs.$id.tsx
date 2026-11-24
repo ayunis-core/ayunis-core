@@ -14,7 +14,7 @@ import {
   getSuperAdminTrialsControllerGetTrialByOrgIdQueryKey,
   InvitesSortField,
   OrgUsersSortField,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { sortFieldSchema, sortOrderSchema } from '@/shared/lib/table-sort';
 import SuperAdminSettingsOrgPage from '@/pages/super-admin-settings/org';
 import { toSubscriptionHistoryItem } from '@/pages/super-admin-settings/org/lib/subscription-history';

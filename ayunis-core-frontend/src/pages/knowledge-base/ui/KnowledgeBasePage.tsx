@@ -3,7 +3,7 @@ import type {
   KnowledgeBaseResponseDto,
   ShareResponseDto,
   MyTeamResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import { ConfigurationTabs } from '@/widgets/shares-tab';
@@ -30,7 +30,7 @@ import {
   knowledgeBasesControllerUpdate,
   getKnowledgeBasesControllerFindAllQueryKey,
   getKnowledgeBasesControllerFindOneQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import {
   OwnerBadge,

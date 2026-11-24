@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ReleaseNoteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ReleaseNoteResponseDto } from '@ayunis/api-client/schemas';
 import type * as ReleaseNotes from '@/features/release-notes';
 import ReleaseNotePage from './ReleaseNotePage';
 

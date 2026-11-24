@@ -9,7 +9,7 @@ import {
   getCreditLimitsControllerGetUserLimitsQueryKey,
   getCreditLimitsControllerGetTeamLimitsQueryKey,
   useSuperAdminOrgUsageVisibilityControllerSetUsageVisibility,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import extractErrorData from '@/shared/api/extract-error-data';
 

@@ -1,25 +1,25 @@
-import { useModelsControllerGetPermittedLanguageModels } from '@/shared/api/generated/ayunisCoreAPI';
+import { useModelsControllerGetPermittedLanguageModels } from '@ayunis/api-client/endpoints';
 
 export function usePermittedModels() {
   const {
     data: permittedModels,
     isLoading,
-    error,
+    isError,
   } = useModelsControllerGetPermittedLanguageModels();
 
   const getPlaceholder = (): string => {
     if (isLoading) return 'Loading models...';
-    if (error) return 'Error loading models';
+    if (isError) return 'Error loading models';
     if (!permittedModels) return 'No models available';
     return 'Select a model';
   };
 
-  const isDisabled = isLoading || !!error || !permittedModels;
+  const isDisabled = isLoading || isError || !permittedModels;
 
   return {
     models: permittedModels ?? [],
     isLoading,
-    error: !!error,
+    error: isError,
     placeholder: getPlaceholder(),
     isDisabled,
   };

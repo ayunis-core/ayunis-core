@@ -5,7 +5,7 @@ const { isCloud } = vi.hoisted(() => ({ isCloud: vi.fn() }));
 
 vi.mock('@/pages/auth/register', () => ({ default: () => null }));
 
-vi.mock('@/shared/api', () => ({ appControllerIsCloud: isCloud }));
+vi.mock('@ayunis/api-client', () => ({ appControllerIsCloud: isCloud }));
 
 const { Route } = await import('./register');
 

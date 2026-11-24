@@ -1,4 +1,4 @@
-import type { InstallMarketplaceIntegrationDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { InstallMarketplaceIntegrationDto } from '@ayunis/api-client/schemas';
 import {
   hasOAuthConfiguration,
   type McpOAuthClientInput,

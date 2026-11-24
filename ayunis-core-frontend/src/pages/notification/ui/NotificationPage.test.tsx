@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CreateThreadOrigin } from '@/features/chat-initiation';
-import type { NotificationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { NotificationResponseDto } from '@ayunis/api-client/schemas';
 import NotificationPage from './NotificationPage';
 
 const mocks = vi.hoisted(() => ({ canManageRoutines: true }));

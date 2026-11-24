@@ -19,7 +19,7 @@ vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: vi.fn() }),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getSuperAdminCatalogModelsControllerGetAllCatalogModelsQueryKey: () => [
     'catalog-models',
   ],

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { defaultStringifySearch } from '@tanstack/react-router';
 import SettingsLayout from '@/pages/admin-settings/admin-settings-layout';
-import type { TeamResponseDto } from '@/shared/api';
+import type { TeamResponseDto } from '@ayunis/api-client';
 import { TeamModelsTab } from './TeamModelsTab';
 
 interface TeamModelSettingsPageProps {

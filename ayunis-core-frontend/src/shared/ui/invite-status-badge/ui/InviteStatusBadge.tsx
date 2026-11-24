@@ -1,6 +1,6 @@
 import { Badge } from '@ayunis/ui/components/badge';
 import { useTranslation } from 'react-i18next';
-import type { InviteResponseDtoStatus } from '@/shared/api';
+import type { InviteResponseDtoStatus } from '@ayunis/api-client';
 
 type BadgeVariant = 'destructive' | 'outline' | 'secondary';
 

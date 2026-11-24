@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import {
   useTeamsControllerUpdateTeam,
   getTeamsControllerGetTeamQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { TeamResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { TeamResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQueries';

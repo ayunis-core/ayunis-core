@@ -4,11 +4,11 @@ import {
   useMemoryControllerDelete,
   useMemoryControllerFindAll,
   useMemoryControllerUpsert,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   MemoryEntryResponseDto,
   MemoryResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';

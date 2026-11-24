@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { getModelModesControllerGetModelModesQueryKey } from '@/shared/api';
+import { getModelModesControllerGetModelModesQueryKey } from '@ayunis/api-client';
 import { useModelModes } from './useModelModes';
 
 const fetchModes = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/api', async (importOriginal) => ({
+vi.mock('@ayunis/api-client', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   modelModesControllerGetModelModes: fetchModes,
 }));

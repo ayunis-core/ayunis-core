@@ -1,4 +1,4 @@
-import type { ArtifactVersionResponseDto } from '@/shared/api';
+import type { ArtifactVersionResponseDto } from '@ayunis/api-client';
 import { Button } from '@ayunis/ui/components/button';
 import { ChevronDown, ChevronRight, History, RotateCcw } from 'lucide-react';
 import { useMemo, useState } from 'react';

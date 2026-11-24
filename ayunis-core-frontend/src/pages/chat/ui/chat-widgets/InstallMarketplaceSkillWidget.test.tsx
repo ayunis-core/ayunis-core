@@ -77,7 +77,7 @@ vi.mock('@/features/permissions', () => ({
   }) => <>{permissions.granted.includes(permission) ? children : fallback}</>,
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   skillsControllerInstallFromMarketplace: installSkill,
   useMarketplaceControllerGetSkill: () => ({
     data: catalogue.state === 'success' ? CATALOGUE_ENTRY : undefined,

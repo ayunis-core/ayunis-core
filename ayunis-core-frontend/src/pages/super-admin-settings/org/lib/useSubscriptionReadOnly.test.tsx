@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSubscriptionReadOnly } from './useSubscriptionReadOnly';
 
 const api = vi.hoisted(() => ({ useFeatureToggles: vi.fn() }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useAppControllerFeatureToggles: api.useFeatureToggles,
 }));
 

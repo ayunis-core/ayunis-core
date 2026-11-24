@@ -11,7 +11,7 @@ const { configureConnection, setIdp } = vi.hoisted(() => ({
   setIdp: vi.fn(),
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getSuperAdminSsoConnectionsControllerGetQueryKey: () => ['sso'],
   superAdminSsoConnectionsControllerConfigure: configureConnection,
   superAdminSsoConnectionsControllerSetIdp: setIdp,

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { RunErrorResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { RunErrorResponseDto } from '@ayunis/api-client/schemas';
 import { useRunErrorHandler } from './useRunErrorHandler';
 
 const { showError } = vi.hoisted(() => ({ showError: vi.fn() }));

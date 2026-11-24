@@ -28,7 +28,7 @@ const { invalidateRouter, mutate, mutationCallbacks } = vi.hoisted(() => ({
   mutationCallbacks: { current: undefined as MutationCallbacks | undefined },
 }));
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getFavoritesControllerFindAllQueryKey: () => ['favorites'],
   getThreadsControllerFindAllQueryKey: () => ['threads'],
   useThreadsControllerDelete: (options: { mutation: MutationCallbacks }) => {

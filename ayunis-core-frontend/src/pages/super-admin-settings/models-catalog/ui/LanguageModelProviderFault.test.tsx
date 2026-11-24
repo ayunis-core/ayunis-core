@@ -4,7 +4,7 @@ import {
   LanguageModelResponseDtoProvider,
   LanguageModelResponseDtoType,
   type LanguageModelResponseDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { CreateLanguageModelDialog } from './CreateLanguageModelDialog';
 import { EditLanguageModelDialog } from './EditLanguageModelDialog';
 

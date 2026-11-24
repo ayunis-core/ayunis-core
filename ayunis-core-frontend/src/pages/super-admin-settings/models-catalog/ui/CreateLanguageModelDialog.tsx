@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useCreateLanguageModel } from '@/pages/super-admin-settings/models-catalog/api/useCreateLanguageModel';
 import type { LanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/model/types';
 import { normalizeLanguageModelFormData } from '@/pages/super-admin-settings/models-catalog/lib/normalizeLanguageModelFormData';
-import type { CreateLanguageModelRequestDtoProvider } from '@/shared/api';
+import type { CreateLanguageModelRequestDtoProvider } from '@ayunis/api-client';
 import { LANGUAGE_MODEL_PROVIDERS } from '@/features/models';
 import { ModelFormDialog } from './ModelFormDialog';
 import { LanguageModelCapabilityFields } from './LanguageModelCapabilityFields';

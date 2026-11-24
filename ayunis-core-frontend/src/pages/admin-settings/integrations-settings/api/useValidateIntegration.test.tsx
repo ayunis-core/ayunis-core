@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   showSuccess: vi.fn(),
 }));
 
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useMcpIntegrationsControllerValidate: (options: {
     mutation: {
       onSuccess: (data: {

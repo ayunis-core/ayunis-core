@@ -1,4 +1,4 @@
-import { useSuperAdminSubscriptionsControllerCreateSubscription } from '@/shared/api';
+import { useSuperAdminSubscriptionsControllerCreateSubscription } from '@ayunis/api-client';
 import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

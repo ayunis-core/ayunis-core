@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   abort: vi.fn(),
   handleError: vi.fn(),
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   getThreadsControllerFindOneQueryKey: (id: string) => ['thread', id],
   threadSourcesControllerCreateUpload: mocks.createSession,
   threadSourcesControllerCompleteUpload: mocks.upload,
@@ -26,7 +26,7 @@ vi.mock('@/shared/api', () => ({
 vi.mock('@/shared/lib/source-upload/transfer-source-file', () => ({
   transferSourceFile: mocks.transfer,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   sourceUploadsControllerAbort: mocks.abort,
   getThreadsControllerFindOneQueryKey: (id: string) => ['thread', id],
   getThreadsControllerFindAllQueryKey: () => ['threads'],

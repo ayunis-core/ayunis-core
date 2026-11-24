@@ -1,7 +1,7 @@
 import {
   useThreadSourcesControllerRemoveSource,
   getThreadsControllerFindOneQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { showError } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';

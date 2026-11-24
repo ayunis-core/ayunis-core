@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AxiosError, AxiosHeaders, type AxiosRequestConfig } from 'axios';
-import schema from './openapi-schema.json';
-import endpointTemplates from './request-endpoint-templates.json';
+import schema from '@ayunis/api-client/openapi-schema.json';
+import endpointTemplates from '@ayunis/api-client/request-endpoint-templates.json';
 import { requestErrorDiagnostics } from './request-error-diagnostics';
 
 function failure(

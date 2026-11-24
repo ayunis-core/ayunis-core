@@ -7,8 +7,8 @@ import {
   useMfaControllerConfirm,
   useMfaControllerDisable,
   getMfaControllerGetStatusQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { MfaSetupResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { MfaSetupResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 

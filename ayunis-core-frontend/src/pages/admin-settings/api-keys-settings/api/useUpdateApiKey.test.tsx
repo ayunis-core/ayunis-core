@@ -3,12 +3,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { UseFormReturn } from 'react-hook-form';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { getApiKeyUsageControllerGetApiKeyUsageQueryKey } from '@/shared/api/generated/ayunisCoreAPI';
+import { getApiKeyUsageControllerGetApiKeyUsageQueryKey } from '@ayunis/api-client/endpoints';
 import type { EditApiKeyFormValues } from '@/pages/admin-settings/api-keys-settings/model/editApiKeyFormSchema';
 import { useUpdateApiKey } from './useUpdateApiKey';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ invalidate: vi.fn() }),
 }));

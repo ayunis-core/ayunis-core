@@ -3,7 +3,7 @@ import { TeamsSettingsPage } from '@/pages/admin-settings/teams-settings';
 import {
   teamsControllerListTeams,
   getTeamsControllerListTeamsQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export const Route = createFileRoute('/_authenticated/admin-settings/teams/')({
   component: RouteComponent,

@@ -1,6 +1,6 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
 import { OrgDefaultModelCardWidget } from '@/widgets/org-default-model-card/ui/OrgDefaultModelCardWidget';
-import { useSuperAdminManageOrgDefaultModel } from '../api/useSuperAdminManageOrgDefaultModel';
+import { useSuperAdminManageOrgDefaultModel } from '@/pages/super-admin-settings/org/api/useSuperAdminManageOrgDefaultModel';
 
 interface SuperAdminOrgDefaultModelCardProps {
   models: ModelWithConfigResponseDto[];

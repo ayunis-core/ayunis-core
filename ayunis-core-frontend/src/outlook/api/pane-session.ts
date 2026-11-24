@@ -1,9 +1,12 @@
 import config from '@/shared/config';
-import type { EmbeddedSession } from '@/shared/api/embedded-session';
+import {
+  createApiTransport,
+  type ApiTransport,
+} from '@ayunis/api-client/transport';
 import type {
   MeResponseDto,
   SessionTokensResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 // Outlook reloads the pane on every open, so the refresh token has to outlive
 // the page. In the cross-site iframe this storage is partitioned per
@@ -58,7 +61,9 @@ export class SessionExpiredError extends Error {
 
 export type SessionEndReason = 'expired' | 'signedOut';
 
-export interface PaneSession extends EmbeddedSession {
+export interface PaneSession {
+  readonly transport: ApiTransport;
+  signOut(this: void): Promise<void>;
   /** Resumes a stored session; null when the pane has never signed in. */
   restore(): Promise<MeResponseDto | null>;
   signIn(tokens: SessionTokensResponseDto): Promise<MeResponseDto>;
@@ -165,35 +170,20 @@ export function createPaneSession(
     if (accessToken === rejected) await refresh();
   }
 
-  async function authorizedRequest(
-    path: string,
-    init: RequestInit = {},
-  ): Promise<Response> {
-    const send = async () => {
-      const token = await currentAccessToken();
-      // Headers, not a spread: a caller's `Headers` instance has no own
-      // enumerable properties, so spreading it would drop every header.
-      const headers = new Headers(init.headers);
-      headers.set('Authorization', `Bearer ${token}`);
-      const response = await fetch(`${baseUrl}${path}`, {
-        ...init,
-        credentials: 'omit',
-        headers,
-      });
-      return { response, token };
-    };
-    const first = await send();
-    let response = first.response;
-    if (response.status === 401) {
-      await refreshRejected(first.token);
-      response = (await send()).response;
-    }
-    if (response.status === 401) throw expire();
-    return response;
-  }
+  const transport = createApiTransport({
+    baseUrl,
+    credentials: 'omit',
+    authorization: {
+      getHeader: async () => `Bearer ${await currentAccessToken()}`,
+      refresh: (header) => refreshRejected(header.replace(/^Bearer /, '')),
+      onFetchUnauthorized: () => {
+        throw expire();
+      },
+    },
+  });
 
   async function authorizedGet(path: string): Promise<Response> {
-    const response = await authorizedRequest(path);
+    const response = await transport.fetch(path);
     if (!response.ok) throw new Error(`GET ${path} failed: ${response.status}`);
     return response;
   }
@@ -225,8 +215,6 @@ export function createPaneSession(
       endListeners.add(listener);
       return () => endListeners.delete(listener);
     },
-    request: authorizedRequest,
-    accessToken: currentAccessToken,
-    refreshRejected,
+    transport,
   };
 }

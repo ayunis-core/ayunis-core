@@ -7,16 +7,16 @@ import {
   getKnowledgeBaseSyncedLocationsControllerListQueryKey,
   useKnowledgeBasesControllerListDocuments,
   useKnowledgeBaseSyncedLocationsControllerList,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import type {
   KnowledgeBaseDocumentListResponseDto,
   SyncedLocationListResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import { useRemoveSyncedLocation } from './useRemoveSyncedLocation';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

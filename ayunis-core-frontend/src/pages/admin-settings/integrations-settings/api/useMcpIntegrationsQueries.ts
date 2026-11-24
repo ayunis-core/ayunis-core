@@ -1,7 +1,7 @@
 import {
   useMcpIntegrationsControllerList,
   getMcpIntegrationsControllerListQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useMcpIntegrationsQueries() {
   const {

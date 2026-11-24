@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   getKnowledgeBasesControllerFindAllQueryKey,
   knowledgeBasesControllerCreate,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';

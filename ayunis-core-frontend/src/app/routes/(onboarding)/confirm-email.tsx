@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import z from 'zod';
-import { userControllerConfirmEmail } from '@/shared/api';
+import { userControllerConfirmEmail } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import EmailConfirmError from '@/pages/auth/email-confirm/ui/EmailConfirmError';
 import { searchParamString } from '@/shared/lib/search-params';

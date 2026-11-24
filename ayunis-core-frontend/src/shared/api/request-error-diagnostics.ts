@@ -1,5 +1,5 @@
 import axios, { isAxiosError, type AxiosRequestConfig } from 'axios';
-import endpointTemplates from './request-endpoint-templates.json';
+import endpointTemplates from '@ayunis/api-client/request-endpoint-templates.json';
 
 const methods = new Set([
   'GET',

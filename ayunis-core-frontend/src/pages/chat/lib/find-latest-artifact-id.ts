@@ -1,4 +1,4 @@
-import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
 
 type ArtifactSummary = Pick<
   ArtifactResponseDto,

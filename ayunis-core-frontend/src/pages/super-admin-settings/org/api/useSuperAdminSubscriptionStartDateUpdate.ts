@@ -1,7 +1,7 @@
 import {
   useSuperAdminSubscriptionsControllerUpdateStartDate,
   type UpdateStartDateDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { invalidateOrgSubscriptionQueries } from './invalidateOrgSubscriptionQueries';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';

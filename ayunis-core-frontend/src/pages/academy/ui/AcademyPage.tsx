@@ -21,8 +21,8 @@ import {
   useDownloadParticipationConfirmation,
 } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
-import type { AcademyChapterResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
-import { AcademyAccessMode } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { AcademyChapterResponseDto } from '@ayunis/api-client/schemas';
+import { AcademyAccessMode } from '@ayunis/api-client/schemas';
 import { AcademyChapterItem } from './AcademyChapterItem';
 
 interface AcademyPageProps {

@@ -14,7 +14,7 @@ vi.mock('@/widgets/chat-input/api/useKnowledgeBases', () => ({
     error: null,
   }),
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   useSkillsControllerFindAll: () => ({
     data: { data: [{ id: 'skill-1', name: 'Formal tone', isActive: true }] },
     isLoading: false,

@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   getReleaseNotesControllerCountUnreadQueryKey,
   getReleaseNotesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 /** Refreshes the product updates list and the bell's unread dot. */
 export function invalidateReleaseNoteQueries(queryClient: QueryClient): void {

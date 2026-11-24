@@ -1,4 +1,4 @@
-import type { UpdatePermittedModelDto } from '@/shared/api';
+import type { UpdatePermittedModelDto } from '@ayunis/api-client';
 
 /** Overwrites only the switches the update names; omitted ones stay as they are. */
 export function applyPolicyUpdate<

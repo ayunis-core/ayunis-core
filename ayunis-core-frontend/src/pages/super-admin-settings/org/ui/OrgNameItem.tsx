@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import type { SuperAdminOrgResponseDto } from '@/shared/api';
+import type { SuperAdminOrgResponseDto } from '@ayunis/api-client';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Form,

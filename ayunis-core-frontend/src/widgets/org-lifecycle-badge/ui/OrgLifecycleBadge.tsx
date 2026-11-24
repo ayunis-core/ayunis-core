@@ -1,6 +1,6 @@
 import { Badge } from '@ayunis/ui/components/badge';
 import { useTranslation } from 'react-i18next';
-import type { OrgLifecycleStatus } from '@/shared/api';
+import type { OrgLifecycleStatus } from '@ayunis/api-client';
 
 const VARIANT: Record<
   OrgLifecycleStatus,

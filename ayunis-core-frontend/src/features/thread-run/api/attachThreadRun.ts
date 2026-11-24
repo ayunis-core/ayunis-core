@@ -1,4 +1,4 @@
-import { apiFetch } from '@/shared/api/embedded-session';
+import { apiFetch } from '@ayunis/api-client/transport';
 
 /**
  * Opens the stream of the run in progress on a thread: the run so far, then

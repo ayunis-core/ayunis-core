@@ -6,7 +6,7 @@ import {
   OrgsSortField,
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   superAdminOrgsControllerGetAllOrgs,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { sortFieldSchema, sortOrderSchema } from '@/shared/lib/table-sort';
 import { searchParamString } from '@/shared/lib/search-params';
 

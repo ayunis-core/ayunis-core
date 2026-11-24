@@ -22,8 +22,8 @@ import {
   useComboboxAnchor,
 } from '@ayunis/ui/components/combobox';
 import { keepPreviousData } from '@tanstack/react-query';
-import { useTeamMembersControllerListTeamMembers } from '@/shared/api/generated/ayunisCoreAPI';
-import { useUserControllerGetUsersInOrganization } from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamMembersControllerListTeamMembers } from '@ayunis/api-client/endpoints';
+import { useUserControllerGetUsersInOrganization } from '@ayunis/api-client/endpoints';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
 import { useAddTeamMembers } from '@/pages/admin-settings/team-detail/api/useAddTeamMembers';
 

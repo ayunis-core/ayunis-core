@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
-import { AxiosError } from 'axios';
-import { axiosInstance } from '@/shared/api/client';
+import { AxiosError, type AxiosInstance } from 'axios';
+import { createApiTransport } from '@ayunis/api-client/transport';
+import { configureAppApi } from '@/shared/api/client';
 import { DeployGapBanner } from './DeployGapBanner';
 
 const translations: Record<string, string> = {
@@ -15,6 +16,8 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => translations[key] ?? key,
   }),
 }));
+
+let axiosInstance: AxiosInstance;
 
 function respondWith(statuses: number[]) {
   let calls = 0;
@@ -39,6 +42,12 @@ function respondWith(statuses: number[]) {
 describe(DeployGapBanner.name, () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    const transport = createApiTransport({
+      baseUrl: '/api',
+      credentials: 'include',
+    });
+    configureAppApi(transport);
+    axiosInstance = transport.axios;
   });
 
   afterEach(() => {

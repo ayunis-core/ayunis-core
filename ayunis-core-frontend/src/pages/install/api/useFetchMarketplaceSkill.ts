@@ -3,6 +3,6 @@ export {
   getMarketplaceControllerGetSkillQueryKey,
   getMarketplaceControllerGetSkillQueryOptions,
   useMarketplaceControllerGetSkill,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
-export type { MarketplaceSkillResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+export type { MarketplaceSkillResponseDto } from '@ayunis/api-client/schemas';

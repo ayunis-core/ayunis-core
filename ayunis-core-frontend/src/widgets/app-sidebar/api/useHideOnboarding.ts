@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import {
   onboardingControllerUpdateOnboarding,
   getOnboardingControllerGetOnboardingQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { OnboardingResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { OnboardingResponseDto } from '@ayunis/api-client/schemas';
 import { showError } from '@/shared/lib/toast';
 import { trackOnboardingChanges } from '@/widgets/onboarding';
 

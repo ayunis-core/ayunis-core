@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { NotificationType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { NotificationType } from '@ayunis/api-client/schemas';
 import { useUnreadNotifications } from './useUnreadNotifications';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 
 let client: QueryClient;
 let unreadRoutineHeadlines: string[];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { McpToolAllowanceResponseDto } from '@/shared/api';
+import type { McpToolAllowanceResponseDto } from '@ayunis/api-client';
 import { groupToolAllowancesByIntegration } from './group-tool-allowances';
 
 function allowance(

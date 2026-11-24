@@ -5,7 +5,7 @@ import {
   getWorkspaceMembersControllerListQueryKey,
   getWorkspacesControllerFindAllQueryKey,
   getWorkspacesControllerFindOneQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 /**
  * Refreshes the member list and the workspace itself: changing their own role

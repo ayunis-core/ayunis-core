@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConfirmation } from '@/widgets/confirmation-modal';
-import { useTeamMembersControllerRemoveTeamMember } from '@/shared/api/generated/ayunisCoreAPI';
+import { useTeamMembersControllerRemoveTeamMember } from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useInvalidateTeamMembership } from '@/pages/admin-settings/team-detail/api/useInvalidateTeamMembership';

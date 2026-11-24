@@ -3,7 +3,7 @@ import { recoverableErrorReport, reportError } from '@/shared/lib/appsignal';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { isDevEmbedded } from '@/shared/contexts/embedded/dev-embedded';
-import { setEmbeddedSession } from '@/shared/api/embedded-session';
+import { configureAppApi } from '@/shared/api/client';
 import { createPaneSession } from '@/outlook/api/pane-session';
 import {
   createOpenPanelScreenViewAnalytics,
@@ -31,7 +31,8 @@ if (document.documentElement.dataset.entry === 'outlook-pane') {
 
 function mountWeb(): void {
   const embedded = isDevEmbedded(import.meta.env.DEV, window.location.search);
-  if (embedded) setEmbeddedSession(createPaneSession());
+  const paneSession = embedded ? createPaneSession() : undefined;
+  configureAppApi(paneSession?.transport);
 
   const queryClient = createAppQueryClient();
   const router = createAppRouter(queryClient, embedded);
@@ -58,7 +59,12 @@ function mountWeb(): void {
     });
     root.render(
       <StrictMode>
-        <App router={router} queryClient={queryClient} embedded={embedded} />
+        <App
+          router={router}
+          queryClient={queryClient}
+          embedded={embedded}
+          onEmbeddedSignOut={paneSession?.signOut}
+        />
       </StrictMode>,
     );
   }

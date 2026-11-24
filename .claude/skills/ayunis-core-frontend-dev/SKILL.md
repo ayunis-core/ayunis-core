@@ -120,7 +120,7 @@ Keep `ui/` components focused on component logic. Calling hooks inside a compone
 After backend API changes, regenerate the client:
 
 ```bash
-pnpm run openapi:update  # Regenerates src/shared/api/generated/
+pnpm run openapi:update  # Regenerates packages/api-client/src/generated/
 ```
 
 **Never edit generated code manually** — it will be overwritten.

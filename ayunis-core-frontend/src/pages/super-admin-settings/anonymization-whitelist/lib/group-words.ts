@@ -1,5 +1,5 @@
-import type { GlobalPiiWhitelistWordDto } from '@/shared/api';
-import type { WordsByCategory } from '../model/types';
+import type { GlobalPiiWhitelistWordDto } from '@ayunis/api-client';
+import type { WordsByCategory } from '@/pages/super-admin-settings/anonymization-whitelist/model/types';
 
 export function groupWordsByCategory(
   words: GlobalPiiWhitelistWordDto[],

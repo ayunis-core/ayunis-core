@@ -1,8 +1,8 @@
 import {
   getReleaseNotesControllerFindAllQueryKey,
   useReleaseNotesControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { ReleaseNoteResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { ReleaseNoteResponseDto } from '@ayunis/api-client/schemas';
 
 export function useReleaseNotes(initialData: ReleaseNoteResponseDto[]) {
   const { data } = useReleaseNotesControllerFindAll({

@@ -3,7 +3,7 @@ import { RoutinesPage } from '@/pages/routines';
 import {
   getRoutinesControllerFindAllQueryKey,
   routinesControllerFindAll,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import { canManageRoutines } from './-manage-routines-access';
 import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 

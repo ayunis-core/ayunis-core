@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import {
   ConnectorStatus,
   type Microsoft365ConnectionTestResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 
 export type ShowConnectionTest = (
   result: Microsoft365ConnectionTestResponseDto,

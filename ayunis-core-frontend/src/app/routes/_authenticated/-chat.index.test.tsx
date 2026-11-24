@@ -18,7 +18,7 @@ vi.mock('@/pages/new-chat', () => ({
     queryFn: mocks.getOnboardingStage,
   }),
 }));
-vi.mock('@/shared/api', () => ({
+vi.mock('@ayunis/api-client', () => ({
   orgChatSettingsControllerGetChatStartDefaults: mocks.getChatStartDefaults,
   getOrgChatSettingsControllerGetChatStartDefaultsQueryKey: () => [
     'chat-start-defaults',

@@ -1,4 +1,4 @@
-import { useUsageControllerGetCreditUsage } from '@/shared/api';
+import { useUsageControllerGetCreditUsage } from '@ayunis/api-client';
 import { computeUsagePercent } from '@/shared/lib/computeUsagePercent';
 
 export function useCreditUsage() {

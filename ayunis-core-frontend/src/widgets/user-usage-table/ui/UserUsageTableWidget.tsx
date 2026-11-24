@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { UserUsageDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { UserUsageDto } from '@ayunis/api-client/schemas';
 import { UserUsageTableContent } from './UserUsageTableContent';
 import { UserUsageTableLoading } from './UserUsageTableLoading';
 import { UserUsageTableError } from './UserUsageTableError';

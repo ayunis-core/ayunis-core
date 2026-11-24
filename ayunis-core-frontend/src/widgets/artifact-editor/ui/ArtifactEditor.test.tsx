@@ -2,7 +2,7 @@ import { createRef } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as TiptapReact from '@tiptap/react';
-import type { ArtifactResponseDto } from '@/shared/api';
+import type { ArtifactResponseDto } from '@ayunis/api-client';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { ArtifactEditor } from './ArtifactEditor';
 

@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import {
   useMfaLoginControllerSetup,
   useMfaLoginControllerConfirmSetup,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { MfaSetupResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { MfaSetupResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import { rememberSuccessfulSsoLogin } from '@/features/sso';

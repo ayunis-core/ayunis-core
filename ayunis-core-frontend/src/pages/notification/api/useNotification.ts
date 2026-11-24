@@ -1,7 +1,7 @@
 import {
   getNotificationsControllerFindOneQueryKey,
   useNotificationsControllerFindOne,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 
 export function useNotification(notificationId: string) {
   const { data, isLoading, error } = useNotificationsControllerFindOne(

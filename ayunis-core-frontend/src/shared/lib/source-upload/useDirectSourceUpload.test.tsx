@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({ transfer: vi.fn(), abort: vi.fn() }));
 vi.mock('./transfer-source-file', () => ({
   transferSourceFile: mocks.transfer,
 }));
-vi.mock('@/shared/api/generated/ayunisCoreAPI', () => ({
+vi.mock('@ayunis/api-client/endpoints', () => ({
   sourceUploadsControllerAbort: mocks.abort,
 }));
 const file = new File(['Budget'], 'Budget.pdf');

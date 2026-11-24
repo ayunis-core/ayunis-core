@@ -1,4 +1,4 @@
-import { useKnowledgeBasesControllerFindAll } from '@/shared/api/generated/ayunisCoreAPI';
+import { useKnowledgeBasesControllerFindAll } from '@ayunis/api-client/endpoints';
 import { workspaceKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
 
 interface WorkspaceKnowledgeBaseListOptions {

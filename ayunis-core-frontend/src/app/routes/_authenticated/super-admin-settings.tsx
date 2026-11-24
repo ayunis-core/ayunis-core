@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
-import { MeResponseDtoSystemRole } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import { MeResponseDtoSystemRole } from '@ayunis/api-client/schemas';
 
 function SuperAdminSettingsLayout() {
   return <Outlet />;

@@ -18,7 +18,7 @@ import type {
   UserResponseDto,
   UserResponseDtoRole,
   PaginationDto,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { formatDate } from '@/shared/lib/format-date';
 import CreateUserDialog from './CreateUserDialog';
 import SuperAdminUsersSearch from './SuperAdminUsersSearch';
@@ -29,7 +29,7 @@ import { BulkInviteDialog } from '@/features/bulk-user-invite';
 import { Button } from '@ayunis/ui/components/button';
 import { Upload } from 'lucide-react';
 import { useState } from 'react';
-import type { OrgUsersSortField } from '@/shared/api';
+import type { OrgUsersSortField } from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 

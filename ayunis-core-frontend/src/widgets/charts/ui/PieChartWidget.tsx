@@ -1,5 +1,5 @@
 // Types
-import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@ayunis/api-client/schemas';
 import type {
   PieDataPoint,
   TransformedPieDataPoint,

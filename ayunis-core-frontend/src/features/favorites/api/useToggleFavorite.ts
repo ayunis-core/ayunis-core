@@ -6,8 +6,8 @@ import {
   getFavoritesControllerToggleMutationKey,
   useFavoritesControllerToggle,
   type FavoritesControllerToggleMutationVariables,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { ToggleFavoriteDtoReferenceType } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { ToggleFavoriteDtoReferenceType } from '@ayunis/api-client/schemas';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { showError } from '@/shared/lib/toast';
 import { isFavorite, type Favorite } from './useFavorites';

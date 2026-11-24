@@ -7,7 +7,7 @@ import {
   ConnectorStatus,
   Microsoft365ConnectionTestOutcome,
   type Microsoft365ConnectionTestResponseDto,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import type { Microsoft365ConnectorFormValues } from '@/pages/admin-settings/microsoft-365-connector/model/microsoft365ConnectorFormSchema';
 import { useSaveMicrosoft365Connector } from '@/pages/admin-settings/microsoft-365-connector/api/useSaveMicrosoft365Connector';
 import { useTestMicrosoft365Connection } from '@/pages/admin-settings/microsoft-365-connector/api/useTestMicrosoft365Connection';
@@ -16,7 +16,7 @@ import { useLatestConnectionTest } from './useLatestConnectionTest';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
-vi.mock('@/shared/api/client', () => ({ customAxiosInstance: request }));
+vi.mock('@ayunis/api-client/request', () => ({ customAxiosInstance: request }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

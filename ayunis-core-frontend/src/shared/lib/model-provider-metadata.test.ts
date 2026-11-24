@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ModelProviderInfoResponseDtoHostedIn,
   ModelProviderInfoResponseDtoProvider,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import {
   getFlagCodeByProvider,
   getHostedInByProvider,

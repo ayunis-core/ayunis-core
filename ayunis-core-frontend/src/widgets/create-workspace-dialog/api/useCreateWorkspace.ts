@@ -6,8 +6,8 @@ import {
   useWorkspacesControllerCreate,
   getWorkspacesControllerFindAllQueryKey,
   getFavoritesControllerFindAllQueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { WorkspaceResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { WorkspaceResponseDto } from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 import { setValidationErrors } from '@/shared/lib/set-validation-errors';

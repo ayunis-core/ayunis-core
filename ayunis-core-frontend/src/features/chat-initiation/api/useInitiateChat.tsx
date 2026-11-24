@@ -8,7 +8,7 @@ import {
   threadSourcesControllerCompleteUpload,
   threadSourcesControllerCreateUpload,
   useThreadsControllerCreate,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { uploadSourceFile } from '@/shared/lib/source-upload';
 import { showError } from '@/shared/lib/toast';
@@ -34,9 +34,9 @@ import type {
   CreateThreadDto,
   GetThreadResponseDto,
   ModelMode,
-} from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/schemas';
 import extractErrorData from '@/shared/api/extract-error-data';
-import type { SourceResponseDtoType } from '@/shared/api';
+import type { SourceResponseDtoType } from '@ayunis/api-client';
 
 /** Compose slide duration (matches --new-chat-settle-duration in CSS) */
 const NEW_CHAT_SETTLE_MS = 1450;

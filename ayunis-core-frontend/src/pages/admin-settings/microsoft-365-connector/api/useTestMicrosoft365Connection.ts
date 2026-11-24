@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useConnectorsControllerTestMicrosoft365,
   getConnectorsControllerGetMicrosoft365QueryKey,
-} from '@/shared/api/generated/ayunisCoreAPI';
+} from '@ayunis/api-client/endpoints';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
 import type { ShowConnectionTest } from '@/pages/admin-settings/microsoft-365-connector/lib/useLatestConnectionTest';

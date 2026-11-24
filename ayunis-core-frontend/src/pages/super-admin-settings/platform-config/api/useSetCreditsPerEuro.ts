@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useSuperAdminPlatformConfigControllerSetCreditsPerEuro,
   getSuperAdminPlatformConfigControllerGetCreditsPerEuroQueryKey,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 
 export default function useSetCreditsPerEuro() {
   const queryClient = useQueryClient();

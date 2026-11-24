@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import type { CourseModuleResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+import type { CourseModuleResponseDto } from '@ayunis/api-client/schemas';
 import { toLoomEmbedUrl } from '@/pages/academy-chapter/lib/toLoomEmbedUrl';
 import { useModulePageTimeHeartbeat } from '@/pages/academy-chapter/api/useModulePageTimeHeartbeat';
 

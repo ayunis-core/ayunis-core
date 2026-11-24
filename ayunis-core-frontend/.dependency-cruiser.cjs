@@ -157,7 +157,6 @@ module.exports = {
         '\\.spec\\.(ts|tsx)$',
         // Generated files
         'routeTree\\.gen\\.ts$',
-        'src/shared/api/generated/',
         // Storybook
         '\\.stories\\.(ts|tsx)$',
       ],

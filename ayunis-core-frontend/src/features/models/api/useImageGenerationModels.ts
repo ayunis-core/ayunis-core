@@ -1,5 +1,5 @@
-import type { ModelWithConfigResponseDto } from '@/shared/api';
-import { useModelsControllerGetAvailableImageGenerationModels } from '@/shared/api';
+import type { ModelWithConfigResponseDto } from '@ayunis/api-client';
+import { useModelsControllerGetAvailableImageGenerationModels } from '@ayunis/api-client';
 
 export function useImageGenerationModels() {
   const { data, isLoading, isError, error, refetch } =

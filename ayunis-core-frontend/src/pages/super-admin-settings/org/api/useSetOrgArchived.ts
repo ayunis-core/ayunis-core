@@ -5,7 +5,7 @@ import {
   getSuperAdminOrgsControllerGetAllOrgsQueryKey,
   getSuperAdminOrgsControllerGetOrgByIdQueryKey,
   useSuperAdminOrgLifecycleControllerSetOrgArchived,
-} from '@/shared/api';
+} from '@ayunis/api-client';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { orgLifecycleErrorKey } from './orgLifecycleError';
 export function useSetOrgArchived() {

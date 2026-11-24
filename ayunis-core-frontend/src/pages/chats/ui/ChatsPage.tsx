@@ -13,8 +13,10 @@ import type { ChatListItem } from '@/pages/chats/model/types';
 import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
 import { Link } from '@tanstack/react-router';
 import { Button } from '@ayunis/ui/components/button';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
-import { getEmbeddedSession } from '@/shared/api/embedded-session';
+import {
+  useEmbedded,
+  useEmbeddedSignOut,
+} from '@/shared/contexts/embedded/embeddedContext';
 
 interface ChatsPageProps {
   chats: ChatListItem[];
@@ -33,6 +35,7 @@ export default function ChatsPage({
 }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
   const isEmbedded = useEmbedded();
+  const signOut = useEmbeddedSignOut();
   const { favorites } = useFavorites({ enabled: !isEmbedded });
   // Sign-out ends the pane session; the pane entry then shows its sign-in.
   const embeddedAction = (
@@ -48,7 +51,7 @@ export default function ChatsPage({
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => void getEmbeddedSession()?.signOut()}
+        onClick={() => void signOut?.()}
         data-testid="embedded-sign-out"
       >
         {t('page.embedded.signOut')}

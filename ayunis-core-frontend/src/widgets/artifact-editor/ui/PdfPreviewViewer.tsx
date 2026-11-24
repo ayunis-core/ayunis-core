@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { artifactsControllerExport } from '@/shared/api';
+import { artifactsControllerExport } from '@ayunis/api-client';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { usePdfDocument, usePdfPageCanvas } from '@/shared/lib/pdf-preview';
 

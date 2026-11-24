@@ -1,7 +1,7 @@
 import { useSubscriptionReadOnly } from '@/pages/super-admin-settings/org/lib/useSubscriptionReadOnly';
 import ExternalSubscriptionNotice from './ExternalSubscriptionNotice';
-import type { SubscriptionResponseDto } from '@/shared/api';
-import { SubscriptionResponseDtoType } from '@/shared/api';
+import type { SubscriptionResponseDto } from '@ayunis/api-client';
+import { SubscriptionResponseDtoType } from '@ayunis/api-client';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Alert, AlertDescription } from '@ayunis/ui/components/alert';

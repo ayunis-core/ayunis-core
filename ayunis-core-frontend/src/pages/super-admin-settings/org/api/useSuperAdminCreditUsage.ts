@@ -1,4 +1,4 @@
-import { useSuperAdminUsageControllerGetCreditUsage } from '@/shared/api';
+import { useSuperAdminUsageControllerGetCreditUsage } from '@ayunis/api-client';
 
 interface UseSuperAdminCreditUsageProps {
   orgId: string;

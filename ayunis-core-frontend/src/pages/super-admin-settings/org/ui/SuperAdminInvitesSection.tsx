@@ -15,14 +15,17 @@ import {
   TableRow,
 } from '@ayunis/ui/components/table';
 import { useTranslation } from 'react-i18next';
-import type { InviteResponseDto, InviteResponseDtoRole } from '@/shared/api';
+import type {
+  InviteResponseDto,
+  InviteResponseDtoRole,
+} from '@ayunis/api-client';
 import { formatDate } from '@/shared/lib/format-date';
 import { InviteStatusBadge } from '@/shared/ui/invite-status-badge';
 
 import { Button } from '@ayunis/ui/components/button';
 import { Trash2 } from 'lucide-react';
 import { useSuperAdminInviteActions } from '@/pages/super-admin-settings/org/lib/useSuperAdminInviteActions';
-import type { InvitesSortField } from '@/shared/api';
+import type { InvitesSortField } from '@ayunis/api-client';
 import type { TableSort } from '@/shared/lib/table-sort';
 import { SortableTableHead } from '@/shared/ui/sortable-table-head';
 

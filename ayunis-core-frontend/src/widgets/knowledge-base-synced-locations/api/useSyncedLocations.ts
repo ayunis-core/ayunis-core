@@ -4,8 +4,8 @@ import {
   getKnowledgeBasesControllerFindOneQueryKey,
   getKnowledgeBasesControllerListDocumentsQueryKey,
   useKnowledgeBaseSyncedLocationsControllerList,
-} from '@/shared/api/generated/ayunisCoreAPI';
-import type { SyncedLocationResponseDto } from '@/shared/api/generated/ayunisCoreAPI.schemas';
+} from '@ayunis/api-client/endpoints';
+import type { SyncedLocationResponseDto } from '@ayunis/api-client/schemas';
 import {
   syncedDocumentsSignature,
   syncedLocationsPollInterval,
