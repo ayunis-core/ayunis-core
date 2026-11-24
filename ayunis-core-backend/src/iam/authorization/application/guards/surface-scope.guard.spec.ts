@@ -1,10 +1,14 @@
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ExecutionContext } from '@nestjs/common';
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { UUID } from 'crypto';
-import { AllowedClientsGuard } from './allowed-clients.guard';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScopeGuard } from './surface-scope.guard';
+import {
+  RequireSurfaceScope,
+  SURFACE_SCOPE_KEY,
+} from 'src/iam/authorization/application/decorators/surface-scope.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
 import { ClientNotAllowedError } from 'src/iam/authorization/application/authorization.errors';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
@@ -15,9 +19,17 @@ createLoggerMock();
 
 @Controller('fixture')
 class FixtureController {
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Get('marked')
   marked() {}
+
+  @RequireSurfaceScope(SurfaceScope.CHAT)
+  @Get('new-chat-operation')
+  newChatOperation() {}
+
+  @SetMetadata(SURFACE_SCOPE_KEY, 'ungranted-test-scope')
+  @Get('ungranted')
+  ungranted() {}
 
   @Get('unmarked')
   unmarked() {}
@@ -64,13 +76,13 @@ function contextFor(
   } as unknown as ExecutionContext;
 }
 
-describe(AllowedClientsGuard.name, () => {
-  const guard = new AllowedClientsGuard(new Reflector());
+describe(SurfaceScopeGuard.name, () => {
+  const guard = new SurfaceScopeGuard(new Reflector());
 
   it.each([
     ['a pane user', paneUser],
     ['a pane user of another organisation', otherOrgPaneUser],
-  ])('denies %s on a route not marked for the client', (_case, user) => {
+  ])('denies %s on a route not marked for the surface', (_case, user) => {
     expect(() => guard.canActivate(contextFor('unmarked', user))).toThrow(
       ClientNotAllowedError,
     );
@@ -79,11 +91,23 @@ describe(AllowedClientsGuard.name, () => {
   it.each([
     ['a pane user', paneUser],
     ['a pane user of another organisation', otherOrgPaneUser],
-  ])('allows %s on a route marked for the client', (_case, user) => {
+  ])('allows %s on a route marked for the surface', (_case, user) => {
     expect(guard.canActivate(contextFor('marked', user))).toBe(true);
   });
 
-  it.each(['marked', 'unmarked'] as const)(
+  it('accepts a new operation that requires a scope already granted to the surface', () => {
+    expect(guard.canActivate(contextFor('newChatOperation', paneUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies a route requiring a scope the surface does not have', () => {
+    expect(() => guard.canActivate(contextFor('ungranted', paneUser))).toThrow(
+      ClientNotAllowedError,
+    );
+  });
+
+  it.each(['marked', 'ungranted', 'unmarked'] as const)(
     'leaves a browser session of the same organisation untouched on the %s route',
     (handler) => {
       expect(guard.canActivate(contextFor(handler, webUser))).toBe(true);

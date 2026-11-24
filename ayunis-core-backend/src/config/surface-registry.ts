@@ -1,3 +1,4 @@
+import { SurfaceScope } from 'src/config/surface-scope';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 
 export interface SurfaceFeatureFlag {
@@ -15,6 +16,7 @@ export interface SurfaceFraming {
 export interface SurfaceDefinition {
   readonly signIn: 'cookie' | 'token' | 'visitor';
   readonly staticPrefix: string;
+  readonly scopes: readonly SurfaceScope[];
   readonly run: {
     readonly profile: { readonly id: string };
     readonly capabilities: readonly string[];
@@ -41,6 +43,7 @@ export const SURFACE_REGISTRY = {
   web: {
     signIn: 'cookie',
     staticPrefix: '/',
+    scopes: [],
     run: {
       profile: { id: 'chat' },
       capabilities: [
@@ -90,6 +93,15 @@ export const SURFACE_REGISTRY = {
   outlook: {
     signIn: 'token',
     staticPrefix: outlookPrefix,
+    scopes: [
+      SurfaceScope.ACADEMY_READ,
+      SurfaceScope.CHAT,
+      SurfaceScope.CHAT_SETTINGS_READ,
+      SurfaceScope.MODELS_READ,
+      SurfaceScope.SESSION,
+      SurfaceScope.UPLOADS,
+      SurfaceScope.VOICE,
+    ],
     run: {
       profile: { id: 'outlook' },
       capabilities: [
@@ -141,6 +153,7 @@ export const SURFACE_REGISTRY = {
   website: {
     signIn: 'visitor',
     staticPrefix: '/embed',
+    scopes: [],
     run: null,
     clientTools: [],
     featureFlag: null,
@@ -159,3 +172,9 @@ export type TokenSurfaceId = {
 export const TOKEN_SURFACES = (
   Object.keys(SURFACE_REGISTRY) as SurfaceId[]
 ).filter((id): id is TokenSurfaceId => SURFACE_REGISTRY[id].signIn === 'token');
+
+export function getTokenSurfaceScopes(
+  client: TokenSurfaceId | null,
+): readonly SurfaceScope[] {
+  return client ? SURFACE_REGISTRY[client].scopes : [];
+}

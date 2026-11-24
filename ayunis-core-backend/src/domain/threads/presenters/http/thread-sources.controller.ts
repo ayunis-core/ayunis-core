@@ -48,7 +48,8 @@ import { CompleteThreadSourceUploadCommand } from 'src/domain/threads/applicatio
 import { CreateSourceUploadDto } from 'src/domain/sources/presenters/http/dto/create-source-upload.dto';
 import { SourceUploadSessionResponseDto } from 'src/domain/sources/presenters/http/dto/source-upload-session-response.dto';
 import { toSourceUploadSessionDto } from 'src/domain/sources/presenters/http/mappers/source-upload.mapper';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 type ThreadSourceResponseDto =
   FileSourceResponseDto | UrlSourceResponseDto | CSVDataSourceResponseDto;
@@ -87,7 +88,7 @@ export class ThreadSourcesController {
     return this.getSourceProgress.execute(new FindThreadSourcesQuery(threadId));
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.UPLOADS)
   @Get(':id/sources')
   @ApiOperation({ summary: 'Get all sources for a thread' })
   @ApiThreadIdParam()
@@ -133,7 +134,7 @@ export class ThreadSourcesController {
     }
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.UPLOADS)
   @Post(':id/uploads')
   @ApiOperation({
     summary: 'Create a direct file upload for a thread',
@@ -161,7 +162,7 @@ export class ThreadSourcesController {
     );
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.UPLOADS)
   @Post(':id/uploads/:uploadId/complete')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -201,7 +202,7 @@ export class ThreadSourcesController {
     );
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.UPLOADS)
   @Delete(':id/sources/:sourceId')
   @ApiOperation({ summary: 'Remove a source from a thread' })
   @ApiThreadIdParam()
