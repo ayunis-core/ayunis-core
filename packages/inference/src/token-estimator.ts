@@ -1,5 +1,6 @@
 import { get_encoding, type Tiktoken } from 'tiktoken';
 import type { ToolSchema } from './tool-schema';
+import { countWithCache } from './token-count-cache';
 
 export type TokenEncoding = 'cl100k_base' | 'o200k_base';
 
@@ -93,11 +94,12 @@ const countInChunks = (
 export const createTiktokenEstimator = (
   options: TiktokenEstimatorOptions,
 ): TokenEstimator => {
+  const encode = (chunk: string): number =>
+    encoderFor(options.encoding).encode(chunk, [], []).length;
   const countText = (text: string): number =>
     text
-      ? countInChunks(
-          text,
-          (chunk) => encoderFor(options.encoding).encode(chunk, [], []).length,
+      ? countWithCache(options.encoding, text, (uncached) =>
+          countInChunks(uncached, encode),
         )
       : 0;
   return {
