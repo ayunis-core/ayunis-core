@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
-import ChatHeader from './ChatHeader';
+import ChatHeader, { ChatArtifactPanelButton } from './ChatHeader';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -55,8 +55,6 @@ function renderHeader(origin: GetThreadResponseDto['origin']) {
       threadId="thread-id"
       isAnonymous={false}
       origin={origin}
-      isArtifactPanelOpen={false}
-      onToggleArtifactPanel={vi.fn()}
       onRename={vi.fn()}
       onDelete={vi.fn()}
     />,
@@ -71,8 +69,12 @@ describe('ChatHeader', () => {
       <ChatHeader
         threadId="thread-id"
         isAnonymous={false}
-        isArtifactPanelOpen={false}
-        onToggleArtifactPanel={onToggleArtifactPanel}
+        actions={
+          <ChatArtifactPanelButton
+            open={false}
+            onToggle={onToggleArtifactPanel}
+          />
+        }
         onRename={vi.fn()}
         onDelete={vi.fn()}
       />,

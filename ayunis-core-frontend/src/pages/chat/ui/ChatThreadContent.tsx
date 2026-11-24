@@ -19,7 +19,7 @@ interface ChatThreadContentProps {
   readonly processingSteps?: SourceProcessingTimelineStep[];
   readonly contextHint: ReactNode;
   readonly showLoadingPlaceholder: boolean;
-  readonly onOpenArtifact: (artifactId: string) => void;
+  readonly onOpenArtifact?: (artifactId: string) => void;
 }
 
 export function ChatThreadContent(props: ChatThreadContentProps) {

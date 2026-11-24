@@ -27,3 +27,14 @@ The package also provides shared chat views:
   `@ayunis/chat/composer.css` for the composer styles.
 - `@ayunis/chat/history` renders history lists and entries. The app supplies
   links, row actions, empty states, and pagination.
+
+`@ayunis/chat/surface` provides the scrolling chat shell and the contracts for
+host transport, capabilities, header and empty-state slots, extra actions, and
+artifact opening. Hosts import `@ayunis/chat/surface.css` and supply the
+conversation content and composer. The header receives the host actions so the
+host can place them next to its navigation.
+
+Client tools can register an executor, a custom card, or both by tool name.
+The host controls when to execute a call and how to return its outcome. This
+also allows a host to collect multiple outcomes for a paused turn before
+passing them to its endpoint adapter.

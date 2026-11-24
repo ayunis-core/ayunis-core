@@ -14,7 +14,7 @@ import {
 import { generatedImageIdFromToolResult } from './generated-image-id';
 import CreateFileWidget from '@/pages/chat/ui/chat-widgets/CreateFileWidget';
 import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
-import OutlookDraftWidget from '@/pages/chat/ui/chat-widgets/OutlookDraftWidget';
+import { outlookClientTools } from '@/pages/chat/model/outlook-client-tools';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
@@ -25,11 +25,13 @@ import AddAnonymizationExceptionWidget from '@/pages/chat/ui/chat-widgets/AddAno
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
 
-const outlookDraftCard: ToolCardRegistration<ArtifactFamily> = {
-  render: ({ toolUse, isStreaming }) => (
-    <OutlookDraftWidget content={toolUse} isStreaming={isStreaming} />
+const clientToolCards = Object.fromEntries<
+  ToolCardRegistration<ArtifactFamily>
+>(
+  Array.from(outlookClientTools).flatMap(([name, { render }]) =>
+    render ? [[name, { render }] as const] : [],
   ),
-};
+);
 
 export const chatToolCards = createToolCardRegistry<ArtifactFamily>({
   ...artifactToolCards,
@@ -179,6 +181,5 @@ export const chatToolCards = createToolCardRegistry<ArtifactFamily>({
       />
     ),
   },
-  outlook__draft_email: outlookDraftCard,
-  outlook__move_email_to_composer: outlookDraftCard,
+  ...clientToolCards,
 });

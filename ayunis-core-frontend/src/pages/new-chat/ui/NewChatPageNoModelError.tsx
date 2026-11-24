@@ -21,28 +21,32 @@ export default function NewChatPageNoModelError() {
 
   return (
     <NewChatPageLayout
-      header={
-        <ContentAreaHeader
-          breadcrumbs={[{ label: 'New Chat' }]}
-          action={isEmbedded ? <EmbeddedHistoryButton /> : undefined}
-        />
-      }
-    >
-      <Card className="text-center" data-testid="new-chat-no-model">
-        <CardHeader>
-          <CardTitle>{t('newChat.noModelTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="">{t('newChat.noModelDescription')}</p>
-        </CardContent>
-        {!isEmbedded && (
-          <CardFooter className="justify-center">
-            <Link to="/admin-settings/models">
-              <Button>{t('newChat.configureModel')}</Button>
-            </Link>
-          </CardFooter>
-        )}
-      </Card>
-    </NewChatPageLayout>
+      slots={{
+        header: (actions) => (
+          <ContentAreaHeader
+            breadcrumbs={[{ label: 'New Chat' }]}
+            action={actions}
+          />
+        ),
+        actions: isEmbedded ? <EmbeddedHistoryButton /> : undefined,
+        emptyState: (
+          <Card className="text-center" data-testid="new-chat-no-model">
+            <CardHeader>
+              <CardTitle>{t('newChat.noModelTitle')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="">{t('newChat.noModelDescription')}</p>
+            </CardContent>
+            {!isEmbedded && (
+              <CardFooter className="justify-center">
+                <Link to="/admin-settings/models">
+                  <Button>{t('newChat.configureModel')}</Button>
+                </Link>
+              </CardFooter>
+            )}
+          </Card>
+        ),
+      }}
+    />
   );
 }

@@ -3,7 +3,7 @@ import {
   startRun,
   type ThreadRunStart,
 } from '@ayunis/chat/runs';
-import { threadRunEndpoints } from '@/features/thread-run/api/thread-run-endpoints';
+import { threadRunEndpoints } from '@/features/chat-surface';
 import { stopThreadRun } from '@/features/thread-run/api/stopThreadRun';
 
 export {

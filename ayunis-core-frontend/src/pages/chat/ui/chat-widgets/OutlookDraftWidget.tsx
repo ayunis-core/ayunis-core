@@ -1,3 +1,4 @@
+import type { ToolCardProps } from '@ayunis/chat/tool-cards';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -109,4 +110,8 @@ export default function OutlookDraftWidget({
       )}
     </Item>
   );
+}
+
+export function OutlookDraftCard({ toolUse, isStreaming }: ToolCardProps) {
+  return <OutlookDraftWidget content={toolUse} isStreaming={isStreaming} />;
 }

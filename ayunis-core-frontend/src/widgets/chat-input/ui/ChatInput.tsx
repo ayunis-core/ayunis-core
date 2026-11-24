@@ -19,6 +19,7 @@ import type {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@ayunis/api-client';
+import { useAppChatSurface } from '@/features/chat-surface';
 import { usePendingImages } from '@/widgets/chat-input/hooks/usePendingImages';
 import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
@@ -89,7 +90,7 @@ interface ChatInputProps {
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
-  /** Shows a skill picker in the plus menu; the Outlook pane's new chat passes it. */
+  /** Adds a skill picker to the plus menu when the host supports skills. */
   onSkillSelect?: (skillId: string, skillName: string) => void;
   isEmbeddingModelEnabled: boolean;
   /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
@@ -137,11 +138,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       onSend,
       onCancel,
       isCancelDisabled = false,
-      isEmbeddingModelEnabled,
+      isEmbeddingModelEnabled: hasEmbeddingModel,
       isAnonymous,
       onAnonymousChange,
       isAnonymousEnforced,
-      isVisionEnabled = false,
+      isVisionEnabled: hasVisionModel = false,
       selectedSkillId,
       selectedSkillName,
       onSkillRemove,
@@ -153,6 +154,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
     },
     ref,
   ) => {
+    const { capabilities } = useAppChatSurface();
+    const isEmbeddingModelEnabled = Boolean(
+      capabilities.fileUpload && hasEmbeddingModel,
+    );
+    const isVisionEnabled = Boolean(capabilities.fileUpload && hasVisionModel);
     const [isFocused, setIsFocused] = useState<boolean>(false);
     const { message, setMessage } = useChatDraft(draftChatId, initialMessage);
     const hasDictationRef = useRef(false);
@@ -355,6 +361,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               }}
               actions={
                 <ChatInputActionBar
+                  capabilities={capabilities}
                   isSubmitting={isSubmitting}
                   isEmbeddingModelEnabled={isEmbeddingModelEnabled}
                   isVisionEnabled={isVisionEnabled}

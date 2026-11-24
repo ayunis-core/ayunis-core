@@ -35,7 +35,7 @@ import type {
 } from '@/shared/contexts/chat/chatContext';
 import { IntegrationsSubmenu } from './IntegrationsSubmenu';
 import { SkillsSubmenu } from './SkillsSubmenu';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
+import { useAppChatSurface } from '@/features/chat-surface';
 
 interface PlusButtonProps {
   onFileUpload: (files: File[]) => void;
@@ -64,7 +64,7 @@ export default function PlusButton({
   onSkillSelect,
   selectedSkillId,
 }: Readonly<PlusButtonProps>) {
-  const isEmbedded = useEmbedded();
+  const { capabilities } = useAppChatSurface();
   const [menuOpen, setMenuOpen] = useState(false);
   if (isSubmitting && menuOpen) setMenuOpen(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -146,7 +146,7 @@ export default function PlusButton({
               <Paperclip className="h-4 w-4" />
               <span>{t('chatInput.uploadFile')}</span>
             </DropdownMenuItem>
-            {!isEmbedded && (
+            {capabilities.audio && (
               <DropdownMenuItem onClick={() => audioInputRef.current?.click()}>
                 <AudioLines className="h-4 w-4" />
                 <span>{t('chatInput.uploadAudio')}</span>

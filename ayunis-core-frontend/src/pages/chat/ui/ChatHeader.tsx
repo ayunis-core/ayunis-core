@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import {
@@ -40,10 +41,9 @@ interface ChatHeaderProps {
   readonly isAnonymous: boolean;
   readonly workspaceId?: string | null;
   readonly origin?: GetThreadResponseDto['origin'];
-  readonly isArtifactPanelOpen: boolean;
-  readonly onToggleArtifactPanel: () => void;
-  readonly onRename: () => void;
-  readonly onDelete: () => void;
+  readonly actions?: ReactNode;
+  readonly onRename?: () => void;
+  readonly onDelete?: () => void;
 }
 
 export default function ChatHeader(props: Readonly<ChatHeaderProps>) {
@@ -53,6 +53,7 @@ export default function ChatHeader(props: Readonly<ChatHeaderProps>) {
     <EmbeddedChatHeader
       threadTitle={props.threadTitle}
       isAnonymous={props.isAnonymous}
+      actions={props.actions}
       onRename={props.onRename}
       onDelete={props.onDelete}
     />
@@ -67,8 +68,7 @@ function WebChatHeader({
   isAnonymous,
   workspaceId,
   origin,
-  isArtifactPanelOpen,
-  onToggleArtifactPanel,
+  actions,
   onRename,
   onDelete,
 }: Readonly<ChatHeaderProps>) {
@@ -117,19 +117,33 @@ function WebChatHeader({
             onToggle={() => togglePinned('thread', threadId)}
           />
           <ThreadActionsMenu onRename={onRename} onDelete={onDelete} />
-          <Button
-            variant={isArtifactPanelOpen ? 'secondary' : 'ghost'}
-            size="icon"
-            data-testid="chat-side-panel-toggle"
-            onClick={onToggleArtifactPanel}
-            aria-label={t('chat.sidePanel.open')}
-            aria-pressed={isArtifactPanelOpen}
-          >
-            <PanelRight className="h-5 w-5 text-primary" />
-          </Button>
+          {actions}
         </div>
       }
     />
+  );
+}
+
+export function ChatArtifactPanelButton({
+  open,
+  onToggle,
+}: Readonly<{
+  open: boolean;
+  onToggle: () => void;
+}>) {
+  const { t } = useTranslation('chat');
+
+  return (
+    <Button
+      variant={open ? 'secondary' : 'ghost'}
+      size="icon"
+      data-testid="chat-side-panel-toggle"
+      onClick={onToggle}
+      aria-label={t('chat.sidePanel.open')}
+      aria-pressed={open}
+    >
+      <PanelRight className="h-5 w-5 text-primary" />
+    </Button>
   );
 }
 
@@ -149,13 +163,12 @@ function AnonymousBadge() {
   );
 }
 
-interface ThreadActionsMenuProps {
-  readonly onRename: () => void;
-  readonly onDelete: () => void;
-}
+type ThreadActionsMenuProps = Pick<ChatHeaderProps, 'onRename' | 'onDelete'>;
 
 function ThreadActionsMenu({ onRename, onDelete }: ThreadActionsMenuProps) {
   const { t } = useTranslation('chat');
+
+  if (!onRename && !onDelete) return null;
 
   return (
     <DropdownMenu>
@@ -165,25 +178,27 @@ function ThreadActionsMenu({ onRename, onDelete }: ThreadActionsMenuProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onRename}>
-          <Pencil className="h-4 w-4" />
-          <span>{t('chat.renameThread')}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete} variant="destructive">
-          <Trash2 />
-          <span>{t('chat.deleteThread')}</span>
-        </DropdownMenuItem>
+        {onRename && (
+          <DropdownMenuItem onClick={onRename}>
+            <Pencil className="h-4 w-4" />
+            <span>{t('chat.renameThread')}</span>
+          </DropdownMenuItem>
+        )}
+        {onDelete && (
+          <DropdownMenuItem onClick={onDelete} variant="destructive">
+            <Trash2 />
+            <span>{t('chat.deleteThread')}</span>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-interface EmbeddedChatHeaderProps {
-  readonly threadTitle?: string;
-  readonly isAnonymous: boolean;
-  readonly onRename: () => void;
-  readonly onDelete: () => void;
-}
+type EmbeddedChatHeaderProps = Pick<
+  ChatHeaderProps,
+  'threadTitle' | 'isAnonymous' | 'actions' | 'onRename' | 'onDelete'
+>;
 
 // The Outlook pane's header: the web header's pin, workspace breadcrumbs and
 // side-panel toggle stay out, and so do the favourites, workspace and
@@ -191,6 +206,7 @@ interface EmbeddedChatHeaderProps {
 function EmbeddedChatHeader({
   threadTitle,
   isAnonymous,
+  actions,
   onRename,
   onDelete,
 }: EmbeddedChatHeaderProps) {
@@ -209,6 +225,7 @@ function EmbeddedChatHeader({
             <Link to="/chat">{t('newChat.newChat')}</Link>
           </Button>
           <ThreadActionsMenu onRename={onRename} onDelete={onDelete} />
+          {actions}
         </>
       }
     />
