@@ -555,9 +555,10 @@ Encryption happens transparently; no application code changes needed for key rot
 
 ## Outlook Add-in
 
-The frontend build bundles the [shared API client](packages/api-client/README.md)
-for both web chat and the Outlook pane. The pane configures bearer authorization
-when it loads.
+`pnpm run build:surfaces` builds the web app and `apps/outlook` independently.
+One backend image serves both builds. The Outlook pane configures bearer
+authorization through the [shared API client](packages/api-client/README.md)
+and uses the [shared chat runtime](packages/chat/README.md).
 
 The add-in is off unless `FEATURE_OUTLOOK_ADDIN_ENABLED=true` is set: without
 it the manifest below answers 404 and an installed add-in cannot sign in. Turn

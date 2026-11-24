@@ -223,11 +223,21 @@ function SendOrStop({
   return (
     <div className="ml-auto">
       {isStreaming ? (
-        <Button type="button" disabled={!onStop} onClick={onStop}>
+        <Button
+          type="button"
+          data-testid="stop"
+          disabled={!onStop}
+          onClick={onStop}
+        >
           {t('chatSurface.stop', { defaultValue: 'Stop' })}
         </Button>
       ) : (
-        <Button type="button" disabled={!canSend} onClick={submit}>
+        <Button
+          type="button"
+          data-testid="send"
+          disabled={!canSend}
+          onClick={submit}
+        >
           {t('chatSurface.send', { defaultValue: 'Send' })}
         </Button>
       )}

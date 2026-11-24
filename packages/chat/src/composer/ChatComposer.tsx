@@ -85,7 +85,11 @@ function ComposerTextarea({
 }
 
 export { canSubmitMessage } from './can-submit-message';
-export { useChatDraft, type ChatDraftStorage } from './use-chat-draft';
+export {
+  createMemoryChatDraftStorage,
+  useChatDraft,
+  type ChatDraftStorage,
+} from './use-chat-draft';
 export { usePendingImages } from './use-pending-images';
 export { useVoiceRecording } from './use-voice-recording';
 export {

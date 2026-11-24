@@ -14,6 +14,7 @@
 ayunis-core/
 ├── ayunis-core-backend/       # NestJS API server
 ├── ayunis-core-frontend/      # React SPA (Feature-Sliced Design)
+├── apps/outlook/              # Standalone Outlook add-in
 ├── ayunis-core-code-execution/# Sandboxed code execution microservice
 ├── ayunis-core-anonymize/     # PII anonymization service
 ├── packages/inference/        # Provider-agnostic inference contracts
@@ -151,6 +152,12 @@ available to a surface when its entry grants it.
 ---
 
 ## Frontend (React + Feature-Sliced Design)
+
+The [Outlook app](apps/outlook/src/outlook/SUMMARY.md) owns its Office shell,
+navigation, bearer session, and mail tools. It uses the workspace
+[`@ayunis/chat`](packages/chat/README.md) runtime with host capabilities and
+adapters. The web app and Outlook build separately and are served by the same
+backend image.
 
 📁 **[`ayunis-core-frontend/src/`](ayunis-core-frontend/src/SUMMARY.md)**
 

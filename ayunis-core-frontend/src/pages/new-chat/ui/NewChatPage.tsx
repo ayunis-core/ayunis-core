@@ -38,12 +38,7 @@ import {
   type OnboardingChat,
 } from '@/pages/new-chat/lib/onboarding-chat';
 import { UnreadNotificationsPanel } from './UnreadNotificationsPanel';
-import {
-  EmbeddedHistoryButton,
-  EmbeddedNewChatCompose,
-} from './EmbeddedNewChat';
 import { useAppChatSurface } from '@/features/chat-surface';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface NewChatPageProps {
   selectedModelId?: string;
@@ -62,13 +57,12 @@ export default function NewChatPage({
   initialWorkspaceId,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
-  const isEmbedded = useEmbedded();
   const { capabilities } = useAppChatSurface();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
   const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
-  const onboardingStage = useOnboardingStage(!isEmbedded);
+  const onboardingStage = useOnboardingStage(true);
   const chatInputRef = useRef<ChatInputRef>(null);
 
   useEffect(() => {
@@ -257,59 +251,6 @@ export default function NewChatPage({
         processingError: undefined,
         uploadProgress: undefined,
       })),
-    );
-  }
-
-  if (isEmbedded) {
-    const isSendDisabled = isAcademyGated || !resolvedModelId;
-    return (
-      <NewChatPageLayout
-        isSettling={isCreating}
-        mistPhase={mistPhase}
-        onMistExitComplete={handleMistExitComplete}
-        slots={{
-          header: (actions) => (
-            <ContentAreaHeader
-              breadcrumbs={[{ label: t('newChat.newChat') }]}
-              action={actions}
-            />
-          ),
-          actions: <EmbeddedHistoryButton />,
-        }}
-        compose={
-          <EmbeddedNewChatCompose
-            isCreating={isCreating}
-            isStarterDisabled={isSendDisabled}
-            onStarterPrompt={(prompt) =>
-              chatInputRef.current?.sendMessage(prompt)
-            }
-            chatInput={
-              <>
-                <AcademyGateNotice className="mb-2" />
-                {/* No skill picker in the pane for now (product decision,
-                    2026-11-18): its `+` menu offers file upload only. */}
-                <ChatInput
-                  ref={chatInputRef}
-                  modelId={modelId}
-                  sources={sources}
-                  submissionState={isCreating ? 'submitting' : 'idle'}
-                  isSendDisabled={isSendDisabled}
-                  onModelChange={handleModelChange}
-                  onSend={handleSend}
-                  onCancel={handleCancel}
-                  onFileUpload={handleFileUpload}
-                  onRemoveSource={handleRemoveSource}
-                  isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-                  isAnonymous={isAnonymous}
-                  onAnonymousChange={setIsAnonymous}
-                  isAnonymousEnforced={isAnonymousEnforced}
-                  isVisionEnabled={isVisionEnabled}
-                />
-              </>
-            }
-          />
-        }
-      />
     );
   }
 

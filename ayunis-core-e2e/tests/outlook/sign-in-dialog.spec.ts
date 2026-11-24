@@ -10,7 +10,7 @@ import {
 import { enableOrgSso } from '../../src/clients/api/sso.client';
 import { stubOfficeHost } from '../../src/clients/office-host-stub';
 import { createUser } from '../../src/factories/user.factory';
-import { expect, test } from '../../src/fixtures/test';
+import { expect, test } from '../../src/fixtures/outlook';
 import {
   OUTLOOK_DIALOG_PATH,
   dialogTokens,

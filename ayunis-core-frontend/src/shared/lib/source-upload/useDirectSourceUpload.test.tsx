@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useDirectSourceUpload } from './useDirectSourceUpload';
 
 const mocks = vi.hoisted(() => ({ transfer: vi.fn(), abort: vi.fn() }));
-vi.mock('./transfer-source-file', () => ({
+vi.mock('@ayunis/api-client/source-upload/transfer', () => ({
   transferSourceFile: mocks.transfer,
 }));
 vi.mock('@ayunis/api-client/endpoints', () => ({

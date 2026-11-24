@@ -20,3 +20,5 @@ export type {
   ChatThreadSnapshot,
 } from './chat-conversation-config';
 export type { ChatHistoryConfig } from './configured-history';
+export { ConfiguredComposer } from './configured-composer';
+export { ConfiguredHistory } from './configured-history';

@@ -3,7 +3,7 @@ import {
   recordingUploadsControllerCreateUpload,
 } from '@ayunis/api-client/endpoints';
 import type { RecordingResponseDto } from '@ayunis/api-client/schemas';
-import type { DirectSourceUploadTarget } from '@/shared/lib/source-upload';
+import type { DirectSourceUploadTarget } from '@ayunis/api-client/source-upload';
 
 export function recordingAudioUploadTarget(
   recordingId: string,

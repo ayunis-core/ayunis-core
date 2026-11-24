@@ -1,0 +1,16 @@
+{
+  "page": {
+    "title": "Chats",
+    "embedded": {
+      "backToStart": "Zur Startseite",
+      "signOut": "Abmelden"
+    }
+  },
+  "emptyState": {
+    "title": "Noch keine Chats",
+    "description": "Starten Sie einen neuen Chat, um ihn hier zu sehen.",
+    "noResultsTitle": "Keine passenden Chats",
+    "noResultsDescription": "Versuchen Sie, Ihre Suche oder Filter anzupassen.",
+    "startChat": "Neuen Chat starten"
+  }
+}

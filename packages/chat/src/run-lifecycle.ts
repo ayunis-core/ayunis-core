@@ -1,5 +1,6 @@
 import type { RunMessageResponseDto } from '@ayunis/api-client/schemas';
 import { createActiveThreadRuns } from './active-thread-run';
+import { createDeferredClientTools } from './deferred-client-tools';
 import { createStoppedThreadRuns } from './stopped-thread-runs';
 import { createStartedThreadRuns } from './started-thread-run';
 import { createFrameCoalescer } from './frame-coalescer';
@@ -24,11 +25,6 @@ export interface RunRequestObserver {
   ) => Promise<void> | void;
 }
 
-export interface DeferredClientTools {
-  readonly contextKey: unknown;
-  readonly callIds: ReadonlySet<string>;
-}
-
 export type ChatRunLifecycle = ReturnType<typeof createChatRunLifecycle>;
 
 /** One lifecycle per surface session. Open or close views without ending their runs. */
@@ -38,7 +34,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
   const handoffs = createStartedThreadRuns(activity.registerActiveThreadRun);
   const events = createRunEventRouting();
   const executor = createRunExecutor(activity, events);
-  const deferredClientTools = new Map<string, DeferredClientTools>();
+  const deferredClientTools = createDeferredClientTools();
   let sessionResetAt = 0;
   let session = new AbortController();
 

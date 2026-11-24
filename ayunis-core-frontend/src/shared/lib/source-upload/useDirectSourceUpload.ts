@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   uploadSourceFile,
   type DirectSourceUploadTarget,
-} from './upload-source-file';
+} from '@ayunis/api-client/source-upload';
 
 /** Local placeholder kept until the completed upload is reconciled with server data. */
 export interface PendingSourceUpload {

@@ -3,9 +3,33 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build && tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "vite": "^8.3.5"
+    "@tailwindcss/vite": "catalog:",
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^6.0.3",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.11",
+    "@testing-library/react": "^16.3.3",
+    "@types/office-js": "^1.0.616",
+    "@types/node": "^24.12.2"
+  },
+  "dependencies": {
+    "@ayunis/api-client": "workspace:*",
+    "@ayunis/chat": "workspace:*",
+    "@ayunis/ui": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "axios": "catalog:",
+    "i18next": "^26.4.0",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-i18next": "^15.5.3",
+    "zod": "^4.5.4"
   }
 }

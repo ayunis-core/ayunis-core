@@ -19,7 +19,7 @@ import {
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
-  beforeLoad: async ({ context: { queryClient, embedded }, preload }) => {
+  beforeLoad: async ({ context: { queryClient }, preload }) => {
     try {
       const user = await queryClient.query(meQueryOptions());
       if (!preload) setThreadRunPrincipal(user.id, user.orgId, queryClient);
@@ -38,9 +38,6 @@ export const Route = createFileRoute('/_authenticated')({
         clearOpenPanelIdentity();
         resetThreadRunSession(queryClient);
       }
-      // The pane has no login route: its entry shows the sign-in once the
-      // session ends (`TaskPane`), and any other failure shows the error page.
-      if (embedded) throw error;
       try {
         const { code } = extractErrorData(error);
         if (code === 'IP_NOT_ALLOWED') {

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'ayunis-core-frontend/**'
+      - 'apps/outlook/**'
       - 'packages/ui/**'
       - 'packages/api-client/**'
       - 'packages/chat/**'
@@ -14,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'ayunis-core-frontend/**'
+      - 'apps/outlook/**'
       - 'packages/ui/**'
       - 'packages/api-client/**'
       - 'packages/chat/**'
@@ -51,6 +53,10 @@ jobs:
         working-directory: ayunis-core-frontend
         run: pnpm run build
 
+      - name: Build Outlook
+        working-directory: apps/outlook
+        run: pnpm run build
+
   lint:
     name: Frontend lint
     runs-on: ubuntu-latest
@@ -77,6 +83,10 @@ jobs:
 
       - name: Run tests
         working-directory: ayunis-core-frontend
+        run: pnpm run test
+
+      - name: Run Outlook tests
+        working-directory: apps/outlook
         run: pnpm run test
 
   ui-package:

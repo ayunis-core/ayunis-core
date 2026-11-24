@@ -50,6 +50,7 @@ export function AttachmentFields({
     <>
       {upload && (
         <FileField
+          testId="chat-attach-files"
           label={t('chatSurface.attachFiles', { defaultValue: 'Attach files' })}
           disabled={disabledDuringAction}
           select={selectFiles}
@@ -81,11 +82,13 @@ export function AttachmentFields({
 
 function FileField({
   label,
+  testId,
   accept,
   disabled,
   select,
 }: Readonly<{
   label: string;
+  testId?: string;
   accept?: string;
   disabled: boolean;
   select: (files: File[]) => void;
@@ -95,6 +98,7 @@ function FileField({
       {label}
       <Input
         type="file"
+        data-testid={testId}
         multiple
         accept={accept}
         disabled={disabled}

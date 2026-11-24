@@ -23,7 +23,6 @@ import {
   CreateChatWorkspaceDialog,
 } from '@/widgets/chat-workspace-menu';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import { Button } from '@ayunis/ui/components/button';
 import { PinButton } from '@/shared/ui/pin-button';
 import {
@@ -51,23 +50,7 @@ interface ChatHeaderProps {
   readonly onDelete?: () => void;
 }
 
-export default function ChatHeader(props: Readonly<ChatHeaderProps>) {
-  const isEmbedded = useEmbedded();
-
-  return isEmbedded ? (
-    <EmbeddedChatHeader
-      threadTitle={props.threadTitle}
-      isAnonymous={props.isAnonymous}
-      actions={props.actions}
-      onRename={props.onRename}
-      onDelete={props.onDelete}
-    />
-  ) : (
-    <WebChatHeader {...props} />
-  );
-}
-
-function WebChatHeader({
+export default function ChatHeader({
   threadId,
   threadTitle,
   isAnonymous,
@@ -235,43 +218,6 @@ function ThreadActionsMenu({
         />
       )}
     </>
-  );
-}
-
-type EmbeddedChatHeaderProps = Pick<
-  ChatHeaderProps,
-  'threadTitle' | 'isAnonymous' | 'actions' | 'onRename' | 'onDelete'
->;
-
-// The Outlook pane's header: the web header's pin, workspace breadcrumbs and
-// side-panel toggle stay out, and so do the favourites, workspace and
-// feature-toggle queries they need.
-function EmbeddedChatHeader({
-  threadTitle,
-  isAnonymous,
-  actions,
-  onRename,
-  onDelete,
-}: EmbeddedChatHeaderProps) {
-  const { t } = useTranslation('chat');
-
-  return (
-    <ContentAreaHeader
-      breadcrumbs={[
-        { label: t('chat.chats'), href: '/chats' },
-        { label: threadTitle || t('chat.untitled') },
-      ]}
-      badge={isAnonymous ? <AnonymousBadge /> : undefined}
-      action={
-        <>
-          <Button size="sm" asChild data-testid="embedded-new-chat">
-            <Link to="/chat">{t('newChat.newChat')}</Link>
-          </Button>
-          <ThreadActionsMenu onRename={onRename} onDelete={onDelete} />
-          {actions}
-        </>
-      }
-    />
   );
 }
 

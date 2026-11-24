@@ -1,0 +1,105 @@
+{
+  "chat": {
+    "outlookDraft": {
+      "insert": "Insert into open reply",
+      "replyAll": "Reply all",
+      "reply": "Reply",
+      "status": {
+        "running": "Working in Outlook …",
+        "inserted": "Inserted into your reply",
+        "replaced": "Replaced the previous draft",
+        "saved": "Saved as draft",
+        "failed": {
+          "noItem": "No email is open.",
+          "noComposeItem": "Open a reply in Outlook to insert the draft.",
+          "nothingToSave": "Only an email you are writing can be saved.",
+          "officeFailed": "Outlook could not do this.",
+          "itemChanged": "The open email changed, so this was not done."
+        }
+      }
+    },
+    "timeline": {
+      "working": "Working…",
+      "thoughtProcess": "Thought process",
+      "preparingToolCall": "Preparing tool call…",
+      "invalidToolCall": "Tool call failed",
+      "invalidToolCallHint": "The model produced a malformed tool call. Try again or choose a different model.",
+      "summary_one": "{{count}} step",
+      "summary_other": "{{count}} steps",
+      "errorStep": "Stopped",
+      "actions": {
+        "create_document": "Created document",
+        "update_document": "Updated document",
+        "edit_document": "Edited document",
+        "read_document": "Read document",
+        "create_diagram": "Created diagram",
+        "update_diagram": "Updated diagram",
+        "create_spreadsheet": "Created spreadsheet",
+        "update_spreadsheet": "Updated spreadsheet",
+        "chart": "Created chart",
+        "map": "Created map",
+        "generate_image": "Generated image",
+        "send_email": "Drafted email",
+        "create_calendar_event": "Created calendar event",
+        "create_skill": "Created skill",
+        "edit_skill": "Edited skill",
+        "install_marketplace_skill": "Offered skill install",
+        "create_routine": "Created routine",
+        "edit_routine": "Edited routine",
+        "add_anonymization_exception": "Proposed an anonymization exception",
+        "activate_skill": "Activated skill",
+        "get_memory": "Read memory",
+        "set_memory": "Updated memory",
+        "chat_list": "Listed past chats",
+        "chat_read": "Read past chat",
+        "chat_grep": "Searched past chats",
+        "internet_search": "Searched the internet",
+        "website_content": "Fetched website",
+        "source_query": "Searched files",
+        "knowledge_query": "Searched knowledge base",
+        "recording_search": "Searched meetings",
+        "code_execution": "Calculated",
+        "http": "Made HTTP request",
+        "use_tool": "Used {{tool}}",
+        "create_file": "Created file"
+      }
+    },
+    "routine": {
+      "finished": "Routine finished",
+      "nudge": "Automatic reminder to the routine"
+    },
+    "toolConfirmation": {
+      "confirm": "Confirm",
+      "reject": "Reject",
+      "alwaysAllow": "Always allow",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected"
+    },
+    "piiMask": {
+      "tooltip": "{{category}} — anonymized before being sent to the AI model",
+      "tooltipClickable": "{{category}} — anonymized before being sent to the AI model. Click to unmask.",
+      "unmaskTitle": "Unmask \"{{value}}\"?",
+      "unmaskDescription": "The term will be sent to the AI model in its original form from now on in this chat, including in the previous conversation. This action cannot be undone and does not change your organization's anonymization settings.",
+      "unmaskConfirm": "Unmask",
+      "unmaskCancel": "Cancel",
+      "unmaskSuccess": "Term unmasked for this chat",
+      "unmaskNotFound": "This term could not be found in this chat",
+      "unmaskError": "Failed to unmask the term",
+      "categories": {
+        "person_name": "Person name",
+        "organization": "Organization",
+        "location": "Location or address",
+        "email_address": "Email address",
+        "phone_number": "Phone number",
+        "url_or_ip": "URL or IP address",
+        "date_time": "Date or time",
+        "financial_account": "Financial account",
+        "government_id": "Government ID",
+        "nationality_religion_politics": "Nationality, religion, or politics",
+        "other": "Personal data"
+      }
+    },
+    "copyToClipboard": "Copy to clipboard",
+    "skillInstructions": "Skill instructions"
+  }
+}

@@ -1,11 +1,10 @@
 import { anonymousModeDefaultQueryOptions } from '@/features/anonymous-mode-default';
-import { createFileRoute, useRouterState } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import {
   NewChatPage,
   NewChatPageNoModelError,
   onboardingStageQueryOptions,
 } from '@/pages/new-chat';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import {
   getSubscriptionsControllerHasActiveSubscriptionQueryKey,
   subscriptionsControllerHasActiveSubscription,
@@ -53,7 +52,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { modelId }, context: { queryClient, embedded } }) => {
+  loader: async ({ deps: { modelId }, context: { queryClient } }) => {
     await queryClient.query(anonymousModeDefaultQueryOptions());
     let selectedModelId: string | undefined;
     if (modelId) {
@@ -67,15 +66,6 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     const { isEmbeddingModelEnabled } = await queryClient.query(
       queryIsEmbeddingModelEnabledOptions(),
     );
-    // The pane has no onboarding hint, and its token may not read billing or
-    // the onboarding stage.
-    if (embedded) {
-      return {
-        selectedModelId,
-        hasActiveSubscription: false,
-        isEmbeddingModelEnabled,
-      };
-    }
     const { hasActiveSubscription } = await queryClient.query(
       queryHasActiveSubscriptionOptions(),
     );
@@ -107,17 +97,9 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 function RouteComponent() {
   const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
   const { prompt, attachmentUrl, workspaceId } = Route.useSearch();
-  // In the Outlook pane every navigation to a new chat (another email, "Neuer
-  // Chat") starts a fresh composer; text typed for one email stays with it.
-  const isEmbedded = useEmbedded();
-  const navigationKey = useRouterState({
-    select: (state) => state.location.state.__TSR_key,
-  });
   return (
     <NewChatPage
-      key={
-        isEmbedded ? (navigationKey ?? 'pane') : (workspaceId ?? 'no-workspace')
-      }
+      key={workspaceId ?? 'no-workspace'}
       selectedModelId={selectedModelId}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       initialPrompt={prompt}

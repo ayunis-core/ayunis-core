@@ -1,7 +1,14 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { EmbeddedContext } from '@/shared/contexts/embedded/embeddedContext';
+import type { ChatCapabilities } from '@ayunis/chat/surface';
 import PlusButton from './PlusButton';
+
+const capabilityState = vi.hoisted((): { value: ChatCapabilities } => ({
+  value: {},
+}));
+vi.mock('@/features/chat-surface', () => ({
+  useAppChatSurface: () => ({ capabilities: capabilityState.value }),
+}));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -22,7 +29,11 @@ vi.mock('@ayunis/api-client/endpoints', () => ({
   }),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  capabilityState.value = { fileUpload: true, audio: true, skills: true };
+});
+capabilityState.value = { fileUpload: true, audio: true, skills: true };
 
 async function openMenu() {
   fireEvent.keyDown(
@@ -33,12 +44,9 @@ async function openMenu() {
 }
 
 describe('PlusButton', () => {
-  it('offers only file upload and skills in the Outlook pane, without audio upload', async () => {
-    render(
-      <EmbeddedContext.Provider value={true}>
-        <PlusButton onFileUpload={vi.fn()} onSkillSelect={vi.fn()} />
-      </EmbeddedContext.Provider>,
-    );
+  it('offers only file upload and skills when the audio capability is disabled', async () => {
+    capabilityState.value = { fileUpload: true };
+    render(<PlusButton onFileUpload={vi.fn()} onSkillSelect={vi.fn()} />);
     await openMenu();
 
     expect(
@@ -49,16 +57,15 @@ describe('PlusButton', () => {
     ).toBeNull();
   });
 
-  it('keeps the skill picker reachable in the Outlook pane when the org allows no uploads', async () => {
+  it('keeps the skill picker reachable when the org allows no uploads', async () => {
+    capabilityState.value = { fileUpload: true };
     render(
-      <EmbeddedContext.Provider value={true}>
-        <PlusButton
-          onFileUpload={vi.fn()}
-          onSkillSelect={vi.fn()}
-          isFileSourceDisabled
-          isImageUploadDisabled
-        />
-      </EmbeddedContext.Provider>,
+      <PlusButton
+        onFileUpload={vi.fn()}
+        onSkillSelect={vi.fn()}
+        isFileSourceDisabled
+        isImageUploadDisabled
+      />,
     );
     expect(
       screen.getByRole<HTMLButtonElement>('button', {

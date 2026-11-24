@@ -11,11 +11,7 @@ const apps = readdirSync(appsPath, { withFileTypes: true })
 
 rmSync(outputPath, { recursive: true, force: true });
 mkdirSync(outputPath, { recursive: true });
-cpSync(webDist, join(outputPath, "web"), {
-  recursive: true,
-  // Outlook still keeps its public files in the web publicDir for dev.
-  filter: (source) => source !== join(webDist, "outlook"),
-});
+cpSync(webDist, join(outputPath, "web"), { recursive: true });
 for (const app of apps) {
   cpSync(join(appsPath, app, "dist"), join(outputPath, app), { recursive: true });
 }

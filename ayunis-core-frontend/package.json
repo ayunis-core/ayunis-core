@@ -65,8 +65,6 @@
     "@tiptap/react": "^3.30.5",
     "@tiptap/starter-kit": "^3.30.5",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@uppy/aws-s3": "^6.3.1",
-    "@uppy/core": "^6.3.1",
     "axios": "catalog:",
     "canvas-confetti": "1.9.3",
     "date-fns": "^4.4.0",

@@ -7,7 +7,6 @@ import NewChatPage from './NewChatPage';
 const mocks = vi.hoisted(() => ({
   initiateChat: vi.fn(),
   isCreating: false,
-  isEmbedded: false,
   onboardingStage: undefined as
     | { stage: 'profile' | 'first_skill' | null; modelId: string | null }
     | undefined,
@@ -55,14 +54,6 @@ vi.mock('@/pages/new-chat/api/useOnboardingStage', () => ({
   useOnboardingStage: (enabled: boolean) =>
     enabled ? mocks.onboardingStage : undefined,
 }));
-vi.mock('@/shared/contexts/embedded/embeddedContext', () => ({
-  useEmbedded: () => mocks.isEmbedded,
-}));
-vi.mock('./EmbeddedNewChat', () => ({
-  EmbeddedHistoryButton: () => null,
-  EmbeddedNewChatCompose: ({ chatInput }: { chatInput: ReactNode }) =>
-    chatInput,
-}));
 vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
   default: () => null,
 }));
@@ -108,7 +99,6 @@ vi.mock('@/widgets/chat-input', () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.isCreating = false;
-  mocks.isEmbedded = false;
   mocks.onboardingStage = undefined;
 });
 afterEach(cleanup);
@@ -226,13 +216,5 @@ describe('new chat onboarding hint', () => {
         origin: { kind: 'onboarding', stage: 'first_skill' },
       }),
     );
-  });
-
-  it('shows no hint in the Outlook pane even when a stage applies', () => {
-    mocks.isEmbedded = true;
-    mocks.onboardingStage = { stage: 'profile', modelId: 'memory-model' };
-    setup('medium');
-
-    expect(screen.queryByTestId('new-chat-onboarding-hint')).toBeNull();
   });
 });

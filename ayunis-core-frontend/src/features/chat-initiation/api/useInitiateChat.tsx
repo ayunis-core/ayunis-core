@@ -10,7 +10,7 @@ import {
   useThreadsControllerCreate,
 } from '@ayunis/api-client/endpoints';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
-import { uploadSourceFile } from '@/shared/lib/source-upload';
+import { uploadSourceFile } from '@ayunis/api-client/source-upload';
 import { showError } from '@/shared/lib/toast';
 import {
   threadInteractionContext,
