@@ -10,6 +10,7 @@ import {
 } from '@ayunis/ui/components/card';
 import config from '@/shared/config';
 import { CopyButton } from '@/shared/ui/copy-button';
+import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { outlookManifestUrl } from '@/pages/admin-settings/office-add-ins/lib/outlook-manifest-url';
 
 // The Microsoft 365 admin center page where add-ins are deployed; the admin
@@ -17,6 +18,7 @@ import { outlookManifestUrl } from '@/pages/admin-settings/office-add-ins/lib/ou
 const INTEGRATED_APPS_URL =
   'https://admin.microsoft.com/#/Settings/IntegratedApps';
 const DEPLOY_STEPS = ['openAddins', 'deployAddin', 'provideUrl', 'assign'];
+const GUIDE_PATH = 'integrations/microsoft-office/outlook/';
 
 /**
  * How an organisation installs the Outlook add-in. Microsoft's install flows
@@ -87,6 +89,10 @@ export function OutlookAddinSection() {
               <li key={step}>{t(`integrations.outlook.steps.${step}`)}</li>
             ))}
           </ol>
+          <HelpLink
+            path={`${GUIDE_PATH}#${t('integrations.outlook.steps.guideAnchor')}`}
+            label={t('integrations.outlook.steps.guide')}
+          />
         </div>
       </CardContent>
     </Card>
