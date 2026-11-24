@@ -10,7 +10,7 @@
   },
   "emptyState": {
     "title": "Let the AI handle recurring work",
-    "description": "A routine carries out a task for you every day at a set time and reports anything relevant to your inbox.",
+    "description": "A routine carries out a task for you on a schedule, daily, weekly or monthly, and reports anything relevant to your inbox.",
     "askPlaceholder": "Ask how routines work or what a routine could do for you…",
     "steps": {
       "describe": {
@@ -18,8 +18,8 @@
         "description": "Write what the routine should do, or start from a premade routine."
       },
       "schedule": {
-        "title": "Pick a time",
-        "description": "Choose when it runs each day and whether it may use the internet."
+        "title": "Pick a schedule",
+        "description": "Choose when it runs and whether it may use the internet."
       },
       "results": {
         "title": "Get the results",
@@ -36,8 +36,18 @@
     "promptDescription": "The routine runs this task without you. Replace the parts in square brackets.",
     "model": "Model",
     "defaultModel": "My default model",
-    "dailyTime": "Daily at",
-    "dailyTimeDescription": "Time in Europe/Berlin.",
+    "schedule": "Schedule",
+    "frequency": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "time": "Time",
+    "timeDescription": "Time in Europe/Berlin.",
+    "weekdays": "On",
+    "monthDay": "Day of the month",
+    "monthDayOption": "{{day}}",
+    "lastMonthDay": "Last day",
     "internet": "Internet access",
     "internetDescription": "Lets the routine search the web and read websites.",
     "internetAccess": {
@@ -54,11 +64,10 @@
     "save": "Save"
   },
   "card": {
-    "schedule": "Daily at {{time}}",
     "internet": "Internet",
     "enabled": "Active",
     "disabled": "Paused",
-    "enabledLabel": "Run daily",
+    "enabledLabel": "Run on schedule",
     "runNow": "Run now",
     "delete": "Delete routine"
   },
@@ -102,7 +111,33 @@
   "schedule": {
     "nextRun": "Next run: {{time}}",
     "paused": "Paused after repeated failures",
-    "pausedHint": "Switch it on to resume the daily run."
+    "pausedHint": "Switch it on to resume its schedule."
+  },
+  "scheduleSummary": {
+    "daily": "Daily at {{time}}",
+    "weekly": "{{days}} at {{time}}",
+    "monthly": "Monthly on day {{day}} at {{time}}",
+    "monthlyLast": "Monthly on the last day at {{time}}"
+  },
+  "weekdays": {
+    "short": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "7": "Sun"
+    },
+    "long": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    }
   },
   "status": {
     "never": "Not run yet",
@@ -162,9 +197,23 @@
       "maxLength": "Task must be 10,000 characters or fewer",
       "invalid": "Invalid task"
     },
-    "dailyTime": {
-      "matches": "Enter a time as HH:mm",
-      "invalid": "Invalid time"
+    "schedule": {
+      "frequency": {
+        "invalid": "Choose how often it runs"
+      },
+      "time": {
+        "matches": "Enter a time as HH:mm",
+        "invalid": "Invalid time"
+      },
+      "weekdays": {
+        "required": "Choose at least one day",
+        "invalid": "Choose days from Monday to Sunday"
+      },
+      "monthDay": {
+        "required": "Choose a day",
+        "invalid": "Choose a day from 1 to 28 or the last day"
+      },
+      "invalid": "Invalid schedule"
     },
     "modelId": {
       "invalid": "Invalid model"

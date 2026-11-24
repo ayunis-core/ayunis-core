@@ -10,7 +10,7 @@ export class RoutineDtoMapper {
       name: routine.name,
       prompt: routine.prompt,
       modelId: routine.modelId,
-      dailyTime: routine.dailyTime,
+      schedule: routine.schedule,
       internetAccess: routine.internetAccess,
       allowedDomains: routine.allowedDomains,
       enabled: routine.enabled,

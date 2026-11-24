@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import type { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import type { RoutineScheduleInput } from 'src/domain/routines/domain/routine-frequency';
 
 /** Omitted properties stay unchanged; a null model means the user's default. */
 export class UpdateRoutineCommand {
@@ -7,7 +8,8 @@ export class UpdateRoutineCommand {
   readonly name?: string;
   readonly prompt?: string;
   readonly modelId?: UUID | null;
-  readonly dailyTime?: string;
+  /** Replaces the whole schedule. */
+  readonly schedule?: RoutineScheduleInput;
   readonly internetAccess?: RoutineInternetAccess;
   readonly allowedDomains?: string[];
   readonly enabled?: boolean;
@@ -17,7 +19,7 @@ export class UpdateRoutineCommand {
     name?: string;
     prompt?: string;
     modelId?: UUID | null;
-    dailyTime?: string;
+    schedule?: RoutineScheduleInput;
     internetAccess?: RoutineInternetAccess;
     allowedDomains?: string[];
     enabled?: boolean;
@@ -26,7 +28,7 @@ export class UpdateRoutineCommand {
     this.name = params.name;
     this.prompt = params.prompt;
     this.modelId = params.modelId;
-    this.dailyTime = params.dailyTime;
+    this.schedule = params.schedule;
     this.internetAccess = params.internetAccess;
     this.allowedDomains = params.allowedDomains;
     this.enabled = params.enabled;

@@ -10,6 +10,7 @@ import { aRoutine } from 'src/domain/routines/application/testing/routine.fixtur
 import { RoutineAlreadyCreatedError } from 'src/domain/routines/application/routines.errors';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
 import { LocalRoutinesRepository } from './local-routines.repository';
 import { RoutineMapper } from './mappers/routine.mapper';
 import { RoutineRecord } from './schema/routine.record';
@@ -41,6 +42,9 @@ const routineSchema = new EntitySchema<RoutineRecord>({
     orgId: { type: 'uuid' },
     modelId: { type: 'uuid', nullable: true },
     dailyTime: { type: String },
+    frequency: { type: String, default: 'daily' },
+    weekdays: { type: 'smallint', array: true, default: () => "'{}'" },
+    monthDay: { type: 'smallint', nullable: true },
     internetAccess: { type: String },
     allowedDomains: { type: String, array: true, default: () => "'{}'" },
     enabled: { type: Boolean },
@@ -380,6 +384,47 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
   });
 
   describe('updateDefinition', () => {
+    it("replaces the whole schedule, leaving none of the previous frequency's fields", async () => {
+      const routine = await stored({
+        schedule: {
+          frequency: RoutineFrequency.WEEKLY,
+          time: '08:00',
+          weekdays: [1, 4],
+        },
+      });
+
+      const monthly = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        {
+          schedule: {
+            frequency: RoutineFrequency.MONTHLY,
+            time: '09:00',
+            monthDay: 'last',
+          },
+        },
+      );
+      const daily = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        { schedule: { frequency: RoutineFrequency.DAILY, time: '07:00' } },
+      );
+      const row = await db
+        .getRepository(RoutineRecord)
+        .findOneByOrFail({ id: routine.id });
+
+      expect(monthly?.schedule).toEqual({
+        frequency: RoutineFrequency.MONTHLY,
+        time: '09:00',
+        monthDay: 'last',
+      });
+      expect(daily?.schedule).toEqual({
+        frequency: RoutineFrequency.DAILY,
+        time: '07:00',
+      });
+      expect(row).toMatchObject({ weekdays: [], monthDay: null });
+    });
+
     it('stores the internet access and its domains', async () => {
       const routine = await stored();
 
@@ -498,9 +543,35 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
         id: earlier.id,
         userId: earlier.userId,
         orgId: earlier.orgId,
-        dailyTime: earlier.dailyTime,
+        schedule: earlier.schedule,
         nextRunAt: earlier.nextRunAt,
       });
+    });
+
+    it("returns each due routine's weekly or monthly schedule", async () => {
+      const weekly = await stored({
+        schedule: {
+          frequency: RoutineFrequency.WEEKLY,
+          time: '08:00',
+          weekdays: [1, 4],
+        },
+        nextRunAt: new Date('2026-11-07T06:00:00.000Z'),
+      });
+      const lastDay = await stored({
+        schedule: {
+          frequency: RoutineFrequency.MONTHLY,
+          time: '08:00',
+          monthDay: 'last',
+        },
+        nextRunAt: new Date('2026-11-07T06:01:00.000Z'),
+      });
+
+      const due = await repository.findDue(now, 10);
+
+      expect(due.map((routine) => routine.schedule)).toEqual([
+        weekly.schedule,
+        lastDay.schedule,
+      ]);
     });
 
     it('returns at most the limit', async () => {

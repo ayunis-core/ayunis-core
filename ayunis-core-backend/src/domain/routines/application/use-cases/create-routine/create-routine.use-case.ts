@@ -6,10 +6,12 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import {
   RoutineInvalidAllowedDomainsError,
+  RoutineInvalidScheduleError,
   UnexpectedRoutineError,
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { routineInternetSettings } from 'src/domain/routines/domain/routine-internet-access';
+import { routineSchedule } from 'src/domain/routines/domain/routine-frequency';
 import { Routine } from 'src/domain/routines/domain/routine.entity';
 import { nextRoutineRunAt } from 'src/domain/routines/domain/routine-schedule';
 import { CreateRoutineCommand } from './create-routine.command';
@@ -28,6 +30,9 @@ export class CreateRoutineUseCase {
   async execute(command: CreateRoutineCommand): Promise<Routine> {
     this.logger.log('Creating routine');
     const { userId, orgId } = getRequiredUserContext(this.contextService);
+    const scheduled = routineSchedule(command.schedule);
+    if (!scheduled.ok) throw new RoutineInvalidScheduleError(scheduled.problem);
+    const { schedule } = scheduled;
     const internet = routineInternetSettings(
       command.internetAccess,
       command.allowedDomains,
@@ -46,12 +51,12 @@ export class CreateRoutineUseCase {
         name: command.name,
         prompt: command.prompt,
         modelId,
-        dailyTime: command.dailyTime,
+        schedule,
         ...internet.settings,
         enabled: command.enabled,
         sourceToolCallId: command.sourceToolCallId,
         nextRunAt: command.enabled
-          ? nextRoutineRunAt({ id, dailyTime: command.dailyTime }, new Date())
+          ? nextRoutineRunAt({ id, schedule }, new Date())
           : null,
       }),
     );

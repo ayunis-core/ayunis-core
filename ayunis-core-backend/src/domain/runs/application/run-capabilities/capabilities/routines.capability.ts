@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { FindManageableRoutinesUseCase } from 'src/domain/routines/application/use-cases/find-manageable-routines/find-manageable-routines.use-case';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import {
+  ROUTINE_LAST_MONTH_DAY,
+  RoutineFrequency,
+  type RoutineSchedule,
+} from 'src/domain/routines/domain/routine-frequency';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { assembleTools } from 'src/domain/runs/application/run-capabilities/assemble-tools.helper';
@@ -45,8 +50,31 @@ export class RoutinesCapability implements RunCapability {
   }
 }
 
+const WEEKDAY_NAMES = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
 function summarize(routine: Routine): string {
-  return `${JSON.stringify(routine.name)} (daily at ${routine.dailyTime}, internet_access ${describeInternet(routine)})`;
+  return `${JSON.stringify(routine.name)} (${describeSchedule(routine.schedule)}, internet_access ${describeInternet(routine)})`;
+}
+
+function describeSchedule(schedule: RoutineSchedule): string {
+  switch (schedule.frequency) {
+    case RoutineFrequency.DAILY:
+      return `daily at ${schedule.time}`;
+    case RoutineFrequency.WEEKLY:
+      return `weekly on ${schedule.weekdays.map((day) => WEEKDAY_NAMES[day - 1]).join(', ')} (weekdays ${schedule.weekdays.join(', ')}) at ${schedule.time}`;
+    case RoutineFrequency.MONTHLY:
+      return schedule.monthDay === ROUTINE_LAST_MONTH_DAY
+        ? `monthly on the last day (month_day "${ROUTINE_LAST_MONTH_DAY}") at ${schedule.time}`
+        : `monthly on day ${schedule.monthDay} at ${schedule.time}`;
+  }
 }
 
 function describeInternet(routine: Routine): string {

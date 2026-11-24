@@ -13,7 +13,7 @@ function routine(overrides: Partial<Routine>): Routine {
     name: 'Amtsblatt',
     prompt: 'Prüfe das Amtsblatt',
     modelId: null,
-    dailyTime: '07:30',
+    schedule: { frequency: 'daily', time: '07:30' },
     internetAccess: 'off',
     allowedDomains: [],
     enabled: true,

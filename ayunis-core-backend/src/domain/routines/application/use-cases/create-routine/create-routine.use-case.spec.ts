@@ -6,6 +6,7 @@ import { RoutinesRepository } from 'src/domain/routines/application/ports/routin
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineInvalidAllowedDomainsError } from 'src/domain/routines/application/routines.errors';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
 import {
   TEST_MODEL_ID,
   TEST_ORG_ID,
@@ -24,7 +25,7 @@ describe('CreateRoutineUseCase', () => {
     new CreateRoutineCommand({
       name: 'Amtsblatt',
       prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
-      dailyTime: '08:00',
+      schedule: { frequency: 'daily', time: '08:00' },
       ...overrides,
     });
 
@@ -50,7 +51,7 @@ describe('CreateRoutineUseCase', () => {
       userId: TEST_USER_ID,
       orgId: TEST_ORG_ID,
       name: 'Amtsblatt',
-      dailyTime: '08:00',
+      schedule: { frequency: RoutineFrequency.DAILY, time: '08:00' },
       internetAccess: RoutineInternetAccess.OFF,
       allowedDomains: [],
       enabled: true,
@@ -83,7 +84,7 @@ describe('CreateRoutineUseCase', () => {
     afterEach(() => jest.useRealTimers());
 
     it('schedules the first run at the next daily time, within the start spread', async () => {
-      const routine = await useCase.execute(command({ dailyTime: '08:00' }));
+      const routine = await useCase.execute(command());
 
       const minutesAfterEight =
         ((routine.nextRunAt?.getTime() ?? 0) -

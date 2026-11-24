@@ -8,12 +8,17 @@ import {
   DEFAULT_MODEL_OPTION,
   type RoutineFormFields,
 } from '@/features/routines/model/types';
+import {
+  DEFAULT_SCHEDULE_FIELDS,
+  fieldsToSchedule,
+  scheduleToFields,
+} from '@/features/routines/lib/routine-schedule';
 
 export const EMPTY_ROUTINE_FORM: RoutineFormFields = {
   name: '',
   prompt: '',
   modelId: DEFAULT_MODEL_OPTION,
-  dailyTime: '07:00',
+  schedule: DEFAULT_SCHEDULE_FIELDS,
   internetAccess: RoutineInternetAccess.off,
   allowedDomains: '',
 };
@@ -23,7 +28,7 @@ export function routineToFormFields(routine: Routine): RoutineFormFields {
     name: routine.name,
     prompt: routine.prompt,
     modelId: routine.modelId ?? DEFAULT_MODEL_OPTION,
-    dailyTime: routine.dailyTime,
+    schedule: scheduleToFields(routine.schedule),
     internetAccess: routine.internetAccess,
     allowedDomains: formatAllowedDomains(routine.allowedDomains),
   };
@@ -57,7 +62,7 @@ export function formFieldsToCreateDto(
   return {
     name: fields.name,
     prompt: fields.prompt,
-    dailyTime: fields.dailyTime,
+    schedule: fieldsToSchedule(fields.schedule),
     internetAccess: fields.internetAccess,
     ...allowedDomainsToSend(fields),
     ...(fields.modelId !== DEFAULT_MODEL_OPTION && { modelId: fields.modelId }),
@@ -71,7 +76,7 @@ export function formFieldsToUpdateDto(
   return {
     name: fields.name,
     prompt: fields.prompt,
-    dailyTime: fields.dailyTime,
+    schedule: fieldsToSchedule(fields.schedule),
     internetAccess: fields.internetAccess,
     ...allowedDomainsToSend(fields),
     modelId: fields.modelId === DEFAULT_MODEL_OPTION ? null : fields.modelId,

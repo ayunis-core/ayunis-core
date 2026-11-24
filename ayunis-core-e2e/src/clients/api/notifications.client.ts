@@ -19,7 +19,7 @@ export function notifyingRoutine(
   return {
     name,
     prompt: `E2E notify routine: ${subject}`,
-    dailyTime: '07:00',
+    schedule: { frequency: 'daily', time: '07:00' },
     internetAccess: 'off',
   };
 }

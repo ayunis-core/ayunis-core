@@ -8,6 +8,11 @@ import {
   routineAllowedDomainsParameter,
   routineInternetAccessParameter,
 } from './routine-internet-params';
+import {
+  assertValidRoutineScheduleParams,
+  routineScheduleParameter,
+  type RoutineScheduleParams,
+} from './routine-schedule-params';
 
 function buildParameters(routineSummaries: Map<string, string>): JSONSchema {
   const routineIdProperty: Record<string, unknown> = {
@@ -36,11 +41,9 @@ function buildParameters(routineSummaries: Map<string, string>): JSONSchema {
         description:
           'The updated task the routine carries out on every run, as self-contained instructions. Pass an empty string if unchanged.',
       },
-      daily_time: {
-        type: 'string' as const,
-        pattern: '^(([01]\\d|2[0-3]):[0-5]\\d)?$',
-        description:
-          'The updated time of day the routine runs, as HH:mm in 24-hour German time (Europe/Berlin). Pass an empty string if unchanged.',
+      schedule: {
+        ...routineScheduleParameter,
+        description: `${routineScheduleParameter.description} Replaces the whole schedule, so give all of it; omit it if unchanged.`,
       },
       internet_access: {
         ...routineInternetAccessParameter,
@@ -56,7 +59,7 @@ function buildParameters(routineSummaries: Map<string, string>): JSONSchema {
           'A brief summary of what was changed and why, shown to the user for review',
       },
     },
-    required: ['routine_id', 'name', 'prompt', 'daily_time', 'change_summary'],
+    required: ['routine_id', 'name', 'prompt', 'change_summary'],
     additionalProperties: false,
   } as const satisfies JSONSchema;
 }
@@ -65,7 +68,7 @@ interface EditRoutineToolParameters {
   routine_id: string;
   name: string;
   prompt: string;
-  daily_time: string;
+  schedule?: RoutineScheduleParams;
   internet_access?: RoutineInternetAccess;
   allowed_domains?: string[];
   change_summary: string;
@@ -77,7 +80,7 @@ export class EditRoutineTool extends Tool {
     super({
       name: ToolType.EDIT_ROUTINE,
       description:
-        "Display a routine edit widget. Use this when the user asks you to change one of their routines, such as its task, its daily time or its internet access, or when a routine's results show that its task should be adjusted. Provide the routine_id and the updated fields. For text fields that are not changing, pass an empty string. Include a brief change_summary describing what was modified. The user reviews and confirms the update.",
+        "Display a routine edit widget. Use this when the user asks you to change one of their routines, such as its task, its schedule or its internet access, or when a routine's results show that its task should be adjusted. Provide the routine_id and the updated fields. For text fields that are not changing, pass an empty string. Include a brief change_summary describing what was modified. The user reviews and confirms the update.",
       parameters: buildParameters(routineSummaries),
       type: ToolType.EDIT_ROUTINE,
     });
@@ -92,6 +95,9 @@ export class EditRoutineTool extends Tool {
       this.parameters,
       params,
     );
+    if (validated.schedule) {
+      assertValidRoutineScheduleParams(validated.schedule);
+    }
     if (validated.allowed_domains) {
       assertValidRoutineInternetParams(
         validated.internet_access ?? RoutineInternetAccess.OFF,

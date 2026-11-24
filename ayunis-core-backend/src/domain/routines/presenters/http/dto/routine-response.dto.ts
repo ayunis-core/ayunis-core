@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineScheduleDto } from './routine-schedule.dto';
 
 export class RoutineResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -21,8 +22,8 @@ export class RoutineResponseDto {
   })
   modelId: string | null;
 
-  @ApiProperty({ description: 'HH:mm (Europe/Berlin)', example: '07:30' })
-  dailyTime: string;
+  @ApiProperty({ type: RoutineScheduleDto })
+  schedule: RoutineScheduleDto;
 
   @ApiProperty({
     enum: RoutineInternetAccess,
@@ -72,7 +73,7 @@ export class RoutineResponseDto {
     type: String,
     nullable: true,
     description:
-      'When the next scheduled run starts: the daily time plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.',
+      'When the next scheduled run starts: the set time on the next day the schedule matches, plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.',
     example: '2026-11-07T06:34:00.000Z',
   })
   nextRunAt: string | null;

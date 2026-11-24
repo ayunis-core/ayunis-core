@@ -1,9 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import type { UUID } from 'crypto';
 import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsDefined,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -12,9 +14,9 @@ import {
   Matches,
   MaxLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 import {
-  ROUTINE_DAILY_TIME_PATTERN,
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
   ROUTINE_ALLOWED_DOMAIN_INPUT_MAX_LENGTH,
@@ -23,6 +25,7 @@ import {
   ROUTINE_ALLOWED_DOMAINS_MAX,
   RoutineInternetAccess,
 } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineScheduleDto } from './routine-schedule.dto';
 
 const NOT_BLANK = /\S/;
 
@@ -55,13 +58,15 @@ export class UpdateRoutineDto {
   modelId?: UUID | null;
 
   @ApiPropertyOptional({
-    description: 'Daily run time as HH:mm (Europe/Berlin)',
-    example: '07:30',
+    type: RoutineScheduleDto,
+    description: 'Replaces the whole schedule; omit it to keep the schedule',
   })
-  @IsOptional()
-  @IsString()
-  @Matches(ROUTINE_DAILY_TIME_PATTERN)
-  dailyTime?: string;
+  // Null is rejected rather than read as "unchanged".
+  @ValidateIf((_dto, value) => value !== undefined)
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => RoutineScheduleDto)
+  schedule?: RoutineScheduleDto;
 
   @ApiPropertyOptional({
     enum: RoutineInternetAccess,

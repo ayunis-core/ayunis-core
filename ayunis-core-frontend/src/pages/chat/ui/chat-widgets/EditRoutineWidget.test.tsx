@@ -35,7 +35,7 @@ const STORED_ROUTINE = {
   name: 'Stored name',
   prompt: 'Stored prompt',
   modelId: 'model-id',
-  dailyTime: '07:00',
+  schedule: { frequency: 'weekly', time: '07:00', weekdays: [1, 4] },
   internetAccess: 'off',
   allowedDomains: [],
 };
@@ -48,7 +48,6 @@ const content = {
     routine_id: STORED_ROUTINE.id,
     name: 'Proposed name',
     prompt: '',
-    daily_time: '',
     change_summary: 'Rename',
   },
 } as unknown as ToolUseMessageContent;
@@ -120,7 +119,11 @@ describe('EditRoutineWidget', () => {
       expect(request).toHaveBeenCalledWith(
         expect.objectContaining({
           method: 'PATCH',
-          data: expect.objectContaining({ name: 'Reviewed name' }) as unknown,
+          data: expect.objectContaining({
+            name: 'Reviewed name',
+            // The proposal has no schedule, so the stored one is kept.
+            schedule: STORED_ROUTINE.schedule,
+          }) as unknown,
         }),
       ),
     );

@@ -15,6 +15,7 @@ import {
   RoutineRunStatusLine,
   RoutineInternetAccess,
   RoutineScheduleLine,
+  RoutineScheduleSummary,
   type Routine,
 } from '@/features/routines';
 
@@ -50,7 +51,7 @@ export default function RoutineCard({ routine }: Readonly<RoutineCardProps>) {
           )}
         </ItemTitle>
         <ItemDescription>
-          {t('card.schedule', { time: routine.dailyTime })}
+          <RoutineScheduleSummary schedule={routine.schedule} />
         </ItemDescription>
         <div className="flex flex-col gap-1 text-sm">
           <RoutineScheduleLine routine={routine} />

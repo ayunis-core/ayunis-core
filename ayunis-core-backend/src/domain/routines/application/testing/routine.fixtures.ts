@@ -5,6 +5,7 @@ import {
 } from 'src/common/context/testing/context.fixtures';
 import { Routine } from 'src/domain/routines/domain/routine.entity';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
 import type { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import type { RoutineExecutionQueue } from 'src/domain/routines/application/ports/routine-execution-queue.port';
 
@@ -20,7 +21,7 @@ export function aRoutine(overrides: Partial<Routine> = {}): Routine {
     name: 'Verkündungsplattform',
     prompt: 'Prüfe die heutigen Verkündungen im Gesetz- und Verordnungsblatt.',
     modelId: TEST_MODEL_ID,
-    dailyTime: '07:30',
+    schedule: { frequency: RoutineFrequency.DAILY, time: '07:30' },
     internetAccess: RoutineInternetAccess.ALL,
     enabled: true,
     createdAt: new Date('2026-11-01T08:00:00.000Z'),

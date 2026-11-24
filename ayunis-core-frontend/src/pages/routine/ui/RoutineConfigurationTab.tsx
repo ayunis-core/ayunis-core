@@ -14,6 +14,7 @@ import {
   RoutineFormFieldset,
   RoutineRunStatusLine,
   RoutineScheduleLine,
+  RoutineScheduleSummary,
   routineToFormFields,
   useUpdateRoutine,
   type Routine,
@@ -43,6 +44,10 @@ function RoutineStatusCard({ routine }: Readonly<{ routine: Routine }>) {
       </CardHeader>
       <CardContent className="flex flex-col gap-1 text-sm">
         <RoutineRunStatusLine routine={routine} />
+        <RoutineScheduleSummary
+          schedule={routine.schedule}
+          className="text-muted-foreground"
+        />
         <RoutineScheduleLine routine={routine} />
       </CardContent>
     </Card>

@@ -1,12 +1,20 @@
 import type { UUID } from 'crypto';
 import type { Routine } from './routine.entity';
 import {
+  ROUTINE_LAST_MONTH_DAY,
+  RoutineFrequency,
+  sameRoutineSchedule,
+  type RoutineSchedule,
+} from './routine-frequency';
+import {
   ROUTINE_START_SPREAD_MINUTES,
   ROUTINE_TIME_ZONE,
 } from './routines.constants';
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
+/** Covers the longest gap between two monthly runs, from yesterday on. */
+const MAX_CANDIDATE_DAYS = 62;
 
 const WALL_CLOCK = new Intl.DateTimeFormat('en-US', {
   timeZone: ROUTINE_TIME_ZONE,
@@ -26,8 +34,8 @@ export interface RoutineScheduleChanges {
 }
 
 /**
- * Spreads routines that share a daily time over a few minutes. Derived from
- * the (random) id so it stays the same for a routine across days and replicas.
+ * Spreads routines that share a time over a few minutes. Derived from the
+ * (random) id so it stays the same for a routine across days and replicas.
  */
 export function routineStartOffsetMinutes(routineId: UUID): number {
   return (
@@ -36,27 +44,45 @@ export function routineStartOffsetMinutes(routineId: UUID): number {
 }
 
 /**
- * The first scheduled start strictly after `after`: the daily time in
- * Europe/Berlin plus the routine's start offset. A time skipped by the switch
- * to summer time runs an hour later; a time repeated by the switch back runs
- * at its first occurrence.
+ * The first scheduled start strictly after `after`: the time in Europe/Berlin
+ * on the first day the schedule matches, plus the routine's start offset. A
+ * time skipped by the switch to summer time runs an hour later; a time
+ * repeated by the switch back runs at its first occurrence.
  */
 export function nextRoutineRunAt(
-  routine: Pick<Routine, 'id' | 'dailyTime'>,
+  routine: Pick<Routine, 'id' | 'schedule'>,
   after: Date,
 ): Date {
+  const { schedule } = routine;
   const offsetMs = routineStartOffsetMinutes(routine.id) * MINUTE_MS;
   const today = berlinDate(after);
-  // Yesterday's start can still be ahead when the offset pushed it past midnight.
-  for (const days of [-1, 0]) {
-    const start =
-      berlinWallTimeToInstant(addDays(today, days), routine.dailyTime) +
-      offsetMs;
+  // Starts at yesterday: its start can still be ahead when the offset pushed
+  // it past midnight.
+  for (let days = -1; days < MAX_CANDIDATE_DAYS; days++) {
+    const date = addDays(today, days);
+    if (!matchesRoutineSchedule(schedule, date)) continue;
+    const start = berlinWallTimeToInstant(date, schedule.time) + offsetMs;
     if (start > after.getTime()) return new Date(start);
   }
-  return new Date(
-    berlinWallTimeToInstant(addDays(today, 1), routine.dailyTime) + offsetMs,
-  );
+  throw new Error(`No run within ${MAX_CANDIDATE_DAYS} days`);
+}
+
+/** Whether the schedule runs on a Berlin date (`YYYY-MM-DD`). */
+export function matchesRoutineSchedule(
+  schedule: RoutineSchedule,
+  date: string,
+): boolean {
+  const [year, month, day] = date.split('-').map(Number);
+  switch (schedule.frequency) {
+    case RoutineFrequency.DAILY:
+      return true;
+    case RoutineFrequency.WEEKLY:
+      return schedule.weekdays.includes(isoWeekday(year, month, day));
+    case RoutineFrequency.MONTHLY:
+      return schedule.monthDay === ROUTINE_LAST_MONTH_DAY
+        ? day === daysInMonth(year, month)
+        : day === schedule.monthDay;
+  }
 }
 
 /**
@@ -79,25 +105,28 @@ export function scheduledRunKey(startAt: Date): string {
 /**
  * How an edit moves the schedule. Disabling removes the scheduled run;
  * re-enabling schedules the next one and clears the pause and the failure
- * count; a new time reschedules an enabled routine. An unchanged time keeps a
- * pending (possibly due) run.
+ * count; any change to the schedule reschedules an enabled routine. An
+ * unchanged schedule keeps a pending (possibly due) run.
  */
 export function scheduleChangesForEdit(
   current: Pick<
     Routine,
-    'id' | 'dailyTime' | 'enabled' | 'nextRunAt' | 'pausedAt'
+    'id' | 'schedule' | 'enabled' | 'nextRunAt' | 'pausedAt'
   >,
-  changes: { dailyTime?: string; enabled?: boolean },
+  changes: { schedule?: RoutineSchedule; enabled?: boolean },
   now: Date,
 ): RoutineScheduleChanges {
   const enabled = changes.enabled ?? current.enabled;
-  const dailyTime = changes.dailyTime ?? current.dailyTime;
+  const schedule = changes.schedule ?? current.schedule;
   if (!enabled) return current.enabled ? { nextRunAt: null } : {};
-  const nextRunAt = nextRoutineRunAt({ id: current.id, dailyTime }, now);
+  const nextRunAt = nextRoutineRunAt({ id: current.id, schedule }, now);
   if (!current.enabled) {
     return { nextRunAt, consecutiveFailureCount: 0, pausedAt: null };
   }
-  if (dailyTime !== current.dailyTime || current.nextRunAt === null) {
+  if (
+    !sameRoutineSchedule(schedule, current.schedule) ||
+    current.nextRunAt === null
+  ) {
     return { nextRunAt };
   }
   return {};
@@ -150,6 +179,14 @@ function addDays(date: string, days: number): string {
     shifted.getUTCMonth() + 1,
     shifted.getUTCDate(),
   );
+}
+
+function isoWeekday(year: number, month: number, day: number): number {
+  return ((new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7) + 1;
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
 function isoDate(year: number, month: number, day: number): string {

@@ -83,6 +83,9 @@ export class LocalRoutinesRepository extends RoutinesRepository {
         'routine.userId',
         'routine.orgId',
         'routine.dailyTime',
+        'routine.frequency',
+        'routine.weekdays',
+        'routine.monthDay',
         'routine.nextRunAt',
       ])
       .where('routine.enabled = true')
@@ -95,7 +98,7 @@ export class LocalRoutinesRepository extends RoutinesRepository {
       id: record.id,
       userId: record.userId,
       orgId: record.orgId,
-      dailyTime: record.dailyTime,
+      schedule: this.mapper.scheduleToDomain(record),
       nextRunAt: record.nextRunAt as Date,
     }));
   }
@@ -105,10 +108,12 @@ export class LocalRoutinesRepository extends RoutinesRepository {
     id: UUID,
     changes: RoutineDefinitionChanges & RoutineScheduleChanges,
   ): Promise<Routine | null> {
+    const { schedule, ...columns } = changes;
     const set = Object.fromEntries(
-      Object.entries(changes as Record<string, unknown>).filter(
-        ([, value]) => value !== undefined,
-      ),
+      Object.entries({
+        ...columns,
+        ...(schedule && this.mapper.scheduleToRecord(schedule)),
+      } as Record<string, unknown>).filter(([, value]) => value !== undefined),
     ) as QueryDeepPartialEntity<RoutineRecord>;
     if (Object.keys(set).length > 0) {
       const result = await this.repo

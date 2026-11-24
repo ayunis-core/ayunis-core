@@ -10,7 +10,7 @@
   },
   "emptyState": {
     "title": "Wiederkehrende Arbeit an die KI abgeben",
-    "description": "Eine Routine erledigt jeden Tag zu einer festen Uhrzeit eine Aufgabe für Sie und meldet Relevantes in Ihren Posteingang.",
+    "description": "Eine Routine erledigt nach Zeitplan – täglich, wöchentlich oder monatlich – eine Aufgabe für Sie und meldet Relevantes in Ihren Posteingang.",
     "askPlaceholder": "Fragen Sie, wie Routinen funktionieren oder was eine Routine für Sie erledigen könnte …",
     "steps": {
       "describe": {
@@ -18,8 +18,8 @@
         "description": "Schreiben Sie, was die Routine tun soll, oder starten Sie mit einer Vorlage."
       },
       "schedule": {
-        "title": "Uhrzeit wählen",
-        "description": "Legen Sie fest, wann sie täglich läuft und ob sie das Internet nutzen darf."
+        "title": "Zeitplan wählen",
+        "description": "Legen Sie fest, wann sie läuft und ob sie das Internet nutzen darf."
       },
       "results": {
         "title": "Ergebnisse erhalten",
@@ -36,8 +36,18 @@
     "promptDescription": "Die Routine erledigt diese Aufgabe ohne Sie. Ersetzen Sie die Angaben in eckigen Klammern.",
     "model": "Modell",
     "defaultModel": "Mein Standardmodell",
-    "dailyTime": "Täglich um",
-    "dailyTimeDescription": "Uhrzeit in Europe/Berlin.",
+    "schedule": "Zeitplan",
+    "frequency": {
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich"
+    },
+    "time": "Uhrzeit",
+    "timeDescription": "Uhrzeit in Europe/Berlin.",
+    "weekdays": "An",
+    "monthDay": "Am",
+    "monthDayOption": "{{day}}.",
+    "lastMonthDay": "Letzten Tag",
     "internet": "Internetzugriff",
     "internetDescription": "Erlaubt der Routine, im Web zu suchen und Webseiten zu lesen.",
     "internetAccess": {
@@ -54,11 +64,10 @@
     "save": "Speichern"
   },
   "card": {
-    "schedule": "Täglich um {{time}}",
     "internet": "Internet",
     "enabled": "Aktiv",
     "disabled": "Pausiert",
-    "enabledLabel": "Täglich ausführen",
+    "enabledLabel": "Nach Zeitplan ausführen",
     "runNow": "Jetzt ausführen",
     "delete": "Routine löschen"
   },
@@ -103,6 +112,32 @@
     "nextRun": "Nächster Lauf: {{time}}",
     "paused": "Nach wiederholten Fehlschlägen pausiert",
     "pausedHint": "Zum Fortsetzen wieder einschalten."
+  },
+  "scheduleSummary": {
+    "daily": "Täglich um {{time}}",
+    "weekly": "{{days}} um {{time}}",
+    "monthly": "Monatlich am {{day}}. um {{time}}",
+    "monthlyLast": "Monatlich am letzten Tag um {{time}}"
+  },
+  "weekdays": {
+    "short": {
+      "1": "Mo",
+      "2": "Di",
+      "3": "Mi",
+      "4": "Do",
+      "5": "Fr",
+      "6": "Sa",
+      "7": "So"
+    },
+    "long": {
+      "1": "Montag",
+      "2": "Dienstag",
+      "3": "Mittwoch",
+      "4": "Donnerstag",
+      "5": "Freitag",
+      "6": "Samstag",
+      "7": "Sonntag"
+    }
   },
   "status": {
     "never": "Noch nicht ausgeführt",
@@ -162,9 +197,23 @@
       "maxLength": "Die Aufgabe darf höchstens 10.000 Zeichen lang sein",
       "invalid": "Ungültige Aufgabe"
     },
-    "dailyTime": {
-      "matches": "Geben Sie eine Uhrzeit im Format HH:mm ein",
-      "invalid": "Ungültige Uhrzeit"
+    "schedule": {
+      "frequency": {
+        "invalid": "Wählen Sie, wie oft sie läuft"
+      },
+      "time": {
+        "matches": "Geben Sie eine Uhrzeit im Format HH:mm ein",
+        "invalid": "Ungültige Uhrzeit"
+      },
+      "weekdays": {
+        "required": "Wählen Sie mindestens einen Tag",
+        "invalid": "Wählen Sie Tage von Montag bis Sonntag"
+      },
+      "monthDay": {
+        "required": "Wählen Sie einen Tag",
+        "invalid": "Wählen Sie einen Tag von 1 bis 28 oder den letzten Tag"
+      },
+      "invalid": "Ungültiger Zeitplan"
     },
     "modelId": {
       "invalid": "Ungültiges Modell"

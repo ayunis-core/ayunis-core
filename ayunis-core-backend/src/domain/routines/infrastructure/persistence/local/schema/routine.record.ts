@@ -18,6 +18,7 @@ import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/p
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
 import {
   ROUTINE_ALLOWED_DOMAIN_MAX_LENGTH,
   ROUTINE_EXECUTION_KEY_MAX_LENGTH,
@@ -63,8 +64,24 @@ export class RoutineRecord extends BaseRecord {
   @JoinColumn({ name: 'modelId' })
   model?: PermittedModelRecord;
 
+  /** HH:mm (Europe/Berlin) for every frequency; named from when routines only ran daily. */
   @Column({ type: 'varchar', length: 5 })
   dailyTime: string;
+
+  @Column({
+    type: 'enum',
+    enum: RoutineFrequency,
+    default: RoutineFrequency.DAILY,
+  })
+  frequency: RoutineFrequency;
+
+  /** ISO weekdays of a weekly routine; empty for the other frequencies. */
+  @Column({ type: 'smallint', array: true, default: () => "'{}'" })
+  weekdays: number[];
+
+  /** 1–28, or -1 for the last day (RRULE's BYMONTHDAY=-1); null unless monthly. */
+  @Column({ type: 'smallint', nullable: true })
+  monthDay: number | null;
 
   @Column({
     type: 'enum',

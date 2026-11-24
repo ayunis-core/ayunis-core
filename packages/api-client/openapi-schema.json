@@ -27311,10 +27311,8 @@
             "nullable": true,
             "description": "Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed"
           },
-          "dailyTime": {
-            "type": "string",
-            "description": "HH:mm (Europe/Berlin)",
-            "example": "07:30"
+          "schedule": {
+            "$ref": "#/components/schemas/RoutineScheduleDto"
           },
           "internetAccess": {
             "allOf": [
@@ -27360,7 +27358,7 @@
           "nextRunAt": {
             "type": "string",
             "nullable": true,
-            "description": "When the next scheduled run starts: the daily time plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.",
+            "description": "When the next scheduled run starts: the set time on the next day the schedule matches, plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.",
             "example": "2026-11-07T06:34:00.000Z"
           },
           "pausedAt": {
@@ -27385,7 +27383,7 @@
           "name",
           "prompt",
           "modelId",
-          "dailyTime",
+          "schedule",
           "internetAccess",
           "allowedDomains",
           "enabled",
@@ -27417,10 +27415,8 @@
             "description": "Permitted model id; omit for the user's default model",
             "format": "uuid"
           },
-          "dailyTime": {
-            "type": "string",
-            "description": "Daily run time as HH:mm (Europe/Berlin)",
-            "example": "07:30"
+          "schedule": {
+            "$ref": "#/components/schemas/RoutineScheduleDto"
           },
           "internetAccess": {
             "description": "Whether the routine may search and read the web: not at all, any website, or only `allowedDomains`",
@@ -27450,7 +27446,7 @@
             "description": "The chat `create_routine` tool call this routine is created from. Each one can create only one routine per user."
           }
         },
-        "required": ["name", "prompt", "dailyTime"]
+        "required": ["name", "prompt", "schedule"]
       },
       "UpdateRoutineDto": {
         "type": "object",
@@ -27469,10 +27465,13 @@
             "format": "uuid",
             "nullable": true
           },
-          "dailyTime": {
-            "type": "string",
-            "description": "Daily run time as HH:mm (Europe/Berlin)",
-            "example": "07:30"
+          "schedule": {
+            "description": "Replaces the whole schedule; omit it to keep the schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineScheduleDto"
+              }
+            ]
           },
           "internetAccess": {
             "description": "Whether the routine may search and read the web: not at all, any website, or only `allowedDomains`",
@@ -28689,6 +28688,55 @@
       "RoutineInternetAccess": {
         "type": "string",
         "enum": ["off", "all", "allowlist"]
+      },
+      "RoutineFrequency": {
+        "type": "string",
+        "enum": ["daily", "weekly", "monthly"],
+        "description": "Daily, weekly on `weekdays`, or monthly on `monthDay`. Fields of another frequency are rejected."
+      },
+      "RoutineScheduleDto": {
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "description": "Daily, weekly on `weekdays`, or monthly on `monthDay`. Fields of another frequency are rejected.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineFrequency"
+              }
+            ]
+          },
+          "time": {
+            "type": "string",
+            "description": "Run time as HH:mm (Europe/Berlin)",
+            "example": "07:30"
+          },
+          "weekdays": {
+            "description": "Weekly only, and required there: ISO weekdays, 1 (Monday) to 7 (Sunday), at least one; stored ascending without duplicates",
+            "example": [1, 4],
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "maximum": 7,
+              "minimum": 1
+            }
+          },
+          "monthDay": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 28
+              },
+              {
+                "type": "string",
+                "enum": ["last"]
+              }
+            ],
+            "description": "Monthly only, and required there: the day of the month, 1 to 28, or `last` for its last day",
+            "example": 15
+          }
+        },
+        "required": ["frequency", "time"]
       }
     }
   }

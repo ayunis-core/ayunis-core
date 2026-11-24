@@ -39,7 +39,7 @@ const content = {
   params: {
     name: 'Proposed name',
     prompt: 'Proposed prompt',
-    daily_time: '06:45',
+    schedule: { frequency: 'weekly', time: '06:45', weekdays: [1, 4] },
     internet_access: 'allowlist',
     allowed_domains: ['nrw.de'],
   },
@@ -51,7 +51,7 @@ function aStoredRoutine(overrides: object = {}) {
     name: 'Saved name',
     prompt: 'Saved prompt',
     modelId: null,
-    dailyTime: '07:00',
+    schedule: { frequency: 'daily', time: '07:00' },
     internetAccess: 'off',
     allowedDomains: [],
     sourceToolCallId: TOOL_CALL_ID,
@@ -142,6 +142,7 @@ describe('CreateRoutineWidget', () => {
           method: 'POST',
           data: expect.objectContaining({
             name: 'Proposed name',
+            schedule: { frequency: 'weekly', time: '06:45', weekdays: [1, 4] },
             internetAccess: 'allowlist',
             allowedDomains: ['nrw.de'],
             sourceToolCallId: TOOL_CALL_ID,
