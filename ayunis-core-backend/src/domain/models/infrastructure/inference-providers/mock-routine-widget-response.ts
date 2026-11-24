@@ -22,7 +22,8 @@ export function mockRoutineWidgetResponse(
       prompt:
         'Prüfe das heutige Amtsblatt auf neue Bekanntmachungen zur Grundsteuer.',
       daily_time: '06:45',
-      internet_enabled: true,
+      internet_access: 'allowlist',
+      allowed_domains: ['nrw.de'],
     });
   }
   if (userText.startsWith(EDIT_ROUTINE_PROMPT)) {
@@ -32,8 +33,7 @@ export function mockRoutineWidgetResponse(
       name: '',
       prompt: '',
       daily_time: '08:15',
-      internet_enabled: false,
-      change_summary: 'Später ausführen, ohne Internet',
+      change_summary: 'Später ausführen',
     });
   }
   return null;

@@ -11,6 +11,7 @@ import { setValidationErrors } from '@/shared/lib/set-validation-errors';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import type { UpdateRoutineDto } from '@/features/routines/model/openapi';
 import type { RoutineFormFields } from '@/features/routines/model/types';
+import { allowedDomainsErrorMessage } from '@/features/routines/lib/allowed-domains-error';
 
 /** Without a form (the enable switch), validation errors become a toast. */
 export function useUpdateRoutine(
@@ -35,7 +36,7 @@ export function useUpdateRoutine(
       },
       onError: (error: unknown) => {
         try {
-          const { code, errors } = extractErrorData(error);
+          const { code, errors, metadata } = extractErrorData(error);
           switch (code) {
             case 'VALIDATION_ERROR':
               if (errors && form) {
@@ -51,8 +52,14 @@ export function useUpdateRoutine(
             case 'MODEL_NOT_FOUND':
               showError(t('toast.modelUnavailable'));
               break;
-            case 'ROUTINE_INTEGRATION_UNAVAILABLE':
-              showError(t('toast.integrationUnavailable'));
+            case 'ROUTINE_INVALID_ALLOWED_DOMAINS':
+              if (form) {
+                form.setError('allowedDomains', {
+                  message: allowedDomainsErrorMessage(metadata, t),
+                });
+              } else {
+                showError(allowedDomainsErrorMessage(metadata, t));
+              }
               break;
             default:
               showError(t('toast.updateError'));

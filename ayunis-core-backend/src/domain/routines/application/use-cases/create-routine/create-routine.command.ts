@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 
 export class CreateRoutineCommand {
   readonly name: string;
@@ -6,8 +7,8 @@ export class CreateRoutineCommand {
   /** Omitted: the user's default model. */
   readonly modelId?: UUID;
   readonly dailyTime: string;
-  readonly internetEnabled: boolean;
-  readonly mcpIntegrationIds: UUID[];
+  readonly internetAccess: RoutineInternetAccess;
+  readonly allowedDomains: string[];
   readonly enabled: boolean;
   readonly sourceToolCallId?: string;
 
@@ -16,8 +17,8 @@ export class CreateRoutineCommand {
     prompt: string;
     modelId?: UUID;
     dailyTime: string;
-    internetEnabled: boolean;
-    mcpIntegrationIds?: UUID[];
+    internetAccess?: RoutineInternetAccess;
+    allowedDomains?: string[];
     enabled?: boolean;
     sourceToolCallId?: string;
   }) {
@@ -25,8 +26,8 @@ export class CreateRoutineCommand {
     this.prompt = params.prompt;
     this.modelId = params.modelId;
     this.dailyTime = params.dailyTime;
-    this.internetEnabled = params.internetEnabled;
-    this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
+    this.internetAccess = params.internetAccess ?? RoutineInternetAccess.OFF;
+    this.allowedDomains = params.allowedDomains ?? [];
     this.enabled = params.enabled ?? true;
     this.sourceToolCallId = params.sourceToolCallId;
   }

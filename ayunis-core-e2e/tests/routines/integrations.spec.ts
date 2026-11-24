@@ -5,7 +5,9 @@ import {
 } from "../../src/clients/api/integrations.client";
 import {
   getRoutine,
+  listRoutineIntegrations,
   listRoutineThreads,
+  requestRoutineLinkAdd,
   runRoutineNow,
 } from "../../src/clients/api/routines.client";
 import { getThread } from "../../src/clients/api/threads.client";
@@ -36,7 +38,10 @@ async function runToEnd(
     .toBe(status);
 }
 
-test("a routine runs with the integration switched on in its form, and fails once that integration is disabled until it is switched off", async ({
+const integrationIds = async (api: APIRequestContext, routineId: string) =>
+  (await listRoutineIntegrations(api, routineId)).map(({ id }) => id);
+
+test("a routine runs with the integration switched on in its Context card, and fails once that integration is disabled until it is switched off", async ({
   api,
   page,
 }) => {
@@ -53,9 +58,18 @@ test("a routine runs with the integration switched on in its form, and fails onc
   const routineId = await createBlankRoutine(page, {
     name,
     prompt: `E2E finish routine: ${name}`,
-    integrationIds: [integration.id],
   });
-  expect((await getRoutine(api, routineId)).mcpIntegrationIds).toEqual([
+  expect(await getRoutine(api, routineId)).toMatchObject({
+    internetAccess: "off",
+    modelId: null,
+    enabled: true,
+  });
+
+  const integrationSwitch = page.getByTestId(
+    `routine-integration-${integration.id}`,
+  );
+  await integrationSwitch.click();
+  await expect.poll(() => integrationIds(api, routineId)).toEqual([
     integration.id,
   ]);
 
@@ -72,14 +86,21 @@ test("a routine runs with the integration switched on in its form, and fails onc
   );
 
   await page.reload();
-  const integrationSwitch = page.getByTestId(
-    `routine-form-integration-${integration.id}`,
-  );
   await expect(integrationSwitch).toBeChecked();
   await integrationSwitch.click();
-  await page.getByTestId("routine-form-submit").click();
-  await expect
-    .poll(async () => (await getRoutine(api, routineId)).mcpIntegrationIds)
-    .toEqual([]);
+  await expect.poll(() => integrationIds(api, routineId)).toEqual([]);
   await runToEnd(api, routineId, "succeeded");
+
+  // Adding it back is refused while it is disabled, and nothing is stored.
+  const response = await requestRoutineLinkAdd(
+    api,
+    routineId,
+    "mcp-integrations",
+    integration.id,
+  );
+  expect(response.status()).toBe(422);
+  expect(await response.json()).toMatchObject({
+    code: "ROUTINE_INTEGRATION_UNAVAILABLE",
+  });
+  expect(await integrationIds(api, routineId)).toEqual([]);
 });

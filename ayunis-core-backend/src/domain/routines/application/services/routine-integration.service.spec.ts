@@ -38,27 +38,19 @@ describe('RoutineIntegrationService', () => {
     service = module.get(RoutineIntegrationService);
   });
 
-  describe('select', () => {
-    it('keeps enabled integrations the user has connected, once each', async () => {
-      await expect(
-        service.select([TICKETS, CALENDAR, TICKETS]),
-      ).resolves.toEqual([TICKETS, CALENDAR]);
+  describe('assertAddable', () => {
+    it('admits an enabled integration the user has connected', async () => {
+      await expect(service.assertAddable(TICKETS)).resolves.toBeUndefined();
     });
 
     it('rejects an integration the user has not connected', async () => {
-      await expect(service.select([TICKETS, NOT_CONNECTED])).rejects.toThrow(
+      await expect(service.assertAddable(NOT_CONNECTED)).rejects.toThrow(
         new RoutineIntegrationUnavailableError(NOT_CONNECTED),
       );
     });
 
-    it('keeps an integration the routine already has, even once it became unavailable', async () => {
-      await expect(
-        service.select([TICKETS, DISABLED], [DISABLED]),
-      ).resolves.toEqual([TICKETS, DISABLED]);
-    });
-
     it('rejects an integration that is disabled or not in the org', async () => {
-      await expect(service.select([DISABLED])).rejects.toBeInstanceOf(
+      await expect(service.assertAddable(DISABLED)).rejects.toBeInstanceOf(
         RoutineIntegrationUnavailableError,
       );
     });

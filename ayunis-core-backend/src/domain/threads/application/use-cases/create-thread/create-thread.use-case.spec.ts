@@ -35,6 +35,8 @@ import { TEST_RELEASE_NOTE_ID } from 'src/domain/release-notes/application/testi
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
+import { FindAccessibleKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-bases-by-ids/find-accessible-knowledge-bases-by-ids.use-case';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 
 describe('CreateThreadUseCase', () => {
   let useCase: CreateThreadUseCase;
@@ -51,6 +53,7 @@ describe('CreateThreadUseCase', () => {
   const findNotification = { execute: jest.fn() };
   const findReleaseNote = { execute: jest.fn() };
   const getMcpIntegrationsByIds = { execute: jest.fn() };
+  const findAccessibleKnowledgeBases = { execute: jest.fn() };
 
   beforeEach(async () => {
     logger = createLoggerMock();
@@ -96,6 +99,10 @@ describe('CreateThreadUseCase', () => {
         {
           provide: GetMcpIntegrationsByIdsUseCase,
           useValue: getMcpIntegrationsByIds,
+        },
+        {
+          provide: FindAccessibleKnowledgeBasesByIdsUseCase,
+          useValue: findAccessibleKnowledgeBases,
         },
       ],
     }).compile();
@@ -551,6 +558,41 @@ describe('CreateThreadUseCase', () => {
           }),
         ),
       ).rejects.toThrow(McpIntegrationNotFoundError);
+      expect(threadsRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('attaches knowledge bases the user can access to the new thread', async () => {
+      const knowledgeBaseId = '66666666-6666-4666-8666-666666666666' as UUID;
+      findAccessibleKnowledgeBases.execute.mockResolvedValue([
+        { id: knowledgeBaseId, name: 'Satzungen' },
+      ]);
+
+      const thread = await useCase.execute(
+        new CreateThreadCommand({
+          modelId: mockModelId,
+          knowledgeBaseIds: [knowledgeBaseId],
+        }),
+      );
+
+      expect(thread.getUniqueKnowledgeBases()).toEqual([
+        { id: knowledgeBaseId, name: 'Satzungen' },
+      ]);
+      expect(
+        thread.knowledgeBaseAssignments?.[0].originSkillId,
+      ).toBeUndefined();
+    });
+
+    it('refuses a knowledge base the user cannot access without creating a thread', async () => {
+      findAccessibleKnowledgeBases.execute.mockResolvedValue([]);
+
+      await expect(
+        useCase.execute(
+          new CreateThreadCommand({
+            modelId: mockModelId,
+            knowledgeBaseIds: ['99999999-9999-4999-8999-999999999999'],
+          }),
+        ),
+      ).rejects.toThrow(KnowledgeBaseNotFoundError);
       expect(threadsRepository.create).not.toHaveBeenCalled();
     });
 

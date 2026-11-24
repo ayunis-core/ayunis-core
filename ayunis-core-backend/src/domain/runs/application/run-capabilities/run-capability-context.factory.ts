@@ -7,6 +7,7 @@ import type { SkillTemplate } from 'src/domain/skill-templates/domain/skill-temp
 import { FindActiveSkillsQuery } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.query';
 import { FindActiveSkillsUseCase } from 'src/domain/skills/application/use-cases/find-active-skills/find-active-skills.use-case';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
+import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { BuildWorkspaceRunContextQuery } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.query';
 import { BuildWorkspaceRunContextUseCase } from 'src/domain/workspaces/application/use-cases/build-workspace-run-context/build-workspace-run-context.use-case';
 import type { WorkspaceRunContext } from 'src/domain/workspaces/domain/workspace-run-context.entity';
@@ -43,11 +44,22 @@ export class RunCapabilityContextFactory {
         mergeKnowledgeBases(
           input.thread.getUniqueKnowledgeBases(),
           workspaceContext?.runtimeKnowledgeBases ?? [],
-          await this.findActiveKnowledgeBasesUseCase.execute(),
+          await this.findActiveKnowledgeBases(input),
         ),
       ),
       skillCatalog: memoize(() => this.loadSkillCatalog(workspaceContext)),
     };
+  }
+
+  /**
+   * The knowledge bases the user switched on for every chat. A routine runs
+   * with only the ones picked on it, which its thread carries.
+   */
+  private async findActiveKnowledgeBases(
+    input: RunCapabilityInput,
+  ): Promise<KnowledgeBaseSummary[]> {
+    if (input.profile.id === 'routine') return [];
+    return this.findActiveKnowledgeBasesUseCase.execute();
   }
 
   private async buildWorkspaceContext(

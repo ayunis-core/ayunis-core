@@ -1,12 +1,11 @@
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { createMockContextService } from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
-import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
-import { RoutineIntegrationUnavailableError } from 'src/domain/routines/application/routines.errors';
+import { RoutineInvalidAllowedDomainsError } from 'src/domain/routines/application/routines.errors';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import {
   TEST_MODEL_ID,
   TEST_ORG_ID,
@@ -20,15 +19,12 @@ describe('CreateRoutineUseCase', () => {
   let useCase: CreateRoutineUseCase;
   let repository: jest.Mocked<RoutinesRepository>;
   const routineModelService = { select: jest.fn() };
-  const routineIntegrationService = { select: jest.fn() };
-  const ticketsIntegrationId = '88888888-8888-4888-8888-888888888888' as UUID;
 
   const command = (overrides: Partial<CreateRoutineCommand> = {}) =>
     new CreateRoutineCommand({
       name: 'Amtsblatt',
       prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
       dailyTime: '08:00',
-      internetEnabled: true,
       ...overrides,
     });
 
@@ -36,18 +32,11 @@ describe('CreateRoutineUseCase', () => {
     jest.resetAllMocks();
     repository = createMockRoutinesRepository();
     routineModelService.select.mockResolvedValue(TEST_MODEL_ID);
-    routineIntegrationService.select.mockImplementation((ids: UUID[]) =>
-      Promise.resolve(ids),
-    );
     const module = await Test.createTestingModule({
       providers: [
         CreateRoutineUseCase,
         { provide: RoutinesRepository, useValue: repository },
         { provide: RoutineModelService, useValue: routineModelService },
-        {
-          provide: RoutineIntegrationService,
-          useValue: routineIntegrationService,
-        },
         { provide: ContextService, useValue: createMockContextService() },
       ],
     }).compile();
@@ -62,7 +51,8 @@ describe('CreateRoutineUseCase', () => {
       orgId: TEST_ORG_ID,
       name: 'Amtsblatt',
       dailyTime: '08:00',
-      internetEnabled: true,
+      internetAccess: RoutineInternetAccess.OFF,
+      allowedDomains: [],
       enabled: true,
       modelId: TEST_MODEL_ID,
       lastRunStatus: null,
@@ -119,22 +109,24 @@ describe('CreateRoutineUseCase', () => {
     expect(routine.modelId).toBeNull();
   });
 
-  it('stores the integrations the user may use', async () => {
+  it('stores the allowed domains as hosts, once each', async () => {
     const routine = await useCase.execute(
-      command({ mcpIntegrationIds: [ticketsIntegrationId] }),
+      command({
+        internetAccess: RoutineInternetAccess.ALLOWLIST,
+        allowedDomains: ['https://Recht.NRW.de/path', 'recht.nrw.de', 'nrw.de'],
+      }),
     );
 
-    expect(routine.mcpIntegrationIds).toEqual([ticketsIntegrationId]);
+    expect(routine.internetAccess).toBe(RoutineInternetAccess.ALLOWLIST);
+    expect(routine.allowedDomains).toEqual(['recht.nrw.de', 'nrw.de']);
   });
 
-  it('does not create a routine with an integration the user cannot use', async () => {
-    routineIntegrationService.select.mockRejectedValue(
-      new RoutineIntegrationUnavailableError(ticketsIntegrationId),
-    );
-
+  it('does not create a routine limited to domains without any', async () => {
     await expect(
-      useCase.execute(command({ mcpIntegrationIds: [ticketsIntegrationId] })),
-    ).rejects.toThrow(RoutineIntegrationUnavailableError);
+      useCase.execute(
+        command({ internetAccess: RoutineInternetAccess.ALLOWLIST }),
+      ),
+    ).rejects.toThrow(RoutineInvalidAllowedDomainsError);
     expect(repository.create).not.toHaveBeenCalled();
   });
 

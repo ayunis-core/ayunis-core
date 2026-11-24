@@ -9,7 +9,8 @@ describe('editRoutineParamsToFormFields', () => {
     prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
     modelId: '890dbfa7-989f-4f2b-9808-7e722dcb2bf0',
     dailyTime: '07:30',
-    internetEnabled: true,
+    internetAccess: 'allowlist',
+    allowedDomains: ['nrw.de', 'bund.de'],
   } as Routine;
 
   it("keeps the routine's chosen model, so saving the edit does not reset it to the default", () => {
@@ -18,10 +19,10 @@ describe('editRoutineParamsToFormFields', () => {
     ).toBe(routine.modelId);
   });
 
-  it('keeps stored values for fields the model left empty', () => {
+  it('keeps stored values for fields the model left empty or out', () => {
     expect(
       editRoutineParamsToFormFields(
-        { name: '', prompt: '', daily_time: '', internet_enabled: false },
+        { name: '', prompt: '', daily_time: '' },
         routine,
       ),
     ).toEqual({
@@ -29,7 +30,20 @@ describe('editRoutineParamsToFormFields', () => {
       prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
       modelId: routine.modelId,
       dailyTime: '07:30',
-      internetEnabled: false,
+      internetAccess: 'allowlist',
+      allowedDomains: 'nrw.de\nbund.de',
+    });
+  });
+
+  it('takes the internet access and domains the model proposes', () => {
+    expect(
+      editRoutineParamsToFormFields(
+        { internet_access: 'allowlist', allowed_domains: ['recht.nrw.de'] },
+        routine,
+      ),
+    ).toMatchObject({
+      internetAccess: 'allowlist',
+      allowedDomains: 'recht.nrw.de',
     });
   });
 });

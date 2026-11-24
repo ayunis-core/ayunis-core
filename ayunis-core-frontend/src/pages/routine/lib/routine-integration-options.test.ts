@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { McpIntegration } from '@/features/routines/model/openapi';
+import type { McpIntegrationResponseDto as McpIntegration } from '@ayunis/api-client/schemas';
 import {
   canToggleIntegration,
   routineIntegrationOptions,

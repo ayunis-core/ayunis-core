@@ -13,6 +13,8 @@ import { RoutineContextCapability } from 'src/domain/runs/application/run-capabi
 import { RoutineInternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-internet.capability';
 import { NotificationsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notifications.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
+import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
+import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
 import { McpToolAssemblerService } from 'src/domain/runs/application/services/mcp-tool-assembler.service';
 import {
   aCapabilityContext,
@@ -26,6 +28,14 @@ import { RoutineRunProfile } from './routine-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
 
 const integrationId = '33333333-3333-4333-8333-333333333333' as UUID;
+const routineKnowledgeBase = {
+  id: '66666666-6666-4666-8666-666666666666' as UUID,
+  name: 'Satzungen',
+};
+const activatedKnowledgeBase = {
+  id: '77777777-7777-4777-8777-777777777777' as UUID,
+  name: 'Persönliche Notizen',
+};
 
 const resolved = <T>(value: T) =>
   ({ execute: jest.fn().mockResolvedValue(value) }) as never;
@@ -66,6 +76,7 @@ function buildRoutineProfile(orgAllowsInternet = true): RoutineRunProfile {
         resolved([{ id: integrationId, name: 'Ticketsystem', logoUrl: null }]),
       ),
     ),
+    new KnowledgeBasesCapability(assembleTool),
   );
 }
 
@@ -77,13 +88,14 @@ function assembleRoutine(
     isAnonymous?: boolean;
     extraTools?: Tool[];
     mcpIntegrationIds?: UUID[];
+    knowledgeBases?: { id: UUID; name: string }[];
   } = {},
 ) {
   const assembler = new RunProfileAssembler(
     new RunCapabilityContextFactory(
       resolved(undefined),
       resolved([]),
-      resolved([]),
+      resolved([activatedKnowledgeBase]),
       resolved([]),
     ),
     resolved({}),
@@ -111,6 +123,9 @@ function assembleRoutine(
           routineId: '44444444-4444-4444-8444-444444444444',
         },
         mcpIntegrationIds: options.mcpIntegrationIds ?? [],
+        knowledgeBaseAssignments: (options.knowledgeBases ?? []).map(
+          (knowledgeBase) => new KnowledgeBaseAssignment({ knowledgeBase }),
+        ),
       }),
       model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
         .model,
@@ -171,6 +186,29 @@ describe('RoutineRunProfile', () => {
       ToolType.FINISH_ROUTINE,
       `mcp__tool__tickets.create__${integrationId.slice(0, 8)}`,
     ]);
+  });
+
+  it("queries only the routine thread's knowledge bases, not the ones the user activated for chat", async () => {
+    const { tools, instructions } = await assembleRoutine({
+      knowledgeBases: [routineKnowledgeBase],
+    });
+
+    expect(tools.map((tool) => tool.name)).toEqual(
+      expect.arrayContaining([
+        ToolType.KNOWLEDGE_QUERY,
+        ToolType.KNOWLEDGE_GET_TEXT,
+      ]),
+    );
+    expect(instructions).toContain(routineKnowledgeBase.id);
+    expect(instructions).not.toContain(activatedKnowledgeBase.id);
+  });
+
+  it('offers no knowledge tools to a routine without knowledge bases, even when the user activated some', async () => {
+    const { tools } = await assembleRoutine();
+
+    expect(tools.map((tool) => tool.name)).not.toContain(
+      ToolType.KNOWLEDGE_QUERY,
+    );
   });
 
   it('tells the model to notify only about something important and otherwise finish silently', async () => {

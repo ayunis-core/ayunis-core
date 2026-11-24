@@ -2,6 +2,11 @@ import { validateToolParams } from 'src/common/validators/tool-params.validator'
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import {
+  assertValidRoutineInternetParams,
+  routineAllowedDomainsParameter,
+  routineInternetAccessParameter,
+} from './routine-internet-params';
 
 const createRoutineToolParameters = {
   type: 'object' as const,
@@ -21,13 +26,13 @@ const createRoutineToolParameters = {
       description:
         'The time of day the routine runs, as HH:mm in 24-hour German time (Europe/Berlin)',
     },
-    internet_enabled: {
-      type: 'boolean' as const,
-      description:
-        'Whether the routine may search and read the web. Enable it only when the task needs information from the internet.',
+    internet_access: routineInternetAccessParameter,
+    allowed_domains: {
+      ...routineAllowedDomainsParameter,
+      description: `${routineAllowedDomainsParameter.description} Required with "allowlist".`,
     },
   },
-  required: ['name', 'prompt', 'daily_time', 'internet_enabled'],
+  required: ['name', 'prompt', 'daily_time', 'internet_access'],
   additionalProperties: false,
 } as const satisfies JSONSchema;
 
@@ -40,17 +45,22 @@ export class CreateRoutineTool extends Tool {
     super({
       name: ToolType.CREATE_ROUTINE,
       description:
-        "Display a routine creation widget. A routine is a task that runs unattended once a day at a fixed time and reports anything relevant to the user's inbox. Use this when the user asks you to create a routine, or wants a task done for them regularly. Propose a name, the task, the daily time and whether the routine needs the internet, based on what the user described. The user reviews and confirms the creation.",
+        "Display a routine creation widget. A routine is a task that runs unattended once a day at a fixed time and reports anything relevant to the user's inbox. Use this when the user asks you to create a routine, or wants a task done for them regularly. Propose a name, the task, the daily time and the internet access the routine needs, based on what the user described. The user reviews and confirms the creation.",
       parameters: createRoutineToolParameters,
       type: ToolType.CREATE_ROUTINE,
     });
   }
 
   validateParams(params: Record<string, unknown>): CreateRoutineToolParameters {
-    return validateToolParams<CreateRoutineToolParameters>(
+    const validated = validateToolParams<CreateRoutineToolParameters>(
       this.parameters,
       params,
     );
+    assertValidRoutineInternetParams(
+      validated.internet_access,
+      validated.allowed_domains ?? [],
+    );
+    return validated;
   }
 
   get returnsPii(): boolean {

@@ -9,14 +9,20 @@ import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { aRoutine } from 'src/domain/routines/application/testing/routine.fixtures';
 import { RoutineAlreadyCreatedError } from 'src/domain/routines/application/routines.errors';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import { LocalRoutinesRepository } from './local-routines.repository';
 import { RoutineMapper } from './mappers/routine.mapper';
 import { RoutineRecord } from './schema/routine.record';
 
-// Only the id, so routines can reference integrations.
+// Only the id, so routines can reference integrations and knowledge bases.
 const mcpIntegrationSchema = new EntitySchema<{ id: string }>({
   name: 'McpIntegrationRecord',
   tableName: 'mcp_integrations',
+  columns: { id: { type: 'uuid', primary: true } },
+});
+const knowledgeBaseSchema = new EntitySchema<{ id: string }>({
+  name: 'KnowledgeBaseRecord',
+  tableName: 'knowledge_bases',
   columns: { id: { type: 'uuid', primary: true } },
 });
 
@@ -35,7 +41,8 @@ const routineSchema = new EntitySchema<RoutineRecord>({
     orgId: { type: 'uuid' },
     modelId: { type: 'uuid', nullable: true },
     dailyTime: { type: String },
-    internetEnabled: { type: Boolean },
+    internetAccess: { type: String },
+    allowedDomains: { type: String, array: true, default: () => "'{}'" },
     enabled: { type: Boolean },
     lastRunStatus: { type: String, nullable: true },
     lastRunAt: { type: 'timestamp', nullable: true },
@@ -54,9 +61,15 @@ const routineSchema = new EntitySchema<RoutineRecord>({
       target: 'McpIntegrationRecord',
       joinTable: { name: 'routine_mcp_integrations' },
     },
+    knowledgeBases: {
+      type: 'many-to-many',
+      target: 'KnowledgeBaseRecord',
+      joinTable: { name: 'routine_knowledge_bases' },
+    },
   },
   relationIds: {
     mcpIntegrationIds: { relationName: 'mcpIntegrations' },
+    knowledgeBaseIds: { relationName: 'knowledgeBases' },
   },
 });
 
@@ -72,7 +85,7 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [routineSchema, mcpIntegrationSchema],
+      entities: [routineSchema, mcpIntegrationSchema, knowledgeBaseSchema],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -94,7 +107,7 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
   beforeEach(async () => {
     ambient = undefined;
     await db.query(
-      `TRUNCATE "${schema}"."routines", "${schema}"."mcp_integrations" CASCADE`,
+      `TRUNCATE "${schema}"."routines", "${schema}"."mcp_integrations", "${schema}"."knowledge_bases" CASCADE`,
     );
   });
 
@@ -236,54 +249,89 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
     });
   });
 
-  describe('integrations', () => {
-    async function integrations(count: number): Promise<UUID[]> {
+  describe('integrations and knowledge bases', () => {
+    async function rows(table: string, count: number): Promise<UUID[]> {
       const ids = Array.from({ length: count }, () => randomUUID());
-      await db
-        .getRepository('McpIntegrationRecord')
-        .insert(ids.map((id) => ({ id })));
+      await db.getRepository(table).insert(ids.map((id) => ({ id })));
       return ids;
     }
+    const integrations = (count: number) => rows('McpIntegrationRecord', count);
+    const knowledgeBases = (count: number) =>
+      rows('KnowledgeBaseRecord', count);
+    const linksOf = async (id: UUID) => {
+      const routine = await repository.findByIdForExecution(id);
+      return {
+        mcpIntegrationIds: routine?.mcpIntegrationIds,
+        knowledgeBaseIds: routine?.knowledgeBaseIds,
+      };
+    };
 
-    it('stores the integrations of a new routine', async () => {
+    it('stores the links of a new routine, also when read under a row lock', async () => {
       const [tickets, calendar] = await integrations(2);
+      const [statutes] = await knowledgeBases(1);
 
-      const routine = await stored({ mcpIntegrationIds: [tickets, calendar] });
+      const routine = await stored({
+        mcpIntegrationIds: [tickets, calendar],
+        knowledgeBaseIds: [statutes],
+      });
 
-      expect(routine.mcpIntegrationIds).toHaveLength(2);
       expect(routine.mcpIntegrationIds).toEqual(
         expect.arrayContaining([tickets, calendar]),
       );
+      expect(routine.knowledgeBaseIds).toEqual([statutes]);
       await db.transaction(async (manager) => {
         ambient = manager;
-        expect(
-          (await repository.findByIdForUpdate(routine.userId, routine.id))
-            ?.mcpIntegrationIds,
-        ).toHaveLength(2);
+        const locked = await repository.findByIdForUpdate(
+          routine.userId,
+          routine.id,
+        );
+        expect(locked?.mcpIntegrationIds).toHaveLength(2);
+        expect(locked?.knowledgeBaseIds).toEqual([statutes]);
         ambient = undefined;
       });
     });
 
-    it('replaces the integrations, together with other fields', async () => {
-      const [tickets, calendar, files] = await integrations(3);
-      const routine = await stored({ mcpIntegrationIds: [tickets, calendar] });
+    it('adds an integration and a knowledge base once, however often they are added', async () => {
+      const [tickets] = await integrations(1);
+      const [statutes] = await knowledgeBases(1);
+      const routine = await stored();
 
-      const updated = await repository.updateDefinition(
-        routine.userId,
-        routine.id,
-        { name: 'Tickets und Dateien', mcpIntegrationIds: [calendar, files] },
-      );
+      for (let i = 0; i < 2; i++) {
+        await repository.addMcpIntegration(routine.id, tickets);
+        await repository.addKnowledgeBase(routine.id, statutes);
+      }
 
-      expect(updated?.name).toBe('Tickets und Dateien');
-      expect(updated?.mcpIntegrationIds).toHaveLength(2);
-      expect(updated?.mcpIntegrationIds).toEqual(
-        expect.arrayContaining([calendar, files]),
-      );
+      expect(await linksOf(routine.id)).toEqual({
+        mcpIntegrationIds: [tickets],
+        knowledgeBaseIds: [statutes],
+      });
     });
 
-    it('keeps the integrations when they are not sent', async () => {
+    it('removes one link and keeps the others, also when it was not linked', async () => {
+      const [tickets, calendar, unlinked] = await integrations(3);
+      const [statutes, minutes] = await knowledgeBases(2);
+      const routine = await stored({
+        mcpIntegrationIds: [tickets, calendar],
+        knowledgeBaseIds: [statutes, minutes],
+      });
+
+      await repository.removeMcpIntegration(routine.id, tickets);
+      await repository.removeMcpIntegration(routine.id, unlinked);
+      await repository.removeKnowledgeBase(routine.id, minutes);
+
+      expect(await linksOf(routine.id)).toEqual({
+        mcpIntegrationIds: [calendar],
+        knowledgeBaseIds: [statutes],
+      });
+    });
+
+    it('keeps the links when the definition is updated', async () => {
       const [tickets] = await integrations(1);
-      const routine = await stored({ mcpIntegrationIds: [tickets] });
+      const [statutes] = await knowledgeBases(1);
+      const routine = await stored({
+        mcpIntegrationIds: [tickets],
+        knowledgeBaseIds: [statutes],
+      });
 
       const updated = await repository.updateDefinition(
         routine.userId,
@@ -291,68 +339,65 @@ describe('LocalRoutinesRepository (PostgreSQL)', () => {
         { name: 'Nur umbenannt' },
       );
 
-      expect(updated?.mcpIntegrationIds).toEqual([tickets]);
+      expect(updated).toMatchObject({
+        mcpIntegrationIds: [tickets],
+        knowledgeBaseIds: [statutes],
+      });
     });
 
-    it('moves updatedAt forward when only the integrations change', async () => {
-      const [tickets] = await integrations(1);
-      const routine = await stored();
-      await db.query(
-        `UPDATE "${schema}"."routines" SET "updatedAt" = '2026-01-01T00:00:00' WHERE id = $1`,
-        [routine.id],
-      );
-
-      const updated = await repository.updateDefinition(
-        routine.userId,
-        routine.id,
-        { mcpIntegrationIds: [tickets] },
-      );
-
-      expect(updated?.updatedAt.getTime()).toBeGreaterThan(
-        new Date('2026-01-01T00:00:00').getTime(),
-      );
-    });
-
-    it('removes all integrations', async () => {
-      const [tickets] = await integrations(1);
-      const routine = await stored({ mcpIntegrationIds: [tickets] });
-
-      const updated = await repository.updateDefinition(
-        routine.userId,
-        routine.id,
-        { mcpIntegrationIds: [] },
-      );
-
-      expect(updated?.mcpIntegrationIds).toEqual([]);
-    });
-
-    it("does not change another user's integrations", async () => {
+    it('drops a deleted integration or knowledge base from the routine', async () => {
       const [tickets, calendar] = await integrations(2);
-      const routine = await stored({ mcpIntegrationIds: [tickets] });
-
-      await expect(
-        repository.updateDefinition(randomUUID(), routine.id, {
-          mcpIntegrationIds: [calendar],
-        }),
-      ).resolves.toBeNull();
-      expect(
-        (await repository.findByIdForExecution(routine.id))?.mcpIntegrationIds,
-      ).toEqual([tickets]);
-    });
-
-    it('drops a deleted integration from the routine', async () => {
-      const [tickets, calendar] = await integrations(2);
-      const routine = await stored({ mcpIntegrationIds: [tickets, calendar] });
+      const [statutes, minutes] = await knowledgeBases(2);
+      const routine = await stored({
+        mcpIntegrationIds: [tickets, calendar],
+        knowledgeBaseIds: [statutes, minutes],
+      });
 
       await db.getRepository('McpIntegrationRecord').delete({ id: tickets });
+      await db.getRepository('KnowledgeBaseRecord').delete({ id: statutes });
 
-      expect(
-        (await repository.findByIdForExecution(routine.id))?.mcpIntegrationIds,
-      ).toEqual([calendar]);
+      expect(await linksOf(routine.id)).toEqual({
+        mcpIntegrationIds: [calendar],
+        knowledgeBaseIds: [minutes],
+      });
+    });
+
+    it('removes the links of a deleted routine', async () => {
+      const [tickets] = await integrations(1);
+      const [statutes] = await knowledgeBases(1);
+      const routine = await stored({
+        mcpIntegrationIds: [tickets],
+        knowledgeBaseIds: [statutes],
+      });
+
+      await repository.delete(routine.userId, routine.id);
+
+      const [{ count }] = await db.query<{ count: string }[]>(
+        `SELECT (SELECT count(*) FROM "${schema}"."routine_mcp_integrations") + (SELECT count(*) FROM "${schema}"."routine_knowledge_bases") AS count`,
+      );
+      expect(Number(count)).toBe(0);
     });
   });
 
   describe('updateDefinition', () => {
+    it('stores the internet access and its domains', async () => {
+      const routine = await stored();
+
+      const updated = await repository.updateDefinition(
+        routine.userId,
+        routine.id,
+        {
+          internetAccess: RoutineInternetAccess.ALLOWLIST,
+          allowedDomains: ['nrw.de', 'recht.nrw.de'],
+        },
+      );
+
+      expect(updated).toMatchObject({
+        internetAccess: RoutineInternetAccess.ALLOWLIST,
+        allowedDomains: ['nrw.de', 'recht.nrw.de'],
+      });
+    });
+
     it('writes only the sent fields and keeps the run status', async () => {
       const routine = await stored({ lastRunStatus: RoutineRunStatus.RUNNING });
 

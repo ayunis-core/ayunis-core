@@ -20,7 +20,7 @@ export function notifyingRoutine(
     name,
     prompt: `E2E notify routine: ${subject}`,
     dailyTime: '07:00',
-    internetEnabled: false,
+    internetAccess: 'off',
   };
 }
 

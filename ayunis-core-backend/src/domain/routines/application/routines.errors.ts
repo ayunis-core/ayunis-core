@@ -1,5 +1,9 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
+import {
+  describeRoutineInternetSettingsProblem,
+  type RoutineInternetSettingsProblem,
+} from 'src/domain/routines/domain/routine-internet-access';
 
 export enum RoutineErrorCode {
   ROUTINE_NOT_FOUND = 'ROUTINE_NOT_FOUND',
@@ -7,6 +11,7 @@ export enum RoutineErrorCode {
   ROUTINE_OWNER_LOCKED = 'ROUTINE_OWNER_LOCKED',
   ROUTINE_ALREADY_CREATED = 'ROUTINE_ALREADY_CREATED',
   ROUTINE_INTEGRATION_UNAVAILABLE = 'ROUTINE_INTEGRATION_UNAVAILABLE',
+  ROUTINE_INVALID_ALLOWED_DOMAINS = 'ROUTINE_INVALID_ALLOWED_DOMAINS',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -78,6 +83,21 @@ export class RoutineIntegrationUnavailableError extends RoutineError {
       RoutineErrorCode.ROUTINE_INTEGRATION_UNAVAILABLE,
       422,
       { integrationId, ...metadata },
+    );
+  }
+}
+
+/**
+ * The allowed domains contain an entry that is not a hostname, are too many,
+ * or are empty in `allowlist` mode. `reason` tells the client which.
+ */
+export class RoutineInvalidAllowedDomainsError extends RoutineError {
+  constructor(problem: RoutineInternetSettingsProblem) {
+    super(
+      describeRoutineInternetSettingsProblem(problem),
+      RoutineErrorCode.ROUTINE_INVALID_ALLOWED_DOMAINS,
+      400,
+      { ...problem },
     );
   }
 }

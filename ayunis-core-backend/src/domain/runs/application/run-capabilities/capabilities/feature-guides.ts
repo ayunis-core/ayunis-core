@@ -95,14 +95,15 @@ const ROUTINES: FeatureGuide = {
     permission: Permission.MANAGE_ROUTINES,
     otherwise: `The user's role does not have the "Manage routines" / "Routinen verwalten" permission. Don't walk them through creating a routine: explain what routines can do for them and tell them to ask an administrator for the permission.`,
   },
-  facts: `A routine ("Routine") carries out a task unattended once a day at a fixed time, such as a morning briefing or watching a website or official gazette for news. It works without the user: all it has is its task description and, if enabled, the internet. Routines can only run daily; never suggest a weekly or monthly schedule.
+  facts: `A routine ("Routine") carries out a task unattended once a day at a fixed time, such as a morning briefing or watching a website or official gazette for news. It works without the user: all it has is its task description and what it is allowed to use (the internet, integrations, knowledge bases). Routines can only run daily; never suggest a weekly or monthly schedule.
 1. On the "Routines" / "Routinen" page, click "New routine" / "Neue Routine" (on the empty page: "Create your first routine" / "Erste Routine erstellen") and pick "Blank routine" / "Leere Routine" or one of the "Premade" / "Vorlagen" routines.
-2. Fill in "Name", the "Task" / "Aufgabe" it carries out on every run, the time under "Daily at" / "Täglich um" (German time) and, if it needs the web, "Internet access" / "Internetzugriff".
-3. "Run now" / "Jetzt ausführen" tries it out right away, and "Run daily" / "Täglich ausführen" switches the daily schedule on or off. Each run creates a chat, and what is relevant arrives in the "Inbox" / "Posteingang".`,
+2. Fill in "Name", the "Task" / "Aufgabe" it carries out on every run and the time under "Daily at" / "Täglich um" (German time), then "Create" / "Erstellen"; the routine's page opens.
+3. If it needs the web, choose under "Internet access" / "Internetzugriff" "All websites" / "Alle Websites" or "Only these domains" / "Nur diese Domains" with the allowed domains, and "Save" / "Speichern". In the "Context" / "Kontext" card, switch on the integrations and knowledge bases it may use; each switch saves at once.
+4. "Run now" / "Jetzt ausführen" tries it out right away, and "Run daily" / "Täglich ausführen" switches the daily schedule on or off. Each run creates a chat, and what is relevant arrives in the "Inbox" / "Posteingang".`,
   toolOffers: [
     {
       tool: ToolType.CREATE_ROUTINE,
-      offer: `Offer to set up their first routine right here with ${ToolType.CREATE_ROUTINE}: agree on a name, a self-contained task description (each run starts without this conversation), the daily time and whether it needs the internet. It shows the user a card on which they confirm the creation, so ask them to confirm there.`,
+      offer: `Offer to set up their first routine right here with ${ToolType.CREATE_ROUTINE}: agree on a name, a self-contained task description (each run starts without this conversation), the daily time and the internet access it needs (none, any website, or only certain domains). It shows the user a card on which they confirm the creation, so ask them to confirm there.`,
     },
   ],
   uiNextStep: `Suggest a concrete first routine for their use case: a name, the task description and the daily time. Then point them to "New routine" / "Neue Routine" on the "Routines" / "Routinen" page.`,

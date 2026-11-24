@@ -2,6 +2,12 @@ import type { JSONSchema } from 'json-schema-to-ts';
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import {
+  assertValidRoutineInternetParams,
+  routineAllowedDomainsParameter,
+  routineInternetAccessParameter,
+} from './routine-internet-params';
 
 function buildParameters(routineSummaries: Map<string, string>): JSONSchema {
   const routineIdProperty: Record<string, unknown> = {
@@ -36,10 +42,13 @@ function buildParameters(routineSummaries: Map<string, string>): JSONSchema {
         description:
           'The updated time of day the routine runs, as HH:mm in 24-hour German time (Europe/Berlin). Pass an empty string if unchanged.',
       },
-      internet_enabled: {
-        type: 'boolean' as const,
-        description:
-          'Whether the routine may search and read the web. Pass its current setting if unchanged.',
+      internet_access: {
+        ...routineInternetAccessParameter,
+        description: `${routineInternetAccessParameter.description} Omit it if unchanged.`,
+      },
+      allowed_domains: {
+        ...routineAllowedDomainsParameter,
+        description: `${routineAllowedDomainsParameter.description} Replaces the routine's list; omit it if unchanged.`,
       },
       change_summary: {
         type: 'string' as const,
@@ -47,14 +56,7 @@ function buildParameters(routineSummaries: Map<string, string>): JSONSchema {
           'A brief summary of what was changed and why, shown to the user for review',
       },
     },
-    required: [
-      'routine_id',
-      'name',
-      'prompt',
-      'daily_time',
-      'internet_enabled',
-      'change_summary',
-    ],
+    required: ['routine_id', 'name', 'prompt', 'daily_time', 'change_summary'],
     additionalProperties: false,
   } as const satisfies JSONSchema;
 }
@@ -64,7 +66,8 @@ interface EditRoutineToolParameters {
   name: string;
   prompt: string;
   daily_time: string;
-  internet_enabled: boolean;
+  internet_access?: RoutineInternetAccess;
+  allowed_domains?: string[];
   change_summary: string;
 }
 
@@ -80,11 +83,22 @@ export class EditRoutineTool extends Tool {
     });
   }
 
+  /**
+   * Without `allowed_domains` the routine keeps its stored list, which only
+   * the save can check against an `allowlist` mode.
+   */
   validateParams(params: Record<string, unknown>): EditRoutineToolParameters {
-    return validateToolParams<EditRoutineToolParameters>(
+    const validated = validateToolParams<EditRoutineToolParameters>(
       this.parameters,
       params,
     );
+    if (validated.allowed_domains) {
+      assertValidRoutineInternetParams(
+        validated.internet_access ?? RoutineInternetAccess.OFF,
+        validated.allowed_domains,
+      );
+    }
+    return validated;
   }
 
   get returnsPii(): boolean {

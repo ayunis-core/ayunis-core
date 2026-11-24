@@ -14,9 +14,12 @@ import { BaseRecord } from 'src/common/db/base-record';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import {
+  ROUTINE_ALLOWED_DOMAIN_MAX_LENGTH,
   ROUTINE_EXECUTION_KEY_MAX_LENGTH,
   ROUTINE_FAILURE_REASON_MAX_LENGTH,
   ROUTINE_NAME_MAX_LENGTH,
@@ -63,8 +66,20 @@ export class RoutineRecord extends BaseRecord {
   @Column({ type: 'varchar', length: 5 })
   dailyTime: string;
 
-  @Column({ default: false })
-  internetEnabled: boolean;
+  @Column({
+    type: 'enum',
+    enum: RoutineInternetAccess,
+    default: RoutineInternetAccess.OFF,
+  })
+  internetAccess: RoutineInternetAccess;
+
+  @Column({
+    type: 'varchar',
+    length: ROUTINE_ALLOWED_DOMAIN_MAX_LENGTH,
+    array: true,
+    default: () => "'{}'",
+  })
+  allowedDomains: string[];
 
   /** Deleting an integration removes it from the routine. */
   @ManyToMany(() => McpIntegrationRecord)
@@ -73,6 +88,14 @@ export class RoutineRecord extends BaseRecord {
 
   @RelationId((routine: RoutineRecord) => routine.mcpIntegrations)
   mcpIntegrationIds?: UUID[];
+
+  /** Deleting a knowledge base removes it from the routine. */
+  @ManyToMany(() => KnowledgeBaseRecord)
+  @JoinTable({ name: 'routine_knowledge_bases' })
+  knowledgeBases?: KnowledgeBaseRecord[];
+
+  @RelationId((routine: RoutineRecord) => routine.knowledgeBases)
+  knowledgeBaseIds?: UUID[];
 
   @Column({ default: true })
   enabled: boolean;

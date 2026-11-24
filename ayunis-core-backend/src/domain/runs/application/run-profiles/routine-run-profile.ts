@@ -8,6 +8,7 @@ import { RoutineContextCapability } from 'src/domain/runs/application/run-capabi
 import { RoutineInternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-internet.capability';
 import { NotificationsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notifications.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
+import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
 import type { RunCompletionPolicy, RunProfile } from './run-profile';
 import { routineCompletionPolicy } from './routine-completion.policy';
 
@@ -44,6 +45,7 @@ export class RoutineRunProfile implements RunProfile {
     notifications: NotificationsCapability,
     finishRoutine: FinishRoutineCapability,
     mcp: McpCapability,
+    knowledgeBases: KnowledgeBasesCapability,
   ) {
     this.capabilities = [
       routineContext,
@@ -53,6 +55,7 @@ export class RoutineRunProfile implements RunProfile {
       notifications,
       finishRoutine,
       mcp,
+      knowledgeBases,
     ];
   }
 }

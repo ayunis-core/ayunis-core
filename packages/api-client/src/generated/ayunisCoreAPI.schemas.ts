@@ -6850,6 +6850,15 @@ export const RoutineRunStatus = {
   skipped: 'skipped',
 } as const;
 
+export type RoutineInternetAccess = typeof RoutineInternetAccess[keyof typeof RoutineInternetAccess];
+
+
+export const RoutineInternetAccess = {
+  off: 'off',
+  all: 'all',
+  allowlist: 'allowlist',
+} as const;
+
 export interface RoutineResponseDto {
   id: string;
   name: string;
@@ -6861,9 +6870,9 @@ export interface RoutineResponseDto {
   modelId: string | null;
   /** HH:mm (Europe/Berlin) */
   dailyTime: string;
-  internetEnabled: boolean;
-  /** Integrations whose tools the routine may use */
-  mcpIntegrationIds: string[];
+  internetAccess: RoutineInternetAccess;
+  /** Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode */
+  allowedDomains: string[];
   enabled: boolean;
   /** Null until the routine ran for the first time */
   lastRunStatus: RoutineRunStatus | null;
@@ -6906,10 +6915,10 @@ export interface CreateRoutineDto {
   modelId?: string;
   /** Daily run time as HH:mm (Europe/Berlin) */
   dailyTime: string;
-  /** Whether the routine may search and read the web */
-  internetEnabled: boolean;
-  /** Integrations whose tools the routine may use; each must be enabled and connected for the user */
-  mcpIntegrationIds?: string[];
+  /** Whether the routine may search and read the web: not at all, any website, or only `allowedDomains` */
+  internetAccess?: RoutineInternetAccess;
+  /** Domains (or URLs, reduced to their host) the routine may access in `allowlist` mode, each with its subdomains; at most 20, no IP addresses or wildcards. `allowlist` needs at least one. */
+  allowedDomains?: string[];
   /** Whether the routine runs on its schedule */
   enabled?: boolean;
   /** The chat `create_routine` tool call this routine is created from. Each one can create only one routine per user. */
@@ -6928,10 +6937,10 @@ export interface UpdateRoutineDto {
   modelId?: string | null;
   /** Daily run time as HH:mm (Europe/Berlin) */
   dailyTime?: string;
-  /** Whether the routine may search and read the web */
-  internetEnabled?: boolean;
-  /** Integrations whose tools the routine may use, replacing the current ones; each must be enabled and connected for the user */
-  mcpIntegrationIds?: string[];
+  /** Whether the routine may search and read the web: not at all, any website, or only `allowedDomains` */
+  internetAccess?: RoutineInternetAccess;
+  /** Replaces the domains (or URLs, reduced to their host) the routine may access in `allowlist` mode, each with its subdomains; at most 20, no IP addresses or wildcards. Kept when the mode changes; `allowlist` needs at least one. */
+  allowedDomains?: string[];
   /** Whether the routine runs on its schedule */
   enabled?: boolean;
 }

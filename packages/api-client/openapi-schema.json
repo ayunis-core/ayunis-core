@@ -16190,6 +16190,249 @@
         "summary": "Revoke the current session and log out",
         "tags": ["Authentication"]
       }
+    },
+    "/routines/{routineId}/knowledge-bases": {
+      "get": {
+        "description": "Only the ones the user can still access; a knowledge base whose share was revoked is left out, and is back once it is shared again.",
+        "operationId": "RoutineKnowledgeBasesController_list",
+        "parameters": [
+          {
+            "name": "routineId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeBaseResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "List a routine's knowledge bases",
+        "tags": ["routines"]
+      }
+    },
+    "/routines/{routineId}/knowledge-bases/{knowledgeBaseId}": {
+      "post": {
+        "description": "A personal knowledge base the user owns or that is shared with them. Adding one the routine already has changes nothing.",
+        "operationId": "RoutineKnowledgeBasesController_add",
+        "parameters": [
+          {
+            "name": "routineId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Knowledge base added"
+          },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
+          "404": {
+            "description": "Routine not found, or no personal knowledge base the user can access"
+          }
+        },
+        "summary": "Add a knowledge base to a routine",
+        "tags": ["routines"]
+      },
+      "delete": {
+        "operationId": "RoutineKnowledgeBasesController_remove",
+        "parameters": [
+          {
+            "name": "routineId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "knowledgeBaseId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the knowledge base",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Knowledge base removed"
+          },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "Remove a knowledge base from a routine",
+        "tags": ["routines"]
+      }
+    },
+    "/routines/{routineId}/mcp-integrations": {
+      "get": {
+        "description": "Includes integrations that are no longer enabled or connected; a run fails until they are removed or usable again.",
+        "operationId": "RoutineMcpIntegrationsController_list",
+        "parameters": [
+          {
+            "name": "routineId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/McpIntegrationResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "List a routine's integrations",
+        "tags": ["routines"]
+      }
+    },
+    "/routines/{routineId}/mcp-integrations/{integrationId}": {
+      "post": {
+        "description": "The integration must be enabled and connected for the user. Adding one the routine already has changes nothing.",
+        "operationId": "RoutineMcpIntegrationsController_add",
+        "parameters": [
+          {
+            "name": "routineId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the integration",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Integration added"
+          },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
+          "404": {
+            "description": "Routine not found"
+          },
+          "422": {
+            "description": "The integration is not enabled or not connected for the user (`ROUTINE_INTEGRATION_UNAVAILABLE`)"
+          }
+        },
+        "summary": "Add an integration to a routine",
+        "tags": ["routines"]
+      },
+      "delete": {
+        "operationId": "RoutineMcpIntegrationsController_remove",
+        "parameters": [
+          {
+            "name": "routineId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the routine",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "integrationId",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the integration",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Integration removed"
+          },
+          "403": {
+            "description": "The manage routines permission is required"
+          },
+          "404": {
+            "description": "Routine not found"
+          }
+        },
+        "summary": "Remove an integration from a routine",
+        "tags": ["routines"]
+      }
     }
   },
   "info": {
@@ -27073,15 +27316,19 @@
             "description": "HH:mm (Europe/Berlin)",
             "example": "07:30"
           },
-          "internetEnabled": {
-            "type": "boolean"
+          "internetAccess": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineInternetAccess"
+              }
+            ]
           },
-          "mcpIntegrationIds": {
-            "description": "Integrations whose tools the routine may use",
+          "allowedDomains": {
+            "description": "Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode",
+            "example": ["nrw.de"],
             "type": "array",
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           "enabled": {
@@ -27139,8 +27386,8 @@
           "prompt",
           "modelId",
           "dailyTime",
-          "internetEnabled",
-          "mcpIntegrationIds",
+          "internetAccess",
+          "allowedDomains",
           "enabled",
           "lastRunStatus",
           "lastRunAt",
@@ -27175,17 +27422,22 @@
             "description": "Daily run time as HH:mm (Europe/Berlin)",
             "example": "07:30"
           },
-          "internetEnabled": {
-            "type": "boolean",
-            "description": "Whether the routine may search and read the web"
+          "internetAccess": {
+            "description": "Whether the routine may search and read the web: not at all, any website, or only `allowedDomains`",
+            "default": "off",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineInternetAccess"
+              }
+            ]
           },
-          "mcpIntegrationIds": {
-            "description": "Integrations whose tools the routine may use; each must be enabled and connected for the user",
+          "allowedDomains": {
+            "description": "Domains (or URLs, reduced to their host) the routine may access in `allowlist` mode, each with its subdomains; at most 20, no IP addresses or wildcards. `allowlist` needs at least one.",
+            "example": ["nrw.de"],
             "default": [],
             "type": "array",
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           "enabled": {
@@ -27198,7 +27450,7 @@
             "description": "The chat `create_routine` tool call this routine is created from. Each one can create only one routine per user."
           }
         },
-        "required": ["name", "prompt", "dailyTime", "internetEnabled"]
+        "required": ["name", "prompt", "dailyTime"]
       },
       "UpdateRoutineDto": {
         "type": "object",
@@ -27222,16 +27474,20 @@
             "description": "Daily run time as HH:mm (Europe/Berlin)",
             "example": "07:30"
           },
-          "internetEnabled": {
-            "type": "boolean",
-            "description": "Whether the routine may search and read the web"
+          "internetAccess": {
+            "description": "Whether the routine may search and read the web: not at all, any website, or only `allowedDomains`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineInternetAccess"
+              }
+            ]
           },
-          "mcpIntegrationIds": {
-            "description": "Integrations whose tools the routine may use, replacing the current ones; each must be enabled and connected for the user",
+          "allowedDomains": {
+            "description": "Replaces the domains (or URLs, reduced to their host) the routine may access in `allowlist` mode, each with its subdomains; at most 20, no IP addresses or wildcards. Kept when the mode changes; `allowlist` needs at least one.",
+            "example": ["nrw.de"],
             "type": "array",
             "items": {
-              "type": "string",
-              "format": "uuid"
+              "type": "string"
             }
           },
           "enabled": {
@@ -28429,6 +28685,10 @@
           }
         },
         "required": ["success", "brokerLogoutUrl"]
+      },
+      "RoutineInternetAccess": {
+        "type": "string",
+        "enum": ["off", "all", "allowlist"]
       }
     }
   }

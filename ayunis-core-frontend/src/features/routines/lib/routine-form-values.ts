@@ -1,7 +1,8 @@
-import type {
-  CreateRoutineDto,
-  Routine,
-  UpdateRoutineDto,
+import {
+  RoutineInternetAccess,
+  type CreateRoutineDto,
+  type Routine,
+  type UpdateRoutineDto,
 } from '@/features/routines/model/openapi';
 import {
   DEFAULT_MODEL_OPTION,
@@ -13,8 +14,8 @@ export const EMPTY_ROUTINE_FORM: RoutineFormFields = {
   prompt: '',
   modelId: DEFAULT_MODEL_OPTION,
   dailyTime: '07:00',
-  internetEnabled: false,
-  mcpIntegrationIds: [],
+  internetAccess: RoutineInternetAccess.off,
+  allowedDomains: '',
 };
 
 export function routineToFormFields(routine: Routine): RoutineFormFields {
@@ -23,19 +24,43 @@ export function routineToFormFields(routine: Routine): RoutineFormFields {
     prompt: routine.prompt,
     modelId: routine.modelId ?? DEFAULT_MODEL_OPTION,
     dailyTime: routine.dailyTime,
-    internetEnabled: routine.internetEnabled,
-    mcpIntegrationIds: routine.mcpIntegrationIds,
+    internetAccess: routine.internetAccess,
+    allowedDomains: formatAllowedDomains(routine.allowedDomains),
   };
+}
+
+export function formatAllowedDomains(domains: readonly string[]): string {
+  return domains.join('\n');
+}
+
+/** Entries may be separated by lines, spaces, commas or semicolons. */
+export function parseAllowedDomains(text: string): string[] {
+  return text.split(/[\s,;]+/).filter(Boolean);
+}
+
+/**
+ * The domain list is shown, and sent, only for "only these domains"; in the
+ * other modes the routine keeps its stored list.
+ */
+function allowedDomainsToSend(
+  fields: RoutineFormFields,
+): Pick<CreateRoutineDto, 'allowedDomains'> {
+  return fields.internetAccess === RoutineInternetAccess.allowlist
+    ? { allowedDomains: parseAllowedDomains(fields.allowedDomains) }
+    : {};
 }
 
 /** The default-model option sends no model, so the routine uses the user's default. */
 export function formFieldsToCreateDto(
   fields: RoutineFormFields,
 ): CreateRoutineDto {
-  const { modelId, ...rest } = fields;
   return {
-    ...rest,
-    ...(modelId !== DEFAULT_MODEL_OPTION && { modelId }),
+    name: fields.name,
+    prompt: fields.prompt,
+    dailyTime: fields.dailyTime,
+    internetAccess: fields.internetAccess,
+    ...allowedDomainsToSend(fields),
+    ...(fields.modelId !== DEFAULT_MODEL_OPTION && { modelId: fields.modelId }),
   };
 }
 
@@ -43,9 +68,12 @@ export function formFieldsToCreateDto(
 export function formFieldsToUpdateDto(
   fields: RoutineFormFields,
 ): UpdateRoutineDto {
-  const { modelId, ...rest } = fields;
   return {
-    ...rest,
-    modelId: modelId === DEFAULT_MODEL_OPTION ? null : modelId,
+    name: fields.name,
+    prompt: fields.prompt,
+    dailyTime: fields.dailyTime,
+    internetAccess: fields.internetAccess,
+    ...allowedDomainsToSend(fields),
+    modelId: fields.modelId === DEFAULT_MODEL_OPTION ? null : fields.modelId,
   };
 }

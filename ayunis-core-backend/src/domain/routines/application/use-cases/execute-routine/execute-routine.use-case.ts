@@ -7,6 +7,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { CreateThreadUseCase } from 'src/domain/threads/application/use-cases/create-thread/create-thread.use-case';
 import { CreateThreadCommand } from 'src/domain/threads/application/use-cases/create-thread/create-thread.command';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { ExecuteUnattendedRunUseCase } from 'src/domain/runs/application/use-cases/execute-unattended-run/execute-unattended-run.use-case';
 import { ExecuteUnattendedRunCommand } from 'src/domain/runs/application/use-cases/execute-unattended-run/execute-unattended-run.command';
 import type { UnattendedRunResult } from 'src/domain/runs/application/use-cases/execute-unattended-run/unattended-run-result';
@@ -25,6 +26,7 @@ import {
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
+import { RoutineKnowledgeBaseService } from 'src/domain/routines/application/services/routine-knowledge-base.service';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
 import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
@@ -33,6 +35,10 @@ import type { RoutineRunOutcome } from 'src/domain/routines/domain/routine-run-o
 import { RoutineRunTrigger } from 'src/domain/routines/domain/routine-run-trigger.enum';
 import { routineThreadTitle } from 'src/domain/routines/domain/routine-thread-title';
 import { ROUTINE_FAILURE_REASON_MAX_LENGTH } from 'src/domain/routines/domain/routines.constants';
+import {
+  RoutineInternetAccess,
+  runAllowedDomains,
+} from 'src/domain/routines/domain/routine-internet-access';
 import { ExecuteRoutineCommand } from './execute-routine.command';
 
 const UNEXPECTED_FAILURE = 'UNEXPECTED_ERROR';
@@ -69,6 +75,7 @@ export class ExecuteRoutineUseCase {
     private readonly hasPermissionUseCase: HasPermissionUseCase,
     private readonly routineModelService: RoutineModelService,
     private readonly routineIntegrationService: RoutineIntegrationService,
+    private readonly routineKnowledgeBaseService: RoutineKnowledgeBaseService,
     private readonly createThreadUseCase: CreateThreadUseCase,
     private readonly executeUnattendedRunUseCase: ExecuteUnattendedRunUseCase,
     private readonly configService: ConfigService,
@@ -214,14 +221,7 @@ export class ExecuteRoutineUseCase {
     // Before the subscription gate, which consumes a trial message.
     await this.routineIntegrationService.assertUsable(routine);
     await this.subscriptionGate.admit(routine.orgId);
-    const thread = await this.createThreadUseCase.execute(
-      new CreateThreadCommand({
-        modelId: await this.routineModelService.forRun(routine),
-        title: routineThreadTitle(routine.name, new Date()),
-        origin: { kind: ThreadOriginKind.ROUTINE, routineId: routine.id },
-        mcpIntegrationIds: routine.mcpIntegrationIds,
-      }),
-    );
+    const thread = await this.createRoutineThread(routine);
     attempt.routineThreadId = thread.id;
     const result = await this.executeUnattendedRunUseCase.execute(
       new ExecuteUnattendedRunCommand({
@@ -231,13 +231,35 @@ export class ExecuteRoutineUseCase {
           id: 'routine',
           routine: {
             name: routine.name,
-            internetEnabled: routine.internetEnabled,
+            internetEnabled:
+              routine.internetAccess !== RoutineInternetAccess.OFF,
+            allowedDomains: runAllowedDomains(routine),
           },
         },
         signal: AbortSignal.timeout(this.timeoutMs()),
       }),
     );
     return toOutcome(result);
+  }
+
+  /**
+   * A chat continuing the thread keeps the routine's integrations and the
+   * knowledge bases the owner can still access; ones whose access was lost
+   * are left out rather than failing the run.
+   */
+  private async createRoutineThread(routine: Routine): Promise<Thread> {
+    const knowledgeBases = await this.routineKnowledgeBaseService.accessible(
+      routine.knowledgeBaseIds,
+    );
+    return this.createThreadUseCase.execute(
+      new CreateThreadCommand({
+        modelId: await this.routineModelService.forRun(routine),
+        title: routineThreadTitle(routine.name, new Date()),
+        origin: { kind: ThreadOriginKind.ROUTINE, routineId: routine.id },
+        mcpIntegrationIds: routine.mcpIntegrationIds,
+        knowledgeBaseIds: knowledgeBases.map(({ id }) => id),
+      }),
+    );
   }
 
   private mayManageRoutines(owner: User): Promise<boolean> {

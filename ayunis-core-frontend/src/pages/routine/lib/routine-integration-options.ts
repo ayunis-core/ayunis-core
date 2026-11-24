@@ -1,4 +1,4 @@
-import type { McpIntegration } from '@/features/routines/model/openapi';
+import type { McpIntegrationResponseDto as McpIntegration } from '@ayunis/api-client/schemas';
 
 export interface RoutineIntegrationOption {
   id: string;

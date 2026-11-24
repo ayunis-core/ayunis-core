@@ -13,6 +13,7 @@ import {
   RoutineEnabledSwitch,
   RoutineRunNowButton,
   RoutineRunStatusLine,
+  RoutineInternetAccess,
   RoutineScheduleLine,
   type Routine,
 } from '@/features/routines';
@@ -41,7 +42,7 @@ export default function RoutineCard({ routine }: Readonly<RoutineCardProps>) {
           >
             <span data-testid="routine-card-name">{routine.name}</span>
           </Link>
-          {routine.internetEnabled && (
+          {routine.internetAccess !== RoutineInternetAccess.off && (
             <Badge variant="outline" className="gap-1">
               <Globe className="size-3" />
               {t('card.internet')}

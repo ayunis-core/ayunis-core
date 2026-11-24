@@ -74,6 +74,8 @@ function CreateRoutineForm({
   // Without the call ID the routine could not be linked to the proposal.
   const disabled = !toolCallId || lookupPending || isCreating || created;
 
+  // Streaming replaces the domains array on every update; its text stays equal.
+  const allowedDomains = params.allowed_domains?.join('\n');
   useEffect(() => {
     if (createdRoutine) return;
     form.reset(
@@ -81,7 +83,8 @@ function CreateRoutineForm({
         name: params.name,
         prompt: params.prompt,
         daily_time: params.daily_time,
-        internet_enabled: params.internet_enabled,
+        internet_access: params.internet_access,
+        allowed_domains: allowedDomains?.split('\n'),
       }),
     );
   }, [
@@ -90,7 +93,8 @@ function CreateRoutineForm({
     params.name,
     params.prompt,
     params.daily_time,
-    params.internet_enabled,
+    params.internet_access,
+    allowedDomains,
   ]);
 
   return (

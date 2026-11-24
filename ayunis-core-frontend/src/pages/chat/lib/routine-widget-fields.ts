@@ -1,15 +1,18 @@
 import {
   EMPTY_ROUTINE_FORM,
+  formatAllowedDomains,
   routineToFormFields,
   type Routine,
   type RoutineFormFields,
+  type RoutineInternetAccess,
 } from '@/features/routines';
 
 export interface CreateRoutineParams {
   name?: string;
   prompt?: string;
   daily_time?: string;
-  internet_enabled?: boolean;
+  internet_access?: RoutineInternetAccess;
+  allowed_domains?: string[];
 }
 
 export interface EditRoutineParams extends CreateRoutineParams {
@@ -26,11 +29,15 @@ export function createRoutineParamsToFormFields(
     name: params.name ?? '',
     prompt: params.prompt ?? '',
     dailyTime: params.daily_time || EMPTY_ROUTINE_FORM.dailyTime,
-    internetEnabled: params.internet_enabled ?? false,
+    internetAccess: params.internet_access ?? EMPTY_ROUTINE_FORM.internetAccess,
+    allowedDomains: formatAllowedDomains(params.allowed_domains ?? []),
   };
 }
 
-/** Empty params mean "unchanged" and keep the stored value; the model always stays the stored one. */
+/**
+ * Empty or omitted params mean "unchanged" and keep the stored value; the
+ * model always stays the stored one.
+ */
 export function editRoutineParamsToFormFields(
   params: EditRoutineParams,
   routine?: Routine,
@@ -41,6 +48,9 @@ export function editRoutineParamsToFormFields(
     name: params.name || stored.name,
     prompt: params.prompt || stored.prompt,
     dailyTime: params.daily_time || stored.dailyTime,
-    internetEnabled: params.internet_enabled ?? stored.internetEnabled,
+    internetAccess: params.internet_access ?? stored.internetAccess,
+    allowedDomains: params.allowed_domains
+      ? formatAllowedDomains(params.allowed_domains)
+      : stored.allowedDomains,
   };
 }

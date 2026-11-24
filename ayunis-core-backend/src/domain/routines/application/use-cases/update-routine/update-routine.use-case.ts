@@ -3,14 +3,18 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
-import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import {
+  RoutinesRepository,
+  type RoutineDefinitionChanges,
+} from 'src/domain/routines/application/ports/routines.repository';
+import {
+  RoutineInvalidAllowedDomainsError,
   RoutineNotFoundError,
   UnexpectedRoutineError,
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
-import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
+import { routineInternetSettings } from 'src/domain/routines/domain/routine-internet-access';
 import { scheduleChangesForEdit } from 'src/domain/routines/domain/routine-schedule';
 import { UpdateRoutineCommand } from './update-routine.command';
 
@@ -26,7 +30,6 @@ export class UpdateRoutineUseCase {
   constructor(
     private readonly routinesRepository: RoutinesRepository,
     private readonly routineModelService: RoutineModelService,
-    private readonly routineIntegrationService: RoutineIntegrationService,
     private readonly contextService: ContextService,
   ) {}
 
@@ -35,7 +38,7 @@ export class UpdateRoutineUseCase {
   async execute(command: UpdateRoutineCommand): Promise<Routine> {
     this.logger.log({ routineId: command.id }, 'Updating routine');
     const { userId } = getRequiredUserContext(this.contextService);
-    const { id, modelId, mcpIntegrationIds, ...changes } = command;
+    const { id, modelId, internetAccess, allowedDomains, ...changes } = command;
     const current = await this.routinesRepository.findByIdForUpdate(userId, id);
     if (!current) throw new RoutineNotFoundError(id);
     const updated = await this.routinesRepository.updateDefinition(userId, id, {
@@ -43,15 +46,35 @@ export class UpdateRoutineUseCase {
       ...(modelId !== undefined && {
         modelId: await this.routineModelService.select(modelId),
       }),
-      ...(mcpIntegrationIds !== undefined && {
-        mcpIntegrationIds: await this.routineIntegrationService.select(
-          mcpIntegrationIds,
-          current.mcpIntegrationIds,
-        ),
-      }),
+      ...internetChanges(current, { internetAccess, allowedDomains }),
       ...scheduleChangesForEdit(current, changes, new Date()),
     });
     if (!updated) throw new RoutineNotFoundError(id);
     return updated;
   }
+}
+
+/**
+ * The mode and the list are checked together, as they will be stored: an
+ * omitted one keeps its stored value, so switching to `allowlist` works with
+ * the domains the routine already has.
+ */
+function internetChanges(
+  current: Routine,
+  changes: Pick<UpdateRoutineCommand, 'internetAccess' | 'allowedDomains'>,
+): Pick<RoutineDefinitionChanges, 'internetAccess' | 'allowedDomains'> {
+  const { internetAccess, allowedDomains } = changes;
+  if (internetAccess === undefined && allowedDomains === undefined) return {};
+  const internet = routineInternetSettings(
+    internetAccess ?? current.internetAccess,
+    allowedDomains ?? current.allowedDomains,
+  );
+  if (!internet.ok)
+    throw new RoutineInvalidAllowedDomainsError(internet.problem);
+  return {
+    ...(internetAccess !== undefined && { internetAccess }),
+    ...(allowedDomains !== undefined && {
+      allowedDomains: internet.settings.allowedDomains,
+    }),
+  };
 }

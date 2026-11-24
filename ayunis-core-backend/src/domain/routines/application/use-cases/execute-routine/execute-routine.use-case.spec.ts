@@ -26,6 +26,8 @@ import {
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
+import { RoutineKnowledgeBaseService } from 'src/domain/routines/application/services/routine-knowledge-base.service';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import { RoutineSubscriptionGate } from 'src/domain/routines/application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from 'src/domain/routines/application/services/routine-academy-gate.service';
 import { RoutineFailureNotifier } from 'src/domain/routines/application/services/routine-failure-notifier.service';
@@ -56,6 +58,7 @@ describe('ExecuteRoutineUseCase', () => {
   const hasPermission = { execute: jest.fn() };
   const routineModelService = { forRun: jest.fn() };
   const routineIntegrationService = { assertUsable: jest.fn() };
+  const routineKnowledgeBaseService = { accessible: jest.fn() };
   const createThread = { execute: jest.fn() };
   const executeUnattendedRun = { execute: jest.fn() };
   const failureNotifier = { notify: jest.fn() };
@@ -90,6 +93,7 @@ describe('ExecuteRoutineUseCase', () => {
     hasPermission.execute.mockResolvedValue(true);
     routineModelService.forRun.mockResolvedValue(TEST_MODEL_ID);
     routineIntegrationService.assertUsable.mockResolvedValue(undefined);
+    routineKnowledgeBaseService.accessible.mockResolvedValue([]);
     createThread.execute.mockResolvedValue({ id: threadId });
     executeUnattendedRun.execute.mockResolvedValue({
       status: 'done',
@@ -113,6 +117,10 @@ describe('ExecuteRoutineUseCase', () => {
         {
           provide: RoutineIntegrationService,
           useValue: routineIntegrationService,
+        },
+        {
+          provide: RoutineKnowledgeBaseService,
+          useValue: routineKnowledgeBaseService,
         },
         { provide: CreateThreadUseCase, useValue: createThread },
         {
@@ -149,7 +157,11 @@ describe('ExecuteRoutineUseCase', () => {
     expect(command.input).toEqual(new RunUserInput(aRoutine().prompt));
     expect(command.profile).toEqual({
       id: 'routine',
-      routine: { name: 'Verkündungsplattform', internetEnabled: true },
+      routine: {
+        name: 'Verkündungsplattform',
+        internetEnabled: true,
+        allowedDomains: undefined,
+      },
     });
     expect(command.signal.aborted).toBe(false);
   });
@@ -247,6 +259,42 @@ describe('ExecuteRoutineUseCase', () => {
     const thread = createThread.execute.mock.calls[0][0] as CreateThreadCommand;
     expect(thread.mcpIntegrationIds).toEqual(integrationIds);
   });
+
+  it('creates the routine thread with only the knowledge bases the owner can still access', async () => {
+    const statutes = '66666666-6666-4666-8666-666666666666' as UUID;
+    const revoked = '99999999-9999-4999-8999-999999999999' as UUID;
+    repository.findByIdForExecution.mockResolvedValue(
+      aRoutine({ knowledgeBaseIds: [statutes, revoked] }),
+    );
+    routineKnowledgeBaseService.accessible.mockResolvedValue([
+      { id: statutes },
+    ]);
+
+    await run();
+
+    const thread = createThread.execute.mock.calls[0][0] as CreateThreadCommand;
+    expect(thread.knowledgeBaseIds).toEqual([statutes]);
+    expect(executeUnattendedRun.execute).toHaveBeenCalled();
+  });
+
+  it.each([
+    [RoutineInternetAccess.ALLOWLIST, true, ['nrw.de']],
+    [RoutineInternetAccess.ALL, true, undefined],
+    [RoutineInternetAccess.OFF, false, undefined],
+  ])(
+    'runs a routine with internet access %s with web tools %s, limited to %s',
+    async (internetAccess, internetEnabled, allowedDomains) => {
+      repository.findByIdForExecution.mockResolvedValue(
+        aRoutine({ internetAccess, allowedDomains: ['nrw.de'] }),
+      );
+
+      await run();
+
+      expect(unattendedCommand().profile).toMatchObject({
+        routine: { internetEnabled, allowedDomains },
+      });
+    },
+  );
 
   it('fails the run when an integration is unavailable, before it consumes a trial message', async () => {
     routineIntegrationService.assertUsable.mockRejectedValue(

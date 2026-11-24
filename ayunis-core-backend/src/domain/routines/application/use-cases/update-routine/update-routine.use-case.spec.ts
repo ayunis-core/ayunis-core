@@ -4,15 +4,16 @@ jest.mock('@nestjs-cls/transactional', () => ({
       descriptor,
 }));
 import { Test } from '@nestjs/testing';
-import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { createMockContextService } from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
-import { RoutineNotFoundError } from 'src/domain/routines/application/routines.errors';
+import {
+  RoutineInvalidAllowedDomainsError,
+  RoutineNotFoundError,
+} from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
-import { RoutineIntegrationService } from 'src/domain/routines/application/services/routine-integration.service';
-import { RoutineIntegrationUnavailableError } from 'src/domain/routines/application/routines.errors';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import {
   TEST_MODEL_ID,
   TEST_ROUTINE_ID,
@@ -27,8 +28,6 @@ describe('UpdateRoutineUseCase', () => {
   let useCase: UpdateRoutineUseCase;
   let repository: jest.Mocked<RoutinesRepository>;
   const routineModelService = { select: jest.fn() };
-  const routineIntegrationService = { select: jest.fn() };
-  const ticketsIntegrationId = '88888888-8888-4888-8888-888888888888' as UUID;
   const scheduled = new Date('2026-11-07T06:32:00.000Z');
   const current = aRoutine({ enabled: true, nextRunAt: scheduled });
 
@@ -38,18 +37,11 @@ describe('UpdateRoutineUseCase', () => {
     repository.findByIdForUpdate.mockResolvedValue(current);
     repository.updateDefinition.mockResolvedValue(aRoutine({ enabled: false }));
     routineModelService.select.mockResolvedValue(TEST_MODEL_ID);
-    routineIntegrationService.select.mockImplementation((ids: UUID[]) =>
-      Promise.resolve(ids),
-    );
     const module = await Test.createTestingModule({
       providers: [
         UpdateRoutineUseCase,
         { provide: RoutinesRepository, useValue: repository },
         { provide: RoutineModelService, useValue: routineModelService },
-        {
-          provide: RoutineIntegrationService,
-          useValue: routineIntegrationService,
-        },
         { provide: ContextService, useValue: createMockContextService() },
       ],
     }).compile();
@@ -180,55 +172,84 @@ describe('UpdateRoutineUseCase', () => {
     expect(repository.updateDefinition).not.toHaveBeenCalled();
   });
 
-  it('replaces the integrations with ones the user may use', async () => {
-    await useCase.execute(
-      new UpdateRoutineCommand({
-        id: TEST_ROUTINE_ID,
-        mcpIntegrationIds: [ticketsIntegrationId],
-      }),
-    );
-
-    expect(repository.updateDefinition).toHaveBeenCalledWith(
-      TEST_USER_ID,
-      TEST_ROUTINE_ID,
-      { mcpIntegrationIds: [ticketsIntegrationId] },
-    );
-  });
-
-  it('checks only the integrations the edit adds, so a routine with one that became unavailable still saves', async () => {
-    const calendarIntegrationId =
-      '99999999-9999-4999-8999-999999999999' as UUID;
-    repository.findByIdForUpdate.mockResolvedValue(
-      aRoutine({ mcpIntegrationIds: [calendarIntegrationId] }),
-    );
-
-    await useCase.execute(
-      new UpdateRoutineCommand({
-        id: TEST_ROUTINE_ID,
-        mcpIntegrationIds: [calendarIntegrationId, ticketsIntegrationId],
-      }),
-    );
-
-    expect(routineIntegrationService.select).toHaveBeenCalledWith(
-      [calendarIntegrationId, ticketsIntegrationId],
-      [calendarIntegrationId],
-    );
-  });
-
-  it('keeps the routine unchanged when an integration is unavailable', async () => {
-    routineIntegrationService.select.mockRejectedValue(
-      new RoutineIntegrationUnavailableError(ticketsIntegrationId),
-    );
-
-    await expect(
+  describe('internet access', () => {
+    const update = (
+      changes: Partial<
+        Pick<UpdateRoutineCommand, 'internetAccess' | 'allowedDomains'>
+      >,
+    ) =>
       useCase.execute(
-        new UpdateRoutineCommand({
-          id: TEST_ROUTINE_ID,
-          mcpIntegrationIds: [ticketsIntegrationId],
+        new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, ...changes }),
+      );
+
+    it('limits the routine to the domains it already has, keeping them', async () => {
+      repository.findByIdForUpdate.mockResolvedValue(
+        aRoutine({ nextRunAt: scheduled, allowedDomains: ['nrw.de'] }),
+      );
+
+      await update({ internetAccess: RoutineInternetAccess.ALLOWLIST });
+
+      expect(repository.updateDefinition).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        TEST_ROUTINE_ID,
+        { internetAccess: RoutineInternetAccess.ALLOWLIST },
+      );
+    });
+
+    it('stores sent domains as hosts', async () => {
+      await update({
+        internetAccess: RoutineInternetAccess.ALLOWLIST,
+        allowedDomains: ['https://Recht.NRW.de/path'],
+      });
+
+      expect(repository.updateDefinition).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        TEST_ROUTINE_ID,
+        {
+          internetAccess: RoutineInternetAccess.ALLOWLIST,
+          allowedDomains: ['recht.nrw.de'],
+        },
+      );
+    });
+
+    it('rejects the allowlist mode for a routine without domains', async () => {
+      await expect(
+        update({ internetAccess: RoutineInternetAccess.ALLOWLIST }),
+      ).rejects.toThrow(RoutineInvalidAllowedDomainsError);
+      expect(repository.updateDefinition).not.toHaveBeenCalled();
+    });
+
+    it('rejects removing the last domain of a routine limited to domains', async () => {
+      repository.findByIdForUpdate.mockResolvedValue(
+        aRoutine({
+          internetAccess: RoutineInternetAccess.ALLOWLIST,
+          allowedDomains: ['nrw.de'],
         }),
-      ),
-    ).rejects.toThrow(RoutineIntegrationUnavailableError);
-    expect(repository.updateDefinition).not.toHaveBeenCalled();
+      );
+
+      await expect(update({ allowedDomains: [] })).rejects.toThrow(
+        RoutineInvalidAllowedDomainsError,
+      );
+      expect(repository.updateDefinition).not.toHaveBeenCalled();
+    });
+
+    it('keeps the domains when internet access is turned off', async () => {
+      repository.findByIdForUpdate.mockResolvedValue(
+        aRoutine({
+          nextRunAt: scheduled,
+          internetAccess: RoutineInternetAccess.ALLOWLIST,
+          allowedDomains: ['nrw.de'],
+        }),
+      );
+
+      await update({ internetAccess: RoutineInternetAccess.OFF });
+
+      expect(repository.updateDefinition).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        TEST_ROUTINE_ID,
+        { internetAccess: RoutineInternetAccess.OFF },
+      );
+    });
   });
 
   it("reports another user's routine as not found", async () => {

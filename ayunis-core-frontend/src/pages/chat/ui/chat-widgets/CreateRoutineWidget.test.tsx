@@ -40,7 +40,8 @@ const content = {
     name: 'Proposed name',
     prompt: 'Proposed prompt',
     daily_time: '06:45',
-    internet_enabled: true,
+    internet_access: 'allowlist',
+    allowed_domains: ['nrw.de'],
   },
 } as unknown as ToolUseMessageContent;
 
@@ -51,8 +52,8 @@ function aStoredRoutine(overrides: object = {}) {
     prompt: 'Saved prompt',
     modelId: null,
     dailyTime: '07:00',
-    internetEnabled: false,
-    mcpIntegrationIds: [],
+    internetAccess: 'off',
+    allowedDomains: [],
     sourceToolCallId: TOOL_CALL_ID,
     ...overrides,
   };
@@ -129,7 +130,7 @@ describe('CreateRoutineWidget', () => {
     );
   });
 
-  it('links the new routine to the proposal and stays created', async () => {
+  it('links the new routine to the proposal, with its domains, and stays created', async () => {
     renderWidget();
     await waitFor(() => expect(submit()).toHaveProperty('disabled', false));
 
@@ -141,6 +142,8 @@ describe('CreateRoutineWidget', () => {
           method: 'POST',
           data: expect.objectContaining({
             name: 'Proposed name',
+            internetAccess: 'allowlist',
+            allowedDomains: ['nrw.de'],
             sourceToolCallId: TOOL_CALL_ID,
           }) as unknown,
         }),

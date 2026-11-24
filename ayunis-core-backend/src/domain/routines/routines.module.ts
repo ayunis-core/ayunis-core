@@ -2,6 +2,9 @@ import { BullModule } from '@nestjs/bullmq';
 import { forwardRef, Module } from '@nestjs/common';
 import { ModelsModule } from 'src/domain/models/models.module';
 import { McpModule } from 'src/domain/mcp/mcp.module';
+import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
+import { McpIntegrationDtoMapper } from 'src/domain/mcp/presenters/http/mappers/mcp-integration-dto.mapper';
+import { KnowledgeBaseDtoMapper } from 'src/domain/knowledge-bases/presenters/http/mappers/knowledge-base-dto.mapper';
 import { RunsModule } from 'src/domain/runs/runs.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
@@ -13,6 +16,7 @@ import { RoutineExecutionQueue } from './application/ports/routine-execution-que
 import { RoutinesRepository } from './application/ports/routines.repository';
 import { RoutineModelService } from './application/services/routine-model.service';
 import { RoutineIntegrationService } from './application/services/routine-integration.service';
+import { RoutineKnowledgeBaseService } from './application/services/routine-knowledge-base.service';
 import { RoutineSubscriptionGate } from './application/services/routine-subscription-gate.service';
 import { RoutineAcademyGate } from './application/services/routine-academy-gate.service';
 import { RoutineFailureNotifier } from './application/services/routine-failure-notifier.service';
@@ -26,6 +30,12 @@ import { FindRoutineUseCase } from './application/use-cases/find-routine/find-ro
 import { RunRoutineNowUseCase } from './application/use-cases/run-routine-now/run-routine-now.use-case';
 import { SweepDueRoutinesUseCase } from './application/use-cases/sweep-due-routines/sweep-due-routines.use-case';
 import { UpdateRoutineUseCase } from './application/use-cases/update-routine/update-routine.use-case';
+import { ListRoutineMcpIntegrationsUseCase } from './application/use-cases/list-routine-mcp-integrations/list-routine-mcp-integrations.use-case';
+import { AddMcpIntegrationToRoutineUseCase } from './application/use-cases/add-mcp-integration-to-routine/add-mcp-integration-to-routine.use-case';
+import { RemoveMcpIntegrationFromRoutineUseCase } from './application/use-cases/remove-mcp-integration-from-routine/remove-mcp-integration-from-routine.use-case';
+import { ListRoutineKnowledgeBasesUseCase } from './application/use-cases/list-routine-knowledge-bases/list-routine-knowledge-bases.use-case';
+import { AddKnowledgeBaseToRoutineUseCase } from './application/use-cases/add-knowledge-base-to-routine/add-knowledge-base-to-routine.use-case';
+import { RemoveKnowledgeBaseFromRoutineUseCase } from './application/use-cases/remove-knowledge-base-from-routine/remove-knowledge-base-from-routine.use-case';
 import { LocalRoutinesRepositoryModule } from './infrastructure/persistence/local/local-routines-repository.module';
 import { LocalRoutinesRepository } from './infrastructure/persistence/local/local-routines.repository';
 import { ROUTINE_EXECUTION_QUEUE } from './infrastructure/queue/routine-execution.constants';
@@ -35,6 +45,8 @@ import { ROUTINE_SWEEP_QUEUE } from './infrastructure/queue/routine-sweep.consta
 import { RoutineSweepConsumer } from './infrastructure/queue/routine-sweep.consumer';
 import { RoutineDtoMapper } from './presenters/http/mappers/routine-dto.mapper';
 import { RoutinesController } from './presenters/http/routines.controller';
+import { RoutineMcpIntegrationsController } from './presenters/http/routine-mcp-integrations.controller';
+import { RoutineKnowledgeBasesController } from './presenters/http/routine-knowledge-bases.controller';
 
 @Module({
   imports: [
@@ -45,6 +57,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     LocalRoutinesRepositoryModule,
     ModelsModule,
     McpModule,
+    KnowledgeBasesModule,
     ThreadsModule,
     forwardRef(() => RunsModule), // Runs → Routines → Runs (circular)
     UsersModule,
@@ -54,7 +67,11 @@ import { RoutinesController } from './presenters/http/routines.controller';
     PermissionsModule,
     NotificationsModule,
   ],
-  controllers: [RoutinesController],
+  controllers: [
+    RoutinesController,
+    RoutineMcpIntegrationsController,
+    RoutineKnowledgeBasesController,
+  ],
   providers: [
     { provide: RoutinesRepository, useExisting: LocalRoutinesRepository },
     RoutineExecutionProducer,
@@ -63,6 +80,7 @@ import { RoutinesController } from './presenters/http/routines.controller';
     RoutineSweepConsumer,
     RoutineModelService,
     RoutineIntegrationService,
+    RoutineKnowledgeBaseService,
     RoutineSubscriptionGate,
     RoutineAcademyGate,
     RoutineFailureNotifier,
@@ -71,11 +89,19 @@ import { RoutinesController } from './presenters/http/routines.controller';
     FindManageableRoutinesUseCase,
     FindRoutineUseCase,
     UpdateRoutineUseCase,
+    ListRoutineMcpIntegrationsUseCase,
+    AddMcpIntegrationToRoutineUseCase,
+    RemoveMcpIntegrationFromRoutineUseCase,
+    ListRoutineKnowledgeBasesUseCase,
+    AddKnowledgeBaseToRoutineUseCase,
+    RemoveKnowledgeBaseFromRoutineUseCase,
     DeleteRoutineUseCase,
     RunRoutineNowUseCase,
     ExecuteRoutineUseCase,
     SweepDueRoutinesUseCase,
     RoutineDtoMapper,
+    McpIntegrationDtoMapper,
+    KnowledgeBaseDtoMapper,
   ],
   exports: [FindManageableRoutinesUseCase],
 })

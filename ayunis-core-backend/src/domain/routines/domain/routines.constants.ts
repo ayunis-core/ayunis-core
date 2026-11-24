@@ -6,6 +6,10 @@ export const ROUTINE_FAILURE_REASON_MAX_LENGTH = 100;
 export const ROUTINE_TIME_ZONE = 'Europe/Berlin';
 export const ROUTINE_EXECUTION_KEY_MAX_LENGTH = 100;
 export const ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH = 255;
+/** A hostname has at most 253 characters. */
+export const ROUTINE_ALLOWED_DOMAIN_MAX_LENGTH = 253;
+/** An allowed domain may be given as a URL, which is reduced to its host. */
+export const ROUTINE_ALLOWED_DOMAIN_INPUT_MAX_LENGTH = 2048;
 /** Scheduled starts are spread over this many minutes after the daily time. */
 export const ROUTINE_START_SPREAD_MINUTES = 10;
 /** Consecutive failed runs after which an enabled routine is paused. */
