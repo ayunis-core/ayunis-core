@@ -16735,6 +16735,85 @@
         "summary": "Mark one of the current user’s notifications unread",
         "tags": ["notifications"]
       }
+    },
+    "/marketplace/routines/{identifier}": {
+      "get": {
+        "operationId": "MarketplaceController_getRoutine",
+        "parameters": [
+          {
+            "name": "identifier",
+            "required": true,
+            "in": "path",
+            "description": "The unique identifier slug of the marketplace routine",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the marketplace routine details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceRoutineResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Marketplace routine not found or not published, or routines are disabled"
+          },
+          "503": {
+            "description": "Marketplace unavailable"
+          }
+        },
+        "summary": "Preview a marketplace routine before installation",
+        "tags": ["marketplace"]
+      }
+    },
+    "/routines/install-from-marketplace": {
+      "post": {
+        "description": "Creates the user's own copy of a published marketplace routine: its name, prompt, schedule and internet access, the user's default model, switched on. Also requires the install marketplace routines permission.",
+        "operationId": "RoutinesController_installFromMarketplace",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstallRoutineFromMarketplaceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The marketplace routine has settings Ayunis Core does not accept, e.g. an IP address as allowed domain"
+          },
+          "403": {
+            "description": "The manage routines and install marketplace routines permissions are required"
+          },
+          "404": {
+            "description": "Marketplace routine not found or not published"
+          },
+          "503": {
+            "description": "Marketplace unavailable"
+          }
+        },
+        "summary": "Install a routine from the marketplace",
+        "tags": ["routines"]
+      }
     }
   },
   "info": {
@@ -17128,6 +17207,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -17171,6 +17251,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -17201,6 +17282,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -20291,6 +20373,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -20334,6 +20417,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -23683,6 +23767,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -23763,6 +23848,7 @@
                 "share_knowledge_bases_with_teams",
                 "share_knowledge_bases_with_org",
                 "manage_routines",
+                "install_marketplace_routines",
                 "manage_workspace",
                 "manage_workspace_members",
                 "manage_recordings",
@@ -28140,6 +28226,12 @@
             "nullable": true,
             "description": "The chat `create_routine` tool call the routine was created from; null when it was created elsewhere"
           },
+          "marketplaceIdentifier": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Marketplace routine this routine was installed from; null when it was created in Ayunis Core",
+            "example": "amtsblatt-nrw"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -28164,6 +28256,7 @@
           "nextRunAt",
           "pausedAt",
           "sourceToolCallId",
+          "marketplaceIdentifier",
           "createdAt",
           "updatedAt"
         ]
@@ -29577,6 +29670,118 @@
           }
         },
         "required": ["id", "position", "referenceId", "referenceType", "name"]
+      },
+      "InstallRoutineFromMarketplaceDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "The unique identifier (slug) of the marketplace routine",
+            "example": "amtsblatt-nrw"
+          }
+        },
+        "required": ["identifier"]
+      },
+      "MarketplaceRoutineResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Routine UUID in the marketplace"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)",
+            "example": "amtsblatt-nrw"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name, also the installed name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "description": {
+            "type": "string",
+            "description": "Longer description",
+            "nullable": true
+          },
+          "iconName": {
+            "type": "string",
+            "description": "Lucide icon name (kebab-case)",
+            "nullable": true
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/MarketplaceRoutineScheduleResponseDto"
+          },
+          "internetAccess": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineInternetAccess"
+              }
+            ]
+          },
+          "allowedDomains": {
+            "description": "Hosts the routine may access, with their subdomains; applied only in `allowlist` mode",
+            "example": ["recht.nrw.de"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "description",
+          "iconName",
+          "schedule",
+          "internetAccess",
+          "allowedDomains"
+        ]
+      },
+      "MarketplaceRoutineScheduleResponseDto": {
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "description": "Daily, weekly on `weekdays`, or monthly on `monthDay`. Fields of another frequency are rejected.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineFrequency"
+              }
+            ]
+          },
+          "time": {
+            "type": "string",
+            "description": "Run time as HH:mm (Europe/Berlin)",
+            "example": "07:30"
+          },
+          "weekdays": {
+            "description": "Weekly only: ISO weekdays, 1 (Monday) to 7 (Sunday). Absent for the other frequencies.",
+            "example": [1, 4],
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "monthDay": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string",
+                "enum": ["last"]
+              }
+            ],
+            "description": "Monthly only: the day of the month, or `last` for its last day. Absent for the other frequencies.",
+            "example": 15
+          }
+        },
+        "required": ["frequency", "time"]
       }
     }
   }

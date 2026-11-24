@@ -22,6 +22,7 @@ export class RoutineDtoMapper {
       nextRunAt: routine.nextRunAt?.toISOString() ?? null,
       pausedAt: routine.pausedAt?.toISOString() ?? null,
       sourceToolCallId: routine.sourceToolCallId,
+      marketplaceIdentifier: routine.marketplaceIdentifier,
       createdAt: routine.createdAt.toISOString(),
       updatedAt: routine.updatedAt.toISOString(),
     };

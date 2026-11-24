@@ -17,6 +17,7 @@ import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
+import { MarketplaceRoutineInstalledEvent } from 'src/domain/routines/application/events/marketplace-routine-installed.event';
 import { User } from 'src/iam/users/domain/user.entity';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 
@@ -531,6 +532,21 @@ describe('PrometheusMetricsListener', () => {
         org_id: ORG_ID,
         marketplace_type: 'integration',
         marketplace_slug: 'oparl-council-data',
+      });
+    });
+  });
+
+  describe('handleMarketplaceRoutineInstalled', () => {
+    it('counts routine installs apart from skills and integrations', () => {
+      listener.handleMarketplaceRoutineInstalled(
+        new MarketplaceRoutineInstalledEvent(USER_ID, ORG_ID, 'amtsblatt-nrw'),
+      );
+
+      expect(marketplaceInstallsCounter.inc).toHaveBeenCalledWith({
+        user_id: USER_ID,
+        org_id: ORG_ID,
+        marketplace_type: 'routine',
+        marketplace_slug: 'amtsblatt-nrw',
       });
     });
   });

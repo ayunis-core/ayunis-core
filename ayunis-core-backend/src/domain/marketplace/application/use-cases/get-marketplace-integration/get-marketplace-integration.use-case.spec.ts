@@ -15,6 +15,8 @@ describe('GetMarketplaceIntegrationUseCase', () => {
   const mockIntegration: IntegrationResponseDto = {
     id: '550e8400-e29b-41d4-a716-446655440000',
     identifier: 'oparl-council-data',
+    kind: 'MCP',
+    linkPath: null,
     name: 'OParl Council Data',
     shortDescription: 'Access municipal council data via OParl',
     description:

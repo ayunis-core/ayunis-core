@@ -57,6 +57,8 @@ export function aMarketplaceIntegrationListEntry(
   return {
     id: 'b0000000-0000-4000-8000-000000000001',
     identifier: 'council-data',
+    kind: 'MCP',
+    linkPath: null,
     name: 'Ratsinformationssystem',
     shortDescription: 'Zugriff auf Beschlüsse',
     description: 'Zugriff auf Beschlüsse',
@@ -78,6 +80,7 @@ export function createMockMarketplaceClient(): jest.Mocked<MarketplaceClient> {
     getSkillByIdentifier: jest.fn().mockResolvedValue(null),
     getPreInstalledSkills: jest.fn().mockResolvedValue([]),
     getIntegrationByIdentifier: jest.fn().mockResolvedValue(null),
+    getRoutineByIdentifier: jest.fn().mockResolvedValue(null),
     listSkills: jest.fn().mockResolvedValue([]),
     listIntegrations: jest.fn().mockResolvedValue([]),
     listCategories: jest.fn().mockResolvedValue([]),

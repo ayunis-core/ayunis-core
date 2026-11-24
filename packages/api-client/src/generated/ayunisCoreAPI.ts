@@ -124,6 +124,7 @@ import type {
   ImproveSkillTextDto,
   ImprovedSkillTextResponseDto,
   InstallMarketplaceIntegrationDto,
+  InstallRoutineFromMarketplaceDto,
   InstallSkillFromMarketplaceDto,
   InstalledMarketplaceSkillResponseDto,
   InviteDetailResponseDto,
@@ -148,6 +149,7 @@ import type {
   LogoutResponseDto,
   MarketplaceConfigResponseDto,
   MarketplaceIntegrationResponseDto,
+  MarketplaceRoutineResponseDto,
   MarketplaceSkillResponseDto,
   McpIntegrationResponseDto,
   McpOAuthAuthorizationUrlDto,
@@ -35959,5 +35961,167 @@ export const useNotificationsControllerMarkUnread = <TError = void,
         TContext
       > => {
       return useMutation(getNotificationsControllerMarkUnreadMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Preview a marketplace routine before installation
+ */
+export const marketplaceControllerGetRoutine = (
+    identifier: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<MarketplaceRoutineResponseDto>(
+      {url: `/marketplace/routines/${identifier}`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getMarketplaceControllerGetRoutineQueryKey = (identifier: string,) => {
+    return [
+    `/marketplace/routines/${identifier}`
+    ] as const;
+    }
+
+
+export const getMarketplaceControllerGetRoutineQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError = void>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerGetRoutineQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>> = ({ signal }) => marketplaceControllerGetRoutine(identifier, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MarketplaceControllerGetRoutineQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>>
+export type MarketplaceControllerGetRoutineQueryError = void
+
+
+export function useMarketplaceControllerGetRoutine<TData = Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError = void>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetRoutine<TData = Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerGetRoutine<TData = Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Preview a marketplace routine before installation
+ */
+
+export function useMarketplaceControllerGetRoutine<TData = Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError = void>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerGetRoutine>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketplaceControllerGetRoutineQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * Creates the user's own copy of a published marketplace routine: its name, prompt, schedule and internet access, the user's default model, switched on. Also requires the install marketplace routines permission.
+ * @summary Install a routine from the marketplace
+ */
+export const routinesControllerInstallFromMarketplace = (
+    installRoutineFromMarketplaceDto: InstallRoutineFromMarketplaceDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<RoutineResponseDto>(
+      {url: `/routines/install-from-marketplace`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: installRoutineFromMarketplaceDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerInstallFromMarketplaceMutationKey = () => ['routinesControllerInstallFromMarketplace'] as const;
+
+export const getRoutinesControllerInstallFromMarketplaceMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerInstallFromMarketplace>>, TError,RoutinesControllerInstallFromMarketplaceMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerInstallFromMarketplace>>, TError,RoutinesControllerInstallFromMarketplaceMutationVariables, TContext> => {
+
+const mutationKey = getRoutinesControllerInstallFromMarketplaceMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routinesControllerInstallFromMarketplace>>, RoutinesControllerInstallFromMarketplaceMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  routinesControllerInstallFromMarketplace(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutinesControllerInstallFromMarketplaceMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerInstallFromMarketplace>>>
+    export type RoutinesControllerInstallFromMarketplaceMutationBody = InstallRoutineFromMarketplaceDto
+    export type RoutinesControllerInstallFromMarketplaceMutationError = void
+    export type RoutinesControllerInstallFromMarketplaceMutationVariables = {data: InstallRoutineFromMarketplaceDto}
+
+    /**
+ * @summary Install a routine from the marketplace
+ */
+export const useRoutinesControllerInstallFromMarketplace = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerInstallFromMarketplace>>, TError,RoutinesControllerInstallFromMarketplaceMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routinesControllerInstallFromMarketplace>>,
+        TError,
+        RoutinesControllerInstallFromMarketplaceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutinesControllerInstallFromMarketplaceMutationOptions(options), queryClient);
     }
 

@@ -56,6 +56,7 @@ export class CreateRoutineUseCase {
         ...internet.settings,
         enabled: command.enabled,
         sourceToolCallId: command.sourceToolCallId,
+        marketplaceIdentifier: command.marketplaceIdentifier,
         nextRunAt: command.enabled
           ? nextRoutineRunAt({ id, schedule }, new Date())
           : null,

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   InstallPage,
   InstallIntegrationPage,
+  InstallRoutinePage,
   InstallErrorState,
 } from '@/pages/install';
 import AppLayout from '@/layouts/app-layout';
@@ -15,6 +16,7 @@ import { searchParamString } from '@/shared/lib/search-params';
 const searchSchema = z.object({
   skill: searchParamString.optional(),
   integration: searchParamString.optional(),
+  routine: searchParamString.optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/install')({
@@ -23,7 +25,7 @@ export const Route = createFileRoute('/_authenticated/install')({
 });
 
 function RouteComponent() {
-  const { skill, integration } = Route.useSearch();
+  const { skill, integration, routine } = Route.useSearch();
   const { user } = Route.useRouteContext();
   const authorization = createAuthorization(user.role);
   const isAdmin = authorization.hasRole(MeResponseDtoRole.admin);
@@ -33,6 +35,10 @@ function RouteComponent() {
       return <AdminRequiredMessage />;
     }
     return <InstallIntegrationPage integrationIdentifier={integration} />;
+  }
+
+  if (routine) {
+    return <InstallRoutinePage routineIdentifier={routine} />;
   }
 
   return <InstallPage skillIdentifier={skill} />;

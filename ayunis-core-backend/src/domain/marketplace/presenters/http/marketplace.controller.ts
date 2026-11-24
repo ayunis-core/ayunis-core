@@ -9,6 +9,11 @@ import { GetMarketplaceIntegrationUseCase } from 'src/domain/marketplace/applica
 import { GetMarketplaceIntegrationQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-integration/get-marketplace-integration.query';
 import { MarketplaceIntegrationResponseDto } from './dto/marketplace-integration-response.dto';
 import { MarketplaceConfigResponseDto } from './dto/marketplace-config-response.dto';
+import { GetMarketplaceRoutineUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-routine/get-marketplace-routine.use-case';
+import { GetMarketplaceRoutineQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-routine/get-marketplace-routine.query';
+import { MarketplaceRoutineResponseDto } from './dto/marketplace-routine-response.dto';
+import { RequireFeature } from 'src/common/guards/feature.guard';
+import { FeatureFlag } from 'src/config/features.config';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -18,6 +23,7 @@ export class MarketplaceController {
   constructor(
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
+    private readonly getMarketplaceRoutineUseCase: GetMarketplaceRoutineUseCase,
     @Inject(marketplaceConfig.KEY)
     private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
@@ -107,6 +113,49 @@ export class MarketplaceController {
       legalTextVersion: integration.legalTextVersion ?? null,
       createdAt: integration.createdAt,
       updatedAt: integration.updatedAt,
+    };
+  }
+
+  @Get('routines/:identifier')
+  @RequireFeature(FeatureFlag.Routines)
+  @ApiOperation({
+    summary: 'Preview a marketplace routine before installation',
+  })
+  @ApiParam({
+    name: 'identifier',
+    description: 'The unique identifier slug of the marketplace routine',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the marketplace routine details',
+    type: MarketplaceRoutineResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description:
+      'Marketplace routine not found or not published, or routines are disabled',
+  })
+  @ApiResponse({ status: 503, description: 'Marketplace unavailable' })
+  async getRoutine(
+    @Param('identifier') identifier: string,
+  ): Promise<MarketplaceRoutineResponseDto> {
+    this.logger.log({ identifier }, 'getRoutine');
+
+    const routine = await this.getMarketplaceRoutineUseCase.execute(
+      new GetMarketplaceRoutineQuery(identifier),
+    );
+
+    return {
+      id: routine.id,
+      identifier: routine.identifier,
+      name: routine.name,
+      shortDescription: routine.shortDescription,
+      description: routine.description,
+      iconName: routine.iconName,
+      schedule: routine.schedule,
+      internetAccess: routine.internetAccess,
+      allowedDomains: routine.allowedDomains,
     };
   }
 }

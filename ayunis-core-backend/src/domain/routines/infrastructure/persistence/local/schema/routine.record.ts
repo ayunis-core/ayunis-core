@@ -25,6 +25,7 @@ import {
   ROUTINE_ALLOWED_DOMAIN_MAX_LENGTH,
   ROUTINE_EXECUTION_KEY_MAX_LENGTH,
   ROUTINE_FAILURE_REASON_MAX_LENGTH,
+  ROUTINE_MARKETPLACE_IDENTIFIER_MAX_LENGTH,
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
   ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH,
@@ -165,4 +166,11 @@ export class RoutineRecord extends BaseRecord {
     nullable: true,
   })
   sourceToolCallId: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: ROUTINE_MARKETPLACE_IDENTIFIER_MAX_LENGTH,
+    nullable: true,
+  })
+  marketplaceIdentifier: string | null;
 }

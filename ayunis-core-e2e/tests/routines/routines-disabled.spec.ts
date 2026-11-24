@@ -6,6 +6,10 @@ import {
   toggleFavorite,
 } from "../../src/clients/api/favorites.client";
 import { generatedApi } from "../../src/clients/api/generated-api";
+import {
+  requestMarketplaceRoutine,
+  requestMarketplaceRoutineInstall,
+} from "../../src/clients/api/marketplace.client";
 import { getRolePermissions } from "../../src/clients/api/role-permissions.client";
 import {
   createRoutine,
@@ -57,6 +61,22 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
       404, 404, 404,
     ]);
   }
+  // Served by the Marketplace stand-in (src/servers/marketplace-mock.mjs).
+  const marketplaceRoutine = "e2e-amtsblatt";
+  expect(
+    (
+      await requestMarketplaceRoutine(api, marketplaceRoutine, disabledApiUrl)
+    ).status(),
+  ).toBe(404);
+  expect(
+    (
+      await requestMarketplaceRoutineInstall(
+        api,
+        marketplaceRoutine,
+        disabledApiUrl,
+      )
+    ).status(),
+  ).toBe(404);
   expect((await requestNotifications(api, disabledApiUrl)).status()).toBe(404);
   expect(
     (await requestUnreadNotificationCount(api, disabledApiUrl)).status(),
@@ -81,6 +101,10 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
   await expect(page.getByTestId("assistant-message").last()).toContainText(
     `${org.defaultModel.provider}::${org.defaultModel.name}`,
   );
+
+  await page.goto(`${disabledBaseUrl}/install?routine=${marketplaceRoutine}`);
+  await expect(page.getByTestId("install-routine-disabled")).toBeVisible();
+  await expect(page.getByTestId("install-routine-card")).toHaveCount(0);
 });
 
 test("with routines disabled, routine favorites are hidden and cannot be added, and other favorites stay", async ({
@@ -134,17 +158,25 @@ test("with routines disabled the roles settings hide the routines permission and
       name: "share_skills_with_org-manager",
     });
     await expect(shareWithOrg).toBeChecked();
-    await expect(
-      page.getByRole("checkbox", { name: "manage_routines-manager" }),
-    ).toHaveCount(0);
+    for (const permission of [
+      "manage_routines",
+      "install_marketplace_routines",
+    ]) {
+      await expect(
+        page.getByRole("checkbox", { name: `${permission}-manager` }),
+      ).toHaveCount(0);
+    }
 
     await shareWithOrg.click();
     await page.getByTestId("roles-settings-save").click();
     await expect
       .poll(() => getRolePermissions(adminApi, "manager"))
       .not.toContain("share_skills_with_org");
-    expect(await getRolePermissions(adminApi, "manager")).toContain(
-      "manage_routines",
+    expect(await getRolePermissions(adminApi, "manager")).toEqual(
+      expect.arrayContaining([
+        "manage_routines",
+        "install_marketplace_routines",
+      ]),
     );
   } finally {
     await context.close();

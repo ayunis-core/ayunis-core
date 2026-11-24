@@ -230,7 +230,7 @@ load-bearing):
   `assign_users_to_teams`, `manage_skills`, `install_marketplace_skills`,
   `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`, `manage_recordings`, `manage_team_recordings`,
+  `manage_routines`, `install_marketplace_routines`, `manage_recordings`, `manage_team_recordings`,
   `manage_org_recordings`, `manage_workspace`, `manage_workspace_members`)
   that org admins grant **per role, per org**. `@RequirePermission(Permission.X)` +
   `PermissionsGuard` → `HasPermissionUseCase`; share permissions depend on the

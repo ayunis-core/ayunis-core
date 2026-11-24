@@ -1,0 +1,40 @@
+{
+  "detail": {
+    "schedule": "Runs",
+    "internet": "Internet access",
+    "internetAccess": {
+      "off": "Off",
+      "all": "All websites",
+      "allowlist": "Only these domains"
+    },
+    "installNote": "The routine is added to your routines and switched on. It uses your default model; you can change its settings after installing."
+  },
+  "action": {
+    "install": "Install routine",
+    "installing": "Installing…",
+    "cancel": "Cancel",
+    "backToRoutines": "Back to routines",
+    "backToChat": "Back to chat"
+  },
+  "success": "Routine installed",
+  "error": {
+    "disabled": {
+      "title": "Routines not available",
+      "description": "Routines are not available in your organisation, so this routine cannot be installed."
+    },
+    "noPermission": {
+      "title": "Installation not available",
+      "description": "You are not allowed to install routines from the Marketplace. Please contact your administration."
+    },
+    "notFound": {
+      "title": "Routine not found",
+      "description": "The routine could not be found in the Marketplace. It may have been removed or unpublished."
+    },
+    "unavailable": {
+      "title": "Marketplace unavailable",
+      "description": "The Marketplace is currently unavailable. Please try again later."
+    },
+    "invalidEntry": "This routine has settings that Ayunis Core does not accept, so it cannot be installed.",
+    "generic": "Something went wrong while installing the routine. Please try again."
+  }
+}

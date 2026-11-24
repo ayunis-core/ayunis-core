@@ -5,6 +5,7 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useInstallFromMarketplace } from './useInstallFromMarketplace';
 import { useInstallIntegrationFromMarketplace } from './useInstallIntegrationFromMarketplace';
+import { useInstallRoutineFromMarketplace } from './useInstallRoutineFromMarketplace';
 import type { InstallIntegrationFormFields } from '@/pages/install/model/types';
 
 const { request, client } = vi.hoisted(() => ({
@@ -36,6 +37,15 @@ function wrapper({ children }: { children: ReactNode }) {
 
 async function installSkill(identifier: string) {
   const { result } = renderHook(() => useInstallFromMarketplace(), {
+    wrapper,
+  });
+  await act(() =>
+    result.current.mutateAsync({ data: { identifier } }).catch(() => undefined),
+  );
+}
+
+async function installRoutine(identifier: string) {
+  const { result } = renderHook(() => useInstallRoutineFromMarketplace(), {
     wrapper,
   });
   await act(() =>
@@ -75,6 +85,16 @@ describe('install page tracking', () => {
     ]);
   });
 
+  it('sends routine_installed with the marketplace slug once the routine was installed', async () => {
+    request.mockResolvedValue({ id: 'routine-1' });
+
+    await installRoutine('amtsblatt-nrw');
+
+    expect(client.track.mock.calls).toEqual([
+      ['routine_installed', { marketplace_slug: 'amtsblatt-nrw' }],
+    ]);
+  });
+
   it('sends integration_installed and integration_connected when the install connected the integration', async () => {
     request.mockResolvedValue({
       id: 'integration-1',
@@ -108,6 +128,7 @@ describe('install page tracking', () => {
     request.mockRejectedValue(new Error('install failed'));
 
     await installSkill('protokoll-assistent');
+    await installRoutine('amtsblatt-nrw');
     await installIntegration('oparl');
 
     expect(client.track).not.toHaveBeenCalled();

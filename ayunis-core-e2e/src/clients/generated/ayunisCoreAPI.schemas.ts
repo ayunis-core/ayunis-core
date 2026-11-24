@@ -205,6 +205,7 @@ export const RolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -236,6 +237,7 @@ export const UpdateRolePermissionsDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -262,6 +264,7 @@ export const MyPermissionsResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -2287,6 +2290,7 @@ export const MyTeamResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -2338,6 +2342,7 @@ export const TeamRolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -4592,6 +4597,7 @@ export const WorkspaceResponseDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -4664,6 +4670,7 @@ export const WorkspaceRolePermissionSetDtoPermissionsItem = {
   share_knowledge_bases_with_teams: 'share_knowledge_bases_with_teams',
   share_knowledge_bases_with_org: 'share_knowledge_bases_with_org',
   manage_routines: 'manage_routines',
+  install_marketplace_routines: 'install_marketplace_routines',
   manage_workspace: 'manage_workspace',
   manage_workspace_members: 'manage_workspace_members',
   manage_recordings: 'manage_recordings',
@@ -7126,6 +7133,11 @@ export interface RoutineResponseDto {
      * @nullable
      */
   sourceToolCallId: string | null;
+  /**
+     * The Marketplace routine this routine was installed from; null when it was created in Ayunis Core
+     * @nullable
+     */
+  marketplaceIdentifier: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -7817,6 +7829,47 @@ export interface RoutineFavoriteResponseDto {
   referenceId: string;
   referenceType: RoutineFavoriteResponseDtoReferenceType;
   name: string;
+}
+
+export interface InstallRoutineFromMarketplaceDto {
+  /** The unique identifier (slug) of the marketplace routine */
+  identifier: string;
+}
+
+export interface MarketplaceRoutineScheduleResponseDto {
+  /** Daily, weekly on `weekdays`, or monthly on `monthDay`. Fields of another frequency are rejected. */
+  frequency: RoutineFrequency;
+  /** Run time as HH:mm (Europe/Berlin) */
+  time: string;
+  /** Weekly only: ISO weekdays, 1 (Monday) to 7 (Sunday). Absent for the other frequencies. */
+  weekdays?: number[];
+  /** Monthly only: the day of the month, or `last` for its last day. Absent for the other frequencies. */
+  monthDay?: number | 'last';
+}
+
+export interface MarketplaceRoutineResponseDto {
+  /** Routine UUID in the marketplace */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name, also the installed name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /**
+     * Longer description
+     * @nullable
+     */
+  description: string | null;
+  /**
+     * Lucide icon name (kebab-case)
+     * @nullable
+     */
+  iconName: string | null;
+  schedule: MarketplaceRoutineScheduleResponseDto;
+  internetAccess: RoutineInternetAccess;
+  /** Hosts the routine may access, with their subdomains; applied only in `allowlist` mode */
+  allowedDomains: string[];
 }
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {

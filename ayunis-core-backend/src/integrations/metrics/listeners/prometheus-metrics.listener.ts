@@ -15,6 +15,7 @@ import { RunUsageCollectionEvent } from 'src/domain/usage/application/events/run
 import { ThreadMessageAddedEvent } from 'src/domain/threads/application/events/thread-message-added.event';
 import { MarketplaceSkillInstalledEvent } from 'src/domain/skills/application/events/marketplace-skill-installed.event';
 import { MarketplaceIntegrationInstalledEvent } from 'src/domain/mcp/application/events/marketplace-integration-installed.event';
+import { MarketplaceRoutineInstalledEvent } from 'src/domain/routines/application/events/marketplace-routine-installed.event';
 import {
   AYUNIS_USER_CREATIONS_TOTAL,
   AYUNIS_MESSAGES_TOTAL,
@@ -251,6 +252,20 @@ export class PrometheusMetricsListener {
         user_id: event.userId,
         org_id: event.orgId,
         marketplace_type: 'integration',
+        marketplace_slug: event.identifier,
+      });
+    });
+  }
+
+  @OnEvent(MarketplaceRoutineInstalledEvent.EVENT_NAME)
+  handleMarketplaceRoutineInstalled(
+    event: MarketplaceRoutineInstalledEvent,
+  ): void {
+    safeMetric(this.logger, () => {
+      this.marketplaceInstallsCounter.inc({
+        user_id: event.userId,
+        org_id: event.orgId,
+        marketplace_type: 'routine',
         marketplace_slug: event.identifier,
       });
     });

@@ -30,7 +30,10 @@ import { DeleteRoutineUseCase } from 'src/domain/routines/application/use-cases/
 import { DeleteRoutineCommand } from 'src/domain/routines/application/use-cases/delete-routine/delete-routine.command';
 import { RunRoutineNowUseCase } from 'src/domain/routines/application/use-cases/run-routine-now/run-routine-now.use-case';
 import { RunRoutineNowCommand } from 'src/domain/routines/application/use-cases/run-routine-now/run-routine-now.command';
+import { InstallRoutineFromMarketplaceUseCase } from 'src/domain/routines/application/use-cases/install-routine-from-marketplace/install-routine-from-marketplace.use-case';
+import { InstallRoutineFromMarketplaceCommand } from 'src/domain/routines/application/use-cases/install-routine-from-marketplace/install-routine-from-marketplace.command';
 import { CreateRoutineDto } from './dto/create-routine.dto';
+import { InstallRoutineFromMarketplaceDto } from './dto/install-routine-from-marketplace.dto';
 import { UpdateRoutineDto } from './dto/update-routine.dto';
 import { RoutineResponseDto } from './dto/routine-response.dto';
 import { RoutineDtoMapper } from './mappers/routine-dto.mapper';
@@ -61,6 +64,7 @@ export class RoutinesController {
     private readonly updateRoutineUseCase: UpdateRoutineUseCase,
     private readonly deleteRoutineUseCase: DeleteRoutineUseCase,
     private readonly runRoutineNowUseCase: RunRoutineNowUseCase,
+    private readonly installRoutineFromMarketplaceUseCase: InstallRoutineFromMarketplaceUseCase,
     private readonly routineDtoMapper: RoutineDtoMapper,
   ) {}
 
@@ -84,6 +88,38 @@ export class RoutinesController {
     this.logger.log('create');
     const routine = await this.createRoutineUseCase.execute(
       new CreateRoutineCommand(dto),
+    );
+    return this.routineDtoMapper.toDto(routine);
+  }
+
+  @Post('install-from-marketplace')
+  @ApiOperation({
+    summary: 'Install a routine from the marketplace',
+    description:
+      "Creates the user's own copy of a published marketplace routine: its name, prompt, schedule and internet access, the user's default model, switched on. Also requires the install marketplace routines permission.",
+  })
+  @ApiResponse({ status: 201, type: RoutineResponseDto })
+  @ApiResponse({
+    status: 400,
+    description:
+      'The marketplace routine has settings Ayunis Core does not accept, e.g. an IP address as allowed domain',
+  })
+  @ApiResponse({
+    status: 403,
+    description:
+      'The manage routines and install marketplace routines permissions are required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Marketplace routine not found or not published',
+  })
+  @ApiResponse({ status: 503, description: 'Marketplace unavailable' })
+  async installFromMarketplace(
+    @Body() dto: InstallRoutineFromMarketplaceDto,
+  ): Promise<RoutineResponseDto> {
+    this.logger.log({ identifier: dto.identifier }, 'installFromMarketplace');
+    const routine = await this.installRoutineFromMarketplaceUseCase.execute(
+      new InstallRoutineFromMarketplaceCommand(dto.identifier),
     );
     return this.routineDtoMapper.toDto(routine);
   }

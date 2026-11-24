@@ -20,6 +20,16 @@ export class MarketplaceIntegrationNotFoundError extends ApplicationError {
   }
 }
 
+export class MarketplaceRoutineNotFoundError extends ApplicationError {
+  constructor(identifier: string) {
+    super(
+      `Marketplace routine not found: ${identifier}`,
+      'MARKETPLACE_ROUTINE_NOT_FOUND',
+      404,
+    );
+  }
+}
+
 export class MarketplaceUnavailableError extends ApplicationError {
   constructor() {
     super(
