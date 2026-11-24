@@ -1,9 +1,9 @@
 import type { TFunction } from 'i18next';
 import type { ToolAction } from '@ayunis/chat/tool-cards';
-import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@ayunis/api-client/schemas';
 
-import { formatToolName } from '@/pages/chat/lib/format-tool-name';
-import { chatToolCards } from './tool-card-registrations';
+import { formatToolName } from './format-tool-name';
+import { EMPTY_TOOL_CARDS, type ToolCards } from './tool-card-types';
 
 export interface ToolActionLabel {
   verb: string;
@@ -118,10 +118,11 @@ const textToolActions: ReadonlyMap<string, ToolAction> = new Map([
 export function getToolActionLabel(
   toolUse: ToolUseMessageContent,
   t: TFunction,
+  toolCards: ToolCards = EMPTY_TOOL_CARDS,
 ): ToolActionLabel {
   const params = (toolUse.params as Record<string, unknown> | undefined) ?? {};
   const name = toolUse.name;
-  const action = chatToolCards.get(name)?.action ?? textToolActions.get(name);
+  const action = toolCards.get(name)?.action ?? textToolActions.get(name);
 
   if (action) {
     const list = action.listTargetParam
