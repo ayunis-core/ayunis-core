@@ -1,7 +1,3 @@
-import {
-  registerActiveThreadRun,
-  unregisterActiveThreadRun,
-} from './active-thread-run';
 import type { RunEndpoints, RunMessagePayload } from './run-endpoints';
 import { readRunEvents, type RunEvent } from './run-stream';
 
@@ -45,7 +41,12 @@ async function consumeRun(
   response: Response,
   outcome: RunOutcome,
   handlers: RunExecutionHandlers,
+  signal: AbortSignal,
 ): Promise<void> {
+  if (signal.aborted) {
+    await response.body?.cancel();
+    signal.throwIfAborted();
+  }
   if (response.status === 401) {
     outcome.unauthorized = true;
     outcome.failed = true;
@@ -68,23 +69,28 @@ async function consumeRun(
   });
 }
 
+function wasAborted(signal: AbortSignal, error: unknown): boolean {
+  return (
+    signal.aborted || (error instanceof Error && error.name === 'AbortError')
+  );
+}
+
 export async function executeRun(
   endpoints: RunEndpoints,
   request: RunExecutionRequest,
   handlers: RunExecutionHandlers,
+  controller = request.startedRequest?.controller ?? new AbortController(),
 ): Promise<void> {
-  const controller =
-    request.startedRequest?.controller ?? new AbortController();
   const outcome = { failed: false, unauthorized: false, reattachFailed: false };
   let aborted = false;
   try {
-    registerActiveThreadRun(request.threadId, controller);
     controller.signal.addEventListener('abort', handlers.onAbort);
     const response = await requestRun(endpoints, request, controller.signal);
-    await consumeRun(response, outcome, handlers);
+    await consumeRun(response, outcome, handlers, controller.signal);
+    controller.signal.throwIfAborted();
   } catch (error) {
     console.error('Error in sendMessage', error);
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (wasAborted(controller.signal, error)) {
       aborted = true;
       return;
     }
@@ -96,11 +102,7 @@ export async function executeRun(
     if (error instanceof Error) handlers.onError(error);
   } finally {
     controller.signal.removeEventListener('abort', handlers.onAbort);
-    try {
-      handlers.onCleanup();
-    } finally {
-      unregisterActiveThreadRun(request.threadId, controller);
-    }
+    handlers.onCleanup();
     if (!aborted) await handlers.onComplete(outcome);
   }
 }

@@ -1,3 +1,7 @@
+import {
+  resetThreadRunSession,
+  setThreadRunPrincipal,
+} from '@/features/thread-run';
 import { createFileRoute, redirect, isRedirect } from '@tanstack/react-router';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import {
@@ -18,6 +22,7 @@ export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context: { queryClient, embedded }, preload }) => {
     try {
       const user = await queryClient.query(meQueryOptions());
+      if (!preload) setThreadRunPrincipal(user.id, user.orgId, queryClient);
       setAppsignalTags({ userId: user.id, orgId: user.orgId });
       identifyOpenPanelUser(user);
       await queryClient.query({
@@ -29,7 +34,10 @@ export const Route = createFileRoute('/_authenticated')({
       clearAppsignalTags();
       // A failed hover preload leaves the user on the current page; only a
       // real navigation that fails ends the analytics session.
-      if (!preload) clearOpenPanelIdentity();
+      if (!preload) {
+        clearOpenPanelIdentity();
+        resetThreadRunSession(queryClient);
+      }
       // The pane has no login route: its entry shows the sign-in once the
       // session ends (`TaskPane`), and any other failure shows the error page.
       if (embedded) throw error;

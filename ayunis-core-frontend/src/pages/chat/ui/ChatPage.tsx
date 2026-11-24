@@ -45,11 +45,13 @@ import { getThreadsControllerFindAllQueryKey } from '@ayunis/api-client/endpoint
 import { useChatThread } from '@/pages/chat/api/useChatThread';
 import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
-import type { PendingImage } from '@/pages/chat/api/useMessageSend';
-import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
+import {
+  mergePiiMasks,
+  useChatThreadState,
+  type PendingImage,
+} from '@ayunis/chat/runs';
 import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
 import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-calls';
-import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
 import { useToolCallDecisions } from '@/pages/chat/hooks/useToolCallDecisions';
 import { OutlookToolBridgeContext } from '@/pages/chat/model/outlook-tool-bridge';
