@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.83.0](https://github.com/ayunis-core/ayunis-core/compare/v2.82.0...v2.83.0) (2026-11-24)
+
+
+### Features
+
+* **chat:** move any chat to a workspace from the overview and header (AYC-1443) ([#2508](https://github.com/ayunis-core/ayunis-core/issues/2508)) ([4cab54a](https://github.com/ayunis-core/ayunis-core/commit/4cab54a4b108eaf2578d9cf822f9ee878c0f75b0))
+* **integrations:** link the outlook add-in setup guide from the admin page (AYC-000) ([#2538](https://github.com/ayunis-core/ayunis-core/issues/2538)) ([e7f4670](https://github.com/ayunis-core/ayunis-core/commit/e7f46709822489b92e90107d6a1d0be064813b50))
+* **routines:** let routines run with integrations (AYC-1706) ([#2245](https://github.com/ayunis-core/ayunis-core/issues/2245)) ([58a3c4b](https://github.com/ayunis-core/ayunis-core/commit/58a3c4ba81cf60ee86347c0a33c19b48cc2efa40))
+* **routines:** run routines weekly or monthly (AYC-2077) ([#2539](https://github.com/ayunis-core/ayunis-core/issues/2539)) ([2ef6674](https://github.com/ayunis-core/ayunis-core/commit/2ef66748b0ff14f760edb9145e767b6ef59f7e62))
+* **routines:** set up routines like skills with a context card and domain-limited internet (AYC-2069) ([#2529](https://github.com/ayunis-core/ayunis-core/issues/2529)) ([c040513](https://github.com/ayunis-core/ayunis-core/commit/c04051372356bd84a4c872e332ab1d1ed2656da7))
+
+
+### Bug Fixes
+
+* **chat:** cache token counts so chat history is not re-tokenized (AYC-2075) ([#2531](https://github.com/ayunis-core/ayunis-core/issues/2531)) ([aa4e77c](https://github.com/ayunis-core/ayunis-core/commit/aa4e77c030f4ed9a0b41b12cf7532128d777cf1a))
+* **ingestion:** base worker readiness on the queues it serves (AYC-2070) ([#2526](https://github.com/ayunis-core/ayunis-core/issues/2526)) ([4834218](https://github.com/ayunis-core/ayunis-core/commit/48342180c6dd1fc0d84ae2a6de4ffaac3836180d))
+* **mcp:** fall back to the legacy handshake when negotiation goes unanswered (AYC-1787) ([#2534](https://github.com/ayunis-core/ayunis-core/issues/2534)) ([c9b0bf4](https://github.com/ayunis-core/ayunis-core/commit/c9b0bf4c0fdfb8f0c29a3f9bfbcc9603f663f48e)), closes [#2321](https://github.com/ayunis-core/ayunis-core/issues/2321)
+* **models:** block removing the last model of an override team (AYC-1204) ([#2535](https://github.com/ayunis-core/ayunis-core/issues/2535)) ([76eae0b](https://github.com/ayunis-core/ayunis-core/commit/76eae0b10456bae97b598b61cce5ee6c9aa4dc8d))
+* **models:** keep createdAt on language model catalog edits (AYC-1959) ([#2532](https://github.com/ayunis-core/ayunis-core/issues/2532)) ([3bfafb1](https://github.com/ayunis-core/ayunis-core/commit/3bfafb11e2a2065adf932da13083fece5d355c7b))
+
+
+### Code Refactoring
+
+* **api-client:** move the generated client into a workspace package (AYC-1953) ([#2509](https://github.com/ayunis-core/ayunis-core/issues/2509)) ([8b47642](https://github.com/ayunis-core/ayunis-core/commit/8b476423bb3eb61253f476d1e16b8a1750b68fa6))
+
 ## [2.82.0](https://github.com/ayunis-core/ayunis-core/compare/v2.81.0...v2.82.0) (2026-11-22)
 
 
