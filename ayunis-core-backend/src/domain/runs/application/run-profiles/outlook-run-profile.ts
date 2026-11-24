@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import type { RunCapability } from 'src/domain/runs/application/run-capabilities/run-capability';
 import { AnonymizationCapability } from 'src/domain/runs/application/run-capabilities/capabilities/anonymization.capability';
 import { BehaviorCapability } from 'src/domain/runs/application/run-capabilities/capabilities/behavior.capability';
@@ -32,47 +33,32 @@ import {
  */
 @Injectable()
 export class OutlookRunProfile implements RunProfile {
-  readonly id = 'outlook';
+  readonly id = SURFACE_REGISTRY.outlook.run.profile.id;
   readonly preamble = AYUNIS_PREAMBLE;
   readonly closing = 'You are now ready to assist the user.';
   readonly completionPolicy: RunCompletionPolicy = DONE_WHEN_MODEL_STOPS;
   readonly maxIterations = 50;
   readonly asksForToolConfirmation = true;
-  readonly capabilities: readonly RunCapability[];
 
   constructor(
-    dateTime: DateTimeCapability,
-    dataHandling: DataHandlingCapability,
-    anonymization: AnonymizationCapability,
-    behavior: BehaviorCapability,
-    legalReferences: LegalReferencesCapability,
-    outlookAddIn: OutlookAddInCapability,
-    customInstructions: CustomInstructionsCapability,
-    internet: InternetCapability,
-    threadSources: ThreadSourcesCapability,
-    knowledgeBases: KnowledgeBasesCapability,
-    recordings: RecordingsCapability,
-    notificationContext: NotificationContextCapability,
-    releaseNoteContext: ReleaseNoteContextCapability,
-    workspaceInstructions: WorkspaceInstructionsCapability,
-    mcp: McpCapability,
-  ) {
-    this.capabilities = [
-      dateTime,
-      dataHandling,
-      anonymization,
-      behavior,
-      legalReferences,
-      outlookAddIn,
-      customInstructions,
-      internet,
-      threadSources,
-      knowledgeBases,
-      recordings,
-      notificationContext,
-      releaseNoteContext,
-      workspaceInstructions,
-      mcp,
-    ];
+    private readonly dateTime: DateTimeCapability,
+    private readonly dataHandling: DataHandlingCapability,
+    private readonly anonymization: AnonymizationCapability,
+    private readonly behavior: BehaviorCapability,
+    private readonly legalReferences: LegalReferencesCapability,
+    private readonly outlookAddIn: OutlookAddInCapability,
+    private readonly customInstructions: CustomInstructionsCapability,
+    private readonly internet: InternetCapability,
+    private readonly threadSources: ThreadSourcesCapability,
+    private readonly knowledgeBases: KnowledgeBasesCapability,
+    private readonly recordings: RecordingsCapability,
+    private readonly notificationContext: NotificationContextCapability,
+    private readonly releaseNoteContext: ReleaseNoteContextCapability,
+    private readonly workspaceInstructions: WorkspaceInstructionsCapability,
+    private readonly mcp: McpCapability,
+  ) {}
+
+  get capabilities(): readonly RunCapability[] {
+    return SURFACE_REGISTRY.outlook.run.capabilities.map((name) => this[name]);
   }
 }

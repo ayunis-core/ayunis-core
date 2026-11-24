@@ -67,6 +67,15 @@ none of these packages implements the Agent Plugins standard.
 
 📁 **[`ayunis-core-backend/src/`](ayunis-core-backend/src/)**
 
+### Surface registry
+
+The backend [surface registry](ayunis-core-backend/src/config/surface-registry.ts)
+records each surface's sign-in method, ordered run capabilities, client tools,
+feature flag, static prefix, framing policy, and manifest paths. The web uses
+cookie sessions and Outlook uses token sessions. The website entry reserves its
+configuration for the future visitor API and embed app. A chat capability is
+available to a surface when its entry grants it.
+
 ### Domain Modules — Core Business Logic
 
 | Module                                                                               | Summary        | Detail                                                                                                        |

@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { releaseNotesConfig } from './release-notes.config';
+import { SURFACE_REGISTRY, type SurfaceFeatureFlag } from './surface-registry';
 
 export enum FeatureFlag {
   ExternalSubscriptions = 'externalSubscriptionsEnabled',
@@ -14,12 +15,6 @@ export enum FeatureFlag {
    * train on regardless of opt-outs.
    */
   ReadAloud = 'readAloudEnabled',
-  /**
-   * Off until the Outlook add-in is released: gates installing it (manifest)
-   * and signing in to it (session handoff), which everything else in the
-   * add-in depends on.
-   */
-  OutlookAddin = 'outlookAddinEnabled',
   /** Off until released: the memory API and memory in chat runs. */
   Memory = 'memoryEnabled',
   /**
@@ -29,7 +24,11 @@ export enum FeatureFlag {
   Connectors = 'connectorsEnabled',
 }
 
-export type FeaturesConfig = Record<FeatureFlag, boolean>;
+type SurfaceFeatureName = NonNullable<
+  (typeof SURFACE_REGISTRY)[keyof typeof SURFACE_REGISTRY]['featureFlag']
+>['name'];
+
+export type FeaturesConfig = Record<FeatureFlag | SurfaceFeatureName, boolean>;
 
 export const parseBooleanWithDefault = (
   value: string | undefined,
@@ -40,6 +39,15 @@ export const parseBooleanWithDefault = (
   if (value === undefined || value.trim() === '') return defaultValue;
   return value.trim() === 'true';
 };
+
+export function isSurfaceFeatureEnabled(
+  feature: SurfaceFeatureFlag | null,
+): boolean {
+  return (
+    feature === null ||
+    parseBooleanWithDefault(process.env[feature.envKey], feature.defaultEnabled)
+  );
+}
 
 export const featuresConfig = registerAs('features', (): FeaturesConfig => {
   const routinesEnabled = parseBooleanWithDefault(
@@ -65,9 +73,8 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
     readAloudEnabled:
       voiceEnabled &&
       parseBooleanWithDefault(process.env.FEATURE_READ_ALOUD_ENABLED, false),
-    outlookAddinEnabled: parseBooleanWithDefault(
-      process.env.FEATURE_OUTLOOK_ADDIN_ENABLED,
-      false,
+    [SURFACE_REGISTRY.outlook.featureFlag.name]: isSurfaceFeatureEnabled(
+      SURFACE_REGISTRY.outlook.featureFlag,
     ),
     memoryEnabled: parseBooleanWithDefault(
       process.env.FEATURE_MEMORY_ENABLED,

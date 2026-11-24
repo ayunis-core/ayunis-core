@@ -396,9 +396,9 @@ repeated valid notifications are idempotent.
 
 Office add-ins run in a cross-site iframe or WebView where session cookies are
 blocked or partitioned, so they hold their session as tokens instead. The value
-identifying such a client (`outlook` today) lives in the session client
-registry (`iam/sessions/domain/value-objects/session-client.ts`); it is data,
-not configuration.
+identifying such a client (`outlook` today) comes from the token sign-in entries
+in the [backend surface registry](../../ayunis-core-backend/src/config/surface-registry.ts).
+That ID is carried in the access token and persisted on refresh sessions.
 
 | Step | Behavior |
 | --- | --- |

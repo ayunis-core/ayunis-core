@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { assembleTools } from 'src/domain/runs/application/run-capabilities/assemble-tools.helper';
@@ -8,14 +9,6 @@ import {
   type CapabilityContribution,
   type RunCapability,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
-
-const OUTLOOK_TOOLS = [
-  ToolType.OUTLOOK_READ_EMAIL,
-  ToolType.OUTLOOK_READ_ATTACHMENT,
-  ToolType.OUTLOOK_DRAFT_EMAIL,
-  ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER,
-  ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT,
-] as const;
 
 const OUTLOOK_INSTRUCTIONS = `<outlook_context>
 The user is chatting with you in the Ayunis pane inside Microsoft Outlook, next to an email that is open there, either being read or being written. The outlook__ tools act on that email:
@@ -40,7 +33,10 @@ export class OutlookAddInCapability implements RunCapability {
   ): Promise<CapabilityContribution> {
     if (!context.model.canUseTools) return {};
     return {
-      tools: await assembleTools(this.assembleToolUseCase, OUTLOOK_TOOLS),
+      tools: await assembleTools(
+        this.assembleToolUseCase,
+        SURFACE_REGISTRY.outlook.clientTools,
+      ),
       sections: [{ slot: PromptSlot.POLICIES, content: OUTLOOK_INSTRUCTIONS }],
     };
   }

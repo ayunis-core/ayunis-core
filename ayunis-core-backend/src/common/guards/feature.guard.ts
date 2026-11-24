@@ -9,11 +9,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { FeatureFlag } from 'src/config/features.config';
+import type { FeaturesConfig } from 'src/config/features.config';
 
 export const FEATURE_KEY = 'feature';
 
-export const RequireFeature = (flag: FeatureFlag) =>
+export const RequireFeature = (flag: keyof FeaturesConfig) =>
   applyDecorators(SetMetadata(FEATURE_KEY, flag), UseGuards(FeatureGuard));
 
 @Injectable()
@@ -25,7 +25,7 @@ export class FeatureGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const featureName = this.reflector.getAllAndOverride<
-      FeatureFlag | undefined
+      keyof FeaturesConfig | undefined
     >(FEATURE_KEY, [context.getHandler(), context.getClass()]);
 
     if (!featureName) {

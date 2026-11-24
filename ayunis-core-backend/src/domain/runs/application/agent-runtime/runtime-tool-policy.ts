@@ -1,32 +1,24 @@
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
+import type { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { CreateFileTool } from 'src/domain/tools/domain/tools/create-file-tool.entity';
 import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-tool.entity';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import type { McpToolAllowance } from 'src/domain/mcp/domain/mcp-tool-allowance.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { BarChartTool } from 'src/domain/tools/domain/tools/bar-chart-tool.entity';
-import { CreateCalendarEventTool } from 'src/domain/tools/domain/tools/create-calendar-event-tool.entity';
 import { CreateDiagramTool } from 'src/domain/tools/domain/tools/create-diagram-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
-import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
-import { CreateSkillTool } from 'src/domain/tools/domain/tools/create-skill-tool.entity';
 import { CreateSpreadsheetTool } from 'src/domain/tools/domain/tools/create-spreadsheet-tool.entity';
 import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
-import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
-import { EditSkillTool } from 'src/domain/tools/domain/tools/edit-skill-tool.entity';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
-import { InstallMarketplaceSkillTool } from 'src/domain/tools/domain/tools/install-marketplace-skill-tool.entity';
 import { LineChartTool } from 'src/domain/tools/domain/tools/line-chart-tool.entity';
 import { MapTool } from 'src/domain/tools/domain/tools/map-tool.entity';
 import { PieChartTool } from 'src/domain/tools/domain/tools/pie-chart-tool.entity';
-import { SendEmailTool } from 'src/domain/tools/domain/tools/send-email-tool.entity';
 import { UpdateDiagramTool } from 'src/domain/tools/domain/tools/update-diagram-tool.entity';
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { UpdateSpreadsheetTool } from 'src/domain/tools/domain/tools/update-spreadsheet-tool.entity';
 import { OutlookReadEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-email-tool.entity';
 import { OutlookReadAttachmentTool } from 'src/domain/tools/domain/tools/outlook/outlook-read-attachment-tool.entity';
-import { OutlookDraftEmailTool } from 'src/domain/tools/domain/tools/outlook/outlook-draft-email-tool.entity';
-import { OutlookMoveEmailToComposerTool } from 'src/domain/tools/domain/tools/outlook/outlook-move-email-to-composer-tool.entity';
-import { OutlookSaveEmailToDraftTool } from 'src/domain/tools/domain/tools/outlook/outlook-save-email-to-draft-tool.entity';
 
 export function isAcknowledgementOnlyTool(tool: Tool): boolean {
   return (
@@ -38,24 +30,16 @@ export function isAcknowledgementOnlyTool(tool: Tool): boolean {
   );
 }
 
-const EXTERNALLY_HANDLED_TOOLS = [
-  SendEmailTool,
-  CreateCalendarEventTool,
-  CreateSkillTool,
-  EditSkillTool,
-  InstallMarketplaceSkillTool,
-  CreateRoutineTool,
-  EditRoutineTool,
-  FinishRoutineTool,
-  OutlookReadEmailTool,
-  OutlookReadAttachmentTool,
-  OutlookDraftEmailTool,
-  OutlookMoveEmailToComposerTool,
-  OutlookSaveEmailToDraftTool,
-];
+const SURFACE_CLIENT_TOOLS = new Set<ToolType>(
+  Object.values(SURFACE_REGISTRY).flatMap(({ clientTools }) => [
+    ...clientTools,
+  ]),
+);
 
 export function isExternallyHandledTool(tool: Tool): boolean {
-  return EXTERNALLY_HANDLED_TOOLS.some((type) => tool instanceof type);
+  return (
+    SURFACE_CLIENT_TOOLS.has(tool.type) || tool instanceof FinishRoutineTool
+  );
 }
 
 /**

@@ -1,13 +1,9 @@
+import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import { outlookAddinId } from './outlook-addin-id';
 
 // Outlook and the Microsoft 365 admin center only apply a manifest update
 // whose version is higher than the installed one: bump on every change.
 export const OUTLOOK_MANIFEST_VERSION = '1.0.3';
-
-// Served by the frontend build (ayunis-core-frontend/outlook and
-// public/outlook). Outlook on the web shows the task pane in an iframe, so
-// these files must stay frameable by it.
-const OUTLOOK_ADDIN_PATH = '/outlook';
 
 // Each button gets its own task pane URL so the pane can serve read and
 // compose differently without a manifest change, which admins would have to
@@ -235,17 +231,18 @@ ${indent([...taskpanes, ...eventsUrls].join('\n'), 4)}
 }
 
 function addinUrls(baseUrl: string): AddinUrls {
-  const addinBaseUrl = escapeXmlAttribute(`${baseUrl}${OUTLOOK_ADDIN_PATH}`);
+  const { staticPrefix, manifest } = SURFACE_REGISTRY.outlook;
+  const addinBaseUrl = escapeXmlAttribute(`${baseUrl}${staticPrefix}`);
   return {
     icon: (size) => `${addinBaseUrl}/assets/icon-${size}.png`,
     taskpane: (surface, withManifestVersion) => {
       const manifestVersion = withManifestVersion
         ? `&amp;manifestVersion=${OUTLOOK_MANIFEST_VERSION}`
         : '';
-      return `${addinBaseUrl}/taskpane.html?surface=${surface}${manifestVersion}`;
+      return `${addinBaseUrl}/${manifest.taskPane}?surface=${surface}${manifestVersion}`;
     },
-    eventsRuntime: `${addinBaseUrl}/events.html`,
-    classicEventsRuntime: `${addinBaseUrl}/events-classic.js`,
+    eventsRuntime: `${addinBaseUrl}/${manifest.events}`,
+    classicEventsRuntime: `${addinBaseUrl}/${manifest.classicEvents}`,
   };
 }
 

@@ -1,8 +1,12 @@
 import type { ServeStaticModuleOptions } from '@nestjs/serve-static';
 import type { Response } from 'express';
 import { join } from 'path';
-import { parseBooleanWithDefault } from 'src/config/features.config';
-import { outlookFrameOrigins } from 'src/config/outlook-frame-origins';
+import { isSurfaceFeatureEnabled } from 'src/config/features.config';
+import { frameOrigins } from 'src/config/frame-origins';
+import {
+  SURFACE_REGISTRY,
+  type SurfaceDefinition,
+} from 'src/config/surface-registry';
 
 // Chrome reuses a stored index.html without revalidating when it restores a
 // discarded tab (a back_forward load), even under no-cache. The restored
@@ -11,15 +15,18 @@ import { outlookFrameOrigins } from 'src/config/outlook-frame-origins';
 // every client route.
 //
 // Static files bypass SecurityHeadersMiddleware, so framing is limited here.
-// Only the add-in task pane and event runtime can be framed by Outlook. The
-// SPA fallback stays 'self' even if a manifest points at a client-side route.
+// The SPA fallback stays 'self' even if a manifest points at a client-side route.
 export function serveFrontendOptions(
   rootPath: string,
 ): ServeStaticModuleOptions {
-  const outlookPaths = new Set([
-    join(rootPath, 'outlook', 'taskpane.html'),
-    join(rootPath, 'outlook', 'events.html'),
-  ]);
+  const framedDocuments = new Map(
+    Object.values<SurfaceDefinition>(SURFACE_REGISTRY).flatMap((surface) =>
+      (surface.framing?.documents ?? []).map(
+        (document) =>
+          [join(rootPath, surface.staticPrefix, document), surface] as const,
+      ),
+    ),
+  );
   return {
     rootPath,
     serveStaticOptions: {
@@ -30,23 +37,22 @@ export function serveFrontendOptions(
         res.setHeader('Cache-Control', 'no-store');
         res.setHeader(
           'Content-Security-Policy',
-          `frame-ancestors ${frameAncestors(outlookPaths.has(path)).join(' ')}`,
+          `frame-ancestors ${frameAncestors(framedDocuments.get(path)).join(' ')}`,
         );
       },
     },
   };
 }
 
-function frameAncestors(isOutlookPage: boolean): string[] {
-  const outlookAddinEnabled = parseBooleanWithDefault(
-    process.env.FEATURE_OUTLOOK_ADDIN_ENABLED,
-    false,
-  );
-  if (!isOutlookPage || !outlookAddinEnabled) {
+function frameAncestors(
+  surface: SurfaceDefinition | undefined,
+): readonly string[] {
+  if (!surface?.framing || !isSurfaceFeatureEnabled(surface.featureFlag)) {
     return ["'self'"];
   }
+  const { framing } = surface;
   return [
     "'self'",
-    ...outlookFrameOrigins(process.env.OUTLOOK_ADDIN_FRAME_ORIGINS),
+    ...frameOrigins(process.env[framing.originsEnvKey], framing.defaultOrigins),
   ];
 }
