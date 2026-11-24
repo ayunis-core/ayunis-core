@@ -147,6 +147,7 @@
       "disableError": "Modell konnte nicht für Team deaktiviert werden",
       "disableModelNotFound": "Modell nicht gefunden",
       "disableModelInvalid": "Dieses Modell kann nicht für das Team deaktiviert werden",
+      "disableLastOverrideModel": "Das letzte Sprachmodell eines Teams mit eigener Modellrichtlinie kann nicht deaktiviert werden. Aktivieren Sie zuerst ein anderes Modell oder deaktivieren Sie die eigene Modellrichtlinie.",
       "updateError": "Modelleinstellung konnte nicht aktualisiert werden",
       "updateModelNotFound": "Die Team-Modelleinstellung existiert nicht mehr"
     },

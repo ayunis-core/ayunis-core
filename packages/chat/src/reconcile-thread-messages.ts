@@ -1,9 +1,11 @@
 import type {
-  AssistantMessageContent,
-  Message,
-  Thread,
-  ToolUseMessageContent,
-} from '@/pages/chat/model/openapi';
+  AssistantMessageResponseDto,
+  GetThreadResponseDto,
+  ToolUseMessageContentResponseDto as ToolUseMessageContent,
+} from '@ayunis/api-client/schemas';
+
+type AssistantMessageContent = AssistantMessageResponseDto['content'][number];
+type Message = GetThreadResponseDto['messages'][number];
 
 function isToolUseContent(
   content: AssistantMessageContent,
@@ -65,8 +67,8 @@ function interleaveMissingInvalidMessages(
 
 export function reconcileMessages(
   currentMessages: readonly Message[],
-  previousThread: Pick<Thread, 'id'>,
-  nextThread: Pick<Thread, 'id' | 'messages'>,
+  previousThread: Pick<GetThreadResponseDto, 'id'>,
+  nextThread: Pick<GetThreadResponseDto, 'id' | 'messages'>,
 ): Message[] {
   if (previousThread.id !== nextThread.id) return nextThread.messages;
   const persistedMessages = nextThread.messages;

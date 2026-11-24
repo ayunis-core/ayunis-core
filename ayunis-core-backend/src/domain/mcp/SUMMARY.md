@@ -32,6 +32,7 @@ The MCP module manages connections to external Model Context Protocol servers at
 **Services:**
 
 - `McpClientService` — Handles authenticated server communication through the MCP SDK adapter and forwards caller-selected capability-list timeout budgets; classified transport failures retain privacy-safe integration, organization, server host, operation, timeout, and underlying error diagnostics
+- `connectMcpClient` — Opens SDK connections with protocol version negotiation (a `server/discover` probe limited to 3 seconds); when a server accepts the probe without answering, it reconnects with the legacy `initialize` handshake within the remaining connection budget and logs a warning. Other negotiation failures, including authorization errors, are not retried
 - `McpClientPoolService` — Pools SDK connections per tenant, integration, user, configuration, and connection timeout budget; keeps at most 100 idle clients and invalidates sessions when integration or user credentials change
 - `McpConnectionHealthService` — Records sanitized per-user connection observations asynchronously against personal credential and OAuth authorization revisions (automatic token refresh preserves the revision; successful interactive authorization replaces it), without waiting on persistence before returning MCP results/errors; settings ignore stale observations after credential/schema changes
 - `McpCapabilityCacheService` — In-process TTL cache for discovered capabilities (per integration and user); invalidated on integration update, delete, and user-config changes

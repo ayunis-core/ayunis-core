@@ -1,15 +1,10 @@
 import type {
   GetThreadResponseDto,
-  RunSessionResponseDto,
-  RunMessageResponseDto,
-  RunErrorResponseDto,
-  RunThreadResponseDto,
-  RunMasksResponseDto,
   ToolCallDecisionDto,
 } from '@ayunis/api-client';
 import { showError, showInfo } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   getThreadsControllerFindAllQueryKey,
@@ -21,89 +16,17 @@ import {
 } from '@ayunis/api-client/endpoints';
 import {
   activeThreadRunsQueryKey,
-  stopThreadRun,
-  type StartedRunRequest,
+  threadRunLifecycle,
 } from '@/features/thread-run';
 import { redirectToLogin } from '@/shared/lib/redirect-to-login';
 import {
-  createFrameCoalescer,
-  executeRun,
-  type RunEvent,
+  useChatRunLifecycle,
+  type ChatRunParams,
   type RunEndpoints,
   type RunExecutionRequest,
+  type RunRequestObserver,
 } from '@ayunis/chat/runs';
-import { threadRunEndpoints } from '@/features/chat-surface';
 import { createRunFunnelTracker } from '@/pages/chat/lib/run-funnel-tracking';
-
-export interface PendingImage {
-  file: File;
-  altText?: string;
-}
-
-export interface SendMessageInput {
-  text: string;
-  images?: PendingImage[];
-  skillId?: string;
-  /** Already sent for this message; its response is read instead of sending again. */
-  startedRequest?: StartedRunRequest;
-  /** The prompt contains text from a successful transcription. */
-  voiceInput?: boolean;
-}
-
-interface SendToolResultInput {
-  toolId: string;
-  toolName: string;
-  result: string;
-}
-
-export interface UseMessageSendParams {
-  threadId: string;
-  onMessageEvent?: (data: RunMessageResponseDto) => void;
-  onMessageReceived?: () => void;
-  onSessionEvent?: (data: RunSessionResponseDto) => void;
-  onThreadEvent?: (data: RunThreadResponseDto) => void;
-  onMasksEvent?: (data: RunMasksResponseDto) => void;
-  onErrorEvent?: (data: RunErrorResponseDto) => void;
-  onError?: (error: Error) => void;
-  onComplete?: (failed: boolean, reason?: 'reattach-failed') => void;
-}
-
-const mountedParamsByThread = new Map<string, UseMessageSendParams>();
-
-/**
- * What a run streamed while its chat was not open. Message events are full
- * snapshots and masks the full dictionary, so the latest of each is enough
- * to bring a reopened chat up to date.
- */
-interface UndeliveredRunEvents {
-  masks?: RunMasksResponseDto;
-  thread?: RunThreadResponseDto;
-  messages: Map<string, RunMessageResponseDto>;
-}
-
-const undeliveredByThread = new Map<string, UndeliveredRunEvents>();
-
-function undeliveredFor(threadId: string): UndeliveredRunEvents {
-  let undelivered = undeliveredByThread.get(threadId);
-  if (!undelivered) {
-    undelivered = { messages: new Map() };
-    undeliveredByThread.set(threadId, undelivered);
-  }
-  return undelivered;
-}
-
-function deliverUndelivered(params: UseMessageSendParams): void {
-  const undelivered = undeliveredByThread.get(params.threadId);
-  if (!undelivered) return;
-  undeliveredByThread.delete(params.threadId);
-  if (undelivered.masks) params.onMasksEvent?.(undelivered.masks);
-  if (undelivered.thread) params.onThreadEvent?.(undelivered.thread);
-  undelivered.messages.forEach((event) => params.onMessageEvent?.(event));
-}
-
-interface SendMessagePayload extends RunExecutionRequest {
-  voiceInput?: boolean;
-}
 
 async function refreshThreadQueriesAfterRun(
   queryClient: QueryClient,
@@ -168,159 +91,71 @@ function notifySendFailure(
 }
 
 export function useMessageSend(
-  params: UseMessageSendParams,
-  transport: RunEndpoints = threadRunEndpoints,
+  params: ChatRunParams,
+  transport?: RunEndpoints,
 ) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
-  const currentParamsRef = useRef(params);
-  useLayoutEffect(() => {
-    currentParamsRef.current = params;
-    mountedParamsByThread.set(params.threadId, params);
-    deliverUndelivered(params);
-    return () => {
-      if (mountedParamsByThread.get(params.threadId) === params) {
-        mountedParamsByThread.delete(params.threadId);
-      }
-    };
-  }, [params]);
-
-  const sendMessage = useCallback(
-    ({ voiceInput, ...payload }: SendMessagePayload) => {
-      const requestThreadId = payload.threadId;
-      const requestParams = currentParamsRef.current;
+  const observeRequest = useCallback(
+    (
+      { threadId, isAttach }: RunExecutionRequest,
+      voiceInput: boolean,
+      onError: ChatRunParams['onError'],
+    ): RunRequestObserver => {
       const runFunnel = createRunFunnelTracker({
-        isAttach: payload.isAttach ?? false,
-        voiceInput: voiceInput ?? false,
+        isAttach: isAttach ?? false,
+        voiceInput,
         getThread: () =>
           queryClient.getQueryData<GetThreadResponseDto>(
-            getThreadsControllerFindOneQueryKey(requestThreadId),
+            getThreadsControllerFindOneQueryKey(threadId),
           ),
       });
-      const getCurrentParams = () =>
-        mountedParamsByThread.get(requestThreadId) ?? null;
-      // Each event carries a full message snapshot, so only the newest one per
-      // message needs to reach React in a frame. Other events and the end of
-      // the run flush first to keep their order relative to the messages.
-      const messageEvents = createFrameCoalescer<RunMessageResponseDto>(
-        (event) => event.message.id,
-        (events) => {
-          requestParams.onMessageReceived?.();
-          const currentParams = getCurrentParams();
-          if (!currentParams) {
-            const { messages } = undeliveredFor(requestThreadId);
-            events.forEach((event) => messages.set(event.message.id, event));
-            return;
+      return {
+        onEvent(event) {
+          switch (event.type) {
+            case 'message':
+              runFunnel.observeMessage(event.message);
+              break;
+            case 'session':
+              if (event.streaming === false) runFunnel.observeRunEnd();
+              break;
+            case 'integration_warning':
+              showInfo(
+                t('chat.integrationUnavailable', {
+                  name: event.integrationName,
+                }),
+              );
+              void queryClient.invalidateQueries({
+                queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
+              });
+              break;
+            case 'error':
+            case 'thread':
+            case 'masks':
+              break;
           }
-          events.forEach((event) => currentParams.onMessageEvent?.(event));
         },
-      );
-      const onEvent = (event: RunEvent): void => {
-        if (event.type === 'message') {
-          messageEvents.push(event);
-          runFunnel.observeMessage(event.message);
-          return;
-        }
-        messageEvents.flush();
-        const currentParams = getCurrentParams();
-        switch (event.type) {
-          case 'session':
-            if (event.streaming === false) runFunnel.observeRunEnd();
-            currentParams?.onSessionEvent?.(event);
-            break;
-          case 'thread':
-            if (currentParams) currentParams.onThreadEvent?.(event);
-            else undeliveredFor(requestThreadId).thread = event;
-            break;
-          case 'masks':
-            if (currentParams) currentParams.onMasksEvent?.(event);
-            else undeliveredFor(requestThreadId).masks = event;
-            break;
-          case 'integration_warning':
-            showInfo(
-              t('chat.integrationUnavailable', { name: event.integrationName }),
-            );
-            void queryClient.invalidateQueries({
-              queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
-            });
-            break;
-          case 'error':
-            requestParams.onErrorEvent?.(event);
-            break;
-        }
-      };
-
-      return executeRun(transport, payload, {
-        onEvent,
         onUnauthorized: redirectToLogin,
-        onError: (error) => notifySendFailure(error, t, requestParams.onError),
-        onAbort: messageEvents.flush,
-        onCleanup: () => {
-          messageEvents.flush();
-          undeliveredByThread.delete(requestThreadId);
-        },
-        onComplete: async ({ failed, unauthorized, reattachFailed }) => {
+        onError: (error) => notifySendFailure(error, t, onError),
+        async onComplete({ failed, unauthorized }) {
           if (!failed) runFunnel.trackDelivered();
-          if (reattachFailed)
-            requestParams.onComplete?.(true, 'reattach-failed');
-          else requestParams.onComplete?.(failed);
           if (!unauthorized) {
-            await refreshThreadQueriesAfterRun(queryClient, requestThreadId);
+            await refreshThreadQueriesAfterRun(queryClient, threadId);
           }
         },
-      });
-    },
-    [t, queryClient, transport],
-  );
-
-  const sendTextMessage = useCallback(
-    (input: SendMessageInput) => {
-      const payload: SendMessagePayload = {
-        threadId: params.threadId,
-        text: input.text,
-        streaming: true,
-        voiceInput: input.voiceInput,
       };
-
-      // Add images and their alt texts if present
-      if (input.images && input.images.length > 0) {
-        payload.images = input.images.map((img) => img.file);
-        payload.imageAltTexts = input.images.map((img) => img.altText ?? '');
-      }
-
-      if (input.skillId) {
-        payload.skillId = input.skillId;
-      }
-
-      if (input.startedRequest) {
-        payload.startedRequest = input.startedRequest;
-      }
-
-      return sendMessage(payload);
     },
-    [params.threadId, sendMessage],
+    [t, queryClient],
   );
 
-  const sendToolResult = useCallback(
-    (input: SendToolResultInput) => {
-      const payload: SendMessagePayload = {
-        threadId: params.threadId,
-        toolResult: input,
-        streaming: true,
-      };
-
-      return sendMessage(payload);
-    },
-    [params.threadId, sendMessage],
-  );
-
+  const run = useChatRunLifecycle(threadRunLifecycle, params, {
+    transport,
+    observeRequest,
+  });
+  const { sendToolCallDecisions: sendDecisions } = run;
   const sendToolCallDecisions = useCallback(
     async (decisions: ToolCallDecisionDto[]) => {
-      await sendMessage({
-        threadId: params.threadId,
-        decisions,
-        streaming: true,
-      });
+      await sendDecisions(decisions);
       if (
         decisions.some((decision) => decision.approved && decision.alwaysAllow)
       ) {
@@ -329,28 +164,8 @@ export function useMessageSend(
         });
       }
     },
-    [params.threadId, sendMessage, queryClient],
+    [sendDecisions, queryClient],
   );
 
-  const attach = useCallback(
-    () => sendMessage({ threadId: params.threadId, isAttach: true }),
-    [params.threadId, sendMessage],
-  );
-
-  const abort = useCallback(() => {
-    stopThreadRun(params.threadId, transport);
-
-    // Don't invalidate queries immediately on abort
-    // The backend will save the message asynchronously, and we'll get the update
-    // through normal query invalidation in the finally block
-    // This prevents race conditions where we refetch before backend finishes saving
-  }, [params.threadId, transport]);
-
-  return {
-    sendTextMessage,
-    sendToolResult,
-    sendToolCallDecisions,
-    attach,
-    abort,
-  };
+  return { ...run, sendToolCallDecisions };
 }

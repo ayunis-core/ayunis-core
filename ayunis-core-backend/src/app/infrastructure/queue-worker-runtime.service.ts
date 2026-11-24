@@ -90,8 +90,13 @@ export class QueueWorkerRuntimeService implements OnModuleDestroy {
   private async checkReadiness(): Promise<boolean> {
     if (this.stopping) return false;
     try {
-      const workers = this.discoverWorkers();
-      this.validateConsumers(workers);
+      const discovered = this.discoverWorkers();
+      this.validateConsumers(discovered);
+      // Shared modules can register consumers this process never starts, e.g.
+      // a feature-gated one; only the queues it serves decide readiness.
+      const workers = discovered.filter((worker) =>
+        this.requiredQueues.includes(worker.name),
+      );
       if (workers.some((worker) => !worker.isRunning() || worker.isPaused()))
         return false;
       await this.database.query('SELECT 1');

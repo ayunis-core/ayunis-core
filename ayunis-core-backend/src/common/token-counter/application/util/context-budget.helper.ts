@@ -97,25 +97,16 @@ export function countMessageTokens(
 }
 
 /**
- * Prices a whole thread in one tokenizer call: every text part joined by a
- * newline, each image at its fixed cost, each message with its framing. The
- * joins can shift the total by a few tokens against summing
- * `countMessageTokens` per message, which a warning tolerates and a budget
- * does not.
+ * Prices a whole thread part by part, so the estimator's cache serves every
+ * part it has counted before instead of re-tokenizing the history.
  */
 export function countThreadTokens(
   estimator: TokenEstimator,
   messages: ReadonlyArray<readonly MessagePart[]>,
 ): number {
-  const parts = messages.flat();
-  const texts = parts.flatMap((part) =>
-    part.kind === 'text' ? [part.text] : [],
-  );
-  const images = parts.length - texts.length;
-  return (
-    estimator.countText(texts.join('\n')) +
-    images * estimator.tokensPerImage +
-    messages.length * estimator.tokensPerMessage
+  return messages.reduce(
+    (total, parts) => total + countMessageTokens(estimator, parts),
+    0,
   );
 }
 

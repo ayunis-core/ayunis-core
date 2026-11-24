@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatToolName } from './format-tool-name';
+import { formatToolName } from '@ayunis/chat/timeline';
 
 const INTEGRATION_PREFIX = 'b0eb63cb';
 

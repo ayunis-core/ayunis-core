@@ -1,7 +1,7 @@
 import { Injectable, Optional, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  Client,
+  type Client,
   StreamableHTTPClientTransport,
   type StreamableHTTPClientTransportOptions,
 } from '@modelcontextprotocol/client';
@@ -30,6 +30,7 @@ import { classifyTransportError } from 'src/common/errors/provider-transport-err
 import { ProviderFailureClass } from 'src/common/errors/provider.errors';
 import { McpClientPoolService } from './mcp-client-pool.service';
 import { verifyMcpCredentials } from './verify-mcp-credentials';
+import { connectMcpClient } from './connect-mcp-client';
 
 /**
  * Node's AbortController.abort() mints a DOMException with name 'AbortError'
@@ -453,24 +454,23 @@ export class McpSdkClientAdapter extends McpClientPort {
       onInsufficientScope: 'throw',
       ...(guardedFetch ? { fetch: guardedFetch.fetch } : {}),
     };
-    const transport = new StreamableHTTPClientTransport(
-      new URL(config.serverUrl),
-      transportOptions,
-    );
-
-    const client = new Client(
-      { name: 'ayunis-core', version: '1.0.0' },
-      { versionNegotiation: { mode: 'auto' } },
-    );
-
-    try {
-      await client.connect(transport, requestOptions);
-    } catch (error) {
-      await client.close().catch(() => undefined);
-      throw error;
-    }
-
-    return client;
+    return connectMcpClient({
+      createTransport: () =>
+        new StreamableHTTPClientTransport(
+          new URL(config.serverUrl),
+          transportOptions,
+        ),
+      timeout: requestOptions.timeout,
+      onLegacyFallback: () =>
+        this.logger.warn(
+          {
+            integrationId: config.connectionScope.integrationId,
+            orgId: config.connectionScope.orgId,
+            serverHost: serverHost(config.serverUrl),
+          },
+          'MCP server did not answer version negotiation; connecting with the legacy handshake',
+        ),
+    });
   }
 
   private async buildOAuthProvider(config: McpConnectionConfig) {

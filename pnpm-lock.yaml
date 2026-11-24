@@ -1059,6 +1059,9 @@ importers:
       '@ayunis/ui':
         specifier: workspace:*
         version: link:../ui
+      '@tanstack/react-query':
+        specifier: 'catalog:'
+        version: 5.104.5(@types/react@19.3.0)(react@19.3.1)
       lucide-react:
         specifier: 'catalog:'
         version: 1.55.0(@types/react@19.3.0)(react@19.3.1)

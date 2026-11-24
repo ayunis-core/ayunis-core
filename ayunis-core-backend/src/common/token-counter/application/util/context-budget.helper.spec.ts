@@ -1,4 +1,4 @@
-import { estimatedTokens, type TokenEstimator } from '@ayunis/inference';
+import type { TokenEstimator } from '@ayunis/inference';
 import {
   countMessageTokens,
   countThreadTokens,
@@ -65,37 +65,17 @@ describe('countThreadTokens', () => {
     countTools: () => 0,
   };
 
-  it('prices the joined text once and adds every image and message cost', () => {
+  it('prices every text part, image and message', () => {
     const thread = [
       [{ kind: 'text', text: 'ab' } as const, { kind: 'image' } as const],
       [{ kind: 'text', text: 'cde' } as const],
     ];
 
-    expect(countThreadTokens(fixed, thread)).toBe('ab\ncde'.length + 7 + 2 * 3);
+    expect(countThreadTokens(fixed, thread)).toBe(2 + 3 + 7 + 2 * 3);
   });
 
   it('counts an empty thread as nothing', () => {
     expect(countThreadTokens(fixed, [])).toBe(0);
-  });
-
-  it('stays within one token per message of the per-message count', () => {
-    const estimator = estimatedTokens();
-    const thread = Array.from({ length: 40 }, (_, i) => [
-      {
-        kind: 'text',
-        text: `Nachricht ${i}: Bitte prüfen Sie den Antrag der Familie Müller.`,
-      } as const,
-      ...(i % 5 === 0 ? [{ kind: 'image' } as const] : []),
-    ]);
-    const perMessage = thread.reduce(
-      (total, parts) => total + countMessageTokens(estimator, parts),
-      0,
-    );
-
-    const batched = countThreadTokens(estimator, thread);
-
-    expect(Math.abs(batched - perMessage)).toBeLessThanOrEqual(thread.length);
-    expect(batched).toBeGreaterThan(8 * estimator.tokensPerImage);
   });
 });
 

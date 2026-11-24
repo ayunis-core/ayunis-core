@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline/model/types';
-import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
+import type { AgentRunUnit } from '@ayunis/chat/timeline';
+import type { ToolCardProps } from '@ayunis/chat/tool-cards';
 import AgentRunTimeline from './AgentRunTimeline';
 
 vi.mock('react-i18next', () => ({
@@ -41,15 +41,22 @@ vi.mock('@/shared/lib/openpanel-outcomes', () => ({
   useTrackProductiveOutcome: () => trackOutcome,
 }));
 
-vi.mock('./AgentRunTimelineRow', () => ({
-  default: ({ step }: { step: { key: string } }) => (
-    <div data-testid={`step-${step.key}`} />
-  ),
-}));
-
-vi.mock('@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card', () => ({
-  renderRichToolCard: vi.fn(() => <div data-testid="rich-card" />),
-}));
+const renderCard = vi.hoisted(() => vi.fn<(props: ToolCardProps) => void>());
+vi.mock(
+  '@/pages/chat/ui/agent-run-timeline/lib/tool-card-registrations',
+  () => {
+    function TestCard(props: ToolCardProps) {
+      renderCard(props);
+      return <div data-testid="rich-card" />;
+    }
+    return {
+      chatToolCards: new Map([
+        ['bar_chart', { render: TestCard }],
+        ['edit_document', { render: TestCard, artifactFamily: 'document' }],
+      ]),
+    };
+  },
+);
 
 vi.mock('@/pages/chat/ui/ResponseStartOrb', () => ({
   default: () => <div data-testid="response-start-orb" />,
@@ -134,11 +141,11 @@ describe('AgentRunTimeline', () => {
     render(<AgentRunTimeline unit={unit} />);
 
     const before = screen.getByTestId('text-before');
-    const tool = screen.getByTestId('step-tool-rich-1');
+    const tool = screen.getByTestId('agent-run-tool-step');
     const card = screen.getByTestId('rich-card');
     const after = screen.getByTestId('text-after');
 
-    expect(screen.queryByTestId('step-tool-ordinary-1')).toBeNull();
+    expect(screen.queryByText('chat.tools.internet_search')).toBeNull();
     expect(before.compareDocumentPosition(tool)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
@@ -195,12 +202,12 @@ describe('AgentRunTimeline', () => {
     };
 
     const { rerender } = render(<AgentRunTimeline unit={pendingUnit} />);
-    const pendingRow = screen.getByTestId('step-tool-streaming');
+    const pendingRow = screen.getByTestId('agent-run-tool-step');
     expect(screen.queryByTestId('rich-card')).toBeNull();
 
     rerender(<AgentRunTimeline unit={resolvedUnit} />);
 
-    expect(screen.getByTestId('step-tool-streaming')).toBe(pendingRow);
+    expect(screen.getByTestId('agent-run-tool-step')).toBe(pendingRow);
     expect(screen.getByTestId('rich-card')).toBeTruthy();
   });
 
@@ -229,11 +236,9 @@ describe('AgentRunTimeline', () => {
 
     render(<AgentRunTimeline unit={mergedUnit} />);
 
-    expect(screen.getByTestId('step-tool-e1')).toBeTruthy();
-    expect(screen.getByTestId('step-tool-e2')).toBeTruthy();
-    expect(screen.getByTestId('step-tool-e3')).toBeTruthy();
+    expect(screen.getAllByTestId('agent-run-tool-step')).toHaveLength(3);
     expect(screen.getAllByTestId('rich-card')).toHaveLength(1);
-    expect(vi.mocked(renderRichToolCard)).toHaveBeenLastCalledWith(
+    expect(renderCard).toHaveBeenLastCalledWith(
       expect.objectContaining({
         toolUse: expect.objectContaining({ id: 'e3' }),
       }),
@@ -282,7 +287,7 @@ describe('AgentRunTimeline', () => {
 
     render(<AgentRunTimeline unit={mergedUnit} />);
 
-    expect(vi.mocked(renderRichToolCard)).toHaveBeenLastCalledWith(
+    expect(renderCard).toHaveBeenLastCalledWith(
       expect.objectContaining({
         toolUse: expect.objectContaining({
           id: 'e1',
@@ -317,7 +322,7 @@ describe('AgentRunTimeline', () => {
       />,
     );
 
-    expect(screen.getByTestId('step-completed-tool')).toBeTruthy();
+    expect(screen.getByTestId('agent-run-tool-step')).toBeTruthy();
 
     rerender(
       <AgentRunTimeline
@@ -336,14 +341,14 @@ describe('AgentRunTimeline', () => {
       />,
     );
 
-    expect(screen.queryByTestId('step-completed-tool')).toBeNull();
+    expect(screen.queryByTestId('agent-run-tool-step')).toBeNull();
   });
 
   it('does not render the response-start orb after timeline content exists', () => {
     render(<AgentRunTimeline unit={{ ...unit, isStreaming: true }} />);
 
     expect(screen.queryByTestId('response-start-orb')).toBeNull();
-    expect(vi.mocked(renderRichToolCard)).toHaveBeenLastCalledWith(
+    expect(renderCard).toHaveBeenLastCalledWith(
       expect.objectContaining({ isStreaming: false }),
     );
   });
@@ -361,7 +366,7 @@ describe('AgentRunTimeline', () => {
     expect(card.compareDocumentPosition(orb)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
-    expect(vi.mocked(renderRichToolCard)).toHaveBeenLastCalledWith(
+    expect(renderCard).toHaveBeenLastCalledWith(
       expect.objectContaining({ isStreaming: false }),
     );
   });

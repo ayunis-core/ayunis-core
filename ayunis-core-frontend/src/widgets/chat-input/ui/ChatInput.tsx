@@ -34,6 +34,7 @@ import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
 import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import {
+  canSubmitMessage,
   ChatComposer,
   type ChatInputSubmissionState,
 } from '@ayunis/chat/composer';
@@ -246,15 +247,16 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       },
     }));
 
+    const canSendText = (text: string) =>
+      canSubmitMessage({
+        text,
+        hasAttachments: pendingImages.length > 0,
+        hasSkill: Boolean(selectedSkillId),
+        busy: !modelId || inFlight || Boolean(isSendDisabled),
+      });
+
     const submit = (text: string) => {
-      if (
-        (!text.trim() && pendingImages.length === 0 && !selectedSkillId) ||
-        !modelId ||
-        inFlight ||
-        isSendDisabled
-      ) {
-        return;
-      }
+      if (!canSendText(text)) return;
 
       // Pass File objects to parent - upload happens in ChatPage/NewChatPage
       const imageFiles = pendingImages.map((img) => ({
@@ -297,11 +299,7 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       if (imageFiles.length > 0) attachImages(imageFiles);
     };
 
-    const canSend =
-      (message.trim() || pendingImages.length > 0 || selectedSkillId) &&
-      modelId &&
-      !inFlight &&
-      !isSendDisabled;
+    const canSend = canSendText(message);
 
     const hasAttachmentChips =
       sources.length > 0 ||

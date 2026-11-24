@@ -17,6 +17,7 @@ import { ContextService } from 'src/common/context/services/context.service';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { CannotDeleteLastTeamModelError } from 'src/domain/models/application/team-permitted-model.errors';
 import {
   PermittedModelNotFoundError,
   PermittedModelNotInTeamError,
@@ -27,6 +28,7 @@ import { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import { ModelProvider } from 'src/domain/models/domain/value-objects/model-provider.enum';
 import { PermittedModelScope } from 'src/domain/models/domain/value-objects/permitted-model-scope.enum';
 import { randomUUID } from 'crypto';
+import type { UUID } from 'crypto';
 import { TeamPermittedModelValidator } from 'src/domain/models/application/services/team-permitted-model-validator.service';
 import { DeleteUserDefaultModelsByModelIdUseCase } from 'src/domain/models/application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.use-case';
 import { DeleteUserDefaultModelsByModelIdCommand } from 'src/domain/models/application/use-cases/delete-user-default-models-by-model-id/delete-user-default-models-by-model-id.command';
@@ -64,6 +66,7 @@ describe('DeleteTeamPermittedModelUseCase', () => {
   beforeEach(async () => {
     permittedModelsRepository = {
       findOne: jest.fn(),
+      findManyLanguageByTeam: jest.fn().mockResolvedValue([]),
       delete: jest.fn(),
     } as unknown as jest.Mocked<PermittedModelsRepository>;
 
@@ -120,6 +123,78 @@ describe('DeleteTeamPermittedModelUseCase', () => {
       return undefined;
     });
   }
+
+  function teamLanguageModel(
+    id: UUID = permittedModelId,
+  ): PermittedLanguageModel {
+    return new PermittedLanguageModel({
+      id,
+      model: languageModel,
+      orgId,
+      scope: PermittedModelScope.TEAM,
+      scopeId: teamId,
+    });
+  }
+
+  function setTeam(modelOverrideEnabled: boolean): void {
+    getTeamUseCase.execute.mockResolvedValue(
+      new Team({ id: teamId, name: 'test-team', orgId, modelOverrideEnabled }),
+    );
+  }
+
+  it('should reject deleting the last language model of a team with model override', async () => {
+    setAdminContext();
+    setTeam(true);
+    permittedModelsRepository.findOne.mockResolvedValue(teamLanguageModel());
+    permittedModelsRepository.findManyLanguageByTeam.mockResolvedValue([
+      teamLanguageModel(),
+    ]);
+
+    await expect(
+      useCase.execute(
+        new DeleteTeamPermittedModelCommand(permittedModelId, orgId, teamId),
+      ),
+    ).rejects.toThrow(CannotDeleteLastTeamModelError);
+    expect(replaceModelWithUserDefaultUseCase.execute).not.toHaveBeenCalled();
+    expect(permittedModelsRepository.delete).not.toHaveBeenCalled();
+  });
+
+  it('should delete a language model of a team with model override when another one remains', async () => {
+    setAdminContext();
+    setTeam(true);
+    permittedModelsRepository.findOne.mockResolvedValue(teamLanguageModel());
+    permittedModelsRepository.findManyLanguageByTeam.mockResolvedValue([
+      teamLanguageModel(),
+      teamLanguageModel(randomUUID()),
+    ]);
+
+    await useCase.execute(
+      new DeleteTeamPermittedModelCommand(permittedModelId, orgId, teamId),
+    );
+
+    expect(permittedModelsRepository.delete).toHaveBeenCalledWith({
+      id: permittedModelId,
+      orgId,
+    });
+  });
+
+  it('should delete the last language model of a team without model override', async () => {
+    setAdminContext();
+    setTeam(false);
+    permittedModelsRepository.findOne.mockResolvedValue(teamLanguageModel());
+    permittedModelsRepository.findManyLanguageByTeam.mockResolvedValue([
+      teamLanguageModel(),
+    ]);
+
+    await useCase.execute(
+      new DeleteTeamPermittedModelCommand(permittedModelId, orgId, teamId),
+    );
+
+    expect(permittedModelsRepository.delete).toHaveBeenCalledWith({
+      id: permittedModelId,
+      orgId,
+    });
+  });
 
   it('should delete a team permitted model successfully', async () => {
     setAdminContext();

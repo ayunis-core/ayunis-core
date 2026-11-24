@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
+import { AgentRunTimeline } from '@/pages/chat/ui/agent-run-timeline';
 import ReadDocumentWidget from './ReadDocumentWidget';
 
 vi.mock('react-i18next', () => ({
@@ -23,17 +23,33 @@ describe('ReadDocumentWidget', () => {
   it('opens the document from the registered read card through the host callback', () => {
     const onOpenArtifact = vi.fn();
     render(
-      renderRichToolCard({
-        toolUse: readDocumentCall(),
-        result: JSON.stringify({
-          artifactId: 'artifact-11',
-          title: 'Script 11',
-          version: 1,
-        }),
-        isStreaming: false,
-        index: 0,
-        onOpenArtifact,
-      }),
+      <AgentRunTimeline
+        unit={{
+          kind: 'agent-run',
+          key: 'run-read',
+          isStreaming: false,
+          blocks: [
+            {
+              kind: 'rich-tool',
+              key: 'read',
+              steps: [
+                {
+                  kind: 'tool',
+                  key: 'read',
+                  status: 'done',
+                  toolUse: readDocumentCall(),
+                  result: JSON.stringify({
+                    artifactId: 'artifact-11',
+                    title: 'Script 11',
+                    version: 1,
+                  }),
+                },
+              ],
+            },
+          ],
+        }}
+        onOpenArtifact={onOpenArtifact}
+      />,
     );
 
     expect(screen.getByText('Script 11')).toBeTruthy();

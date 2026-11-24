@@ -10,7 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import extractErrorData from '@/shared/api/extract-error-data';
-import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
+import { mergePiiMasks } from '@ayunis/chat/runs';
 import { useLayoutEffect, useRef } from 'react';
 
 interface UseUnmaskPiiMaskProps {
