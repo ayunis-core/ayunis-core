@@ -1,3 +1,4 @@
+import * as apiEndpoints from '@ayunis/api-client/endpoints';
 import { OpenPanel } from '@openpanel/web';
 import { QueryClient } from '@tanstack/react-query';
 import { isRedirect } from '@tanstack/react-router';
@@ -13,11 +14,11 @@ const { me, client } = vi.hoisted(() => ({
 
 vi.mock('@/layouts/authenticated-layout', () => ({ default: () => null }));
 
-vi.mock('@ayunis/api-client/endpoints', () => ({
+vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
+  ...(await importOriginal<typeof apiEndpoints>()),
   authenticationControllerMe: me,
-  getAuthenticationControllerMeQueryKey: () => ['/auth/me'],
-  appControllerIsCloud: () => Promise.resolve({ isCloud: true }),
-  getAppControllerIsCloudQueryKey: () => ['/app/is-cloud'],
+  appControllerIsCloud: () =>
+    Promise.resolve({ isCloud: true, isRegistrationDisabled: false }),
 }));
 
 vi.mock('@/shared/lib/openpanel', () => ({
@@ -131,6 +132,24 @@ describe('authenticated bootstrap analytics identity', () => {
         groups: [userB.orgId],
       },
     ]);
+  });
+
+  it('clears the active-run listing when the authenticated principal changes', async () => {
+    const queryClient = new QueryClient();
+    const activeRunsKey =
+      apiEndpoints.getActiveRunsControllerFindActiveQueryKey();
+    me.mockResolvedValueOnce(userA).mockResolvedValueOnce(userB);
+    await runBootstrap(queryClient);
+    queryClient.setQueryData(activeRunsKey, [
+      { threadId: 'previous-chat', cancellable: true },
+    ]);
+
+    queryClient.removeQueries({
+      queryKey: apiEndpoints.getAuthenticationControllerMeQueryKey(),
+    });
+    await runBootstrap(queryClient);
+
+    expect(queryClient.getQueryData(activeRunsKey)).toBeUndefined();
   });
 
   it('keeps the profile when a hover preload of an authenticated route fails', async () => {

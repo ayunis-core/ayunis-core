@@ -6,29 +6,25 @@ export {
 export {
   executeRun,
   type RunExecutionRequest,
+  type RunOutcome,
   type StartedRunRequest,
 } from './run-execution';
-export { type RunEvent } from './run-stream';
-export { stopRun } from './run-cancellation';
+export type { RunEvent } from './run-stream';
+export type { RunViewEvent } from './run-event-routing';
 export {
-  abortActiveThreadRun,
-  getActiveThreadRunIds,
-  isThreadRunActive,
-  registerActiveThreadRun,
-  subscribeToActiveThreadRuns,
-  unregisterActiveThreadRun,
-} from './active-thread-run';
-export {
-  forgetStoppedThreadRunsExcept,
-  isThreadRunStopped,
-  markThreadRunStopped,
-  unmarkThreadRunStopped,
-} from './stopped-thread-runs';
+  createChatRunLifecycle,
+  type ChatRunLifecycle,
+  type RunRequestObserver,
+} from './run-lifecycle';
 export { createFrameCoalescer } from './frame-coalescer';
+export type { ThreadRunStart, StartedThreadRun } from './started-thread-run';
 export {
-  cancelStartedRun,
-  startRun,
-  takeStartedThreadRun,
-  type ThreadRunStart,
-  type StartedThreadRun,
-} from './started-thread-run';
+  useChatRunLifecycle,
+  type ChatRunParams,
+  type PendingImage,
+  type SendMessageInput,
+} from './use-chat-run-lifecycle';
+export { useChatThreadState } from './use-chat-thread-state';
+export { useThreadRunReattach } from './use-thread-run-reattach';
+export { mergePiiMasks } from './merge-pii-masks';
+export { reconcileMessages } from './reconcile-thread-messages';

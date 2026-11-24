@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import {
   clearWaitingMessage,
+  clearWaitingMessages,
   takeWaitingMessage,
   writeWaitingMessage,
 } from '@/shared/lib/waiting-message-storage';
@@ -53,6 +54,12 @@ export function cancelDeferredThreadRun(threadId: string): boolean {
   if (!deferredRuns.delete(threadId)) return false;
   notifyListeners();
   return true;
+}
+
+export function resetDeferredThreadRuns(): void {
+  deferredRuns.clear();
+  clearWaitingMessages();
+  notifyListeners();
 }
 
 function subscribeToDeferredThreadRuns(listener: () => void): () => void {

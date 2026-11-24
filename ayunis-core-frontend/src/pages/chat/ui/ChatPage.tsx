@@ -12,17 +12,18 @@ import UnavailableModelNotice from './UnavailableModelNotice';
 import ProviderFaultNotice from './ProviderFaultNotice';
 import type { Thread } from '@/pages/chat/model/openapi';
 import { useThreadSubmissionState } from '@/pages/chat/hooks/useThreadSubmissionState';
-import type { ThreadSubmission } from '@/pages/chat/model/pending-submissions';
-import { showError } from '@/shared/lib/toast';
-import { useConfirmation } from '@/widgets/confirmation-modal';
-import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
 import {
+  type ThreadSubmission,
   cancelDeferredThreadRun,
   deferThreadRun,
   useDeleteThread,
   useIsThreadRunActive,
   useIsThreadRunDeferred,
 } from '@/features/thread-run';
+import { showError } from '@/shared/lib/toast';
+import { useConfirmation } from '@/widgets/confirmation-modal';
+import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
+
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useNavigate } from '@tanstack/react-router';
@@ -45,11 +46,13 @@ import { getThreadsControllerFindAllQueryKey } from '@ayunis/api-client/endpoint
 import { useChatThread } from '@/pages/chat/api/useChatThread';
 import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
-import type { PendingImage } from '@/pages/chat/api/useMessageSend';
-import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
+import {
+  mergePiiMasks,
+  useChatThreadState,
+  type PendingImage,
+} from '@ayunis/chat/runs';
 import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
 import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-calls';
-import { useChatThreadState } from '@/pages/chat/hooks/useChatThreadState';
 import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
 import { useToolCallDecisions } from '@/pages/chat/hooks/useToolCallDecisions';
 import { OutlookToolBridgeContext } from '@/pages/chat/model/outlook-tool-bridge';

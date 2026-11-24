@@ -1,8 +1,16 @@
+import { QueryClient } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resetThreadSubmission } from '@/pages/chat/model/pending-submissions';
-import { cancelDeferredThreadRun, deferThreadRun } from '@/features/thread-run';
+import {
+  getFailedThreadSubmission,
+  resetThreadSubmission,
+  cancelDeferredThreadRun,
+  deferThreadRun,
+  setThreadRunPrincipal,
+} from '@/features/thread-run';
+
 import { getChatInputSubmissionState } from '@/widgets/chat-input/model/chatInputSubmissionState';
+import { writeWaitingMessage } from '@/shared/lib/waiting-message-storage';
 import { useThreadSubmissionState } from './useThreadSubmissionState';
 
 const threadA = 'thread-a';
@@ -38,6 +46,33 @@ describe(useThreadSubmissionState.name, () => {
     expect(result.current.pendingSubmission).toBeNull();
   });
 
+  it('clears pending text and failed submissions when the principal changes', () => {
+    const cache = new QueryClient();
+    const { result } = renderHook(() =>
+      useThreadSubmissionState({
+        threadId: threadA,
+        isStreaming: true,
+        restoreFailedSubmission: vi.fn(),
+        onRestoreBlocked: vi.fn(),
+      }),
+    );
+    act(() => setThreadRunPrincipal('account-a', 'organization', cache));
+    act(() => {
+      result.current.startSubmission(threadA, { text: 'In flight' });
+      result.current.startSubmission(threadB, { text: 'Failed earlier' });
+      result.current.completeSubmission(threadB, true);
+    });
+
+    act(() => setThreadRunPrincipal('account-a', 'organization', cache));
+    expect(result.current.pendingSubmission).toBe('In flight');
+    expect(getFailedThreadSubmission(threadB)?.text).toBe('Failed earlier');
+
+    act(() => setThreadRunPrincipal('account-b', 'organization', cache));
+
+    expect(result.current.pendingSubmission).toBeNull();
+    expect(getFailedThreadSubmission(threadB)).toBeNull();
+  });
+
   it.each(['Summarise the minutes', ''])(
     'keeps the composer submitting while the message %j waits for its files',
     (text) => {
@@ -65,7 +100,8 @@ describe(useThreadSubmissionState.name, () => {
   );
 
   it('puts a message that was waiting before a reload back into the input, once', () => {
-    window.localStorage.setItem('waiting_message:thread-a', 'Message A');
+    setThreadRunPrincipal('account-a', 'organization', new QueryClient());
+    writeWaitingMessage(threadA, 'Message A');
     const restoreFailedSubmission = vi.fn().mockReturnValue(true);
     const mount = () =>
       renderHook(() =>

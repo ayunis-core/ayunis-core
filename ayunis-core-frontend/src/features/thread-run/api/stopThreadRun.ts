@@ -1,9 +1,3 @@
-import { stopRun, type RunEndpoints } from '@ayunis/chat/runs';
-import { threadRunEndpoints } from '@/features/chat-surface';
+import { threadRunLifecycle } from '@/features/thread-run/model/thread-run-lifecycle';
 
-export function stopThreadRun(
-  threadId: string,
-  transport: RunEndpoints = threadRunEndpoints,
-): void {
-  stopRun(threadId, transport.cancel);
-}
+export const { stopThreadRun } = threadRunLifecycle;

@@ -45,6 +45,13 @@ export function resetThreadSubmission(threadId: string): void {
   notifyListeners();
 }
 
+export function resetThreadSubmissions(): void {
+  activeSubmissions.clear();
+  failedSubmissions.clear();
+  pendingSubmissions.clear();
+  notifyListeners();
+}
+
 export function getPendingThreadSubmission(threadId: string): string | null {
   return pendingSubmissions.get(threadId) ?? null;
 }

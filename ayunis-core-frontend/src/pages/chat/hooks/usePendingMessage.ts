@@ -6,13 +6,11 @@ import {
   useIsThreadRunDeferred,
   startDeferredThreadRun,
   takeStartedThreadRun,
-} from '@/features/thread-run';
-import { showError } from '@/shared/lib/toast';
-import type { SendMessageInput } from '@/pages/chat/api/useMessageSend';
-import {
   clearPendingThreadSubmission,
   startThreadSubmission,
-} from '@/pages/chat/model/pending-submissions';
+} from '@/features/thread-run';
+import { showError } from '@/shared/lib/toast';
+import type { SendMessageInput } from '@ayunis/chat/runs';
 
 interface UsePendingMessageParams {
   threadId: string;

@@ -1,3 +1,4 @@
+import type * as apiEndpoints from '@ayunis/api-client/endpoints';
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
@@ -20,7 +21,8 @@ const {
   showError: vi.fn(),
 }));
 
-vi.mock('@ayunis/api-client/endpoints', () => ({
+vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
+  ...(await importOriginal<typeof apiEndpoints>()),
   useLogoutControllerLogout: () => ({ mutate, isPending: false }),
 }));
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }));
