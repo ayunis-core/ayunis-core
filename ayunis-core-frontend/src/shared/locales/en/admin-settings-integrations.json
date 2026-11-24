@@ -184,7 +184,9 @@
         "openAddins": "Sign in to the Microsoft 365 admin center and select the Add-ins link near the top of the Integrated apps page.",
         "deployAddin": "Select Deploy Add-in, then Next, and choose to upload a custom add-in.",
         "provideUrl": "Under Choose how to upload app, choose to provide a URL, paste the manifest URL above, and select Upload.",
-        "assign": "Select Everyone, Specific users/groups or Just me, then select Deploy."
+        "assign": "Select Everyone, Specific users/groups or Just me, then select Deploy.",
+        "guide": "Full guide",
+        "guideAnchor": "deploy-the-add-in"
       }
     },
     "emptyState": {
