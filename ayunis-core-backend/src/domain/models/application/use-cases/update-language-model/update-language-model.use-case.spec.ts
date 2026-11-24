@@ -385,6 +385,32 @@ describe('UpdateLanguageModelUseCase', () => {
       );
     });
 
+    it('keeps the original creation date when a catalog edit is saved', async () => {
+      const createdAt = new Date('2026-01-05T09:00:00Z');
+      const existingModel = new LanguageModel({
+        id: mockModelId,
+        name: 'gpt-4',
+        displayName: 'GPT-4',
+        provider: ModelProvider.OPENAI,
+        canStream: true,
+        isReasoning: false,
+        isArchived: false,
+        canUseTools: true,
+        canVision: false,
+        contextWindowSize: 200_000,
+        createdAt,
+      });
+
+      modelsRepository.findOne.mockResolvedValue(existingModel);
+      modelsRepository.save.mockResolvedValue();
+
+      await useCase.execute(createUpdateCommand(mockModelId, false));
+
+      expect(modelsRepository.save.mock.calls[0][0].createdAt).toEqual(
+        createdAt,
+      );
+    });
+
     it('should not log archival message when model is not being archived', async () => {
       // Arrange
       const existingModel = createMockLanguageModel(mockModelId, false);

@@ -45,7 +45,11 @@ export class UpdateLanguageModelUseCase {
       (existingModel instanceof LanguageModel
         ? existingModel.hasProviderFault
         : false);
-    const model = this.createModel(command, hasProviderFault);
+    const model = this.createModel(
+      command,
+      hasProviderFault,
+      existingModel.createdAt,
+    );
     await this.modelsRepository.save(model);
 
     if (isBeingArchived) {
@@ -66,9 +70,11 @@ export class UpdateLanguageModelUseCase {
   private createModel(
     command: UpdateLanguageModelCommand,
     hasProviderFault: boolean,
+    createdAt: Date,
   ): LanguageModel {
     return new LanguageModel({
       id: command.id,
+      createdAt,
       name: command.name,
       provider: command.provider,
       displayName: command.displayName,
