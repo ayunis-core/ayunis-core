@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Message } from '../model/openapi';
-import { reconcileMessages } from './reconcile-thread-messages';
+import type { Message } from '@/pages/chat/model/openapi';
+import { reconcileMessages } from '@ayunis/chat/runs';
 
 function message(
   id: string,

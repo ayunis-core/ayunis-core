@@ -8,7 +8,7 @@ import {
   takeStartedThreadRun,
 } from '@/features/thread-run';
 import { showError } from '@/shared/lib/toast';
-import type { SendMessageInput } from '@/pages/chat/api/useMessageSend';
+import type { SendMessageInput } from '@ayunis/chat/runs';
 import {
   clearPendingThreadSubmission,
   startThreadSubmission,

@@ -851,6 +851,58 @@ describe(useOutlookToolBridge.name, () => {
     expect(item.body.setAsync).not.toHaveBeenCalled();
   });
 
+  it('does not apply a composed draft after another turn starts during the Office read', async () => {
+    const item = composeItem();
+    const pending = vi.fn<(callback: Callback) => void>();
+    const delayedItem = {
+      ...item,
+      body: { ...item.body, getTypeAsync: pending },
+    };
+    stubOffice(delayedItem);
+    const chat = renderBridge(true);
+
+    chat.run(
+      turn('obsolete-draft', 'outlook__draft_email', {
+        body: 'Old body',
+        subject: 'Old subject',
+      }),
+    );
+    expect(pending).toHaveBeenCalledOnce();
+    act(() => chat.result.current.beginRun());
+    await act(async () => {
+      pending.mock.calls[0]?.[0]({ status: 'succeeded', value: 'html' });
+    });
+
+    expect(item.body.prependAsync).not.toHaveBeenCalled();
+    expect(item.body.setAsync).not.toHaveBeenCalled();
+    expect(item.subject.setAsync).not.toHaveBeenCalled();
+  });
+
+  it('returns an item-changed result when a mail read completes after an item switch', async () => {
+    const item = readItem();
+    const pending = vi.fn<(_type: string, callback: Callback) => void>();
+    stubOffice({ ...item, body: { ...item.body, getAsync: pending } });
+    const chat = renderBridge(true);
+
+    chat.run(turn('old-read', 'outlook__read_email'));
+    expect(pending).toHaveBeenCalledOnce();
+    changeOfficeItem({ ...readItem(), itemId: 'mail-2' });
+    await act(async () => {
+      pending.mock.calls[0]?.[1]({
+        status: 'succeeded',
+        value: 'Private old body',
+      });
+    });
+
+    expect(chat.sendToolResult).toHaveBeenCalledExactlyOnceWith({
+      toolId: 'old-read',
+      toolName: 'outlook__read_email',
+      result: JSON.stringify({
+        error: 'the open email changed since this request started',
+      }),
+    });
+  });
+
   it('drops a read result once the user sent another message while it was read', async () => {
     const item = readItem();
     let finishRead: Callback | undefined;

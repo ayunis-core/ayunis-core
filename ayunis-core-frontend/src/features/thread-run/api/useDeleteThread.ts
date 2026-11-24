@@ -5,7 +5,7 @@ import {
 } from '@ayunis/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { abortActiveThreadRun } from '@ayunis/chat/runs';
+import { abortActiveThreadRun } from '@/features/thread-run/model/thread-run-lifecycle';
 import { cancelDeferredThreadRun } from '@/features/thread-run/model/deferred-thread-run';
 import { clearChatDraft } from '@/shared/lib/chat-draft-storage';
 
