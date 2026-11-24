@@ -3,6 +3,12 @@ import { Column, Entity, ManyToOne, Index } from 'typeorm';
 import { ParentChunkRecord } from './parent-chunk.record';
 import { UUID } from 'crypto';
 
+// One partial HNSW index per embedding column, on the vectors cast to
+// halfvec. TypeORM cannot express an expression index, so the migration
+// AddHnswIndexesToChildChunks creates them, by the same names (AYC-2056).
+@Index('IDX_child_chunks_embedding_1024_hnsw', { synchronize: false })
+@Index('IDX_child_chunks_embedding_1536_hnsw', { synchronize: false })
+@Index('IDX_child_chunks_embedding_2560_hnsw', { synchronize: false })
 @Entity({ name: 'child_chunks' })
 export class ChildChunkRecord extends BaseRecord {
   @Index()
