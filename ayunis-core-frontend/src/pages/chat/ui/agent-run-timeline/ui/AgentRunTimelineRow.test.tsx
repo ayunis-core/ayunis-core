@@ -1,16 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createInstance } from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import de from '@/shared/locales/de/chat.json';
 import en from '@/shared/locales/en/chat.json';
-import type { TimelineStep } from '@/pages/chat/ui/agent-run-timeline/model/types';
-import AgentRunTimelineRow from './AgentRunTimelineRow';
-
-vi.mock('@/widgets/markdown', () => ({
-  PiiText: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
+import { AgentRunTimelineRow, type TimelineStep } from '@ayunis/chat/timeline';
 
 function toolStep(
   status: 'streaming' | 'invalid',

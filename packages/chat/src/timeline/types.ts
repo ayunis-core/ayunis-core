@@ -1,10 +1,12 @@
-import type { SourceProcessingStage } from '@ayunis/api-client/schemas';
 import type {
-  Message,
-  ToolUseMessageContent,
-  TextMessageContent,
-} from '@/pages/chat/model/openapi';
+  GetThreadResponseDto,
+  SourceProcessingStage,
+  ToolUseMessageContentResponseDto as ToolUseMessageContent,
+  TextMessageContentResponseDto as TextMessageContent,
+} from '@ayunis/api-client/schemas';
 import type { ToolCallDecision } from '@ayunis/api-client';
+
+type Message = GetThreadResponseDto['messages'][number];
 
 export type StepStatus = 'in_progress' | 'done' | 'error';
 

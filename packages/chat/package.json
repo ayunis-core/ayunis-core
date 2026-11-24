@@ -12,6 +12,7 @@
     "./composer.css": "./src/composer/chat-input-glow.css",
     "./history": "./src/history/index.ts",
     "./messages": "./src/messages/index.ts",
+    "./timeline": "./src/timeline/index.ts",
     "./surface": "./src/surface.ts",
     "./surface.css": "./src/content-scroll.css"
   },
@@ -23,6 +24,7 @@
   "dependencies": {
     "@ayunis/api-client": "workspace:*",
     "@ayunis/ui": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "lucide-react": "catalog:",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.2",
