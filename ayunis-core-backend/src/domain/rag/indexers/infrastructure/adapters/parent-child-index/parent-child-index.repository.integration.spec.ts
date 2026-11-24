@@ -112,6 +112,7 @@ describe('ParentChildIndexerRepository against Postgres', () => {
   let runner: QueryRunner;
   let repository: ParentChildIndexerRepository;
   let statements: string[];
+  let selects: { sql: string; parameters: unknown[] }[];
 
   const count = async (table: string): Promise<number> => {
     const rows: { count: string }[] = await runner.query(
@@ -150,6 +151,10 @@ describe('ParentChildIndexerRepository against Postgres', () => {
       embedding_1024 vector(1024),
       embedding_1536 vector(1536),
       embedding_2560 vector(2560))`);
+    // As created by the migration AddHnswIndexesToChildChunks.
+    await runner.query(`CREATE INDEX "IDX_child_chunks_embedding_1024_hnsw"
+      ON child_chunks USING hnsw ((embedding_1024::halfvec(1024)) halfvec_cosine_ops)
+      WHERE embedding_1024 IS NOT NULL`);
     repository = new ParentChildIndexerRepository(
       {} as never,
       new ParentChildIndexerMapper(),
@@ -160,9 +165,14 @@ describe('ParentChildIndexerRepository against Postgres', () => {
   beforeEach(async () => {
     await runner.query('TRUNCATE parent_chunks CASCADE');
     statements = [];
+    selects = [];
     const query = runner.query.bind(runner);
     jest.spyOn(runner, 'query').mockImplementation((sql, ...rest) => {
-      statements.push(String(sql).trimStart().split(' ')[0].toUpperCase());
+      const kind = String(sql).trimStart().split(' ')[0].toUpperCase();
+      statements.push(kind);
+      if (kind === 'SELECT') {
+        selects.push({ sql, parameters: rest[0] as unknown[] });
+      }
       return query(sql, ...rest);
     });
   });
@@ -257,6 +267,50 @@ describe('ParentChildIndexerRepository against Postgres', () => {
       ['Öffnungszeiten', Number((1 - Math.cos(0.3)).toFixed(6))],
     ]);
     expect(results[0].parentChunk.children).toHaveLength(2);
+  });
+
+  it('finds as many matches as asked through the HNSW index when the nearest chunks belong to other documents, at exact distances', async () => {
+    const statute = randomUUID();
+    const minutes = randomUUID();
+    // halfvec rounds this query vector's components by about 7e-5, which
+    // would move the distances below by about 1e-4.
+    const query = 0.8;
+    const angles = [1.8, 1.9, 2.0, 2.1, 2.2];
+    const crowd = Array.from({ length: 300 }, (_, i) => query + 0.001 * i);
+    const nearer = searchable(minutes, 'Niederschrift', crowd);
+    const scoped = angles.map((angle) =>
+      searchable(statute, `Satzung ${angle}`, [angle]),
+    );
+    await repository.saveMany([nearer, ...scoped]);
+    await runner.query('ANALYZE child_chunks');
+    // The table has no relatedDocumentId index, so a sequential scan is the
+    // only other plan.
+    await runner.query('SET enable_seqscan = off');
+
+    try {
+      const results = await repository.findByDocumentIds(
+        angled(query),
+        [statute],
+        5,
+      );
+
+      expect(results.map(({ parentChunk }) => parentChunk.content)).toEqual(
+        angles.map((angle) => `Satzung ${angle}`),
+      );
+      results.forEach(({ distance }, i) =>
+        expect(distance).toBeCloseTo(1 - Math.cos(angles[i] - query), 6),
+      );
+      const search = selects[selects.length - 1];
+      const plan: { 'QUERY PLAN': string }[] = await runner.query(
+        `EXPLAIN (COSTS OFF) ${search.sql}`,
+        search.parameters,
+      );
+      expect(plan.map((line) => line['QUERY PLAN']).join('\n')).toContain(
+        'Index Scan using "IDX_child_chunks_embedding_1024_hnsw"',
+      );
+    } finally {
+      await runner.query('RESET enable_seqscan');
+    }
   });
 
   it('writes nothing and opens no transaction for an empty list', async () => {

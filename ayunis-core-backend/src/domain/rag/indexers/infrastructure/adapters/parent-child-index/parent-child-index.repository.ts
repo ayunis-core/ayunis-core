@@ -21,6 +21,12 @@ import {
 import { ParentChildIndexerMapper } from './infrastructure/persistence/mappers/parent-child-indexer.mapper';
 
 const DEFAULT_LIMIT = 10;
+// halfvec, which the HNSW indexes store, rounds a cosine distance by about
+// 1e-4: enough to swap near-equal neighbours at the cut-off. Ranking a few
+// times the requested matches by it and keeping the closest by exact
+// distance returns the exact nearest ones whenever the scope is searched
+// exhaustively (AYC-2056).
+const CANDIDATES_PER_MATCH = 4;
 const EMBEDDING_COLUMNS: Record<number, string> = {
   1024: 'child.embedding_1024',
   1536: 'child.embedding_1536',
@@ -226,25 +232,46 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
   // the nearest few are loaded with their parents afterwards. The document
   // IDs are one array parameter: an IN list caps a scope at the 65,535 bind
   // parameters of a statement.
+  //
+  // Candidates are ordered by the halfvec expression of the column's HNSW
+  // index, so Postgres can choose between that index (large scopes) and the
+  // relatedDocumentId index with a sort (small scopes). Connections run with
+  // hnsw.iterative_scan (typeorm.config), so a scan through the index keeps
+  // going until it has found enough chunks of the scope. The distance
+  // returned and the final order use the full-precision vectors (AYC-2056).
   private nearestChildrenQuery(
     embeddingColumn: string,
     queryVector: number[],
     relatedDocumentIds: UUID[],
     limit: number,
   ): SelectQueryBuilder<ObjectLiteral> {
-    const distance = `${embeddingColumn} <=> :queryVector::vector`;
-    return this.manager
+    const halfvec = `halfvec(${queryVector.length})`;
+    const candidates = this.manager
       .createQueryBuilder()
       .select('child.id', 'id')
       .addSelect('child.parentId', 'parentId')
-      .addSelect(distance, 'distance')
+      .addSelect(embeddingColumn, 'embedding')
       .from(ChildChunkRecord, 'child')
       .where('child.relatedDocumentId = ANY(:documentIds)', {
         documentIds: relatedDocumentIds,
       })
       .andWhere(`${embeddingColumn} IS NOT NULL`)
-      .orderBy(distance, 'ASC')
+      // Postgres types the parameter by its first cast; cast straight to
+      // halfvec here, the exact distance below would use the rounded vector.
+      .orderBy(
+        `${embeddingColumn}::${halfvec} <=> :queryVector::vector::${halfvec}`,
+        'ASC',
+      )
       .setParameter('queryVector', JSON.stringify(queryVector))
+      .limit(limit * CANDIDATES_PER_MATCH);
+    return this.manager
+      .createQueryBuilder()
+      .select('candidate.id', 'id')
+      .addSelect('candidate."parentId"', 'parentId')
+      .addSelect('candidate.embedding <=> :queryVector::vector', 'distance')
+      .from(`(${candidates.getQuery()})`, 'candidate')
+      .setParameters(candidates.getParameters())
+      .orderBy('distance', 'ASC')
       .limit(limit);
   }
 

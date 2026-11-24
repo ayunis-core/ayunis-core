@@ -28,6 +28,11 @@ const baseConfig: DataSourceOptions = {
       process.env.POSTGRES_IDLE_TX_TIMEOUT_MS,
       60_000,
     ),
+    // Without it a scan of the HNSW indexes on child_chunks stops after
+    // hnsw.ef_search candidates, so a search whose nearest chunks belong
+    // mostly to documents outside its scope returns fewer matches than
+    // asked, or none (AYC-2056). Only HNSW scans read it.
+    options: '-c hnsw.iterative_scan=relaxed_order',
   },
 };
 
