@@ -1,7 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import type { TFunction } from 'i18next';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
-import { getToolActionLabel } from './get-tool-action-label';
+import { getToolActionLabel as getTimelineActionLabel } from '@ayunis/chat/timeline';
+import { chatToolCards } from './tool-card-registrations';
+
+function getToolActionLabel(
+  ...[toolUse, t]: Parameters<typeof getTimelineActionLabel>
+) {
+  return getTimelineActionLabel(toolUse, t, chatToolCards);
+}
 
 const t = ((key: string) => key) as unknown as TFunction;
 

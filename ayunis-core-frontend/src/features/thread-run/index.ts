@@ -1,6 +1,6 @@
 export { useDeleteThread } from './api/useDeleteThread';
 export { stopThreadRun } from './api/stopThreadRun';
-export { isThreadRunStopped } from '@ayunis/chat/runs';
+export { isThreadRunStopped } from '@/features/thread-run/model/thread-run-lifecycle';
 export {
   activeThreadRunsQueryKey,
   expectActiveThreadRun,
@@ -15,7 +15,7 @@ export {
   isThreadRunActive,
   registerActiveThreadRun,
   unregisterActiveThreadRun,
-} from '@ayunis/chat/runs';
+} from '@/features/thread-run/model/thread-run-lifecycle';
 export {
   cancelStartedThreadRun,
   startThreadRun,
@@ -30,3 +30,8 @@ export {
   takeInterruptedThreadRunText,
   useIsThreadRunDeferred,
 } from './model/deferred-thread-run';
+export {
+  resetThreadRunSession,
+  setThreadRunPrincipal,
+  threadRunLifecycle,
+} from './model/thread-run-lifecycle';

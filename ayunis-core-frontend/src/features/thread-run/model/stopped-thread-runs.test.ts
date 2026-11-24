@@ -3,7 +3,7 @@ import {
   forgetStoppedThreadRunsExcept,
   isThreadRunStopped,
   markThreadRunStopped,
-} from '@ayunis/chat/runs';
+} from '@/features/thread-run/model/thread-run-lifecycle';
 
 const threadId = '00000000-0000-0000-0000-000000000001';
 const otherThreadId = '00000000-0000-0000-0000-000000000002';

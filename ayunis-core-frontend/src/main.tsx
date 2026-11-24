@@ -1,3 +1,4 @@
+import { resetThreadRunSession } from '@/features/thread-run';
 import { bootPage } from '@/app/boot-page';
 import { recoverableErrorReport, reportError } from '@/shared/lib/appsignal';
 import { StrictMode } from 'react';
@@ -35,6 +36,7 @@ function mountWeb(): void {
   configureAppApi(paneSession?.transport);
 
   const queryClient = createAppQueryClient();
+  paneSession?.onEnd(() => resetThreadRunSession(queryClient));
   const router = createAppRouter(queryClient, embedded);
 
   if (openPanel) {

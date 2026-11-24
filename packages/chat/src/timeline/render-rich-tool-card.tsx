@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
 import type { ToolCallDecision } from '@ayunis/api-client';
 import type { ToolCardProps } from '@ayunis/chat/tool-cards';
-import ToolCallConfirmationCard from '@/pages/chat/ui/agent-run-timeline/ui/ToolCallConfirmationCard';
-import { chatToolCards } from './tool-card-registrations';
+import ToolCallConfirmationCard from './ToolCallConfirmationCard';
+import type { ToolCards } from './tool-card-types';
 
 interface RenderRichToolCardOptions extends ToolCardProps {
   readonly decision?: ToolCallDecision;
 }
 
 // eslint-disable-next-line sonarjs/function-return-type -- absence of a card is represented by null
-export function renderRichToolCard({
-  decision,
-  ...props
-}: RenderRichToolCardOptions): ReactNode {
+export function renderRichToolCard(
+  toolCards: ToolCards,
+  { decision, ...props }: RenderRichToolCardOptions,
+): ReactNode {
   const { toolUse, result } = props;
   if (toolUse.requiresConfirmation) {
     return (
@@ -24,6 +24,6 @@ export function renderRichToolCard({
     );
   }
 
-  const Card = chatToolCards.get(toolUse.name)?.render;
+  const Card = toolCards.get(toolUse.name)?.render;
   return Card ? <Card {...props} /> : null;
 }

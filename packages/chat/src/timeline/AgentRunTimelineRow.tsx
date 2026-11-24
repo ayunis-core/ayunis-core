@@ -13,13 +13,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@ayunis/ui/components/collapsible';
-import { PiiText } from '@/widgets/markdown';
+import { PiiText } from '@ayunis/chat/markdown';
 import type {
   TimelineStep,
+  ToolTimelineStep,
   StepStatus,
   SourceProcessingTimelineStep,
-} from '@/pages/chat/ui/agent-run-timeline/model/types';
-import { getToolActionLabel } from '@/pages/chat/ui/agent-run-timeline/lib/get-tool-action-label';
+} from './types';
+import { getToolActionLabel } from './get-tool-action-label';
+
+import { useTimelinePresentation } from './timeline-presentation';
+import type { ToolCards } from './tool-card-types';
 
 interface AgentRunTimelineRowProps {
   step: TimelineStep;
@@ -32,43 +36,15 @@ export default function AgentRunTimelineRow({
   const [userOpen, setUserOpen] = useState<boolean | null>(null);
   const open =
     userOpen ?? (step.kind === 'thinking' && step.status === 'in_progress');
-  const { label, hasDetails, details, expandable } = getStepView(step, t);
+  const { toolCards } = useTimelinePresentation();
+  const { label, hasDetails, details, expandable } = getStepView(
+    step,
+    t,
+    toolCards,
+  );
 
-  const toolUse = step.kind === 'tool' ? step.toolUse : undefined;
-  const integration = toolUse?.integration;
   const header = (
-    <div
-      className="flex items-center gap-2 py-1 text-sm text-muted-foreground"
-      data-testid={
-        step.kind === 'source_processing'
-          ? 'attachment-progress'
-          : toolUse && 'agent-run-tool-step'
-      }
-      data-stage={step.kind === 'source_processing' ? step.stage : undefined}
-      data-tool-name={toolUse?.name}
-      data-status={step.status}
-    >
-      {step.kind === 'skill_instruction' ? (
-        <Sparkles className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-      ) : (
-        <StatusIcon
-          status={step.status}
-          logoUrl={integration?.logoUrl ?? undefined}
-          logoAlt={integration?.name}
-        />
-      )}
-      <span className={cn(step.status === 'in_progress' && 'animate-pulse')}>
-        {label}
-      </span>
-      {expandable && (
-        <ChevronRight
-          className={cn(
-            'h-3.5 w-3.5 flex-shrink-0 transition-transform',
-            open && 'rotate-90',
-          )}
-        />
-      )}
-    </div>
+    <StepHeader step={step} label={label} open={open} expandable={expandable} />
   );
   const hint = step.kind === 'tool' && step.status === 'error' && (
     <p className="ml-6 mb-1 text-xs text-muted-foreground">
@@ -99,6 +75,61 @@ export default function AgentRunTimelineRow({
         <div className="ml-6 mb-1 flex flex-col gap-2">{details}</div>
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+function StepHeader({
+  step,
+  label,
+  open,
+  expandable,
+}: Readonly<{
+  step: TimelineStep;
+  label: string;
+  open: boolean;
+  expandable: boolean;
+}>) {
+  const toolUse = step.kind === 'tool' ? step.toolUse : undefined;
+  return (
+    <div
+      className="flex items-center gap-2 py-1 text-sm text-muted-foreground"
+      data-testid={
+        step.kind === 'source_processing'
+          ? 'attachment-progress'
+          : toolUse && 'agent-run-tool-step'
+      }
+      data-stage={step.kind === 'source_processing' ? step.stage : undefined}
+      data-tool-name={toolUse?.name}
+      data-status={step.status}
+    >
+      <StepIcon step={step} />
+      <span className={cn(step.status === 'in_progress' && 'animate-pulse')}>
+        {label}
+      </span>
+      {expandable && (
+        <ChevronRight
+          className={cn(
+            'h-3.5 w-3.5 flex-shrink-0 transition-transform',
+            open && 'rotate-90',
+          )}
+        />
+      )}
+    </div>
+  );
+}
+
+function StepIcon({ step }: Readonly<{ step: TimelineStep }>) {
+  if (step.kind === 'skill_instruction') {
+    return <Sparkles className="h-4 w-4 flex-shrink-0 text-muted-foreground" />;
+  }
+  const integration =
+    step.kind === 'tool' ? step.toolUse.integration : undefined;
+  return (
+    <StatusIcon
+      status={step.status}
+      logoUrl={integration?.logoUrl ?? undefined}
+      logoAlt={integration?.name}
+    />
   );
 }
 
@@ -139,6 +170,7 @@ interface StepView {
 function getStepView(
   step: TimelineStep,
   t: ReturnType<typeof useTranslation>['t'],
+  toolCards: ToolCards,
 ): StepView {
   if (step.kind === 'source_processing') return sourceProcessingView(step, t);
 
@@ -171,49 +203,62 @@ function getStepView(
     };
   }
 
-  const action = getToolActionLabel(step.toolUse, t);
-  let label = action.target ? `${action.verb}: ${action.target}` : action.verb;
-  if (step.toolUse.name.length === 0) {
-    label = t('chat.timeline.preparingToolCall');
-  }
-  if (step.status === 'error') {
-    label = t('chat.timeline.invalidToolCall');
-  }
+  return toolStepView(step, t, toolCards);
+}
+
+function toolStepLabel(
+  step: ToolTimelineStep,
+  t: ReturnType<typeof useTranslation>['t'],
+  toolCards: ToolCards,
+): string {
+  if (step.status === 'error') return t('chat.timeline.invalidToolCall');
+  if (step.toolUse.name.length === 0)
+    return t('chat.timeline.preparingToolCall');
+  const action = getToolActionLabel(step.toolUse, t, toolCards);
+  return action.target ? `${action.verb}: ${action.target}` : action.verb;
+}
+
+function toolStepView(
+  step: ToolTimelineStep,
+  t: ReturnType<typeof useTranslation>['t'],
+  toolCards: ToolCards,
+): StepView {
   const params = step.toolUse.params as Record<string, unknown> | undefined;
   const hasParams = params !== undefined && Object.keys(params).length > 0;
   const streamedArguments = step.toolUse.stream?.argumentsJson;
-  const hasStreamedArguments =
-    streamedArguments !== undefined && streamedArguments.length > 0;
-  const hasResult = typeof step.result === 'string' && step.result.length > 0;
-  const hasDetails = hasStreamedArguments || hasParams || hasResult;
+  const input =
+    streamedArguments ||
+    (hasParams ? JSON.stringify(params, null, 2) : undefined);
+  const result = step.result || undefined;
+  const hasDetails = input !== undefined || result !== undefined;
   return {
-    label,
+    label: toolStepLabel(step, t, toolCards),
     hasDetails,
     expandable: hasDetails,
-    details: (
-      <>
-        {hasStreamedArguments && (
-          <div className="max-h-32 overflow-y-auto">
-            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-              {streamedArguments}
-            </pre>
-          </div>
-        )}
-        {!hasStreamedArguments && hasParams && (
-          <div className="max-h-32 overflow-y-auto">
-            <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-              {JSON.stringify(step.toolUse.params, null, 2)}
-            </pre>
-          </div>
-        )}
-        {hasResult && (
-          <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
-            <PiiText>{step.result ?? ''}</PiiText>
-          </div>
-        )}
-      </>
-    ),
+    details: <ToolStepDetails input={input} result={result} />,
   };
+}
+
+function ToolStepDetails({
+  input,
+  result,
+}: Readonly<{ input?: string; result?: string }>) {
+  return (
+    <>
+      {input && (
+        <div className="max-h-32 overflow-y-auto">
+          <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
+            {input}
+          </pre>
+        </div>
+      )}
+      {result && (
+        <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+          <PiiText>{result}</PiiText>
+        </div>
+      )}
+    </>
+  );
 }
 
 interface ThinkingTranscriptProps {

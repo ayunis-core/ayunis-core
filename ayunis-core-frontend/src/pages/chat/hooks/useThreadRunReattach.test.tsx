@@ -2,9 +2,9 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   forgetStoppedThreadRunsExcept,
-  isThreadRunStopped,
   markThreadRunStopped,
-} from '@ayunis/chat/runs';
+  threadRunLifecycle,
+} from '@/features/thread-run/model/thread-run-lifecycle';
 import type { ActiveThreadRunResponseDto } from '@ayunis/api-client/schemas';
 import { useThreadRunReattach } from './useThreadRunReattach';
 
@@ -19,8 +19,9 @@ const activeRuns = vi.hoisted(() => ({
 }));
 vi.mock('@/features/thread-run', () => ({
   useActiveThreadRuns: () => activeRuns.current,
-  isThreadRunActive: () => false,
-  isThreadRunStopped: (id: string) => isThreadRunStopped(id),
+  get threadRunLifecycle() {
+    return threadRunLifecycle;
+  },
 }));
 
 function listRuns(runs: ActiveThreadRunResponseDto[], dataUpdatedAt: number) {

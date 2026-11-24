@@ -1,15 +1,8 @@
 export { default as AgentRunTimeline } from './ui/AgentRunTimeline';
-export { groupMessagesIntoRuns } from './lib/group-messages-into-runs';
-export type {
-  RenderUnit,
-  UserUnit,
-  AgentRunUnit,
-  AgentRunBlock,
-  TimelineStep,
-  SourceProcessingTimelineStep,
-  ToolTimelineStep,
-} from './model/types';
 export {
   ToolCallConfirmationContext,
   type ToolCallConfirmation,
-} from './model/tool-call-confirmation';
+  type RenderUnit,
+  type AgentRunUnit,
+  type SourceProcessingTimelineStep,
+} from '@ayunis/chat/timeline';

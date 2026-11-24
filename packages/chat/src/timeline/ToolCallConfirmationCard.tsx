@@ -14,10 +14,10 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@ayunis/ui/components/item';
-import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@ayunis/api-client/schemas';
 import type { ToolCallDecision } from '@ayunis/api-client';
-import { upstreamToolName } from '@/pages/chat/lib/format-tool-name';
-import { useToolCallConfirmation } from '@/pages/chat/ui/agent-run-timeline/model/tool-call-confirmation';
+import { upstreamToolName } from './format-tool-name';
+import { useToolCallConfirmation } from './tool-call-confirmation';
 
 interface ToolCallConfirmationCardProps {
   toolUse: ToolUseMessageContent;
@@ -32,10 +32,10 @@ export default function ToolCallConfirmationCard({
   decision,
 }: Readonly<ToolCallConfirmationCardProps>) {
   const { canDecide, decisionFor } = useToolCallConfirmation();
-  const unsent = decisionFor(toolUse.id);
-  const unsentDecision = unsent?.approved ? 'confirmed' : 'rejected';
-  const shownDecision = decision ?? (unsent ? unsentDecision : undefined);
-  const isPending = result === undefined && shownDecision === undefined;
+  const shownDecision =
+    decision ?? pendingDecision(decisionFor(toolUse.id)?.approved);
+  const state =
+    shownDecision ?? (result === undefined ? 'pending' : 'answered');
   const integration = toolUse.integration;
 
   return (
@@ -44,24 +44,13 @@ export default function ToolCallConfirmationCard({
       className="my-2 w-full"
       data-testid="tool-confirmation"
       data-tool-call-id={toolUse.id}
-      data-state={shownDecision ?? (isPending ? 'pending' : 'answered')}
+      data-state={state}
     >
       <ItemMedia variant="icon">
-        {integration?.logoUrl ? (
-          <img
-            src={integration.logoUrl}
-            alt=""
-            className="size-4 rounded-sm object-contain"
-          />
-        ) : (
-          <Plug />
-        )}
+        <IntegrationIcon logoUrl={integration?.logoUrl ?? undefined} />
       </ItemMedia>
       <ItemContent className="min-w-0">
-        {integration && <ItemDescription>{integration.name}</ItemDescription>}
-        <ItemTitle className="font-mono">
-          {upstreamToolName(toolUse.name)}
-        </ItemTitle>
+        <ToolIdentity toolUse={toolUse} />
       </ItemContent>
       {shownDecision && (
         <ItemActions>
@@ -71,8 +60,40 @@ export default function ToolCallConfirmationCard({
       <pre className="basis-full max-h-48 overflow-auto rounded-md bg-muted/50 p-2 text-xs font-mono whitespace-pre-wrap break-words">
         {JSON.stringify(toolUse.params, null, 2)}
       </pre>
-      {isPending && canDecide && <DecisionActions toolCallId={toolUse.id} />}
+      {state === 'pending' && canDecide && (
+        <DecisionActions toolCallId={toolUse.id} />
+      )}
     </Item>
+  );
+}
+
+function ToolIdentity({
+  toolUse,
+}: Readonly<{ toolUse: ToolUseMessageContent }>) {
+  return (
+    <>
+      {toolUse.integration && (
+        <ItemDescription>{toolUse.integration.name}</ItemDescription>
+      )}
+      <ItemTitle className="font-mono">
+        {upstreamToolName(toolUse.name)}
+      </ItemTitle>
+    </>
+  );
+}
+
+function pendingDecision(
+  approved: boolean | undefined,
+): ToolCallDecision | undefined {
+  if (approved === undefined) return undefined;
+  return approved ? 'confirmed' : 'rejected';
+}
+
+function IntegrationIcon({ logoUrl }: Readonly<{ logoUrl?: string }>) {
+  return logoUrl ? (
+    <img src={logoUrl} alt="" className="size-4 rounded-sm object-contain" />
+  ) : (
+    <Plug />
   );
 }
 
