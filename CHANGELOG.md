@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.83.1](https://github.com/ayunis-core/ayunis-core/compare/v2.83.0...v2.83.1) (2026-11-24)
+
+
+### Performance Improvements
+
+* **rag:** search large knowledge bases through hnsw halfvec indexes (AYC-2056) ([#2517](https://github.com/ayunis-core/ayunis-core/issues/2517)) ([a38d440](https://github.com/ayunis-core/ayunis-core/commit/a38d440cc75e60ef14d46cb57c84c3f591c6f88d))
+
 ## [2.83.0](https://github.com/ayunis-core/ayunis-core/compare/v2.82.0...v2.83.0) (2026-11-24)
 
 
