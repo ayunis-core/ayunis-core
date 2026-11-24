@@ -1,5 +1,6 @@
 import { turnContext } from 'src/domain/runs/testing/runtime-hook-context.fixture';
 import type { RetrieveUrlUseCase } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.use-case';
+import type { RetrieveUrlCommand } from 'src/domain/retrievers/url-retrievers/application/use-cases/retrieve-url/retrieve-url.command';
 import { UrlRetrieverResult } from 'src/domain/retrievers/url-retrievers/domain/url-retriever-result.entity';
 import { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
 import { WebsiteContentToolHandler } from './website-content-tool.handler';
@@ -10,6 +11,9 @@ import {
 } from '@ayunis/agent-runtime';
 import { ContextBudgetHookFactory } from 'src/domain/runs/application/agent-runtime/hooks/context-budget-hook.factory';
 import toolsConfig from 'src/config/tools.config';
+import { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
+import { UrlRetrieverDomainNotAllowedError } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 
 const context = {
   threadId: '123e4567-e89b-12d3-a456-426614174000',
@@ -185,6 +189,33 @@ describe('WebsiteContentToolHandler', () => {
     expect(result.url).toBe('https://www.stadt.example.de/records/');
     expect(result.nextPage.url).toBe('https://stadt.example.de/records');
     expect(result.linksPage.url).toBe('https://stadt.example.de/records');
+  });
+
+  it("limits the retrieval to the tool's allowed domains and tells the model which ones they are", async () => {
+    const allowedDomains = new AllowedDomains(['nrw.de', 'bund.de']);
+    retrieveUrl.mockImplementation((command: RetrieveUrlCommand) => {
+      if (command.allowedDomains?.allowsUrl(command.url) !== false) {
+        return Promise.resolve(
+          new UrlRetrieverResult('Gesetzblatt', command.url, 'GV. NRW.'),
+        );
+      }
+      return Promise.reject(
+        new UrlRetrieverDomainNotAllowedError(command.url, allowedDomains),
+      );
+    });
+    const limitedTool = new WebsiteContentTool(allowedDomains);
+
+    const error = await handler
+      .execute({
+        tool: limitedTool,
+        input: { url: 'https://evil.example.com/gv' },
+        context,
+      })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ToolExecutionFailedError);
+    expect(error).toMatchObject({ exposeToLLM: true });
+    expect((error as Error).message).toContain('nrw.de, bund.de');
   });
 
   it('returns the final content page without truncation', async () => {

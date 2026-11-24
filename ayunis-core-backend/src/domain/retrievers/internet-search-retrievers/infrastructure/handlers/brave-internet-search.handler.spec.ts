@@ -99,6 +99,57 @@ describe('BraveInternetSearchHandler', () => {
     expect(result.extraSnippets).toBeUndefined();
   });
 
+  describe('with allowed domains', () => {
+    const emptyResponse = { json: async () => ({}) } as Response;
+    const queryOf = (fetchMock: jest.SpyInstance) =>
+      new URL(String(fetchMock.mock.calls[0][0] as string)).searchParams.get(
+        'q',
+      );
+
+    it('restricts the query to the allowed domains with site: operators joined by OR', async () => {
+      const fetchMock = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(emptyResponse);
+
+      await handler.search('Gesetzblatt 2026', undefined, [
+        'nrw.de',
+        'bund.de',
+      ]);
+
+      expect(queryOf(fetchMock)).toBe(
+        'Gesetzblatt 2026 site:nrw.de OR site:bund.de',
+      );
+    });
+
+    it('sends the plain query when the restriction would exceed the 600 characters Brave accepts', async () => {
+      const fetchMock = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(emptyResponse);
+      const longDomains = Array.from(
+        { length: 20 },
+        (_, i) => `ein-sehr-langer-kommunaler-domainname-${i}.de`,
+      );
+
+      await handler.search('Gesetzblatt 2026', undefined, longDomains);
+
+      expect(queryOf(fetchMock)).toBe('Gesetzblatt 2026');
+    });
+  });
+
+  it('encodes reserved characters in the query', async () => {
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValue({ json: async () => ({}) } as Response);
+
+    await handler.search('Bauen & Wohnen #Förderung');
+
+    expect(
+      new URL(String(fetchMock.mock.calls[0][0] as string)).searchParams.get(
+        'q',
+      ),
+    ).toBe('Bauen & Wohnen #Förderung');
+  });
+
   it('aborts the request when the caller cancels', async () => {
     const controller = new AbortController();
     const fetchMock = jest

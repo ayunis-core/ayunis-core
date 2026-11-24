@@ -1,7 +1,8 @@
 import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
-import { ToolType } from '../value-objects/tool-type.enum';
+import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
-import { Tool } from '../tool.entity';
+import { Tool } from 'src/domain/tools/domain/tool.entity';
+import type { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 
 const internetSearchToolParameters = {
   type: 'object' as const,
@@ -17,7 +18,8 @@ type InternetSearchToolParameters = FromSchema<
 >;
 
 export class InternetSearchTool extends Tool {
-  constructor() {
+  /** Absent: any domain. */
+  constructor(public readonly allowedDomains?: AllowedDomains) {
     super({
       name: ToolType.INTERNET_SEARCH,
       description: 'Search the internet for current information.',

@@ -5,9 +5,13 @@ import type {
   RunCapability,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
 import { routineOf } from 'src/domain/runs/application/run-capabilities/routine-of.helper';
+import { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 import { InternetCapability } from './internet.capability';
 
-/** The chat's web tools, only for routines with internet access turned on. */
+/**
+ * The chat's web tools, only for routines with internet access turned on, and
+ * limited to the routine's allowed domains when it has them.
+ */
 @Injectable()
 export class RoutineInternetCapability implements RunCapability {
   constructor(private readonly internetCapability: InternetCapability) {}
@@ -15,7 +19,11 @@ export class RoutineInternetCapability implements RunCapability {
   async contribute(
     context: RunCapabilityContext,
   ): Promise<CapabilityContribution> {
-    if (!routineOf(context).internetEnabled) return {};
-    return this.internetCapability.contribute(context);
+    const routine = routineOf(context);
+    if (!routine.internetEnabled) return {};
+    return this.internetCapability.contributeWebTools(
+      context,
+      routine.allowedDomains && new AllowedDomains(routine.allowedDomains),
+    );
   }
 }

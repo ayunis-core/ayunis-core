@@ -26,7 +26,11 @@ export class InternetSearchToolHandler extends ToolExecutionHandler {
     try {
       const validatedInput = tool.validateParams(input);
       const results = await this.searchWebUseCase.execute(
-        new SearchWebCommand(validatedInput.query, context.signal),
+        new SearchWebCommand(
+          validatedInput.query,
+          context.signal,
+          tool.allowedDomains,
+        ),
       );
       return JSON.stringify(results);
     } catch (error) {

@@ -9,6 +9,16 @@ import { SearchWebCommand } from './search-web.command';
 import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-retrievers/domain/value-objects/internet-search-result-type.enum';
+import { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
+
+function aResult(url: string): InternetSearchResult {
+  return new InternetSearchResult({
+    title: 'Gesetz- und Verordnungsblatt',
+    description: 'Verkündungen',
+    url,
+    type: InternetSearchResultType.WEB,
+  });
+}
 
 describe('SearchWebUseCase', () => {
   let logger: LoggerMock;
@@ -73,5 +83,44 @@ describe('SearchWebUseCase', () => {
       'Abfallkalender Musterstadt',
       controller.signal,
     );
+  });
+
+  describe('with allowed domains', () => {
+    const allowedDomains = new AllowedDomains(['nrw.de', 'bund.de']);
+
+    it('restricts the provider search to the allowed domains', async () => {
+      jest.spyOn(mockHandler, 'search').mockResolvedValue([]);
+
+      await useCase.execute(
+        new SearchWebCommand('Gesetzblatt 2026', undefined, allowedDomains),
+      );
+
+      expect(mockHandler.search).toHaveBeenCalledWith(
+        'Gesetzblatt 2026',
+        undefined,
+        ['nrw.de', 'bund.de'],
+      );
+    });
+
+    it('drops results outside the allowed domains, whatever the provider returns', async () => {
+      jest
+        .spyOn(mockHandler, 'search')
+        .mockResolvedValue([
+          aResult('https://recht.nrw.de/gv/2026'),
+          aResult('https://evilnrw.de/gv'),
+          aResult('https://nrw.de.evil.example.com/gv'),
+          aResult('https://www.recht.bund.de/bgbl'),
+          aResult('not a url'),
+        ]);
+
+      const results = await useCase.execute(
+        new SearchWebCommand('Gesetzblatt 2026', undefined, allowedDomains),
+      );
+
+      expect(results.map((result) => result.url)).toEqual([
+        'https://recht.nrw.de/gv/2026',
+        'https://www.recht.bund.de/bgbl',
+      ]);
+    });
   });
 });

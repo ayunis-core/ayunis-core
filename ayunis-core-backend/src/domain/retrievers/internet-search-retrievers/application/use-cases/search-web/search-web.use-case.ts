@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { InternetSearchHandler } from 'src/domain/retrievers/internet-search-retrievers/application/ports/internet-search.handler';
 import { InternetSearchResult } from 'src/domain/retrievers/internet-search-retrievers/domain/internet-search-result.entity';
 import { SearchWebCommand } from './search-web.command';
-import { ApplicationError } from 'src/common/errors/base.error';
 import { UnexpectedInternetSearchError } from 'src/domain/retrievers/internet-search-retrievers/application/internet-search.errors';
 
 @Injectable()
@@ -11,20 +11,18 @@ export class SearchWebUseCase {
 
   constructor(private readonly internetSearchHandler: InternetSearchHandler) {}
 
+  @HandleUnexpectedErrors(UnexpectedInternetSearchError)
   async execute(command: SearchWebCommand): Promise<InternetSearchResult[]> {
-    try {
-      this.logger.debug({ input: command.query }, 'Searching web');
-
-      return this.internetSearchHandler.search(command.query, command.signal);
-    } catch (error) {
-      if (error instanceof ApplicationError) {
-        throw error;
-      }
-      this.logger.error(
-        { err: error as Error, input: command.query },
-        'Unexpected error searching web',
-      );
-      throw new UnexpectedInternetSearchError(error as Error);
+    this.logger.debug({ input: command.query }, 'Searching web');
+    const { query, signal, allowedDomains } = command;
+    if (!allowedDomains) {
+      return this.internetSearchHandler.search(query, signal);
     }
+    const results = await this.internetSearchHandler.search(
+      query,
+      signal,
+      allowedDomains.entries,
+    );
+    return results.filter((result) => allowedDomains.allowsUrl(result.url));
   }
 }

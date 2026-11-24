@@ -32,6 +32,9 @@ type BraveSearchErrorResult = {
   };
 };
 
+// Brave rejects longer queries with a 422.
+const MAX_QUERY_LENGTH = 600;
+
 @Injectable()
 export class BraveInternetSearchHandler implements InternetSearchHandler {
   private readonly logger = new Logger(BraveInternetSearchHandler.name);
@@ -41,10 +44,13 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
   async search(
     query: string,
     signal?: AbortSignal,
+    allowedDomains?: readonly string[],
   ): Promise<InternetSearchResult[]> {
     this.logger.debug({ input: query }, 'Using Brave internet search handler');
     try {
-      const [url, init] = this.buildRequest(query);
+      const [url, init] = this.buildRequest(
+        restrictToDomains(query, allowedDomains),
+      );
       const response = await fetch(url, {
         ...init,
         signal: searchRequestSignal(signal),
@@ -78,7 +84,7 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
       throw new Error('Brave search URL or API key is not configured');
     }
 
-    const urlFriendlyQuery = encodeURI(query);
+    const urlFriendlyQuery = encodeURIComponent(query);
     const headers = {
       'x-subscription-token': braveSearchApiKey,
       Accept: 'application/json',
@@ -124,4 +130,19 @@ export class BraveInternetSearchHandler implements InternetSearchHandler {
       (result) => result !== null,
     );
   }
+}
+
+/**
+ * Brave documents `site:` for a domain and its subdomains, and `OR` to combine
+ * several (search-operators reference). The caller filters the results either
+ * way, so a restriction too long for Brave is left out rather than failing.
+ */
+function restrictToDomains(
+  query: string,
+  allowedDomains: readonly string[] | undefined,
+): string {
+  if (!allowedDomains?.length) return query;
+  const sites = allowedDomains.map((domain) => `site:${domain}`).join(' OR ');
+  const restricted = `${query} ${sites}`;
+  return restricted.length <= MAX_QUERY_LENGTH ? restricted : query;
 }
