@@ -15,7 +15,8 @@ export class ItemChangedError extends Error {}
  * Writing takes several Office calls; the user may open another mail in a
  * pinned pane meanwhile, and the draft must not follow them there.
  */
-function ensureStillOpen(item: ComposeItem): void {
+function ensureStillOpen(item: ComposeItem, signal?: AbortSignal): void {
+  signal?.throwIfAborted();
   if (currentOutlookMailboxItem() !== item) throw new ItemChangedError();
 }
 
@@ -118,8 +119,9 @@ async function prependDraftBlock(
   item: ComposeItem,
   html: string,
   blockId = `ayunis-draft-${crypto.randomUUID()}`,
+  signal?: AbortSignal,
 ): Promise<'inserted'> {
-  ensureStillOpen(item);
+  ensureStillOpen(item, signal);
   await officeAsync<void>((callback) =>
     item.body.prependAsync(
       `<div id="${blockId}">${html}</div>`,
@@ -135,6 +137,7 @@ async function prependTextDraft(
   item: ComposeItem,
   body: string,
   callId?: string,
+  signal?: AbortSignal,
 ): Promise<'inserted'> {
   const text = Office.CoercionType.Text;
   const draft = `${body}\n\n`;
@@ -145,11 +148,11 @@ async function prependTextDraft(
     if (
       current.replace(/\r\n/g, '\n').startsWith(draft.replace(/\r\n/g, '\n'))
     ) {
-      ensureStillOpen(item);
+      ensureStillOpen(item, signal);
       return 'inserted';
     }
   }
-  ensureStillOpen(item);
+  ensureStillOpen(item, signal);
   await officeAsync<void>((callback) =>
     item.body.prependAsync(draft, bodyOptions(text), callback),
   );
@@ -160,23 +163,24 @@ async function writeDraft(
   item: ComposeItem,
   body: string,
   callId?: string,
+  signal?: AbortSignal,
 ): Promise<'inserted' | 'replaced'> {
   const type = await officeAsync<Office.CoercionType>((callback) =>
     item.body.getTypeAsync(callback),
   );
   const html = Office.CoercionType.Html;
-  if (type !== html) return prependTextDraft(item, body, callId);
+  if (type !== html) return prependTextDraft(item, body, callId, signal);
 
   const previousBlockId = draftBlockIds.get(item);
   const nextBlockId = draftBlockId(callId);
   const escapedBody = toHtml(body);
   if (!previousBlockId && !nextBlockId)
-    return prependDraftBlock(item, escapedBody);
+    return prependDraftBlock(item, escapedBody, undefined, signal);
 
   const current = await officeAsync<string>((callback) =>
     item.body.getAsync(html, callback),
   );
-  ensureStillOpen(item);
+  ensureStillOpen(item, signal);
   if (nextBlockId) {
     const existing = findDraftBlock(current, nextBlockId);
     if (existing && existing.index < quotedThreadStart(current)) {
@@ -188,7 +192,7 @@ async function writeDraft(
     ? replaceDraftBlock(current, previousBlockId, escapedBody, nextBlockId)
     : null;
   if (revised === null)
-    return prependDraftBlock(item, escapedBody, nextBlockId);
+    return prependDraftBlock(item, escapedBody, nextBlockId, signal);
   await officeAsync<void>((callback) =>
     item.body.setAsync(revised, bodyOptions(html), callback),
   );
@@ -201,10 +205,15 @@ async function writeDraftAndSubject(
   body: string,
   subject: string,
   callId?: string,
+  signal?: AbortSignal,
 ): Promise<OutlookWriteAction> {
-  const action = await writeDraft(item, body, callId);
+  const action = await writeDraft(item, body, callId, signal);
   // The draft is written; a mail opened since must not get its subject.
-  if (subject !== '' && currentOutlookMailboxItem() === item) {
+  if (
+    subject !== '' &&
+    !signal?.aborted &&
+    currentOutlookMailboxItem() === item
+  ) {
     await officeAsync<void>((callback) =>
       item.subject.setAsync(subject, callback),
     );
@@ -216,6 +225,7 @@ export async function draftEmail(
   outlookItem: OutlookItem,
   params: Record<string, unknown>,
   callId?: string,
+  signal?: AbortSignal,
 ): Promise<OutlookWriteAction> {
   if (outlookItem.mode === 'read') throw new NoComposeItemError();
   return writeDraftAndSubject(
@@ -223,6 +233,7 @@ export async function draftEmail(
     textParam(params.body),
     textParam(params.subject),
     callId,
+    signal,
   );
 }
 
@@ -230,16 +241,19 @@ export async function moveEmailToComposer(
   outlookItem: OutlookItem,
   params: Record<string, unknown>,
   callId?: string,
+  signal?: AbortSignal,
 ): Promise<OutlookWriteAction> {
   if (outlookItem.mode === 'read') throw new NoComposeItemError();
-  return writeDraft(outlookItem.item, textParam(params.body), callId);
+  return writeDraft(outlookItem.item, textParam(params.body), callId, signal);
 }
 
 export async function saveEmailToDraft(
   outlookItem: OutlookItem,
+  signal?: AbortSignal,
 ): Promise<OutlookWriteAction> {
   if (outlookItem.mode === 'read') throw new NothingToSaveError();
   const { item } = outlookItem;
+  ensureStillOpen(item, signal);
   await officeAsync<string>((callback) => item.saveAsync(callback));
   return 'saved';
 }

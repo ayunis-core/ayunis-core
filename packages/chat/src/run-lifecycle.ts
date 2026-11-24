@@ -60,6 +60,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
     cancelStartedThreadRun: (threadId: string) =>
       handoffs.cancelStartedRun(threadId, stopThreadRun),
     getSessionResetAt: () => sessionResetAt,
+    getSessionSignal: () => session.signal,
     reset() {
       sessionResetAt = Date.now();
       const previousSession = session;
