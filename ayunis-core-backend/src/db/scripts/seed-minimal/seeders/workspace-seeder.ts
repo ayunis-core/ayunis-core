@@ -431,6 +431,7 @@ export class WorkspaceSeeder extends OrgSeeder {
         id: randomUUID(),
         parentId: parent.id,
         parent,
+        relatedDocumentId: sourceId,
         embedding1024: embedding,
         embedding1536: null,
         embedding2560: null,

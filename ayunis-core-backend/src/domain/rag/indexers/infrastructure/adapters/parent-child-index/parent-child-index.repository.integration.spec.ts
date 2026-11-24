@@ -26,6 +26,13 @@ const parentChunkSchema = new EntitySchema<ParentChunkRecord>({
     relatedChunkId: { type: String },
     content: { type: String },
   },
+  relations: {
+    children: {
+      type: 'one-to-many',
+      target: 'ChildChunkRecord',
+      inverseSide: 'parent',
+    },
+  },
 });
 
 const childChunkSchema = new EntitySchema<ChildChunkRecord>({
@@ -37,9 +44,18 @@ const childChunkSchema = new EntitySchema<ChildChunkRecord>({
     createdAt: { type: 'timestamp', createDate: true },
     updatedAt: { type: 'timestamp', updateDate: true },
     parentId: { type: String },
+    relatedDocumentId: { type: String, nullable: true },
     embedding1024: { name: 'embedding_1024', type: 'vector', nullable: true },
     embedding1536: { name: 'embedding_1536', type: 'vector', nullable: true },
     embedding2560: { name: 'embedding_2560', type: 'vector', nullable: true },
+  },
+  relations: {
+    parent: {
+      type: 'many-to-one',
+      target: 'ParentChunkRecord',
+      inverseSide: 'children',
+      joinColumn: { name: 'parentId' },
+    },
   },
 });
 
@@ -47,6 +63,32 @@ const DOCUMENT_ID = randomUUID();
 
 function vector(dimensions: number, seed: number): number[] {
   return Array.from({ length: dimensions }, (_, i) => ((seed + i) % 97) / 100);
+}
+
+// A unit vector at the given angle from the query vector, whose cosine
+// distance to it is therefore 1 - cos(angle).
+function angled(angle: number): number[] {
+  const embedding = new Array<number>(1024).fill(0);
+  embedding[0] = Math.cos(angle);
+  embedding[1] = Math.sin(angle);
+  return embedding;
+}
+
+function searchable(
+  relatedDocumentId: UUID,
+  content: string,
+  angles: number[],
+): ParentChunk {
+  const parentId = randomUUID();
+  return new ParentChunk({
+    id: parentId,
+    relatedDocumentId,
+    relatedChunkId: randomUUID(),
+    content,
+    children: angles.map(
+      (angle) => new ChildChunk({ parentId, embedding: angled(angle) }),
+    ),
+  });
 }
 
 function parent(index: number, children: number, id?: UUID): ParentChunk {
@@ -104,6 +146,7 @@ describe('ParentChildIndexerRepository against Postgres', () => {
       "createdAt" timestamp NOT NULL DEFAULT now(),
       "updatedAt" timestamp NOT NULL DEFAULT now(),
       "parentId" uuid NOT NULL REFERENCES parent_chunks(id) ON DELETE CASCADE,
+      "relatedDocumentId" character varying,
       embedding_1024 vector(1024),
       embedding_1536 vector(1536),
       embedding_2560 vector(2560))`);
@@ -192,6 +235,29 @@ describe('ParentChildIndexerRepository against Postgres', () => {
     expect(await count('parent_chunks')).toBe(1);
     expect(await count('child_chunks')).toBe(1);
   }, 60_000);
+
+  it('ranks only chunks of the given documents, each parent by its closest child', async () => {
+    const statute = randomUUID();
+    const minutes = randomUUID();
+    const fees = searchable(statute, 'Gebührensatzung', [0.1, 0.2, 1.2]);
+    const opening = searchable(statute, 'Öffnungszeiten', [0.3]);
+    const parking = searchable(statute, 'Parkordnung', [1.4]);
+    const outside = searchable(minutes, 'Niederschrift', [0]);
+    await repository.saveMany([fees, opening, parking, outside]);
+
+    const results = await repository.findByDocumentIds(angled(0), [statute], 3);
+
+    expect(
+      results.map(({ parentChunk, distance }) => [
+        parentChunk.content,
+        Number(distance.toFixed(6)),
+      ]),
+    ).toEqual([
+      ['Gebührensatzung', Number((1 - Math.cos(0.1)).toFixed(6))],
+      ['Öffnungszeiten', Number((1 - Math.cos(0.3)).toFixed(6))],
+    ]);
+    expect(results[0].parentChunk.children).toHaveLength(2);
+  });
 
   it('writes nothing and opens no transaction for an empty list', async () => {
     await repository.saveMany([]);

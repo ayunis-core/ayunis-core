@@ -1,5 +1,10 @@
 import type { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import type { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm';
+import type {
+  EntityManager,
+  EntityTarget,
+  ObjectLiteral,
+  SelectQueryBuilder,
+} from 'typeorm';
 import type { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable, Logger } from '@nestjs/common';
@@ -17,9 +22,9 @@ import { ParentChildIndexerMapper } from './infrastructure/persistence/mappers/p
 
 const DEFAULT_LIMIT = 10;
 const EMBEDDING_COLUMNS: Record<number, string> = {
-  1024: 'children.embedding_1024',
-  1536: 'children.embedding_1536',
-  2560: 'children.embedding_2560',
+  1024: 'child.embedding_1024',
+  1536: 'child.embedding_1536',
+  2560: 'child.embedding_2560',
 };
 
 const INSERT_BATCH_ROWS = 500;
@@ -163,28 +168,13 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
     limit: number | undefined,
   ): Promise<ScoredParentChunk[]> {
     try {
-      const distance = `${embeddingColumn} <=> :queryVector::vector`;
-      const { entities, raw } = await this.parentChunkRepository
-        .createQueryBuilder('parentChunk')
-        .leftJoinAndSelect('parentChunk.children', 'children')
-        .addSelect(distance, 'distance')
-        .where('parentChunk.relatedDocumentId IN (:...documentIds)', {
-          documentIds: relatedDocumentIds,
-        })
-        .andWhere(`${embeddingColumn} IS NOT NULL`)
-        .orderBy(distance, 'ASC')
-        .setParameter('queryVector', JSON.stringify(queryVector))
-        .limit(limit ?? DEFAULT_LIMIT)
-        .getRawAndEntities<{
-          parentChunk_id: UUID;
-          distance: number | string;
-        }>();
-
-      const bestDistances = this.bestDistanceByParentId(raw);
-      return entities.map((entity) => ({
-        parentChunk: this.parentChildIndexerMapper.toParentChunkEntity(entity),
-        distance: bestDistances.get(entity.id) ?? Number.POSITIVE_INFINITY,
-      }));
+      const nearest = this.nearestChildrenQuery(
+        embeddingColumn,
+        queryVector,
+        relatedDocumentIds,
+        limit ?? DEFAULT_LIMIT,
+      );
+      return await this.scoredParentsOf(nearest);
     } catch (error) {
       this.logger.error(
         {
@@ -199,6 +189,63 @@ export class ParentChildIndexerRepository extends ParentChildIndexerRepositoryPo
         { cause: error },
       );
     }
+  }
+
+  private async scoredParentsOf(
+    nearest: SelectQueryBuilder<ObjectLiteral>,
+  ): Promise<ScoredParentChunk[]> {
+    const { entities, raw } = await this.parentChunkRepository
+      .createQueryBuilder('parentChunk')
+      .innerJoin(
+        `(${nearest.getQuery()})`,
+        'nearest',
+        'nearest."parentId" = parentChunk.id',
+      )
+      .leftJoinAndSelect(
+        'parentChunk.children',
+        'children',
+        'children.id = nearest.id',
+      )
+      .addSelect('nearest.distance', 'distance')
+      .setParameters(nearest.getParameters())
+      .orderBy('nearest.distance', 'ASC')
+      .getRawAndEntities<{
+        parentChunk_id: UUID;
+        distance: number | string;
+      }>();
+
+    const bestDistances = this.bestDistanceByParentId(raw);
+    return entities.map((entity) => ({
+      parentChunk: this.parentChildIndexerMapper.toParentChunkEntity(entity),
+      distance: bestDistances.get(entity.id) ?? Number.POSITIVE_INFINITY,
+    }));
+  }
+
+  // Ranks child chunks by reading only their IDs and distance, so contents
+  // and vectors of the candidates are not carried through a join or a sort;
+  // the nearest few are loaded with their parents afterwards. The document
+  // IDs are one array parameter: an IN list caps a scope at the 65,535 bind
+  // parameters of a statement.
+  private nearestChildrenQuery(
+    embeddingColumn: string,
+    queryVector: number[],
+    relatedDocumentIds: UUID[],
+    limit: number,
+  ): SelectQueryBuilder<ObjectLiteral> {
+    const distance = `${embeddingColumn} <=> :queryVector::vector`;
+    return this.manager
+      .createQueryBuilder()
+      .select('child.id', 'id')
+      .addSelect('child.parentId', 'parentId')
+      .addSelect(distance, 'distance')
+      .from(ChildChunkRecord, 'child')
+      .where('child.relatedDocumentId = ANY(:documentIds)', {
+        documentIds: relatedDocumentIds,
+      })
+      .andWhere(`${embeddingColumn} IS NOT NULL`)
+      .orderBy(distance, 'ASC')
+      .setParameter('queryVector', JSON.stringify(queryVector))
+      .limit(limit);
   }
 
   private bestDistanceByParentId(

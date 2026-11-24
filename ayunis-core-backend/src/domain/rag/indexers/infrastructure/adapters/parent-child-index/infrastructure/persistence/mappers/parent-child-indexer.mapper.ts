@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { UUID } from 'crypto';
 import { ParentChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/parent-chunk.record';
 import { ChildChunkRecord } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/infrastructure/persistence/schema/child-chunk.record';
 import { ParentChunk } from 'src/domain/rag/indexers/infrastructure/adapters/parent-child-index/domain/parent-chunk.entity';
@@ -13,16 +14,20 @@ export class ParentChildIndexerMapper {
     parentChunkRecord.relatedChunkId = parentChunk.relatedChunkId;
     parentChunkRecord.content = parentChunk.content;
     parentChunkRecord.children = parentChunk.children.map((child) =>
-      this.toChildChunkRecord(child),
+      this.toChildChunkRecord(child, parentChunk.relatedDocumentId),
     );
     parentChunkRecord.createdAt = parentChunk.createdAt;
     parentChunkRecord.updatedAt = parentChunk.updatedAt;
     return parentChunkRecord;
   }
 
-  toChildChunkRecord(childChunk: ChildChunk): ChildChunkRecord {
+  toChildChunkRecord(
+    childChunk: ChildChunk,
+    relatedDocumentId: UUID,
+  ): ChildChunkRecord {
     const childChunkRecord = new ChildChunkRecord();
     childChunkRecord.id = childChunk.id;
+    childChunkRecord.relatedDocumentId = relatedDocumentId;
     // Route to the correct column by dimension
     if (Array.isArray(childChunk.embedding)) {
       const len = childChunk.embedding.length;
