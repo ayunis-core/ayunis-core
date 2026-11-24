@@ -14,6 +14,7 @@ export const EMPTY_ROUTINE_FORM: RoutineFormFields = {
   modelId: DEFAULT_MODEL_OPTION,
   dailyTime: '07:00',
   internetEnabled: false,
+  mcpIntegrationIds: [],
 };
 
 export function routineToFormFields(routine: Routine): RoutineFormFields {
@@ -23,6 +24,7 @@ export function routineToFormFields(routine: Routine): RoutineFormFields {
     modelId: routine.modelId ?? DEFAULT_MODEL_OPTION,
     dailyTime: routine.dailyTime,
     internetEnabled: routine.internetEnabled,
+    mcpIntegrationIds: routine.mcpIntegrationIds,
   };
 }
 

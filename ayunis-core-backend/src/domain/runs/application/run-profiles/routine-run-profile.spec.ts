@@ -1,3 +1,4 @@
+import type { UUID } from 'crypto';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { Tool } from 'src/domain/tools/domain/tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
@@ -11,6 +12,8 @@ import { InternetCapability } from 'src/domain/runs/application/run-capabilities
 import { RoutineContextCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-context.capability';
 import { RoutineInternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/routine-internet.capability';
 import { NotificationsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/notifications.capability';
+import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
+import { McpToolAssemblerService } from 'src/domain/runs/application/services/mcp-tool-assembler.service';
 import {
   aCapabilityContext,
   aThread,
@@ -21,6 +24,8 @@ import {
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
 import { RoutineRunProfile } from './routine-run-profile';
 import { RunProfileAssembler } from './run-profile-assembler.service';
+
+const integrationId = '33333333-3333-4333-8333-333333333333' as UUID;
 
 const resolved = <T>(value: T) =>
   ({ execute: jest.fn().mockResolvedValue(value) }) as never;
@@ -43,6 +48,24 @@ function buildRoutineProfile(orgAllowsInternet = true): RoutineRunProfile {
     ),
     new NotificationsCapability(assembleTool, { get: () => true } as never),
     new FinishRoutineCapability(assembleTool),
+    new McpCapability(
+      new McpToolAssemblerService(
+        resolved({
+          tools: [
+            new McpTool(
+              'tickets.create',
+              'Create a ticket',
+              { type: 'object', properties: {} },
+              integrationId,
+            ),
+          ],
+          resources: [],
+          prompts: [],
+          returnsPii: false,
+        }),
+        resolved([{ id: integrationId, name: 'Ticketsystem', logoUrl: null }]),
+      ),
+    ),
   );
 }
 
@@ -53,6 +76,7 @@ function assembleRoutine(
     canUseTools?: boolean;
     isAnonymous?: boolean;
     extraTools?: Tool[];
+    mcpIntegrationIds?: UUID[];
   } = {},
 ) {
   const assembler = new RunProfileAssembler(
@@ -86,6 +110,7 @@ function assembleRoutine(
           kind: ThreadOriginKind.ROUTINE,
           routineId: '44444444-4444-4444-8444-444444444444',
         },
+        mcpIntegrationIds: options.mcpIntegrationIds ?? [],
       }),
       model: aCapabilityContext({ canUseTools: options.canUseTools ?? true })
         .model,
@@ -131,6 +156,20 @@ describe('RoutineRunProfile', () => {
     expect(tools.map((tool) => tool.name)).toEqual([
       ToolType.SEND_NOTIFICATION,
       ToolType.FINISH_ROUTINE,
+    ]);
+  });
+
+  it("offers the tools of the routine thread's integrations", async () => {
+    const { tools } = await assembleRoutine({
+      mcpIntegrationIds: [integrationId],
+    });
+
+    expect(tools.map((tool) => tool.name)).toEqual([
+      ToolType.WEBSITE_CONTENT,
+      ToolType.INTERNET_SEARCH,
+      ToolType.SEND_NOTIFICATION,
+      ToolType.FINISH_ROUTINE,
+      `mcp__tool__tickets.create__${integrationId.slice(0, 8)}`,
     ]);
   });
 

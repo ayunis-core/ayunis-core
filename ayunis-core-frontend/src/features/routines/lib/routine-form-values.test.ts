@@ -11,6 +11,7 @@ describe('routine form values', () => {
     prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
     dailyTime: '07:30',
     internetEnabled: true,
+    mcpIntegrationIds: [],
   };
   const modelId = '890dbfa7-989f-4f2b-9808-7e722dcb2bf0';
 

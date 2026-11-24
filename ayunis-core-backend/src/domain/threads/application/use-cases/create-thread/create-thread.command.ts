@@ -11,6 +11,8 @@ export class CreateThreadCommand {
   workspaceId?: UUID;
   /** A plain chat when omitted. */
   origin?: ThreadOrigin;
+  /** Integrations attached to the new thread, as if added one by one. */
+  mcpIntegrationIds?: UUID[];
 
   constructor(params: {
     modelId?: UUID;
@@ -20,6 +22,7 @@ export class CreateThreadCommand {
     isAnonymous?: boolean;
     workspaceId?: UUID;
     origin?: ThreadOrigin;
+    mcpIntegrationIds?: UUID[];
   }) {
     this.modelId = params.modelId;
     this.mode = params.mode;
@@ -28,5 +31,6 @@ export class CreateThreadCommand {
     this.isAnonymous = params.isAnonymous;
     this.workspaceId = params.workspaceId;
     this.origin = params.origin;
+    this.mcpIntegrationIds = params.mcpIntegrationIds;
   }
 }

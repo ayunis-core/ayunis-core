@@ -9,4 +9,5 @@ export interface RoutineFormFields {
   /** HH:mm, Europe/Berlin. */
   dailyTime: string;
   internetEnabled: boolean;
+  mcpIntegrationIds: string[];
 }

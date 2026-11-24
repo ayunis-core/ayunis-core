@@ -7,6 +7,7 @@ export class CreateRoutineCommand {
   readonly modelId?: UUID;
   readonly dailyTime: string;
   readonly internetEnabled: boolean;
+  readonly mcpIntegrationIds: UUID[];
   readonly enabled: boolean;
   readonly sourceToolCallId?: string;
 
@@ -16,6 +17,7 @@ export class CreateRoutineCommand {
     modelId?: UUID;
     dailyTime: string;
     internetEnabled: boolean;
+    mcpIntegrationIds?: UUID[];
     enabled?: boolean;
     sourceToolCallId?: string;
   }) {
@@ -24,6 +26,7 @@ export class CreateRoutineCommand {
     this.modelId = params.modelId;
     this.dailyTime = params.dailyTime;
     this.internetEnabled = params.internetEnabled;
+    this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
     this.enabled = params.enabled ?? true;
     this.sourceToolCallId = params.sourceToolCallId;
   }

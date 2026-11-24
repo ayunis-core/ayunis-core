@@ -11,6 +11,8 @@ export interface RoutineDefinitionChanges {
   modelId?: UUID | null;
   dailyTime?: string;
   internetEnabled?: boolean;
+  /** Replaces the routine's integrations. */
+  mcpIntegrationIds?: UUID[];
   enabled?: boolean;
 }
 
@@ -43,7 +45,11 @@ export abstract class RoutinesRepository {
   abstract findAllByUserId(userId: UUID): Promise<Routine[]>;
   /** Enabled routines whose next run is due by `now`, earliest first. */
   abstract findDue(now: Date, limit: number): Promise<DueRoutine[]>;
-  /** Writes only the given fields, so a concurrent run's status survives. */
+  /**
+   * Writes only the given fields, so a concurrent run's status survives.
+   * Replacing the integrations takes more than one statement, so call it in a
+   * transaction.
+   */
   abstract updateDefinition(
     userId: UUID,
     id: UUID,

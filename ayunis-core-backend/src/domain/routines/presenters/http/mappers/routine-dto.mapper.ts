@@ -12,6 +12,7 @@ export class RoutineDtoMapper {
       modelId: routine.modelId,
       dailyTime: routine.dailyTime,
       internetEnabled: routine.internetEnabled,
+      mcpIntegrationIds: routine.mcpIntegrationIds,
       enabled: routine.enabled,
       lastRunStatus: routine.lastRunStatus,
       lastRunAt: routine.lastRunAt?.toISOString() ?? null,
