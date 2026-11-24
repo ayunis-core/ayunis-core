@@ -28,6 +28,7 @@ import {
 import { createApiContext } from "../../src/factories/api-context.factory";
 import { createOrg } from "../../src/factories/org.factory";
 import { sendMessage } from "../../src/flows/chat.flow";
+import { searchMarketplaceInNewChat } from "../../src/flows/marketplace-search.flow";
 import { test, expect } from "../../src/fixtures/test";
 
 // Same database and frontend build, served by a second backend started with
@@ -134,6 +135,24 @@ test("with routines disabled, routine favorites are hidden and cannot be added, 
       await requestFavoriteToggle(api, "routine", other.id, disabledApiUrl)
     ).status(),
   ).toBe(404);
+});
+
+test("with routines disabled the chat's marketplace search lists skills but no routines", async ({
+  api,
+  page,
+}) => {
+  // Served by the Marketplace stand-in (src/servers/marketplace-mock.mjs).
+  const routines = await searchMarketplaceInNewChat(
+    page,
+    api,
+    { type: "routine" },
+    disabledBaseUrl,
+  );
+  await expect(routines).toContainText("marketplace-search::0");
+
+  const all = await searchMarketplaceInNewChat(page, api, {}, disabledBaseUrl);
+  await expect(all).toContainText("/install?skill=e2e-sitzungsprotokoll");
+  await expect(all).not.toContainText("/install?routine=");
 });
 
 // Changes the MANAGER role of its own organization, so it cannot affect the

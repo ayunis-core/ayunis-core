@@ -26,7 +26,8 @@ const skills = [
   },
 ];
 
-// Keep in sync with tests/routines/marketplace-install.spec.ts.
+// Keep in sync with tests/routines/marketplace-install.spec.ts and
+// tests/routines/marketplace-search.spec.ts.
 const ROUTINE_UNAVAILABLE = "e2e-marketplace-down";
 const routines = [
   routine({
@@ -58,6 +59,11 @@ const server = createServer((request, response) => {
   if (url.pathname === "/api/skills/pre-installed") {
     return sendJson(response, 200, []);
   }
+  // The catalogue lists behind the chat's marketplace_search, one page each.
+  const list = catalogueLists()[url.pathname];
+  if (list) {
+    return sendJson(response, 200, list);
+  }
   const routineMatch = /^\/api\/routines\/([^/]+)$/.exec(url.pathname);
   if (routineMatch) {
     const identifier = decodeURIComponent(routineMatch[1]);
@@ -84,6 +90,22 @@ server.listen(port, "127.0.0.1");
 function sendJson(response, status, body) {
   response.writeHead(status, { "content-type": "application/json" });
   response.end(JSON.stringify(body));
+}
+
+function catalogueLists() {
+  return {
+    "/api/skills": page(skills),
+    "/api/skill-categories": [],
+    "/api/integrations": page([]),
+    "/api/routines": page(
+      routines.map((entry) => ({ ...entry, schedule: anHourAgoWeekly() })),
+    ),
+    "/api/routine-categories": [],
+  };
+}
+
+function page(data) {
+  return { data, total: data.length, page: 1, limit: 100, totalPages: 1 };
 }
 
 function routine(fields) {
