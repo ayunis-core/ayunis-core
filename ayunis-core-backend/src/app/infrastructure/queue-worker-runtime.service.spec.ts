@@ -10,6 +10,7 @@ describe('queue worker readiness and shutdown', () => {
   let running: boolean;
   let databaseReady: boolean;
   let consumersPresent: boolean;
+  let idleUnrelatedConsumer: boolean;
   let redisReady: boolean;
   let releaseDrain: (() => void) | undefined;
   let drainGate: Promise<void> | undefined;
@@ -19,6 +20,7 @@ describe('queue worker readiness and shutdown', () => {
     running = true;
     databaseReady = true;
     consumersPresent = true;
+    idleUnrelatedConsumer = false;
     redisReady = true;
     releaseDrain = undefined;
     drainGate = undefined;
@@ -40,17 +42,27 @@ describe('queue worker readiness and shutdown', () => {
         running = false;
       },
     };
+    const host = (instance: object) => ({
+      instance: Object.assign(Object.create(WorkerHost.prototype), {
+        _worker: instance,
+      }),
+    });
     runtime = new QueueWorkerRuntimeService(
       {
-        getProviders: () =>
-          (consumersPresent
-            ? ['document-processing', 'data-source-processing', 'url-crawl']
-            : []
-          ).map((name) => ({
-            instance: Object.assign(Object.create(WorkerHost.prototype), {
-              _worker: { ...worker, name },
-            }),
-          })),
+        getProviders: () => [
+          ...(consumersPresent ? QUEUES : []).map((name) =>
+            host({ ...worker, name }),
+          ),
+          ...(idleUnrelatedConsumer
+            ? [
+                host({
+                  ...worker,
+                  name: 'release-note-sync',
+                  isRunning: () => false,
+                }),
+              ]
+            : []),
+        ],
       } as unknown as DiscoveryService,
       {
         query: async () => {
@@ -77,6 +89,11 @@ describe('queue worker readiness and shutdown', () => {
     const port = await runtime.startHealthServer(0, QUEUES);
     running = false;
     expect((await fetch(`http://127.0.0.1:${port}/health`)).status).toBe(503);
+  });
+  it('stays healthy when a consumer for a queue it does not serve was never started', async () => {
+    idleUnrelatedConsumer = true;
+    const port = await runtime.startHealthServer(0, QUEUES);
+    expect((await fetch(`http://127.0.0.1:${port}/health`)).status).toBe(200);
   });
   it('returns unavailable when Redis stops responding', async () => {
     const port = await runtime.startHealthServer(0, QUEUES);
