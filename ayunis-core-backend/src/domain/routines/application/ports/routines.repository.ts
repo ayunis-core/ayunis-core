@@ -4,13 +4,15 @@ import type { RoutineRunOutcome } from 'src/domain/routines/domain/routine-run-o
 import type { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import type { RoutineScheduleChanges } from 'src/domain/routines/domain/routine-schedule';
 import type { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import type { RoutineSchedule } from 'src/domain/routines/domain/routine-frequency';
 
 /** The fields a user edits; omitted properties stay unchanged. */
 export interface RoutineDefinitionChanges {
   name?: string;
   prompt?: string;
   modelId?: UUID | null;
-  dailyTime?: string;
+  /** Replaced as a whole. */
+  schedule?: RoutineSchedule;
   internetAccess?: RoutineInternetAccess;
   allowedDomains?: string[];
   enabled?: boolean;
@@ -21,7 +23,7 @@ export interface DueRoutine {
   id: UUID;
   userId: UUID;
   orgId: UUID;
-  dailyTime: string;
+  schedule: RoutineSchedule;
   nextRunAt: Date;
 }
 

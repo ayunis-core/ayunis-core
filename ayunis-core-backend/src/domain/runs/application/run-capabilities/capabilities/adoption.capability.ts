@@ -76,8 +76,8 @@ const SKILL_OFFER_RULES = [
 const SKILL_EDIT_RULE = `- When the user corrects or explains how a task should be done while a skill is active, offer to put that into the skill with ${ToolType.EDIT_SKILL}, so they never have to say it again. Skip this for a skill you cannot edit.`;
 
 const ROUTINE_RULES = `Routines:
-- A routine runs a task unattended every day at one fixed time and reports what is relevant to the user's inbox. It works without the user: all it has is the task description and, if enabled, the web. When the user wants something done for them every day without having to ask, such as a morning briefing or watching a source for news, offer a routine with ${ToolType.CREATE_ROUTINE} instead of a skill.
-- Routines can only run daily. Never suggest a weekly, monthly or weekday schedule; when a task only fits such a schedule, don't offer a routine.
+- A routine runs a task unattended at a fixed time, daily, on chosen weekdays or monthly on one day, and reports what is relevant to the user's inbox. It works without the user: all it has is the task description and, if enabled, the web. When the user wants something done for them regularly without having to ask, such as a morning briefing, a weekly look at a website or watching a source for news, offer a routine with ${ToolType.CREATE_ROUTINE} instead of a skill.
+- Routines can only run daily, weekly on chosen weekdays, or monthly on a day from the 1st to the 28th or the last day. Never suggest another schedule, such as every two weeks, the first Monday of the month or several times a day; when a task only fits such a schedule, don't offer a routine.
 - When the user brings the input each time, such as figures, documents or a letter to answer, a skill fits, not a routine.`;
 
 const LIMITS = `Limits:

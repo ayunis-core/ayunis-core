@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,7 +9,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@ayunis/ui/components/form';
-import { Input } from '@ayunis/ui/components/input';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import {
   Select,
@@ -19,6 +19,8 @@ import {
 } from '@ayunis/ui/components/select';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { RoutineInternetAccessField } from '@/features/routines/ui/RoutineInternetAccessField';
+import { RoutineScheduleField } from '@/features/routines/ui/RoutineScheduleField';
+import { RoutineInputField } from '@/features/routines/ui/RoutineInputField';
 import {
   DEFAULT_MODEL_OPTION,
   type RoutineFormFields,
@@ -29,57 +31,55 @@ interface RoutineFieldsProps {
   disabled: boolean;
 }
 
-/** The routine's configuration, shared by its configuration card and the chat widgets. */
-export function RoutineFormFieldset({
+type RoutineField = (props: Readonly<RoutineFieldsProps>) => ReactNode;
+
+function RoutineFields({
+  fields,
   form,
   disabled,
-}: Readonly<RoutineFieldsProps>) {
+}: Readonly<RoutineFieldsProps & { fields: RoutineField[] }>) {
+  // The lists are fixed, so the position identifies a field.
+  return fields.map((Field, index) => (
+    <Field key={index} form={form} disabled={disabled} />
+  ));
+}
+
+/** The routine's configuration, shared by its configuration card and the chat widgets. */
+export function RoutineFormFieldset(props: Readonly<RoutineFieldsProps>) {
   return (
-    <>
-      <NameField form={form} disabled={disabled} />
-      <PromptField form={form} disabled={disabled} />
-      <ModelField form={form} disabled={disabled} />
-      <DailyTimeField form={form} disabled={disabled} />
-      <RoutineInternetAccessField form={form} disabled={disabled} />
-    </>
+    <RoutineFields
+      {...props}
+      fields={[
+        NameField,
+        PromptField,
+        ModelField,
+        RoutineScheduleField,
+        RoutineInternetAccessField,
+      ]}
+    />
   );
 }
 
 /** What a new routine needs; the rest is set on its page. */
-export function RoutineCreateFieldset({
-  form,
-  disabled,
-}: Readonly<RoutineFieldsProps>) {
+export function RoutineCreateFieldset(props: Readonly<RoutineFieldsProps>) {
   return (
-    <>
-      <NameField form={form} disabled={disabled} />
-      <PromptField form={form} disabled={disabled} />
-      <DailyTimeField form={form} disabled={disabled} />
-    </>
+    <RoutineFields
+      {...props}
+      fields={[NameField, PromptField, RoutineScheduleField]}
+    />
   );
 }
 
 function NameField({ form, disabled }: Readonly<RoutineFieldsProps>) {
   const { t } = useTranslation('routines');
   return (
-    <FormField
-      control={form.control}
+    <RoutineInputField
+      form={form}
       name="name"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{t('form.name')}</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              placeholder={t('form.namePlaceholder')}
-              disabled={disabled}
-              data-testid="routine-form-name"
-              required
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      label={t('form.name')}
+      disabled={disabled}
+      testId="routine-form-name"
+      inputProps={{ placeholder: t('form.namePlaceholder') }}
     />
   );
 }
@@ -104,34 +104,6 @@ function PromptField({ form, disabled }: Readonly<RoutineFieldsProps>) {
             />
           </FormControl>
           <FormDescription>{t('form.promptDescription')}</FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-}
-
-function DailyTimeField({ form, disabled }: Readonly<RoutineFieldsProps>) {
-  const { t } = useTranslation('routines');
-  return (
-    <FormField
-      control={form.control}
-      name="dailyTime"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{t('form.dailyTime')}</FormLabel>
-          <FormControl>
-            <Input
-              {...field}
-              type="time"
-              step={60}
-              disabled={disabled}
-              className="w-32"
-              data-testid="routine-form-time"
-              required
-            />
-          </FormControl>
-          <FormDescription>{t('form.dailyTimeDescription')}</FormDescription>
           <FormMessage />
         </FormItem>
       )}

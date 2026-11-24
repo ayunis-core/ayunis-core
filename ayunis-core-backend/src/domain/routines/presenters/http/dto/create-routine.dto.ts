@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import type { UUID } from 'crypto';
 import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsDefined,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -11,9 +13,9 @@ import {
   IsUUID,
   Matches,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
 import {
-  ROUTINE_DAILY_TIME_PATTERN,
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
   ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH,
@@ -23,6 +25,7 @@ import {
   ROUTINE_ALLOWED_DOMAINS_MAX,
   RoutineInternetAccess,
 } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineScheduleDto } from './routine-schedule.dto';
 
 const NOT_BLANK = /\S/;
 
@@ -51,13 +54,11 @@ export class CreateRoutineDto {
   @IsUUID()
   modelId?: UUID;
 
-  @ApiProperty({
-    description: 'Daily run time as HH:mm (Europe/Berlin)',
-    example: '07:30',
-  })
-  @IsString()
-  @Matches(ROUTINE_DAILY_TIME_PATTERN)
-  dailyTime: string;
+  @ApiProperty({ type: RoutineScheduleDto })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => RoutineScheduleDto)
+  schedule: RoutineScheduleDto;
 
   @ApiPropertyOptional({
     enum: RoutineInternetAccess,

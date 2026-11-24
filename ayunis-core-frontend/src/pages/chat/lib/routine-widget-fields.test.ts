@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Routine } from '@/features/routines';
-import { editRoutineParamsToFormFields } from './routine-widget-fields';
+import {
+  createRoutineParamsToFormFields,
+  editRoutineParamsToFormFields,
+} from './routine-widget-fields';
 
 describe('editRoutineParamsToFormFields', () => {
   const routine = {
@@ -8,28 +11,31 @@ describe('editRoutineParamsToFormFields', () => {
     name: 'Amtsblatt',
     prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
     modelId: '890dbfa7-989f-4f2b-9808-7e722dcb2bf0',
-    dailyTime: '07:30',
+    schedule: { frequency: 'weekly', time: '07:30', weekdays: [1, 4] },
     internetAccess: 'allowlist',
     allowedDomains: ['nrw.de', 'bund.de'],
   } as Routine;
+  const storedSchedule = {
+    frequency: 'weekly',
+    time: '07:30',
+    weekdays: [1, 4],
+    monthDay: '1',
+  };
 
   it("keeps the routine's chosen model, so saving the edit does not reset it to the default", () => {
     expect(
-      editRoutineParamsToFormFields({ daily_time: '08:00' }, routine).modelId,
+      editRoutineParamsToFormFields({ name: 'Gesetzblatt' }, routine).modelId,
     ).toBe(routine.modelId);
   });
 
   it('keeps stored values for fields the model left empty or out', () => {
     expect(
-      editRoutineParamsToFormFields(
-        { name: '', prompt: '', daily_time: '' },
-        routine,
-      ),
+      editRoutineParamsToFormFields({ name: '', prompt: '' }, routine),
     ).toEqual({
       name: 'Amtsblatt',
       prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
       modelId: routine.modelId,
-      dailyTime: '07:30',
+      schedule: storedSchedule,
       internetAccess: 'allowlist',
       allowedDomains: 'nrw.de\nbund.de',
     });
@@ -45,5 +51,31 @@ describe('editRoutineParamsToFormFields', () => {
       internetAccess: 'allowlist',
       allowedDomains: 'recht.nrw.de',
     });
+  });
+
+  it('replaces the stored schedule with a proposed one', () => {
+    expect(
+      editRoutineParamsToFormFields(
+        {
+          schedule: { frequency: 'monthly', time: '08:15', month_day: 'last' },
+        },
+        routine,
+      ).schedule,
+    ).toEqual({
+      ...storedSchedule,
+      frequency: 'monthly',
+      time: '08:15',
+      monthDay: 'last',
+    });
+  });
+});
+
+describe('createRoutineParamsToFormFields', () => {
+  it('takes the proposed weekly schedule', () => {
+    expect(
+      createRoutineParamsToFormFields({
+        schedule: { frequency: 'weekly', time: '08:00', weekdays: [1] },
+      }).schedule,
+    ).toMatchObject({ frequency: 'weekly', time: '08:00', weekdays: [1] });
   });
 });

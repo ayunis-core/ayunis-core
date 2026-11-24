@@ -15,7 +15,7 @@ export function finishingRoutine(name: string): CreateRoutineDto {
   return {
     name,
     prompt: `E2E finish routine: ${name}`,
-    dailyTime: '07:00',
+    schedule: { frequency: 'daily', time: '07:00' },
     internetAccess: 'off',
   };
 }
@@ -29,7 +29,10 @@ export function failingRoutine(name: string): CreateRoutineDto {
   return {
     name,
     prompt: `Fasse das Amtsblatt zusammen: ${name}`,
-    dailyTime: berlinTime(new Date(Date.now() - 60 * 60 * 1000)),
+    schedule: {
+      frequency: 'daily',
+      time: berlinTime(new Date(Date.now() - 60 * 60 * 1000)),
+    },
     internetAccess: 'off',
   };
 }

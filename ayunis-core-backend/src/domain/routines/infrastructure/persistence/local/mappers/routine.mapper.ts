@@ -3,6 +3,21 @@ import { Routine } from 'src/domain/routines/domain/routine.entity';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
+import {
+  ROUTINE_LAST_MONTH_DAY,
+  RoutineFrequency,
+  routineMonthDay,
+  routineWeekdays,
+  type RoutineSchedule,
+} from 'src/domain/routines/domain/routine-frequency';
+
+/** The stored month day of the last day, as RRULE's BYMONTHDAY=-1. */
+const LAST_MONTH_DAY_COLUMN = -1;
+
+export type RoutineScheduleColumns = Pick<
+  RoutineRecord,
+  'frequency' | 'dailyTime' | 'weekdays' | 'monthDay'
+>;
 
 @Injectable()
 export class RoutineMapper {
@@ -14,7 +29,7 @@ export class RoutineMapper {
       name: record.name,
       prompt: record.prompt,
       modelId: record.modelId,
-      dailyTime: record.dailyTime,
+      schedule: this.scheduleToDomain(record),
       internetAccess: record.internetAccess,
       allowedDomains: record.allowedDomains,
       mcpIntegrationIds: record.mcpIntegrationIds ?? [],
@@ -41,7 +56,7 @@ export class RoutineMapper {
     record.name = domain.name;
     record.prompt = domain.prompt;
     record.modelId = domain.modelId;
-    record.dailyTime = domain.dailyTime;
+    Object.assign(record, this.scheduleToRecord(domain.schedule));
     record.internetAccess = domain.internetAccess;
     record.allowedDomains = domain.allowedDomains;
     record.mcpIntegrations = domain.mcpIntegrationIds.map(
@@ -62,5 +77,36 @@ export class RoutineMapper {
     record.createdAt = domain.createdAt;
     record.updatedAt = domain.updatedAt;
     return record;
+  }
+
+  scheduleToDomain(record: RoutineScheduleColumns): RoutineSchedule {
+    const time = record.dailyTime;
+    switch (record.frequency) {
+      case RoutineFrequency.DAILY:
+        return { frequency: record.frequency, time };
+      case RoutineFrequency.WEEKLY:
+        return { frequency: record.frequency, time, weekdays: record.weekdays };
+      case RoutineFrequency.MONTHLY:
+        return {
+          frequency: record.frequency,
+          time,
+          monthDay:
+            record.monthDay === LAST_MONTH_DAY_COLUMN
+              ? ROUTINE_LAST_MONTH_DAY
+              : (record.monthDay as number),
+        };
+    }
+  }
+
+  /** Every column, so a changed frequency clears the previous one's fields. */
+  scheduleToRecord(schedule: RoutineSchedule): RoutineScheduleColumns {
+    const monthDay = routineMonthDay(schedule);
+    return {
+      frequency: schedule.frequency,
+      dailyTime: schedule.time,
+      weekdays: routineWeekdays(schedule),
+      monthDay:
+        monthDay === ROUTINE_LAST_MONTH_DAY ? LAST_MONTH_DAY_COLUMN : monthDay,
+    };
   }
 }

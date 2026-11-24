@@ -12,6 +12,7 @@ import {
   createMockRoutineExecutionQueue,
   createMockRoutinesRepository,
 } from 'src/domain/routines/application/testing/routine.fixtures';
+import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
 import { SweepDueRoutinesCommand } from './sweep-due-routines.command';
 import { SweepDueRoutinesUseCase } from './sweep-due-routines.use-case';
 
@@ -30,7 +31,7 @@ describe('SweepDueRoutinesUseCase', () => {
     id: ROUTINE_ID,
     userId: TEST_USER_ID,
     orgId: TEST_ORG_ID,
-    dailyTime: '07:30',
+    schedule: { frequency: RoutineFrequency.DAILY, time: '07:30' },
     nextRunAt: new Date(nextRunAt),
   });
 
@@ -93,7 +94,10 @@ describe('SweepDueRoutinesUseCase', () => {
 
   it('schedules a missed routine for later today when its time is still ahead', async () => {
     repository.findDue.mockResolvedValue([
-      { ...due('2026-11-06T09:00:00.000Z'), dailyTime: '10:00' },
+      {
+        ...due('2026-11-06T09:00:00.000Z'),
+        schedule: { frequency: RoutineFrequency.DAILY, time: '10:00' },
+      },
     ]);
     repository.moveNextRunAt.mockResolvedValue(true);
 

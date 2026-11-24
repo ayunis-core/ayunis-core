@@ -21,7 +21,7 @@ export function mockRoutineWidgetResponse(
       name: userText.slice(CREATE_ROUTINE_PROMPT.length),
       prompt:
         'Prüfe das heutige Amtsblatt auf neue Bekanntmachungen zur Grundsteuer.',
-      daily_time: '06:45',
+      schedule: { frequency: 'weekly', time: '06:45', weekdays: [1, 4] },
       internet_access: 'allowlist',
       allowed_domains: ['nrw.de'],
     });
@@ -32,7 +32,7 @@ export function mockRoutineWidgetResponse(
       routine_id: userText.slice(EDIT_ROUTINE_PROMPT.length),
       name: '',
       prompt: '',
-      daily_time: '08:15',
+      schedule: { frequency: 'monthly', time: '08:15', month_day: 'last' },
       change_summary: 'Später ausführen',
     });
   }

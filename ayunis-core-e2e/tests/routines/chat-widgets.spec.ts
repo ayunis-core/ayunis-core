@@ -42,6 +42,10 @@ test("creates the routine the assistant proposes in the chat, once", async ({
   await expect(widget.getByTestId("routine-form-allowed-domains")).toHaveValue(
     "nrw.de",
   );
+  await expect(widget.getByTestId("routine-form-weekday-4")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await widget.getByTestId("routine-form-name").fill(reviewedName);
   await widget.getByTestId("create-routine-widget-submit").click();
 
@@ -50,7 +54,7 @@ test("creates the routine the assistant proposes in the chat, once", async ({
       (await listRoutines(api)).find((r) => r.name === reviewedName),
     )
     .toMatchObject({
-      dailyTime: "06:45",
+      schedule: { frequency: "weekly", time: "06:45", weekdays: [1, 4] },
       internetAccess: "allowlist",
       allowedDomains: ["nrw.de"],
       modelId: null,
@@ -94,7 +98,7 @@ test("edits a routine from the chat and keeps what the edit leaves unchanged", a
       name: routine.name,
       prompt: routine.prompt,
       modelId: model.id,
-      dailyTime: "08:15",
+      schedule: { frequency: "monthly", time: "08:15", monthDay: "last" },
       internetAccess: "allowlist",
       allowedDomains: ["nrw.de", "bund.de"],
     });

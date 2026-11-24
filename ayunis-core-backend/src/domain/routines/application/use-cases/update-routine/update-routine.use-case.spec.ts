@@ -10,10 +10,12 @@ import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.e
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import {
   RoutineInvalidAllowedDomainsError,
+  RoutineInvalidScheduleError,
   RoutineNotFoundError,
 } from 'src/domain/routines/application/routines.errors';
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
 import {
   TEST_MODEL_ID,
   TEST_ROUTINE_ID,
@@ -65,15 +67,18 @@ describe('UpdateRoutineUseCase', () => {
     expect(routineModelService.select).not.toHaveBeenCalled();
   });
 
-  it('keeps a pending run when the form is saved with the same time', async () => {
+  it('keeps a pending run when the form is saved with the same schedule', async () => {
     await useCase.execute(
-      new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, dailyTime: '07:30' }),
+      new UpdateRoutineCommand({
+        id: TEST_ROUTINE_ID,
+        schedule: { frequency: 'daily', time: '07:30' },
+      }),
     );
 
     expect(repository.updateDefinition).toHaveBeenCalledWith(
       TEST_USER_ID,
       TEST_ROUTINE_ID,
-      { dailyTime: '07:30' },
+      { schedule: { frequency: RoutineFrequency.DAILY, time: '07:30' } },
     );
   });
 
@@ -91,17 +96,54 @@ describe('UpdateRoutineUseCase', () => {
 
   it('reschedules the routine when its time changes', async () => {
     await useCase.execute(
-      new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, dailyTime: '09:15' }),
+      new UpdateRoutineCommand({
+        id: TEST_ROUTINE_ID,
+        schedule: { frequency: 'daily', time: '09:15' },
+      }),
     );
 
     expect(repository.updateDefinition).toHaveBeenCalledWith(
       TEST_USER_ID,
       TEST_ROUTINE_ID,
       expect.objectContaining({
-        dailyTime: '09:15',
+        schedule: { frequency: RoutineFrequency.DAILY, time: '09:15' },
         nextRunAt: expect.any(Date),
       }),
     );
+  });
+
+  it('stores a weekly schedule with its weekdays ascending and deduplicated', async () => {
+    await useCase.execute(
+      new UpdateRoutineCommand({
+        id: TEST_ROUTINE_ID,
+        schedule: { frequency: 'weekly', time: '07:30', weekdays: [4, 1, 4] },
+      }),
+    );
+
+    expect(repository.updateDefinition).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      TEST_ROUTINE_ID,
+      expect.objectContaining({
+        schedule: {
+          frequency: RoutineFrequency.WEEKLY,
+          time: '07:30',
+          weekdays: [1, 4],
+        },
+        nextRunAt: expect.any(Date),
+      }),
+    );
+  });
+
+  it('rejects a schedule with a field of another frequency and changes nothing', async () => {
+    await expect(
+      useCase.execute(
+        new UpdateRoutineCommand({
+          id: TEST_ROUTINE_ID,
+          schedule: { frequency: 'monthly', time: '07:30', weekdays: [1] },
+        }),
+      ),
+    ).rejects.toThrow(RoutineInvalidScheduleError);
+    expect(repository.updateDefinition).not.toHaveBeenCalled();
   });
 
   it('re-enabling a paused routine resumes its schedule and clears the pause and failure count', async () => {

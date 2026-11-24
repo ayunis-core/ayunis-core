@@ -16,6 +16,8 @@ import {
 import { useRoutineFromProposal } from '@/pages/chat/api/useRoutineFromProposal';
 import {
   createRoutineParamsToFormFields,
+  parseScheduleParamsKey,
+  scheduleParamsKey,
   type CreateRoutineParams,
 } from '@/pages/chat/lib/routine-widget-fields';
 
@@ -74,15 +76,17 @@ function CreateRoutineForm({
   // Without the call ID the routine could not be linked to the proposal.
   const disabled = !toolCallId || lookupPending || isCreating || created;
 
-  // Streaming replaces the domains array on every update; its text stays equal.
+  // Streaming replaces the domains array and the schedule on every update;
+  // their text stays equal.
   const allowedDomains = params.allowed_domains?.join('\n');
+  const schedule = scheduleParamsKey(params.schedule);
   useEffect(() => {
     if (createdRoutine) return;
     form.reset(
       createRoutineParamsToFormFields({
         name: params.name,
         prompt: params.prompt,
-        daily_time: params.daily_time,
+        schedule: parseScheduleParamsKey(schedule),
         internet_access: params.internet_access,
         allowed_domains: allowedDomains?.split('\n'),
       }),
@@ -92,7 +96,7 @@ function CreateRoutineForm({
     createdRoutine,
     params.name,
     params.prompt,
-    params.daily_time,
+    schedule,
     params.internet_access,
     allowedDomains,
   ]);

@@ -8,7 +8,8 @@ describe('routine widget tools', () => {
     new CreateRoutineTool().validateParams({
       name: 'Gesetzblatt NRW',
       prompt: 'Prüfe das heutige Gesetz- und Verordnungsblatt.',
-      daily_time: '07:00',
+      schedule: { frequency: 'daily', time: '07:00' },
+      internet_access: 'off',
       ...params,
     });
   const edit = (params: Record<string, unknown>) =>
@@ -18,7 +19,6 @@ describe('routine widget tools', () => {
       routine_id: ROUTINE_ID,
       name: '',
       prompt: '',
-      daily_time: '',
       change_summary: 'Nur amtliche Quellen',
       ...params,
     });
@@ -45,5 +45,47 @@ describe('routine widget tools', () => {
   it('lets an edit leave the internet access and the domains as they are', () => {
     expect(edit({})).not.toHaveProperty('internet_access');
     expect(() => edit({ allowed_domains: ['*.nrw.de'] })).toThrow(/wildcard/);
+  });
+
+  it('proposes a weekly routine on the days the user named', () => {
+    expect(
+      create({
+        schedule: { frequency: 'weekly', time: '08:00', weekdays: [1] },
+      }),
+    ).toMatchObject({
+      schedule: { frequency: 'weekly', time: '08:00', weekdays: [1] },
+    });
+  });
+
+  it('tells the model when a schedule would be rejected on saving', () => {
+    expect(() =>
+      create({ schedule: { frequency: 'weekly', time: '08:00' } }),
+    ).toThrow(/schedule\.weekdays: weekly needs at least one weekday/);
+    expect(() =>
+      create({
+        schedule: { frequency: 'daily', time: '08:00', month_day: 1 },
+      }),
+    ).toThrow(
+      /schedule\.month_day: a month day is only allowed with the monthly frequency/,
+    );
+    expect(() =>
+      create({
+        schedule: { frequency: 'monthly', time: '08:00', month_day: 31 },
+      }),
+    ).toThrow(/schedule\.month_day/);
+  });
+
+  it('lets an edit leave the schedule as it is, or replace it as a whole', () => {
+    expect(edit({})).not.toHaveProperty('schedule');
+    expect(
+      edit({
+        schedule: { frequency: 'monthly', time: '08:00', month_day: 'last' },
+      }),
+    ).toMatchObject({
+      schedule: { frequency: 'monthly', time: '08:00', month_day: 'last' },
+    });
+    expect(() =>
+      edit({ schedule: { frequency: 'monthly', time: '08:00' } }),
+    ).toThrow(/schedule\.month_day/);
   });
 });

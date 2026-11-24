@@ -6850,6 +6850,33 @@ export const RoutineRunStatus = {
   skipped: 'skipped',
 } as const;
 
+/**
+ * Daily, weekly on `weekdays`, or monthly on `monthDay`. Fields of another frequency are rejected.
+ */
+export type RoutineFrequency = typeof RoutineFrequency[keyof typeof RoutineFrequency];
+
+
+export const RoutineFrequency = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface RoutineScheduleDto {
+  /** Daily, weekly on `weekdays`, or monthly on `monthDay`. Fields of another frequency are rejected. */
+  frequency: RoutineFrequency;
+  /** Run time as HH:mm (Europe/Berlin) */
+  time: string;
+  /**
+     * Weekly only, and required there: ISO weekdays, 1 (Monday) to 7 (Sunday), at least one; stored ascending without duplicates
+     * @items.minimum 1
+     * @items.maximum 7
+     */
+  weekdays?: number[];
+  /** Monthly only, and required there: the day of the month, 1 to 28, or `last` for its last day */
+  monthDay?: number | 'last';
+}
+
 export type RoutineInternetAccess = typeof RoutineInternetAccess[keyof typeof RoutineInternetAccess];
 
 
@@ -6868,8 +6895,7 @@ export interface RoutineResponseDto {
      * @nullable
      */
   modelId: string | null;
-  /** HH:mm (Europe/Berlin) */
-  dailyTime: string;
+  schedule: RoutineScheduleDto;
   internetAccess: RoutineInternetAccess;
   /** Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode */
   allowedDomains: string[];
@@ -6888,7 +6914,7 @@ export interface RoutineResponseDto {
   lastRunFailureReason: string | null;
   consecutiveFailureCount: number;
   /**
-     * When the next scheduled run starts: the daily time plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.
+     * When the next scheduled run starts: the set time on the next day the schedule matches, plus a per-routine offset of up to 9 minutes. Null while the routine is disabled.
      * @nullable
      */
   nextRunAt: string | null;
@@ -6913,8 +6939,7 @@ export interface CreateRoutineDto {
   prompt: string;
   /** Permitted model id; omit for the user's default model */
   modelId?: string;
-  /** Daily run time as HH:mm (Europe/Berlin) */
-  dailyTime: string;
+  schedule: RoutineScheduleDto;
   /** Whether the routine may search and read the web: not at all, any website, or only `allowedDomains` */
   internetAccess?: RoutineInternetAccess;
   /** Domains (or URLs, reduced to their host) the routine may access in `allowlist` mode, each with its subdomains; at most 20, no IP addresses or wildcards. `allowlist` needs at least one. */
@@ -6935,8 +6960,8 @@ export interface UpdateRoutineDto {
      * @nullable
      */
   modelId?: string | null;
-  /** Daily run time as HH:mm (Europe/Berlin) */
-  dailyTime?: string;
+  /** Replaces the whole schedule; omit it to keep the schedule */
+  schedule?: RoutineScheduleDto;
   /** Whether the routine may search and read the web: not at all, any website, or only `allowedDomains` */
   internetAccess?: RoutineInternetAccess;
   /** Replaces the domains (or URLs, reduced to their host) the routine may access in `allowlist` mode, each with its subdomains; at most 20, no IP addresses or wildcards. Kept when the mode changes; `allowlist` needs at least one. */

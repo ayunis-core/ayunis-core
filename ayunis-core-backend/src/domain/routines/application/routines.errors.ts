@@ -4,6 +4,10 @@ import {
   describeRoutineInternetSettingsProblem,
   type RoutineInternetSettingsProblem,
 } from 'src/domain/routines/domain/routine-internet-access';
+import {
+  describeRoutineScheduleProblem,
+  type RoutineScheduleProblem,
+} from 'src/domain/routines/domain/routine-frequency';
 
 export enum RoutineErrorCode {
   ROUTINE_NOT_FOUND = 'ROUTINE_NOT_FOUND',
@@ -12,6 +16,7 @@ export enum RoutineErrorCode {
   ROUTINE_ALREADY_CREATED = 'ROUTINE_ALREADY_CREATED',
   ROUTINE_INTEGRATION_UNAVAILABLE = 'ROUTINE_INTEGRATION_UNAVAILABLE',
   ROUTINE_INVALID_ALLOWED_DOMAINS = 'ROUTINE_INVALID_ALLOWED_DOMAINS',
+  ROUTINE_INVALID_SCHEDULE = 'ROUTINE_INVALID_SCHEDULE',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -96,6 +101,21 @@ export class RoutineInvalidAllowedDomainsError extends RoutineError {
     super(
       describeRoutineInternetSettingsProblem(problem),
       RoutineErrorCode.ROUTINE_INVALID_ALLOWED_DOMAINS,
+      400,
+      { ...problem },
+    );
+  }
+}
+
+/**
+ * A schedule field is invalid, missing for its frequency, or does not belong
+ * to it. Requests are checked by their DTO first, so this guards the domain.
+ */
+export class RoutineInvalidScheduleError extends RoutineError {
+  constructor(problem: RoutineScheduleProblem) {
+    super(
+      describeRoutineScheduleProblem(problem),
+      RoutineErrorCode.ROUTINE_INVALID_SCHEDULE,
       400,
       { ...problem },
     );

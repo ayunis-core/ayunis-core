@@ -2,6 +2,7 @@ import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { RoutineRunStatus } from './routine-run-status.enum';
 import { RoutineInternetAccess } from './routine-internet-access';
+import type { RoutineSchedule } from './routine-frequency';
 
 export class Routine {
   readonly id: UUID;
@@ -11,8 +12,7 @@ export class Routine {
   readonly prompt: string;
   /** Permitted model id; null means the owner's default model, also once the permit was removed. */
   readonly modelId: UUID | null;
-  /** HH:mm in Europe/Berlin. */
-  readonly dailyTime: string;
+  readonly schedule: RoutineSchedule;
   readonly internetAccess: RoutineInternetAccess;
   /** Normalized hosts; stored in every mode, applied only in `allowlist`. */
   readonly allowedDomains: string[];
@@ -43,7 +43,7 @@ export class Routine {
     name: string;
     prompt: string;
     modelId: UUID | null;
-    dailyTime: string;
+    schedule: RoutineSchedule;
     internetAccess?: RoutineInternetAccess;
     allowedDomains?: string[];
     mcpIntegrationIds?: UUID[];
@@ -66,7 +66,7 @@ export class Routine {
     this.name = params.name;
     this.prompt = params.prompt;
     this.modelId = params.modelId;
-    this.dailyTime = params.dailyTime;
+    this.schedule = params.schedule;
     this.internetAccess = params.internetAccess ?? RoutineInternetAccess.OFF;
     this.allowedDomains = params.allowedDomains ?? [];
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];

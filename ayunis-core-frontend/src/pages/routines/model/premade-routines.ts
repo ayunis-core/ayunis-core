@@ -11,7 +11,7 @@ import {
 export const VERKUENDUNGSPLATTFORM_ROUTINE: RoutineFormFields = {
   ...EMPTY_ROUTINE_FORM,
   name: 'Verkündungsplattform',
-  dailyTime: '07:00',
+  schedule: { ...EMPTY_ROUTINE_FORM.schedule, time: '07:00' },
   internetAccess: 'all',
   prompt: `Prüfe die Verkündungsplattform bzw. das elektronische Gesetz- und Verordnungsblatt meines Bundeslandes auf heute veröffentlichte Gesetze und Verordnungen und bewerte ihre Relevanz für meine Arbeit.
 

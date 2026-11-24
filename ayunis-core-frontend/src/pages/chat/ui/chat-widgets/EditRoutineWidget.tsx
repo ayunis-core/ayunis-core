@@ -15,6 +15,8 @@ import {
 import { useRoutineToEdit } from '@/pages/chat/api/useRoutineToEdit';
 import {
   editRoutineParamsToFormFields,
+  parseScheduleParamsKey,
+  scheduleParamsKey,
   type EditRoutineParams,
 } from '@/pages/chat/lib/routine-widget-fields';
 
@@ -79,15 +81,17 @@ function EditRoutineForm({
     setUpdated(true),
   );
 
-  // Streaming replaces the domains array on every update; its text stays equal.
+  // Streaming replaces the domains array and the schedule on every update;
+  // their text stays equal.
   const allowedDomains = params.allowed_domains?.join('\n');
+  const schedule = scheduleParamsKey(params.schedule);
   useEffect(() => {
     form.reset(
       editRoutineParamsToFormFields(
         {
           name: params.name,
           prompt: params.prompt,
-          daily_time: params.daily_time,
+          schedule: parseScheduleParamsKey(schedule),
           internet_access: params.internet_access,
           allowed_domains: allowedDomains?.split('\n'),
         },
@@ -98,7 +102,7 @@ function EditRoutineForm({
     form,
     params.name,
     params.prompt,
-    params.daily_time,
+    schedule,
     params.internet_access,
     allowedDomains,
     storedRoutine,

@@ -7,6 +7,10 @@ import {
   routineAllowedDomainsParameter,
   routineInternetAccessParameter,
 } from './routine-internet-params';
+import {
+  assertValidRoutineScheduleParams,
+  routineScheduleParameter,
+} from './routine-schedule-params';
 
 const createRoutineToolParameters = {
   type: 'object' as const,
@@ -20,19 +24,14 @@ const createRoutineToolParameters = {
       description:
         'The task the routine carries out on every run, as self-contained instructions. Each run starts without this conversation, so include everything the task needs.',
     },
-    daily_time: {
-      type: 'string' as const,
-      pattern: '^([01]\\d|2[0-3]):[0-5]\\d$',
-      description:
-        'The time of day the routine runs, as HH:mm in 24-hour German time (Europe/Berlin)',
-    },
+    schedule: routineScheduleParameter,
     internet_access: routineInternetAccessParameter,
     allowed_domains: {
       ...routineAllowedDomainsParameter,
       description: `${routineAllowedDomainsParameter.description} Required with "allowlist".`,
     },
   },
-  required: ['name', 'prompt', 'daily_time', 'internet_access'],
+  required: ['name', 'prompt', 'schedule', 'internet_access'],
   additionalProperties: false,
 } as const satisfies JSONSchema;
 
@@ -45,7 +44,7 @@ export class CreateRoutineTool extends Tool {
     super({
       name: ToolType.CREATE_ROUTINE,
       description:
-        "Display a routine creation widget. A routine is a task that runs unattended once a day at a fixed time and reports anything relevant to the user's inbox. Use this when the user asks you to create a routine, or wants a task done for them regularly. Propose a name, the task, the daily time and the internet access the routine needs, based on what the user described. The user reviews and confirms the creation.",
+        "Display a routine creation widget. A routine is a task that runs unattended on a schedule (daily, on chosen weekdays, or monthly, at a fixed time) and reports anything relevant to the user's inbox. Use this when the user asks you to create a routine, or wants a task done for them regularly. Propose a name, the task, the schedule and the internet access the routine needs, based on what the user described. The user reviews and confirms the creation.",
       parameters: createRoutineToolParameters,
       type: ToolType.CREATE_ROUTINE,
     });
@@ -56,6 +55,7 @@ export class CreateRoutineTool extends Tool {
       this.parameters,
       params,
     );
+    assertValidRoutineScheduleParams(validated.schedule);
     assertValidRoutineInternetParams(
       validated.internet_access,
       validated.allowed_domains ?? [],

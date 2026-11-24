@@ -75,6 +75,10 @@ test("a routine's page shows its configuration, notifications and chats, and its
   const renamed = `Gesetzblatt ${key}`;
   await page.getByTestId("routine-form-name").fill(renamed);
   await page.getByTestId("routine-form-time").fill("06:15");
+  await page.getByTestId("routine-form-frequency").click();
+  await page.getByTestId("routine-form-frequency-weekly").click();
+  // Monday is preselected; Wednesday is added.
+  await page.getByTestId("routine-form-weekday-3").click();
   // Unsaved edits survive a look at another tab.
   await page.getByTestId("routine-tab-chats").click();
   await expect(page.getByTestId("routine-chat-item")).toHaveCount(2);
@@ -84,7 +88,10 @@ test("a routine's page shows its configuration, notifications and chats, and its
   await page.getByTestId("routine-form-submit").click();
   await expect
     .poll(async () => getRoutine(api, routine.id))
-    .toMatchObject({ name: renamed, dailyTime: "06:15" });
+    .toMatchObject({
+      name: renamed,
+      schedule: { frequency: "weekly", time: "06:15", weekdays: [1, 3] },
+    });
 
   await page.getByTestId("routine-tab-notifications").click();
   // The last run status stays in the header outside the Configuration tab.
