@@ -34,7 +34,23 @@ artifact opening. Hosts import `@ayunis/chat/surface.css` and supply the
 conversation content and composer. The header receives the host actions so the
 host can place them next to its navigation.
 
+For a configured surface, render `ChatConversation` from
+`@ayunis/chat/surface` with the selected thread, transport, and capabilities.
+It connects the run lifecycle, composer, history actions, timeline and registered
+client tools. Supply a principal-scoped `sessionKey`, plus the following
+adapters where the surface supports them.
+
+- Supply the selected thread snapshot and, for rejoin, the active run snapshot
+  with its freshness timestamp. Use `onRunSettled` to refresh thread and history
+  snapshots, including for turns that finish after the user navigates away.
+- Supply model and attachment operations, voice transcription, and history
+  mutations for the capabilities the host enables. A host can provide draft
+  storage scoped to the principal. The default keeps drafts in memory for the
+  mounted session.
+- Use slots for host actions, attachment chips, and authenticated message
+  images. Hosts also provide the translation resources and import the
+  package styles through their Tailwind stylesheet.
+
 Client tools can register an executor, a custom card, or both by tool name.
-The host controls when to execute a call and how to return its outcome. This
-also allows a host to collect multiple outcomes for a paused turn before
-passing them to its endpoint adapter.
+The shared lifecycle coordinates execution and routes results to the run.
+The host supplies the executor invocation and its context.

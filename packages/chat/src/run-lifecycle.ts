@@ -24,6 +24,11 @@ export interface RunRequestObserver {
   ) => Promise<void> | void;
 }
 
+export interface DeferredClientTools {
+  readonly contextKey: unknown;
+  readonly callIds: ReadonlySet<string>;
+}
+
 export type ChatRunLifecycle = ReturnType<typeof createChatRunLifecycle>;
 
 /** One lifecycle per surface session. Open or close views without ending their runs. */
@@ -33,6 +38,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
   const handoffs = createStartedThreadRuns(activity.registerActiveThreadRun);
   const events = createRunEventRouting();
   const executor = createRunExecutor(activity, events);
+  const deferredClientTools = new Map<string, DeferredClientTools>();
   let sessionResetAt = 0;
   let session = new AbortController();
 
@@ -46,6 +52,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
   return {
     ...activity,
     ...stopped,
+    deferredClientTools,
     subscribe: events.subscribe,
     run: (
       request: RunExecutionRequest,
@@ -65,6 +72,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
       sessionResetAt = Date.now();
       const previousSession = session;
       session = new AbortController();
+      deferredClientTools.clear();
       executor.reset();
       previousSession.abort();
       events.clear();

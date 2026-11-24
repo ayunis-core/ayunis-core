@@ -1,4 +1,7 @@
 import {
+  answeredToolCallIds,
+  hasPendingToolApproval,
+  latestToolMessages,
   listClientToolCalls,
   type ClientToolMessage,
 } from './client-tool-messages';
@@ -49,6 +52,17 @@ export function expectsResult<Context, Outcome>(
   dispatch: ClientToolDispatch<Context, Outcome>,
 ): boolean {
   return dispatch.expectsResult?.(call) ?? true;
+}
+
+export function pendingClientToolResults<Context, Outcome>(
+  messages: readonly ClientToolMessage[],
+  dispatch: ClientToolDispatch<Context, Outcome>,
+) {
+  if (hasPendingToolApproval(messages)) return [];
+  const answered = answeredToolCallIds(messages);
+  return registeredCalls(latestToolMessages(messages), dispatch).filter(
+    (call) => expectsResult(call, dispatch) && !answered.has(call.id),
+  );
 }
 
 /** The current run protocol accepts one client result per continuation. */

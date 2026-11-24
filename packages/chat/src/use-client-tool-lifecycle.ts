@@ -5,22 +5,24 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from 'react';
 import {
   answeredToolCallIds,
   hasPendingToolApproval,
   latestToolMessages,
+  listClientToolCalls,
   type ClientToolMessage,
 } from './client-tool-messages';
 import {
   executeToolBatch,
   expectsResult,
+  pendingClientToolResults,
   registeredCalls,
   type ClientToolDispatch,
   type ClientToolResult,
 } from './client-tool-dispatch';
-import type { ChatRunLifecycle } from './run-lifecycle';
+import { useRuntimeSession } from './use-runtime-session';
+import type { ChatRunLifecycle, DeferredClientTools } from './run-lifecycle';
 import type { ClientToolCall } from './client-tools';
 
 interface ClientToolLifecycleOptions<Context, Outcome> {
@@ -44,7 +46,10 @@ interface CompletedRun {
   readonly scope: Scope;
   readonly failed: boolean;
   readonly reopened?: boolean;
+  readonly deferred?: DeferredClientTools;
 }
+
+type RunEndReason = 'reattach-failed' | 'followed';
 
 function scopeIsCurrent(scope: Scope) {
   return scope.mounted && !scope.session.aborted;
@@ -58,27 +63,50 @@ function initializeScope<Context, Outcome>(
   scope: Scope,
   { dispatch, messages }: ClientToolLifecycleOptions<Context, Outcome>,
   reopenedThread: boolean,
-): boolean {
-  if (!dispatch) return false;
-  const resume = dispatch.resumeOnOpen?.() === true && reopenedThread;
-  const awaiting = resume
-    ? new Set(waitingReads(messages, dispatch).map(({ id }) => id))
-    : undefined;
+  deferred: DeferredClientTools | undefined,
+): CompletedRun | undefined {
+  if (!dispatch) return;
+  const awaiting = pendingToolsOnOpen(
+    dispatch,
+    messages,
+    reopenedThread,
+    deferred,
+  );
   for (const { id } of registeredCalls(messages, dispatch)) {
-    if (!awaiting?.has(id)) scope.handled.add(id);
+    if (!awaiting?.callIds.has(id)) scope.handled.add(id);
   }
-  return (awaiting?.size ?? 0) > 0;
+  if (awaiting?.callIds.size) {
+    return {
+      scope,
+      failed: false,
+      reopened: true,
+      deferred: awaiting.deferred,
+    };
+  }
 }
 
-function waitingReads<Context, Outcome>(
-  messages: readonly ClientToolMessage[],
+function pendingToolsOnOpen<Context, Outcome>(
   dispatch: ClientToolDispatch<Context, Outcome>,
+  messages: readonly ClientToolMessage[],
+  reopenedThread: boolean,
+  deferred: DeferredClientTools | undefined,
 ) {
-  if (hasPendingToolApproval(messages)) return [];
-  const answered = answeredToolCallIds(messages);
-  return registeredCalls(latestToolMessages(messages), dispatch).filter(
-    (call) => expectsResult(call, dispatch) && !answered.has(call.id),
-  );
+  const resume = dispatch.resumeOnOpen?.();
+  if (resume === false) return;
+  if (deferred) {
+    if (Object.is(deferred.contextKey, dispatch.contextKey)) {
+      return { callIds: deferred.callIds, deferred };
+    }
+    return;
+  }
+  if (reopenedThread && resume) {
+    return {
+      callIds: new Set(
+        pendingClientToolResults(messages, dispatch).map(({ id }) => id),
+      ),
+      deferred: undefined,
+    };
+  }
 }
 
 function dispatchCompletedRun<Context, Outcome>(
@@ -90,7 +118,7 @@ function dispatchCompletedRun<Context, Outcome>(
   }: ClientToolLifecycleOptions<Context, Outcome>,
 ): Promise<void> | undefined {
   const { scope } = completion;
-  if (!dispatch || dispatch.canDispatch?.() === false) return;
+  if (!dispatch) return;
   const calls = takeUnhandledCalls(completion, messages, dispatch);
   if (completion.failed || calls.length === 0) return;
   const batch = new AbortController();
@@ -125,15 +153,44 @@ async function runBatch<Context, Outcome>(
   }
 }
 
+function retainsReopenedCompletion(
+  lifecycle: ChatRunLifecycle,
+  scope: Scope,
+  current: CompletedRun | null,
+  reason: RunEndReason | undefined,
+): boolean {
+  if (current?.scope !== scope || !current.reopened) return false;
+  if (reason === 'reattach-failed') return true;
+  return (
+    reason === 'followed' &&
+    current.deferred !== undefined &&
+    lifecycle.deferredClientTools.get(scope.threadId) === current.deferred
+  );
+}
+
+function reconsiderFollowedCalls<Context, Outcome>(
+  scope: Scope,
+  { dispatch, messages }: ClientToolLifecycleOptions<Context, Outcome>,
+  followed: boolean,
+) {
+  if (!followed || !dispatch) return;
+  for (const { id } of pendingClientToolResults(messages, dispatch)) {
+    scope.handled.delete(id);
+  }
+}
+
 function takeUnhandledCalls<Context, Outcome>(
-  { scope, reopened }: CompletedRun,
+  { scope, reopened, deferred }: CompletedRun,
   messages: readonly ClientToolMessage[],
   dispatch: ClientToolDispatch<Context, Outcome>,
 ) {
   const candidates = reopened
-    ? waitingReads(messages, dispatch)
+    ? pendingClientToolResults(messages, dispatch)
     : registeredCalls(messages, dispatch);
-  const calls = candidates.filter(({ id }) => !scope.handled.has(id));
+  const calls = candidates.filter(
+    ({ id }) =>
+      !scope.handled.has(id) && (!deferred || deferred.callIds.has(id)),
+  );
   for (const { id } of calls) scope.handled.add(id);
   const answered = answeredToolCallIds(messages);
   return calls.filter(
@@ -148,26 +205,10 @@ function canResumeInScope(previous: Scope | null, scope: Scope): boolean {
   );
 }
 
-function useRuntimeSession(lifecycle: ChatRunLifecycle): AbortSignal {
-  const signal = lifecycle.getSessionSignal();
-  const subscribe = useCallback(
-    (notify: () => void) => {
-      signal.addEventListener('abort', notify);
-      return () => signal.removeEventListener('abort', notify);
-    },
-    [signal],
-  );
-  return useSyncExternalStore(
-    subscribe,
-    lifecycle.getSessionSignal,
-    lifecycle.getSessionSignal,
-  );
-}
-
 function useToolScope<Context, Outcome>(
   lifecycle: ChatRunLifecycle,
   options: ClientToolLifecycleOptions<Context, Outcome>,
-  reopen: (scope: Scope) => void,
+  reopen: (completion: CompletedRun) => void,
 ) {
   const { threadId, dispatch } = options;
   const enabled = dispatch !== undefined;
@@ -194,7 +235,13 @@ function useToolScope<Context, Outcome>(
     if (opened.current !== scope) {
       const resume = canResumeInScope(opened.current, scope);
       opened.current = scope;
-      if (initializeScope(scope, latest.current, resume)) reopen(scope);
+      const completion = initializeScope(
+        scope,
+        latest.current,
+        resume,
+        lifecycle.deferredClientTools.get(threadId),
+      );
+      if (completion) reopen(completion);
     }
     const abort = () => scope.batch?.abort();
     session.addEventListener('abort', abort);
@@ -203,7 +250,7 @@ function useToolScope<Context, Outcome>(
       session.removeEventListener('abort', abort);
       abort();
     };
-  }, [enabled, reopen, scope, session]);
+  }, [enabled, lifecycle, reopen, scope, session, threadId]);
 
   return { scope, latest };
 }
@@ -217,11 +264,7 @@ export function useClientToolLifecycle<Context, Outcome>(
   options: ClientToolLifecycleOptions<Context, Outcome>,
 ) {
   const [completion, setCompletion] = useState<CompletedRun | null>(null);
-  const reopen = useCallback(
-    (scope: Scope) => setCompletion({ scope, failed: false, reopened: true }),
-    [],
-  );
-  const { scope, latest } = useToolScope(lifecycle, options, reopen);
+  const { scope, latest } = useToolScope(lifecycle, options, setCompletion);
 
   const beginRun = useCallback(
     ({ takesOverStartedRun = false } = {}) => {
@@ -229,6 +272,7 @@ export function useClientToolLifecycle<Context, Outcome>(
       const { dispatch, messages } = latest.current;
       if (!dispatch) return;
       scope.batch?.abort();
+      lifecycle.deferredClientTools.delete(scope.threadId);
       setCompletion(null);
       for (const { id } of registeredCalls(messages, dispatch))
         scope.handled.add(id);
@@ -241,39 +285,35 @@ export function useClientToolLifecycle<Context, Outcome>(
       }
       dispatch.onBeginRun?.(takesOverStartedRun);
     },
-    [latest, scope],
+    [latest, lifecycle, scope],
   );
 
   const runEnded = useCallback(
-    (failed: boolean, reason?: 'reattach-failed') => {
+    (failed: boolean, reason?: RunEndReason) => {
       if (!scopeIsCurrent(scope)) return;
+      reconsiderFollowedCalls(
+        scope,
+        latest.current,
+        reason === 'followed' && !failed,
+      );
       setCompletion((current) =>
-        reason === 'reattach-failed' &&
-        current?.scope === scope &&
-        current.reopened
+        retainsReopenedCompletion(lifecycle, scope, current, reason)
           ? current
           : { scope, failed },
       );
     },
-    [scope],
+    [latest, lifecycle, scope],
   );
 
-  useDispatchCompletedRun(lifecycle, options, { scope, latest, completion });
+  useDispatchCompletedRun(lifecycle, options, scope, completion);
   return { beginRun, runEnded };
 }
 
 function useDispatchCompletedRun<Context, Outcome>(
   lifecycle: ChatRunLifecycle,
   options: ClientToolLifecycleOptions<Context, Outcome>,
-  {
-    scope,
-    latest,
-    completion,
-  }: {
-    scope: Scope;
-    latest: { current: ClientToolLifecycleOptions<Context, Outcome> };
-    completion: CompletedRun | null;
-  },
+  scope: Scope,
+  completion: CompletedRun | null,
 ) {
   const settled = useRef<CompletedRun>(null);
   const { threadId, messages, isStreaming, isCheckingForRun } = options;
@@ -287,7 +327,34 @@ function useDispatchCompletedRun<Context, Outcome>(
       return;
     if (busy || lifecycle.isThreadRunActive(threadId)) return;
     if (!completion.failed && hasPendingToolApproval(messages)) return;
-    settled.current = completion;
-    void dispatchCompletedRun(completion, latest.current);
-  }, [busy, completion, latest, lifecycle, messages, scope, threadId]);
+    settleCompletion(lifecycle, options, completion, settled);
+  }, [busy, completion, lifecycle, messages, options, scope, threadId]);
+}
+
+function settleCompletion<Context, Outcome>(
+  lifecycle: ChatRunLifecycle,
+  options: ClientToolLifecycleOptions<Context, Outcome>,
+  completion: CompletedRun,
+  settled: { current: CompletedRun | null },
+): void {
+  const canDispatch = options.dispatch?.canDispatch?.() !== false;
+  if (completion.reopened && !canDispatch) return;
+  if (!claimDeferredTools(lifecycle, completion, options.messages)) return;
+  settled.current = completion;
+  if (canDispatch) void dispatchCompletedRun(completion, options);
+}
+
+function claimDeferredTools(
+  lifecycle: ChatRunLifecycle,
+  { scope, deferred }: CompletedRun,
+  messages: readonly ClientToolMessage[],
+): boolean {
+  if (!deferred) return true;
+  if (lifecycle.deferredClientTools.get(scope.threadId) !== deferred)
+    return false;
+  // The host may render a cached snapshot before the completed turn is loaded.
+  if (!listClientToolCalls(messages).some(({ id }) => deferred.callIds.has(id)))
+    return false;
+  lifecycle.deferredClientTools.delete(scope.threadId);
+  return true;
 }

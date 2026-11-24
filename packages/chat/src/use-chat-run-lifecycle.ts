@@ -10,6 +10,7 @@ import type {
 import type { RunEndpoints, RunMessagePayload } from './run-endpoints';
 import type { RunExecutionRequest, StartedRunRequest } from './run-execution';
 import type { ChatRunLifecycle, RunRequestObserver } from './run-lifecycle';
+import { useRuntimeSession } from './use-runtime-session';
 import type { RunViewEvent } from './run-event-routing';
 
 export interface PendingImage {
@@ -69,7 +70,10 @@ function observeView(
 ): RunRequestObserver {
   return {
     ...observer,
-    onMessageReceived: params.onMessageReceived,
+    onMessageReceived() {
+      params.onMessageReceived?.();
+      observer.onMessageReceived?.();
+    },
     onError: observer.onError ?? params.onError,
     onEvent(event) {
       observer.onEvent?.(event);
@@ -89,13 +93,7 @@ export function useChatRunLifecycle(
   { transport, observeRequest }: ChatRunOptions = {},
 ) {
   const { threadId } = params;
-  const currentParams = useRef(params);
-  useLayoutEffect(() => {
-    currentParams.current = params;
-    return lifecycle.subscribe(params.threadId, (event) =>
-      dispatchViewEvent(params, event),
-    );
-  }, [lifecycle, params]);
+  const currentParams = useRunView(lifecycle, params);
 
   const send = useCallback(
     (request: RunExecutionRequest, voiceInput = false) => {
@@ -137,6 +135,25 @@ export function useChatRunLifecycle(
     attach,
     abort,
   };
+}
+
+function useRunView(lifecycle: ChatRunLifecycle, params: ChatRunParams) {
+  const { threadId } = params;
+  const currentParams = useRef(params);
+  const session = useRuntimeSession(lifecycle);
+  useLayoutEffect(() => {
+    currentParams.current = params;
+  }, [params]);
+
+  useLayoutEffect(
+    () =>
+      lifecycle.subscribe(threadId, (event) =>
+        dispatchViewEvent(currentParams.current, event),
+      ),
+    [lifecycle, threadId, session],
+  );
+
+  return currentParams;
 }
 
 function useTextMessageSender(
