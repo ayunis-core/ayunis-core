@@ -5,11 +5,12 @@ const DIMENSIONS = [1024, 1536, 2560];
 const indexName = (dimensions: number) =>
   `IDX_child_chunks_embedding_${dimensions}_hnsw`;
 
-// On production the indexes are built by hand before the deploy (runbook in
-// the PR of AYC-2056) with CREATE INDEX CONCURRENTLY, which a migration
-// cannot run: migrations share one transaction. Every step here is therefore
-// idempotent: on production it does nothing, on every other database it
-// builds the indexes, which blocks writes to child_chunks while it runs.
+// On production the indexes are built by hand before the deploy
+// (docs/runbooks/child-chunk-search-indexes.md) with CREATE INDEX
+// CONCURRENTLY, which a migration cannot run: migrations share one
+// transaction. Every step here is therefore idempotent: on production it does
+// nothing, on every other database it builds the indexes, which blocks writes
+// to child_chunks while it runs.
 export class AddHnswIndexesToChildChunks1795480080226 implements MigrationInterface {
   name = 'AddHnswIndexesToChildChunks1795480080226';
 
