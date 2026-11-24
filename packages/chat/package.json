@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./tool-cards": "./src/tool-cards.ts"
+    "./tool-cards": "./src/tool-cards.ts",
+    "./runs": "./src/runs.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

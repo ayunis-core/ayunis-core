@@ -13,7 +13,7 @@ import {
 import {
   abortActiveThreadRun,
   registerActiveThreadRun,
-} from '@/features/thread-run/model/active-thread-run';
+} from '@ayunis/chat/runs';
 import { useDeleteThread } from './useDeleteThread';
 import { readChatDraft, writeChatDraft } from '@/shared/lib/chat-draft-storage';
 

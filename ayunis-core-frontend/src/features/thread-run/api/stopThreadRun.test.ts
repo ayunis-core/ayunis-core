@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   forgetStoppedThreadRunsExcept,
   isThreadRunStopped,
-} from '@/features/thread-run/model/stopped-thread-runs';
+} from '@ayunis/chat/runs';
 import { stopThreadRun } from './stopThreadRun';
 
 const { cancelRun } = vi.hoisted(() => ({ cancelRun: vi.fn() }));

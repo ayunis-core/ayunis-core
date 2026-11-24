@@ -4,7 +4,7 @@ import {
   startThreadRun,
   takeStartedThreadRun,
 } from './started-thread-run';
-import { abortActiveThreadRun, isThreadRunActive } from './active-thread-run';
+import { abortActiveThreadRun, isThreadRunActive } from '@ayunis/chat/runs';
 
 const { cancelRun } = vi.hoisted(() => ({
   cancelRun: vi.fn(() => Promise.resolve()),

@@ -5,7 +5,6 @@ import type {
   RunErrorResponseDto,
   RunThreadResponseDto,
   RunMasksResponseDto,
-  RunIntegrationWarningResponseDto,
   ToolCallDecisionDto,
 } from '@ayunis/api-client';
 import { showError, showInfo } from '@/shared/lib/toast';
@@ -22,16 +21,17 @@ import {
 } from '@ayunis/api-client/endpoints';
 import {
   activeThreadRunsQueryKey,
-  attachThreadRun,
-  postRunMessage,
-  registerActiveThreadRun,
+  threadRunEndpoints,
   stopThreadRun,
-  unregisterActiveThreadRun,
-  type RunMessagePayload,
   type StartedRunRequest,
 } from '@/features/thread-run';
 import { redirectToLogin } from '@/shared/lib/redirect-to-login';
-import { createFrameCoalescer } from '@/pages/chat/lib/frame-coalescer';
+import {
+  createFrameCoalescer,
+  executeRun,
+  type RunEvent,
+  type RunExecutionRequest,
+} from '@ayunis/chat/runs';
 import { createRunFunnelTracker } from '@/pages/chat/lib/run-funnel-tracking';
 
 export interface PendingImage {
@@ -100,10 +100,7 @@ function deliverUndelivered(params: UseMessageSendParams): void {
   undelivered.messages.forEach((event) => params.onMessageEvent?.(event));
 }
 
-interface SendMessagePayload extends RunMessagePayload {
-  startedRequest?: StartedRunRequest;
-  /** Attaching to a run in progress; its failures are not send failures. */
-  isAttach?: boolean;
+interface SendMessagePayload extends RunExecutionRequest {
   voiceInput?: boolean;
 }
 
@@ -143,6 +140,32 @@ async function refreshThreadQueriesAfterRun(
   });
 }
 
+function notifySendFailure(
+  error: Error,
+  t: ReturnType<typeof useTranslation<'chat'>>['t'],
+  onError?: (error: Error) => void,
+): void {
+  if (error.message.includes('IMAGE_UPLOADS_BUSY')) {
+    showError(t('chat.imageUploadsBusy'));
+  } else if (error.message.includes('429')) {
+    const retryMatch = /retryAfterSeconds[":]+(\d+)/.exec(error.message);
+    const retryMinutes = retryMatch
+      ? Math.ceil(parseInt(retryMatch[1], 10) / 60)
+      : null;
+    showError(
+      retryMinutes
+        ? t('chat.errorQuotaExceededWithTime', { minutes: retryMinutes })
+        : t('chat.errorQuotaExceeded'),
+    );
+  } else if (error.message.includes('ACADEMY_CERTIFICATE_REQUIRED')) {
+    showError(t('chat.academyCertificateRequiredError'));
+  } else if (error.message.includes('403')) {
+    showError(t('chat.upgradeToProError'));
+  } else {
+    onError?.(error);
+  }
+}
+
 export function useMessageSend(params: UseMessageSendParams) {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
@@ -159,18 +182,12 @@ export function useMessageSend(params: UseMessageSendParams) {
   }, [params]);
 
   const sendMessage = useCallback(
-    // eslint-disable-next-line sonarjs/cognitive-complexity
-    async (payload: SendMessagePayload) => {
-      let requestController: AbortController | null = null;
-      let wasAborted = false;
-      let hadError = false;
-      let reattachFailed = false;
-      let sessionExpired = false;
+    ({ voiceInput, ...payload }: SendMessagePayload) => {
       const requestThreadId = payload.threadId;
       const requestParams = currentParamsRef.current;
       const runFunnel = createRunFunnelTracker({
         isAttach: payload.isAttach ?? false,
-        voiceInput: payload.voiceInput ?? false,
+        voiceInput: voiceInput ?? false,
         getThread: () =>
           queryClient.getQueryData<GetThreadResponseDto>(
             getThreadsControllerFindOneQueryKey(requestThreadId),
@@ -194,214 +211,60 @@ export function useMessageSend(params: UseMessageSendParams) {
           events.forEach((event) => currentParams.onMessageEvent?.(event));
         },
       );
-      try {
-        requestController =
-          payload.startedRequest?.controller ?? new AbortController();
-        registerActiveThreadRun(requestThreadId, requestController);
-        // Cancelling cleans up the last message synchronously after aborting,
-        // so already received snapshots must be applied before that.
-        requestController.signal.addEventListener('abort', messageEvents.flush);
-
-        const response = await (payload.startedRequest?.response ??
-          postRunMessage(payload, requestController.signal));
-
-        if (response.status === 401) {
-          sessionExpired = true;
-          hadError = true;
-          redirectToLogin();
+      const onEvent = (event: RunEvent): void => {
+        if (event.type === 'message') {
+          messageEvents.push(event);
+          runFunnel.observeMessage(event.message);
           return;
         }
-
-        // Attaching found no run in progress: it ended in the meantime.
-        if (response.status === 204) return;
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('HTTP error:', { status: response.status, errorText });
-          throw new Error(
-            `HTTP error! status: ${response.status}, message: ${errorText}`,
-          );
-        }
-
-        if (!response.body) {
-          throw new Error('No response body');
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        const dispatchLine = (line: string) => {
-          if (line.startsWith(':')) return;
-          if (!line.startsWith('data: ')) return;
-          try {
-            const data = JSON.parse(line.slice(6)) as { type?: string };
-            if (data.type === 'message') {
-              const event = data as RunMessageResponseDto;
-              messageEvents.push(event);
-              runFunnel.observeMessage(event.message);
-              return;
-            }
-            messageEvents.flush();
-            switch (data.type) {
-              case 'session': {
-                const event = data as RunSessionResponseDto;
-                if (event.streaming === false) runFunnel.observeRunEnd();
-                getCurrentParams()?.onSessionEvent?.(event);
-                break;
-              }
-              case 'thread': {
-                const currentParams = getCurrentParams();
-                if (currentParams) {
-                  currentParams.onThreadEvent?.(data as RunThreadResponseDto);
-                } else {
-                  undeliveredFor(requestThreadId).thread =
-                    data as RunThreadResponseDto;
-                }
-                break;
-              }
-              case 'masks': {
-                const currentParams = getCurrentParams();
-                if (currentParams) {
-                  currentParams.onMasksEvent?.(data as RunMasksResponseDto);
-                } else {
-                  undeliveredFor(requestThreadId).masks =
-                    data as RunMasksResponseDto;
-                }
-                break;
-              }
-              case 'integration_warning': {
-                const warning = data as RunIntegrationWarningResponseDto;
-                showInfo(
-                  t('chat.integrationUnavailable', {
-                    name: warning.integrationName,
-                  }),
-                );
-                void queryClient.invalidateQueries({
-                  queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
-                });
-                break;
-              }
-              case 'error':
-                hadError = true;
-                requestParams.onErrorEvent?.(data as RunErrorResponseDto);
-                break;
-              case undefined:
-              default:
-                console.warn('Unknown SSE event type:', data.type);
-            }
-          } catch (parseError) {
-            console.warn('Failed to parse SSE data:', line, parseError);
-          }
-        };
-
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          while (true) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-              break;
-            }
-
-            const chunk = decoder.decode(value, { stream: true });
-
-            buffer += chunk;
-            const lines = buffer.split('\n');
-            buffer = lines.pop() ?? '';
-
-            for (const line of lines) {
-              dispatchLine(line);
-            }
-          }
-        } catch (readerError) {
-          console.error('Error reading SSE stream:', readerError);
-          throw readerError;
-        }
-
-        // Flush any bytes pending in the decoder (e.g. multi-byte UTF-8
-        // codepoint split across the last chunk) and process the final
-        // line in the buffer. Defensive: an upstream proxy may close the
-        // connection after delivering a complete `data: …` line but
-        // before its trailing `\n\n`, which would otherwise be dropped.
-        buffer += decoder.decode();
-        if (buffer.length > 0) {
-          for (const line of buffer.split('\n')) {
-            dispatchLine(line);
-          }
-        }
-      } catch (error) {
-        console.error('Error in sendMessage', error);
-
-        if (error instanceof Error && error.name === 'AbortError') {
-          wasAborted = true;
-          return;
-        }
-
-        hadError = true;
-
-        if (payload.isAttach) {
-          reattachFailed = true;
-          throw error;
-        }
-
-        if (error instanceof Error) {
-          // Handle specific error status codes
-          if (error.message.includes('IMAGE_UPLOADS_BUSY')) {
-            // Must precede the generic 429 branch, which reports a quota.
-            showError(t('chat.imageUploadsBusy'));
-          } else if (error.message.includes('429')) {
-            // Try to extract retry time from error response
-            const retryMatch = /retryAfterSeconds[":]+(\d+)/.exec(
-              error.message,
-            );
-            const retryMinutes = retryMatch
-              ? Math.ceil(parseInt(retryMatch[1], 10) / 60)
-              : null;
-            showError(
-              retryMinutes
-                ? t('chat.errorQuotaExceededWithTime', {
-                    minutes: retryMinutes,
-                  })
-                : t('chat.errorQuotaExceeded'),
-            );
-          } else if (error.message.includes('ACADEMY_CERTIFICATE_REQUIRED')) {
-            // Must precede the generic 403 branch, which would otherwise tell a
-            // blocked user to upgrade to Pro. The thrown message interpolates
-            // the response body, so the error code is present in it.
-            showError(t('chat.academyCertificateRequiredError'));
-          } else if (error.message.includes('403')) {
-            showError(t('chat.upgradeToProError'));
-          } else {
-            requestParams.onError?.(error);
-          }
-        }
-      } finally {
         messageEvents.flush();
-        // The saved thread is refetched below, which supersedes anything
-        // still waiting for its chat to reopen.
-        undeliveredByThread.delete(requestThreadId);
-        if (requestController) {
-          unregisterActiveThreadRun(requestThreadId, requestController);
+        const currentParams = getCurrentParams();
+        switch (event.type) {
+          case 'session':
+            if (event.streaming === false) runFunnel.observeRunEnd();
+            currentParams?.onSessionEvent?.(event);
+            break;
+          case 'thread':
+            if (currentParams) currentParams.onThreadEvent?.(event);
+            else undeliveredFor(requestThreadId).thread = event;
+            break;
+          case 'masks':
+            if (currentParams) currentParams.onMasksEvent?.(event);
+            else undeliveredFor(requestThreadId).masks = event;
+            break;
+          case 'integration_warning':
+            showInfo(
+              t('chat.integrationUnavailable', { name: event.integrationName }),
+            );
+            void queryClient.invalidateQueries({
+              queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
+            });
+            break;
+          case 'error':
+            requestParams.onErrorEvent?.(event);
+            break;
         }
+      };
 
-        // Only invalidate queries if the request completed normally (not aborted)
-        // When aborted, we keep the optimistic local state to avoid race conditions
-        // with the backend's async save operation
-        if (!wasAborted) {
-          if (!hadError) runFunnel.trackDelivered();
-          if (reattachFailed) {
+      return executeRun(threadRunEndpoints, payload, {
+        onEvent,
+        onUnauthorized: redirectToLogin,
+        onError: (error) => notifySendFailure(error, t, requestParams.onError),
+        onAbort: messageEvents.flush,
+        onCleanup: () => {
+          messageEvents.flush();
+          undeliveredByThread.delete(requestThreadId);
+        },
+        onComplete: async ({ failed, unauthorized, reattachFailed }) => {
+          if (!failed) runFunnel.trackDelivered();
+          if (reattachFailed)
             requestParams.onComplete?.(true, 'reattach-failed');
-          } else {
-            requestParams.onComplete?.(hadError);
-          }
-          if (!sessionExpired) {
-            // Await the post-save server state unless navigation is already
-            // handing an expired session back to login.
+          else requestParams.onComplete?.(failed);
+          if (!unauthorized) {
             await refreshThreadQueriesAfterRun(queryClient, requestThreadId);
           }
-        }
-      }
+        },
+      });
     },
     [t, queryClient],
   );
@@ -465,17 +328,10 @@ export function useMessageSend(params: UseMessageSendParams) {
     [params.threadId, sendMessage, queryClient],
   );
 
-  const attach = useCallback(() => {
-    const controller = new AbortController();
-    return sendMessage({
-      threadId: params.threadId,
-      isAttach: true,
-      startedRequest: {
-        controller,
-        response: attachThreadRun(params.threadId, controller.signal),
-      },
-    });
-  }, [params.threadId, sendMessage]);
+  const attach = useCallback(
+    () => sendMessage({ threadId: params.threadId, isAttach: true }),
+    [params.threadId, sendMessage],
+  );
 
   const abort = useCallback(() => {
     stopThreadRun(params.threadId);

@@ -4,7 +4,7 @@ import {
   forgetStoppedThreadRunsExcept,
   isThreadRunStopped,
   markThreadRunStopped,
-} from '@/features/thread-run/model/stopped-thread-runs';
+} from '@ayunis/chat/runs';
 import type { ActiveThreadRunResponseDto } from '@ayunis/api-client/schemas';
 import { useThreadRunReattach } from './useThreadRunReattach';
 

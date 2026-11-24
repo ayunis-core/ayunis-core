@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFrameCoalescer } from './frame-coalescer';
+import { createFrameCoalescer } from '@ayunis/chat/runs';
 
 interface Snapshot {
   id: string;
