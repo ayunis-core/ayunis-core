@@ -4,6 +4,7 @@ import type { ApiKey } from 'src/iam/api-keys/domain/api-key.entity';
 export interface ApiKeyMetadataChanges {
   name?: string;
   description?: string | null;
+  expiresAt?: Date | null;
 }
 
 export abstract class ApiKeysRepository {
