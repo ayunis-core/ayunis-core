@@ -1,11 +1,11 @@
-import { request as apiRequest } from '@playwright/test';
-import type { APIRequestContext, APIResponse } from '@playwright/test';
+import { request as apiRequest } from "@playwright/test";
+import type { APIRequestContext, APIResponse } from "@playwright/test";
 import type {
   MeResponseDto,
   SessionTokensResponseDto,
-} from '../generated/ayunisCoreAPI.schemas';
-import { config } from '../../config';
-import { generatedApi } from './generated-api';
+} from "../generated/ayunisCoreAPI.schemas";
+import { config } from "../../config";
+import { generatedApi } from "./generated-api";
 
 // Token clients (the Outlook add-in) call the API with a Bearer access token
 // and never hold cookies. API keys are Bearer secrets too.
@@ -36,7 +36,9 @@ export function currentUserForAccessToken(
   );
 }
 
-export async function listThreadsStatus(api: APIRequestContext): Promise<number> {
+export async function listThreadsStatus(
+  api: APIRequestContext,
+): Promise<number> {
   return (await api.get(`${config.apiURL}/api/threads`)).status();
 }
 
@@ -92,7 +94,7 @@ export async function handOffSessionToOutlook(
 ): Promise<SessionTokensResponseDto> {
   const response = await api.post(`${config.apiURL}/api/auth/session/handoff`, {
     headers: { Origin: new URL(config.baseURL).origin },
-    data: { client: 'outlook' },
+    data: { client: "outlook" },
   });
   if (!response.ok()) {
     throw new Error(
@@ -103,15 +105,33 @@ export async function handOffSessionToOutlook(
 }
 
 export interface RouteCall {
-  method: 'GET' | 'POST' | 'DELETE';
+  method: "GET" | "POST" | "DELETE";
   path: string;
+}
+
+function fetchRoute(
+  api: APIRequestContext,
+  { method, path }: RouteCall,
+): Promise<APIResponse> {
+  return api.fetch(`${config.apiURL}/api${path}`, { method });
 }
 
 export async function routeStatus(
   api: APIRequestContext,
-  { method, path }: RouteCall,
+  call: RouteCall,
 ): Promise<number> {
-  return (await api.fetch(`${config.apiURL}/api${path}`, { method })).status();
+  return (await fetchRoute(api, call)).status();
+}
+
+export function routeDenialWithBearer(
+  bearer: string,
+  call: RouteCall,
+): Promise<{ status: number; code?: string }> {
+  return withAccessToken(bearer, async (api) => {
+    const response = await fetchRoute(api, call);
+    const { code } = (await response.json()) as { code?: string };
+    return { status: response.status(), code };
+  });
 }
 
 export function routeStatusWithBearer(

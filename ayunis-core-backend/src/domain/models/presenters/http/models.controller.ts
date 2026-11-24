@@ -57,7 +57,8 @@ import { UpdatePermittedModelDto } from './dto/update-permitted-model.dto';
 import { ModelProviderInfoResponseDtoMapper } from './mappers/model-provider-info-response-dto.mapper';
 import { ModelResponseDtoMapper } from './mappers/model-response-dto.mapper';
 import { ModelWithConfigResponseDtoMapper } from './mappers/model-with-config-response-dto.mapper';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('models')
 @Controller('models')
@@ -282,7 +283,7 @@ export class ModelsController {
     return this.modelResponseDtoMapper.toDto(model);
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.MODELS_READ)
   @Get('permitted/language-models')
   @ApiOperation({
     summary: 'Get effective permitted language models for the current user',
@@ -370,7 +371,7 @@ export class ModelsController {
     return this.modelProviderInfoResponseDtoMapper.toDto(entity);
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.MODELS_READ)
   @Get('embedding/enabled')
   @ApiOperation({
     summary: 'Check if an embedding model is enabled for this org',

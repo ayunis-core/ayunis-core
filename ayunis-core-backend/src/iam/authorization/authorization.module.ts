@@ -11,7 +11,7 @@ import { SystemRolesGuard } from './application/guards/system-roles.guard';
 import { AddonGuard } from './application/guards/addon.guard';
 import { PermissionsGuard } from './application/guards/permissions.guard';
 import { UsageBasedSubscriptionGuard } from './application/guards/usage-based-subscription.guard';
-import { AllowedClientsGuard } from './application/guards/allowed-clients.guard';
+import { SurfaceScopeGuard } from './application/guards/surface-scope.guard';
 
 /**
  * Authorization guards live here as regular providers and are exported for
@@ -36,7 +36,7 @@ import { AllowedClientsGuard } from './application/guards/allowed-clients.guard'
     AddonGuard,
     PermissionsGuard,
     UsageBasedSubscriptionGuard,
-    AllowedClientsGuard,
+    SurfaceScopeGuard,
   ],
   exports: [
     EmailConfirmGuard,
@@ -47,7 +47,7 @@ import { AllowedClientsGuard } from './application/guards/allowed-clients.guard'
     AddonGuard,
     PermissionsGuard,
     UsageBasedSubscriptionGuard,
-    AllowedClientsGuard,
+    SurfaceScopeGuard,
     SubscriptionsModule,
     TrialsModule,
     AddonsModule,

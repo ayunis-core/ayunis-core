@@ -56,4 +56,4 @@ session as it is (on Outlook on the web the dialog shares cookies with the web
 app), so a sign-in that SSO cut off from the pane completes on the next dialog.
 
 The backend restricts sessions handed to a client to routes marked
-`@AllowedClients('outlook')`; see `docs/architecture/authentication.md`.
+`@RequireSurfaceScope(...)` for a scope granted to the Outlook surface; see `docs/architecture/authentication.md`.

@@ -61,7 +61,8 @@ import { PiiMaskDtoMapper } from 'src/domain/thread-pii-masks/presenters/http/ma
 import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.use-case';
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('threads')
 @RequireAcademyCertificate()
@@ -84,7 +85,7 @@ export class ThreadsController {
     private readonly piiMaskDtoMapper: PiiMaskDtoMapper,
   ) {}
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Post()
   @ApiOperation({ summary: 'Create a new thread' })
   @ApiBody({ type: CreateThreadDto })
@@ -118,7 +119,7 @@ export class ThreadsController {
     return this.getThreadDtoMapper.toDto({ thread, isLongChat: false });
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Get()
   @ApiOperation({ summary: 'Get all threads for the current user' })
   @ApiQuery({
@@ -169,7 +170,7 @@ export class ThreadsController {
     return this.getThreadsDtoMapper.toPaginatedDto(threads);
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Get(':id')
   @ApiOperation({ summary: 'Get a thread by ID' })
   @ApiParam({
@@ -203,7 +204,7 @@ export class ThreadsController {
     return this.getThreadDtoMapper.toDto(result, piiMasks, mcpIntegrations);
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a thread' })
   @ApiParam({
@@ -224,7 +225,7 @@ export class ThreadsController {
     await this.deleteThreadUseCase.execute(new DeleteThreadCommand(id));
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Patch(':id/title')
   @ApiOperation({ summary: 'Update a thread title' })
   @ApiParam({
@@ -255,7 +256,7 @@ export class ThreadsController {
     );
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Post(':id/pii-masks/:maskId/unmask')
   @ApiOperation({
     summary:

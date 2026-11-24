@@ -21,7 +21,8 @@ import { CancelThreadRunCommand } from 'src/domain/runs/application/use-cases/ca
 import { ActiveThreadRunResponseDto } from 'src/domain/runs/presenters/http/dto/active-thread-run-response.dto';
 import { RunSsePresenter } from 'src/domain/runs/presenters/http/sse/run-sse.presenter';
 import { SEND_MESSAGE_SSE_RESPONSE } from 'src/domain/runs/presenters/http/send-message.swagger';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('runs')
 @RequireAcademyCertificate()
@@ -36,7 +37,7 @@ export class ActiveRunsController {
     private readonly ssePresenter: RunSsePresenter,
   ) {}
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Get('active')
   @ApiOperation({ summary: 'List the current user’s runs in progress' })
   @ApiResponse({ status: 200, type: [ActiveThreadRunResponseDto] })
@@ -48,7 +49,7 @@ export class ActiveRunsController {
     }));
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Get('threads/:threadId/events')
   @ApiOperation({
     summary: 'Attach to the run in progress on a thread',
@@ -73,7 +74,7 @@ export class ActiveRunsController {
     await this.ssePresenter.stream(response, threadId, subscription);
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Post('threads/:threadId/cancel')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({

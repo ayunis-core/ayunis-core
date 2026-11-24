@@ -8,6 +8,7 @@ import { UUID } from 'crypto';
 import { FindUserByIdUseCase } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.use-case';
 import { FindUserByIdQuery } from 'src/iam/users/application/use-cases/find-user-by-id/find-user-by-id.query';
 import { ApplicationError } from 'src/common/errors/base.error';
+import { isSessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
 interface JwtPayload {
@@ -18,6 +19,7 @@ interface JwtPayload {
   systemRole: SystemRole;
   orgId: UUID;
   name: string;
+  client?: unknown;
 }
 
 @Injectable()
@@ -42,7 +44,8 @@ export class GetCurrentUserUseCase {
         !payload.email ||
         !payload.role ||
         !payload.orgId ||
-        !payload.name
+        !payload.name ||
+        (payload.client !== undefined && !isSessionClient(payload.client))
       ) {
         throw new InvalidTokenError('Invalid token payload');
       }
@@ -69,6 +72,7 @@ export class GetCurrentUserUseCase {
         systemRole: user.systemRole,
         orgId: user.orgId,
         name: user.name,
+        client: payload.client,
       });
     } catch (error: unknown) {
       if (error instanceof ApplicationError) {

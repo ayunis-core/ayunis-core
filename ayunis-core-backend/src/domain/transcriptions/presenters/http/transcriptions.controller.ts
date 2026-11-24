@@ -14,7 +14,8 @@ import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cas
 import { TranscriptionResponseDto } from './dtos/transcription-response.dto';
 import { ApiTranscribe } from './decorators/api-transcribe.decorator';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('transcriptions')
 @ApiBearerAuth()
@@ -25,7 +26,7 @@ export class TranscriptionsController {
 
   constructor(private readonly transcribeUseCase: TranscribeUseCase) {}
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.VOICE)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
