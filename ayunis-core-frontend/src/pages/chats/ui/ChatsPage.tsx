@@ -1,3 +1,4 @@
+import { ChatHistory } from '@ayunis/chat/history';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
@@ -100,22 +101,18 @@ export default function ChatsPage({
           />
         }
         contentArea={
-          <>
-            {chats.length === 0 ? (
-              <ChatsEmptyState hasFilters={hasFilters} />
-            ) : (
-              <div className="space-y-3">
-                {sortedChats.map((chat) => (
-                  <ChatCard key={chat.id} chat={chat} />
-                ))}
-              </div>
-            )}
-            <ChatsPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              search={search}
-            />
-          </>
+          <ChatHistory
+            chats={sortedChats}
+            renderChat={(chat) => <ChatCard chat={chat} />}
+            empty={<ChatsEmptyState hasFilters={hasFilters} />}
+            pagination={
+              <ChatsPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                search={search}
+              />
+            }
+          />
         }
       />
     </AppLayout>

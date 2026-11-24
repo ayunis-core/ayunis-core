@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import Markdown from './Markdown';
-import { SourceCitationProvider } from '@/widgets/markdown/model/source-citation-context';
+import { SourceCitationProvider } from '@ayunis/chat/markdown';
 
 const CHUNK_ID = '123e4567-e89b-12d3-a456-426614174000';
 const MARKER = `{{source:${CHUNK_ID}|Quelle 1}}`;

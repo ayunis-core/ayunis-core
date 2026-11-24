@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import Markdown from './Markdown';
-import { PiiMaskProvider } from '@/widgets/markdown/model/pii-mask-context';
-import { SourceCitationProvider } from '@/widgets/markdown/model/source-citation-context';
+import { PiiMaskProvider } from '@ayunis/chat/markdown';
+import { SourceCitationProvider } from '@ayunis/chat/markdown';
 
 vi.mock('./Codeblock', () => ({
   default: ({

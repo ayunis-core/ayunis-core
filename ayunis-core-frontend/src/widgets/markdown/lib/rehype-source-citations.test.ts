@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rehypeSourceCitations } from './rehype-source-citations';
+import { rehypeSourceCitations } from '@ayunis/chat/markdown/rehype-source-citations';
 
 const CHUNK_ID = '123e4567-e89b-12d3-a456-426614174000';
 const MARKER = `{{source:${CHUNK_ID}|Quelle 1}}`;

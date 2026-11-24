@@ -1,13 +1,14 @@
-import { Fragment, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { ChatMessageList } from '@ayunis/chat/messages';
 import ChatMessage from '@/pages/chat/ui/ChatMessage';
 import AssistantRunBlock from '@/pages/chat/ui/AssistantRunBlock';
 import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
 import {
   AgentRunTimeline,
+  type AgentRunUnit,
   type RenderUnit,
   type SourceProcessingTimelineStep,
 } from '@/pages/chat/ui/agent-run-timeline';
-import type { Message } from '@/pages/chat/model/openapi';
 import { sourceProcessingRun } from '@/pages/chat/lib/source-processing-steps';
 
 interface ChatThreadContentProps {
@@ -30,55 +31,32 @@ export function ChatThreadContent(props: ChatThreadContentProps) {
     showLoadingPlaceholder,
     onOpenArtifact,
   } = props;
-  const firstUserUnitIndex = units.findIndex((unit) => unit.kind === 'user');
   const waitingSteps =
     pendingSubmission === null ? [] : (props.processingSteps ?? []);
-
   return (
-    <div className="p-4 pb-8">
-      {units.map((unit, index) => {
-        if (unit.kind === 'user')
-          return (
-            <Fragment key={unit.key}>
-              {index === firstUserUnitIndex && contextHint}
-              <ChatMessage message={unit.message} />
-            </Fragment>
-          );
-        return (
-          <AssistantRunBlock
-            key={unit.key}
-            unit={unit}
-            isGroupedWithPrevious={units[index - 1]?.kind === 'agent-run'}
-            threadId={threadId}
-            onOpenArtifact={onOpenArtifact}
-          />
-        );
-      })}
-      {pendingSubmission !== null && (
-        <>
-          {firstUserUnitIndex === -1 && contextHint}
-          <div data-testid="pending-user-message">
-            <ChatMessage message={makePendingUserMessage(pendingSubmission)} />
-          </div>
-        </>
+    <ChatMessageList<AgentRunUnit>
+      units={units}
+      pendingSubmission={pendingSubmission}
+      contextHint={contextHint}
+      renderUser={(message) => <ChatMessage message={message} />}
+      renderRun={(unit, grouped) => (
+        <AssistantRunBlock
+          unit={unit}
+          isGroupedWithPrevious={grouped}
+          threadId={threadId}
+          onOpenArtifact={onOpenArtifact}
+        />
       )}
-      {waitingSteps.length > 0 && (
-        <div className="mt-4 max-w-2xl">
+      waiting={
+        waitingSteps.length > 0 ? (
           <AgentRunTimeline unit={sourceProcessingRun(waitingSteps)} />
-        </div>
-      )}
-      {showLoadingPlaceholder && waitingSteps.length === 0 && (
-        <LoadingAssistantBlock />
-      )}
-    </div>
+        ) : undefined
+      }
+      loading={
+        showLoadingPlaceholder && waitingSteps.length === 0 ? (
+          <LoadingAssistantBlock />
+        ) : undefined
+      }
+    />
   );
-}
-
-function makePendingUserMessage(text: string): Message {
-  return {
-    id: 'pending-user-message',
-    role: 'user',
-    content: [{ type: 'text', text }],
-    createdAt: new Date().toISOString(),
-  } as unknown as Message;
 }

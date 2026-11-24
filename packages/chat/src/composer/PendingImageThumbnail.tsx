@@ -1,9 +1,8 @@
 import { Button } from '@ayunis/ui/components/button';
 import { XIcon } from 'lucide-react';
-import type { PendingImage } from '../hooks/usePendingImages';
 
 interface PendingImageThumbnailProps {
-  image: PendingImage;
+  image: { id: string; preview: string; file: Pick<File, 'name'> };
   onRemove: (imageId: string) => void;
 }
 

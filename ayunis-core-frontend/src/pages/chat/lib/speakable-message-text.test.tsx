@@ -1,9 +1,9 @@
 import { render } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import Markdown from '@/widgets/markdown/ui/Markdown';
-import { PiiMaskProvider } from '@/widgets/markdown/model/pii-mask-context';
-import type { PiiMaskEntry } from '@/widgets/markdown/model/pii-mask-context';
-import { SourceCitationProvider } from '@/widgets/markdown/model/source-citation-context';
+import { PiiMaskProvider } from '@ayunis/chat/markdown';
+import type { PiiMaskEntry } from '@ayunis/chat/markdown';
+import { SourceCitationProvider } from '@ayunis/chat/markdown';
 import {
   hasSpeakableText,
   speakableMessageText,

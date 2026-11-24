@@ -8,7 +8,9 @@ import { cn } from '@ayunis/ui/lib/cn';
 import {
   usePiiMasks,
   usePiiUnmaskRequest,
-} from '@/widgets/markdown/model/pii-mask-context';
+  type PiiMaskEntry,
+  type PiiUnmaskRequestHandler,
+} from './pii-mask-context';
 
 interface PiiMaskInlineProps {
   readonly token: string;
@@ -47,6 +49,27 @@ export default function PiiMaskInline({ token }: PiiMaskInlineProps) {
     ? t('chat.piiMask.tooltipClickable', { category: categoryLabel })
     : t('chat.piiMask.tooltip', { category: categoryLabel });
 
+  return (
+    <MaskedValue
+      entry={entry}
+      categoryLabel={categoryLabel}
+      tooltip={tooltip}
+      onUnmaskRequest={onUnmaskRequest}
+    />
+  );
+}
+
+function MaskedValue({
+  entry,
+  categoryLabel,
+  tooltip,
+  onUnmaskRequest,
+}: {
+  readonly entry: PiiMaskEntry;
+  readonly categoryLabel: string;
+  readonly tooltip: string;
+  readonly onUnmaskRequest?: PiiUnmaskRequestHandler;
+}) {
   const highlight = 'bg-brand/15 text-brand px-1 py-0.5 rounded font-medium';
 
   return (

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import type { SourceCitation } from '@/widgets/markdown/lib/source-citation';
+import type { SourceCitation } from './source-citation';
 
 export type SourceCitationClickHandler = (citation: SourceCitation) => void;
 
@@ -24,7 +24,6 @@ export function SourceCitationProvider({
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components -- context hook belongs with its provider by repo convention
 export function useSourceCitationClick():
   SourceCitationClickHandler | undefined {
   return useContext(SourceCitationContext);

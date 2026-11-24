@@ -10,8 +10,6 @@ import {
   useImperativeHandle,
   useRef,
 } from 'react';
-import TextareaAutosize from 'react-textarea-autosize';
-import { Card, CardContent } from '@ayunis/ui/components/card';
 import useKeyboardShortcut from '@/features/useKeyboardShortcut';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -21,10 +19,7 @@ import type {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@ayunis/api-client';
-import {
-  usePendingImages,
-  type PendingImage,
-} from '@/widgets/chat-input/hooks/usePendingImages';
+import { usePendingImages } from '@/widgets/chat-input/hooks/usePendingImages';
 import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
 import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
 import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
@@ -32,34 +27,22 @@ import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
 import { usePromptHistory } from '@/widgets/chat-input/hooks/usePromptHistory';
 import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
 import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
-import { PendingImageThumbnail } from './PendingImageThumbnail';
-import { cn } from '@ayunis/ui/lib/cn';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
 import { SourcesList } from './SourcesList';
-import { ChatInputExpandable } from './ChatInputExpandable';
 import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
 import { ProcessingGlow } from '@/shared/ui/processing-glow';
-import './chat-input-glow.css';
+import {
+  ChatComposer,
+  type ChatInputSubmissionState,
+} from '@ayunis/chat/composer';
+import '@ayunis/chat/composer.css';
+
+export type { ChatInputSubmissionState } from '@ayunis/chat/composer';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
-
-/**
- * Lifecycle of an in-flight submit. The input behaves differently in each:
- *
- * - `idle`     — fully editable, send button visible, can submit if `canSend`.
- * - `submitting` — message is being delivered (upload + processing pipeline
- *                  on the new-chat page). Textarea is read-only, plus button
- *                  disabled, send button replaced with a cancel button. Local
- *                  message state is preserved so it survives a cancellation
- *                  or a failure.
- * - `streaming`  — assistant response is streaming. Textarea remains editable
- *                  (so the user can prepare a follow-up), but the send button
- *                  is replaced with a cancel button.
- */
-export type ChatInputSubmissionState = 'idle' | 'submitting' | 'streaming';
 
 interface ChatInputProps {
   modelId: string | undefined;
@@ -177,7 +160,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       if (!message) hasDictationRef.current = false;
     }, [message]);
     const isSubmitting = submissionState === 'submitting';
-    const isStreaming = submissionState === 'streaming';
     const inFlight = submissionState !== 'idle';
     const showProcessingGlow = inFlight;
     const { t } = useTranslation('common');
@@ -319,7 +301,6 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
       sources.length > 0 ||
       (knowledgeBases?.length ?? 0) > 0 ||
       (mcpIntegrations?.length ?? 0) > 0;
-    const hasPendingImages = pendingImages.length > 0;
 
     function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
       const pastedText = e.clipboardData.getData('text/plain');
@@ -343,105 +324,70 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
           data-processing={showProcessingGlow ? 'true' : undefined}
         >
           <OnboardingTourTarget name={TOUR_TARGET.chatComposer} settleMs={900}>
-            <Card
-              className={cn(
-                'chat-input-shell__card py-3 sm:py-4',
-                isDragging &&
-                  'border-2 border-dashed border-primary bg-primary/5',
-                showProcessingGlow && !isDragging && 'bg-card',
-              )}
-            >
-              <CardContent className="px-(--chat-input-content-padding)">
-                <div className="chat-input-body flex flex-col gap-4">
-                  {hasAttachmentChips && (
-                    <ChatInputExpandable show>
-                      <SourcesList
-                        sources={sources}
-                        knowledgeBases={knowledgeBases}
-                        mcpIntegrations={mcpIntegrations}
-                        onRemove={onRemoveSource}
-                        onRemoveKnowledgeBase={onRemoveKnowledgeBase}
-                        onRemoveIntegration={onRemoveIntegration}
-                      />
-                    </ChatInputExpandable>
-                  )}
-
-                  {hasPendingImages && (
-                    <ChatInputExpandable show>
-                      <div className="flex flex-wrap gap-2 items-center pt-0">
-                        {pendingImages.map((image: PendingImage) => (
-                          <PendingImageThumbnail
-                            key={image.id}
-                            image={image}
-                            onRemove={removeImage}
-                          />
-                        ))}
-                      </div>
-                    </ChatInputExpandable>
-                  )}
-
-                  <TextareaAutosize
-                    ref={textareaRef}
-                    minRows={1}
-                    maxRows={10}
-                    value={message}
-                    autoFocus
-                    readOnly={isSubmitting}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onPaste={handlePaste}
-                    onKeyDown={
-                      isSubmitting ? undefined : handlePromptHistoryKey
-                    }
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholder={placeholder ?? t('chatInput.placeholder')}
-                    aria-label={placeholder ?? t('chatInput.placeholder')}
-                    className={cn(
-                      'chat-input-shell__textarea border-0 border-none bg-transparent rounded-none resize-none focus:outline-none p-0',
-                      isHeightAnimationEnabled &&
-                        'chat-input-shell__textarea--animate',
-                      showProcessingGlow && 'opacity-90',
-                      isSubmitting && 'cursor-not-allowed',
-                      isStreaming && 'cursor-text',
-                    )}
-                    data-testid="input"
-                  />
-
-                  <ChatInputActionBar
-                    isSubmitting={isSubmitting}
-                    isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-                    isVisionEnabled={isVisionEnabled}
+            <ChatComposer
+              state={submissionState}
+              dragging={isDragging}
+              animateHeight={isHeightAnimationEnabled}
+              attachments={
+                hasAttachmentChips ? (
+                  <SourcesList
+                    sources={sources}
                     knowledgeBases={knowledgeBases}
                     mcpIntegrations={mcpIntegrations}
-                    onFileUpload={onFileUpload}
-                    onImageSelect={handleImageSelect}
-                    onAddKnowledgeBase={onAddKnowledgeBase}
-                    onAddIntegration={onAddIntegration}
-                    isAnonymous={isAnonymous}
-                    onAnonymousChange={onAnonymousChange}
-                    isAnonymousChangeDisabled={isAnonymousChangeDisabled}
-                    isAnonymousEnforced={isAnonymousEnforced}
-                    selectedSkillId={selectedSkillId}
-                    selectedSkillName={selectedSkillName}
-                    onSkillRemove={onSkillRemove}
-                    onSkillSelect={onSkillSelect}
-                    isModelChangeDisabled={isModelChangeDisabled}
-                    modelId={modelId}
-                    onModelChange={onModelChange}
-                    inFlight={inFlight}
-                    canSend={!!canSend}
-                    onSend={handleSend}
-                    onCancel={onCancel}
-                    isCancelDisabled={isCancelDisabled}
-                    setMessage={setMessage}
-                    textareaRef={textareaRef}
-                    onDictation={() => {
-                      hasDictationRef.current = true;
-                    }}
+                    onRemove={onRemoveSource}
+                    onRemoveKnowledgeBase={onRemoveKnowledgeBase}
+                    onRemoveIntegration={onRemoveIntegration}
                   />
-                </div>
-              </CardContent>
-            </Card>
+                ) : undefined
+              }
+              images={pendingImages}
+              onRemoveImage={removeImage}
+              textarea={{
+                ref: textareaRef,
+                value: message,
+                onChange: (event) => setMessage(event.target.value),
+                onPaste: handlePaste,
+                onKeyDown: isSubmitting ? undefined : handlePromptHistoryKey,
+                onFocus: () => setIsFocused(true),
+                onBlur: () => setIsFocused(false),
+                placeholder: placeholder ?? t('chatInput.placeholder'),
+                'aria-label': placeholder ?? t('chatInput.placeholder'),
+              }}
+              actions={
+                <ChatInputActionBar
+                  isSubmitting={isSubmitting}
+                  isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+                  isVisionEnabled={isVisionEnabled}
+                  knowledgeBases={knowledgeBases}
+                  mcpIntegrations={mcpIntegrations}
+                  onFileUpload={onFileUpload}
+                  onImageSelect={handleImageSelect}
+                  onAddKnowledgeBase={onAddKnowledgeBase}
+                  onAddIntegration={onAddIntegration}
+                  isAnonymous={isAnonymous}
+                  onAnonymousChange={onAnonymousChange}
+                  isAnonymousChangeDisabled={isAnonymousChangeDisabled}
+                  isAnonymousEnforced={isAnonymousEnforced}
+                  selectedSkillId={selectedSkillId}
+                  selectedSkillName={selectedSkillName}
+                  onSkillRemove={onSkillRemove}
+                  onSkillSelect={onSkillSelect}
+                  isModelChangeDisabled={isModelChangeDisabled}
+                  modelId={modelId}
+                  onModelChange={onModelChange}
+                  inFlight={inFlight}
+                  canSend={!!canSend}
+                  onSend={handleSend}
+                  onCancel={onCancel}
+                  isCancelDisabled={isCancelDisabled}
+                  setMessage={setMessage}
+                  textareaRef={textareaRef}
+                  onDictation={() => {
+                    hasDictationRef.current = true;
+                  }}
+                />
+              }
+            />
           </OnboardingTourTarget>
         </ProcessingGlow>
       </div>

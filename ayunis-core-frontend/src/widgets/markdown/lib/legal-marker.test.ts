@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { parseLegalMarker, splitLegalMarkers } from './legal-marker';
+import {
+  parseLegalMarker,
+  splitLegalMarkers,
+} from '@ayunis/chat/markdown/legal-marker';
 
 const STATE_SCOPES = [
   'DE-BW',

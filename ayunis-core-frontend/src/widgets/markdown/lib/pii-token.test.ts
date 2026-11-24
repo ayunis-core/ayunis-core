@@ -3,7 +3,7 @@ import {
   splitPiiTokens,
   containsPiiToken,
   resolvePiiTokens,
-} from './pii-token';
+} from '@ayunis/chat/markdown/pii-token';
 
 describe('splitPiiTokens', () => {
   it('returns a single text part when there are no tokens', () => {

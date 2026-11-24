@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 
 const styles = readFileSync(
-  'src/widgets/chat-input/ui/chat-input-glow.css',
+  createRequire(import.meta.url).resolve('@ayunis/chat/composer.css'),
   'utf8',
 );
 

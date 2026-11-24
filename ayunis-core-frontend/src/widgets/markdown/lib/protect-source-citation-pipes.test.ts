@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { protectSourceCitationPipes } from './protect-source-citation-pipes';
+import { protectSourceCitationPipes } from '@ayunis/chat/markdown/protect-source-citation-pipes';
 
 const MARKER = '{{source:123e4567-e89b-12d3-a456-426614174000|Quelle}}';
 

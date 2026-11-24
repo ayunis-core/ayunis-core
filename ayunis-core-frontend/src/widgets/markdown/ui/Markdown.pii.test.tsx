@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Markdown from './Markdown';
-import { PiiMaskProvider } from '@/widgets/markdown/model/pii-mask-context';
-import type { PiiMaskEntry } from '@/widgets/markdown/model/pii-mask-context';
+import { PiiMaskProvider } from '@ayunis/chat/markdown';
+import type { PiiMaskEntry } from '@ayunis/chat/markdown';
 
 const masks: PiiMaskEntry[] = [
   {

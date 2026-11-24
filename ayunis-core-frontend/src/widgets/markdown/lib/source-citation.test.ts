@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parseSourceCitationMarker,
   splitSourceCitationMarkers,
-} from './source-citation';
+} from '@ayunis/chat/markdown/source-citation';
 
 const CHUNK_ID = '123e4567-e89b-12d3-a456-426614174000';
 
