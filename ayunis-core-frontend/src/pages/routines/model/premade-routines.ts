@@ -1,5 +1,5 @@
 import {
-  DEFAULT_MODEL_OPTION,
+  EMPTY_ROUTINE_FORM,
   type RoutineFormFields,
 } from '@/features/routines';
 
@@ -9,11 +9,10 @@ import {
  * the user to fill in.
  */
 export const VERKUENDUNGSPLATTFORM_ROUTINE: RoutineFormFields = {
+  ...EMPTY_ROUTINE_FORM,
   name: 'Verkündungsplattform',
   dailyTime: '07:00',
-  internetEnabled: true,
-  mcpIntegrationIds: [],
-  modelId: DEFAULT_MODEL_OPTION,
+  internetAccess: 'all',
   prompt: `Prüfe die Verkündungsplattform bzw. das elektronische Gesetz- und Verordnungsblatt meines Bundeslandes auf heute veröffentlichte Gesetze und Verordnungen und bewerte ihre Relevanz für meine Arbeit.
 
 Mein Bundesland: [Bundesland eintragen, z. B. Nordrhein-Westfalen]

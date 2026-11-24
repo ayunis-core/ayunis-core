@@ -79,7 +79,8 @@ function EditRoutineForm({
     setUpdated(true),
   );
 
-  // Update the form when params change (for streaming updates)
+  // Streaming replaces the domains array on every update; its text stays equal.
+  const allowedDomains = params.allowed_domains?.join('\n');
   useEffect(() => {
     form.reset(
       editRoutineParamsToFormFields(
@@ -87,7 +88,8 @@ function EditRoutineForm({
           name: params.name,
           prompt: params.prompt,
           daily_time: params.daily_time,
-          internet_enabled: params.internet_enabled,
+          internet_access: params.internet_access,
+          allowed_domains: allowedDomains?.split('\n'),
         },
         storedRoutine,
       ),
@@ -97,7 +99,8 @@ function EditRoutineForm({
     params.name,
     params.prompt,
     params.daily_time,
-    params.internet_enabled,
+    params.internet_access,
+    allowedDomains,
     storedRoutine,
   ]);
 

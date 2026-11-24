@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 
 export class RoutineResponseDto {
   @ApiProperty({ format: 'uuid' })
@@ -23,15 +24,19 @@ export class RoutineResponseDto {
   @ApiProperty({ description: 'HH:mm (Europe/Berlin)', example: '07:30' })
   dailyTime: string;
 
-  @ApiProperty()
-  internetEnabled: boolean;
+  @ApiProperty({
+    enum: RoutineInternetAccess,
+    enumName: 'RoutineInternetAccess',
+  })
+  internetAccess: RoutineInternetAccess;
 
   @ApiProperty({
     type: [String],
-    format: 'uuid',
-    description: 'Integrations whose tools the routine may use',
+    description:
+      'Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode',
+    example: ['nrw.de'],
   })
-  mcpIntegrationIds: string[];
+  allowedDomains: string[];
 
   @ApiProperty()
   enabled: boolean;

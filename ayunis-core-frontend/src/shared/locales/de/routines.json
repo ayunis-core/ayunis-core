@@ -40,8 +40,14 @@
     "dailyTimeDescription": "Uhrzeit in Europe/Berlin.",
     "internet": "Internetzugriff",
     "internetDescription": "Erlaubt der Routine, im Web zu suchen und Webseiten zu lesen.",
-    "integrations": "Integrationen",
-    "integrationsDescription": "Die Routine kann die Werkzeuge der eingeschalteten Integrationen nutzen, ohne Sie vorher zu fragen.",
+    "internetAccess": {
+      "off": "Aus",
+      "all": "Alle Websites",
+      "allowlist": "Nur diese Domains"
+    },
+    "allowedDomains": "Erlaubte Domains",
+    "allowedDomainsPlaceholder": "nrw.de\nrecht.nrw.de",
+    "allowedDomainsDescription": "Eine Domain pro Zeile, höchstens 20. Jede schließt ihre Subdomains ein.",
     "integrationUnavailable": "Nicht verfügbare Integration",
     "cancel": "Abbrechen",
     "create": "Erstellen",
@@ -76,7 +82,21 @@
     },
     "configuration": {
       "title": "Konfiguration",
-      "description": "Name, Aufgabe, Modell, Zeitplan, Internetzugriff und Integrationen dieser Routine."
+      "description": "Name, Aufgabe, Modell, Zeitplan und Internetzugriff dieser Routine."
+    },
+    "context": {
+      "title": "Kontext",
+      "description": "Was die Routine bei jeder Ausführung nutzen kann. Änderungen werden sofort gespeichert.",
+      "integrations": "Integrationen",
+      "knowledgeBases": "Wissenssammlungen",
+      "integrationsDescription": "Die Routine kann die Werkzeuge der eingeschalteten Integrationen nutzen, ohne Sie vorher zu fragen.",
+      "knowledgeBasesDescription": "Die Routine kann die eingeschalteten Wissenssammlungen durchsuchen.",
+      "integrationsEmpty": "Ihnen stehen keine Integrationen zur Verfügung.",
+      "knowledgeBasesEmpty": "Sie haben noch keine Wissenssammlungen.",
+      "loadError": "Diese Liste konnte nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "toggleAriaLabel": "{{name}} umschalten",
+      "sharedBadge": "Freigegeben"
     }
   },
   "schedule": {
@@ -125,7 +145,9 @@
     "integrationUnavailable": "Eine ausgewählte Integration ist für Sie nicht verfügbar.",
     "runStarted": "Routine gestartet. Das Ergebnis erscheint als neuer Chat.",
     "runError": "Die Routine konnte nicht gestartet werden.",
-    "subscriptionRequired": "Ein Abonnement oder verbleibende Testnachrichten sind erforderlich."
+    "subscriptionRequired": "Ein Abonnement oder verbleibende Testnachrichten sind erforderlich.",
+    "contextSaveError": "Die Änderung konnte nicht gespeichert werden.",
+    "knowledgeBaseUnavailable": "Diese Wissenssammlung steht Ihnen nicht zur Verfügung."
   },
   "validation": {
     "name": {
@@ -146,6 +168,17 @@
     },
     "modelId": {
       "invalid": "Ungültiges Modell"
+    },
+    "allowedDomains": {
+      "required": "Fügen Sie mindestens eine Domain hinzu",
+      "too-many": "Geben Sie höchstens 20 Domains ein",
+      "arrayMaxSize": "Geben Sie höchstens 20 Domains ein",
+      "ip-address": "„{{domain}}“ ist eine IP-Adresse; geben Sie eine Domain wie nrw.de ein",
+      "wildcard": "„{{domain}}“ enthält *; eine Domain schließt ihre Subdomains bereits ein",
+      "missing-dot": "„{{domain}}“ ist keine Domain wie nrw.de",
+      "invalid": "Ungültige Domains",
+      "maxLength": "Ein Eintrag ist zu lang",
+      "invalidDomain": "„{{domain}}“ ist keine gültige Domain"
     },
     "invalid": "Ungültige Eingabe"
   }

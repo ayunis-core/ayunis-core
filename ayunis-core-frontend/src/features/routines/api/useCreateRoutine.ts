@@ -13,6 +13,7 @@ import type {
   Routine,
 } from '@/features/routines/model/openapi';
 import type { RoutineFormFields } from '@/features/routines/model/types';
+import { allowedDomainsErrorMessage } from '@/features/routines/lib/allowed-domains-error';
 
 export function useCreateRoutine(
   form: UseFormReturn<RoutineFormFields>,
@@ -31,7 +32,7 @@ export function useCreateRoutine(
       },
       onError: (error: unknown) => {
         try {
-          const { code, errors } = extractErrorData(error);
+          const { code, errors, metadata } = extractErrorData(error);
           switch (code) {
             case 'VALIDATION_ERROR':
               if (errors) setValidationErrors(form, errors, t, 'validation');
@@ -47,8 +48,10 @@ export function useCreateRoutine(
             case 'MODEL_NOT_FOUND':
               showError(t('toast.modelUnavailable'));
               break;
-            case 'ROUTINE_INTEGRATION_UNAVAILABLE':
-              showError(t('toast.integrationUnavailable'));
+            case 'ROUTINE_INVALID_ALLOWED_DOMAINS':
+              form.setError('allowedDomains', {
+                message: allowedDomainsErrorMessage(metadata, t),
+              });
               break;
             default:
               showError(t('toast.createError'));

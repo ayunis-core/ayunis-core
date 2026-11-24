@@ -29,6 +29,9 @@ import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-c
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import type { UUID } from 'crypto';
+import { FindAccessibleKnowledgeBasesByIdsUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-bases-by-ids/find-accessible-knowledge-bases-by-ids.use-case';
+import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
+import { KnowledgeBaseAssignment } from 'src/domain/threads/domain/thread-knowledge-base-assignment.entity';
 
 @Injectable()
 export class CreateThreadUseCase {
@@ -43,6 +46,7 @@ export class CreateThreadUseCase {
     private readonly findNotificationUseCase: FindNotificationUseCase,
     private readonly findReleaseNoteUseCase: FindReleaseNoteUseCase,
     private readonly getMcpIntegrationsByIdsUseCase: GetMcpIntegrationsByIdsUseCase,
+    private readonly findAccessibleKnowledgeBasesByIdsUseCase: FindAccessibleKnowledgeBasesByIdsUseCase,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -56,7 +60,8 @@ export class CreateThreadUseCase {
     const model = await this.resolveModel(command, userId);
     const isAnonymous = model.anonymousOnly || (command.isAnonymous ?? false);
 
-    const mcpIntegrationIds = await this.assertLinksAccessible(command);
+    const { mcpIntegrationIds, knowledgeBaseAssignments } =
+      await this.assertLinksAccessible(command);
 
     try {
       const thread = new Thread({
@@ -69,6 +74,7 @@ export class CreateThreadUseCase {
         origin: command.origin,
         client: this.contextService.get('client') ?? null,
         mcpIntegrationIds,
+        knowledgeBaseAssignments,
         messages: [],
       });
       const createdThread = await this.threadsRepository.create(thread);
@@ -87,10 +93,11 @@ export class CreateThreadUseCase {
     }
   }
 
-  /** Checks every resource the thread links to; returns its integration ids. */
-  private async assertLinksAccessible(
-    command: CreateThreadCommand,
-  ): Promise<UUID[]> {
+  /** Checks every resource the thread links to; returns the links to store. */
+  private async assertLinksAccessible(command: CreateThreadCommand): Promise<{
+    mcpIntegrationIds: UUID[];
+    knowledgeBaseAssignments: KnowledgeBaseAssignment[];
+  }> {
     // Throws WorkspaceNotFoundError for an id the caller does not own.
     if (command.workspaceId) {
       await this.workspaceReadAccess.execute({
@@ -98,7 +105,31 @@ export class CreateThreadUseCase {
       });
     }
     await this.assertOriginReadable(command.origin);
-    return this.findMcpIntegrations(command.mcpIntegrationIds ?? []);
+    return {
+      mcpIntegrationIds: await this.findMcpIntegrations(
+        command.mcpIntegrationIds ?? [],
+      ),
+      knowledgeBaseAssignments: await this.findKnowledgeBases(
+        command.knowledgeBaseIds ?? [],
+      ),
+    };
+  }
+
+  /** The same access check as adding a knowledge base to an existing thread. */
+  private async findKnowledgeBases(
+    ids: UUID[],
+  ): Promise<KnowledgeBaseAssignment[]> {
+    if (ids.length === 0) return [];
+    const found = await this.findAccessibleKnowledgeBasesByIdsUseCase.execute({
+      knowledgeBaseIds: ids,
+    });
+    const foundIds = new Set(found.map(({ id }) => id));
+    const missing = ids.find((id) => !foundIds.has(id));
+    if (missing) throw new KnowledgeBaseNotFoundError(missing);
+    return found.map(
+      ({ id, name }) =>
+        new KnowledgeBaseAssignment({ knowledgeBase: { id, name } }),
+    );
   }
 
   /** The same check as adding an integration to an existing thread. */

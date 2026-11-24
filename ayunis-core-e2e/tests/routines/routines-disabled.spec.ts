@@ -3,6 +3,9 @@ import { login } from "../../src/clients/api/auth.client";
 import { getRolePermissions } from "../../src/clients/api/role-permissions.client";
 import {
   requestFeatureToggles,
+  requestRoutineLinkAdd,
+  requestRoutineLinkRemoval,
+  requestRoutineLinks,
   requestRoutineRun,
   requestRoutines,
 } from "../../src/clients/api/routines.client";
@@ -34,6 +37,18 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
   expect(
     (await requestRoutineRun(api, randomUUID(), disabledApiUrl)).status(),
   ).toBe(404);
+  for (const kind of ["mcp-integrations", "knowledge-bases"] as const) {
+    const routineId = randomUUID();
+    const linkedId = randomUUID();
+    const responses = await Promise.all([
+      requestRoutineLinks(api, routineId, kind, disabledApiUrl),
+      requestRoutineLinkAdd(api, routineId, kind, linkedId, disabledApiUrl),
+      requestRoutineLinkRemoval(api, routineId, kind, linkedId, disabledApiUrl),
+    ]);
+    expect(responses.map((response) => response.status())).toEqual([
+      404, 404, 404,
+    ]);
+  }
   expect((await requestNotifications(api, disabledApiUrl)).status()).toBe(404);
   expect(
     (await requestUnreadNotificationCount(api, disabledApiUrl)).status(),

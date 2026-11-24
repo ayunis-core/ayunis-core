@@ -36,8 +36,8 @@ const STORED_ROUTINE = {
   prompt: 'Stored prompt',
   modelId: 'model-id',
   dailyTime: '07:00',
-  internetEnabled: false,
-  mcpIntegrationIds: [],
+  internetAccess: 'off',
+  allowedDomains: [],
 };
 
 const content = {

@@ -3,6 +3,7 @@ import type { Routine } from 'src/domain/routines/domain/routine.entity';
 import type { RoutineRunOutcome } from 'src/domain/routines/domain/routine-run-outcome';
 import type { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import type { RoutineScheduleChanges } from 'src/domain/routines/domain/routine-schedule';
+import type { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 
 /** The fields a user edits; omitted properties stay unchanged. */
 export interface RoutineDefinitionChanges {
@@ -10,9 +11,8 @@ export interface RoutineDefinitionChanges {
   prompt?: string;
   modelId?: UUID | null;
   dailyTime?: string;
-  internetEnabled?: boolean;
-  /** Replaces the routine's integrations. */
-  mcpIntegrationIds?: UUID[];
+  internetAccess?: RoutineInternetAccess;
+  allowedDomains?: string[];
   enabled?: boolean;
 }
 
@@ -45,17 +45,18 @@ export abstract class RoutinesRepository {
   abstract findAllByUserId(userId: UUID): Promise<Routine[]>;
   /** Enabled routines whose next run is due by `now`, earliest first. */
   abstract findDue(now: Date, limit: number): Promise<DueRoutine[]>;
-  /**
-   * Writes only the given fields, so a concurrent run's status survives.
-   * Replacing the integrations takes more than one statement, so call it in a
-   * transaction.
-   */
+  /** Writes only the given fields, so a concurrent run's status survives. */
   abstract updateDefinition(
     userId: UUID,
     id: UUID,
     changes: RoutineDefinitionChanges & RoutineScheduleChanges,
   ): Promise<Routine | null>;
   abstract delete(userId: UUID, id: UUID): Promise<boolean>;
+  /** Adding a linked integration or knowledge base again changes nothing. */
+  abstract addMcpIntegration(id: UUID, integrationId: UUID): Promise<void>;
+  abstract removeMcpIntegration(id: UUID, integrationId: UUID): Promise<void>;
+  abstract addKnowledgeBase(id: UUID, knowledgeBaseId: UUID): Promise<void>;
+  abstract removeKnowledgeBase(id: UUID, knowledgeBaseId: UUID): Promise<void>;
   /**
    * Moves an enabled routine's next run from `expected` to `next`. Returns
    * false when another sweep (or an edit) already moved it, so only one

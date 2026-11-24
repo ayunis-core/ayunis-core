@@ -10,8 +10,8 @@ describe('routine form values', () => {
     name: 'Amtsblatt',
     prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
     dailyTime: '07:30',
-    internetEnabled: true,
-    mcpIntegrationIds: [],
+    internetAccess: 'allowlist' as const,
+    allowedDomains: 'nrw.de\n  recht.nrw.de, bund.de\n\n',
   };
   const modelId = '890dbfa7-989f-4f2b-9808-7e722dcb2bf0';
 
@@ -41,6 +41,23 @@ describe('routine form values', () => {
       expect(formFieldsToUpdateDto({ ...fields, modelId }).modelId).toBe(
         modelId,
       );
+    });
+
+    it('sends one allowed domain per entry, however they are separated', () => {
+      expect(
+        formFieldsToUpdateDto({ ...fields, modelId }).allowedDomains,
+      ).toEqual(['nrw.de', 'recht.nrw.de', 'bund.de']);
+    });
+
+    it('keeps the stored domains in another mode, so an edit of the hidden list cannot fail the save', () => {
+      expect(
+        formFieldsToUpdateDto({
+          ...fields,
+          modelId,
+          internetAccess: 'off',
+          allowedDomains: 'kein-host',
+        }),
+      ).not.toHaveProperty('allowedDomains');
     });
   });
 });

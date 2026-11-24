@@ -17,19 +17,12 @@ export class RoutineIntegrationService {
   ) {}
 
   /**
-   * Each added integration must be enabled in the org and connected for the
-   * user. Integrations the routine already has are kept as they are, so an
-   * edit of other fields still saves after one became unavailable; the run
-   * then fails until it is removed or usable again.
+   * An integration can only be added while it is enabled in the org and
+   * connected for the user. One the routine already has stays when it becomes
+   * unavailable; the run then fails until it is removed or usable again.
    */
-  async select(
-    integrationIds: UUID[],
-    alreadySelected: UUID[] = [],
-  ): Promise<UUID[]> {
-    const selected = [...new Set(integrationIds)];
-    const added = selected.filter((id) => !alreadySelected.includes(id));
-    if (added.length > 0) await this.assertAvailable(added);
-    return selected;
+  assertAddable(integrationId: UUID): Promise<void> {
+    return this.assertAvailable([integrationId]);
   }
 
   /**

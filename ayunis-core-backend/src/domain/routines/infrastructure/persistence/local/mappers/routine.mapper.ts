@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Routine } from 'src/domain/routines/domain/routine.entity';
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
+import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 
 @Injectable()
@@ -14,8 +15,10 @@ export class RoutineMapper {
       prompt: record.prompt,
       modelId: record.modelId,
       dailyTime: record.dailyTime,
-      internetEnabled: record.internetEnabled,
+      internetAccess: record.internetAccess,
+      allowedDomains: record.allowedDomains,
       mcpIntegrationIds: record.mcpIntegrationIds ?? [],
+      knowledgeBaseIds: record.knowledgeBaseIds ?? [],
       enabled: record.enabled,
       lastRunStatus: record.lastRunStatus,
       lastRunAt: record.lastRunAt,
@@ -39,9 +42,13 @@ export class RoutineMapper {
     record.prompt = domain.prompt;
     record.modelId = domain.modelId;
     record.dailyTime = domain.dailyTime;
-    record.internetEnabled = domain.internetEnabled;
+    record.internetAccess = domain.internetAccess;
+    record.allowedDomains = domain.allowedDomains;
     record.mcpIntegrations = domain.mcpIntegrationIds.map(
       (id) => ({ id }) as McpIntegrationRecord,
+    );
+    record.knowledgeBases = domain.knowledgeBaseIds.map(
+      (id) => ({ id }) as KnowledgeBaseRecord,
     );
     record.enabled = domain.enabled;
     record.lastRunStatus = domain.lastRunStatus;

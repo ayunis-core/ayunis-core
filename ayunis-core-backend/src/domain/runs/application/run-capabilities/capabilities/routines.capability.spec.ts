@@ -1,5 +1,6 @@
 import { aRoutine } from 'src/domain/routines/application/testing/routine.fixtures';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import type { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import {
@@ -34,7 +35,6 @@ describe('RoutinesCapability', () => {
         name: '',
         prompt: '',
         daily_time: '08:00',
-        internet_enabled: true,
         change_summary: 'Eine halbe Stunde später',
       }),
     ).toMatchObject({ routine_id: routine.id });
@@ -44,10 +44,24 @@ describe('RoutinesCapability', () => {
         name: '',
         prompt: '',
         daily_time: '',
-        internet_enabled: true,
         change_summary: 'Fremde Routine',
       }),
     ).toThrow();
+  });
+
+  it("tells the model each routine's internet access and allowed domains", async () => {
+    const limited = aRoutine({
+      internetAccess: RoutineInternetAccess.ALLOWLIST,
+      allowedDomains: ['nrw.de', 'bund.de'],
+    });
+
+    const contribution = await capability([limited]).contribute(
+      aCapabilityContext(),
+    );
+
+    expect(JSON.stringify(contribution.tools?.[1].parameters)).toContain(
+      'internet_access allowlist, allowed_domains nrw.de, bund.de',
+    );
   });
 
   it('offers only routine creation to a user without routines', async () => {

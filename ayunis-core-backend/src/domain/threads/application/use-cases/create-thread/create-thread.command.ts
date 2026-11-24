@@ -13,6 +13,8 @@ export class CreateThreadCommand {
   origin?: ThreadOrigin;
   /** Integrations attached to the new thread, as if added one by one. */
   mcpIntegrationIds?: UUID[];
+  /** Knowledge bases attached to the new thread, as if added one by one. */
+  knowledgeBaseIds?: UUID[];
 
   constructor(params: {
     modelId?: UUID;
@@ -23,6 +25,7 @@ export class CreateThreadCommand {
     workspaceId?: UUID;
     origin?: ThreadOrigin;
     mcpIntegrationIds?: UUID[];
+    knowledgeBaseIds?: UUID[];
   }) {
     this.modelId = params.modelId;
     this.mode = params.mode;
@@ -32,5 +35,6 @@ export class CreateThreadCommand {
     this.workspaceId = params.workspaceId;
     this.origin = params.origin;
     this.mcpIntegrationIds = params.mcpIntegrationIds;
+    this.knowledgeBaseIds = params.knowledgeBaseIds;
   }
 }

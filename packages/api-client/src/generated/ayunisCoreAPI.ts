@@ -34807,3 +34807,461 @@ export const useLogoutControllerLogout = <TError = unknown,
       return useMutation(getLogoutControllerLogoutMutationOptions(options), queryClient);
     }
 
+/**
+ * Only the ones the user can still access; a knowledge base whose share was revoked is left out, and is back once it is shared again.
+ * @summary List a routine's knowledge bases
+ */
+export const routineKnowledgeBasesControllerList = (
+    routineId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<KnowledgeBaseResponseDto[]>(
+      {url: `/routines/${routineId}/knowledge-bases`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutineKnowledgeBasesControllerListQueryKey = (routineId: string,) => {
+    return [
+    `/routines/${routineId}/knowledge-bases`
+    ] as const;
+    }
+
+
+export const getRoutineKnowledgeBasesControllerListQueryOptions = <TData = Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError = void>(routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRoutineKnowledgeBasesControllerListQueryKey(routineId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>> = ({ signal }) => routineKnowledgeBasesControllerList(routineId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: routineId !== null && routineId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RoutineKnowledgeBasesControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>>
+export type RoutineKnowledgeBasesControllerListQueryError = void
+
+
+export function useRoutineKnowledgeBasesControllerList<TData = Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError = void>(
+ routineId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutineKnowledgeBasesControllerList<TData = Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError = void>(
+ routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutineKnowledgeBasesControllerList<TData = Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError = void>(
+ routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List a routine's knowledge bases
+ */
+
+export function useRoutineKnowledgeBasesControllerList<TData = Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError = void>(
+ routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRoutineKnowledgeBasesControllerListQueryOptions(routineId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * A personal knowledge base the user owns or that is shared with them. Adding one the routine already has changes nothing.
+ * @summary Add a knowledge base to a routine
+ */
+export const routineKnowledgeBasesControllerAdd = (
+    routineId: string,
+    knowledgeBaseId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/routines/${routineId}/knowledge-bases/${knowledgeBaseId}`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutineKnowledgeBasesControllerAddMutationKey = () => ['routineKnowledgeBasesControllerAdd'] as const;
+
+export const getRoutineKnowledgeBasesControllerAddMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerAdd>>, TError,RoutineKnowledgeBasesControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerAdd>>, TError,RoutineKnowledgeBasesControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getRoutineKnowledgeBasesControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routineKnowledgeBasesControllerAdd>>, RoutineKnowledgeBasesControllerAddMutationVariables> = (props) => {
+          const {routineId,knowledgeBaseId} = props ?? {};
+
+          return  routineKnowledgeBasesControllerAdd(routineId,knowledgeBaseId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutineKnowledgeBasesControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof routineKnowledgeBasesControllerAdd>>>
+
+    export type RoutineKnowledgeBasesControllerAddMutationError = void
+    export type RoutineKnowledgeBasesControllerAddMutationVariables = {routineId: string;knowledgeBaseId: string}
+
+    /**
+ * @summary Add a knowledge base to a routine
+ */
+export const useRoutineKnowledgeBasesControllerAdd = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerAdd>>, TError,RoutineKnowledgeBasesControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routineKnowledgeBasesControllerAdd>>,
+        TError,
+        RoutineKnowledgeBasesControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutineKnowledgeBasesControllerAddMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove a knowledge base from a routine
+ */
+export const routineKnowledgeBasesControllerRemove = (
+    routineId: string,
+    knowledgeBaseId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/routines/${routineId}/knowledge-bases/${knowledgeBaseId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutineKnowledgeBasesControllerRemoveMutationKey = () => ['routineKnowledgeBasesControllerRemove'] as const;
+
+export const getRoutineKnowledgeBasesControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerRemove>>, TError,RoutineKnowledgeBasesControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerRemove>>, TError,RoutineKnowledgeBasesControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getRoutineKnowledgeBasesControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routineKnowledgeBasesControllerRemove>>, RoutineKnowledgeBasesControllerRemoveMutationVariables> = (props) => {
+          const {routineId,knowledgeBaseId} = props ?? {};
+
+          return  routineKnowledgeBasesControllerRemove(routineId,knowledgeBaseId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutineKnowledgeBasesControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof routineKnowledgeBasesControllerRemove>>>
+
+    export type RoutineKnowledgeBasesControllerRemoveMutationError = void
+    export type RoutineKnowledgeBasesControllerRemoveMutationVariables = {routineId: string;knowledgeBaseId: string}
+
+    /**
+ * @summary Remove a knowledge base from a routine
+ */
+export const useRoutineKnowledgeBasesControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineKnowledgeBasesControllerRemove>>, TError,RoutineKnowledgeBasesControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routineKnowledgeBasesControllerRemove>>,
+        TError,
+        RoutineKnowledgeBasesControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutineKnowledgeBasesControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
+ * Includes integrations that are no longer enabled or connected; a run fails until they are removed or usable again.
+ * @summary List a routine's integrations
+ */
+export const routineMcpIntegrationsControllerList = (
+    routineId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<McpIntegrationResponseDto[]>(
+      {url: `/routines/${routineId}/mcp-integrations`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutineMcpIntegrationsControllerListQueryKey = (routineId: string,) => {
+    return [
+    `/routines/${routineId}/mcp-integrations`
+    ] as const;
+    }
+
+
+export const getRoutineMcpIntegrationsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError = void>(routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRoutineMcpIntegrationsControllerListQueryKey(routineId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>> = ({ signal }) => routineMcpIntegrationsControllerList(routineId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: routineId !== null && routineId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RoutineMcpIntegrationsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>>
+export type RoutineMcpIntegrationsControllerListQueryError = void
+
+
+export function useRoutineMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError = void>(
+ routineId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutineMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError = void>(
+ routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoutineMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError = void>(
+ routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List a routine's integrations
+ */
+
+export function useRoutineMcpIntegrationsControllerList<TData = Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError = void>(
+ routineId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRoutineMcpIntegrationsControllerListQueryOptions(routineId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * The integration must be enabled and connected for the user. Adding one the routine already has changes nothing.
+ * @summary Add an integration to a routine
+ */
+export const routineMcpIntegrationsControllerAdd = (
+    routineId: string,
+    integrationId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/routines/${routineId}/mcp-integrations/${integrationId}`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutineMcpIntegrationsControllerAddMutationKey = () => ['routineMcpIntegrationsControllerAdd'] as const;
+
+export const getRoutineMcpIntegrationsControllerAddMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerAdd>>, TError,RoutineMcpIntegrationsControllerAddMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerAdd>>, TError,RoutineMcpIntegrationsControllerAddMutationVariables, TContext> => {
+
+const mutationKey = getRoutineMcpIntegrationsControllerAddMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routineMcpIntegrationsControllerAdd>>, RoutineMcpIntegrationsControllerAddMutationVariables> = (props) => {
+          const {routineId,integrationId} = props ?? {};
+
+          return  routineMcpIntegrationsControllerAdd(routineId,integrationId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutineMcpIntegrationsControllerAddMutationResult = NonNullable<Awaited<ReturnType<typeof routineMcpIntegrationsControllerAdd>>>
+
+    export type RoutineMcpIntegrationsControllerAddMutationError = void
+    export type RoutineMcpIntegrationsControllerAddMutationVariables = {routineId: string;integrationId: string}
+
+    /**
+ * @summary Add an integration to a routine
+ */
+export const useRoutineMcpIntegrationsControllerAdd = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerAdd>>, TError,RoutineMcpIntegrationsControllerAddMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routineMcpIntegrationsControllerAdd>>,
+        TError,
+        RoutineMcpIntegrationsControllerAddMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutineMcpIntegrationsControllerAddMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove an integration from a routine
+ */
+export const routineMcpIntegrationsControllerRemove = (
+    routineId: string,
+    integrationId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/routines/${routineId}/mcp-integrations/${integrationId}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutineMcpIntegrationsControllerRemoveMutationKey = () => ['routineMcpIntegrationsControllerRemove'] as const;
+
+export const getRoutineMcpIntegrationsControllerRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerRemove>>, TError,RoutineMcpIntegrationsControllerRemoveMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerRemove>>, TError,RoutineMcpIntegrationsControllerRemoveMutationVariables, TContext> => {
+
+const mutationKey = getRoutineMcpIntegrationsControllerRemoveMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routineMcpIntegrationsControllerRemove>>, RoutineMcpIntegrationsControllerRemoveMutationVariables> = (props) => {
+          const {routineId,integrationId} = props ?? {};
+
+          return  routineMcpIntegrationsControllerRemove(routineId,integrationId,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutineMcpIntegrationsControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof routineMcpIntegrationsControllerRemove>>>
+
+    export type RoutineMcpIntegrationsControllerRemoveMutationError = void
+    export type RoutineMcpIntegrationsControllerRemoveMutationVariables = {routineId: string;integrationId: string}
+
+    /**
+ * @summary Remove an integration from a routine
+ */
+export const useRoutineMcpIntegrationsControllerRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routineMcpIntegrationsControllerRemove>>, TError,RoutineMcpIntegrationsControllerRemoveMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routineMcpIntegrationsControllerRemove>>,
+        TError,
+        RoutineMcpIntegrationsControllerRemoveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutineMcpIntegrationsControllerRemoveMutationOptions(options), queryClient);
+    }
+

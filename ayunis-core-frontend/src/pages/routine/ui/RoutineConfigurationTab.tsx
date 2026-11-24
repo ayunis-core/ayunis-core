@@ -19,6 +19,7 @@ import {
   type Routine,
   type RoutineFormFields,
 } from '@/features/routines';
+import { RoutineContextCard } from './RoutineContextCard';
 
 export function RoutineConfigurationTab({
   routine,
@@ -27,6 +28,7 @@ export function RoutineConfigurationTab({
     <div className="grid gap-4">
       <RoutineStatusCard routine={routine} />
       <RoutineConfigurationCard routine={routine} />
+      <RoutineContextCard routineId={routine.id} />
     </div>
   );
 }

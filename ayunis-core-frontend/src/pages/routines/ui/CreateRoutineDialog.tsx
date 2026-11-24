@@ -12,13 +12,13 @@ import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import {
   formFieldsToCreateDto,
-  RoutineFormFieldset,
+  RoutineCreateFieldset,
   useCreateRoutine,
   type RoutineFormFields,
 } from '@/features/routines';
 
 interface CreateRoutineDialogProps {
-  /** The fields to start from: empty, or a premade routine. */
+  /** The fields to start from: empty, or a premade routine, whose other settings are kept. */
   initialValues: RoutineFormFields;
   onClose: () => void;
 }
@@ -59,7 +59,7 @@ export function CreateRoutineDialog({
             className="space-y-4"
             data-testid="routine-form"
           >
-            <RoutineFormFieldset form={form} disabled={isCreating} />
+            <RoutineCreateFieldset form={form} disabled={isCreating} />
             <DialogFooter>
               <Button
                 type="button"

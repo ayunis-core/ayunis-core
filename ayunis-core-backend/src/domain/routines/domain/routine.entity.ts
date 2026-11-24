@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { RoutineRunStatus } from './routine-run-status.enum';
+import { RoutineInternetAccess } from './routine-internet-access';
 
 export class Routine {
   readonly id: UUID;
@@ -12,9 +13,13 @@ export class Routine {
   readonly modelId: UUID | null;
   /** HH:mm in Europe/Berlin. */
   readonly dailyTime: string;
-  readonly internetEnabled: boolean;
+  readonly internetAccess: RoutineInternetAccess;
+  /** Normalized hosts; stored in every mode, applied only in `allowlist`. */
+  readonly allowedDomains: string[];
   /** Integrations whose tools the routine's runs may use. */
   readonly mcpIntegrationIds: UUID[];
+  /** Personal knowledge bases its runs may query, while the owner can access them. */
+  readonly knowledgeBaseIds: UUID[];
   readonly enabled: boolean;
   readonly lastRunStatus: RoutineRunStatus | null;
   readonly lastRunAt: Date | null;
@@ -39,8 +44,10 @@ export class Routine {
     prompt: string;
     modelId: UUID | null;
     dailyTime: string;
-    internetEnabled: boolean;
+    internetAccess?: RoutineInternetAccess;
+    allowedDomains?: string[];
     mcpIntegrationIds?: UUID[];
+    knowledgeBaseIds?: UUID[];
     enabled: boolean;
     lastRunStatus?: RoutineRunStatus | null;
     lastRunAt?: Date | null;
@@ -60,8 +67,10 @@ export class Routine {
     this.prompt = params.prompt;
     this.modelId = params.modelId;
     this.dailyTime = params.dailyTime;
-    this.internetEnabled = params.internetEnabled;
+    this.internetAccess = params.internetAccess ?? RoutineInternetAccess.OFF;
+    this.allowedDomains = params.allowedDomains ?? [];
     this.mcpIntegrationIds = params.mcpIntegrationIds ?? [];
+    this.knowledgeBaseIds = params.knowledgeBaseIds ?? [];
     this.enabled = params.enabled;
     this.lastRunStatus = params.lastRunStatus ?? null;
     this.lastRunAt = params.lastRunAt ?? null;

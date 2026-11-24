@@ -4,6 +4,7 @@ import {
   TEST_USER_ID,
 } from 'src/common/context/testing/context.fixtures';
 import { Routine } from 'src/domain/routines/domain/routine.entity';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import type { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import type { RoutineExecutionQueue } from 'src/domain/routines/application/ports/routine-execution-queue.port';
 
@@ -20,7 +21,7 @@ export function aRoutine(overrides: Partial<Routine> = {}): Routine {
     prompt: 'Prüfe die heutigen Verkündungen im Gesetz- und Verordnungsblatt.',
     modelId: TEST_MODEL_ID,
     dailyTime: '07:30',
-    internetEnabled: true,
+    internetAccess: RoutineInternetAccess.ALL,
     enabled: true,
     createdAt: new Date('2026-11-01T08:00:00.000Z'),
     updatedAt: new Date('2026-11-01T08:00:00.000Z'),
@@ -40,6 +41,10 @@ export function createMockRoutinesRepository(): jest.Mocked<RoutinesRepository> 
     findDue: jest.fn().mockResolvedValue([]),
     updateDefinition: jest.fn().mockResolvedValue(null),
     delete: jest.fn().mockResolvedValue(false),
+    addMcpIntegration: jest.fn().mockResolvedValue(undefined),
+    removeMcpIntegration: jest.fn().mockResolvedValue(undefined),
+    addKnowledgeBase: jest.fn().mockResolvedValue(undefined),
+    removeKnowledgeBase: jest.fn().mockResolvedValue(undefined),
     moveNextRunAt: jest.fn().mockResolvedValue(true),
     markRunQueued: jest.fn().mockResolvedValue(true),
     setRunStatus: jest.fn().mockResolvedValue(undefined),

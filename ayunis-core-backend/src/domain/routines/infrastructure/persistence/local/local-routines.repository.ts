@@ -103,21 +103,13 @@ export class LocalRoutinesRepository extends RoutinesRepository {
   async updateDefinition(
     userId: UUID,
     id: UUID,
-    {
-      mcpIntegrationIds,
-      ...changes
-    }: RoutineDefinitionChanges & RoutineScheduleChanges,
+    changes: RoutineDefinitionChanges & RoutineScheduleChanges,
   ): Promise<Routine | null> {
     const set = Object.fromEntries(
       Object.entries(changes as Record<string, unknown>).filter(
         ([, value]) => value !== undefined,
       ),
     ) as QueryDeepPartialEntity<RoutineRecord>;
-    // The integrations live in a join table; touching the row keeps updatedAt
-    // current when they are the only change.
-    if (mcpIntegrationIds !== undefined && Object.keys(set).length === 0) {
-      set.updatedAt = () => 'CURRENT_TIMESTAMP';
-    }
     if (Object.keys(set).length > 0) {
       const result = await this.repo
         .createQueryBuilder()
@@ -127,36 +119,55 @@ export class LocalRoutinesRepository extends RoutinesRepository {
         .execute();
       if ((result.affected ?? 0) === 0) return null;
     }
-    if (mcpIntegrationIds !== undefined) {
-      const stored = await this.findById(userId, id);
-      if (!stored) return null;
-      await this.replaceMcpIntegrations(
-        id,
-        stored.mcpIntegrationIds,
-        mcpIntegrationIds,
-      );
-    }
     return this.findById(userId, id);
-  }
-
-  private async replaceMcpIntegrations(
-    id: UUID,
-    stored: UUID[],
-    desired: UUID[],
-  ): Promise<void> {
-    await this.repo
-      .createQueryBuilder()
-      .relation(RoutineRecord, 'mcpIntegrations')
-      .of(id)
-      .addAndRemove(
-        desired.filter((integrationId) => !stored.includes(integrationId)),
-        stored.filter((integrationId) => !desired.includes(integrationId)),
-      );
   }
 
   async delete(userId: UUID, id: UUID): Promise<boolean> {
     const result = await this.repo.delete({ id, userId });
     return (result.affected ?? 0) > 0;
+  }
+
+  async addMcpIntegration(id: UUID, integrationId: UUID): Promise<void> {
+    await this.addLink(ROUTINE_MCP_INTEGRATIONS, {
+      routinesId: id,
+      mcpIntegrationsId: integrationId,
+    });
+  }
+
+  async removeMcpIntegration(id: UUID, integrationId: UUID): Promise<void> {
+    await this.repo
+      .createQueryBuilder()
+      .relation(RoutineRecord, 'mcpIntegrations')
+      .of(id)
+      .remove(integrationId);
+  }
+
+  async addKnowledgeBase(id: UUID, knowledgeBaseId: UUID): Promise<void> {
+    await this.addLink(ROUTINE_KNOWLEDGE_BASES, {
+      routinesId: id,
+      knowledgeBasesId: knowledgeBaseId,
+    });
+  }
+
+  async removeKnowledgeBase(id: UUID, knowledgeBaseId: UUID): Promise<void> {
+    await this.repo
+      .createQueryBuilder()
+      .relation(RoutineRecord, 'knowledgeBases')
+      .of(id)
+      .remove(knowledgeBaseId);
+  }
+
+  private async addLink(
+    joinTable: string,
+    row: Record<string, UUID>,
+  ): Promise<void> {
+    await this.repo
+      .createQueryBuilder()
+      .insert()
+      .into(joinTable)
+      .values(row)
+      .orIgnore()
+      .execute();
   }
 
   async moveNextRunAt(id: UUID, expected: Date, next: Date): Promise<boolean> {
@@ -284,6 +295,10 @@ export class LocalRoutinesRepository extends RoutinesRepository {
     }));
   }
 }
+
+/** Join tables of the record's many-to-many relations. */
+const ROUTINE_MCP_INTEGRATIONS = 'routine_mcp_integrations';
+const ROUTINE_KNOWLEDGE_BASES = 'routine_knowledge_bases';
 
 /**
  * How many execution requests a routine remembers as started. A job is

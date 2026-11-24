@@ -2,6 +2,8 @@ import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { config } from '../../config';
 import type {
   CreateRoutineDto,
+  KnowledgeBaseResponseDto,
+  McpIntegrationResponseDto,
   RoutineResponseDto,
   GetThreadsResponseDtoItem,
   UpdateRoutineDto,
@@ -14,7 +16,7 @@ export function finishingRoutine(name: string): CreateRoutineDto {
     name,
     prompt: `E2E finish routine: ${name}`,
     dailyTime: '07:00',
-    internetEnabled: false,
+    internetAccess: 'off',
   };
 }
 
@@ -28,7 +30,7 @@ export function failingRoutine(name: string): CreateRoutineDto {
     name,
     prompt: `Fasse das Amtsblatt zusammen: ${name}`,
     dailyTime: berlinTime(new Date(Date.now() - 60 * 60 * 1000)),
-    internetEnabled: false,
+    internetAccess: 'off',
   };
 }
 
@@ -106,6 +108,52 @@ export function updateRoutine(
   data: UpdateRoutineDto,
 ): Promise<RoutineResponseDto> {
   return generatedApi.routinesControllerUpdate(routineId, data, { api });
+}
+
+export function listRoutineIntegrations(
+  api: APIRequestContext,
+  routineId: string,
+): Promise<McpIntegrationResponseDto[]> {
+  return generatedApi.routineMcpIntegrationsControllerList(routineId, { api });
+}
+
+export function listRoutineKnowledgeBases(
+  api: APIRequestContext,
+  routineId: string,
+): Promise<KnowledgeBaseResponseDto[]> {
+  return generatedApi.routineKnowledgeBasesControllerList(routineId, { api });
+}
+
+/** The routine's integration and knowledge-base endpoints, for one linked resource. */
+export type RoutineLinkKind = 'mcp-integrations' | 'knowledge-bases';
+
+export function requestRoutineLinks(
+  api: APIRequestContext,
+  routineId: string,
+  kind: RoutineLinkKind,
+  apiURL = config.apiURL,
+): Promise<APIResponse> {
+  return api.get(`${apiURL}/api/routines/${routineId}/${kind}`);
+}
+
+export function requestRoutineLinkAdd(
+  api: APIRequestContext,
+  routineId: string,
+  kind: RoutineLinkKind,
+  linkedId: string,
+  apiURL = config.apiURL,
+): Promise<APIResponse> {
+  return api.post(`${apiURL}/api/routines/${routineId}/${kind}/${linkedId}`);
+}
+
+export function requestRoutineLinkRemoval(
+  api: APIRequestContext,
+  routineId: string,
+  kind: RoutineLinkKind,
+  linkedId: string,
+  apiURL = config.apiURL,
+): Promise<APIResponse> {
+  return api.delete(`${apiURL}/api/routines/${routineId}/${kind}/${linkedId}`);
 }
 
 // Raw requests for asserting denied access; `apiURL` targets another backend

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FindManageableRoutinesUseCase } from 'src/domain/routines/application/use-cases/find-manageable-routines/find-manageable-routines.use-case';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
+import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { assembleTools } from 'src/domain/runs/application/run-capabilities/assemble-tools.helper';
@@ -45,6 +46,16 @@ export class RoutinesCapability implements RunCapability {
 }
 
 function summarize(routine: Routine): string {
-  const internet = routine.internetEnabled ? 'on' : 'off';
-  return `${JSON.stringify(routine.name)} (daily at ${routine.dailyTime}, internet ${internet})`;
+  return `${JSON.stringify(routine.name)} (daily at ${routine.dailyTime}, internet_access ${describeInternet(routine)})`;
+}
+
+function describeInternet(routine: Routine): string {
+  switch (routine.internetAccess) {
+    case RoutineInternetAccess.OFF:
+      return 'off';
+    case RoutineInternetAccess.ALL:
+      return 'all';
+    case RoutineInternetAccess.ALLOWLIST:
+      return `allowlist, allowed_domains ${routine.allowedDomains.join(', ')}`;
+  }
 }

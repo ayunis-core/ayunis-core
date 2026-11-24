@@ -39,6 +39,9 @@ test("creates the routine the assistant proposes in the chat, once", async ({
 
   const widget = page.getByTestId("create-routine-widget");
   await expect(widget.getByTestId("routine-form-name")).toHaveValue(name);
+  await expect(widget.getByTestId("routine-form-allowed-domains")).toHaveValue(
+    "nrw.de",
+  );
   await widget.getByTestId("routine-form-name").fill(reviewedName);
   await widget.getByTestId("create-routine-widget-submit").click();
 
@@ -48,7 +51,8 @@ test("creates the routine the assistant proposes in the chat, once", async ({
     )
     .toMatchObject({
       dailyTime: "06:45",
-      internetEnabled: true,
+      internetAccess: "allowlist",
+      allowedDomains: ["nrw.de"],
       modelId: null,
       enabled: true,
     });
@@ -72,7 +76,8 @@ test("edits a routine from the chat and keeps what the edit leaves unchanged", a
   const routine = await createRoutine(api, {
     ...finishingRoutine(`Bebauungspläne ${randomUUID().slice(0, 8)}`),
     modelId: model.id,
-    internetEnabled: true,
+    internetAccess: "allowlist",
+    allowedDomains: ["nrw.de", "bund.de"],
   });
   await page.goto("/chat");
   await sendMessage(page, `E2E edit routine: ${routine.id}`);
@@ -90,7 +95,8 @@ test("edits a routine from the chat and keeps what the edit leaves unchanged", a
       prompt: routine.prompt,
       modelId: model.id,
       dailyTime: "08:15",
-      internetEnabled: false,
+      internetAccess: "allowlist",
+      allowedDomains: ["nrw.de", "bund.de"],
     });
 });
 

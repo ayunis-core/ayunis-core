@@ -1,8 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -15,7 +17,12 @@ import {
   ROUTINE_NAME_MAX_LENGTH,
   ROUTINE_PROMPT_MAX_LENGTH,
   ROUTINE_SOURCE_TOOL_CALL_ID_MAX_LENGTH,
+  ROUTINE_ALLOWED_DOMAIN_INPUT_MAX_LENGTH,
 } from 'src/domain/routines/domain/routines.constants';
+import {
+  ROUTINE_ALLOWED_DOMAINS_MAX,
+  RoutineInternetAccess,
+} from 'src/domain/routines/domain/routine-internet-access';
 
 const NOT_BLANK = /\S/;
 
@@ -52,23 +59,29 @@ export class CreateRoutineDto {
   @Matches(ROUTINE_DAILY_TIME_PATTERN)
   dailyTime: string;
 
-  @ApiProperty({
-    description: 'Whether the routine may search and read the web',
+  @ApiPropertyOptional({
+    enum: RoutineInternetAccess,
+    enumName: 'RoutineInternetAccess',
+    description:
+      'Whether the routine may search and read the web: not at all, any website, or only `allowedDomains`',
+    default: RoutineInternetAccess.OFF,
   })
-  @IsBoolean()
-  internetEnabled: boolean;
+  @IsOptional()
+  @IsEnum(RoutineInternetAccess)
+  internetAccess?: RoutineInternetAccess;
 
   @ApiPropertyOptional({
-    description:
-      'Integrations whose tools the routine may use; each must be enabled and connected for the user',
     type: [String],
-    format: 'uuid',
+    description: `Domains (or URLs, reduced to their host) the routine may access in \`allowlist\` mode, each with its subdomains; at most ${ROUTINE_ALLOWED_DOMAINS_MAX}, no IP addresses or wildcards. \`allowlist\` needs at least one.`,
+    example: ['nrw.de'],
     default: [],
   })
   @IsOptional()
   @IsArray()
-  @IsUUID('all', { each: true })
-  mcpIntegrationIds?: UUID[];
+  @ArrayMaxSize(ROUTINE_ALLOWED_DOMAINS_MAX)
+  @IsString({ each: true })
+  @MaxLength(ROUTINE_ALLOWED_DOMAIN_INPUT_MAX_LENGTH, { each: true })
+  allowedDomains?: string[];
 
   @ApiPropertyOptional({
     description: 'Whether the routine runs on its schedule',
