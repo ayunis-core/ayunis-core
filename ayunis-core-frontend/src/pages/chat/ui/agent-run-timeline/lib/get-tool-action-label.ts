@@ -1,7 +1,9 @@
 import type { TFunction } from 'i18next';
+import type { ToolAction } from '@ayunis/chat/tool-cards';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
 
 import { formatToolName } from '@/pages/chat/lib/format-tool-name';
+import { chatToolCards } from './tool-card-registrations';
 
 export interface ToolActionLabel {
   verb: string;
@@ -34,203 +36,112 @@ function asStringList(value: unknown): string | undefined {
   );
 }
 
+const textToolActions: ReadonlyMap<string, ToolAction> = new Map([
+  [
+    'activate_skill',
+    {
+      labelKey: 'chat.timeline.actions.activate_skill',
+      targetParams: ['name'],
+    },
+  ],
+  [
+    'get_memory',
+    { labelKey: 'chat.timeline.actions.get_memory', targetParams: ['key'] },
+  ],
+  [
+    'set_memory',
+    { labelKey: 'chat.timeline.actions.set_memory', targetParams: ['key'] },
+  ],
+  [
+    'internet_search',
+    {
+      labelKey: 'chat.timeline.actions.internet_search',
+      targetParams: ['query'],
+    },
+  ],
+  [
+    'website_content',
+    {
+      labelKey: 'chat.timeline.actions.website_content',
+      targetParams: ['url'],
+    },
+  ],
+  [
+    'source_query',
+    {
+      labelKey: 'chat.timeline.actions.source_query',
+      listTargetParam: 'queries',
+      targetParams: ['query'],
+    },
+  ],
+  [
+    'source_get_text',
+    {
+      labelKey: 'chat.timeline.actions.source_query',
+      listTargetParam: 'queries',
+      targetParams: ['query'],
+    },
+  ],
+  [
+    'knowledge_query',
+    {
+      labelKey: 'chat.timeline.actions.knowledge_query',
+      listTargetParam: 'queries',
+      targetParams: ['query'],
+    },
+  ],
+  [
+    'knowledge_get_text',
+    {
+      labelKey: 'chat.timeline.actions.knowledge_query',
+      listTargetParam: 'queries',
+      targetParams: ['query'],
+    },
+  ],
+  [
+    'recording_search',
+    {
+      labelKey: 'chat.timeline.actions.recording_search',
+      listTargetParam: 'queries',
+    },
+  ],
+  ['code_execution', { labelKey: 'chat.timeline.actions.code_execution' }],
+  ['http', { labelKey: 'chat.timeline.actions.http', targetParams: ['url'] }],
+  ['chat_list', { labelKey: 'chat.timeline.actions.chat_list' }],
+  ['chat_read', { labelKey: 'chat.timeline.actions.chat_read' }],
+  [
+    'chat_grep',
+    { labelKey: 'chat.timeline.actions.chat_grep', targetParams: ['pattern'] },
+  ],
+]);
+
 export function getToolActionLabel(
   toolUse: ToolUseMessageContent,
   t: TFunction,
 ): ToolActionLabel {
   const params = (toolUse.params as Record<string, unknown> | undefined) ?? {};
   const name = toolUse.name;
+  const action = chatToolCards.get(name)?.action ?? textToolActions.get(name);
 
-  const pastChatLabel = getPastChatActionLabel(name, params, t);
-  if (pastChatLabel) return pastChatLabel;
-
-  switch (name) {
-    case 'create_file':
-      return {
-        verb: t('chat.timeline.actions.create_file'),
-        target: asString(params.filename),
-      };
-    case 'create_document':
-      return {
-        verb: t('chat.timeline.actions.create_document'),
-        target: asString(params.title),
-      };
-    case 'update_document':
-      return {
-        verb: t('chat.timeline.actions.update_document'),
-        target: asString(params.title),
-      };
-    case 'edit_document':
-      return {
-        verb: t('chat.timeline.actions.edit_document'),
-        target: asString(params.title),
-      };
-    case 'read_document':
-      return {
-        verb: t('chat.timeline.actions.read_document'),
-        target: asString(params.title),
-      };
-    case 'create_diagram':
-      return {
-        verb: t('chat.timeline.actions.create_diagram'),
-        target: asString(params.title),
-      };
-    case 'update_diagram':
-      return {
-        verb: t('chat.timeline.actions.update_diagram'),
-        target: asString(params.title),
-      };
-    case 'create_spreadsheet':
-      return {
-        verb: t('chat.timeline.actions.create_spreadsheet'),
-        target: asString(params.title),
-      };
-    case 'update_spreadsheet':
-      return {
-        verb: t('chat.timeline.actions.update_spreadsheet'),
-        target: asString(params.title),
-      };
-    case 'bar_chart':
-    case 'line_chart':
-    case 'pie_chart':
-      return {
-        verb: t('chat.timeline.actions.chart'),
-        target: asString(params.title),
-      };
-    case 'map':
-      return {
-        verb: t('chat.timeline.actions.map'),
-        target: asString(params.title),
-      };
-    case 'generate_image':
-      return {
-        verb: t('chat.timeline.actions.generate_image'),
-        target: asString(params.prompt),
-      };
-    case 'send_email':
-      return {
-        verb: t('chat.timeline.actions.send_email'),
-        target: asString(params.subject) ?? asString(params.to),
-      };
-    case 'create_calendar_event':
-      return {
-        verb: t('chat.timeline.actions.create_calendar_event'),
-        target: asString(params.title),
-      };
-    case 'create_skill':
-      return {
-        verb: t('chat.timeline.actions.create_skill'),
-        target: asString(params.name),
-      };
-    case 'edit_skill':
-      return {
-        verb: t('chat.timeline.actions.edit_skill'),
-        target: asString(params.name),
-      };
-    case 'create_routine':
-      return {
-        verb: t('chat.timeline.actions.create_routine'),
-        target: asString(params.name),
-      };
-    case 'edit_routine':
-      return {
-        verb: t('chat.timeline.actions.edit_routine'),
-        target: asString(params.name),
-      };
-    case 'install_marketplace_skill':
-      return {
-        verb: t('chat.timeline.actions.install_marketplace_skill'),
-        target: asString(params.name) ?? asString(params.identifier),
-      };
-    case 'add_anonymization_exception':
-      return {
-        verb: t('chat.timeline.actions.add_anonymization_exception'),
-      };
-    case 'activate_skill':
-      return {
-        verb: t('chat.timeline.actions.activate_skill'),
-        target: asString(params.name),
-      };
-    case 'get_memory':
-      return {
-        verb: t('chat.timeline.actions.get_memory'),
-        target: asString(params.key),
-      };
-    case 'set_memory':
-      return {
-        verb: t('chat.timeline.actions.set_memory'),
-        target: asString(params.key),
-      };
-    case 'internet_search':
-      return {
-        verb: t('chat.timeline.actions.internet_search'),
-        target: asString(params.query),
-      };
-    case 'website_content':
-      return {
-        verb: t('chat.timeline.actions.website_content'),
-        target: asString(params.url),
-      };
-    case 'source_query':
-    case 'source_get_text':
-      return {
-        verb: t('chat.timeline.actions.source_query'),
-        target: asStringList(params.queries) ?? asString(params.query),
-      };
-    case 'knowledge_query':
-    case 'knowledge_get_text':
-      return {
-        verb: t('chat.timeline.actions.knowledge_query'),
-        target: asStringList(params.queries) ?? asString(params.query),
-      };
-    case 'recording_search':
-      return {
-        verb: t('chat.timeline.actions.recording_search'),
-        target: asStringList(params.queries),
-      };
-    case 'code_execution':
-      return { verb: t('chat.timeline.actions.code_execution') };
-    case 'http':
-      return {
-        verb: t('chat.timeline.actions.http'),
-        target: asString(params.url),
-      };
-    default: {
-      // MCP tool / unknown: fall back to formatted tool name + first scalar param
-      const verb = t(`chat.tools.${name}`, {
-        defaultValue: t('chat.timeline.actions.use_tool', {
-          tool: formatToolName(name),
-        }),
-      });
-      const target = pickFirstScalarParam(params);
-      return { verb, target };
-    }
+  if (action) {
+    const list = action.listTargetParam
+      ? asStringList(params[action.listTargetParam])
+      : undefined;
+    const target =
+      list ?? firstString(action.targetParams?.map((key) => params[key]) ?? []);
+    return { verb: t(action.labelKey), target };
   }
+
+  const verb = t(`chat.tools.${name}`, {
+    defaultValue: t('chat.timeline.actions.use_tool', {
+      tool: formatToolName(name),
+    }),
+  });
+  return { verb, target: firstString(Object.values(params)) };
 }
 
-function getPastChatActionLabel(
-  name: string,
-  params: Record<string, unknown>,
-  t: TFunction,
-): ToolActionLabel | undefined {
-  switch (name) {
-    case 'chat_list':
-    case 'chat_read':
-      return { verb: t(`chat.timeline.actions.${name}`) };
-    case 'chat_grep':
-      return {
-        verb: t('chat.timeline.actions.chat_grep'),
-        target: asString(params.pattern),
-      };
-    default:
-      return undefined;
-  }
-}
-
-function pickFirstScalarParam(
-  params: Record<string, unknown>,
-): string | undefined {
-  for (const value of Object.values(params)) {
+function firstString(values: readonly unknown[]): string | undefined {
+  for (const value of values) {
     const str = asString(value);
     if (str !== undefined) return str;
   }

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ToolUseMessageContent } from '@/pages/chat/model/openapi';
+import { renderRichToolCard } from '@/pages/chat/ui/agent-run-timeline/lib/render-rich-tool-card';
 import ReadDocumentWidget from './ReadDocumentWidget';
 
 vi.mock('react-i18next', () => ({
@@ -19,18 +20,20 @@ function readDocumentCall(): ToolUseMessageContent {
 }
 
 describe('ReadDocumentWidget', () => {
-  it('opens the document returned by a successful read', () => {
+  it('opens the document from the registered read card through the host callback', () => {
     const onOpenArtifact = vi.fn();
     render(
-      <ReadDocumentWidget
-        content={readDocumentCall()}
-        result={JSON.stringify({
+      renderRichToolCard({
+        toolUse: readDocumentCall(),
+        result: JSON.stringify({
           artifactId: 'artifact-11',
           title: 'Script 11',
           version: 1,
-        })}
-        onOpenArtifact={onOpenArtifact}
-      />,
+        }),
+        isStreaming: false,
+        index: 0,
+        onOpenArtifact,
+      }),
     );
 
     expect(screen.getByText('Script 11')).toBeTruthy();
