@@ -1,6 +1,7 @@
-import { MeResponseDto } from '../dtos/auth-response.dto';
+import { MeResponseDto } from 'src/iam/authentication/presenters/http/dtos/auth-response.dto';
 import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import { Injectable } from '@nestjs/common';
+import { getTokenSurfaceScopes } from 'src/config/surface-registry';
 
 @Injectable()
 export class MeResponseDtoMapper {
@@ -12,6 +13,7 @@ export class MeResponseDtoMapper {
       role: user.role,
       systemRole: user.systemRole,
       name: user.name,
+      scopes: getTokenSurfaceScopes(user.client),
     };
   }
 }

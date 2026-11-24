@@ -16,7 +16,8 @@ import {
 } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
 import { Roles } from 'src/iam/authorization/application/decorators/roles.decorator';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { ModelModeDefaultLevel } from 'src/domain/models/domain/value-objects/model-mode-default-level.enum';
 import { GetDefaultModelSelectionUseCase } from 'src/domain/models/application/use-cases/get-default-model-selection/get-default-model-selection.use-case';
@@ -39,7 +40,7 @@ export class ModelModeDefaultsController {
     private readonly setModelModeDefaultUseCase: SetModelModeDefaultUseCase,
   ) {}
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.MODELS_READ)
   @Get('default-selection')
   @ApiOperation({
     summary: "What a new chat preselects: the caller's default mode or model",

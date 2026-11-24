@@ -9,7 +9,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 import {
   ApiOperation,
   ApiBody,
@@ -105,7 +106,7 @@ export class RunsController {
     private readonly ssePresenter: RunSsePresenter,
   ) {}
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT)
   @Post('send-message')
   @RequireSubscription()
   @UseInterceptors(FilesInterceptor('images', MAX_IMAGES, IMAGE_UPLOAD_OPTIONS))

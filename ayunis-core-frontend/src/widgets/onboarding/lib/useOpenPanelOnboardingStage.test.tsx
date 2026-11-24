@@ -47,6 +47,7 @@ function me(role: MeResponseDto['role']): MeResponseDto {
     name: 'Anna Amsel',
     role,
     systemRole: 'customer',
+    scopes: [],
   };
 }
 

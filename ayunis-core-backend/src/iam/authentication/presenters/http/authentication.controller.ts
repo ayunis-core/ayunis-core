@@ -40,7 +40,8 @@ import {
   setMfaPendingCookie,
 } from 'src/common/util/cookie.util';
 import { extractAccessToken } from 'src/common/util/access-token.util';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 import { RefreshTokenRequestDto } from './dtos/session-tokens.dto';
 import { SessionTokensResponseDtoMapper } from './mappers/session-tokens-response-dto.mapper';
 import { ApiRefresh } from './decorators/api-refresh.decorator';
@@ -78,7 +79,6 @@ export class AuthenticationController {
   private readonly logger = new Logger(AuthenticationController.name);
 
   // NestJS injects these use cases and adapters through the controller constructor.
-  // eslint-disable-next-line max-params
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokens: RefreshTokenSingleFlightService,
@@ -208,7 +208,7 @@ export class AuthenticationController {
   }
 
   @Public()
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.SESSION)
   @Post('refresh')
   // Every rotation writes a refresh-token row, so an uncapped endpoint lets a
   // token holder grow the table without bound. The limit is per IP and refresh
@@ -290,7 +290,7 @@ export class AuthenticationController {
     }
   }
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.SESSION)
   @Get('me')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

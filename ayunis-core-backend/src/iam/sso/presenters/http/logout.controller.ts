@@ -16,7 +16,8 @@ import { CompleteSsoLogoutCommand } from 'src/iam/sso/application/use-cases/comp
 import { CompleteSsoLogoutUseCase } from 'src/iam/sso/application/use-cases/complete-sso-logout/complete-sso-logout.use-case';
 import { LogoutResponseDto } from 'src/iam/sso/presenters/http/dto/logout.response-dto';
 import { LogoutRequestDto } from 'src/iam/sso/presenters/http/dto/logout.request-dto';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -27,7 +28,7 @@ export class LogoutController {
   ) {}
 
   @Public()
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.SESSION)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SurfaceScope } from 'src/config/surface-scope';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
 
@@ -88,6 +89,15 @@ export class MeResponseDto {
     example: 'John Doe',
   })
   name: string;
+
+  @ApiProperty({
+    description:
+      'Scopes granted to the current token surface. Empty for browser sessions.',
+    enum: SurfaceScope,
+    enumName: 'SurfaceScope',
+    isArray: true,
+  })
+  scopes: readonly SurfaceScope[];
 }
 
 export class ErrorResponseDto {

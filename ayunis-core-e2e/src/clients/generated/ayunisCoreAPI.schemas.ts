@@ -7316,6 +7316,22 @@ export const MeResponseDtoSystemRole = {
   super_admin: 'super_admin',
 } as const;
 
+/**
+ * Scopes granted to the current token surface. Empty for browser sessions.
+ */
+export type SurfaceScope = typeof SurfaceScope[keyof typeof SurfaceScope];
+
+
+export const SurfaceScope = {
+  'academy:read': 'academy:read',
+  chat: 'chat',
+  'chat-settings:read': 'chat-settings:read',
+  'models:read': 'models:read',
+  session: 'session',
+  uploads: 'uploads',
+  voice: 'voice',
+} as const;
+
 export interface MeResponseDto {
   /** User id */
   id: string;
@@ -7329,6 +7345,8 @@ export interface MeResponseDto {
   systemRole: MeResponseDtoSystemRole;
   /** User name */
   name: string;
+  /** Scopes granted to the current token surface. Empty for browser sessions. */
+  scopes: SurfaceScope[];
 }
 
 export interface MfaCodeRequestDto {
