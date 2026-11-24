@@ -2,6 +2,7 @@ import type { SearchWebUseCase } from 'src/domain/retrievers/internet-search-ret
 import { SearchWebCommand } from 'src/domain/retrievers/internet-search-retrievers/application/use-cases/search-web/search-web.command';
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { InternetSearchToolHandler } from './internet-search-tool.handler';
+import { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 
 const context = {
   threadId: '123e4567-e89b-12d3-a456-426614174000',
@@ -24,6 +25,24 @@ describe('InternetSearchToolHandler', () => {
 
     expect(search).toHaveBeenCalledWith(
       new SearchWebCommand('Sperrmüll anmelden Musterstadt', controller.signal),
+    );
+  });
+
+  it("limits the web search to the tool's allowed domains", async () => {
+    const search = jest.fn().mockResolvedValue([]);
+    const handler = new InternetSearchToolHandler({
+      execute: search,
+    } as unknown as SearchWebUseCase);
+    const allowedDomains = new AllowedDomains(['nrw.de']);
+
+    await handler.execute({
+      tool: new InternetSearchTool(allowedDomains),
+      input: { query: 'Gesetzblatt 2026' },
+      context,
+    });
+
+    expect(search).toHaveBeenCalledWith(
+      new SearchWebCommand('Gesetzblatt 2026', undefined, allowedDomains),
     );
   });
 });

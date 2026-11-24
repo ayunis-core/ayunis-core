@@ -14,7 +14,9 @@ import {
   UrlRetrieverProviderNotAvailableError,
   UrlRetrieverUnsupportedContentTypeError,
   UrlRetrieverParsingError,
+  UrlRetrieverDomainNotAllowedError,
 } from 'src/domain/retrievers/url-retrievers/application/url-retriever.errors';
+import type { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 import { ApplicationError } from 'src/common/errors/base.error';
 import { AssertCrawlDomainAccessUseCase } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.use-case';
 import { AssertCrawlDomainAccessCommand } from 'src/domain/crawl-domain-grants/application/use-cases/assert-crawl-domain-access/assert-crawl-domain-access.command';
@@ -41,6 +43,7 @@ export class RetrieveUrlUseCase {
   @HandleUnexpectedErrors(UnexpectedUrlRetrieverError)
   async execute(command: RetrieveUrlCommand): Promise<UrlRetrieverResult> {
     this.logger.debug({ url: command.url }, 'Retrieving URL');
+    this.assertAllowedDomain(command.url, command.allowedDomains);
 
     // Org-scoped crawl gate — runs BEFORE the try/catch so a thrown
     // CrawlDomainAccessDeniedError (404) is not swallowed into a retriever
@@ -61,6 +64,7 @@ export class RetrieveUrlUseCase {
       },
       () => this.fetchAndParse(command),
     );
+    this.assertAllowedDomain(result.url, command.allowedDomains);
     if (result.url !== command.url) {
       await this.assertCrawlDomainAccessUseCase.execute(
         new AssertCrawlDomainAccessCommand(result.url, command.orgId),
@@ -86,10 +90,12 @@ export class RetrieveUrlUseCase {
                   new AssertCrawlDomainAccessCommand(url, command.orgId, true),
                 )
             : undefined,
-        onRedirect: (url) =>
-          this.assertCrawlDomainAccessUseCase.execute(
+        onRedirect: async (url) => {
+          this.assertAllowedDomain(url, command.allowedDomains);
+          await this.assertCrawlDomainAccessUseCase.execute(
             new AssertCrawlDomainAccessCommand(url, command.orgId),
-          ),
+          );
+        },
         // Let the handler reject unsupported types from headers alone, before it
         // buffers the body. Content-type interpretation is an application
         // concern, so the policy stays here rather than in the adapter.
@@ -99,6 +105,15 @@ export class RetrieveUrlUseCase {
       return await this.parseByContentType(raw, command.url, command.orgId);
     } catch (error) {
       return this.mapError(error, command.url);
+    }
+  }
+
+  private assertAllowedDomain(
+    url: string,
+    allowedDomains: AllowedDomains | undefined,
+  ): void {
+    if (allowedDomains && !allowedDomains.allowsUrl(url)) {
+      throw new UrlRetrieverDomainNotAllowedError(url, allowedDomains);
     }
   }
 

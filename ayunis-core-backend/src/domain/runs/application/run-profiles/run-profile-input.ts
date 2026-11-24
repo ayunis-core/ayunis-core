@@ -16,6 +16,8 @@ export interface RoutineRunProfileInput {
     readonly name: string;
     /** The routine's own toggle; the org's internet setting still applies. */
     readonly internetEnabled: boolean;
+    /** Web hosts the routine's web tools may reach. Absent: any host. */
+    readonly allowedDomains?: readonly string[];
   };
 }
 

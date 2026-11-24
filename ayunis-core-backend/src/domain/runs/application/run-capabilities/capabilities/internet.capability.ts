@@ -5,10 +5,12 @@ import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { AssembleToolUseCase } from 'src/domain/tools/application/use-cases/assemble-tool/assemble-tool.use-case';
 import { assembleTools } from 'src/domain/runs/application/run-capabilities/assemble-tools.helper';
 import type { RunCapabilityContext } from 'src/domain/runs/application/run-capabilities/run-capability-context';
-import type {
-  CapabilityContribution,
-  RunCapability,
+import {
+  PromptSlot,
+  type CapabilityContribution,
+  type RunCapability,
 } from 'src/domain/runs/application/run-capabilities/run-capability';
+import type { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 
 /**
  * `website_content` and `internet_search`, offered only while the org allows
@@ -24,8 +26,14 @@ export class InternetCapability implements RunCapability {
     private readonly assembleToolUseCase: AssembleToolUseCase,
   ) {}
 
-  async contribute(
+  contribute(context: RunCapabilityContext): Promise<CapabilityContribution> {
+    return this.contributeWebTools(context);
+  }
+
+  /** The web tools, limited to `allowedDomains` when given. */
+  async contributeWebTools(
     context: RunCapabilityContext,
+    allowedDomains?: AllowedDomains,
   ): Promise<CapabilityContribution> {
     if (!context.model.canUseTools) return {};
     const orgChatSettings = await this.getOrgChatSettingsUseCase.execute();
@@ -37,7 +45,27 @@ export class InternetCapability implements RunCapability {
     if (this.configService.get<boolean>('internetSearch.isAvailable')) {
       types.push(ToolType.INTERNET_SEARCH);
     }
-    const tools = await assembleTools(this.assembleToolUseCase, types);
-    return { tools };
+    const tools = await assembleTools(
+      this.assembleToolUseCase,
+      types,
+      allowedDomains,
+    );
+    if (!allowedDomains) return { tools };
+    return {
+      tools,
+      sections: [
+        {
+          slot: PromptSlot.POLICIES,
+          content: allowedDomainsPolicy(allowedDomains),
+        },
+      ],
+    };
   }
+}
+
+function allowedDomainsPolicy(allowedDomains: AllowedDomains): string {
+  return `<allowed_domains>
+Web access in this run is limited to these domains and their subdomains: ${allowedDomains.toString()}
+${ToolType.WEBSITE_CONTENT} refuses pages on other domains, including redirects to them, and ${ToolType.INTERNET_SEARCH} only returns results from these domains. Look for the information there.
+</allowed_domains>`;
 }

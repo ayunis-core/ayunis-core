@@ -140,6 +140,24 @@ describe('StaanInternetSearchHandler', () => {
     await expect(handler.search('q')).rejects.toThrow('status 401');
   });
 
+  it('restricts the search to the allowed domains through include_domains', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({ web: { results: [] } }),
+    } as Response);
+
+    await handler.search('Gesetzblatt 2026', undefined, ['nrw.de', 'bund.de']);
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://api.staan.ai/v2/search/web');
+    expect(init?.method).toBe('POST');
+    expect(JSON.parse(init?.body as string)).toEqual({
+      q: 'Gesetzblatt 2026',
+      market: 'de-de',
+      include_domains: ['nrw.de', 'bund.de'],
+    });
+  });
+
   it('aborts the request when the caller cancels', async () => {
     const controller = new AbortController();
     const fetchMock = jest

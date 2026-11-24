@@ -6,6 +6,8 @@ import { InternetSearchResultType } from 'src/domain/retrievers/internet-search-
 import { searchRequestSignal } from './search-request-signal';
 
 const MAX_RESULTS = 10;
+// Staan rejects a longer include_domains list with a 400.
+const MAX_INCLUDE_DOMAINS = 20;
 
 type StaanSearchResult = {
   web?: {
@@ -26,10 +28,11 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
   async search(
     query: string,
     signal?: AbortSignal,
+    allowedDomains?: readonly string[],
   ): Promise<InternetSearchResult[]> {
     this.logger.debug({ input: query }, 'Using Staan internet search handler');
 
-    const [url, init] = this.buildRequest(query);
+    const [url, init] = this.buildRequest(query, allowedDomains);
     const response = await fetch(url, {
       ...init,
       signal: searchRequestSignal(signal),
@@ -49,7 +52,10 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
     return this.mapResults(data);
   }
 
-  private buildRequest(query: string): [string, RequestInit] {
+  private buildRequest(
+    query: string,
+    allowedDomains: readonly string[] | undefined,
+  ): [string, RequestInit] {
     const apiKey = this.configService.get<string>(
       'internetSearch.staan.apiKey',
     );
@@ -62,11 +68,29 @@ export class StaanInternetSearchHandler implements InternetSearchHandler {
       this.configService.get<string>('internetSearch.staan.url') ||
       'https://api.staan.ai/v2/search/web';
 
-    const url = `${baseUrl}?q=${encodeURIComponent(query)}&market=${market}`;
     const headers = {
       Authorization: `Bearer ${apiKey}`,
       Accept: 'application/json',
     };
+    // Staan documents include_domains (POST only) for an application's
+    // allowlist: it holds whatever the query says and, unlike site: operators,
+    // does not count against the query's 400 characters. The caller filters
+    // the results either way, so a list Staan would reject is left out.
+    if (
+      allowedDomains?.length &&
+      allowedDomains.length <= MAX_INCLUDE_DOMAINS
+    ) {
+      const body = { q: query, market, include_domains: allowedDomains };
+      return [
+        baseUrl,
+        {
+          method: 'POST',
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        },
+      ];
+    }
+    const url = `${baseUrl}?q=${encodeURIComponent(query)}&market=${market}`;
     return [url, { headers }];
   }
 

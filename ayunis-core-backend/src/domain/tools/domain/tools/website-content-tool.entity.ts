@@ -2,6 +2,7 @@ import type { FromSchema, JSONSchema } from 'json-schema-to-ts';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import { Tool } from 'src/domain/tools/domain/tool.entity';
 import { validateToolParams } from 'src/common/validators/tool-params.validator';
+import type { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 
 const websiteContentToolParameters = {
   type: 'object' as const,
@@ -38,7 +39,8 @@ type WebsiteContentToolParameters = FromSchema<
 >;
 
 export class WebsiteContentTool extends Tool {
-  constructor() {
+  /** Absent: any domain. */
+  constructor(public readonly allowedDomains?: AllowedDomains) {
     super({
       name: ToolType.WEBSITE_CONTENT,
       description: 'Fetch content from a specific URL.',

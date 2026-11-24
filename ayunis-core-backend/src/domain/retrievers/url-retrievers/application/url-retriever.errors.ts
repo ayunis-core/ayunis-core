@@ -1,5 +1,6 @@
 import type { ErrorMetadata } from 'src/common/errors/base.error';
 import { ApplicationError } from 'src/common/errors/base.error';
+import type { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 
 /**
  * Error codes specific to the URL retriever domain
@@ -13,6 +14,7 @@ export enum UrlRetrieverErrorCode {
   UNSUPPORTED_CONTENT_TYPE = 'UNSUPPORTED_CONTENT_TYPE',
   TOO_MANY_REDIRECTS = 'TOO_MANY_REDIRECTS',
   CONTENT_TOO_LARGE = 'CONTENT_TOO_LARGE',
+  DOMAIN_NOT_ALLOWED = 'DOMAIN_NOT_ALLOWED',
 }
 
 /**
@@ -117,6 +119,18 @@ export class UrlRetrieverTooManyRedirectsError extends UrlRetrieverError {
       metadata,
     );
     this.name = 'UrlRetrieverTooManyRedirectsError';
+  }
+}
+
+export class UrlRetrieverDomainNotAllowedError extends UrlRetrieverError {
+  constructor(url: string, allowedDomains: AllowedDomains) {
+    super(
+      `'${url}' is outside the domains this run may access. Allowed are only these domains and their subdomains: ${allowedDomains.toString()}`,
+      UrlRetrieverErrorCode.DOMAIN_NOT_ALLOWED,
+      403,
+      { url },
+    );
+    this.name = 'UrlRetrieverDomainNotAllowedError';
   }
 }
 

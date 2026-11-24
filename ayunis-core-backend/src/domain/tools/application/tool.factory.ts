@@ -52,6 +52,7 @@ import { ChatListTool } from 'src/domain/tools/domain/tools/chat-list-tool.entit
 import { ChatReadTool } from 'src/domain/tools/domain/tools/chat-read-tool.entity';
 import { ChatGrepTool } from 'src/domain/tools/domain/tools/chat-grep-tool.entity';
 import { PastChatScope } from 'src/domain/threads/domain/past-chat-scope';
+import { AllowedDomains } from 'src/domain/retrievers/url-retrievers/domain/allowed-domains';
 import { FinishRoutineTool } from 'src/domain/tools/domain/tools/finish-routine-tool.entity';
 import { CreateRoutineTool } from 'src/domain/tools/domain/tools/create-routine-tool.entity';
 import { EditRoutineTool } from 'src/domain/tools/domain/tools/edit-routine-tool.entity';
@@ -70,8 +71,6 @@ type ToolCreator = (params: { config?: ToolConfig; context?: unknown }) => Tool;
 
 const SIMPLE_TOOLS: Record<string, () => Tool> = {
   [ToolType.CREATE_FILE]: () => new CreateFileTool(),
-  [ToolType.INTERNET_SEARCH]: () => new InternetSearchTool(),
-  [ToolType.WEBSITE_CONTENT]: () => new WebsiteContentTool(),
   [ToolType.SEND_EMAIL]: () => new SendEmailTool(),
   [ToolType.CREATE_CALENDAR_EVENT]: () => new CreateCalendarEventTool(),
   [ToolType.BAR_CHART]: () => new BarChartTool(),
@@ -105,6 +104,17 @@ const SIMPLE_TOOLS: Record<string, () => Tool> = {
     new AddAnonymizationExceptionTool(),
 };
 
+const WEB_TOOLS: Record<string, ToolCreator> = {
+  [ToolType.INTERNET_SEARCH]: (p) =>
+    new InternetSearchTool(
+      optionalAllowedDomains(p.context, ToolType.INTERNET_SEARCH),
+    ),
+  [ToolType.WEBSITE_CONTENT]: (p) =>
+    new WebsiteContentTool(
+      optionalAllowedDomains(p.context, ToolType.WEBSITE_CONTENT),
+    ),
+};
+
 @Injectable()
 export class ToolFactory {
   private readonly creators: Record<string, ToolCreator>;
@@ -112,6 +122,7 @@ export class ToolFactory {
   constructor() {
     this.creators = {
       ...SIMPLE_TOOLS,
+      ...WEB_TOOLS,
       [ToolType.HTTP]: (p) => this.createHttpTool(p.config),
       [ToolType.SOURCE_QUERY]: (p) =>
         new SourceQueryTool(
@@ -245,6 +256,19 @@ function requireMapContext(
 ): Map<string, string> {
   if (context instanceof Map) {
     return context as Map<string, string>;
+  }
+  throw new ToolInvalidContextError({
+    toolType,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function optionalAllowedDomains(
+  context: unknown,
+  toolType: ToolType,
+): AllowedDomains | undefined {
+  if (context === undefined || context instanceof AllowedDomains) {
+    return context;
   }
   throw new ToolInvalidContextError({
     toolType,

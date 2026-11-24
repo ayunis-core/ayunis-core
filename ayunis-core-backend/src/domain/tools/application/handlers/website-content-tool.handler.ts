@@ -86,7 +86,13 @@ export class WebsiteContentToolHandler extends ToolExecutionHandler {
         numLines = this.config.websiteContent.maxLines,
       } = tool.validateParams(input);
       const content = await this.retrieveUrlUseCase.execute(
-        new RetrieveUrlCommand(url, context.orgId),
+        new RetrieveUrlCommand(
+          url,
+          context.orgId,
+          undefined,
+          'existing',
+          tool.allowedDomains,
+        ),
       );
       return JSON.stringify(
         this.buildResult(content, {

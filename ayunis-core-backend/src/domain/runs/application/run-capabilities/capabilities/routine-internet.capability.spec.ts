@@ -1,7 +1,11 @@
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
+import type { WebsiteContentTool } from 'src/domain/tools/domain/tools/website-content-tool.entity';
+import { PromptSlot } from 'src/domain/runs/application/run-capabilities/run-capability';
 import {
   aCapabilityContext,
   createAssembleToolUseCase,
+  sectionsIn,
   toolNames,
 } from 'src/domain/runs/testing/run-capability.fixture';
 import { InternetCapability } from './internet.capability';
@@ -54,5 +58,66 @@ describe('RoutineInternetCapability', () => {
     expect(toolNames(await capability.contribute(routineRun(true)))).toEqual(
       [],
     );
+  });
+
+  describe('with allowed domains', () => {
+    const allowlistRun = aCapabilityContext({
+      profile: {
+        id: 'routine',
+        routine: {
+          name: 'Verkündungsplattform prüfen',
+          internetEnabled: true,
+          allowedDomains: ['nrw.de', 'bund.de'],
+        },
+      },
+    });
+
+    it('limits both web tools to the allowed domains', async () => {
+      const { capability } = buildCapability(true);
+
+      const { tools = [] } = await capability.contribute(allowlistRun);
+
+      expect(
+        tools.map((tool) => [
+          tool.name,
+          (tool as WebsiteContentTool | InternetSearchTool).allowedDomains
+            ?.entries,
+        ]),
+      ).toEqual([
+        [ToolType.WEBSITE_CONTENT, ['nrw.de', 'bund.de']],
+        [ToolType.INTERNET_SEARCH, ['nrw.de', 'bund.de']],
+      ]);
+    });
+
+    it('names the allowed domains in the instructions', async () => {
+      const { capability } = buildCapability(true);
+
+      const [policy] = sectionsIn(
+        await capability.contribute(allowlistRun),
+        PromptSlot.POLICIES,
+      );
+
+      expect(policy).toContain('nrw.de, bund.de');
+    });
+
+    it('offers no web tools and no instructions when the org disabled internet access', async () => {
+      const { capability } = buildCapability(false);
+
+      expect(await capability.contribute(allowlistRun)).toEqual({});
+    });
+  });
+
+  it('leaves the web tools unrestricted and adds no instructions without allowed domains', async () => {
+    const { capability } = buildCapability(true);
+
+    const contribution = await capability.contribute(routineRun(true));
+
+    expect(contribution.sections).toBeUndefined();
+    expect(
+      (contribution.tools ?? []).map(
+        (tool) =>
+          (tool as WebsiteContentTool | InternetSearchTool).allowedDomains,
+      ),
+    ).toEqual([undefined, undefined]);
   });
 });
