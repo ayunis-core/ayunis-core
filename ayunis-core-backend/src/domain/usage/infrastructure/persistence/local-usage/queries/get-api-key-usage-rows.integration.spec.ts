@@ -15,6 +15,7 @@ const apiKeySchema = new EntitySchema<ApiKeyRecord>({
   tableName: 'api_keys',
   columns: {
     id: { type: String, primary: true },
+    createdAt: { type: 'timestamp' },
     name: { type: String },
     expiresAt: { name: 'expires_at', type: 'timestamptz', nullable: true },
     revokedAt: { name: 'revoked_at', type: 'timestamptz', nullable: true },
@@ -54,6 +55,10 @@ const revokedKeyId = randomUUID();
 const recreatedKeyId = randomUUID();
 const oldUsageKeyId = randomUUID();
 const otherOrgKeyId = randomUUID();
+const revokedBeforeRangeKeyId = randomUUID();
+const expiredBeforeRangeKeyId = randomUUID();
+const expiringInRangeKeyId = randomUUID();
+const createdAfterRangeKeyId = randomUUID();
 
 describe('getApiKeyUsageRows', () => {
   let dataSource: DataSource;
@@ -111,17 +116,39 @@ describe('getApiKeyUsageRows', () => {
     });
   });
 
-  it('lists every key of the organization, sorted by total tokens then name', async () => {
+  it('lists every key active in the range, sorted by total tokens then name', async () => {
     const items = await query(orgId);
 
     expect(items.map((item) => item.apiKeyId)).toEqual([
       activeKeyId,
       revokedKeyId,
       recreatedKeyId,
+      expiringInRangeKeyId,
       oldUsageKeyId,
     ]);
     expect(items).not.toContainEqual(
       expect.objectContaining({ apiKeyId: otherOrgKeyId }),
+    );
+  });
+
+  it('omits keys that were inactive for the whole range', async () => {
+    const ids = (await query(orgId)).map((item) => item.apiKeyId);
+
+    expect(ids).not.toContain(revokedBeforeRangeKeyId);
+    expect(ids).not.toContain(expiredBeforeRangeKeyId);
+    expect(ids).not.toContain(createdAfterRangeKeyId);
+  });
+
+  it('lists every key of the organization without a range', async () => {
+    const ids = (await query(orgId, false)).map((item) => item.apiKeyId);
+
+    expect(ids).toHaveLength(8);
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        revokedBeforeRangeKeyId,
+        expiredBeforeRangeKeyId,
+        createdAfterRangeKeyId,
+      ]),
     );
   });
 
@@ -169,17 +196,51 @@ describe('getApiKeyUsageRows', () => {
 });
 
 async function seed(dataSource: DataSource): Promise<void> {
+  const createdAt = new Date('2026-01-01T00:00:00.000Z');
   await dataSource.getRepository(ApiKeyRecord).insert([
-    { id: activeKeyId, name: 'Council portal', orgId },
+    { id: activeKeyId, name: 'Council portal', orgId, createdAt },
     {
       id: revokedKeyId,
       name: 'Citizen portal',
       orgId,
+      createdAt,
       revokedAt: new Date('2026-03-15T00:00:00.000Z'),
     },
-    { id: recreatedKeyId, name: 'Citizen portal', orgId },
-    { id: oldUsageKeyId, name: 'Pilot', orgId },
-    { id: otherOrgKeyId, name: 'Other org key', orgId: otherOrgId },
+    { id: recreatedKeyId, name: 'Citizen portal', orgId, createdAt },
+    { id: oldUsageKeyId, name: 'Pilot', orgId, createdAt },
+    {
+      id: otherOrgKeyId,
+      name: 'Other org key',
+      orgId: otherOrgId,
+      createdAt,
+    },
+    {
+      id: revokedBeforeRangeKeyId,
+      name: 'Old newsletter',
+      orgId,
+      createdAt,
+      revokedAt: new Date('2026-02-20T00:00:00.000Z'),
+    },
+    {
+      id: expiredBeforeRangeKeyId,
+      name: 'Old archive',
+      orgId,
+      createdAt,
+      expiresAt: startDate,
+    },
+    {
+      id: expiringInRangeKeyId,
+      name: 'Hackathon',
+      orgId,
+      createdAt,
+      expiresAt: new Date('2026-03-10T00:00:00.000Z'),
+    },
+    {
+      id: createdAfterRangeKeyId,
+      name: 'Later key',
+      orgId,
+      createdAt: endDate,
+    },
   ]);
 
   await dataSource.getRepository(UsageRecord).insert([
