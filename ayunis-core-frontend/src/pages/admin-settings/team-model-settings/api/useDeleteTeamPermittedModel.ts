@@ -8,6 +8,7 @@ import { invalidateTeamModelAccessQueries } from './invalidateTeamModelAccessQue
 const ERROR_KEYS: Record<string, string> = {
   MODEL_NOT_FOUND: 'teamDetail.models.disableModelNotFound',
   MODEL_INVALID: 'teamDetail.models.disableModelInvalid',
+  CANNOT_DELETE_LAST_TEAM_MODEL: 'teamDetail.models.disableLastOverrideModel',
 };
 
 export function useDeleteTeamPermittedModel(teamId: string) {

@@ -147,6 +147,7 @@
       "disableError": "Failed to disable model for team",
       "disableModelNotFound": "Model not found",
       "disableModelInvalid": "This model cannot be disabled for the team",
+      "disableLastOverrideModel": "The last language model of a team with a custom model policy can't be disabled. Enable another model first or turn off the custom model policy.",
       "updateError": "Failed to update model setting",
       "updateModelNotFound": "The team model setting no longer exists"
     },

@@ -3,6 +3,7 @@ import type { UUID } from 'crypto';
 import { GetTeamUseCase } from 'src/iam/teams/application/use-cases/get-team/get-team.use-case';
 import { GetTeamQuery } from 'src/iam/teams/application/use-cases/get-team/get-team.query';
 import { TeamNotFoundError } from 'src/iam/teams/application/teams.errors';
+import type { Team } from 'src/iam/teams/domain/team.entity';
 import { ContextService } from 'src/common/context/services/context.service';
 import {
   getRequiredUserContext,
@@ -36,12 +37,13 @@ export class TeamPermittedModelValidator {
     }
   }
 
-  async validateTeamInOrg(teamId: UUID, orgId: UUID): Promise<void> {
+  async validateTeamInOrg(teamId: UUID, orgId: UUID): Promise<Team> {
     try {
       const team = await this.getTeamUseCase.execute(new GetTeamQuery(teamId));
       if (team.orgId !== orgId) {
         throw new TeamNotFoundInOrgError(teamId);
       }
+      return team;
     } catch (error) {
       if (error instanceof TeamNotFoundError) {
         throw new TeamNotFoundInOrgError(teamId);
