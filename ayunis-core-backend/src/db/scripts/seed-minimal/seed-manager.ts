@@ -6,6 +6,7 @@ import type { GlobalSeeder, OrgSeeder } from './seeders/base-seeder';
 import { ModelSeeder } from './seeders/model-seeder';
 import { PlatformConfigSeeder } from './seeders/platform-config-seeder';
 import { OparlCatalogSeeder } from './seeders/oparl-catalog-seeder';
+import { OparlCouncilSeeder } from './seeders/oparl-council-seeder';
 import { OrgUserSeeder } from './seeders/org-user-seeder';
 import { BillingSeeder } from './seeders/billing-seeder';
 import { UsageSeeder } from './seeders/usage-seeder';
@@ -21,6 +22,7 @@ export class SeedManager {
     new PlatformConfigSeeder(),
     new AcademyContentSeeder(),
     new OparlCatalogSeeder(),
+    new OparlCouncilSeeder(),
   ];
 
   // AcademyAccessSeeder runs after OrgUserSeeder: its chapter confirmations

@@ -14,6 +14,7 @@ import { ImageGenerationCapability } from 'src/domain/runs/application/run-capab
 import { InternetCapability } from 'src/domain/runs/application/run-capabilities/capabilities/internet.capability';
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
 import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
+import { OparlCapability } from 'src/domain/runs/application/run-capabilities/capabilities/oparl.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
@@ -66,6 +67,7 @@ export class ChatRunProfile implements RunProfile {
     private readonly threadSources: ThreadSourcesCapability,
     private readonly knowledgeBases: KnowledgeBasesCapability,
     private readonly recordings: RecordingsCapability,
+    private readonly oparl: OparlCapability,
     private readonly notificationContext: NotificationContextCapability,
     private readonly releaseNoteContext: ReleaseNoteContextCapability,
     private readonly onboarding: OnboardingCapability,

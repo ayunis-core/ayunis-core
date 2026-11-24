@@ -54,6 +54,7 @@ import { ImageGenerationCapability } from './application/run-capabilities/capabi
 import { InternetCapability } from './application/run-capabilities/capabilities/internet.capability';
 import { KnowledgeBasesCapability } from './application/run-capabilities/capabilities/knowledge-bases.capability';
 import { RecordingsCapability } from './application/run-capabilities/capabilities/recordings.capability';
+import { OparlCapability } from './application/run-capabilities/capabilities/oparl.capability';
 import { LegalReferencesCapability } from './application/run-capabilities/capabilities/legal-references.capability';
 import { MarketplaceCapability } from './application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from './application/run-capabilities/capabilities/mcp.capability';
@@ -100,6 +101,7 @@ import { LetterheadsModule } from 'src/domain/letterheads/letterheads.module';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { RecordingsModule } from 'src/domain/recordings/recordings.module';
+import { OparlModule } from 'src/domain/oparl/oparl.module';
 import { RoutinesModule } from 'src/domain/routines/routines.module';
 import { GetThreadSourceCitationUseCase } from './application/use-cases/get-thread-source-citation/get-thread-source-citation.use-case';
 import { ThreadSourceCitationsController } from './presenters/http/thread-source-citations.controller';
@@ -125,6 +127,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     WorkspacesModule,
     KnowledgeBasesModule,
     RecordingsModule,
+    OparlModule,
     NotificationsModule,
     ReleaseNotesModule,
     MemoryModule,
@@ -193,6 +196,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     InternetCapability,
     KnowledgeBasesCapability,
     RecordingsCapability,
+    OparlCapability,
     LegalReferencesCapability,
     MarketplaceCapability,
     McpCapability,

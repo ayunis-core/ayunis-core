@@ -1,5 +1,6 @@
 import { mockSourceReadingResponse } from './mock-source-reading-response';
 import { mockRecordingSearchResponse } from './mock-recording-search-response';
+import { mockOparlResponse } from './mock-oparl-response';
 import { mockImageEditResponse } from './mock-image-edit-response';
 import { mockCreateFileResponse } from './mock-create-file-response';
 import { mockCodeExecutionResponse } from './mock-code-execution-response';
@@ -121,7 +122,8 @@ function mockRetrievalToolResponse(
 ): AsyncIterable<ProviderChunk> | null {
   return (
     mockSourceReadingResponse(request, userText) ??
-    mockRecordingSearchResponse(request, userText)
+    mockRecordingSearchResponse(request, userText) ??
+    mockOparlResponse(request, userText)
   );
 }
 

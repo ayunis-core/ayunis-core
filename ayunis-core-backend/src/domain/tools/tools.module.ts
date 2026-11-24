@@ -18,6 +18,7 @@ import { McpModule } from 'src/domain/mcp/mcp.module';
 import { SkillsModule } from 'src/domain/skills/skills.module';
 import { KnowledgeBasesModule } from 'src/domain/knowledge-bases/knowledge-bases.module';
 import { RecordingsModule } from 'src/domain/recordings/recordings.module';
+import { OparlModule } from 'src/domain/oparl/oparl.module';
 import { SkillTemplatesModule } from 'src/domain/skill-templates/skill-templates.module';
 import { ArtifactsModule } from 'src/domain/artifacts/artifacts.module';
 import { ModelsModule } from 'src/domain/models/models.module';
@@ -42,6 +43,7 @@ import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/a
     SkillsModule,
     KnowledgeBasesModule,
     RecordingsModule,
+    OparlModule,
     SkillTemplatesModule,
     ArtifactsModule,
     UsageModule,

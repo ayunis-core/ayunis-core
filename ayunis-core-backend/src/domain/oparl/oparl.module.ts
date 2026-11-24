@@ -10,6 +10,7 @@ import { OparlBodyLinksRepository } from './application/ports/oparl-body-links.r
 import { OparlClientPort } from './application/ports/oparl-client.port';
 import { OparlDocumentsRepository } from './application/ports/oparl-documents.repository';
 import { OparlMirrorRepository } from './application/ports/oparl-mirror.repository';
+import { OparlReadRepository } from './application/ports/oparl-read.repository';
 import { OparlSyncJobsPort } from './application/ports/oparl-sync-jobs.port';
 import { OparlSyncRunsRepository } from './application/ports/oparl-sync-runs.repository';
 import { OparlSystemsRepository } from './application/ports/oparl-systems.repository';
@@ -19,17 +20,22 @@ import { OparlFileTextReader } from './application/services/oparl-file-text-read
 import { OparlObjectExtractor } from './application/services/oparl-object-extractor.service';
 import { OparlObjectIndexer } from './application/services/oparl-object-indexer.service';
 import { OparlPageWriter } from './application/services/oparl-page-writer.service';
+import { OparlReadScopeService } from './application/services/oparl-read-scope.service';
 import { OparlSyncService } from './application/services/oparl-sync.service';
 import { OparlSystemOverviews } from './application/services/oparl-system-overviews.service';
 import { AddOparlSystemUseCase } from './application/use-cases/add-oparl-system/add-oparl-system.use-case';
 import { FindLinkedOparlBodiesUseCase } from './application/use-cases/find-linked-oparl-bodies/find-linked-oparl-bodies.use-case';
+import { GetOparlObjectUseCase } from './application/use-cases/get-oparl-object/get-oparl-object.use-case';
 import { GetOparlEmbeddingModelUseCase } from './application/use-cases/get-oparl-embedding-model/get-oparl-embedding-model.use-case';
 import { HasOparlVectorsOfModelUseCase } from './application/use-cases/has-oparl-vectors-of-model/has-oparl-vectors-of-model.use-case';
 import { LinkOparlBodiesUseCase } from './application/use-cases/link-oparl-bodies/link-oparl-bodies.use-case';
 import { ListOparlCatalogBodiesUseCase } from './application/use-cases/list-oparl-catalog-bodies/list-oparl-catalog-bodies.use-case';
+import { ListOparlObjectsUseCase } from './application/use-cases/list-oparl-objects/list-oparl-objects.use-case';
 import { ListOparlSystemsUseCase } from './application/use-cases/list-oparl-systems/list-oparl-systems.use-case';
 import { ProcessOparlDocumentsUseCase } from './application/use-cases/process-oparl-documents/process-oparl-documents.use-case';
+import { ReadOparlFileUseCase } from './application/use-cases/read-oparl-file/read-oparl-file.use-case';
 import { RunOparlSyncUseCase } from './application/use-cases/run-oparl-sync/run-oparl-sync.use-case';
+import { SearchOparlUseCase } from './application/use-cases/search-oparl/search-oparl.use-case';
 import { SetOparlEmbeddingModelUseCase } from './application/use-cases/set-oparl-embedding-model/set-oparl-embedding-model.use-case';
 import { SyncDueOparlSystemsUseCase } from './application/use-cases/sync-due-oparl-systems/sync-due-oparl-systems.use-case';
 import { SyncOparlSystemNowUseCase } from './application/use-cases/sync-oparl-system-now/sync-oparl-system-now.use-case';
@@ -38,6 +44,7 @@ import { OparlHttpClient } from './infrastructure/http/oparl-http.client';
 import { PostgresOparlBodyLinksRepository } from './infrastructure/persistence/postgres/postgres-oparl-body-links.repository';
 import { PostgresOparlDocumentsRepository } from './infrastructure/persistence/postgres/postgres-oparl-documents.repository';
 import { PostgresOparlMirrorRepository } from './infrastructure/persistence/postgres/postgres-oparl-mirror.repository';
+import { PostgresOparlReadRepository } from './infrastructure/persistence/postgres/postgres-oparl-read.repository';
 import { PostgresOparlSyncRunsRepository } from './infrastructure/persistence/postgres/postgres-oparl-sync-runs.repository';
 import { PostgresOparlSystemsRepository } from './infrastructure/persistence/postgres/postgres-oparl-systems.repository';
 import { OparlBodyLinkRecord } from './infrastructure/persistence/postgres/schema/oparl-body-link.record';
@@ -76,6 +83,7 @@ import { SuperAdminOparlSystemsController } from './presenters/http/super-admin-
   providers: [
     { provide: OparlClientPort, useClass: OparlHttpClient },
     { provide: OparlMirrorRepository, useClass: PostgresOparlMirrorRepository },
+    { provide: OparlReadRepository, useClass: PostgresOparlReadRepository },
     {
       provide: OparlDocumentsRepository,
       useClass: PostgresOparlDocumentsRepository,
@@ -101,6 +109,7 @@ import { SuperAdminOparlSystemsController } from './presenters/http/super-admin-
     OparlFileTextReader,
     OparlObjectIndexer,
     OparlChunkEmbedder,
+    OparlReadScopeService,
     AddOparlSystemUseCase,
     ListOparlSystemsUseCase,
     SyncOparlSystemNowUseCase,
@@ -114,6 +123,10 @@ import { SuperAdminOparlSystemsController } from './presenters/http/super-admin-
     LinkOparlBodiesUseCase,
     UnlinkOparlBodyUseCase,
     FindLinkedOparlBodiesUseCase,
+    SearchOparlUseCase,
+    GetOparlObjectUseCase,
+    ReadOparlFileUseCase,
+    ListOparlObjectsUseCase,
   ],
   exports: [
     RunOparlSyncUseCase,
@@ -121,6 +134,10 @@ import { SuperAdminOparlSystemsController } from './presenters/http/super-admin-
     ProcessOparlDocumentsUseCase,
     HasOparlVectorsOfModelUseCase,
     FindLinkedOparlBodiesUseCase,
+    SearchOparlUseCase,
+    GetOparlObjectUseCase,
+    ReadOparlFileUseCase,
+    ListOparlObjectsUseCase,
     BullModule,
   ],
 })

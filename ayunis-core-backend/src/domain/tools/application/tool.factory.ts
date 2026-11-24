@@ -33,6 +33,11 @@ import {
   RecordingSearchScope,
   RecordingSearchTool,
 } from 'src/domain/tools/domain/tools/recording-search-tool.entity';
+import { OparlToolScope } from 'src/domain/tools/domain/tools/oparl-tool-scope';
+import { OparlSearchTool } from 'src/domain/tools/domain/tools/oparl-search-tool.entity';
+import { OparlGetTool } from 'src/domain/tools/domain/tools/oparl-get-tool.entity';
+import { OparlReadFileTool } from 'src/domain/tools/domain/tools/oparl-read-file-tool.entity';
+import { OparlListTool } from 'src/domain/tools/domain/tools/oparl-list-tool.entity';
 import type { KnowledgeBaseSummary } from 'src/domain/knowledge-bases/domain/knowledge-base-summary';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
@@ -115,6 +120,21 @@ const WEB_TOOLS: Record<string, ToolCreator> = {
     ),
 };
 
+const OPARL_TOOL_CLASSES = {
+  [ToolType.OPARL_SEARCH]: OparlSearchTool,
+  [ToolType.OPARL_GET]: OparlGetTool,
+  [ToolType.OPARL_READ_FILE]: OparlReadFileTool,
+  [ToolType.OPARL_LIST]: OparlListTool,
+};
+
+const OPARL_TOOLS: Record<string, ToolCreator> = Object.fromEntries(
+  Object.entries(OPARL_TOOL_CLASSES).map(([type, ToolClass]) => [
+    type,
+    (p: { context?: unknown }) =>
+      new ToolClass(requireOparlToolScope(p.context, type as ToolType)),
+  ]),
+);
+
 @Injectable()
 export class ToolFactory {
   private readonly creators: Record<string, ToolCreator>;
@@ -123,6 +143,7 @@ export class ToolFactory {
     this.creators = {
       ...SIMPLE_TOOLS,
       ...WEB_TOOLS,
+      ...OPARL_TOOLS,
       [ToolType.HTTP]: (p) => this.createHttpTool(p.config),
       [ToolType.SOURCE_QUERY]: (p) =>
         new SourceQueryTool(
@@ -280,6 +301,17 @@ function requireRecordingSearchScope(context: unknown): RecordingSearchScope {
   if (context instanceof RecordingSearchScope) return context;
   throw new ToolInvalidContextError({
     toolType: ToolType.RECORDING_SEARCH,
+    metadata: { contextType: contextTypeName(context) },
+  });
+}
+
+function requireOparlToolScope(
+  context: unknown,
+  toolType: ToolType,
+): OparlToolScope {
+  if (context instanceof OparlToolScope) return context;
+  throw new ToolInvalidContextError({
+    toolType,
     metadata: { contextType: contextTypeName(context) },
   });
 }

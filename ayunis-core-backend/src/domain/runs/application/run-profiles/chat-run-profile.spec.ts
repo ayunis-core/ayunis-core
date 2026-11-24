@@ -22,6 +22,7 @@ import { InternetCapability } from 'src/domain/runs/application/run-capabilities
 import { KnowledgeBasesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/knowledge-bases.capability';
 import { LegalReferencesCapability } from 'src/domain/runs/application/run-capabilities/capabilities/legal-references.capability';
 import { RecordingsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/recordings.capability';
+import { OparlCapability } from 'src/domain/runs/application/run-capabilities/capabilities/oparl.capability';
 import { MarketplaceCapability } from 'src/domain/runs/application/run-capabilities/capabilities/marketplace.capability';
 import { McpCapability } from 'src/domain/runs/application/run-capabilities/capabilities/mcp.capability';
 import { SkillsCapability } from 'src/domain/runs/application/run-capabilities/capabilities/skills.capability';
@@ -135,6 +136,11 @@ function buildChatProfile(memory?: MemoryEntry[]): ChatRunProfile {
     new ThreadSourcesCapability(assembleTool),
     new KnowledgeBasesCapability(assembleTool),
     new RecordingsCapability(assembleTool, { get: () => true } as never),
+    new OparlCapability(
+      assembleTool,
+      { get: () => true } as never,
+      resolved([]) as never,
+    ),
     new NotificationContextCapability(
       resolved(notification) as never,
       { get: () => true } as never,

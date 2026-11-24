@@ -174,10 +174,30 @@ export interface PermittedModelFixture {
   anonymousOnly: boolean;
 }
 
+/** A small council record of a body, searchable without a reachable RIS. */
+export interface OparlCouncilFixture {
+  committee: string;
+  member: { givenName: string; familyName: string; role: string };
+  paper: {
+    reference: string;
+    name: string;
+    paperType: string;
+    date: string;
+    /** The text of its main file, one entry per page. */
+    filePages: readonly string[];
+  };
+  meeting: {
+    name: string;
+    start: string;
+    agendaItem: { number: string; result: string };
+  };
+}
+
 export interface OparlBodyFixture {
   oparlId: string;
   name: string;
   shortName: string;
+  council: OparlCouncilFixture;
 }
 
 /** A catalog entry without a reachable RIS: its bodies can be linked, it is never synced. */
