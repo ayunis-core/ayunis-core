@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowDown,
   ArrowUp,
-  FolderOpen,
   Loader2,
   MessageCircle,
   MoreHorizontal,
@@ -17,9 +16,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import {
@@ -28,15 +24,12 @@ import {
   SidebarMenuItem,
 } from '@ayunis/ui/components/sidebar';
 import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
-import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
-import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
-import { useToggleFavorite, type Favorite } from '@/features/favorites';
 import {
-  getWorkspaceAccess,
-  useWorkspaces,
-  type Workspace,
-} from '@/features/workspaces';
-import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
+  ChatWorkspaceSubmenu,
+  CreateChatWorkspaceDialog,
+} from '@/widgets/chat-workspace-menu';
+import { useToggleFavorite, type Favorite } from '@/features/favorites';
+import { getWorkspaceAccess, type Workspace } from '@/features/workspaces';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 import { trackOpenPanelEvent } from '@/shared/lib/openpanel-events';
 
@@ -80,8 +73,6 @@ export function FavoriteSidebarItem({
   const { t: tWorkspaces } = useTranslation('workspaces');
   const params = useParams({ strict: false });
   const { toggle } = useToggleFavorite();
-  const { workspaces } = useWorkspaces();
-  const { mutate: assignToWorkspace } = useAssignThreadToWorkspace();
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
@@ -194,35 +185,13 @@ export function FavoriteSidebarItem({
               </span>
             </DropdownMenuItem>
             {!isWorkspace && (
-              <>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <FolderOpen />
-                    <span>{t('sidebar.addToWorkspace')}</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <WorkspacePickerMenuWithCreate
-                      workspaces={workspaces}
-                      selectedWorkspaceId={threadWorkspaceId}
-                      onClear={() =>
-                        assignToWorkspace({
-                          threadId: item.referenceId,
-                          workspaceId: null,
-                        })
-                      }
-                      onSelect={(target) =>
-                        assignToWorkspace({
-                          threadId: item.referenceId,
-                          workspaceId: target.id,
-                        })
-                      }
-                      onCreateNew={() =>
-                        requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
-                      }
-                    />
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              </>
+              <ChatWorkspaceSubmenu
+                threadId={item.referenceId}
+                workspaceId={threadWorkspaceId}
+                onCreateNew={() =>
+                  requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
+                }
+              />
             )}
             {(!isWorkspace || access?.isAdmin) && (
               <DropdownMenuItem
@@ -240,18 +209,11 @@ export function FavoriteSidebarItem({
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-      {isCreateWorkspaceOpen && (
-        <CreateWorkspaceDialog
-          open={isCreateWorkspaceOpen}
-          onOpenChange={setIsCreateWorkspaceOpen}
-          onCreated={(created) =>
-            assignToWorkspace({
-              threadId: item.referenceId,
-              workspaceId: created.id,
-            })
-          }
-        />
-      )}
+      <CreateChatWorkspaceDialog
+        threadId={item.referenceId}
+        open={isCreateWorkspaceOpen}
+        onOpenChange={setIsCreateWorkspaceOpen}
+      />
     </>
   );
 }

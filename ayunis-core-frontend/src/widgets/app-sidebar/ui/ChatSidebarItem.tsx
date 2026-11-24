@@ -3,7 +3,6 @@ import { Link, useParams } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
   CalendarClock,
-  FolderOpen,
   Loader2,
   MessageCircle,
   MoreHorizontal,
@@ -15,9 +14,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
 import {
@@ -26,12 +22,12 @@ import {
   SidebarMenuItem,
 } from '@ayunis/ui/components/sidebar';
 import { cn } from '@ayunis/ui/lib/cn';
-import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
-import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
+import {
+  ChatWorkspaceSubmenu,
+  CreateChatWorkspaceDialog,
+} from '@/widgets/chat-workspace-menu';
 import { useOnboardingTour, type TourTargetName } from '@/widgets/onboarding';
-import { useWorkspaces } from '@/features/workspaces';
 import { useToggleFavorite } from '@/features/favorites';
-import { useAssignThreadToWorkspace } from '@/widgets/app-sidebar/api/useAssignThreadToWorkspace';
 import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 
@@ -75,9 +71,7 @@ export function ChatSidebarItem({
 }: Readonly<ChatSidebarItemProps>) {
   const { t } = useTranslation('common');
   const params = useParams({ strict: false });
-  const { workspaces } = useWorkspaces();
   const { toggle: togglePinned } = useToggleFavorite();
-  const { mutate: assignToWorkspace } = useAssignThreadToWorkspace();
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
@@ -137,33 +131,13 @@ export function ChatSidebarItem({
                 {isPinned ? t('sidebar.unpinChat') : t('sidebar.pinChat')}
               </span>
             </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <FolderOpen />
-                <span>{t('sidebar.addToWorkspace')}</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <WorkspacePickerMenuWithCreate
-                  workspaces={workspaces}
-                  selectedWorkspaceId={thread.workspaceId}
-                  onClear={() =>
-                    assignToWorkspace({
-                      threadId: thread.id,
-                      workspaceId: null,
-                    })
-                  }
-                  onSelect={(workspace) =>
-                    assignToWorkspace({
-                      threadId: thread.id,
-                      workspaceId: workspace.id,
-                    })
-                  }
-                  onCreateNew={() =>
-                    requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
-                  }
-                />
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+            <ChatWorkspaceSubmenu
+              threadId={thread.id}
+              workspaceId={thread.workspaceId}
+              onCreateNew={() =>
+                requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
+              }
+            />
 
             <DropdownMenuItem
               variant="destructive"
@@ -177,18 +151,11 @@ export function ChatSidebarItem({
         </DropdownMenu>
       </SidebarMenuItem>
 
-      {isCreateWorkspaceOpen && (
-        <CreateWorkspaceDialog
-          open={isCreateWorkspaceOpen}
-          onOpenChange={setIsCreateWorkspaceOpen}
-          onCreated={(workspace) =>
-            assignToWorkspace({
-              threadId: thread.id,
-              workspaceId: workspace.id,
-            })
-          }
-        />
-      )}
+      <CreateChatWorkspaceDialog
+        threadId={thread.id}
+        open={isCreateWorkspaceOpen}
+        onOpenChange={setIsCreateWorkspaceOpen}
+      />
     </>
   );
 }

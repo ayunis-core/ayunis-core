@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import {
@@ -18,6 +18,11 @@ import {
 import { useWorkspaces } from '@/features/workspaces';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
+import {
+  ChatWorkspaceSubmenu,
+  CreateChatWorkspaceDialog,
+} from '@/widgets/chat-workspace-menu';
+import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';
 import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 import { Button } from '@ayunis/ui/components/button';
 import { PinButton } from '@/shared/ui/pin-button';
@@ -116,7 +121,11 @@ function WebChatHeader({
             unpinLabel={tCommon('sidebar.unpinChat')}
             onToggle={() => togglePinned('thread', threadId)}
           />
-          <ThreadActionsMenu onRename={onRename} onDelete={onDelete} />
+          <ThreadActionsMenu
+            onRename={onRename}
+            onDelete={onDelete}
+            workspace={{ threadId, workspaceId }}
+          />
           {actions}
         </div>
       }
@@ -163,35 +172,69 @@ function AnonymousBadge() {
   );
 }
 
-type ThreadActionsMenuProps = Pick<ChatHeaderProps, 'onRename' | 'onDelete'>;
+type ThreadActionsMenuProps = Pick<ChatHeaderProps, 'onRename' | 'onDelete'> & {
+  /** Omitted in the Outlook pane, which has no workspaces. */
+  readonly workspace?: {
+    readonly threadId: string;
+    readonly workspaceId?: string | null;
+  };
+};
 
-function ThreadActionsMenu({ onRename, onDelete }: ThreadActionsMenuProps) {
+function ThreadActionsMenu({
+  onRename,
+  onDelete,
+  workspace,
+}: ThreadActionsMenuProps) {
   const { t } = useTranslation('chat');
+  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
+  const { requestDialogOpen, handleCloseAutoFocus } =
+    useDropdownDialogTransition();
 
-  if (!onRename && !onDelete) return null;
+  if (!onRename && !onDelete && !workspace) return null;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="h-5 w-5 text-primary" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {onRename && (
-          <DropdownMenuItem onClick={onRename}>
-            <Pencil className="h-4 w-4" />
-            <span>{t('chat.renameThread')}</span>
-          </DropdownMenuItem>
-        )}
-        {onDelete && (
-          <DropdownMenuItem onClick={onDelete} variant="destructive">
-            <Trash2 />
-            <span>{t('chat.deleteThread')}</span>
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="h-5 w-5 text-primary" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          onCloseAutoFocus={handleCloseAutoFocus}
+        >
+          {onRename && (
+            <DropdownMenuItem onClick={onRename}>
+              <Pencil className="h-4 w-4" />
+              <span>{t('chat.renameThread')}</span>
+            </DropdownMenuItem>
+          )}
+          {workspace && (
+            <ChatWorkspaceSubmenu
+              threadId={workspace.threadId}
+              workspaceId={workspace.workspaceId}
+              onCreateNew={() =>
+                requestDialogOpen(() => setIsCreateWorkspaceOpen(true))
+              }
+            />
+          )}
+          {onDelete && (
+            <DropdownMenuItem onClick={onDelete} variant="destructive">
+              <Trash2 />
+              <span>{t('chat.deleteThread')}</span>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {workspace && (
+        <CreateChatWorkspaceDialog
+          threadId={workspace.threadId}
+          open={isCreateWorkspaceOpen}
+          onOpenChange={setIsCreateWorkspaceOpen}
+        />
+      )}
+    </>
   );
 }
 

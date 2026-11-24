@@ -21,6 +21,11 @@ vi.mock('@/features/workspaces', () => ({
 }));
 
 let routinesEnabled = true;
+vi.mock('@/widgets/chat-workspace-menu', () => ({
+  ChatWorkspaceSubmenu: () => null,
+  CreateChatWorkspaceDialog: () => null,
+}));
+
 vi.mock('@/features/feature-toggles', () => ({
   useIsFeatureEnabled: () => routinesEnabled,
 }));
