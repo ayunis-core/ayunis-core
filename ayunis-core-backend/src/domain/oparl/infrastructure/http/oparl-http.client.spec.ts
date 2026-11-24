@@ -2,6 +2,7 @@ import { isIP } from 'node:net';
 import { fetch, Response } from 'undici';
 import type * as Undici from 'undici';
 import {
+  OparlFileTooLargeError,
   OparlHostBlockedError,
   OparlRequestFailedError,
 } from 'src/domain/oparl/application/oparl.errors';
@@ -173,5 +174,42 @@ describe('OparlHttpClient', () => {
     expect(error).toBeInstanceOf(OparlRequestFailedError);
     expect(error.status).toBe(400);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  describe('downloadFile', () => {
+    const FILE_URL =
+      'https://ris.example.de/oparl/v1.1/body/1/files/abc/Beschlussvorlage.pdf';
+
+    it('returns the bytes and their content type', async () => {
+      const client = new TestOparlHttpClient({});
+      fetchMock.mockResolvedValue(
+        new Response('%PDF-1.7 Vorlage', {
+          headers: { 'content-type': 'application/pdf' },
+        }),
+      );
+
+      const download = await client.downloadFile(FILE_URL, { maxBytes: 100 });
+
+      expect(download.data.toString()).toBe('%PDF-1.7 Vorlage');
+      expect(download.contentType).toBe('application/pdf');
+    });
+
+    it.each([
+      ['declares', { 'content-length': '200' }],
+      ['streams', {}],
+    ])(
+      'refuses a file beyond the size limit that %s its size, without retrying',
+      async (_how, headers: Record<string, string>) => {
+        const client = new TestOparlHttpClient({});
+        fetchMock.mockResolvedValue(
+          new Response(Buffer.alloc(200, 'x'), { headers }),
+        );
+
+        await expect(
+          client.downloadFile(FILE_URL, { maxBytes: 100 }),
+        ).rejects.toBeInstanceOf(OparlFileTooLargeError);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+      },
+    );
   });
 });

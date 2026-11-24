@@ -10,7 +10,8 @@ export class EmbedTextCommand {
   constructor(params: {
     model: EmbeddingModel;
     texts: string[];
-    orgId: UUID;
+    /** Absent for platform work (e.g. the OParl mirror) that no org pays for. */
+    orgId?: UUID;
     priority?: EmbeddingPriority;
   }) {
     this.model = params.model;

@@ -227,6 +227,7 @@
   "/super-admin/models/{orgId}/default-model",
   "/super-admin/models/{orgId}/permitted-models",
   "/super-admin/models/{orgId}/permitted-models/{id}",
+  "/super-admin/oparl/embedding-model",
   "/super-admin/oparl/systems",
   "/super-admin/oparl/systems/{id}/sync",
   "/super-admin/orgs",

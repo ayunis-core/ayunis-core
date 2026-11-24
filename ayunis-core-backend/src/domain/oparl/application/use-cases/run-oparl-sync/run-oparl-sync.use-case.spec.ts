@@ -7,6 +7,7 @@ import {
   OparlSyncRunStatus,
 } from 'src/domain/oparl/domain/oparl-sync-run.entity';
 import type { OparlMirrorRepository } from 'src/domain/oparl/application/ports/oparl-mirror.repository';
+import type { OparlSyncJobsPort } from 'src/domain/oparl/application/ports/oparl-sync-jobs.port';
 import type { OparlSyncRunsRepository } from 'src/domain/oparl/application/ports/oparl-sync-runs.repository';
 import type { OparlSystemsRepository } from 'src/domain/oparl/application/ports/oparl-systems.repository';
 import { OparlSyncInterruptedError } from 'src/domain/oparl/application/oparl.errors';
@@ -62,15 +63,17 @@ function setup(
     forgetListed: jest.fn().mockResolvedValue(undefined),
   };
   const syncService = { sync: jest.fn(sync) };
+  const jobs = { enqueueDocuments: jest.fn().mockResolvedValue(undefined) };
   const useCase = new RunOparlSyncUseCase(
     systems as unknown as OparlSystemsRepository,
     runsRepository as unknown as OparlSyncRunsRepository,
     mirror as unknown as OparlMirrorRepository,
     syncService as unknown as OparlSyncService,
+    jobs as unknown as OparlSyncJobsPort,
   );
   const finished = () =>
     runsRepository.update.mock.calls.at(-1)?.[0] as OparlSyncRun | undefined;
-  return { useCase, runs, runsRepository, mirror, syncService, finished };
+  return { useCase, runs, runsRepository, mirror, syncService, jobs, finished };
 }
 
 const command = (
@@ -173,6 +176,21 @@ describe('RunOparlSyncUseCase', () => {
       error: 'connection terminated',
     });
   });
+
+  it.each([
+    ['succeeded', complete],
+    ['failed', () => Promise.reject(new Error('connection terminated'))],
+  ])(
+    'queues the document job of a system once its run %s, so its new files become searchable',
+    async (_status, sync: () => Promise<OparlSyncOutcome>) => {
+      const system = aSystem({ lastFullSyncAt: null });
+      const { useCase, jobs } = setup(system, sync);
+
+      await useCase.execute(command(system.id));
+
+      expect(jobs.enqueueDocuments).toHaveBeenCalledWith([system.id]);
+    },
+  );
 
   it('leaves the run running on shutdown, to be resumed', async () => {
     const system = aSystem({ lastFullSyncAt: null });

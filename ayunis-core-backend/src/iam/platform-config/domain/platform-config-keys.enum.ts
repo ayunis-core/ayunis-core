@@ -23,4 +23,6 @@ export enum PlatformConfigKey {
   APP_ALERT_ENABLED = 'APP_ALERT_ENABLED',
   APP_ALERT_MESSAGE = 'APP_ALERT_MESSAGE',
   ACADEMY_MINIMUM_MODULE_SECONDS = 'ACADEMY_MINIMUM_MODULE_SECONDS',
+  // ID of the catalog embedding model that embeds the OParl mirror's chunks.
+  OPARL_EMBEDDING_MODEL_ID = 'OPARL_EMBEDDING_MODEL_ID',
 }

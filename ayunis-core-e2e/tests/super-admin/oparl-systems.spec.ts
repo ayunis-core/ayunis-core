@@ -1,11 +1,12 @@
-import { requestOparlSystemRoutes } from '../../src/clients/api/oparl.client';
+import { requestOparlSuperAdminRoutes } from '../../src/clients/api/oparl.client';
+import { config } from '../../src/config';
 import { loginAsSeededSuperAdmin } from '../../src/flows/super-admin.flow';
 import { expect, test } from '../../src/fixtures/test';
 
 test('an org admin without the super admin role is refused on every OParl route', async ({
   api,
 }) => {
-  for (const response of await requestOparlSystemRoutes(api))
+  for (const response of await requestOparlSuperAdminRoutes(api))
     expect(response.status()).toBe(403);
 });
 
@@ -33,5 +34,25 @@ test.describe('super admin', () => {
       'aria-invalid',
       'true',
     );
+  });
+
+  test('chooses the embedding model of every OParl mirror', async ({
+    page,
+  }) => {
+    await loginAsSeededSuperAdmin(page, '/super-admin-settings/oparl');
+
+    await page.getByTestId('oparl-embedding-model-select').click();
+    await page.getByTestId('oparl-embedding-model-option-mistral-embed').click();
+
+    // Polled: choosing the model already chosen (a retry) sends nothing.
+    await expect
+      .poll(async () => {
+        const response = await page.request.get(
+          `${config.apiURL}/api/super-admin/oparl/embedding-model`,
+        );
+        return ((await response.json()) as { model: { name: string } | null })
+          .model?.name;
+      })
+      .toBe('mistral-embed');
   });
 });

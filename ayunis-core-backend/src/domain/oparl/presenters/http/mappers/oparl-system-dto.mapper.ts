@@ -1,7 +1,9 @@
 import { OparlEntityType } from 'src/domain/oparl/domain/oparl-entity-type.enum';
 import type { OparlTypeCounts } from 'src/domain/oparl/domain/oparl-sync-run.entity';
 import type { OparlSystemOverview } from 'src/domain/oparl/application/models/oparl-system-overview';
+import type { OparlDocumentStats } from 'src/domain/oparl/application/models/oparl-document';
 import type {
+  OparlDocumentStatsDto,
   OparlObjectCountsDto,
   OparlSystemResponseDto,
 } from 'src/domain/oparl/presenters/http/dto/oparl-system-response.dto';
@@ -23,11 +25,34 @@ function toCountsDto(counts: OparlTypeCounts): OparlObjectCountsDto {
   };
 }
 
+function toDocumentStatsDto({
+  files,
+  index,
+}: OparlDocumentStats): OparlDocumentStatsDto {
+  return {
+    files: {
+      total: files.total,
+      pending: files.pending,
+      extracted: files.extracted,
+      failed: files.failed,
+      skipped: {
+        tooLarge: files.skipped.too_large,
+        tooManyPages: files.skipped.too_many_pages,
+        unsupportedType: files.skipped.unsupported_type,
+        unreadable: files.skipped.unreadable,
+      },
+      lastError: files.lastError,
+    },
+    index: { chunks: index.chunks, embeddedChunks: index.embeddedChunks },
+  };
+}
+
 export function toOparlSystemResponseDto({
   system,
   bodies,
   counts,
   running,
+  documents,
 }: OparlSystemOverview): OparlSystemResponseDto {
   return {
     id: system.id,
@@ -48,6 +73,7 @@ export function toOparlSystemResponseDto({
     running: running
       ? { kind: running.kind, startedAt: running.startedAt }
       : null,
+    documents: toDocumentStatsDto(documents),
     lastDeltaSyncAt: system.lastDeltaSyncAt,
     lastFullSyncAt: system.lastFullSyncAt,
     lastRunStatus: system.lastRunStatus,

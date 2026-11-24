@@ -10,6 +10,8 @@ export enum OparlErrorCode {
   SYSTEM_ALREADY_EXISTS = 'OPARL_SYSTEM_ALREADY_EXISTS',
   SYSTEM_NOT_FOUND = 'OPARL_SYSTEM_NOT_FOUND',
   SYNC_INTERRUPTED = 'OPARL_SYNC_INTERRUPTED',
+  FILE_TOO_LARGE = 'OPARL_FILE_TOO_LARGE',
+  EMBEDDING_MODEL_NOT_FOUND = 'OPARL_EMBEDDING_MODEL_NOT_FOUND',
   UNEXPECTED_ERROR = 'OPARL_UNEXPECTED_ERROR',
 }
 
@@ -107,6 +109,29 @@ export class OparlSyncInterruptedError extends ApplicationError {
       'The OParl sync was interrupted by a shutdown',
       OparlErrorCode.SYNC_INTERRUPTED,
       503,
+    );
+  }
+}
+
+export class OparlFileTooLargeError extends ApplicationError {
+  constructor(url: string, maxBytes: number) {
+    super(
+      `The file is larger than ${maxBytes} bytes: ${url}`,
+      OparlErrorCode.FILE_TOO_LARGE,
+      422,
+      { url, maxBytes },
+    );
+  }
+}
+
+/** Not an embedding model of the catalog, or an archived one. */
+export class OparlEmbeddingModelNotFoundError extends ApplicationError {
+  constructor(modelId: string) {
+    super(
+      `Embedding model ${modelId} not found in the catalog`,
+      OparlErrorCode.EMBEDDING_MODEL_NOT_FOUND,
+      404,
+      { modelId },
     );
   }
 }

@@ -9,6 +9,7 @@ import {
 } from 'src/domain/oparl/domain/oparl-sync-run.entity';
 import type { OparlSyncProgress } from 'src/domain/oparl/application/models/oparl-sync-progress';
 import { OparlMirrorRepository } from 'src/domain/oparl/application/ports/oparl-mirror.repository';
+import { OparlSyncJobsPort } from 'src/domain/oparl/application/ports/oparl-sync-jobs.port';
 import { OparlSyncRunsRepository } from 'src/domain/oparl/application/ports/oparl-sync-runs.repository';
 import { OparlSystemsRepository } from 'src/domain/oparl/application/ports/oparl-systems.repository';
 import {
@@ -27,7 +28,8 @@ import { RunOparlSyncCommand } from './run-oparl-sync.command';
  * progress names, if that run is still running. A failure is recorded on
  * the run and the system (shown in the catalog) and schedules the next
  * attempt; it is not thrown. A shutdown leaves the run running, to be
- * resumed (`OparlSyncInterruptedError`).
+ * resumed (`OparlSyncInterruptedError`). A finished run queues the
+ * system's document job.
  */
 @Injectable()
 export class RunOparlSyncUseCase {
@@ -38,6 +40,7 @@ export class RunOparlSyncUseCase {
     private readonly runs: OparlSyncRunsRepository,
     private readonly mirror: OparlMirrorRepository,
     private readonly syncService: OparlSyncService,
+    private readonly jobs: OparlSyncJobsPort,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedOparlError)
@@ -161,5 +164,18 @@ export class RunOparlSyncUseCase {
     await this.runs.update(run);
     system.recordFinishedRun(run, new Date());
     await this.systems.updateSyncState(system);
+    await this.queueDocuments(system);
+  }
+
+  /** Even a failed run may have mirrored files. Not queued: the next run queues it. */
+  private async queueDocuments(system: OparlSystem): Promise<void> {
+    try {
+      await this.jobs.enqueueDocuments([system.id]);
+    } catch (error) {
+      this.logger.warn(
+        { systemId: system.id, err: error as Error },
+        'Could not queue the OParl document job',
+      );
+    }
   }
 }

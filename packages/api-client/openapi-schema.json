@@ -12079,6 +12079,68 @@
         "tags": ["Super Admin OParl"]
       }
     },
+    "/super-admin/oparl/embedding-model": {
+      "get": {
+        "description": "The catalog embedding model that embeds the chunks of every OParl mirror, installation-wide.",
+        "operationId": "SuperAdminOparlEmbeddingModelController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OparlEmbeddingModelResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a super admin"
+          },
+          "404": {
+            "description": "OParl is disabled"
+          }
+        },
+        "summary": "Get the OParl embedding model",
+        "tags": ["Super Admin OParl"]
+      },
+      "put": {
+        "description": "A change embeds every chunk again in the background; until then vector search ignores the chunks of the previous model.",
+        "operationId": "SuperAdminOparlEmbeddingModelController_set",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOparlEmbeddingModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OparlEmbeddingModelResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not a super admin"
+          },
+          "404": {
+            "description": "OParl is disabled, or the model is not an embedding model of the catalog or archived (OPARL_EMBEDDING_MODEL_NOT_FOUND)"
+          }
+        },
+        "summary": "Set the OParl embedding model",
+        "tags": ["Super Admin OParl"]
+      }
+    },
     "/recordings": {
       "post": {
         "operationId": "RecordingsController_create",
@@ -25892,6 +25954,99 @@
         },
         "required": ["kind", "startedAt"]
       },
+      "OparlSkippedFilesDto": {
+        "type": "object",
+        "properties": {
+          "tooLarge": {
+            "type": "number",
+            "description": "Beyond the upload size limit"
+          },
+          "tooManyPages": {
+            "type": "number",
+            "description": "Beyond the page limit"
+          },
+          "unsupportedType": {
+            "type": "number",
+            "description": "Of a type whose text is not read"
+          },
+          "unreadable": {
+            "type": "number",
+            "description": "Damaged, protected or without text"
+          }
+        },
+        "required": [
+          "tooLarge",
+          "tooManyPages",
+          "unsupportedType",
+          "unreadable"
+        ]
+      },
+      "OparlFileTextCountsDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "pending": {
+            "type": "number",
+            "description": "Not read yet, or changed since"
+          },
+          "extracted": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number",
+            "description": "Could not be read for now; tried again later"
+          },
+          "skipped": {
+            "description": "Kept as metadata only, by reason",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OparlSkippedFilesDto"
+              }
+            ]
+          },
+          "lastError": {
+            "type": "string",
+            "nullable": true,
+            "description": "Error of the file that failed last"
+          }
+        },
+        "required": [
+          "total",
+          "pending",
+          "extracted",
+          "failed",
+          "skipped",
+          "lastError"
+        ]
+      },
+      "OparlIndexCountsDto": {
+        "type": "object",
+        "properties": {
+          "chunks": {
+            "type": "number",
+            "description": "Searchable chunks"
+          },
+          "embeddedChunks": {
+            "type": "number",
+            "description": "Chunks with a vector of the current OParl embedding model"
+          }
+        },
+        "required": ["chunks", "embeddedChunks"]
+      },
+      "OparlDocumentStatsDto": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "$ref": "#/components/schemas/OparlFileTextCountsDto"
+          },
+          "index": {
+            "$ref": "#/components/schemas/OparlIndexCountsDto"
+          }
+        },
+        "required": ["files", "index"]
+      },
       "OparlSyncRunStatus": {
         "type": "string",
         "enum": ["running", "succeeded", "suspicious", "failed"]
@@ -25948,6 +26103,9 @@
               }
             ]
           },
+          "documents": {
+            "$ref": "#/components/schemas/OparlDocumentStatsDto"
+          },
           "lastDeltaSyncAt": {
             "format": "date-time",
             "type": "string",
@@ -25995,6 +26153,7 @@
           "counts",
           "health",
           "running",
+          "documents",
           "lastDeltaSyncAt",
           "lastFullSyncAt",
           "lastRunStatus",
@@ -26014,6 +26173,52 @@
           }
         },
         "required": ["url"]
+      },
+      "OparlEmbeddingModelDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "dimensions": {
+            "type": "number"
+          }
+        },
+        "required": ["id", "name", "displayName", "dimensions"]
+      },
+      "OparlEmbeddingModelResponseDto": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "nullable": true,
+            "description": "The model that embeds the mirror; without one, chunks are full-text searchable only",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OparlEmbeddingModelDto"
+              }
+            ]
+          }
+        },
+        "required": ["model"]
+      },
+      "SetOparlEmbeddingModelDto": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of an embedding model of the catalog"
+          }
+        },
+        "required": ["modelId"]
       },
       "CreateRecordingDto": {
         "type": "object",

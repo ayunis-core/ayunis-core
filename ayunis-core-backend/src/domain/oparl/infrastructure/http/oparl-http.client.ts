@@ -2,6 +2,7 @@ import { Injectable, Logger, type OnApplicationShutdown } from '@nestjs/common';
 import type { LookupOptions } from 'node:dns';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { Agent, fetch, type Response } from 'undici';
+import { ApplicationError } from 'src/common/errors/base.error';
 import { classifyTransportError } from 'src/common/errors/provider-transport-error.classifier';
 import {
   buildBlockedAddresses,
@@ -17,9 +18,12 @@ import type {
 } from 'src/domain/oparl/application/models/oparl-object';
 import {
   OparlClientPort,
+  type OparlDownload,
+  type OparlDownloadOptions,
   type OparlRequestOptions,
 } from 'src/domain/oparl/application/ports/oparl-client.port';
 import {
+  OparlFileTooLargeError,
   OparlHostBlockedError,
   OparlInvalidResponseError,
   OparlRequestFailedError,
@@ -35,6 +39,8 @@ const REQUEST_TIMEOUT_MS = 120_000;
 const MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
 const MAX_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+type ReadBody<T> = (url: string, response: Response) => Promise<T>;
+
 const RETRY_DELAYS_MS = [5_000, 30_000, 120_000, 300_000];
 const MAX_RETRY_AFTER_MS = 15 * 60_000;
 
@@ -94,6 +100,18 @@ export class OparlHttpClient
     return toPage(finalUrl, body);
   }
 
+  async downloadFile(
+    url: string,
+    { maxBytes, ...options }: OparlDownloadOptions,
+  ): Promise<OparlDownload> {
+    return this.request(url, options, '*/*', async (target, response) => ({
+      data: await this.readBody(target, response, maxBytes, () => {
+        return new OparlFileTooLargeError(target, maxBytes);
+      }),
+      contentType: response.headers.get('content-type'),
+    }));
+  }
+
   protected resolveAddresses(hostname: string): Promise<string[]> {
     return resolveHostnameAddresses(hostname);
   }
@@ -102,14 +120,31 @@ export class OparlHttpClient
     return sleep(ms, undefined, { signal });
   }
 
-  private async getJson(
+  private getJson(
+    url: string,
+    options: OparlRequestOptions,
+  ): Promise<JsonResponse> {
+    return this.request(
+      url,
+      options,
+      'application/json',
+      async (target, response) => ({
+        body: await this.readJson(target, response),
+        finalUrl: target,
+      }),
+    );
+  }
+
+  private async request<T>(
     url: string,
     { retry = true, signal }: OparlRequestOptions,
-  ): Promise<JsonResponse> {
+    accept: string,
+    read: ReadBody<T>,
+  ): Promise<T> {
     for (let attempt = 0; ; attempt++) {
       signal?.throwIfAborted();
       try {
-        return await this.followRedirects(url, signal);
+        return await this.followRedirects(url, signal, accept, read);
       } catch (error) {
         if (signal?.aborted) throw signal.reason;
         const delay = retry ? retryDelay(error, attempt) : null;
@@ -139,18 +174,19 @@ export class OparlHttpClient
     );
   }
 
-  private async followRedirects(
+  private async followRedirects<T>(
     initialUrl: string,
     signal: AbortSignal | undefined,
-  ): Promise<JsonResponse> {
+    accept: string,
+    read: ReadBody<T>,
+  ): Promise<T> {
     let url = this.parse(initialUrl);
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       await this.assertPublic(url);
       const result = await this.limiter.run(url.host, () =>
-        this.send(url, signal),
+        this.send(url, signal, accept, read),
       );
-      if (!('location' in result))
-        return { body: result.body, finalUrl: url.href };
+      if (!('location' in result)) return result.body;
       url = this.parse(new URL(result.location, url).href);
     }
     throw new OparlRequestFailedError(initialUrl, null, false, null, {
@@ -158,17 +194,19 @@ export class OparlHttpClient
     });
   }
 
-  private async send(
+  private async send<T>(
     url: URL,
     signal: AbortSignal | undefined,
-  ): Promise<{ location: string } | { body: unknown }> {
+    accept: string,
+    read: ReadBody<T>,
+  ): Promise<{ location: string } | { body: T }> {
     const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
     let response: Response;
     try {
       response = await fetch(url, {
         dispatcher: this.dispatcher,
         redirect: 'manual',
-        headers: { accept: 'application/json', 'user-agent': OPARL_USER_AGENT },
+        headers: { accept, 'user-agent': OPARL_USER_AGENT },
         signal: signal ? AbortSignal.any([timeout, signal]) : timeout,
       });
     } catch (error) {
@@ -190,33 +228,47 @@ export class OparlHttpClient
         parseRetryAfter(response.headers.get('retry-after')),
       );
     }
-    return { body: await this.readJson(url.href, response) };
+    return { body: await read(url.href, response) };
   }
 
   private async readJson(url: string, response: Response): Promise<unknown> {
+    const body = await this.readBody(
+      url,
+      response,
+      MAX_RESPONSE_BYTES,
+      () => new OparlInvalidResponseError(url, 'response too large'),
+    );
+    try {
+      return JSON.parse(body.toString('utf8'));
+    } catch {
+      throw new OparlInvalidResponseError(url, 'not JSON');
+    }
+  }
+
+  private async readBody(
+    url: string,
+    response: Response,
+    maxBytes: number,
+    tooLarge: () => Error,
+  ): Promise<Buffer> {
     const declared = Number(response.headers.get('content-length'));
-    if (declared > MAX_RESPONSE_BYTES) {
+    if (declared > maxBytes) {
       await response.body?.cancel();
-      throw new OparlInvalidResponseError(url, 'response too large');
+      throw tooLarge();
     }
     const chunks: Buffer[] = [];
     let size = 0;
     try {
       for await (const chunk of response.body ?? []) {
         size += (chunk as Buffer).length;
-        if (size > MAX_RESPONSE_BYTES)
-          throw new OparlInvalidResponseError(url, 'response too large');
+        if (size > maxBytes) throw tooLarge();
         chunks.push(chunk as Buffer);
       }
     } catch (error) {
-      if (error instanceof OparlInvalidResponseError) throw error;
+      if (error instanceof ApplicationError) throw error;
       throw this.transportFailure(url, error);
     }
-    try {
-      return JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    } catch {
-      throw new OparlInvalidResponseError(url, 'not JSON');
-    }
+    return Buffer.concat(chunks);
   }
 
   private transportFailure(url: string, error: unknown): Error {

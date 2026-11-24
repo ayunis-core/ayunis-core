@@ -17,6 +17,7 @@ import type {
 } from '@ayunis/api-client';
 import { OparlSystemHealth } from '@ayunis/api-client';
 import { useSyncOparlSystemNow } from '@/pages/super-admin-settings/oparl/api/useSyncOparlSystemNow';
+import { OparlDocumentStats } from './OparlDocumentStats';
 
 const COUNT_KEYS: Array<keyof OparlObjectCountsDto> = [
   'body',
@@ -135,6 +136,7 @@ export function OparlSystemCard({
             </div>
           ))}
         </dl>
+        <OparlDocumentStats documents={system.documents} />
       </CardContent>
     </Card>
   );

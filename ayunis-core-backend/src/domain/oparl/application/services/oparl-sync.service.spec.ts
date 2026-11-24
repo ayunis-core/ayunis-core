@@ -7,6 +7,7 @@ import {
 } from 'src/domain/oparl/domain/oparl-sync-run.entity';
 import type { OparlPage } from 'src/domain/oparl/application/models/oparl-object';
 import type { OparlSyncProgress } from 'src/domain/oparl/application/models/oparl-sync-progress';
+import type { OparlClientPort } from 'src/domain/oparl/application/ports/oparl-client.port';
 import type { OparlMirrorRepository } from 'src/domain/oparl/application/ports/oparl-mirror.repository';
 import type { OparlSystemsRepository } from 'src/domain/oparl/application/ports/oparl-systems.repository';
 import { OparlRequestFailedError } from 'src/domain/oparl/application/oparl.errors';
@@ -93,7 +94,7 @@ function setup(
   const mirror = { linkReferences: jest.fn().mockResolvedValue(undefined) };
   const systems = { updateMetadata: jest.fn().mockResolvedValue(undefined) };
   const service = new OparlSyncService(
-    client,
+    client as unknown as OparlClientPort,
     writer as unknown as OparlPageWriter,
     mirror as unknown as OparlMirrorRepository,
     systems as unknown as OparlSystemsRepository,

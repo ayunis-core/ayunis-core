@@ -1,4 +1,4 @@
-import { requestOparlSystemRoutes } from '../../src/clients/api/oparl.client';
+import { requestOparlSuperAdminRoutes } from '../../src/clients/api/oparl.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import { loginAsSeededSuperAdmin } from '../../src/flows/super-admin.flow';
 import { expect, test } from '../../src/fixtures/test';
@@ -21,7 +21,7 @@ test('with OParl disabled a super admin finds neither its routes nor its page', 
 
   const toggles = await requestFeatureToggles(page.request, disabledApiUrl);
   expect(await toggles.json()).toMatchObject({ oparlEnabled: false });
-  for (const response of await requestOparlSystemRoutes(
+  for (const response of await requestOparlSuperAdminRoutes(
     page.request,
     disabledApiUrl,
   ))

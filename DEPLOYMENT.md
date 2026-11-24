@@ -431,8 +431,11 @@ At least one must be configured:
 - `FEATURE_OPARL_ENABLED`: `true` lets super admins add council information
   systems (OParl) whose data is mirrored and synced daily from the API or
   ingestion worker, which then makes outbound requests to those public hosts.
-  Off by default. `INGESTION_OPARL_CONCURRENCY` sets how many systems sync at
-  once per process (default `3`).
+  Their documents are downloaded and read (OCR for scans) and, once a super
+  admin chose an OParl embedding model, embedded; these provider costs are the
+  platform's, not any org's. Off by default. `INGESTION_OPARL_CONCURRENCY` sets
+  how many OParl jobs (system syncs and document jobs) run at once per process
+  (default `3`).
 - `OCR_MAX_CONCURRENCY`: OCR requests in flight per process (default `4`). The
   batches of one long PDF run in parallel and may use every slot, so the total
   against the Mistral account is this value times the number of API and worker
