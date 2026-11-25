@@ -1,6 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { groupMessagesIntoRuns } from './group-messages-into-runs';
+import {
+  groupMessagesIntoRuns as groupTimeline,
+  type GroupingOptions,
+} from '@ayunis/chat/timeline';
+import { chatToolCards } from './tool-card-registrations';
 import type { Message } from '@/pages/chat/model/openapi';
+
+function groupMessagesIntoRuns(
+  messages: readonly Message[],
+  options: GroupingOptions,
+) {
+  return groupTimeline(messages, { ...options, toolCards: chatToolCards });
+}
 
 interface AssistantContentBlock {
   type: 'text' | 'thinking' | 'tool_use';
