@@ -8,8 +8,9 @@ token disables service access without preventing the rest of Core from booting.
 `surface-registry.ts` declares sign-in, run capabilities, client tools, feature
 flags, static prefixes, framing and manifest paths for web, Outlook and the
 planned website surface. Session client IDs come from the token entries. The
-environment validator reads the framing origin keys from the registry and
-`features.config.ts` resolves the registered Outlook flag.
+server uses the registry keys to find the built surfaces and the prefixes to
+route requests. Framing can use a validated environment key or an asynchronous
+request resolver. `features.config.ts` resolves the registered Outlook flag.
 
 The other configuration files cover environment bootstrap and config factories.
 

@@ -23,9 +23,8 @@ COPY . .
 # Install the full workspace, frozen to the committed lockfile.
 RUN pnpm install --frozen-lockfile
 
-# Build the frontend, then bundle it where the backend serves it from: a sibling
-# of dist/ (so nest's deleteOutDir doesn't wipe it), copied into dist/frontend in
-# the final stage. Then build the backend.
+# Build the web app and each surface into separate directories. Keep the
+# bundle beside dist/ while Nest builds, then copy it into dist/frontend.
 #
 # No .env is consulted: environment-specific frontend values are injected at
 # runtime via the backend's GET /config.js, so the same image serves every
@@ -37,9 +36,8 @@ RUN pnpm install --frozen-lockfile
 # one. The maps themselves (vite build.sourcemap: 'hidden') are deleted —
 # they must not be publicly served; CI uploads them to AppSignal instead.
 ARG APP_REVISION
-RUN VITE_APP_REVISION=$APP_REVISION pnpm --filter core-frontend-tanstack run build
-RUN find ayunis-core-frontend/dist -name '*.map' -delete
-RUN cp -r ayunis-core-frontend/dist ayunis-core-backend/frontend
+RUN VITE_APP_REVISION=$APP_REVISION pnpm run build:surfaces
+RUN find ayunis-core-backend/frontend -name '*.map' -delete
 # Build the workspace packages the backend depends on (@ayunis/inference,
 # @ayunis/provider-anthropic, @ayunis/provider-openai, @ayunis/agent-runtime)
 # before the backend so their dist/ exists when nest build resolves them. pnpm

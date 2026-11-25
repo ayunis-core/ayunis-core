@@ -9,14 +9,14 @@ manifest's VersionOverrides 1.1 block also pass
 `manifestVersion=<version>`; a feature that depends on something only a newer
 manifest declares checks a minimum version there.
 
-The task pane runs the web app's own build (`src/main.tsx`, branching on
-`<html data-entry="outlook-pane">`); the build writes
-`dist/outlook/taskpane.html` from the web page's asset tags
-(`outlookTaskpanePage` in `vite.config.js`) rather than adding a second input,
-which would split the web app's first load into many more chunks. The pane
-page does not load `/config.js`, so it runs without analytics or AppSignal.
-The dialog's last page (`dialog.html`) and the launch-event runtime
-(`events.html`) are separate entries without the app.
+The `apps/outlook` Vite build ships the dialog, launch events, icons and task
+pane HTML under `/outlook`. `pnpm run build:surfaces` builds the web app first
+and bundles both builds for the backend. The task pane still runs the embedded
+web app through `src/main.tsx` and its `data-entry="outlook-pane"` branch. The
+Outlook build copies the web page's asset tags into the pane HTML, so it
+shares the app files without loading `/config.js` or building another copy.
+During Vite development the existing templates under
+`ayunis-core-frontend/outlook` keep the same URLs.
 
 The launch-event runtime handles every event the manifest registers
 (`OnMessageCompose`, `OnMessageRecipientsChanged`,

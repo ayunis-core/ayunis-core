@@ -1,5 +1,6 @@
 import { SurfaceScope } from 'src/config/surface-scope';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
+import type { Request } from 'express';
 
 export interface SurfaceFeatureFlag {
   readonly name: string;
@@ -7,11 +8,19 @@ export interface SurfaceFeatureFlag {
   readonly defaultEnabled: boolean;
 }
 
-export interface SurfaceFraming {
+export type SurfaceFraming = {
   readonly documents: readonly string[];
-  readonly originsEnvKey: string;
-  readonly defaultOrigins: readonly string[];
-}
+} & (
+  | {
+      readonly originsEnvKey: string;
+      readonly defaultOrigins: readonly string[];
+    }
+  | {
+      readonly resolveOrigins: (
+        request: Request,
+      ) => readonly string[] | Promise<readonly string[]>;
+    }
+);
 
 export interface SurfaceDefinition {
   readonly signIn: 'cookie' | 'token' | 'visitor';
@@ -22,6 +31,7 @@ export interface SurfaceDefinition {
     readonly capabilities: readonly string[];
   } | null;
   readonly clientTools: readonly ToolType[];
+  readonly webShellPaths?: readonly string[];
   readonly featureFlag: SurfaceFeatureFlag | null;
   readonly framing: SurfaceFraming | null;
   readonly manifest: {
@@ -134,6 +144,7 @@ export const SURFACE_REGISTRY = {
       envKey: 'FEATURE_OUTLOOK_ADDIN_ENABLED',
       defaultEnabled: false,
     },
+    webShellPaths: ['/login', '/handoff'],
     framing: {
       documents: Object.values(outlookLaunchDocuments),
       originsEnvKey: 'OUTLOOK_ADDIN_FRAME_ORIGINS',
