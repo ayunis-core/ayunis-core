@@ -24,7 +24,7 @@ import {
   SkillTextField,
 } from './improve-skill-text.command';
 import { buildImproveSkillTextPrompt } from './improve-skill-text.prompt';
-import { normalizeSkillText } from 'src/domain/skills/application/util/normalize-skill-text.helper';
+import { stripWrappingQuotes } from 'src/common/util/strip-wrapping-quotes';
 
 type ReportedUsage = { inputTokens?: number; outputTokens?: number };
 
@@ -59,7 +59,7 @@ export class ImproveSkillTextUseCase {
     const response = await this.getInferenceUseCase.execute(
       this.buildInferenceCommand(command, model),
     );
-    const improved = normalizeSkillText(
+    const improved = stripWrappingQuotes(
       response.content
         .filter((content) => content instanceof TextMessageContent)
         .map((content) => content.text)

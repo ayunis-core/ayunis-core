@@ -9,9 +9,9 @@ const QUOTE_PAIRS = [
   ['«', '»'],
 ] as const;
 
-// Quote removal is best-effort: internal quotes can be meaningful trigger keywords.
+// Quote removal is best-effort: internal quotes can be meaningful keywords.
 // Preserve ambiguous wrapping instead of changing the author's content.
-export function normalizeSkillText(text: string): string {
+export function stripWrappingQuotes(text: string): string {
   text = text.trim();
   const pair = QUOTE_PAIRS.find(
     ([open, close]) =>

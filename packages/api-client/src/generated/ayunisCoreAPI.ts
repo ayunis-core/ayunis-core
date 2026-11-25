@@ -120,7 +120,9 @@ import type {
   GlobalPiiWhitelistWordDto,
   GrantCrawlDomainRequestDto,
   ImageGenerationModelResponseDto,
+  ImproveRoutinePromptDto,
   ImproveSkillTextDto,
+  ImprovedRoutinePromptResponseDto,
   ImprovedSkillTextResponseDto,
   InstallMarketplaceIntegrationDto,
   InstallSkillFromMarketplaceDto,
@@ -35263,5 +35265,73 @@ export const useRoutineMcpIntegrationsControllerRemove = <TError = void,
         TContext
       > => {
       return useMutation(getRoutineMcpIntegrationsControllerRemoveMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Rewrite a routine's task without saving it
+ */
+export const routinesControllerImprovePrompt = (
+    improveRoutinePromptDto: ImproveRoutinePromptDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<ImprovedRoutinePromptResponseDto>(
+      {url: `/routines/improve-prompt`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: improveRoutinePromptDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getRoutinesControllerImprovePromptMutationKey = () => ['routinesControllerImprovePrompt'] as const;
+
+export const getRoutinesControllerImprovePromptMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerImprovePrompt>>, TError,RoutinesControllerImprovePromptMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof routinesControllerImprovePrompt>>, TError,RoutinesControllerImprovePromptMutationVariables, TContext> => {
+
+const mutationKey = getRoutinesControllerImprovePromptMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof routinesControllerImprovePrompt>>, RoutinesControllerImprovePromptMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  routinesControllerImprovePrompt(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoutinesControllerImprovePromptMutationResult = NonNullable<Awaited<ReturnType<typeof routinesControllerImprovePrompt>>>
+    export type RoutinesControllerImprovePromptMutationBody = ImproveRoutinePromptDto
+    export type RoutinesControllerImprovePromptMutationError = void
+    export type RoutinesControllerImprovePromptMutationVariables = {data: ImproveRoutinePromptDto}
+
+    /**
+ * @summary Rewrite a routine's task without saving it
+ */
+export const useRoutinesControllerImprovePrompt = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof routinesControllerImprovePrompt>>, TError,RoutinesControllerImprovePromptMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof routinesControllerImprovePrompt>>,
+        TError,
+        RoutinesControllerImprovePromptMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRoutinesControllerImprovePromptMutationOptions(options), queryClient);
     }
 

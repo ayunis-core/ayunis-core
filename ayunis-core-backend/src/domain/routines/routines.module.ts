@@ -9,6 +9,8 @@ import { RunsModule } from 'src/domain/runs/runs.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
 import { SubscriptionsModule } from 'src/iam/subscriptions/subscriptions.module';
 import { TrialsModule } from 'src/iam/trials/trials.module';
+import { QuotasModule } from 'src/iam/quotas/quotas.module';
+import { UsageModule } from 'src/domain/usage/usage.module';
 import { UsersModule } from 'src/iam/users/users.module';
 import { AcademyAccessModule } from 'src/iam/academy-access/academy-access.module';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
@@ -28,6 +30,7 @@ import { FindAllRoutinesUseCase } from './application/use-cases/find-all-routine
 import { FindManageableRoutinesUseCase } from './application/use-cases/find-manageable-routines/find-manageable-routines.use-case';
 import { FindRoutineUseCase } from './application/use-cases/find-routine/find-routine.use-case';
 import { RunRoutineNowUseCase } from './application/use-cases/run-routine-now/run-routine-now.use-case';
+import { ImproveRoutinePromptUseCase } from './application/use-cases/improve-routine-prompt/improve-routine-prompt.use-case';
 import { SweepDueRoutinesUseCase } from './application/use-cases/sweep-due-routines/sweep-due-routines.use-case';
 import { UpdateRoutineUseCase } from './application/use-cases/update-routine/update-routine.use-case';
 import { ListRoutineMcpIntegrationsUseCase } from './application/use-cases/list-routine-mcp-integrations/list-routine-mcp-integrations.use-case';
@@ -63,6 +66,8 @@ import { RoutineKnowledgeBasesController } from './presenters/http/routine-knowl
     UsersModule,
     SubscriptionsModule,
     TrialsModule,
+    QuotasModule,
+    UsageModule,
     AcademyAccessModule,
     PermissionsModule,
     NotificationsModule,
@@ -97,6 +102,7 @@ import { RoutineKnowledgeBasesController } from './presenters/http/routine-knowl
     RemoveKnowledgeBaseFromRoutineUseCase,
     DeleteRoutineUseCase,
     RunRoutineNowUseCase,
+    ImproveRoutinePromptUseCase,
     ExecuteRoutineUseCase,
     SweepDueRoutinesUseCase,
     RoutineDtoMapper,

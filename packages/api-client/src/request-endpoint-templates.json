@@ -163,6 +163,7 @@
   "/role-permissions",
   "/role-permissions/{role}",
   "/routines",
+  "/routines/improve-prompt",
   "/routines/{id}",
   "/routines/{id}/run",
   "/routines/{routineId}/knowledge-bases",
