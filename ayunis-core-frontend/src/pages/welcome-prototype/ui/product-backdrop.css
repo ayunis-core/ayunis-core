@@ -1,0 +1,257 @@
+.wp-product-backdrop {
+  --wp-product-backdrop-scale: 0.58;
+
+  --backdrop-blob-color: var(--brand);
+
+  --backdrop-blob-opacity-1: 0.4;
+  --backdrop-blob-opacity-2: 0.9;
+  --backdrop-blob-opacity-3: 1;
+
+  --backdrop-blob-blur-1: 100px;
+  --backdrop-blob-blur-2: 80px;
+  --backdrop-blob-blur-3: 60px;
+
+  --backdrop-blob-speed-1: 6s;
+  --backdrop-blob-speed-2: 8s;
+  --backdrop-blob-speed-3: 10s;
+
+  --backdrop-blob-delay-1: 0s;
+  --backdrop-blob-delay-2: 0s;
+  --backdrop-blob-delay-3: 0s;
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+:is(.dark, .theme-core.dark) .wp-product-backdrop {
+  --backdrop-blob-color: var(--brand);
+  --backdrop-blob-opacity-1: 0.35;
+  --backdrop-blob-opacity-2: 0.55;
+  --backdrop-blob-opacity-3: 0.65;
+}
+
+.wp-product-backdrop__canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+  animation: wpProductBackdropAppear 4s ease-in-out 0.2s both;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 45%,
+    color-mix(
+        in oklab,
+        color-mix(in oklab, var(--brand) 10%, var(--background)) 35%,
+        transparent
+      )
+      68%,
+    color-mix(in oklab, var(--brand) 13%, var(--background)) 100%
+  );
+}
+
+@keyframes wpProductBackdropAppear {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+:is(.dark, .theme-core.dark) .wp-product-backdrop__canvas {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 45%,
+    color-mix(
+        in oklab,
+        color-mix(in oklab, var(--brand) 16%, var(--background)) 45%,
+        transparent
+      )
+      68%,
+    color-mix(in oklab, var(--brand) 19%, var(--background)) 100%
+  );
+}
+
+.wp-product-backdrop__blobs {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 8%;
+  width: 118%;
+  height: 32rem;
+  transform: scale(var(--wp-product-backdrop-scale));
+  transform-origin: 85% 100%;
+}
+
+.wp-product-backdrop__blob {
+  position: absolute;
+  border-radius: 999rem;
+  pointer-events: none;
+  will-change: transform;
+  transform-origin: center;
+  background-color: var(--backdrop-blob-color);
+}
+
+.wp-product-backdrop__blob.is-1 {
+  left: 28%;
+  bottom: -52%;
+  width: 64rem;
+  height: 34rem;
+  opacity: var(--backdrop-blob-opacity-1);
+  filter: blur(var(--backdrop-blob-blur-1));
+  animation: wpProductBackdropBlobOne var(--backdrop-blob-speed-1) ease-in-out
+    infinite alternate;
+  animation-delay: var(--backdrop-blob-delay-1);
+}
+
+.wp-product-backdrop__blob.is-2 {
+  left: 38%;
+  bottom: -48%;
+  width: 72rem;
+  height: 28rem;
+  border-radius: 50%;
+  opacity: var(--backdrop-blob-opacity-2);
+  filter: blur(var(--backdrop-blob-blur-2));
+  animation: wpProductBackdropBlobTwo var(--backdrop-blob-speed-2) ease-in-out
+    infinite alternate;
+  animation-delay: var(--backdrop-blob-delay-2);
+}
+
+.wp-product-backdrop__blob.is-3 {
+  right: -6%;
+  bottom: -46%;
+  width: 88rem;
+  height: 22rem;
+  border-radius: 50%;
+  opacity: var(--backdrop-blob-opacity-3);
+  filter: blur(var(--backdrop-blob-blur-3));
+  animation: wpProductBackdropBlobThree var(--backdrop-blob-speed-3) ease-in-out
+    infinite alternate;
+  animation-delay: var(--backdrop-blob-delay-3);
+}
+
+@keyframes wpProductBackdropBlobOne {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, 0%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-3%, 0%, 0) scale(0.97);
+  }
+}
+
+@keyframes wpProductBackdropBlobTwo {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(5%, 0%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-4%, 0%, 0) scale(1.01);
+  }
+}
+
+@keyframes wpProductBackdropBlobThree {
+  0% {
+    transform: translate3d(0%, 0%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-14%, 0%, 0) scale(1.05, 1.02);
+  }
+  100% {
+    transform: translate3d(-8%, 0%, 0) scale(0.98, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-product-backdrop__canvas {
+    animation: none;
+  }
+
+  .wp-product-backdrop__blob {
+    animation: none !important;
+  }
+}
+
+.wp-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  animation: wpGlowIn 4s ease-in-out 0.2s both;
+}
+
+@keyframes wpGlowIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.wp-glow--mist .wp-glow__blob {
+  position: absolute;
+  bottom: -30vh;
+  will-change: transform;
+  border-radius: 50%;
+  background: var(--brand);
+  filter: blur(90px);
+}
+
+.wp-glow--mist .wp-glow__blob.is-1 {
+  left: -18vw;
+  width: 48vw;
+  height: 55vh;
+  opacity: 0.75;
+  animation: wpMistOne 22s ease-in-out infinite alternate;
+}
+
+.wp-glow--mist .wp-glow__blob.is-2 {
+  left: 25vw;
+  bottom: -22vh;
+  width: 50vw;
+  height: 28vh;
+  opacity: 0.35;
+  animation: wpMistTwo 28s ease-in-out infinite alternate;
+}
+
+.wp-glow--mist .wp-glow__blob.is-3 {
+  right: -18vw;
+  width: 48vw;
+  height: 55vh;
+  opacity: 0.75;
+  background: color-mix(in oklab, var(--brand) 85%, var(--foreground));
+  animation: wpMistThree 26s ease-in-out infinite alternate;
+}
+
+@keyframes wpMistOne {
+  to {
+    transform: translate3d(6vw, 0, 0) scale(1.08, 1);
+  }
+}
+
+@keyframes wpMistTwo {
+  to {
+    transform: translate3d(-4vw, 0, 0) scale(1.1, 1);
+  }
+}
+
+@keyframes wpMistThree {
+  to {
+    transform: translate3d(-6vw, 0, 0) scale(1.08, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-glow,
+  .wp-glow__blob {
+    animation: none !important;
+  }
+}

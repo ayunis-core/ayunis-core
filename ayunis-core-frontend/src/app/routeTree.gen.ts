@@ -18,6 +18,7 @@ import { Route as onboardingIpBlockedRouteImport } from './routes/(onboarding)/i
 import { Route as onboardingLoginRouteImport } from './routes/(onboarding)/login'
 import { Route as onboardingRegisterRouteImport } from './routes/(onboarding)/register'
 import { Route as onboardingTwoFactorRouteImport } from './routes/(onboarding)/two-factor'
+import { Route as onboardingWelcomePrototypeRouteImport } from './routes/(onboarding)/welcome-prototype'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin-settings'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedInstallRouteImport } from './routes/_authenticated/install'
@@ -137,6 +138,12 @@ const onboardingTwoFactorRoute = onboardingTwoFactorRouteImport.update({
   path: '/two-factor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const onboardingWelcomePrototypeRoute =
+  onboardingWelcomePrototypeRouteImport.update({
+    id: '/(onboarding)/welcome-prototype',
+    path: '/welcome-prototype',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/admin-settings',
@@ -581,6 +588,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/two-factor': typeof onboardingTwoFactorRoute
+  '/welcome-prototype': typeof onboardingWelcomePrototypeRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsRouteWithChildren
   '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/install': typeof AuthenticatedInstallRoute
@@ -665,6 +673,7 @@ export interface FileRoutesByTo {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/two-factor': typeof onboardingTwoFactorRoute
+  '/welcome-prototype': typeof onboardingWelcomePrototypeRoute
   '/install': typeof AuthenticatedInstallRoute
   '/account/activate': typeof onboardingAccountActivateRoute
   '/outlook/handoff': typeof onboardingOutlookHandoffRoute
@@ -748,6 +757,7 @@ export interface FileRoutesById {
   '/(onboarding)/login': typeof onboardingLoginRoute
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/(onboarding)/two-factor': typeof onboardingTwoFactorRoute
+  '/(onboarding)/welcome-prototype': typeof onboardingWelcomePrototypeRoute
   '/_authenticated/admin-settings': typeof AuthenticatedAdminSettingsRouteWithChildren
   '/_authenticated/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/_authenticated/install': typeof AuthenticatedInstallRoute
@@ -834,6 +844,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/two-factor'
+    | '/welcome-prototype'
     | '/admin-settings'
     | '/inbox'
     | '/install'
@@ -918,6 +929,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/two-factor'
+    | '/welcome-prototype'
     | '/install'
     | '/account/activate'
     | '/outlook/handoff'
@@ -1000,6 +1012,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/login'
     | '/(onboarding)/register'
     | '/(onboarding)/two-factor'
+    | '/(onboarding)/welcome-prototype'
     | '/_authenticated/admin-settings'
     | '/_authenticated/inbox'
     | '/_authenticated/install'
@@ -1086,6 +1099,7 @@ export interface RootRouteChildren {
   onboardingLoginRoute: typeof onboardingLoginRoute
   onboardingRegisterRoute: typeof onboardingRegisterRoute
   onboardingTwoFactorRoute: typeof onboardingTwoFactorRoute
+  onboardingWelcomePrototypeRoute: typeof onboardingWelcomePrototypeRoute
   onboardingAccountActivateRoute: typeof onboardingAccountActivateRoute
   onboardingOutlookHandoffRoute: typeof onboardingOutlookHandoffRoute
   onboardingOutlookLoginRoute: typeof onboardingOutlookLoginRoute
@@ -1159,6 +1173,13 @@ declare module '@tanstack/react-router' {
       path: '/two-factor'
       fullPath: '/two-factor'
       preLoaderRoute: typeof onboardingTwoFactorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(onboarding)/welcome-prototype': {
+      id: '/(onboarding)/welcome-prototype'
+      path: '/welcome-prototype'
+      fullPath: '/welcome-prototype'
+      preLoaderRoute: typeof onboardingWelcomePrototypeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin-settings': {
@@ -1902,6 +1923,7 @@ const rootRouteChildren: RootRouteChildren = {
   onboardingLoginRoute: onboardingLoginRoute,
   onboardingRegisterRoute: onboardingRegisterRoute,
   onboardingTwoFactorRoute: onboardingTwoFactorRoute,
+  onboardingWelcomePrototypeRoute: onboardingWelcomePrototypeRoute,
   onboardingAccountActivateRoute: onboardingAccountActivateRoute,
   onboardingOutlookHandoffRoute: onboardingOutlookHandoffRoute,
   onboardingOutlookLoginRoute: onboardingOutlookLoginRoute,
