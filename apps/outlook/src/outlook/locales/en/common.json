@@ -84,5 +84,107 @@
     "confirmDelete": "Delete {{title}}?",
     "deleteDescription": "This chat will be permanently deleted.",
     "removeFile": "Remove {{name}}"
+  },
+  "sidebar": {
+    "renameThreadTitle": "Rename Chat",
+    "renameThreadDescription": "Enter a new title for this chat.",
+    "renameThreadLabel": "Title",
+    "renameThreadPlaceholder": "Enter chat title",
+    "renameThreadConfirm": "Rename",
+    "renameThreadCancel": "Cancel",
+    "renameThreadSuccess": "Chat renamed successfully",
+    "renameThreadError": "Failed to rename chat",
+    "renameThreadEmptyError": "Title cannot be empty",
+    "renameThreadMaxLengthError": "Title cannot exceed {{max}} characters"
+  },
+  "models": {
+    "availableHeading": "Available models",
+    "modes": {
+      "heading": "Mode",
+      "current": "Currently:",
+      "adminHint": "Ayunis Core picks from your enabled models.",
+      "otherModelsHeading": "Other available models",
+      "auto": {
+        "label": "Auto",
+        "description": "Ayunis Core picks the model with the best balance of performance, speed and usage.",
+        "hint": "Best balance"
+      },
+      "max": {
+        "label": "Max",
+        "description": "Ayunis Core picks the most capable model available for demanding tasks such as analyses or long documents. If a model is disrupted, Ayunis Core switches to the next healthy model in the Max list when available. Usage is higher.",
+        "hint": "Highest performance"
+      },
+      "moreModels": "More models",
+      "noneAvailable": "No enabled model is currently available for this mode.",
+      "defaultSaved": "Default saved.",
+      "defaultSaveError": "The default could not be saved. Please try again.",
+      "defaultForbidden": "You are not allowed to change this default."
+    },
+    "providerFaultWarning": "This model currently has a known provider issue and may not work reliably.",
+    "category": {
+      "zero": "Very weak",
+      "low": "Weak",
+      "medium": "Balanced",
+      "high": "Powerful"
+    },
+    "tierPerformance": {
+      "zero": "Very weak performance",
+      "low": "Weak performance",
+      "medium": "Balanced performance",
+      "high": "Powerful"
+    },
+    "tierUsage": {
+      "zero": "No usage",
+      "low": "Low usage",
+      "medium": "Medium usage",
+      "high": "High usage"
+    },
+    "providerHosting": {
+      "openai": "Hosted in the US by OpenAI.",
+      "anthropic": "Hosted in the US by Anthropic.",
+      "gemini": "Hosted in the US by Google.",
+      "azure": "Hosted in the EU on Microsoft Azure.",
+      "bedrock": "Hosted in the EU on AWS Bedrock.",
+      "mistral": "Hosted in the EU by Mistral.",
+      "scaleway": "Hosted in the EU by Scaleway.",
+      "otc": "Hosted in Germany on Open Telekom Cloud.",
+      "stackit": "Hosted in Germany by Stackit.",
+      "synaforce": "Hosted in Germany on Ayunis sovereign cloud.",
+      "ayunis": "Hosted in Germany on Ayunis sovereign cloud.",
+      "ollama": "Self-hosted via Ollama."
+    }
+  },
+  "sources": {
+    "removeFile": "Remove file {{name}}",
+    "reindexing": "Being re-indexed. The file can be searched again once this is finished.",
+    "processingErrors": {
+      "failed": "The file could not be processed. Remove it and upload it again in this chat. If the problem persists, contact support.",
+      "unreadable": "Couldn’t read this file. Remove it and try uploading it again.",
+      "empty": "No text could be read from the document. Use a more legible version and upload it again in this chat.",
+      "timeout": "Document processing timed out. Remove the file and upload it again in this chat. Splitting large documents may help.",
+      "tooManyPages": "The document has too many pages. Split it into smaller files and upload them in this chat.",
+      "recordingTooLong": "The recording is too long to transcribe. Split it into shorter parts and upload them separately in this chat.",
+      "spreadsheetTooLarge": "The spreadsheet is too large. Remove unused rows and columns or split it into smaller files, then upload it again in this chat.",
+      "unavailable": "The document processing service is temporarily unavailable. Remove the file and upload it again in this chat later."
+    },
+    "failedToAdd": "Error uploading file",
+    "invalidFileTypeError": "This file type is currently not supported.",
+    "fileSourceEmptyDataError": "The uploaded file contains no processable data.",
+    "fileSourceTooLargeError": "The file exceeds the maximum file size.",
+    "fileSourceTooManyPagesError": "Document has too many pages to process.",
+    "fileSourceServiceBusyError": "The document processing service is busy. Please try again later.",
+    "fileSourceTimeoutError": "Document processing timed out. The file may be too complex.",
+    "fileSourceUnreadableError": "Document could not be read. It may be corrupted.",
+    "sourceLimitExceededError": "A chat can have at most 20 sources. Please remove one before adding another.",
+    "noEmbeddingModelError": "No embedding model is enabled. Please ask your administrator to enable one before uploading files.",
+    "embeddingModelUnavailableError": "The enabled embedding model can't be used. Please ask your administrator to check its configuration.",
+    "uploading": "Uploading… {{percent}}%",
+    "uploadInterruptedError": "The upload was interrupted. Please try again."
+  },
+  "common": {
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    }
   }
 }

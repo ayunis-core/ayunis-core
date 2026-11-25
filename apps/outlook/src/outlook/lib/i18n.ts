@@ -3,9 +3,11 @@ import { initReactI18next } from 'react-i18next';
 import deOutlook from '@/outlook/locales/de/outlook.json';
 import enOutlook from '@/outlook/locales/en/outlook.json';
 
+import deAcademy from '@/outlook/locales/de/academy.json';
 import deCommon from '@/outlook/locales/de/common.json';
 import deChat from '@/outlook/locales/de/chat.json';
 import deChats from '@/outlook/locales/de/chats.json';
+import enAcademy from '@/outlook/locales/en/academy.json';
 import enCommon from '@/outlook/locales/en/common.json';
 import enChat from '@/outlook/locales/en/chat.json';
 import enChats from '@/outlook/locales/en/chats.json';
@@ -26,12 +28,14 @@ export function createOutlookI18n(displayLanguage: string): i18n {
         chat: deChat,
         chats: deChats,
         common: deCommon,
+        academy: deAcademy,
       },
       en: {
         outlook: enOutlook,
         chat: enChat,
         chats: enChats,
         common: enCommon,
+        academy: enAcademy,
       },
     },
     interpolation: { escapeValue: false },

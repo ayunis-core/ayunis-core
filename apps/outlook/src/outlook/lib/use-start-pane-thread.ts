@@ -5,11 +5,13 @@ import {
   getThreadsControllerFindOneQueryKey,
   threadsControllerCreate,
 } from '@ayunis/api-client/endpoints';
+import type { ModelMode } from '@ayunis/api-client/schemas';
 import type { ChatRunLifecycle, SendMessageInput } from '@ayunis/chat/runs';
 import { uploadPaneFiles, waitForPaneFiles } from '@/outlook/api/chat-api';
 
 export interface NewPaneChatInput extends SendMessageInput {
   readonly modelId?: string;
+  readonly mode?: ModelMode;
   readonly isAnonymous: boolean;
   readonly files: File[];
 }
@@ -66,13 +68,17 @@ function useStartAttempt(draftKey: string | undefined) {
 
 async function preparePaneThread({
   modelId,
+  mode,
   isAnonymous,
   files,
   signal,
-}: Pick<NewPaneChatInput, 'modelId' | 'isAnonymous' | 'files'> & {
+}: Pick<NewPaneChatInput, 'modelId' | 'mode' | 'isAnonymous' | 'files'> & {
   signal: AbortSignal;
 }) {
-  let thread = await threadsControllerCreate({ modelId, isAnonymous }, signal);
+  let thread = await threadsControllerCreate(
+    { modelId, mode, isAnonymous },
+    signal,
+  );
   signal.throwIfAborted();
   if (files.length > 0) {
     await uploadPaneFiles(thread.id, files, signal);
@@ -108,6 +114,7 @@ export function useStartPaneThread({
     try {
       const thread = await create.mutateAsync({
         modelId: input.modelId,
+        mode: input.mode,
         isAnonymous: input.isAnonymous,
         files: input.files,
         signal,

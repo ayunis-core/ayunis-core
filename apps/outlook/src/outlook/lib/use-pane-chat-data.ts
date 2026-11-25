@@ -7,10 +7,12 @@ import {
   threadsControllerDelete,
   threadsControllerUpdateTitle,
   useThreadsControllerFindAll,
+  useModelsControllerIsEmbeddingModelEnabled,
   useThreadsControllerFindOne,
   useActiveRunsControllerFindActive,
 } from '@ayunis/api-client/endpoints';
 import { SessionClient, ThreadType } from '@ayunis/api-client/schemas';
+import type { ChatCapabilities } from '@ayunis/chat/surface';
 
 export const PANE_HISTORY_PAGE_SIZE = 20;
 
@@ -21,6 +23,20 @@ export function usePaneHistory(offset: number) {
     limit: PANE_HISTORY_PAGE_SIZE,
     offset,
   });
+}
+
+export function usePaneDocumentAttachments({
+  fileUpload,
+  modelSelection,
+}: Readonly<Pick<ChatCapabilities, 'fileUpload' | 'modelSelection'>>) {
+  const canReadEmbeddingStatus = Boolean(fileUpload && modelSelection);
+  const { data } = useModelsControllerIsEmbeddingModelEnabled({
+    query: { enabled: canReadEmbeddingStatus },
+  });
+  // The upload endpoint checks readiness for sessions without models:read.
+  return canReadEmbeddingStatus
+    ? data?.isEmbeddingModelEnabled === true
+    : undefined;
 }
 
 export function usePaneThread(threadId: string | undefined) {

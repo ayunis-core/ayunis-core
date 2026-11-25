@@ -12,5 +12,17 @@
     "noResultsTitle": "No matching chats",
     "noResultsDescription": "Try adjusting your search or filter.",
     "startChat": "Start New Chat"
+  },
+  "card": {
+    "untitled": "Untitled",
+    "anonymous": "Anonymous",
+    "pin": "Add to favorites",
+    "unpin": "Remove from favorites",
+    "confirmDelete": {
+      "title": "Delete Chat",
+      "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "confirmText": "Delete",
+      "cancelText": "Cancel"
+    }
   }
 }

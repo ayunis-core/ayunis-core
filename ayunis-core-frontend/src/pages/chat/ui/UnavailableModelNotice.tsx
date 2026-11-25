@@ -1,36 +1,11 @@
-import { AlertTriangle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from '@ayunis/ui/components/alert';
+import { UnavailableModelNotice as SharedUnavailableModelNotice } from '@ayunis/chat/model-presentation';
 
 export default function UnavailableModelNotice() {
-  const { t } = useTranslation('chat');
   const navigate = useNavigate();
-
-  function handleNewChat() {
-    void navigate({ to: '/chat' });
-  }
-
   return (
-    <Alert variant="warning" className="mb-2">
-      <AlertTriangle />
-      <AlertTitle>{t('chat.modelUnavailableTitle')}</AlertTitle>
-      <AlertDescription>
-        {t('chat.modelUnavailableDescription')}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleNewChat}
-          className="mt-2"
-        >
-          {t('newChat.newChat')}
-        </Button>
-      </AlertDescription>
-    </Alert>
+    <SharedUnavailableModelNotice
+      onNewChat={() => void navigate({ to: '/chat' })}
+    />
   );
 }

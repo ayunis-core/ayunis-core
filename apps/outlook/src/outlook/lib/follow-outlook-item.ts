@@ -2,7 +2,7 @@ import type { ItemChats } from '@/outlook/lib/item-chats';
 
 export interface PaneChatNavigation {
   openThread: (threadId: string) => void;
-  startNewChat: (itemKey: string) => void;
+  startNewChat: (itemKey: string | null) => void;
   onThreadOpening: (listener: (threadId: string) => void) => () => void;
   onThreadOpened: (listener: (threadId: string) => void) => () => void;
 }

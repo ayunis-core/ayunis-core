@@ -12,5 +12,17 @@
     "noResultsTitle": "Keine passenden Chats",
     "noResultsDescription": "Versuchen Sie, Ihre Suche oder Filter anzupassen.",
     "startChat": "Neuen Chat starten"
+  },
+  "card": {
+    "untitled": "Ohne Titel",
+    "anonymous": "Anonym",
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen",
+    "confirmDelete": {
+      "title": "Chat löschen",
+      "description": "Sind Sie sicher, dass Sie \"{{title}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmText": "Löschen",
+      "cancelText": "Abbrechen"
+    }
   }
 }

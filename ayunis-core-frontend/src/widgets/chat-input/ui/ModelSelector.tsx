@@ -1,93 +1,23 @@
-import { ChevronDown } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@ayunis/ui/components/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@ayunis/ui/components/dropdown-menu';
+  ModelSelector as SharedModelSelector,
+  type ModelSelectorProps,
+} from '@ayunis/chat/model-presentation';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
-import {
-  getModeFromValue,
-  stripProviderSuffix,
-} from '@/widgets/model-select-options';
 import { ModelSelectorMenu } from './ModelSelectorMenu';
-import { ModeLabel } from './ModeLabel';
-import './max-mode.css';
 
-interface ModelSelectorProps {
-  isDisabled: boolean;
-  isAnonymous: boolean;
-  selectedModelId: string | undefined;
-  onModelChange: (modelId: string) => void;
-}
-
-export default function ModelSelector({
-  isDisabled,
-  isAnonymous,
-  selectedModelId,
-  onModelChange,
-}: Readonly<ModelSelectorProps>) {
-  const { t } = useTranslation('common');
-  const {
-    models,
-    placeholder,
-    isDisabled: isDisabledModels,
-  } = usePermittedModels();
-  const selectedMode = getModeFromValue(selectedModelId);
-  const selectedModel = models.find((model) => model.id === selectedModelId);
-  const isLocked = isDisabled || isDisabledModels || !selectedModelId;
-
+export default function ModelSelector(
+  props: Readonly<
+    Omit<ModelSelectorProps, 'models' | 'resolutions' | 'placeholder'>
+  >,
+) {
+  const { models, placeholder, isDisabled } = usePermittedModels();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={isLocked}>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-fit min-w-0 max-w-full justify-between"
-          aria-label={t('chatInput.modelSelectorAriaLabel')}
-          data-testid="chat-model-selector"
-        >
-          <span className="flex min-w-0 items-center gap-1.5">
-            {selectedMode && (
-              <ModeLabel
-                key={selectedMode}
-                mode={selectedMode}
-                label={t(`models.modes.${selectedMode}.label`)}
-                className="gap-1.5"
-                withShimmer={!isLocked}
-              />
-            )}
-            {!selectedMode && selectedModel && (
-              <>
-                <ProviderFlag provider={selectedModel.provider} />
-                <span className="truncate">
-                  {stripProviderSuffix(selectedModel.displayName)}
-                </span>
-              </>
-            )}
-            {!selectedMode && !selectedModel && (
-              <span className="text-muted-foreground">{placeholder}</span>
-            )}
-          </span>
-          <ChevronDown className="size-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        sideOffset={4}
-        collisionPadding={8}
-        className="max-h-[min(24rem,var(--radix-dropdown-menu-content-available-height))] min-w-[240px]"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
-        <ModelSelectorMenu
-          models={models}
-          selectedValue={selectedModelId}
-          isAnonymous={isAnonymous}
-          onSelect={onModelChange}
-        />
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SharedModelSelector
+      {...props}
+      models={models}
+      renderMenu={(menu) => <ModelSelectorMenu {...menu} />}
+      placeholder={placeholder}
+      isDisabled={props.isDisabled || isDisabled}
+    />
   );
 }

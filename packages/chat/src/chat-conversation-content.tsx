@@ -2,11 +2,19 @@ import type {
   GetThreadResponseDto,
   ToolCallDecisionDto,
 } from '@ayunis/api-client/schemas';
-import { useMemo } from 'react';
-import { Markdown, PiiMaskProvider, PiiText } from '@ayunis/chat/markdown';
+import { useMemo, type RefObject } from 'react';
+import {
+  Markdown,
+  PiiMaskProvider,
+  PiiText,
+  usePiiMasks,
+} from '@ayunis/chat/markdown';
 import {
   AssistantMessageFrame,
   ChatMessageList,
+  CopyMessageButton,
+  copyableMessageContent,
+  resolvedPromptText,
   UserMessage,
 } from '@ayunis/chat/messages';
 import {
@@ -26,6 +34,7 @@ type Message = GetThreadResponseDto['messages'][number];
 
 interface ContentProps {
   readonly threadId: string;
+  readonly copyActions?: boolean;
   readonly messages: Message[];
   readonly masks: GetThreadResponseDto['piiMasks'];
   readonly isStreaming: boolean;
@@ -52,17 +61,7 @@ export function useConversationTimeline<Context, Outcome>(
 }
 
 export function ChatConversationContent(props: ContentProps) {
-  const {
-    threadId,
-    messages,
-    masks,
-    timeline,
-    isStreaming,
-    canDecide,
-    decide,
-    onOpenArtifact,
-    messageImage,
-  } = props;
+  const { messages, timeline, isStreaming, canDecide, decide } = props;
   const units = useRenderUnits(messages, {
     isStreaming,
     toolCards: timeline?.toolCards,
@@ -73,20 +72,25 @@ export function ChatConversationContent(props: ContentProps) {
     sendDecisions: decide,
   });
   return (
-    <PiiMaskProvider masks={masks}>
+    <PiiMaskProvider masks={props.masks}>
       <ToolCallConfirmationContext.Provider value={confirmation}>
         <ChatMessageList<AgentRunUnit>
           units={units}
           pendingSubmission={null}
           contextHint={null}
-          renderUser={(message) => renderUser(message, messageImage)}
+          renderUser={(message) => (
+            <ConversationUserMessage
+              message={message}
+              messageImage={props.messageImage}
+              copyActions={props.copyActions}
+            />
+          )}
           renderRun={(unit, grouped) => (
-            <AssistantMessageFrame grouped={grouped}>
-              <AgentRunTimeline
-                {...{ unit, threadId, onOpenArtifact }}
-                presentation={timeline}
-              />
-            </AssistantMessageFrame>
+            <ConversationAssistantRun
+              unit={unit}
+              grouped={grouped}
+              content={props}
+            />
           )}
         />
       </ToolCallConfirmationContext.Provider>
@@ -94,16 +98,79 @@ export function ChatConversationContent(props: ContentProps) {
   );
 }
 
-function renderUser(
-  message: Message,
-  messageImage: ContentProps['messageImage'],
-) {
+function ConversationAssistantRun({
+  unit,
+  grouped,
+  content,
+}: Readonly<{ unit: AgentRunUnit; grouped: boolean; content: ContentProps }>) {
+  const showCopy =
+    content.copyActions && unit.blocks.some((block) => block.kind === 'text');
+  return (
+    <AssistantMessageFrame
+      grouped={grouped}
+      actions={
+        showCopy
+          ? (ref) => <CopyAssistantMessage contentRef={ref} />
+          : undefined
+      }
+    >
+      <AgentRunTimeline
+        unit={unit}
+        threadId={content.threadId}
+        onOpenArtifact={content.onOpenArtifact}
+        presentation={content.timeline}
+      />
+    </AssistantMessageFrame>
+  );
+}
+
+function ConversationUserMessage({
+  message,
+  messageImage,
+  copyActions,
+}: Readonly<{
+  message: Message;
+  messageImage: ContentProps['messageImage'];
+  copyActions?: boolean;
+}>) {
+  const masks = usePiiMasks();
   return (
     <UserMessage
       message={message}
-      renderText={(text) => <Markdown>{text}</Markdown>}
+      renderText={(text) => (
+        <Markdown className={copyActions ? '[&_p]:!my-0' : undefined}>
+          {text}
+        </Markdown>
+      )}
       renderNudge={(text) => <PiiText>{text}</PiiText>}
       renderImage={(image) => messageImage?.(message, image)}
+      actions={
+        copyActions && (
+          <CopyMessageButton
+            getContent={() => ({
+              text: resolvedPromptText(message, masks),
+            })}
+          />
+        )
+      }
     />
   );
+}
+
+function CopyAssistantMessage({
+  contentRef,
+}: Readonly<{ contentRef: RefObject<HTMLDivElement | null> }>) {
+  function getContent() {
+    const nodes = contentRef.current?.querySelectorAll(
+      '[data-copyable="true"]',
+    );
+    if (!nodes?.length) return null;
+    const parts = Array.from(nodes, copyableMessageContent);
+    return {
+      html: parts.map(({ html }) => html).join('<br><br>'),
+      text: parts.map(({ text }) => text).join('\n\n'),
+    };
+  }
+
+  return <CopyMessageButton getContent={getContent} />;
 }

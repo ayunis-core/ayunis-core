@@ -1,5 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
+import { Loader2, Mic } from 'lucide-react';
+import { cn } from '@ayunis/ui/lib/cn';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
+import { AttachmentMenu } from './composer-toolbar';
+import { useComposerAttachmentSelection } from './composer/use-composer-attachment-selection';
 import { Input } from '@ayunis/ui/components/input';
 import {
   Select,
@@ -22,46 +31,107 @@ type ChatAction = ReturnType<typeof useChatAction>;
 interface AttachmentProps {
   readonly threadId: string;
   readonly disabled: boolean;
+  readonly compact?: boolean;
   readonly audio?: boolean;
   readonly images?: boolean;
   readonly upload?: Upload;
   readonly onImages: (files: File[]) => void;
+  readonly onError?: (error: Error) => void;
   readonly action: ChatAction;
 }
 
-export function AttachmentFields({
-  threadId,
+type AttachmentSelection = Readonly<{
+  disabled: boolean;
+  audio?: boolean;
+  images?: boolean;
+  onFiles?: (files: File[]) => void;
+  onImages: (files: File[]) => void;
+  onError?: (error: Error) => void;
+}>;
+
+export function AttachmentFields(props: AttachmentProps) {
+  const {
+    threadId,
+    disabled,
+    compact,
+    audio,
+    images,
+    upload,
+    onImages,
+    onError,
+    action,
+  } = props;
+  const selection: AttachmentSelection = {
+    disabled: disabled || action.busy,
+    audio,
+    images,
+    onImages,
+    onError,
+    onFiles: upload
+      ? (files) => {
+          if (files.length)
+            void action.run((signal) => upload(threadId, files, signal));
+        }
+      : undefined,
+  };
+  return compact ? (
+    <CompactAttachmentFields {...selection} />
+  ) : (
+    <LabeledAttachmentFields {...selection} />
+  );
+}
+
+function CompactAttachmentFields({
   disabled,
   audio,
   images,
-  upload,
+  onFiles,
   onImages,
-  action,
-}: AttachmentProps) {
-  const { t } = useTranslation('common');
-  const disabledDuringAction = disabled || action.busy;
-
-  function selectFiles(files: File[]) {
-    if (files.length && upload)
-      void action.run((signal) => upload(threadId, files, signal));
-  }
+  onError,
+}: AttachmentSelection) {
+  const selectFiles = useComposerAttachmentSelection({
+    onImages: images ? onImages : undefined,
+    onFiles,
+    onError,
+  });
 
   return (
+    <AttachmentMenu
+      disabled={disabled}
+      onFiles={onFiles || images ? selectFiles : undefined}
+      onAudio={audio ? onFiles : undefined}
+    />
+  );
+}
+
+function isImage(file: File) {
+  return file.type.startsWith('image/');
+}
+
+function LabeledAttachmentFields({
+  disabled,
+  audio,
+  images,
+  onFiles,
+  onImages,
+}: AttachmentSelection) {
+  const { t } = useTranslation('common');
+  return (
     <>
-      {upload && (
+      {onFiles && (
         <FileField
           testId="chat-attach-files"
           label={t('chatSurface.attachFiles', { defaultValue: 'Attach files' })}
-          disabled={disabledDuringAction}
-          select={selectFiles}
+          disabled={disabled}
+          select={onFiles}
         />
       )}
-      {upload && audio && (
+      {onFiles && audio && (
         <FileField
           label={t('chatSurface.attachAudio', { defaultValue: 'Attach audio' })}
           accept="audio/*"
-          disabled={disabledDuringAction}
-          select={selectFiles}
+          disabled={disabled}
+          select={onFiles}
         />
       )}
       {images && (
@@ -70,10 +140,8 @@ export function AttachmentFields({
             defaultValue: 'Attach images',
           })}
           accept="image/*"
-          disabled={disabledDuringAction}
-          select={(files) =>
-            onImages(files.filter((file) => file.type.startsWith('image/')))
-          }
+          disabled={disabled}
+          select={(files) => onImages(files.filter(isImage))}
         />
       )}
     </>
@@ -155,10 +223,12 @@ export function ModelField({
 
 export function VoiceField({
   transcribe,
+  compact,
   onTranscript,
   onError,
 }: Readonly<{
   transcribe: Transcribe;
+  compact?: boolean;
   onTranscript: (text: string) => void;
   onError?: (error: unknown) => void;
 }>) {
@@ -176,21 +246,65 @@ export function VoiceField({
     },
   );
   if (!voice.isSupported) return null;
+  const { isRecording: recording, isStarting, isTranscribing } = voice;
+  const busy = isStarting || isTranscribing;
+  function toggle() {
+    if (recording) voice.stopRecording();
+    else void voice.startRecording();
+  }
 
-  const label = voice.isRecording
+  if (compact)
+    return (
+      <ToolbarMicrophone recording={recording} busy={busy} toggle={toggle} />
+    );
+  const label = recording
     ? t('chatSurface.stopRecording', { defaultValue: 'Stop recording' })
     : t('chatSurface.dictate', { defaultValue: 'Dictate' });
   return (
-    <Button
-      type="button"
-      variant="outline"
-      disabled={voice.isStarting || voice.isTranscribing}
-      onClick={() => {
-        if (voice.isRecording) voice.stopRecording();
-        else void voice.startRecording();
-      }}
-    >
+    <Button type="button" variant="outline" disabled={busy} onClick={toggle}>
       {label}
     </Button>
+  );
+}
+
+function ToolbarMicrophone({
+  recording,
+  busy,
+  toggle,
+}: Readonly<{
+  recording: boolean;
+  busy: boolean;
+  toggle: () => void;
+}>) {
+  const { t } = useTranslation('common');
+  const idleLabel = recording
+    ? 'chatInput.microphoneRecording'
+    : 'chatInput.microphoneTooltip';
+  const label = t(busy ? 'chatInput.transcribing' : idleLabel);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div>
+          <Button
+            type="button"
+            variant={recording ? 'destructive' : 'outline'}
+            size="icon"
+            className={cn('rounded-full', recording && 'animate-pulse')}
+            aria-label={label}
+            data-testid="chat-input-microphone"
+            onClick={toggle}
+            disabled={busy}
+          >
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }

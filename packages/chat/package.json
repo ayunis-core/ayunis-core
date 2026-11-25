@@ -7,14 +7,19 @@
     "./tool-cards": "./src/tool-cards.ts",
     "./runs": "./src/runs.ts",
     "./markdown": "./src/markdown/index.ts",
+    "./markdown.css": "./src/markdown/markdown.css",
     "./markdown/*": "./src/markdown/*.ts",
     "./composer": "./src/composer/ChatComposer.tsx",
     "./composer.css": "./src/composer/chat-input-glow.css",
     "./history": "./src/history/index.ts",
+    "./model-presentation": "./src/model-presentation/index.ts",
     "./messages": "./src/messages/index.ts",
     "./timeline": "./src/timeline/index.ts",
     "./surface": "./src/surface.ts",
-    "./surface.css": "./src/content-scroll.css"
+    "./surface.css": "./src/content-scroll.css",
+    "./upload-policy": "./src/composer/document-upload-policy.ts",
+    "./new-chat": "./src/new-chat/index.ts",
+    "./source-errors": "./src/source-processing-error.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -34,11 +39,13 @@
   "peerDependencies": {
     "i18next": "^26.4.0",
     "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "react-i18next": "^15.5.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
@@ -49,6 +56,7 @@
     "madge": "^8.0.0",
     "prettier": "^3.9.6",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "react-i18next": "^15.5.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.68.0"

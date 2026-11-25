@@ -1,4 +1,13 @@
-import { Button } from '@ayunis/ui/components/button';
+import { toast } from '@ayunis/ui/lib/toast';
+import { PaneSourceChips } from '@/outlook/ui/PaneSourceChips';
+import { PaneAcademyNotice } from '@/outlook/ui/PaneAcademyNotice';
+import {
+  LongChatWarning,
+  getModeValue,
+  ModelSelector,
+  ProviderFaultNotice,
+  UnavailableModelNotice,
+} from '@ayunis/chat/model-presentation';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,8 +16,9 @@ import {
   type ChatThreadSnapshot,
 } from '@ayunis/chat/surface';
 import type { ChatRunLifecycle } from '@ayunis/chat/runs';
-import type { ChatDraftStorage } from '@ayunis/chat/composer';
+import { AnonymousButton, type ChatDraftStorage } from '@ayunis/chat/composer';
 import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
+import { PaneConversationHeading } from '@/outlook/ui/PaneConversationHeading';
 import { PaneMessageImage } from '@/outlook/ui/PaneMessageImage';
 import {
   useModelsControllerGetPermittedLanguageModels,
@@ -17,6 +27,7 @@ import {
 import { OutlookToolBridgeContext } from '@/outlook/model/outlook-tool-bridge';
 import {
   usePaneActiveRun,
+  usePaneDocumentAttachments,
   usePaneThreadActions,
 } from '@/outlook/lib/use-pane-chat-data';
 import { useStandaloneOutlookTools } from '@/outlook/lib/use-standalone-outlook-tools';
@@ -28,6 +39,9 @@ interface PaneConversationProps {
   readonly config: ChatSurfaceConfig;
   readonly lifecycle: ChatRunLifecycle;
   readonly drafts: ChatDraftStorage;
+  readonly isAcademyGated: boolean;
+  readonly onNewChat: () => void;
+  readonly onDeleted: (threadId: string) => void;
   readonly onError: (error: unknown) => void;
 }
 
@@ -37,19 +51,25 @@ export function PaneConversation({
   config,
   lifecycle,
   drafts,
+  isAcademyGated,
+  onNewChat,
+  onDeleted,
   onError,
 }: PaneConversationProps) {
   const [renderedThread, setRenderedThread] = useState<ChatThreadSnapshot>();
   const models = useModelsControllerGetPermittedLanguageModels({
     query: {
-      enabled: Boolean(
-        config.capabilities.modelSelection && config.capabilities.fileUpload,
-      ),
+      enabled: Boolean(config.capabilities.modelSelection),
     },
   });
-  const model = models.data?.find(
-    ({ id, modelId }) =>
-      id === thread.permittedModelId || modelId === thread.modelId,
+  const documentAttachments = usePaneDocumentAttachments(config.capabilities);
+  const model = models.data?.find(({ id, modelId }) =>
+    thread.modelId
+      ? modelId === thread.modelId
+      : id === thread.permittedModelId,
+  );
+  const modelUnavailable = Boolean(
+    thread.permittedModelId && models.isSuccess && !model,
   );
   const activeRun = usePaneActiveRun(thread.id);
   const actions = usePaneThreadActions();
@@ -60,6 +80,10 @@ export function PaneConversation({
     piiMasks: current.piiMasks,
   });
   const { t } = useTranslation('outlook');
+  const { t: chat } = useTranslation('chat');
+  const visibleSources = thread.sources.filter(
+    ({ createdBy }) => createdBy !== 'system',
+  );
 
   const upload = useCallback(
     async (id: string, files: File[], signal: AbortSignal) => {
@@ -72,6 +96,7 @@ export function PaneConversation({
   return (
     <OutlookToolBridgeContext.Provider value={bridge}>
       <ChatConversation
+        compactComposer
         sessionKey={userId}
         thread={thread}
         config={config}
@@ -82,23 +107,90 @@ export function PaneConversation({
           drafts,
           uploadFiles: upload,
           imageAttachments: model?.canVision,
+          documentAttachments,
+          onAttachmentError: (error) => {
+            toast.error(error.message, {
+              position: 'bottom-center',
+              closeButton: true,
+            });
+          },
           transcribe: transcribePaneAudio,
           onThreadState: setRenderedThread,
           onRunSettled: actions.refreshRun,
           onError,
-          isSendDisabled: thread.sources.some(
-            ({ status }) => status === 'processing',
-          ),
+          isSendDisabled:
+            isAcademyGated ||
+            thread.sources.some(({ status }) => status === 'processing'),
         }}
         slots={{
+          header: () => (
+            <PaneConversationHeading
+              key={thread.id}
+              title={current.title}
+              anonymous={thread.isAnonymous}
+              onNewChat={onNewChat}
+              rename={
+                config.capabilities.rename
+                  ? (title) => {
+                      void actions
+                        .rename(thread.id, title, lifecycle.getSessionSignal())
+                        .catch(onError);
+                    }
+                  : undefined
+              }
+              remove={
+                config.capabilities.delete
+                  ? () => {
+                      void actions
+                        .remove(thread.id, lifecycle.getSessionSignal())
+                        .then(() => onDeleted(thread.id))
+                        .catch(onError);
+                    }
+                  : undefined
+              }
+            />
+          ),
+          composerFallback: modelUnavailable && (
+            <UnavailableModelNotice onNewChat={onNewChat} />
+          ),
+          composerNotice: (
+            <>
+              <p className="mb-2 text-center text-xs text-muted-foreground">
+                {chat('chat.inputDisclaimer')}
+              </p>
+              {thread.isLongChat && (
+                <LongChatWarning key={thread.id} onNewChat={onNewChat} />
+              )}
+              {isAcademyGated && <PaneAcademyNotice />}
+              {model?.hasProviderFault && (
+                <ProviderFaultNotice modelName={model.displayName} />
+              )}
+            </>
+          ),
+          composerModel: config.capabilities.modelSelection && (
+            <ModelSelector
+              models={models.data ?? []}
+              resolutions={[]}
+              placeholder="Select a model"
+              selectedModelId={
+                thread.mode
+                  ? getModeValue(thread.mode)
+                  : (model?.id ?? thread.permittedModelId)
+              }
+              isAnonymous={thread.isAnonymous}
+              isDisabled
+              onModelChange={() => undefined}
+            />
+          ),
+          composerLeading: <AnonymousButton isAnonymous={thread.isAnonymous} />,
           emptyState: (
             <p className="p-4 text-sm text-muted-foreground">
               {t('chat.empty', { defaultValue: 'Ask about this email' })}
             </p>
           ),
-          attachments: (
-            <ThreadFiles
-              sources={thread.sources}
+          attachments: visibleSources.length > 0 && (
+            <PaneSourceChips
+              sources={visibleSources}
               remove={(id) => {
                 void threadSourcesControllerRemoveSource(thread.id, id)
                   .then(() => actions.refreshThread(thread.id))
@@ -118,42 +210,5 @@ export function PaneConversation({
         }}
       />
     </OutlookToolBridgeContext.Provider>
-  );
-}
-
-function ThreadFiles({
-  sources,
-  remove,
-}: Readonly<{
-  sources: GetThreadResponseDto['sources'];
-  remove: (id: string) => void;
-}>) {
-  const { t } = useTranslation('common');
-  if (sources.length === 0) return null;
-  return (
-    <ul className="flex flex-wrap gap-2 text-sm">
-      {sources.map(({ id, name, status }) => (
-        <li
-          key={id}
-          className="rounded-md bg-muted px-2 py-1"
-          data-source-status={status}
-        >
-          {name}
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            className="ml-2"
-            aria-label={t('chatSurface.removeFile', {
-              defaultValue: 'Remove {{name}}',
-              name,
-            })}
-            onClick={() => remove(id)}
-          >
-            ×
-          </Button>
-        </li>
-      ))}
-    </ul>
   );
 }

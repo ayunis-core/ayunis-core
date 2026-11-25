@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 @import '@ayunis/ui/styles.css';
 @import '@ayunis/chat/surface.css';
+@import '@ayunis/chat/markdown.css';
 @import '@ayunis/chat/composer.css';
+@import './scrollbar.css';
 @source '../../../../packages/chat/src';
 
 html,
@@ -9,13 +11,10 @@ body,
 #app {
   @apply m-0 h-full overflow-hidden;
   font-family:
-    'Segoe UI',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Roboto',
-    'Helvetica Neue',
-    sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Assistant answers are Markdown; the pane keeps its spacing compact. */
@@ -41,5 +40,11 @@ body,
   & th,
   & td {
     @apply border px-2 py-1;
+  }
+}
+
+@layer components {
+  .outlook-page-header {
+    @apply sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background px-3 pt-2;
   }
 }

@@ -1,75 +1,35 @@
 import type { TFunction } from 'i18next';
 import { showError } from '@/shared/lib/toast';
-import { AUDIO_EXTENSIONS, isAudioFileName } from '@/shared/lib/audio-files';
+import {
+  FILE_SIZE_MIB,
+  oversizedDocumentLimit,
+} from '@ayunis/chat/upload-policy';
 
+export {
+  ACCEPTED_DOCUMENT_EXTENSIONS,
+  ACCEPTED_FILE_PICKER_TYPES,
+  MAX_SOURCE_FILE_SIZE_BYTES,
+  MAX_PDF_FILE_SIZE_BYTES,
+} from '@ayunis/chat/upload-policy';
 export { ACCEPTED_AUDIO_PICKER_TYPES } from '@/shared/lib/audio-files';
-
-// Non-image extensions accepted by the chat input. Mirrors the backend's
-// FILE_EXTENSIONS in src/common/util/file-type.ts; images are routed by MIME
-// type instead of extension.
-export const ACCEPTED_DOCUMENT_EXTENSIONS = [
-  '.pdf',
-  '.csv',
-  '.xlsx',
-  '.xls',
-  '.docx',
-  '.pptx',
-  '.odt',
-  '.odp',
-  '.txt',
-  '.md',
-  '.xml',
-  '.html',
-  '.htm',
-  '.eml',
-  '.msg',
-  ...AUDIO_EXTENSIONS,
-];
-
-// Mirrors the backend's MAX_SOURCE_FILE_SIZE_BYTES in
-// src/common/util/source-file-upload.ts.
-export const MAX_SOURCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
-
-// Mirrors the default of the backend's PDF_MAX_UPLOAD_BYTES in
-// src/config/source-upload.config.ts. A deployment that lowers it answers a
-// larger PDF with FILE_TOO_LARGE.
-export const MAX_PDF_FILE_SIZE_BYTES = 100 * 1024 * 1024;
-
-function sizeLimitFor(file: File): number {
-  return file.name.toLowerCase().endsWith('.pdf')
-    ? MAX_PDF_FILE_SIZE_BYTES
-    : MAX_SOURCE_FILE_SIZE_BYTES;
-}
-
-const BYTES_PER_MB = 1024 * 1024;
 
 // Rejects oversized files before any upload request is sent, with one toast
 // per rejected file. Sizes round up so a file just over the limit never reads
 // as "25 MB" next to a 25 MB limit.
 export function keepFilesWithinSizeLimit(files: File[], t: TFunction): File[] {
   return files.filter((file) => {
-    // Recordings have a server-configured cap (AUDIO_MAX_UPLOAD_BYTES); the
-    // API answers an oversized one with FILE_TOO_LARGE.
-    if (isAudioFileName(file.name)) return true;
-    const limit = sizeLimitFor(file);
-    if (file.size <= limit) return true;
+    const limit = oversizedDocumentLimit(file);
+    if (limit === undefined) return true;
     showError(
       t('chatInput.fileTooLarge', {
         name: file.name,
-        size: Math.ceil(file.size / BYTES_PER_MB),
-        limit: limit / BYTES_PER_MB,
+        size: Math.ceil(file.size / FILE_SIZE_MIB),
+        limit: limit / FILE_SIZE_MIB,
       }),
     );
     return false;
   });
 }
-
-// `accept` value for the chat input's file picker, so the picker and drag-drop
-// validation cannot drift apart.
-export const ACCEPTED_FILE_PICKER_TYPES = [
-  'image/*',
-  ...ACCEPTED_DOCUMENT_EXTENSIONS,
-].join(',');
 
 export function separateFilesByType(files: FileList): {
   images: File[];

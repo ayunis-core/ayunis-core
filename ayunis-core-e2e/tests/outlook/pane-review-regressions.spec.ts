@@ -34,12 +34,12 @@ function selectEmail(page: Page, item: OfficeStubReadItem) {
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test.beforeEach(async ({ page, api }) => {
+test.beforeEach(async ({ page }) => {
   await stubOfficeHost(page, { readItem });
-  await openSignedInPane(page, api);
 });
 
 async function reopenLatestThread(page: Page, prompt: string): Promise<void> {
+  await page.getByTestId("embedded-new-chat").click();
   await page.getByTestId("embedded-history").click();
   await page.getByTestId("chat-card").first().click();
   await expect(page.getByTestId("outlook-conversation")).toBeVisible();
@@ -49,7 +49,9 @@ async function reopenLatestThread(page: Page, prompt: string): Promise<void> {
 
 test("posts the email read result when the thread remounts before the run finishes", async ({
   page,
+  api,
 }) => {
+  await openSignedInPane(page, api);
   const prompt = "Open a thread for the read test";
   await sendMessage(page, prompt);
   await expect(page.getByTestId("assistant-message").last()).toBeVisible();
@@ -82,7 +84,9 @@ test("posts the email read result when the thread remounts before the run finish
 
 test("keeps an unsent thread draft when opening history and returning", async ({
   page,
+  api,
 }) => {
+  await openSignedInPane(page, api);
   const prompt = "Open a thread for the draft test";
   await sendMessage(page, prompt);
   await expect(page.getByTestId("assistant-message").last()).toBeVisible();
@@ -92,16 +96,22 @@ test("keeps an unsent thread draft when opening history and returning", async ({
   await expect(page.getByTestId("input")).toHaveValue(draft);
 });
 
-test("keeps the first email’s unsent draft out of another email’s new chat", async ({
+test("preserves the new-chat draft when returning from history and keeps it scoped to its email", async ({
   page,
+  api,
 }) => {
+  await openSignedInPane(page, api);
   const input = page.getByTestId("input");
   const draft = "Private notes for the first fixture email";
   await input.fill(draft);
+  await page.getByTestId("embedded-history").click();
+  await page.getByTestId("embedded-back-to-start").click();
+  await expect(input).toHaveValue(draft);
 
   await selectEmail(page, secondReadItem);
   await expect(input).toHaveValue("");
-  await page.getByTestId("embedded-new-chat").click();
+  await page.getByTestId("embedded-history").click();
+  await page.getByTestId("embedded-back-to-start").click();
   await expect(input).toHaveValue("");
 
   await selectEmail(page, readItem);
@@ -113,6 +123,7 @@ test("stops a first send and lets a retry finish on its original email", async (
   api,
 }) => {
   await permitEmbeddingModel(api);
+  await openSignedInPane(page, api);
   let processingPolls = 0;
   let holdProcessing = true;
   await page.route(
@@ -189,11 +200,16 @@ test("stops a first send and lets a retry finish on its original email", async (
 });
 
 async function attachReviewSource(page: Page): Promise<void> {
-  await page.getByTestId("chat-attach-files").setInputFiles({
+  const picker = page.getByTestId("chat-attach-files");
+  await expect(picker).toBeEnabled();
+  await picker.setInputFiles({
     name: "review-source.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("Budget information for review"),
   });
+  await expect(page.getByTestId("chat-source")).toContainText(
+    "review-source.txt",
+  );
 }
 
 async function permitEmbeddingModel(api: APIRequestContext): Promise<void> {
