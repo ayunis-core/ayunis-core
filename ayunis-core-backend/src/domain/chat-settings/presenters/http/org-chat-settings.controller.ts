@@ -8,7 +8,8 @@ import { UpsertOrgChatSettingsCommand } from 'src/domain/chat-settings/applicati
 import { UpsertOrgChatSettingsDto } from './dtos/upsert-org-chat-settings.dto';
 import { ChatStartDefaultsResponseDto } from './dtos/chat-start-defaults-response.dto';
 import { OrgChatSettingsResponseDto } from './dtos/org-chat-settings-response.dto';
-import { AllowedClients } from 'src/iam/authorization/application/decorators/allowed-clients.decorator';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('Chat Settings')
 @Controller('chat-settings')
@@ -18,7 +19,7 @@ export class OrgChatSettingsController {
     private readonly upsertOrgChatSettingsUseCase: UpsertOrgChatSettingsUseCase,
   ) {}
 
-  @AllowedClients('outlook')
+  @RequireSurfaceScope(SurfaceScope.CHAT_SETTINGS_READ)
   @Get('chat-start-defaults')
   @ApiOperation({
     summary:

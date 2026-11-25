@@ -414,38 +414,33 @@ That ID is carried in the access token and persisted on refresh sessions.
 | `POST /api/auth/logout` `{ refreshToken }` | Same fallback: revokes the family without cookie writes. |
 
 The refresh-token row stores `client`, and rotation copies it to every
-successor, so a refreshed token stays restricted. `AllowedClientsGuard` runs
-directly after `JwtAuthGuard`: a session with a `client` may only call routes
-marked `@AllowedClients(<client>)` and receives 403 `CLIENT_NOT_ALLOWED`
-everywhere else. Browser sessions and API keys carry no client and are not
-affected. A token whose `client` is no longer in the registry is rejected
-rather than treated as a browser session.
+successor. `SurfaceScopeGuard` runs directly after `JwtAuthGuard`. A protected
+route declares one scope with `@RequireSurfaceScope(...)`. The verified
+session client must have that grant in the surface registry. Routes without
+a granted scope return 403 `CLIENT_NOT_ALLOWED` for token clients. JWT
+authentication rejects an unknown client claim. Browser sessions, API keys
+and the public body-token refresh and sign-out endpoints retain their usual
+authentication and authorization checks.
 
-Routes open to `outlook` are what the chat app needs in the pane's embedded
-mode (AYC-1895). Each is user-scoped or a read of an organisation setting the
-chat depends on. Admin, organisation-management and billing routes stay
-closed; the embedded app hides the controls that would call them.
+`GET /api/auth/me` returns `scopes` from the registry for the current token
+surface. Browser sessions receive an empty scope list. User roles, resource
+ownership and organization boundaries are still checked by their existing
+policies.
 
-| Area | Routes | Used by |
-| --- | --- | --- |
-| Session | `GET /api/auth/me`, `POST /api/auth/refresh`, `POST /api/auth/logout` | Boot, body-token refresh, sign-out |
-| Chats | `GET` and `POST /api/threads`, `GET` and `DELETE /api/threads/:id`, `PATCH /api/threads/:id/title` | New chat, history (`?client=outlook`, so only pane chats), rename, delete |
-| Runs | `POST /api/runs/send-message`, `GET /api/runs/active`, `GET /api/runs/threads/:threadId/events`, `POST /api/runs/threads/:threadId/cancel` | Send, reattach to a running chat, Stop |
-| Files | `GET /api/threads/:id/sources`, `POST /api/threads/:id/uploads`, `POST /api/threads/:id/uploads/:uploadId/complete`, `POST /api/source-uploads/:id/sign`, `DELETE /api/source-uploads/:id`, `DELETE /api/threads/:id/sources/:sourceId` | Upload, remove an uploaded file |
-| Message content | `GET /api/threads/:threadId/messages/:messageId/images/:index`, `GET /api/threads/:threadId/source-chunks/:chunkId`, `POST /api/threads/:id/pii-masks/:maskId/unmask` | Images in the user's messages, citations, revealing an anonymised value |
-| Composer | `GET /api/models/default-selection`, `GET /api/models/permitted/language-models`, `GET /api/models/modes`, `POST /api/transcriptions` | Model selector, voice input |
-| Read-only settings | `GET /api/chat-settings/chat-start-defaults`, `GET /api/models/embedding/enabled`, `GET /api/academy-access/status` | Anonymisation default, file sources, academy gate |
+| Outlook grant | Area |
+| --- | --- |
+| `session` | Current session information, refresh and sign-out |
+| `chat` | Threads, runs, message images, citations and PII reveal |
+| `uploads` | Direct upload and thread source management |
+| `models:read` | Model availability, modes and default selection |
+| `voice` | Transcription |
+| `chat-settings:read` | Chat-start defaults |
+| `academy:read` | Academy access status |
 
-The embedded app never calls `GET /api/onboarding`,
-`GET /api/onboarding/stage`, `GET /api/subscriptions/active`,
-`GET /api/chat-settings/system-prompt`,
-`GET /api/threads/:id/ai-context`, `GET /api/workspaces/:id`, `GET /api/skills` or
-`POST /api/speech`: the welcome video, onboarding checklist and hint, context
-hint, skill picker and read-aloud controls are hidden there. Pane runs use the `outlook` run profile, which has no
-artifacts, image generation, skills or routines tools, so their routes stay
-closed too. The legacy multipart-form route `POST /api/threads/:id/sources/file`
-stays closed: it is slated for removal (AYC-1587), and the pane uses the same
-direct-upload flow as the web app.
+Add the required scope to a route when token clients should reach it. A
+surface with the grant can call that route subject to its existing guards.
+The embedded app keeps web-only controls such as onboarding, workspaces,
+the skill picker and read-aloud out of the pane.
 
 In embedded mode the chat app sends no cookies: the axios client uses the fetch
 adapter with `credentials: 'omit'` and the pane's Bearer token, the streaming

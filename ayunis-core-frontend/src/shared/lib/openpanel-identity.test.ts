@@ -36,6 +36,7 @@ const userA: MeResponseDto = {
   name: 'Anna Amsel',
   role: 'admin',
   systemRole: 'super_admin',
+  scopes: [],
 };
 
 const userB: MeResponseDto = {
@@ -45,6 +46,7 @@ const userB: MeResponseDto = {
   name: 'Bernd Bussard',
   role: 'user',
   systemRole: 'customer',
+  scopes: [],
 };
 
 const fetchMock = vi.fn(
