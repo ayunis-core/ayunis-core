@@ -11975,6 +11975,96 @@
         "tags": ["connectors"]
       }
     },
+    "/oparl/bodies": {
+      "get": {
+        "description": "Each body with its system and whether the organization linked it.",
+        "operationId": "OparlBodiesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OparlCatalogBodyResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin of the organization"
+          },
+          "404": {
+            "description": "OParl is disabled"
+          }
+        },
+        "summary": "List the bodies of the OParl catalog",
+        "tags": ["OParl"]
+      }
+    },
+    "/oparl/bodies/links": {
+      "post": {
+        "description": "A body the organization already linked stays linked.",
+        "operationId": "OparlBodiesController_link",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkOparlBodiesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Linked"
+          },
+          "403": {
+            "description": "Not an admin of the organization"
+          },
+          "404": {
+            "description": "OParl is disabled, or a body is not in the catalog (OPARL_BODY_NOT_FOUND); nothing was linked"
+          }
+        },
+        "summary": "Link bodies to the organization",
+        "tags": ["OParl"]
+      }
+    },
+    "/oparl/bodies/{id}/link": {
+      "delete": {
+        "description": "Removes only the link; the mirrored data stays.",
+        "operationId": "OparlBodiesController_unlink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Unlinked"
+          },
+          "403": {
+            "description": "Not an admin of the organization"
+          },
+          "404": {
+            "description": "OParl is disabled, or the organization has not linked the body (OPARL_BODY_NOT_LINKED)"
+          }
+        },
+        "summary": "Unlink a body from the organization",
+        "tags": ["OParl"]
+      }
+    },
     "/super-admin/oparl/systems": {
       "get": {
         "description": "Each system with its bodies, sync state and health, and the mirrored objects per type.",
@@ -25851,6 +25941,82 @@
         },
         "required": ["outcome", "kind", "name", "location", "grant"]
       },
+      "OparlCatalogBodyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "shortName": {
+            "type": "string",
+            "nullable": true
+          },
+          "web": {
+            "type": "string",
+            "nullable": true,
+            "description": "Web page in the RIS"
+          },
+          "systemName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the OParl system"
+          },
+          "linked": {
+            "type": "boolean",
+            "description": "Whether the organization linked the body"
+          },
+          "linkedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "shortName",
+          "web",
+          "systemName",
+          "linked",
+          "linkedAt"
+        ]
+      },
+      "LinkOparlBodiesDto": {
+        "type": "object",
+        "properties": {
+          "bodyIds": {
+            "description": "Bodies of the catalog to link to the organization",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": ["bodyIds"]
+      },
+      "OparlLinkingOrgDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "linkedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "linkedAt"]
+      },
       "OparlBodyResponseDto": {
         "type": "object",
         "properties": {
@@ -25874,9 +26040,16 @@
             "type": "string",
             "nullable": true,
             "description": "Web page in the RIS"
+          },
+          "linkedOrgs": {
+            "description": "Organizations that linked the body",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OparlLinkingOrgDto"
+            }
           }
         },
-        "required": ["id", "oparlId", "name", "shortName", "web"]
+        "required": ["id", "oparlId", "name", "shortName", "web", "linkedOrgs"]
       },
       "OparlObjectCountsDto": {
         "type": "object",

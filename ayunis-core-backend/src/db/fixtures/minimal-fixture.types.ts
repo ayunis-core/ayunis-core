@@ -174,6 +174,20 @@ export interface PermittedModelFixture {
   anonymousOnly: boolean;
 }
 
+export interface OparlBodyFixture {
+  oparlId: string;
+  name: string;
+  shortName: string;
+}
+
+/** A catalog entry without a reachable RIS: its bodies can be linked, it is never synced. */
+export interface OparlSystemFixture {
+  url: string;
+  name: string;
+  vendor: string;
+  bodies: readonly OparlBodyFixture[];
+}
+
 export interface SeedFixture {
   languageModel: LanguageModelFixture;
   anthropicLanguageModel: LanguageModelFixture;
@@ -187,4 +201,5 @@ export interface SeedFixture {
   orgs: readonly OrgFixture[];
   permittedModels: readonly PermittedModelFixture[];
   academyChapters: readonly AcademyChapterFixture[];
+  oparlSystems: readonly OparlSystemFixture[];
 }

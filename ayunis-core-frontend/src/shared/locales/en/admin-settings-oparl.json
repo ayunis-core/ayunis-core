@@ -1,0 +1,35 @@
+{
+  "title": "Council information",
+  "loadError": "The bodies could not be loaded.",
+  "retry": "Retry",
+  "empty": {
+    "title": "No bodies available",
+    "description": "No council information system has been added yet."
+  },
+  "bodies": {
+    "title": "Bodies",
+    "description": "Link the bodies of your council information system to your organization.",
+    "search": "Search bodies or systems",
+    "body": "Body",
+    "system": "System",
+    "status": "Status",
+    "selectColumn": "Select",
+    "select": "Select {{name}}",
+    "linked": "Linked",
+    "unnamed": "Unnamed body",
+    "noMatch": "No bodies match your search."
+  },
+  "link": {
+    "action": "Link selected",
+    "success_one": "The body was linked.",
+    "success_other": "{{count}} bodies were linked.",
+    "notFound": "A body is no longer available. The list was updated.",
+    "error": "The bodies could not be linked."
+  },
+  "unlink": {
+    "action": "Unlink",
+    "success": "The body was unlinked.",
+    "notLinked": "The body was not linked. The list was updated.",
+    "error": "The body could not be unlinked."
+  }
+}

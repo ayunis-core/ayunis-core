@@ -13,6 +13,7 @@ import {
   MessageSquareText,
   Trash2,
   GraduationCap,
+  Landmark,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,6 +21,7 @@ import {
   type SidebarMenuGroup,
 } from '@/widgets/settings-sidebar/ui/SettingsSidebarWidget';
 import { useIsAcademyAddonActive } from '@/features/academy';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import { useHasCreditBudget } from '@/features/credit-limits';
 import { MeResponseDtoRole } from '@ayunis/api-client';
 import {
@@ -30,6 +32,7 @@ import {
 export function AdminSettingsSidebar() {
   const { t } = useTranslation('admin-settings-layout');
   const academyAddonActive = useIsAcademyAddonActive();
+  const isOparlEnabled = useIsFeatureEnabled('oparlEnabled');
   const authorization = useAuthorization();
   const hasCreditBudget = useHasCreditBudget(
     authorization.hasRole(MeResponseDtoRole.admin),
@@ -96,6 +99,16 @@ export function AdminSettingsSidebar() {
           icon: <FileText />,
           label: t('layout.documents'),
         },
+        ...(isOparlEnabled
+          ? [
+              {
+                to: '/admin-settings/oparl' as const,
+                testId: 'admin-settings-nav-oparl',
+                icon: <Landmark />,
+                label: t('layout.oparl'),
+              },
+            ]
+          : []),
       ],
     },
     {

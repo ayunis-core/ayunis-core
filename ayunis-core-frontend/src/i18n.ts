@@ -84,6 +84,8 @@ import enAdminSettingsAcademy from './shared/locales/en/admin-settings-academy.j
 import deAdminSettingsAcademy from './shared/locales/de/admin-settings-academy.json';
 import enAdminSettingsAnonymization from './shared/locales/en/admin-settings-anonymization.json';
 import deAdminSettingsAnonymization from './shared/locales/de/admin-settings-anonymization.json';
+import enAdminSettingsOparl from './shared/locales/en/admin-settings-oparl.json';
+import deAdminSettingsOparl from './shared/locales/de/admin-settings-oparl.json';
 import enAdminSettingsRoles from './shared/locales/en/admin-settings-roles.json';
 import deAdminSettingsRoles from './shared/locales/de/admin-settings-roles.json';
 import enAdminSettingsRetention from './shared/locales/en/admin-settings-retention.json';
@@ -145,6 +147,7 @@ const resources = {
     'admin-settings-security': enAdminSettingsSecurity,
     'admin-settings-academy': enAdminSettingsAcademy,
     'admin-settings-anonymization': enAdminSettingsAnonymization,
+    'admin-settings-oparl': enAdminSettingsOparl,
     'admin-settings-roles': enAdminSettingsRoles,
     'admin-settings-retention': enAdminSettingsRetention,
     'admin-settings-letterheads': enAdminSettingsLetterheads,
@@ -196,6 +199,7 @@ const resources = {
     'admin-settings-security': deAdminSettingsSecurity,
     'admin-settings-academy': deAdminSettingsAcademy,
     'admin-settings-anonymization': deAdminSettingsAnonymization,
+    'admin-settings-oparl': deAdminSettingsOparl,
     'admin-settings-roles': deAdminSettingsRoles,
     'admin-settings-retention': deAdminSettingsRetention,
     'admin-settings-letterheads': deAdminSettingsLetterheads,

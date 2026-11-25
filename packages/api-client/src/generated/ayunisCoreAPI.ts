@@ -141,6 +141,7 @@ import type {
   KnowledgeBasesControllerFindAllParams,
   LanguageModelResponseDto,
   LetterheadResponseDto,
+  LinkOparlBodiesDto,
   LoginDto,
   LoginResponseDto,
   LogoutRequestDto,
@@ -174,6 +175,7 @@ import type {
   NotificationsControllerFindAllParams,
   OnboardingResponseDto,
   OnboardingStageResponseDto,
+  OparlCatalogBodyResponseDto,
   OparlEmbeddingModelResponseDto,
   OparlSystemResponseDto,
   OrgAcademyAccessSettingsResponseDto,
@@ -25070,6 +25072,236 @@ export const useSharePointLocationsControllerResolve = <TError = void,
         TContext
       > => {
       return useMutation(getSharePointLocationsControllerResolveMutationOptions(options), queryClient);
+    }
+
+/**
+ * Each body with its system and whether the organization linked it.
+ * @summary List the bodies of the OParl catalog
+ */
+export const oparlBodiesControllerList = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OparlCatalogBodyResponseDto[]>(
+      {url: `/oparl/bodies`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getOparlBodiesControllerListQueryKey = () => {
+    return [
+    `/oparl/bodies`
+    ] as const;
+    }
+
+
+export const getOparlBodiesControllerListQueryOptions = <TData = Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getOparlBodiesControllerListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof oparlBodiesControllerList>>> = ({ signal }) => oparlBodiesControllerList(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type OparlBodiesControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof oparlBodiesControllerList>>>
+export type OparlBodiesControllerListQueryError = void
+
+
+export function useOparlBodiesControllerList<TData = Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof oparlBodiesControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof oparlBodiesControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOparlBodiesControllerList<TData = Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof oparlBodiesControllerList>>,
+          TError,
+          Awaited<ReturnType<typeof oparlBodiesControllerList>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOparlBodiesControllerList<TData = Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the bodies of the OParl catalog
+ */
+
+export function useOparlBodiesControllerList<TData = Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oparlBodiesControllerList>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getOparlBodiesControllerListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * A body the organization already linked stays linked.
+ * @summary Link bodies to the organization
+ */
+export const oparlBodiesControllerLink = (
+    linkOparlBodiesDto: LinkOparlBodiesDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/oparl/bodies/links`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: linkOparlBodiesDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getOparlBodiesControllerLinkMutationKey = () => ['oparlBodiesControllerLink'] as const;
+
+export const getOparlBodiesControllerLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oparlBodiesControllerLink>>, TError,OparlBodiesControllerLinkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof oparlBodiesControllerLink>>, TError,OparlBodiesControllerLinkMutationVariables, TContext> => {
+
+const mutationKey = getOparlBodiesControllerLinkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof oparlBodiesControllerLink>>, OparlBodiesControllerLinkMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  oparlBodiesControllerLink(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OparlBodiesControllerLinkMutationResult = NonNullable<Awaited<ReturnType<typeof oparlBodiesControllerLink>>>
+    export type OparlBodiesControllerLinkMutationBody = LinkOparlBodiesDto
+    export type OparlBodiesControllerLinkMutationError = void
+    export type OparlBodiesControllerLinkMutationVariables = {data: LinkOparlBodiesDto}
+
+    /**
+ * @summary Link bodies to the organization
+ */
+export const useOparlBodiesControllerLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oparlBodiesControllerLink>>, TError,OparlBodiesControllerLinkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof oparlBodiesControllerLink>>,
+        TError,
+        OparlBodiesControllerLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOparlBodiesControllerLinkMutationOptions(options), queryClient);
+    }
+
+/**
+ * Removes only the link; the mirrored data stays.
+ * @summary Unlink a body from the organization
+ */
+export const oparlBodiesControllerUnlink = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/oparl/bodies/${id}/link`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getOparlBodiesControllerUnlinkMutationKey = () => ['oparlBodiesControllerUnlink'] as const;
+
+export const getOparlBodiesControllerUnlinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oparlBodiesControllerUnlink>>, TError,OparlBodiesControllerUnlinkMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof oparlBodiesControllerUnlink>>, TError,OparlBodiesControllerUnlinkMutationVariables, TContext> => {
+
+const mutationKey = getOparlBodiesControllerUnlinkMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof oparlBodiesControllerUnlink>>, OparlBodiesControllerUnlinkMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  oparlBodiesControllerUnlink(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OparlBodiesControllerUnlinkMutationResult = NonNullable<Awaited<ReturnType<typeof oparlBodiesControllerUnlink>>>
+
+    export type OparlBodiesControllerUnlinkMutationError = void
+    export type OparlBodiesControllerUnlinkMutationVariables = {id: string}
+
+    /**
+ * @summary Unlink a body from the organization
+ */
+export const useOparlBodiesControllerUnlink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oparlBodiesControllerUnlink>>, TError,OparlBodiesControllerUnlinkMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof oparlBodiesControllerUnlink>>,
+        TError,
+        OparlBodiesControllerUnlinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOparlBodiesControllerUnlinkMutationOptions(options), queryClient);
     }
 
 /**

@@ -1,0 +1,35 @@
+{
+  "title": "Ratsinformationssystem",
+  "loadError": "Die Körperschaften konnten nicht geladen werden.",
+  "retry": "Erneut versuchen",
+  "empty": {
+    "title": "Keine Körperschaften verfügbar",
+    "description": "Es wurde noch kein Ratsinformationssystem hinzugefügt."
+  },
+  "bodies": {
+    "title": "Körperschaften",
+    "description": "Verknüpfen Sie die Körperschaften Ihres Ratsinformationssystems mit Ihrer Organisation.",
+    "search": "Körperschaften oder Systeme suchen",
+    "body": "Körperschaft",
+    "system": "System",
+    "status": "Status",
+    "selectColumn": "Auswahl",
+    "select": "{{name}} auswählen",
+    "linked": "Verknüpft",
+    "unnamed": "Unbenannte Körperschaft",
+    "noMatch": "Keine Körperschaft entspricht Ihrer Suche."
+  },
+  "link": {
+    "action": "Auswahl verknüpfen",
+    "success_one": "Die Körperschaft wurde verknüpft.",
+    "success_other": "{{count}} Körperschaften wurden verknüpft.",
+    "notFound": "Eine Körperschaft ist nicht mehr verfügbar. Die Liste wurde aktualisiert.",
+    "error": "Die Körperschaften konnten nicht verknüpft werden."
+  },
+  "unlink": {
+    "action": "Trennen",
+    "success": "Die Verknüpfung wurde getrennt.",
+    "notLinked": "Die Körperschaft war nicht verknüpft. Die Liste wurde aktualisiert.",
+    "error": "Die Verknüpfung konnte nicht getrennt werden."
+  }
+}

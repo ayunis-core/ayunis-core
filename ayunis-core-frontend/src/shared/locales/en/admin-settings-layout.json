@@ -17,7 +17,8 @@
     "instructions": "Chat",
     "documents": "Documents",
     "apiKeys": "API Keys",
-    "academy": "Academy"
+    "academy": "Academy",
+    "oparl": "Council information"
   },
   "groups": {
     "membersAccess": "Members & Access",

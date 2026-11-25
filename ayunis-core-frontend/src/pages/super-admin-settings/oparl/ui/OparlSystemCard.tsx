@@ -17,6 +17,7 @@ import type {
 } from '@ayunis/api-client';
 import { OparlSystemHealth } from '@ayunis/api-client';
 import { useSyncOparlSystemNow } from '@/pages/super-admin-settings/oparl/api/useSyncOparlSystemNow';
+import { OparlBodyList } from './OparlBodyList';
 import { OparlDocumentStats } from './OparlDocumentStats';
 
 const COUNT_KEYS: Array<keyof OparlObjectCountsDto> = [
@@ -98,9 +99,7 @@ export function OparlSystemCard({
         <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1">
           <dt className="text-muted-foreground">{t('fields.bodies')}</dt>
           <dd>
-            {system.bodies
-              .map((body) => body.name ?? body.oparlId)
-              .join(', ') || '—'}
+            <OparlBodyList bodies={system.bodies} />
           </dd>
           <dt className="text-muted-foreground">{t('fields.system')}</dt>
           <dd>
