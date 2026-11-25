@@ -476,7 +476,8 @@ jobs:
       # tests/memory/memory-disabled.spec.ts,
       # tests/connectors/connections-disabled.spec.ts,
       # tests/super-admin/oparl-disabled.spec.ts,
-      # tests/admin/oparl-body-links-disabled.spec.ts). Its routine worker
+      # tests/admin/oparl-body-links-disabled.spec.ts,
+      # tests/chat/oparl-council-data-disabled.spec.ts). Its routine worker
       # stays stopped, so it takes no jobs from the main run.
       - name: Start backend with routines, recordings, memory, connectors and OParl disabled
         working-directory: ayunis-core-backend

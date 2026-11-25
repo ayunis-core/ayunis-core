@@ -17,6 +17,10 @@ import { ActivateSkillToolHandler } from './handlers/activate-skill-tool.handler
 import { KnowledgeQueryToolHandler } from './handlers/knowledge-query-tool.handler';
 import { KnowledgeGetTextToolHandler } from './handlers/knowledge-get-text-tool.handler';
 import { RecordingSearchToolHandler } from './handlers/recording-search-tool.handler';
+import { OparlSearchToolHandler } from './handlers/oparl-search-tool.handler';
+import { OparlGetToolHandler } from './handlers/oparl-get-tool.handler';
+import { OparlReadFileToolHandler } from './handlers/oparl-read-file-tool.handler';
+import { OparlListToolHandler } from './handlers/oparl-list-tool.handler';
 import { CreateDocumentToolHandler } from './handlers/create-document-tool.handler';
 import { UpdateDocumentToolHandler } from './handlers/update-document-tool.handler';
 import { EditDocumentToolHandler } from './handlers/edit-document-tool.handler';
@@ -46,6 +50,10 @@ import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-
 import { KnowledgeQueryTool } from 'src/domain/tools/domain/tools/knowledge-query-tool.entity';
 import { KnowledgeGetTextTool } from 'src/domain/tools/domain/tools/knowledge-get-text-tool.entity';
 import { RecordingSearchTool } from 'src/domain/tools/domain/tools/recording-search-tool.entity';
+import { OparlSearchTool } from 'src/domain/tools/domain/tools/oparl-search-tool.entity';
+import { OparlGetTool } from 'src/domain/tools/domain/tools/oparl-get-tool.entity';
+import { OparlReadFileTool } from 'src/domain/tools/domain/tools/oparl-read-file-tool.entity';
+import { OparlListTool } from 'src/domain/tools/domain/tools/oparl-list-tool.entity';
 import { CreateDocumentTool } from 'src/domain/tools/domain/tools/create-document-tool.entity';
 import { UpdateDocumentTool } from 'src/domain/tools/domain/tools/update-document-tool.entity';
 import { EditDocumentTool } from 'src/domain/tools/domain/tools/edit-document-tool.entity';
@@ -82,6 +90,10 @@ const TOOL_HANDLER_PAIRS: readonly (readonly [
   [KnowledgeQueryTool, KnowledgeQueryToolHandler],
   [KnowledgeGetTextTool, KnowledgeGetTextToolHandler],
   [RecordingSearchTool, RecordingSearchToolHandler],
+  [OparlSearchTool, OparlSearchToolHandler],
+  [OparlGetTool, OparlGetToolHandler],
+  [OparlReadFileTool, OparlReadFileToolHandler],
+  [OparlListTool, OparlListToolHandler],
   [CreateDocumentTool, CreateDocumentToolHandler],
   [UpdateDocumentTool, UpdateDocumentToolHandler],
   [EditDocumentTool, EditDocumentToolHandler],

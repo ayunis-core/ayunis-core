@@ -105,6 +105,19 @@ const textToolActions: ReadonlyMap<string, ToolAction> = new Map([
       listTargetParam: 'queries',
     },
   ],
+  [
+    'oparl_search',
+    {
+      labelKey: 'chat.timeline.actions.oparl_search',
+      listTargetParam: 'queries',
+    },
+  ],
+  ['oparl_get', { labelKey: 'chat.timeline.actions.oparl_get' }],
+  ['oparl_read_file', { labelKey: 'chat.timeline.actions.oparl_read_file' }],
+  [
+    'oparl_list',
+    { labelKey: 'chat.timeline.actions.oparl_list', targetParams: ['name'] },
+  ],
   ['code_execution', { labelKey: 'chat.timeline.actions.code_execution' }],
   ['http', { labelKey: 'chat.timeline.actions.http', targetParams: ['url'] }],
   ['chat_list', { labelKey: 'chat.timeline.actions.chat_list' }],

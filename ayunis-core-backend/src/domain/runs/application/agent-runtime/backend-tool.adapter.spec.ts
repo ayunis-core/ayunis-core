@@ -24,6 +24,8 @@ import { ActivateSkillTool } from 'src/domain/tools/domain/tools/activate-skill-
 import { InternetSearchTool } from 'src/domain/tools/domain/tools/internet-search-tool.entity';
 import { McpIntegrationTool } from 'src/domain/tools/domain/tools/mcp-integration-tool.entity';
 import { McpTool } from 'src/domain/mcp/domain/mcp-tool.entity';
+import { OparlSearchTool } from 'src/domain/tools/domain/tools/oparl-search-tool.entity';
+import { OparlToolScope } from 'src/domain/tools/domain/tools/oparl-tool-scope';
 import { ToolExecutionFailedError } from 'src/domain/tools/application/tools.errors';
 import { ProviderTimeoutError } from 'src/common/errors/provider.errors';
 import type { AnonymizeTextForThreadUseCase } from 'src/domain/thread-pii-masks/application/use-cases/anonymize-text-for-thread/anonymize-text-for-thread.use-case';
@@ -309,6 +311,21 @@ describe('BackendToolAdapter', () => {
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'thread_pii_masks' }),
     );
+  });
+
+  it('passes public council data from OParl search to the model unmasked in anonymous mode', async () => {
+    const councilResult = JSON.stringify({
+      results: [{ text: 'Antrag von Erika Muster, Fraktion Grüne Liste' }],
+    });
+    execute.mockResolvedValue(councilResult);
+
+    const [tool] = adapter.toRuntimeTools([
+      new OparlSearchTool(new OparlToolScope([])),
+    ]);
+    const result = await tool.execute!({ queries: ['Kita'] }, toolCtx(true));
+
+    expect(result).toEqual({ result: councilResult, isError: false });
+    expect(anonymize).not.toHaveBeenCalled();
   });
 
   it('limits PII tool output before anonymization', async () => {
