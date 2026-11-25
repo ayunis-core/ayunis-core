@@ -19,10 +19,7 @@ export { RoutineFrequency, RoutineInternetAccess } from './model/openapi';
 export { DEFAULT_MODEL_OPTION, LAST_MONTH_DAY } from './model/types';
 export type { RoutineFormFields, RoutineScheduleFields } from './model/types';
 export { RoutineEnabledSwitch } from './ui/RoutineEnabledSwitch';
-export {
-  RoutineCreateFieldset,
-  RoutineFormFieldset,
-} from './ui/RoutineFormFieldset';
+export { RoutineFormFieldset } from './ui/RoutineFormFieldset';
 export { RoutineRunNowButton } from './ui/RoutineRunNowButton';
 export { RoutineRunStatusLine } from './ui/RoutineRunStatusLine';
 export { RoutineScheduleLine } from './ui/RoutineScheduleLine';

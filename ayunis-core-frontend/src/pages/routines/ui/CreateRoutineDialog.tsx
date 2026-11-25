@@ -12,7 +12,7 @@ import { Form } from '@ayunis/ui/components/form';
 import { Button } from '@ayunis/ui/components/button';
 import {
   formFieldsToCreateDto,
-  RoutineCreateFieldset,
+  RoutineFormFieldset,
   useCreateRoutine,
   type RoutineFormFields,
 } from '@/features/routines';
@@ -59,7 +59,7 @@ export function CreateRoutineDialog({
             className="space-y-4"
             data-testid="routine-form"
           >
-            <RoutineCreateFieldset form={form} disabled={isCreating} />
+            <RoutineFormFieldset form={form} disabled={isCreating} />
             <DialogFooter>
               <Button
                 type="button"
