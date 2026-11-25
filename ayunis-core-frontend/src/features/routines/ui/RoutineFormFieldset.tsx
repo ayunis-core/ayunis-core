@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,42 +30,16 @@ interface RoutineFieldsProps {
   disabled: boolean;
 }
 
-type RoutineField = (props: Readonly<RoutineFieldsProps>) => ReactNode;
-
-function RoutineFields({
-  fields,
-  form,
-  disabled,
-}: Readonly<RoutineFieldsProps & { fields: RoutineField[] }>) {
-  // The lists are fixed, so the position identifies a field.
-  return fields.map((Field, index) => (
-    <Field key={index} form={form} disabled={disabled} />
-  ));
-}
-
-/** The routine's configuration, shared by its configuration card and the chat widgets. */
+/** The routine's configuration, shared by its create dialog, configuration card and the chat widgets. */
 export function RoutineFormFieldset(props: Readonly<RoutineFieldsProps>) {
   return (
-    <RoutineFields
-      {...props}
-      fields={[
-        NameField,
-        PromptField,
-        ModelField,
-        RoutineScheduleField,
-        RoutineInternetAccessField,
-      ]}
-    />
-  );
-}
-
-/** What a new routine needs; the rest is set on its page. */
-export function RoutineCreateFieldset(props: Readonly<RoutineFieldsProps>) {
-  return (
-    <RoutineFields
-      {...props}
-      fields={[NameField, PromptField, RoutineScheduleField]}
-    />
+    <>
+      <NameField {...props} />
+      <PromptField {...props} />
+      <ModelField {...props} />
+      <RoutineScheduleField {...props} />
+      <RoutineInternetAccessField {...props} />
+    </>
   );
 }
 

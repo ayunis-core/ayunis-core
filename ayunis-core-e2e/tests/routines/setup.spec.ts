@@ -1,14 +1,23 @@
 import { randomUUID } from "node:crypto";
+import type { APIRequestContext } from "@playwright/test";
+import { getEffectiveDefaultModel } from "../../src/clients/api/models.client";
 import { getRoutine } from "../../src/clients/api/routines.client";
 import { createBlankRoutine } from "../../src/flows/routines.flow";
 import { test, expect } from "../../src/fixtures/test";
 
 const ROUTINE_PAGE_URL = /\/routines\/([0-9a-f-]{36})$/;
 
-test("the premade routine is created with internet access from a dialog that asks only for name, task and time", async ({
+async function defaultModelOf(api: APIRequestContext) {
+  const model = await getEffectiveDefaultModel(api);
+  if (!model) throw new Error("The worker org has no default model");
+  return model;
+}
+
+test("the premade routine is created from the dialog with its preset internet access and the model chosen there", async ({
   api,
   page,
 }) => {
+  const model = await defaultModelOf(api);
   await page.goto("/routines");
   await page.getByTestId("create-routine-menu").click();
   await page
@@ -16,13 +25,13 @@ test("the premade routine is created with internet access from a dialog that ask
     .click();
 
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByTestId("routine-form-name")).toBeVisible();
-  await expect(dialog.getByTestId("routine-form-prompt")).toBeVisible();
-  await expect(dialog.getByTestId("routine-form-time")).toBeVisible();
-  await expect(dialog.getByTestId("routine-form-model")).toHaveCount(0);
-  await expect(dialog.getByTestId("routine-form-internet")).toHaveCount(0);
   const name = `Verkündungsplattform ${randomUUID().slice(0, 8)}`;
   await dialog.getByTestId("routine-form-name").fill(name);
+  await dialog.getByTestId("routine-form-model").click();
+  // Model names are catalogue data, not translated copy.
+  await page
+    .getByRole("option", { name: model.displayName, exact: true })
+    .click();
   await dialog.getByTestId("routine-form-submit").click();
 
   await expect(page).toHaveURL(ROUTINE_PAGE_URL);
@@ -30,8 +39,37 @@ test("the premade routine is created with internet access from a dialog that ask
   expect(await getRoutine(api, routineId)).toMatchObject({
     name,
     internetAccess: "all",
-    modelId: null,
+    modelId: model.id,
     enabled: true,
+  });
+});
+
+test("a blank routine is created with the internet access chosen in the dialog", async ({
+  api,
+  page,
+}) => {
+  await page.goto("/routines");
+  await page.getByTestId("create-routine-menu").click();
+  await page.getByTestId("create-routine-blank").click();
+
+  const dialog = page.getByRole("dialog");
+  await dialog
+    .getByTestId("routine-form-name")
+    .fill(`Gesetzblatt ${randomUUID().slice(0, 8)}`);
+  await dialog
+    .getByTestId("routine-form-prompt")
+    .fill("Prüfe das heutige Gesetz- und Verordnungsblatt NRW.");
+  await dialog.getByTestId("routine-form-internet").click();
+  await page.getByTestId("routine-form-internet-allowlist").click();
+  await dialog.getByTestId("routine-form-allowed-domains").fill("nrw.de");
+  await dialog.getByTestId("routine-form-submit").click();
+
+  await expect(page).toHaveURL(ROUTINE_PAGE_URL);
+  const routineId = ROUTINE_PAGE_URL.exec(page.url())?.[1] ?? "";
+  expect(await getRoutine(api, routineId)).toMatchObject({
+    internetAccess: "allowlist",
+    allowedDomains: ["nrw.de"],
+    modelId: null,
   });
 });
 
