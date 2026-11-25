@@ -16,6 +16,7 @@ import {
   RoutineScheduleLine,
   RoutineScheduleSummary,
   routineToFormFields,
+  useRoutinePromptAssist,
   useUpdateRoutine,
   type Routine,
   type RoutineFormFields,
@@ -60,7 +61,11 @@ function RoutineConfigurationCard({ routine }: Readonly<{ routine: Routine }>) {
   const form = useForm<RoutineFormFields>({
     defaultValues: routineToFormFields(routine),
   });
-  const { updateRoutine, isUpdating } = useUpdateRoutine(form);
+  const promptAssist = useRoutinePromptAssist(form);
+  const { updateRoutine, isUpdating } = useUpdateRoutine(
+    form,
+    promptAssist.endSuggestion,
+  );
 
   return (
     <Card data-testid="routine-configuration-card">
@@ -87,10 +92,11 @@ function RoutineConfigurationCard({ routine }: Readonly<{ routine: Routine }>) {
               modelField={
                 <RoutineModelField form={form} disabled={isUpdating} />
               }
+              promptAssist={promptAssist}
             />
             <Button
               type="submit"
-              disabled={isUpdating}
+              disabled={isUpdating || promptAssist.isBusy}
               data-testid="routine-form-submit"
             >
               {t('form.save')}

@@ -128,7 +128,7 @@ body {
   }
 }
 
-.skill-improve-shimmer {
+.improve-text-shimmer {
   background: linear-gradient(
     100deg,
     color-mix(in oklab, var(--brand) 45%, transparent) 30%,
@@ -150,7 +150,7 @@ body {
   .onboarding-fade,
   .onboarding-kenburns,
   .onboarding-shimmer,
-  .skill-improve-shimmer {
+  .improve-text-shimmer {
     animation: none;
   }
   .onboarding-shimmer {
