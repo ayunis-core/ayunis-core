@@ -6,6 +6,7 @@ export interface SsoOidcConfig {
   clientId?: string;
   clientSecret?: string;
   callbackUrl?: string;
+  identityCleanupToken?: string;
   allowInsecureRequests: boolean;
   reauthenticationMaxAgeSeconds: number;
 }
@@ -15,6 +16,8 @@ export const ssoOidcConfig = registerAs('ssoOidc', (): SsoOidcConfig => ({
   clientId: process.env.SSO_OIDC_CLIENT_ID || undefined,
   clientSecret: process.env.SSO_OIDC_CLIENT_SECRET || undefined,
   callbackUrl: process.env.SSO_OIDC_CALLBACK_URL || undefined,
+  identityCleanupToken:
+    process.env.SSO_ZITADEL_IDENTITY_CLEANUP_TOKEN || undefined,
   allowInsecureRequests:
     process.env.NODE_ENV !== 'production' &&
     isLoopbackHttpUrl(process.env.SSO_OIDC_ISSUER ?? ''),
