@@ -161,7 +161,7 @@ export function useConversationRun<Context, Outcome>(
   lifecycle: ChatRunLifecycle,
   props: ChatConversationProps<Context, Outcome>,
 ) {
-  const { thread, activeRun, clientTools, config } = props;
+  const { thread, activeRun, clientTools, config, adapters } = props;
   const { isStreaming, state, run, selected, onAccepted } = useRunObserver(
     props,
     lifecycle,
@@ -184,17 +184,21 @@ export function useConversationRun<Context, Outcome>(
     sendToolResult: run.sendToolResult,
   });
 
-  const contextKey = clientTools?.contextKey;
-  useLayoutEffect(() => {
-    selected.current = {
-      threadId: thread.id,
-      contextKey,
-      runEnded: tools.runEnded,
-    };
-    return () => {
-      selected.current = null;
-    };
-  }, [contextKey, selected, thread.id, tools.runEnded]);
+  useSelectedToolView(
+    selected,
+    thread.id,
+    clientTools?.contextKey,
+    tools.runEnded,
+  );
+
+  useSelectedThread(
+    lifecycle,
+    thread,
+    state,
+    run.sendTextMessage,
+    tools.beginRun,
+    adapters?.onThreadState,
+  );
 
   function send(input: SendMessageInput, accepted: () => void) {
     if (status.isCheckingForRun || lifecycle.isThreadRunActive(thread.id))
@@ -205,4 +209,43 @@ export function useConversationRun<Context, Outcome>(
   }
 
   return { ...state, ...status, ...run, isStreaming, send };
+}
+
+function useSelectedToolView(
+  selected: { current: SelectedToolView | null },
+  threadId: string,
+  contextKey: unknown,
+  runEnded: RunEnded,
+) {
+  useLayoutEffect(() => {
+    selected.current = { threadId, contextKey, runEnded };
+    return () => {
+      selected.current = null;
+    };
+  }, [selected, threadId, contextKey, runEnded]);
+}
+
+function useSelectedThread(
+  lifecycle: ChatRunLifecycle,
+  thread: ChatConversationProps['thread'],
+  state: ReturnType<typeof useChatThreadState>,
+  sendTextMessage: ReturnType<typeof useChatRunLifecycle>['sendTextMessage'],
+  beginRun: ReturnType<typeof useClientToolLifecycle>['beginRun'],
+  onThreadState?: ChatConversationAdapters['onThreadState'],
+) {
+  const { id } = thread;
+  const { messages, piiMasks, threadTitle } = state;
+  useLayoutEffect(() => {
+    onThreadState?.({ id, messages, piiMasks, title: threadTitle });
+  }, [id, messages, piiMasks, threadTitle, onThreadState]);
+  useLayoutEffect(() => {
+    const started = lifecycle.takeStartedThreadRun(id);
+    if (!started) return;
+    beginRun({ takesOverStartedRun: true });
+    void sendTextMessage({
+      text: started.text,
+      voiceInput: started.voiceInput,
+      startedRequest: started.request,
+    });
+  }, [id, lifecycle, beginRun, sendTextMessage]);
 }

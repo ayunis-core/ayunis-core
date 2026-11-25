@@ -23,7 +23,7 @@ vi.mock('@ayunis/api-client', () => ({
   threadSourcesControllerCreateUpload: mocks.createSession,
   threadSourcesControllerCompleteUpload: mocks.upload,
 }));
-vi.mock('@/shared/lib/source-upload/transfer-source-file', () => ({
+vi.mock('@ayunis/api-client/source-upload/transfer', () => ({
   transferSourceFile: mocks.transfer,
 }));
 vi.mock('@ayunis/api-client/endpoints', () => ({

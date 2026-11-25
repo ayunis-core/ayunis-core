@@ -8,6 +8,7 @@ import type { ChatHistoryConfig } from './configured-history';
 import type { TimelinePresentation } from '@ayunis/chat/timeline';
 import type { ChatSlots, ChatSurfaceConfig } from './chat-surface-config';
 import type { ClientToolDispatch } from './client-tool-dispatch';
+import type { ChatRunLifecycle } from './run-lifecycle';
 import type { RunOutcome } from './run-execution';
 
 export type ChatThreadSnapshot = Pick<
@@ -40,6 +41,7 @@ export interface ChatConversationAdapters {
     signal: AbortSignal,
   ) => Promise<string | null>;
   readonly model?: ChatModelAdapter;
+  readonly onThreadState?: (thread: ChatThreadSnapshot) => void;
   readonly onRunSettled?: (threadId: string, outcome: RunOutcome) => void;
   readonly onUnauthorized?: () => void;
   readonly onError?: (error: unknown) => void;
@@ -60,6 +62,7 @@ export interface ChatConversationProps<Context = unknown, Outcome = unknown> {
   /** Change this when the authenticated principal changes. Scope supplied data and storage to the same principal. */
   readonly sessionKey: string;
   readonly config: ChatSurfaceConfig;
+  readonly lifecycle?: ChatRunLifecycle;
   readonly thread: ChatThreadSnapshot;
   readonly history?: ChatHistoryConfig;
   readonly adapters?: ChatConversationAdapters;

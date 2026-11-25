@@ -1,11 +1,8 @@
-import { resetThreadRunSession } from '@/features/thread-run';
 import { bootPage } from '@/app/boot-page';
 import { recoverableErrorReport, reportError } from '@/shared/lib/appsignal';
 import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-import { isDevEmbedded } from '@/shared/contexts/embedded/dev-embedded';
 import { configureAppApi } from '@/shared/api/client';
-import { createPaneSession } from '@/outlook/api/pane-session';
 import {
   createOpenPanelScreenViewAnalytics,
   openPanel,
@@ -21,23 +18,13 @@ import reportWebVitals from './reportWebVitals.ts';
 
 bootPage();
 
-// /outlook/taskpane.html loads this same entry, so the pane and the web app
-// share one build of the app; a second entry would split every route into
-// chunks the web app then preloads.
-if (document.documentElement.dataset.entry === 'outlook-pane') {
-  void import('@/outlook/taskpane').then(({ mountPane }) => mountPane());
-} else {
-  mountWeb();
-}
+mountWeb();
 
 function mountWeb(): void {
-  const embedded = isDevEmbedded(import.meta.env.DEV, window.location.search);
-  const paneSession = embedded ? createPaneSession() : undefined;
-  configureAppApi(paneSession?.transport);
+  configureAppApi();
 
   const queryClient = createAppQueryClient();
-  paneSession?.onEnd(() => resetThreadRunSession(queryClient));
-  const router = createAppRouter(queryClient, embedded);
+  const router = createAppRouter(queryClient);
 
   if (openPanel) {
     trackOpenPanelScreenViews(
@@ -61,12 +48,7 @@ function mountWeb(): void {
     });
     root.render(
       <StrictMode>
-        <App
-          router={router}
-          queryClient={queryClient}
-          embedded={embedded}
-          onEmbeddedSignOut={paneSession?.signOut}
-        />
+        <App router={router} queryClient={queryClient} />
       </StrictMode>,
     );
   }

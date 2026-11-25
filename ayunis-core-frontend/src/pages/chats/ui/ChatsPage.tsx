@@ -12,13 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import type { ChatListItem } from '@/pages/chats/model/types';
 import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
-import { Link } from '@tanstack/react-router';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  useEmbedded,
-  useEmbeddedSignOut,
-} from '@/shared/contexts/embedded/embeddedContext';
-
 interface ChatsPageProps {
   chats: ChatListItem[];
   search?: string;
@@ -35,30 +28,7 @@ export default function ChatsPage({
   currentPage,
 }: Readonly<ChatsPageProps>) {
   const { t } = useTranslation('chats');
-  const isEmbedded = useEmbedded();
-  const signOut = useEmbeddedSignOut();
-  const { favorites } = useFavorites({ enabled: !isEmbedded });
-  // Sign-out ends the pane session; the pane entry then shows its sign-in.
-  const embeddedAction = (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
-        data-testid="embedded-back-to-start"
-      >
-        <Link to="/chat">{t('page.embedded.backToStart')}</Link>
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => void signOut?.()}
-        data-testid="embedded-sign-out"
-      >
-        {t('page.embedded.signOut')}
-      </Button>
-    </div>
-  );
+  const { favorites } = useFavorites();
   const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
 
   const total = pagination?.total ?? 0;
@@ -72,7 +42,7 @@ export default function ChatsPage({
           header={
             <ContentAreaHeader
               breadcrumbs={[{ label: t('page.title') }]}
-              action={isEmbedded ? embeddedAction : <HelpLink path="chat/" />}
+              action={<HelpLink path="chat/" />}
             />
           }
         >
@@ -89,14 +59,10 @@ export default function ChatsPage({
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
             action={
-              isEmbedded ? (
-                embeddedAction
-              ) : (
-                <ListToolbar data-testid="chats-toolbar">
-                  <ChatsFilters search={search} />
-                  <HelpLink path="chat/" />
-                </ListToolbar>
-              )
+              <ListToolbar data-testid="chats-toolbar">
+                <ChatsFilters search={search} />
+                <HelpLink path="chat/" />
+              </ListToolbar>
             }
           />
         }

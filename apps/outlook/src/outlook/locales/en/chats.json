@@ -1,0 +1,16 @@
+{
+  "page": {
+    "title": "Chats",
+    "embedded": {
+      "backToStart": "Back to start",
+      "signOut": "Sign out"
+    }
+  },
+  "emptyState": {
+    "title": "No chats yet",
+    "description": "Start a new chat to see it here.",
+    "noResultsTitle": "No matching chats",
+    "noResultsDescription": "Try adjusting your search or filter.",
+    "startChat": "Start New Chat"
+  }
+}

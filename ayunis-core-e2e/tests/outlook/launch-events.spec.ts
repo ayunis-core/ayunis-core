@@ -1,6 +1,6 @@
 import { requestOutlookManifest } from '../../src/clients/api/office-addins.client';
 import { stubOfficeHost } from '../../src/clients/office-host-stub';
-import { expect, test } from '../../src/fixtures/test';
+import { expect, test } from '../../src/fixtures/outlook';
 import {
   dispatchLaunchEvent,
   officeItemCalls,

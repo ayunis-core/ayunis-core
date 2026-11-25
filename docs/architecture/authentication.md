@@ -439,10 +439,10 @@ policies.
 
 Add the required scope to a route when token clients should reach it. A
 surface with the grant can call that route subject to its existing guards.
-The embedded app keeps web-only controls such as onboarding, workspaces,
-the skill picker and read-aloud out of the pane.
+The standalone Outlook app configures chat capabilities from the scopes
+returned by `/auth/me`.
 
-In embedded mode the chat app sends no cookies: the axios client uses the fetch
+The Outlook pane sends requests without cookies: the axios client uses the fetch
 adapter with `credentials: 'omit'` and the pane's Bearer token, the streaming
 calls go through `apiFetch`, and API images are fetched into blob URLs because
 an `<img>` cannot carry a Bearer token. A 401 refreshes the token once (single

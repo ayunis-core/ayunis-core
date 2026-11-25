@@ -4,7 +4,7 @@ import {
   type OfficeStubReadItem,
 } from '../../src/clients/office-host-stub';
 import { generatedApi } from '../../src/clients/api/generated-api';
-import { expect, test } from '../../src/fixtures/test';
+import { expect, test } from '../../src/fixtures/outlook';
 import { sendMessage } from '../../src/flows/chat.flow';
 import {
   openSignedInPane,

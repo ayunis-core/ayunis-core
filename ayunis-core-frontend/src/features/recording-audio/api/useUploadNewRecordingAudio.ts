@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { uploadSourceFile } from '@/shared/lib/source-upload';
+import { uploadSourceFile } from '@ayunis/api-client/source-upload';
 import { recordingAudioUploadTarget } from './recording-audio-upload-target';
 import { handleRecordingAudioUploadError } from '@/features/recording-audio/lib/handle-recording-audio-upload-error';
 

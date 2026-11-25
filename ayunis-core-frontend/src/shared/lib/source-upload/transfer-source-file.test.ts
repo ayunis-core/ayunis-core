@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toSignRequestBody } from './transfer-source-file';
+import { toSignRequestBody } from '@ayunis/api-client/source-upload';
 
 describe('toSignRequestBody', () => {
   it('passes a whole-object PUT through without multipart fields', () => {

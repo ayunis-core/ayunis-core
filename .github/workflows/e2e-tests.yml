@@ -19,7 +19,7 @@ on:
       - 'ayunis-core-frontend/package.json'
       - 'ayunis-core-frontend/tsconfig*.json'
       - 'ayunis-core-frontend/vite.config.*'
-      - 'ayunis-core-frontend/outlook/**'
+      - 'apps/outlook/**'
       - 'apps/**'
       - 'package.json'
       - 'pnpm-workspace.yaml'

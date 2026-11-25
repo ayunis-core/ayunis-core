@@ -191,7 +191,7 @@ describe('authenticated bootstrap analytics identity', () => {
 
 describe('authenticated bootstrap without a session', () => {
   const beforeLoad = Route.options.beforeLoad as (args: {
-    context: { queryClient: QueryClient; embedded: boolean };
+    context: { queryClient: QueryClient };
     preload: boolean;
   }) => Promise<unknown>;
 
@@ -203,24 +203,10 @@ describe('authenticated bootstrap without a session', () => {
     me.mockRejectedValue(new Error('401'));
 
     const failure: unknown = await beforeLoad({
-      context: { queryClient: new QueryClient(), embedded: false },
+      context: { queryClient: new QueryClient() },
       preload: false,
     }).catch((error: unknown) => error);
 
     expect(isRedirect(failure)).toBe(true);
-  });
-
-  // The pane may not show app routes such as /login (AYC-1899); its entry
-  // owns the sign-in.
-  it('leaves the Outlook pane where it is', async () => {
-    const expired = new Error('The Ayunis session has expired');
-    me.mockRejectedValue(expired);
-
-    const failure: unknown = await beforeLoad({
-      context: { queryClient: new QueryClient(), embedded: true },
-      preload: false,
-    }).catch((error: unknown) => error);
-
-    expect(failure).toBe(expired);
   });
 });

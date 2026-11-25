@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { createMemoryHistory, createRouter } from '@tanstack/react-router';
+import { createRouter } from '@tanstack/react-router';
 import { ErrorFallback } from '@/shared/ui/error-boundary/ErrorFallback';
 import { isChunkLoadError } from '@/shared/lib/is-chunk-load-error';
 import { attemptChunkReload } from '@/shared/lib/chunk-reload-guard';
@@ -21,16 +21,10 @@ export function createAppQueryClient(): QueryClient {
   });
 }
 
-export function createAppRouter(queryClient: QueryClient, embedded: boolean) {
+export function createAppRouter(queryClient: QueryClient) {
   return createRouter({
     routeTree,
-    // Outlook may frame only the pane's own document (AYC-1899), so embedded
-    // routes never reach the address bar: a reload, the chunk-reload guard or
-    // the error page's reload loads the pane again, not a blocked app route.
-    history: embedded
-      ? createMemoryHistory({ initialEntries: ['/chat'] })
-      : undefined,
-    context: { queryClient, user: null, embedded },
+    context: { queryClient, user: null },
     defaultPreload: 'intent',
     scrollRestoration: true,
     defaultStructuralSharing: true,

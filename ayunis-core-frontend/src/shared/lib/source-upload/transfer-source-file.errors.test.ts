@@ -1,7 +1,7 @@
 import { AxiosError, AxiosHeaders } from 'axios';
 import type { TFunction } from 'i18next';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { transferSourceFile } from './transfer-source-file';
+import { transferSourceFile } from '@ayunis/api-client/source-upload';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 
 const mocks = vi.hoisted(() => ({ sign: vi.fn(), showError: vi.fn() }));

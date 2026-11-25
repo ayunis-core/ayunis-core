@@ -4,7 +4,11 @@ import type {
 } from '@ayunis/api-client/schemas';
 import { useMemo } from 'react';
 import { Markdown, PiiMaskProvider, PiiText } from '@ayunis/chat/markdown';
-import { ChatMessageList, UserMessage } from '@ayunis/chat/messages';
+import {
+  AssistantMessageFrame,
+  ChatMessageList,
+  UserMessage,
+} from '@ayunis/chat/messages';
 import {
   AgentRunTimeline,
   ToolCallConfirmationContext,
@@ -76,11 +80,13 @@ export function ChatConversationContent(props: ContentProps) {
           pendingSubmission={null}
           contextHint={null}
           renderUser={(message) => renderUser(message, messageImage)}
-          renderRun={(unit) => (
-            <AgentRunTimeline
-              {...{ unit, threadId, onOpenArtifact }}
-              presentation={timeline}
-            />
+          renderRun={(unit, grouped) => (
+            <AssistantMessageFrame grouped={grouped}>
+              <AgentRunTimeline
+                {...{ unit, threadId, onOpenArtifact }}
+                presentation={timeline}
+              />
+            </AssistantMessageFrame>
           )}
         />
       </ToolCallConfirmationContext.Provider>

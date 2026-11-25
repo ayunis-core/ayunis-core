@@ -1,7 +1,4 @@
-import {
-  createToolCardRegistry,
-  type ToolCardRegistration,
-} from '@ayunis/chat/tool-cards';
+import { createToolCardRegistry } from '@ayunis/chat/tool-cards';
 import {
   artifactToolCards,
   type ArtifactFamily,
@@ -14,7 +11,6 @@ import {
 import { generatedImageIdFromToolResult } from './generated-image-id';
 import CreateFileWidget from '@/pages/chat/ui/chat-widgets/CreateFileWidget';
 import SendEmailWidget from '@/pages/chat/ui/chat-widgets/SendEmailWidget';
-import { outlookClientTools } from '@/pages/chat/model/outlook-client-tools';
 import CreateCalendarEventWidget from '@/pages/chat/ui/chat-widgets/CreateCalendarEventWidget';
 import CreateSkillWidget from '@/pages/chat/ui/chat-widgets/CreateSkillWidget';
 import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
@@ -24,14 +20,6 @@ import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallM
 import AddAnonymizationExceptionWidget from '@/pages/chat/ui/chat-widgets/AddAnonymizationExceptionWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
-
-const clientToolCards = Object.fromEntries<
-  ToolCardRegistration<ArtifactFamily>
->(
-  Array.from(outlookClientTools).flatMap(([name, { render }]) =>
-    render ? [[name, { render }] as const] : [],
-  ),
-);
 
 export const chatToolCards = createToolCardRegistry<ArtifactFamily>({
   ...artifactToolCards,
@@ -181,5 +169,4 @@ export const chatToolCards = createToolCardRegistry<ArtifactFamily>({
       />
     ),
   },
-  ...clientToolCards,
 });

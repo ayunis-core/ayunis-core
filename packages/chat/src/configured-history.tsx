@@ -74,7 +74,12 @@ function HistoryRow({
 }: Readonly<Omit<HistoryProps, 'chats'> & { id: string; title: string }>) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button type="button" variant="ghost" onClick={() => onSelect(id)}>
+      <Button
+        type="button"
+        variant="ghost"
+        data-testid="chat-card"
+        onClick={() => onSelect(id)}
+      >
         {title}
       </Button>
       {capabilities.rename && rename && (

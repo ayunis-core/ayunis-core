@@ -1,6 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { ConfiguredHistory } from './configured-history';
-import { useChatDraft, type ChatDraftStorage } from '@ayunis/chat/composer';
+import {
+  createMemoryChatDraftStorage,
+  useChatDraft,
+  type ChatDraftStorage,
+} from '@ayunis/chat/composer';
 import { ConfiguredComposer } from './configured-composer';
 import { ChatSurface } from './chat-surface';
 import type { ChatConversationProps } from './chat-conversation-config';
@@ -17,25 +21,14 @@ export function ChatConversation<Context, Outcome>(
   return <ConversationSession key={props.sessionKey} {...props} />;
 }
 
-function createMemoryDrafts(): ChatDraftStorage {
-  const messages = new Map<string, string>();
-  return {
-    read: (id) => messages.get(id) ?? '',
-    write(id, message) {
-      if (message) messages.set(id, message);
-      else messages.delete(id);
-    },
-  };
-}
-
 function ConversationSession<Context, Outcome>(
   props: ChatConversationProps<Context, Outcome>,
 ) {
-  const [lifecycle] = useState(() =>
+  const [ownedLifecycle] = useState(() =>
     createChatRunLifecycle(props.config.transport),
   );
-  const [memoryDrafts] = useState(createMemoryDrafts);
-  useSessionCleanup(lifecycle);
+  const [memoryDrafts] = useState(createMemoryChatDraftStorage);
+  useSessionCleanup(ownedLifecycle);
   return (
     <>
       {props.history && (
@@ -47,7 +40,7 @@ function ConversationSession<Context, Outcome>(
       )}
       <ConversationView
         {...props}
-        lifecycle={lifecycle}
+        lifecycle={props.lifecycle ?? ownedLifecycle}
         drafts={props.adapters?.drafts ?? memoryDrafts}
       />
     </>

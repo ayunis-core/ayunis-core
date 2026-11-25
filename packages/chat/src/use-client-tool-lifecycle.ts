@@ -22,7 +22,8 @@ import {
   type ClientToolResult,
 } from './client-tool-dispatch';
 import { useRuntimeSession } from './use-runtime-session';
-import type { ChatRunLifecycle, DeferredClientTools } from './run-lifecycle';
+import type { ChatRunLifecycle } from './run-lifecycle';
+import type { DeferredClientTools } from './deferred-client-tools';
 import type { ClientToolCall } from './client-tools';
 
 interface ClientToolLifecycleOptions<Context, Outcome> {
@@ -224,11 +225,23 @@ function useToolScope<Context, Outcome>(
     [session, threadId, contextKey, enabled],
   );
   const latest = useRef(options);
-  const opened = useRef<Scope>(null);
   useLayoutEffect(() => {
     latest.current = options;
   }, [options]);
 
+  useToolScopeSubscription(lifecycle, scope, latest, enabled, reopen);
+  return { scope, latest };
+}
+
+function useToolScopeSubscription<Context, Outcome>(
+  lifecycle: ChatRunLifecycle,
+  scope: Scope,
+  latest: { current: ClientToolLifecycleOptions<Context, Outcome> },
+  enabled: boolean,
+  reopen: (completion: CompletedRun) => void,
+) {
+  const opened = useRef<Scope>(null);
+  const { session, threadId } = scope;
   useLayoutEffect(() => {
     if (!enabled || session.aborted) return;
     scope.mounted = true;
@@ -243,16 +256,31 @@ function useToolScope<Context, Outcome>(
       );
       if (completion) reopen(completion);
     }
+    const unsubscribe = lifecycle.deferredClientTools.subscribe(
+      threadId,
+      (deferred) => {
+        if (!scopeIsCurrent(scope)) return;
+        const completion = initializeScope(
+          scope,
+          latest.current,
+          true,
+          deferred,
+        );
+        if (!completion) return;
+        // This view could already have loaded the call while the run was active.
+        for (const id of deferred.callIds) scope.handled.delete(id);
+        reopen(completion);
+      },
+    );
     const abort = () => scope.batch?.abort();
     session.addEventListener('abort', abort);
     return () => {
       scope.mounted = false;
+      unsubscribe();
       session.removeEventListener('abort', abort);
       abort();
     };
-  }, [enabled, lifecycle, reopen, scope, session, threadId]);
-
-  return { scope, latest };
+  }, [enabled, latest, lifecycle, reopen, scope, session, threadId]);
 }
 
 /**

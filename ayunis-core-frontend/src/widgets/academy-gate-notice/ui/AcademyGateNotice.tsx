@@ -8,7 +8,6 @@ import {
   AlertDescription,
 } from '@ayunis/ui/components/alert';
 import { useAcademyAccessStatus } from '@/features/academy';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface AcademyGateNoticeProps {
   className?: string;
@@ -28,7 +27,6 @@ export default function AcademyGateNotice({
   const navigate = useNavigate();
   const { isGated } = useAcademyAccessStatus();
   // The Outlook pane can't open the academy.
-  const isEmbedded = useEmbedded();
 
   if (!isGated) {
     return null;
@@ -40,7 +38,7 @@ export default function AcademyGateNotice({
       <AlertTitle>{t('gate.title')}</AlertTitle>
       <AlertDescription>
         {t('gate.description')}
-        {withAction && !isEmbedded && (
+        {withAction && (
           <Button
             variant="outline"
             size="sm"

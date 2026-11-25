@@ -60,7 +60,7 @@ vi.mock('@ayunis/api-client/endpoints', () => ({
   activeRunsControllerCancel: mocks.cancelRun,
 }));
 
-vi.mock('@/shared/lib/source-upload/transfer-source-file', () => ({
+vi.mock('@ayunis/api-client/source-upload/transfer', () => ({
   transferSourceFile: mocks.transfer,
 }));
 vi.mock('@/shared/lib/handle-source-upload-error', () => ({

@@ -5,7 +5,8 @@ import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfac
 import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
 import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
-import { useMessageSendWithOutlookTools } from '@/pages/chat/hooks/useMessageSendWithOutlookTools';
+import { useMessageSend } from '@/pages/chat/api/useMessageSend';
+import { useThreadRunReattach } from '@/pages/chat/hooks/useThreadRunReattach';
 import ChatHeader, { ChatArtifactPanelButton } from './ChatHeader';
 import LongChatWarning from './LongChatWarning';
 import UnavailableModelNotice from './UnavailableModelNotice';
@@ -55,7 +56,6 @@ import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
 import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-calls';
 import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
 import { useToolCallDecisions } from '@/pages/chat/hooks/useToolCallDecisions';
-import { OutlookToolBridgeContext } from '@/pages/chat/model/outlook-tool-bridge';
 import { ToolCallConfirmationContext } from '@/pages/chat/ui/agent-run-timeline';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
@@ -64,7 +64,6 @@ import SourceCitationController from './SourceCitationController';
 import { getModeValue } from '@/widgets/model-select-options';
 import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
 import { ProductiveOutcomeProvider } from '@/shared/lib/openpanel-outcomes';
-import { useEmbedded } from '@/shared/contexts/embedded/embeddedContext';
 
 interface ChatPageProps {
   readonly thread: Thread;
@@ -78,7 +77,6 @@ export default function ChatPage({
   initialArtifactId,
 }: ChatPageProps) {
   const { t } = useTranslation('chat');
-  const isEmbedded = useEmbedded();
   const { capabilities, transport } = useAppChatSurface();
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
@@ -224,28 +222,27 @@ export default function ChatPage({
     [queryClient, setThreadTitle],
   );
 
-  const {
-    sendTextMessage,
-    sendToolCallDecisions,
-    isRunCancellable,
-    abort,
-    outlookToolBridge,
-  } = useMessageSendWithOutlookTools({
-    transport,
+  const { sendTextMessage, sendToolCallDecisions, abort, attach } =
+    useMessageSend(
+      {
+        threadId: thread.id,
+        onMessageReceived: () => clearPendingSubmission(thread.id),
+        onMessageEvent: (data) => handleMessage(data.message),
+        onErrorEvent: handleError,
+        onThreadEvent: handleThread,
+        onMasksEvent: handleMasks,
+        onError: (error) => {
+          console.error('Error in useMessageSend:', error);
+          showError(t('chat.errorSendMessage'));
+        },
+        onComplete: (failed) => completeSubmission(thread.id, failed),
+      },
+      transport,
+    );
+  const { isRunCancellable } = useThreadRunReattach({
     threadId: thread.id,
-    messages,
     isStreaming,
-    piiMasks,
-    onMessageReceived: () => clearPendingSubmission(thread.id),
-    onMessageEvent: (data) => handleMessage(data.message),
-    onErrorEvent: handleError,
-    onThreadEvent: handleThread,
-    onMasksEvent: handleMasks,
-    onError: (error) => {
-      console.error('Error in useMessageSend:', error);
-      showError(t('chat.errorSendMessage'));
-    },
-    onComplete: (failed) => completeSubmission(thread.id, failed),
+    attach,
   });
   const toolCallConfirmation = useToolCallDecisions({
     messages,
@@ -344,15 +341,13 @@ export default function ChatPage({
         onDelete={capabilities.delete ? handleDeleteThread : undefined}
       />
     ),
-    actions: !isEmbedded && (
+    actions: (
       <ChatArtifactPanelButton
         open={sidePanelState.isOpen}
         onToggle={sidePanelTransitions.toggleArtifactPanel}
       />
     ),
-    onOpenArtifact: isEmbedded
-      ? undefined
-      : sidePanelTransitions.openArtifactPanel,
+    onOpenArtifact: sidePanelTransitions.openArtifactPanel,
   };
 
   const renderUnits = useRenderUnits(messages, {
@@ -371,28 +366,21 @@ export default function ChatPage({
     openArtifact,
   ) => (
     <ToolCallConfirmationContext.Provider value={toolCallConfirmation}>
-      <OutlookToolBridgeContext.Provider value={outlookToolBridge}>
-        <ChatThreadContent
-          renderUnits={renderUnits}
-          threadId={thread.id}
-          pendingSubmission={pendingSubmission}
-          contextHint={
-            // It opens the side panel, which the pane doesn't have.
-            !isEmbedded && (
-              <ChatContextHint
-                threadId={thread.id}
-                workspaceId={thread.workspaceId}
-                onOpen={() => sidePanelTransitions.changeTab('context')}
-              />
-            )
-          }
-          processingSteps={chatFiles.processingSteps}
-          showLoadingPlaceholder={
-            showLoadingPlaceholder && !hasProcessingSources
-          }
-          onOpenArtifact={openArtifact}
-        />
-      </OutlookToolBridgeContext.Provider>
+      <ChatThreadContent
+        renderUnits={renderUnits}
+        threadId={thread.id}
+        pendingSubmission={pendingSubmission}
+        contextHint={
+          <ChatContextHint
+            threadId={thread.id}
+            workspaceId={thread.workspaceId}
+            onOpen={() => sidePanelTransitions.changeTab('context')}
+          />
+        }
+        processingSteps={chatFiles.processingSteps}
+        showLoadingPlaceholder={showLoadingPlaceholder && !hasProcessingSources}
+        onOpenArtifact={openArtifact}
+      />
     </ToolCallConfirmationContext.Provider>
   );
 
@@ -447,27 +435,26 @@ export default function ChatPage({
     </>
   );
 
-  const sidePanel =
-    !isEmbedded && sidePanelState.isOpen ? (
-      <ChatSidePanel
-        threadId={thread.id}
-        view={sidePanelState.view}
-        artifactPanelRef={artifactPanelRef}
-        artifactPanelProps={{
-          ...artifactPanel,
-          onBack: () => sidePanelState.openTab('artifacts'),
-          onClose: sidePanelState.close,
-          onSave: handleSaveArtifact,
-          onRevert: handleRevertArtifact,
-          onExport: handleExportArtifact,
-          onLetterheadChange: handleLetterheadChange,
-          isExporting,
-        }}
-        onSelectArtifact={sidePanelTransitions.openArtifactPanel}
-        onTabChange={sidePanelTransitions.changeTab}
-        onClose={sidePanelTransitions.toggleArtifactPanel}
-      />
-    ) : undefined;
+  const sidePanel = sidePanelState.isOpen ? (
+    <ChatSidePanel
+      threadId={thread.id}
+      view={sidePanelState.view}
+      artifactPanelRef={artifactPanelRef}
+      artifactPanelProps={{
+        ...artifactPanel,
+        onBack: () => sidePanelState.openTab('artifacts'),
+        onClose: sidePanelState.close,
+        onSave: handleSaveArtifact,
+        onRevert: handleRevertArtifact,
+        onExport: handleExportArtifact,
+        onLetterheadChange: handleLetterheadChange,
+        isExporting,
+      }}
+      onSelectArtifact={sidePanelTransitions.openArtifactPanel}
+      onTabChange={sidePanelTransitions.changeTab}
+      onClose={sidePanelTransitions.toggleArtifactPanel}
+    />
+  ) : undefined;
   return (
     <AppLayout>
       <ProductiveOutcomeProvider threadId={thread.id}>

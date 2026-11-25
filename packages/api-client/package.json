@@ -10,7 +10,9 @@
     "./request": "./src/request.ts",
     "./transport": "./src/transport.ts",
     "./openapi-schema.json": "./openapi-schema.json",
-    "./request-endpoint-templates.json": "./src/request-endpoint-templates.json"
+    "./request-endpoint-templates.json": "./src/request-endpoint-templates.json",
+    "./source-upload": "./src/source-upload/index.ts",
+    "./source-upload/transfer": "./src/source-upload/transfer-source-file.ts"
   },
   "scripts": {
     "openapi:fetch": "node scripts/fetch-openapi-schema.mjs",
@@ -22,7 +24,9 @@
     "deps:check": "madge --circular --extensions ts --exclude '^generated/' src"
   },
   "dependencies": {
-    "axios": "catalog:"
+    "axios": "catalog:",
+    "@uppy/aws-s3": "^6.3.1",
+    "@uppy/core": "^6.3.1"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.104.5"
