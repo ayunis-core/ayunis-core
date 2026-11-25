@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.84.0](https://github.com/ayunis-core/ayunis-core/compare/v2.83.1...v2.84.0) (2026-11-25)
+
+
+### Features
+
+* **oparl:** search and read council data in chat (AYC-2061) ([#2522](https://github.com/ayunis-core/ayunis-core/issues/2522)) ([1284bc2](https://github.com/ayunis-core/ayunis-core/commit/1284bc2ae7e06ec906a129795b4d1734405a3e8c))
+* **routines:** run routines in the Auto or Max model mode (AYC-2093) ([#2553](https://github.com/ayunis-core/ayunis-core/issues/2553)) ([fe53422](https://github.com/ayunis-core/ayunis-core/commit/fe5342211f6c13c683c4d031674a70d517ba19c6))
+* **routines:** set model and internet access when creating a routine (AYC-2092) ([#2552](https://github.com/ayunis-core/ayunis-core/issues/2552)) ([56b922e](https://github.com/ayunis-core/ayunis-core/commit/56b922e2ff362f24e3886a0c168fa6e17a784b2a))
+
+
+### Bug Fixes
+
+* **outlook:** preserve the released pane experience (AYC-1956) ([#2554](https://github.com/ayunis-core/ayunis-core/issues/2554)) ([a0e24d4](https://github.com/ayunis-core/ayunis-core/commit/a0e24d4e237ab226cce4fa3bd4b4b49f18d18e16))
+* **shutdown:** exit once shutdown hooks finish (AYC-1267) ([#2468](https://github.com/ayunis-core/ayunis-core/issues/2468)) ([8e591fa](https://github.com/ayunis-core/ayunis-core/commit/8e591fa99006c6c95e2f5cc1bc42471ccbbef90e))
+
+
+### Documentation
+
+* **rag:** add the runbook for the child-chunk search indexes (AYC-2053) ([#2547](https://github.com/ayunis-core/ayunis-core/issues/2547)) ([5c0a431](https://github.com/ayunis-core/ayunis-core/commit/5c0a431eb2bd312d7ae8fc2831285f4a4b715b1d))
+
 ## [2.83.1](https://github.com/ayunis-core/ayunis-core/compare/v2.83.0...v2.83.1) (2026-11-24)
 
 
