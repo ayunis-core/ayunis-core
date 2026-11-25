@@ -6,11 +6,13 @@ export interface ClientToolCall {
   readonly params: Record<string, unknown>;
 }
 
+export type ClientToolExecutor<Context, Outcome> = (
+  call: ClientToolCall,
+  context: Context,
+) => Promise<Outcome>;
+
 export interface ClientToolRegistration<Context, Outcome> {
-  readonly execute?: (
-    call: ClientToolCall,
-    context: Context,
-  ) => Promise<Outcome>;
+  readonly execute?: ClientToolExecutor<Context, Outcome>;
   readonly render?: ToolCardRegistration['render'];
 }
 

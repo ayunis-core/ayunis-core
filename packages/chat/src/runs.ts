@@ -28,3 +28,9 @@ export { useChatThreadState } from './use-chat-thread-state';
 export { useThreadRunReattach } from './use-thread-run-reattach';
 export { mergePiiMasks } from './merge-pii-masks';
 export { reconcileMessages } from './reconcile-thread-messages';
+export { useClientToolLifecycle } from './use-client-tool-lifecycle';
+export type { ClientToolDispatch } from './client-tool-dispatch';
+export {
+  latestToolMessages,
+  listClientToolCalls,
+} from './client-tool-messages';
