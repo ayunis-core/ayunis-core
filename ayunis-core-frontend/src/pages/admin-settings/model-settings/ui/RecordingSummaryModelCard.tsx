@@ -110,11 +110,7 @@ export function RecordingSummaryModelCard({
               {t('models.recordingSummaryModel.orgDefault')}
             </SelectItem>
             {modelOptions.length > 0 && <SelectSeparator />}
-            <ModelSelectOptions
-              models={modelOptions}
-              showFlag
-              showHeading={false}
-            />
+            <ModelSelectOptions models={modelOptions} showHeading={false} />
           </SelectContent>
         </Select>
       </CardContent>
