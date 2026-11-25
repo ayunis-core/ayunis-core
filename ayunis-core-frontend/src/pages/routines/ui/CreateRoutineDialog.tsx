@@ -14,6 +14,7 @@ import {
   formFieldsToCreateDto,
   RoutineFormFieldset,
   useCreateRoutine,
+  useRoutinePromptAssist,
   type RoutineFormFields,
 } from '@/features/routines';
 import { RoutineModelField } from '@/widgets/routine-model-field';
@@ -31,6 +32,7 @@ export function CreateRoutineDialog({
   const { t } = useTranslation('routines');
   const navigate = useNavigate();
   const form = useForm<RoutineFormFields>({ defaultValues: initialValues });
+  const promptAssist = useRoutinePromptAssist(form);
   const { createRoutine, isCreating } = useCreateRoutine(form, (routine) => {
     onClose();
     void navigate({
@@ -66,6 +68,7 @@ export function CreateRoutineDialog({
               modelField={
                 <RoutineModelField form={form} disabled={isCreating} />
               }
+              promptAssist={promptAssist}
             />
             <DialogFooter>
               <Button
@@ -78,7 +81,7 @@ export function CreateRoutineDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isCreating}
+                disabled={isCreating || promptAssist.isBusy}
                 data-testid="routine-form-submit"
               >
                 {t('form.create')}

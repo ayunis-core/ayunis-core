@@ -285,5 +285,19 @@
   "emptyState": {
     "learnMore": "Learn more",
     "askHowItWorks": "Or ask how it works"
+  },
+  "improveText": {
+    "action": "Improve",
+    "running": "Improving…",
+    "accept": "Keep it",
+    "retry": "Try again",
+    "undo": "Revert",
+    "tooltip": "Improve this text with Ayunis Core",
+    "needsInput": "Write a few words first, then Ayunis Core has something to work with.",
+    "error": "The text could not be improved. Please try again.",
+    "emptyAnswer": "No suggestion came back. Your text is unchanged.",
+    "noModel": "No model is enabled for your organisation.",
+    "anonymousOnly": "Ayunis Core can't improve this text because every enabled model may only receive anonymised input.",
+    "limitReached": "You have reached your usage limit. Your text is unchanged."
   }
 }

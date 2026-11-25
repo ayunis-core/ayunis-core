@@ -2,8 +2,8 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { skillsControllerImproveText } from '@ayunis/api-client/endpoints';
 import type { ImproveSkillTextDtoField } from '@ayunis/api-client/schemas';
-import extractErrorData from '@/shared/api/extract-error-data';
 import { showError } from '@/shared/lib/toast';
+import { improveTextErrorKey } from '@/shared/ui/improve-text-button';
 
 interface ImproveSkillTextParams {
   field: ImproveSkillTextDtoField;
@@ -15,7 +15,7 @@ interface ImproveSkillTextParams {
 }
 
 export function useImproveSkillText() {
-  const { t, i18n } = useTranslation('skills');
+  const { t, i18n } = useTranslation('common');
 
   return useMutation({
     mutationFn: async (params: ImproveSkillTextParams) => {
@@ -26,30 +26,14 @@ export function useImproveSkillText() {
       return text;
     },
     onError: (error) => {
-      try {
-        const { code } = extractErrorData(error);
-        switch (code) {
-          case 'SKILL_TEXT_IMPROVEMENT_FAILED':
-            showError(t('improve.emptyAnswer'));
-            break;
-          case 'NO_DEFAULT_MODEL_FOUND':
-            showError(t('improve.noModel'));
-            break;
-          case 'SKILL_TEXT_IMPROVEMENT_UNAVAILABLE':
-            showError(t('improve.anonymousOnly'));
-            break;
-          case 'QUOTA_EXCEEDED':
-          case 'CREDIT_BUDGET_EXCEEDED':
-          case 'USER_CREDIT_LIMIT_EXCEEDED':
-          case 'TEAM_CREDIT_LIMIT_EXCEEDED':
-            showError(t('improve.limitReached'));
-            break;
-          default:
-            showError(t('improve.error'));
-        }
-      } catch {
-        showError(t('improve.error'));
-      }
+      showError(
+        t(
+          improveTextErrorKey(error, {
+            emptyAnswer: 'SKILL_TEXT_IMPROVEMENT_FAILED',
+            anonymousOnly: 'SKILL_TEXT_IMPROVEMENT_UNAVAILABLE',
+          }),
+        ),
+      );
     },
   });
 }
