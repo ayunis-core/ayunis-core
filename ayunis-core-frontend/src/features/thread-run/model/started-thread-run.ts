@@ -1,22 +1,10 @@
-import {
-  cancelStartedRun,
-  startRun,
-  type ThreadRunStart,
-} from '@ayunis/chat/runs';
-import { threadRunEndpoints } from '@/features/chat-surface';
-import { stopThreadRun } from '@/features/thread-run/api/stopThreadRun';
+import { threadRunLifecycle } from './thread-run-lifecycle';
 
-export {
-  takeStartedThreadRun,
-  type StartedRunRequest,
-  type StartedThreadRun,
-  type ThreadRunStart,
+export type {
+  StartedRunRequest,
+  StartedThreadRun,
+  ThreadRunStart,
 } from '@ayunis/chat/runs';
 
-export function startThreadRun(run: ThreadRunStart): void {
-  startRun(run, threadRunEndpoints.send);
-}
-
-export function cancelStartedThreadRun(threadId: string): void {
-  cancelStartedRun(threadId, stopThreadRun);
-}
+export const { startThreadRun, takeStartedThreadRun, cancelStartedThreadRun } =
+  threadRunLifecycle;

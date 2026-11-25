@@ -2,8 +2,6 @@ import { useEffect, useSyncExternalStore } from 'react';
 import {
   takeInterruptedThreadRunText,
   useIsThreadRunDeferred,
-} from '@/features/thread-run';
-import {
   clearPendingThreadSubmission,
   completeThreadSubmission,
   consumeFailedThreadSubmission,
@@ -13,7 +11,7 @@ import {
   startThreadSubmission,
   subscribeToThreadSubmissions,
   type ThreadSubmission,
-} from '@/pages/chat/model/pending-submissions';
+} from '@/features/thread-run';
 
 interface UseThreadSubmissionStateParams {
   threadId: string;

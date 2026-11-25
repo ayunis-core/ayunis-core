@@ -5,7 +5,7 @@ import {
   useActiveRunsControllerFindActive,
 } from '@ayunis/api-client/endpoints';
 import type { ActiveThreadRunResponseDto } from '@ayunis/api-client/schemas';
-import { forgetStoppedThreadRunsExcept } from '@ayunis/chat/runs';
+import { forgetStoppedThreadRunsExcept } from '@/features/thread-run/model/thread-run-lifecycle';
 import {
   expectThreadRunSoon,
   isThreadRunExpected,

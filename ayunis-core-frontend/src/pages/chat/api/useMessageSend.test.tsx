@@ -1,8 +1,20 @@
 import { createElement, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientProvider,
+  QueryObserver,
+} from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { abortActiveThreadRun } from '@/features/thread-run';
+import {
+  abortActiveThreadRun,
+  activeThreadRunsQueryKey,
+  resetThreadRunSession,
+} from '@/features/thread-run';
+import {
+  getThreadsControllerFindAllQueryKey,
+  getThreadsControllerFindOneQueryKey,
+} from '@ayunis/api-client/endpoints';
 import { showError, showInfo } from '@/shared/lib/toast';
 import type * as GeneratedApi from '@ayunis/api-client/endpoints';
 import { useMessageSend } from './useMessageSend';
@@ -181,6 +193,87 @@ describe('useMessageSend', () => {
 
     expect(showError).toHaveBeenCalledWith('chat.imageUploadsBusy');
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('cancels a completion refetch when the session changes', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
+    );
+    const queryClient = new QueryClient();
+    const key = getThreadsControllerFindOneQueryKey(threadId);
+    let resolveThread: ((text: string) => void) | undefined;
+    let refetchSignal: AbortSignal | undefined;
+    queryClient.setQueryDefaults(key, {
+      queryFn: ({ signal }) => {
+        refetchSignal = signal;
+        return new Promise<string>((resolve) => {
+          resolveThread = resolve;
+        });
+      },
+    });
+    queryClient.setQueryData(key, 'cached thread');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useMessageSend({ threadId }), {
+      wrapper,
+    });
+    const send = result.current.sendTextMessage({ text: 'Finish this run' });
+    await waitFor(() => expect(refetchSignal).toBeDefined());
+
+    resetThreadRunSession(queryClient);
+    queryClient.setQueryData(activeThreadRunsQueryKey(), []);
+    resolveThread?.('previous session response');
+    await send;
+
+    expect(refetchSignal?.aborted).toBe(true);
+    expect(queryClient.getQueryData(key)).toBe('cached thread');
+    expect(
+      queryClient.getQueryState(activeThreadRunsQueryKey())?.isInvalidated,
+    ).toBe(false);
+  });
+
+  it('cancels an already invalidated thread-list refresh when the session changes', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
+    );
+    const queryClient = new QueryClient();
+    const key = getThreadsControllerFindAllQueryKey();
+    let resolveList: ((text: string) => void) | undefined;
+    let refreshSignal: AbortSignal | undefined;
+    queryClient.setQueryData(key, 'cached list');
+    const observer = new QueryObserver(queryClient, {
+      queryKey: key,
+      staleTime: Infinity,
+      queryFn: ({ signal }) => {
+        refreshSignal = signal;
+        return new Promise<string>((resolve) => {
+          resolveList = resolve;
+        });
+      },
+    });
+    const unsubscribe = observer.subscribe(() => undefined);
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useMessageSend({ threadId }), {
+      wrapper,
+    });
+    try {
+      const send = result.current.sendTextMessage({ text: 'Finish this run' });
+      await waitFor(() => expect(refreshSignal).toBeDefined());
+
+      resetThreadRunSession(queryClient);
+      resolveList?.('previous session list');
+      await send;
+
+      expect(refreshSignal?.aborted).toBe(true);
+      expect(queryClient.getQueryData(key)).toBe('cached list');
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('registers the streamed request for thread-level cancellation', async () => {

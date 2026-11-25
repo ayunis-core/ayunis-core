@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { afterEach, expect, it, vi } from 'vitest';
 
 vi.mock('./started-thread-run', () => ({ startThreadRun: vi.fn() }));
@@ -8,6 +9,9 @@ const waiting = { threadId, text: 'Summarise the minutes', images: [] };
 /** A fresh copy of the module, as after a page reload: memory is empty. */
 async function loadPage() {
   vi.resetModules();
+  const { setWaitingMessagePrincipal } =
+    await import('@/shared/lib/waiting-message-storage');
+  setWaitingMessagePrincipal(JSON.stringify(['user-1', 'org-1']));
   return import('./deferred-thread-run');
 }
 
@@ -59,3 +63,48 @@ it('keeps nothing for a message without text', async () => {
 
   expect((await loadPage()).takeInterruptedThreadRunText(threadId)).toBeNull();
 });
+
+it('discards the previous principal’s waiting first send on an organization change', async () => {
+  const page = await loadPage();
+  const { setThreadRunPrincipal } = await import('./thread-run-session');
+  const queryClient = new QueryClient();
+  setThreadRunPrincipal('user-1', 'org-1', queryClient);
+  page.deferThreadRun(waiting);
+
+  setThreadRunPrincipal('user-1', 'org-1', queryClient);
+  expect(page.getDeferredThreadRun(threadId)).toEqual(waiting);
+
+  setThreadRunPrincipal('user-1', 'org-2', queryClient);
+
+  expect(page.getDeferredThreadRun(threadId)).toBeNull();
+  expect(page.takeInterruptedThreadRunText(threadId)).toBeNull();
+});
+
+it('clears saved recovery text on logout after a reload', async () => {
+  (await loadPage()).deferThreadRun(waiting);
+  const reloaded = await loadPage();
+  const { resetThreadRunSession } = await import('./thread-run-session');
+
+  resetThreadRunSession(new QueryClient());
+
+  expect(reloaded.takeInterruptedThreadRunText(threadId)).toBeNull();
+});
+
+it.each([
+  ['first-account', waiting.text],
+  ['different-account', null],
+])(
+  'restores stored text after login as %s only if it owns the waiting message',
+  async (nextAccount, expected) => {
+    const page = await loadPage();
+    const before = await import('./thread-run-session');
+    before.setThreadRunPrincipal('first-account', 'org-1', new QueryClient());
+    page.deferThreadRun(waiting);
+
+    const reloaded = await loadPage();
+    const after = await import('./thread-run-session');
+    after.setThreadRunPrincipal(nextAccount, 'org-1', new QueryClient());
+
+    expect(reloaded.takeInterruptedThreadRunText(threadId)).toBe(expected);
+  },
+);

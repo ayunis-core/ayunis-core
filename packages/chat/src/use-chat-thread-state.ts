@@ -2,17 +2,25 @@ import { useCallback, useState } from 'react';
 import type {
   PiiMaskResponseDto,
   RunMasksResponseDto,
-  RunMessageResponseDtoMessage,
-} from '@ayunis/api-client';
-import type { Message, Thread } from '@/pages/chat/model/openapi';
-import { mergePiiMasks } from '@/pages/chat/lib/merge-pii-masks';
-import { reconcileMessages } from '@/pages/chat/lib/reconcile-thread-messages';
+  RunMessageResponseDto,
+  GetThreadResponseDto,
+} from '@ayunis/api-client/schemas';
+import { mergePiiMasks } from './merge-pii-masks';
+import { reconcileMessages } from './reconcile-thread-messages';
 
-export function useChatThreadState(thread: Thread, isStreaming: boolean) {
+type ThreadSnapshot = Pick<
+  GetThreadResponseDto,
+  'id' | 'title' | 'messages' | 'piiMasks'
+>;
+
+export function useChatThreadState(
+  thread: ThreadSnapshot,
+  isStreaming: boolean,
+) {
   const [threadTitle, setThreadTitle] = useState<string | undefined>(
     thread.title,
   );
-  const [messages, setMessages] = useState<Message[]>(thread.messages);
+  const [messages, setMessages] = useState(thread.messages);
   const [piiMasks, setPiiMasks] = useState<PiiMaskResponseDto[]>(
     thread.piiMasks,
   );
@@ -33,15 +41,16 @@ export function useChatThreadState(thread: Thread, isStreaming: boolean) {
     );
   }
 
-  const handleMessage = useCallback((message: RunMessageResponseDtoMessage) => {
-    setMessages((prev) => {
-      const exists = prev.some((item) => item.id === message.id);
-      if (exists) {
-        return prev.map((item) => (item.id === message.id ? message : item));
-      }
-      return [...prev, message];
-    });
-  }, []);
+  const handleMessage = useCallback(
+    (message: RunMessageResponseDto['message']) => {
+      setMessages((prev) =>
+        prev.some((item) => item.id === message.id)
+          ? prev.map((item) => (item.id === message.id ? message : item))
+          : [...prev, message],
+      );
+    },
+    [],
+  );
 
   const handleMasks = useCallback((data: RunMasksResponseDto) => {
     setPiiMasks((prev) => mergePiiMasks(prev, data.masks));

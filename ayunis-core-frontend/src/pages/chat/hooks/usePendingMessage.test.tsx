@@ -8,15 +8,14 @@ import {
   deferThreadRun,
   startThreadRun,
   takeStartedThreadRun,
-} from '@/features/thread-run';
-import { useChatThread } from '@/pages/chat/api/useChatThread';
-import type { Thread } from '@/pages/chat/model/openapi';
-import {
   completeThreadSubmission,
   getFailedThreadSubmission,
   getPendingThreadSubmission,
   resetThreadSubmission,
-} from '@/pages/chat/model/pending-submissions';
+} from '@/features/thread-run';
+import { useChatThread } from '@/pages/chat/api/useChatThread';
+import type { Thread } from '@/pages/chat/model/openapi';
+
 import { usePendingMessage } from './usePendingMessage';
 
 const { findThread } = vi.hoisted(() => ({ findThread: vi.fn() }));

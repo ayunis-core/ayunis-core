@@ -1,15 +1,15 @@
 import { useCallback } from 'react';
-import type { RunEndpoints } from '@ayunis/chat/runs';
-import {
-  useMessageSend,
-  type SendMessageInput,
-  type UseMessageSendParams,
-} from '@/pages/chat/api/useMessageSend';
+import type {
+  ChatRunParams,
+  RunEndpoints,
+  SendMessageInput,
+} from '@ayunis/chat/runs';
+import { useMessageSend } from '@/pages/chat/api/useMessageSend';
 import { useOutlookToolBridge } from '@/pages/chat/hooks/useOutlookToolBridge';
 import type { Message } from '@/pages/chat/model/openapi';
 import { useThreadRunReattach } from './useThreadRunReattach';
 
-interface UseMessageSendWithOutlookToolsParams extends UseMessageSendParams {
+interface UseMessageSendWithOutlookToolsParams extends ChatRunParams {
   messages: readonly Message[];
   isStreaming: boolean;
   piiMasks: readonly { token: string; value: string }[];
