@@ -4,6 +4,7 @@ import type {
   RunThreadResponseDto,
 } from '@ayunis/api-client/schemas';
 import type { RunEvent } from './run-stream';
+import { mergePiiMasks } from './merge-pii-masks';
 
 export type RunViewEvent = Extract<
   RunEvent,
@@ -26,7 +27,6 @@ export function createRunEventRouting() {
     subscribers.set(threadId, listener);
     const buffered = bufferedByThread.get(threadId);
     if (buffered) {
-      bufferedByThread.delete(threadId);
       if (buffered.masks) listener(buffered.masks);
       if (buffered.thread) listener(buffered.thread);
       for (const message of buffered.messages.values()) {
@@ -41,12 +41,7 @@ export function createRunEventRouting() {
   }
 
   function publish(threadId: string, event: RunViewEvent): void {
-    const subscriber = subscribers.get(threadId);
-    if (subscriber) {
-      subscriber(event);
-      return;
-    }
-
+    subscribers.get(threadId)?.(event);
     if (event.type === 'session') return;
     let buffered = bufferedByThread.get(threadId);
     if (!buffered) {
@@ -74,7 +69,9 @@ function rememberEvent(
 ): void {
   switch (event.type) {
     case 'masks':
-      buffered.masks = event;
+      buffered.masks = buffered.masks
+        ? { ...event, masks: mergePiiMasks(buffered.masks.masks, event.masks) }
+        : event;
       break;
     case 'thread':
       buffered.thread = event;
