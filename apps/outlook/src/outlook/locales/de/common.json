@@ -84,5 +84,107 @@
     "confirmDelete": "{{title}} löschen?",
     "deleteDescription": "Dieser Chat wird dauerhaft gelöscht.",
     "removeFile": "{{name}} entfernen"
+  },
+  "sidebar": {
+    "renameThreadTitle": "Chat umbenennen",
+    "renameThreadDescription": "Geben Sie einen neuen Titel für diesen Chat ein.",
+    "renameThreadLabel": "Titel",
+    "renameThreadPlaceholder": "Chat-Titel eingeben",
+    "renameThreadConfirm": "Umbenennen",
+    "renameThreadCancel": "Abbrechen",
+    "renameThreadSuccess": "Chat erfolgreich umbenannt",
+    "renameThreadError": "Chat konnte nicht umbenannt werden",
+    "renameThreadEmptyError": "Titel darf nicht leer sein",
+    "renameThreadMaxLengthError": "Titel darf maximal {{max}} Zeichen lang sein"
+  },
+  "models": {
+    "availableHeading": "Verfügbare Modelle",
+    "modes": {
+      "heading": "Modus",
+      "current": "Aktuell:",
+      "adminHint": "Ayunis Core wählt aus Ihren freigeschalteten Modellen.",
+      "otherModelsHeading": "Weitere verfügbare Modelle",
+      "auto": {
+        "label": "Auto",
+        "description": "Ayunis Core wählt das Modell mit dem besten Verhältnis aus Leistung, Geschwindigkeit und Verbrauch.",
+        "hint": "Beste Balance"
+      },
+      "max": {
+        "label": "Max",
+        "description": "Ayunis Core wählt das leistungsstärkste verfügbare Modell für anspruchsvolle Aufgaben wie Analysen oder lange Dokumente. Bei einer Störung wechselt Ayunis Core zum nächsten verfügbaren, störungsfreien Modell in der Max-Liste. Der Verbrauch ist höher.",
+        "hint": "Höchste Leistung"
+      },
+      "moreModels": "Weitere Modelle",
+      "noneAvailable": "Für diesen Modus ist derzeit kein freigeschaltetes Modell verfügbar.",
+      "defaultSaved": "Standard gespeichert.",
+      "defaultSaveError": "Der Standard konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+      "defaultForbidden": "Sie dürfen diesen Standard nicht ändern."
+    },
+    "providerFaultWarning": "Für dieses Modell ist derzeit eine Provider-Störung bekannt. Es funktioniert möglicherweise nicht zuverlässig.",
+    "category": {
+      "zero": "Sehr schwach",
+      "low": "Schwach",
+      "medium": "Ausgewogen",
+      "high": "Leistungsstark"
+    },
+    "tierPerformance": {
+      "zero": "Sehr schwache Leistung",
+      "low": "Schwache Leistung",
+      "medium": "Ausgewogene Leistung",
+      "high": "Leistungsstark"
+    },
+    "tierUsage": {
+      "zero": "Kein Verbrauch",
+      "low": "Geringer Verbrauch",
+      "medium": "Mittlerer Verbrauch",
+      "high": "Hoher Verbrauch"
+    },
+    "providerHosting": {
+      "openai": "Gehostet in den USA von OpenAI.",
+      "anthropic": "Gehostet in den USA von Anthropic.",
+      "gemini": "Gehostet in den USA von Google.",
+      "azure": "Gehostet in der EU bei Microsoft Azure.",
+      "bedrock": "Gehostet in der EU bei AWS Bedrock.",
+      "mistral": "Gehostet in der EU bei Mistral.",
+      "scaleway": "Gehostet in der EU bei Scaleway.",
+      "otc": "Gehostet in Deutschland in der Open Telekom Cloud.",
+      "stackit": "Gehostet in Deutschland bei Stackit.",
+      "synaforce": "Gehostet in Deutschland in der souveränen Cloud von Ayunis.",
+      "ayunis": "Gehostet in Deutschland in der souveränen Cloud von Ayunis.",
+      "ollama": "Selbst gehostet über Ollama."
+    }
+  },
+  "sources": {
+    "removeFile": "Datei {{name}} entfernen",
+    "reindexing": "Wird neu indexiert. Die Datei ist danach wieder durchsuchbar.",
+    "processingErrors": {
+      "failed": "Die Datei konnte nicht verarbeitet werden. Entfernen Sie sie und laden Sie sie in diesem Chat erneut hoch. Falls der Fehler weiterhin auftritt, wenden Sie sich an den Support.",
+      "unreadable": "Diese Datei konnte nicht gelesen werden. Entfernen Sie sie und laden Sie sie erneut hoch.",
+      "empty": "Aus dem Dokument konnte kein Text gelesen werden. Verwenden Sie eine besser lesbare Version und laden Sie sie in diesem Chat erneut hoch.",
+      "timeout": "Die Dokumentenverarbeitung hat das Zeitlimit überschritten. Entfernen Sie die Datei und laden Sie sie in diesem Chat erneut hoch. Bei großen Dokumenten kann eine Aufteilung helfen.",
+      "tooManyPages": "Das Dokument hat zu viele Seiten. Teilen Sie es in kleinere Dateien auf und laden Sie diese in diesem Chat hoch.",
+      "recordingTooLong": "Die Aufnahme ist zu lang für eine Transkription. Teilen Sie sie in kürzere Abschnitte und laden Sie diese einzeln in diesem Chat hoch.",
+      "spreadsheetTooLarge": "Die Tabelle ist zu groß. Entfernen Sie ungenutzte Zeilen und Spalten oder teilen Sie sie in kleinere Dateien auf und laden Sie sie in diesem Chat erneut hoch.",
+      "unavailable": "Der Dokumentenverarbeitungsdienst ist vorübergehend nicht verfügbar. Entfernen Sie die Datei und laden Sie sie später in diesem Chat erneut hoch."
+    },
+    "failedToAdd": "Fehler beim Hochladen der Datei",
+    "invalidFileTypeError": "Dieser Dateityp wird derzeit nicht unterstützt.",
+    "fileSourceEmptyDataError": "Die hochgeladene Datei enthält keine verarbeitbaren Daten.",
+    "fileSourceTooLargeError": "Die Datei überschreitet die maximale Dateigröße.",
+    "fileSourceTooManyPagesError": "Dokument hat zu viele Seiten zur Verarbeitung.",
+    "fileSourceServiceBusyError": "Der Dokumentenverarbeitungsdienst ist beschäftigt. Bitte versuchen Sie es später erneut.",
+    "fileSourceTimeoutError": "Dokumentenverarbeitung hat das Zeitlimit überschritten. Die Datei ist möglicherweise zu komplex.",
+    "fileSourceUnreadableError": "Dokument konnte nicht gelesen werden. Es ist möglicherweise beschädigt.",
+    "sourceLimitExceededError": "Ein Chat kann maximal 20 Quellen enthalten. Bitte entfernen Sie eine, bevor Sie eine weitere hinzufügen.",
+    "noEmbeddingModelError": "Es ist kein Embedding-Modell aktiviert. Bitte bitten Sie Ihren Administrator, eines zu aktivieren, bevor Sie Dateien hochladen.",
+    "embeddingModelUnavailableError": "Das aktivierte Embedding-Modell kann nicht verwendet werden. Bitte bitten Sie Ihren Administrator, seine Konfiguration zu prüfen.",
+    "uploading": "Wird hochgeladen… {{percent}} %",
+    "uploadInterruptedError": "Der Upload wurde unterbrochen. Bitte versuchen Sie es erneut."
+  },
+  "common": {
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter"
+    }
   }
 }

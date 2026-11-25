@@ -45,3 +45,18 @@ it('opens a prepared chat only while its composer is selected', () => {
   });
   expect(result.current.view).toEqual({ kind: 'thread', threadId: 'thread-a' });
 });
+
+it('returns to history after deleting only when the deleted chat is still selected', () => {
+  const drafts = createMemoryChatDraftStorage();
+  const { result } = renderHook(() => usePaneNavigation(drafts));
+
+  act(() => {
+    result.current.navigation.openThread('first');
+    result.current.navigation.openThread('second');
+    result.current.navigation.showHistoryAfterDelete('first');
+  });
+  expect(result.current.view).toEqual({ kind: 'thread', threadId: 'second' });
+
+  act(() => result.current.navigation.showHistoryAfterDelete('second'));
+  expect(result.current.view).toEqual({ kind: 'history' });
+});

@@ -1,3 +1,4 @@
+import { useRef, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ayunis/ui/components/button';
 import {
@@ -17,9 +18,21 @@ import type {
 import type { SendMessageInput } from './use-chat-run-lifecycle';
 import { AttachmentFields, ModelField, VoiceField } from './composer-features';
 import { useChatAction } from './use-chat-action';
+import { ComposerToolbar, ToolbarSendButton } from './composer-toolbar';
+import { ProcessingGlow } from './composer/ProcessingGlow';
+import { usePromptHistory } from './composer/use-prompt-history';
+import { useDraftCursorAtEnd } from './composer/use-draft-cursor-at-end';
+import { insertTextPreservingUndo } from './composer/insert-text';
+import {
+  useComposerFileDrop,
+  useComposerImagePaste,
+} from './use-composer-file-drop';
 
 interface ComposerProps {
   readonly threadId: string;
+  readonly compact?: boolean;
+  readonly isSubmitting?: boolean;
+  readonly sentPrompts?: readonly string[];
   readonly capabilities: ChatCapabilities;
   readonly adapters?: ChatConversationAdapters;
   readonly draft: ReturnType<typeof useChatDraft>;
@@ -40,7 +53,7 @@ function useSubmission(props: ComposerProps) {
     adapters,
   } = props;
   const images = usePendingImages();
-  const attachImages = useImageSelection(images, adapters?.onError);
+  const attachImages = useImageSelection(images, onAttachmentError(adapters));
   const upload = useChatAction(adapters?.onError, capabilities.fileUpload);
   const model = useChatAction(adapters?.onError, capabilities.modelSelection);
   const canSend = canSubmitMessage({
@@ -74,40 +87,99 @@ function useSubmission(props: ComposerProps) {
 }
 
 export function ConfiguredComposer(props: ComposerProps) {
-  const {
-    draft: { message, setMessage },
-    isStreaming,
-    capabilities,
-    slots,
-  } = props;
-  const { t } = useTranslation('common');
+  const { isStreaming, capabilities, slots } = props;
   const submission = useSubmission(props);
-  return (
+  const textarea = useConfiguredTextarea(props, submission.submit);
+  const container = useRef<HTMLDivElement>(null);
+  const transfer = useComposerFileDrop(
+    container,
+    props,
+    submission.upload,
+    submission.attachImages,
+  );
+  const setFocused = useComposerImagePaste(
+    container,
+    props,
+    submission.attachImages,
+  );
+  const runState = isStreaming ? 'streaming' : 'idle';
+  const state = props.isSubmitting ? 'submitting' : runState;
+  const composer = (
     <ChatComposer
-      state={isStreaming ? 'streaming' : 'idle'}
-      dragging={false}
-      animateHeight={false}
+      state={state}
+      dragging={transfer.isDragging}
+      animateHeight={Boolean(props.compact)}
       attachments={capabilities.fileUpload && slots?.attachments}
       images={capabilities.fileUpload ? submission.images.pendingImages : []}
       onRemoveImage={submission.images.removeImage}
       textarea={{
-        value: message,
-        'aria-label': t('chatSurface.message', { defaultValue: 'Message' }),
-        onChange: (event) => setMessage(event.target.value),
-        onKeyDown: (event) => {
-          if (
-            event.key === 'Enter' &&
-            !event.shiftKey &&
-            !event.nativeEvent.isComposing
-          ) {
-            event.preventDefault();
-            submission.submit();
-          }
-        },
+        ...textarea,
+        onFocus: () => setFocused(true),
+        onBlur: () => setFocused(false),
       }}
       actions={<ComposerActions {...props} {...submission} />}
     />
   );
+  if (!props.compact) return composer;
+  return (
+    <div ref={container} className="w-full space-y-2" data-testid="chat-input">
+      <ProcessingGlow isActive={isStreaming} className="chat-input-shell">
+        {composer}
+      </ProcessingGlow>
+    </div>
+  );
+}
+
+const NO_PROMPTS: readonly string[] = [];
+
+function useConfiguredTextarea(props: ComposerProps, submit: () => void) {
+  const {
+    compact,
+    threadId,
+    isSubmitting,
+    draft,
+    sentPrompts = NO_PROMPTS,
+  } = props;
+  const { message, setMessage } = draft;
+  const { t } = useTranslation('common');
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useDraftCursorAtEnd(ref, compact ? threadId : undefined);
+  const recall = usePromptHistory(message, setMessage, sentPrompts);
+  const placeholder = compact ? t('chatInput.placeholder') : undefined;
+
+  return {
+    ref,
+    value: message,
+    'aria-label':
+      placeholder ?? t('chatSurface.message', { defaultValue: 'Message' }),
+    placeholder,
+    onChange: ({ target }: React.ChangeEvent<HTMLTextAreaElement>) =>
+      setMessage(target.value),
+    onPaste: compact ? pasteWithUndo : undefined,
+    onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (isSubmitting) return;
+      if (
+        event.key === 'Enter' &&
+        !event.shiftKey &&
+        !event.nativeEvent.isComposing
+      ) {
+        event.preventDefault();
+        submit();
+      } else {
+        recall(event);
+      }
+    },
+  };
+}
+
+function pasteWithUndo(event: ClipboardEvent<HTMLTextAreaElement>) {
+  const text = event.clipboardData.getData('text/plain');
+  if (text && insertTextPreservingUndo(event.currentTarget, text))
+    event.preventDefault();
+}
+
+function onAttachmentError(adapters: ChatConversationAdapters | undefined) {
+  return adapters?.onAttachmentError ?? adapters?.onError;
 }
 
 function useImageSelection(
@@ -143,55 +215,113 @@ function useImageSelection(
   };
 }
 
-function ComposerActions(
-  props: ComposerProps & ReturnType<typeof useSubmission>,
-) {
-  const {
-    capabilities,
-    slots,
-    adapters,
-    threadId,
-    isStreaming,
-    attachImages,
-    upload,
-    model,
-  } = props;
+type ComposerControls = ComposerProps & ReturnType<typeof useSubmission>;
 
+function ComposerActions(props: ComposerControls) {
+  const { capabilities, slots } = props;
+  const attachments = <ComposerAttachmentControl {...props} />;
+  const model = <ComposerModelControl {...props} />;
+  const voice = <ComposerVoiceControl {...props} />;
+  const send = <SendOrStop {...props} />;
+  const host = (
+    <HostComposerActions capabilities={capabilities} slots={slots} />
+  );
+
+  if (props.compact) {
+    return (
+      <ComposerToolbar
+        leading={
+          <>
+            {attachments}
+            {slots?.composerLeading}
+            {host}
+          </>
+        }
+        model={slots?.composerModel ?? model}
+        trailing={
+          <>
+            {voice}
+            {send}
+          </>
+        }
+      />
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {capabilities.fileUpload && (
-        <AttachmentFields
-          threadId={threadId}
-          disabled={isStreaming}
-          upload={adapters?.uploadFiles}
-          action={upload}
-          audio={capabilities.audio}
-          images={adapters?.imageAttachments}
-          onImages={attachImages}
-        />
-      )}
-      {capabilities.modelSelection && adapters?.model && (
-        <ModelField
-          threadId={threadId}
-          disabled={isStreaming}
-          adapter={adapters.model}
-          action={model}
-        />
-      )}
-      {capabilities.voice && adapters?.transcribe && (
-        <VoiceField
-          transcribe={adapters.transcribe}
-          onError={adapters.onError}
-          onTranscript={(text) =>
-            props.draft.setMessage((draft) =>
-              draft ? draft + ' ' + text : text,
-            )
-          }
-        />
-      )}
-      <HostComposerActions capabilities={capabilities} slots={slots} />
-      <SendOrStop {...props} />
+      {attachments}
+      {model}
+      {voice}
+      {host}
+      {send}
     </div>
+  );
+}
+
+function ComposerAttachmentControl(props: ComposerControls) {
+  const {
+    capabilities,
+    threadId,
+    compact,
+    isStreaming,
+    adapters,
+    attachImages,
+    upload,
+  } = props;
+  if (!capabilities.fileUpload) return null;
+  return (
+    <AttachmentFields
+      threadId={threadId}
+      compact={compact}
+      disabled={isStreaming}
+      upload={
+        adapters?.documentAttachments === false
+          ? undefined
+          : adapters?.uploadFiles
+      }
+      action={upload}
+      audio={capabilities.audio}
+      images={adapters?.imageAttachments}
+      onImages={attachImages}
+      onError={onAttachmentError(adapters)}
+    />
+  );
+}
+
+function ComposerModelControl({
+  capabilities,
+  adapters,
+  threadId,
+  isStreaming,
+  model,
+}: ComposerControls) {
+  if (!capabilities.modelSelection || !adapters?.model) return null;
+  return (
+    <ModelField
+      threadId={threadId}
+      disabled={isStreaming}
+      adapter={adapters.model}
+      action={model}
+    />
+  );
+}
+
+function ComposerVoiceControl({
+  capabilities,
+  adapters,
+  compact,
+  draft,
+}: ComposerControls) {
+  if (!capabilities.voice || !adapters?.transcribe) return null;
+  return (
+    <VoiceField
+      compact={compact}
+      transcribe={adapters.transcribe}
+      onError={adapters.onError}
+      onTranscript={(text) =>
+        draft.setMessage((value) => (value ? value + ' ' + text : text))
+      }
+    />
   );
 }
 
@@ -213,13 +343,25 @@ function SendOrStop({
   canSend,
   submit,
   onStop,
+  compact,
 }: Readonly<{
   isStreaming: boolean;
+  compact?: boolean;
   canSend: boolean;
   submit: () => void;
   onStop?: () => void;
 }>) {
   const { t } = useTranslation('common');
+  if (compact) {
+    return (
+      <ToolbarSendButton
+        isStreaming={isStreaming}
+        canSend={canSend}
+        submit={submit}
+        onStop={onStop}
+      />
+    );
+  }
   return (
     <div className="ml-auto">
       {isStreaming ? (

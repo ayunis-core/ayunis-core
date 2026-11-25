@@ -30,6 +30,8 @@ export interface ChatConversationAdapters {
   readonly drafts?: ChatDraftStorage;
   readonly isSendDisabled?: boolean;
   readonly imageAttachments?: boolean;
+  readonly documentAttachments?: boolean;
+  readonly onAttachmentError?: (error: Error) => void;
   readonly uploadFiles?: (
     threadId: string,
     files: File[],
@@ -49,6 +51,10 @@ export interface ChatConversationAdapters {
 
 export interface ChatConversationSlots extends ChatSlots {
   readonly attachments?: ReactNode;
+  readonly composerLeading?: ReactNode;
+  readonly composerModel?: ReactNode;
+  readonly composerNotice?: ReactNode;
+  readonly composerFallback?: ReactNode;
   readonly messageImage?: (
     message: ChatThreadSnapshot['messages'][number],
     image: ImageMessageContentResponseDto,
@@ -61,6 +67,7 @@ export interface ChatConversationSlots extends ChatSlots {
 export interface ChatConversationProps<Context = unknown, Outcome = unknown> {
   /** Change this when the authenticated principal changes. Scope supplied data and storage to the same principal. */
   readonly sessionKey: string;
+  readonly compactComposer?: boolean;
   readonly config: ChatSurfaceConfig;
   readonly lifecycle?: ChatRunLifecycle;
   readonly thread: ChatThreadSnapshot;

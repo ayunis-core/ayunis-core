@@ -99,3 +99,12 @@ export {
   MAX_TOTAL_IMAGE_SIZE_BYTES,
   MAX_TOTAL_IMAGE_SIZE_MIB,
 } from './image-upload-policy';
+export { ProcessingGlow } from './ProcessingGlow';
+export { usePromptHistory } from './use-prompt-history';
+export { useDraftCursorAtEnd } from './use-draft-cursor-at-end';
+export {
+  insertTextPreservingUndo,
+  type TextInsertionPoint,
+} from './insert-text';
+export { useImagePaste } from './use-image-paste';
+export { AnonymousButton } from './AnonymousButton';

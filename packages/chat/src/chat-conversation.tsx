@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from 'react';
 import { ConfiguredHistory } from './configured-history';
 import {
   createMemoryChatDraftStorage,
@@ -14,6 +20,7 @@ import {
 } from './chat-conversation-content';
 import { createChatRunLifecycle, type ChatRunLifecycle } from './run-lifecycle';
 import { useConversationRun } from './use-conversation-run';
+import { sentPrompts } from '@ayunis/chat/messages';
 
 export function ChatConversation<Context, Outcome>(
   props: ChatConversationProps<Context, Outcome>,
@@ -61,21 +68,24 @@ function useSessionCleanup(lifecycle: ChatRunLifecycle) {
   }, [lifecycle]);
 }
 
+type ConversationViewProps<Context, Outcome> = ChatConversationProps<
+  Context,
+  Outcome
+> & {
+  lifecycle: ChatRunLifecycle;
+  drafts: ChatDraftStorage;
+};
+
 function ConversationView<Context, Outcome>(
-  props: ChatConversationProps<Context, Outcome> & {
-    lifecycle: ChatRunLifecycle;
-    drafts: ChatDraftStorage;
-  },
+  props: ConversationViewProps<Context, Outcome>,
 ) {
-  const { config, thread, slots, adapters, lifecycle, drafts } = props;
+  const { thread, slots, lifecycle, drafts } = props;
   const run = useConversationRun(lifecycle, props);
   const draft = useChatDraft(thread.id, drafts);
   const timeline = useConversationTimeline(
     props.timeline,
     props.clientTools?.registry,
   );
-  const onStop =
-    run.isRunCancellable && config.transport.cancel ? run.abort : undefined;
   return (
     <ChatSurface
       resetKey={thread.id}
@@ -84,6 +94,7 @@ function ConversationView<Context, Outcome>(
       renderContent={(onOpenArtifact) => (
         <ChatConversationContent
           threadId={thread.id}
+          copyActions={props.compactComposer}
           messages={run.messages}
           masks={run.piiMasks}
           isStreaming={run.isStreaming}
@@ -95,19 +106,53 @@ function ConversationView<Context, Outcome>(
         />
       )}
       composer={
-        <ConfiguredComposer
+        <ConversationComposer
           key={thread.id}
-          threadId={thread.id}
-          capabilities={config.capabilities}
-          adapters={adapters}
+          run={run}
+          view={props}
           draft={draft}
-          slots={slots}
-          isStreaming={run.isStreaming}
-          isCheckingForRun={run.isCheckingForRun}
-          onSend={run.send}
-          onStop={onStop}
         />
       }
     />
+  );
+}
+
+function ConversationComposer({
+  run,
+  view,
+  draft,
+}: Readonly<{
+  run: ReturnType<typeof useConversationRun>;
+  view: Pick<
+    ChatConversationProps,
+    'slots' | 'config' | 'adapters' | 'compactComposer' | 'thread'
+  >;
+  draft: ComponentProps<typeof ConfiguredComposer>['draft'];
+}>) {
+  const { slots, config, adapters, compactComposer, thread } = view;
+  const prompts = useMemo(
+    () => sentPrompts(run.messages, run.piiMasks),
+    [run.messages, run.piiMasks],
+  );
+  if (slots?.composerFallback) return <>{slots.composerFallback}</>;
+  const onStop =
+    run.isRunCancellable && config.transport.cancel ? run.abort : undefined;
+  return (
+    <>
+      {slots?.composerNotice}
+      <ConfiguredComposer
+        compact={compactComposer}
+        threadId={thread.id}
+        capabilities={config.capabilities}
+        adapters={adapters}
+        draft={draft}
+        slots={slots}
+        sentPrompts={prompts}
+        isStreaming={run.isStreaming}
+        isCheckingForRun={run.isCheckingForRun}
+        onSend={run.send}
+        onStop={onStop}
+      />
+    </>
   );
 }

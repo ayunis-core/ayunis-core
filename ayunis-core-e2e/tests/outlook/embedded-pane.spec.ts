@@ -55,7 +55,13 @@ test("can reach Outlook chats on an older history page", async ({ page }) => {
     await route.fulfill({
       json: {
         data: [
-          { id: String(offset), title: offset ? "Older chat" : "Recent chat" },
+          {
+            id: String(offset),
+            title: offset ? "Older chat" : "Recent chat",
+            createdAt: "2026-11-01T12:00:00Z",
+            origin: { kind: "chat" },
+            isAnonymous: false,
+          },
         ],
         pagination: { limit: 20, offset, total: 21 },
       },

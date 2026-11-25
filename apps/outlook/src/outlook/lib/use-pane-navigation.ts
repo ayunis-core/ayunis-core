@@ -71,6 +71,11 @@ function createNavigation(
       select(view);
     },
     showHistory: () => select({ kind: 'history' }),
+    showHistoryAfterDelete(threadId: string) {
+      if (current.kind === 'thread' && current.threadId === threadId) {
+        select({ kind: 'history' });
+      }
+    },
     didOpen: (id: string) => opened.forEach((listener) => listener(id)),
   };
 }
