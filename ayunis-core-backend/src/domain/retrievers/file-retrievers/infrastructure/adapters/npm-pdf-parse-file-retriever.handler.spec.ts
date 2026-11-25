@@ -88,7 +88,10 @@ describe('NpmPdfParseFileRetrieverHandler', () => {
       );
 
       expect(result.pages[0].text).toBe('Ratsprotokoll');
-      expect(mockedPdfParse).toHaveBeenCalledWith(new Uint8Array(bytes));
+      expect(mockedPdfParse).toHaveBeenCalledWith(
+        expect.objectContaining({ data: new Uint8Array(bytes) }),
+        expect.anything(),
+      );
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

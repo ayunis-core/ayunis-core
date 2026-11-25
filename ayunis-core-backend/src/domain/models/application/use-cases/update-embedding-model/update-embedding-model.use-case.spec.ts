@@ -1,10 +1,13 @@
 import type { UUID } from 'crypto';
+import type { ModuleRef } from '@nestjs/core';
 import { createLoggerMock } from 'src/common/testing/logger.mock';
 import type { ModelsRepository } from 'src/domain/models/application/ports/models.repository';
 import type { PermittedModelsRepository } from 'src/domain/models/application/ports/permitted-models.repository';
 import type { ClearDefaultsByCatalogModelIdUseCase } from 'src/domain/models/application/use-cases/clear-defaults-by-catalog-model-id/clear-defaults-by-catalog-model-id.use-case';
 import type { HasIndexedSourceInOrgsUseCase } from 'src/domain/sources/application/use-cases/has-indexed-source-in-orgs/has-indexed-source-in-orgs.use-case';
 import type { HasIndexedSourceInOrgsQuery } from 'src/domain/sources/application/use-cases/has-indexed-source-in-orgs/has-indexed-source-in-orgs.query';
+import { HasOparlVectorsOfModelUseCase } from 'src/domain/oparl/application/use-cases/has-oparl-vectors-of-model/has-oparl-vectors-of-model.use-case';
+import type { HasOparlVectorsOfModelQuery } from 'src/domain/oparl/application/use-cases/has-oparl-vectors-of-model/has-oparl-vectors-of-model.query';
 import { EmbeddingModelInUseError } from 'src/domain/models/application/embedding-model-catalog.errors';
 import { ModelAlreadyExistsError } from 'src/domain/models/application/models.errors';
 import { EmbeddingModel } from 'src/domain/models/domain/models/embedding.model';
@@ -53,11 +56,13 @@ describe('UpdateEmbeddingModelUseCase', () => {
   let useCase: UpdateEmbeddingModelUseCase;
   let indexedOrgIds: UUID[];
   let indexedModelIds: UUID[];
+  let oparlModelIds: UUID[];
   let permittedModelsRepository: jest.Mocked<PermittedModelsRepository>;
 
   beforeEach(() => {
     indexedOrgIds = [];
     indexedModelIds = [];
+    oparlModelIds = [];
     modelsRepository = {
       findOneEmbedding: jest.fn().mockResolvedValue(existingModel),
       findOne: jest.fn().mockResolvedValue(undefined),
@@ -80,11 +85,22 @@ describe('UpdateEmbeddingModelUseCase', () => {
         ),
       ),
     } as unknown as jest.Mocked<HasIndexedSourceInOrgsUseCase>;
+    const hasOparlVectors = {
+      execute: jest.fn((query: HasOparlVectorsOfModelQuery) =>
+        Promise.resolve(oparlModelIds.includes(query.embeddingModelId)),
+      ),
+    };
+    const moduleRef = {
+      get: jest.fn((token: unknown) =>
+        token === HasOparlVectorsOfModelUseCase ? hasOparlVectors : undefined,
+      ),
+    } as unknown as ModuleRef;
     useCase = new UpdateEmbeddingModelUseCase(
       modelsRepository,
       permittedModelsRepository,
       { execute: jest.fn() } as unknown as ClearDefaultsByCatalogModelIdUseCase,
       hasIndexedSourceInOrgs,
+      moduleRef,
     );
   });
 
@@ -172,6 +188,29 @@ describe('UpdateEmbeddingModelUseCase', () => {
       ),
     ).rejects.toThrow(EmbeddingModelInUseError);
     expect(modelsRepository.save).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['name', { name: 'mistral-embed-2' }],
+    ['dimensions', { dimensions: EmbeddingDimensions.DIMENSION_1536 }],
+  ])(
+    'rejects a %s change while OParl chunks hold vectors of the model',
+    async (_change, changes) => {
+      oparlModelIds = [modelId];
+
+      await expect(useCase.execute(commandWith(changes))).rejects.toThrow(
+        EmbeddingModelInUseError,
+      );
+      expect(modelsRepository.save).not.toHaveBeenCalled();
+    },
+  );
+
+  it('allows a name change while OParl chunks hold vectors of other models only', async () => {
+    oparlModelIds = ['123e4567-e89b-12d3-a456-426614174002'];
+
+    await useCase.execute(commandWith({ name: 'mistral-embed-2' }));
+
+    expect(savedModel().name).toBe('mistral-embed-2');
   });
 
   it('rejects taking the name and provider of another catalog model', async () => {

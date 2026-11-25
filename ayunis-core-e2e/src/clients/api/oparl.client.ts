@@ -1,19 +1,22 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
 import { config } from '../../config';
 
-const SOME_SYSTEM_ID = '00000000-0000-4000-8000-000000000000';
+const SOME_ID = '00000000-0000-4000-8000-000000000000';
 
 /** Raw responses of every super-admin OParl route, for asserting the status a principal gets. */
-export function requestOparlSystemRoutes(
+export function requestOparlSuperAdminRoutes(
   api: APIRequestContext,
   apiURL = config.apiURL,
 ): Promise<APIResponse[]> {
-  const base = `${apiURL}/api/super-admin/oparl/systems`;
+  const systems = `${apiURL}/api/super-admin/oparl/systems`;
+  const embeddingModel = `${apiURL}/api/super-admin/oparl/embedding-model`;
   return Promise.all([
-    api.get(base),
-    api.post(base, {
+    api.get(systems),
+    api.post(systems, {
       data: { url: 'https://ris.example.de/oparl/v1.1/system' },
     }),
-    api.post(`${base}/${SOME_SYSTEM_ID}/sync`),
+    api.post(`${systems}/${SOME_ID}/sync`),
+    api.get(embeddingModel),
+    api.put(embeddingModel, { data: { modelId: SOME_ID } }),
   ]);
 }

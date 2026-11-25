@@ -174,6 +174,7 @@ import type {
   NotificationsControllerFindAllParams,
   OnboardingResponseDto,
   OnboardingStageResponseDto,
+  OparlEmbeddingModelResponseDto,
   OparlSystemResponseDto,
   OrgAcademyAccessSettingsResponseDto,
   OrgChatSettingsResponseDto,
@@ -243,6 +244,7 @@ import type {
   SetImageFairUseLimitRequestDto,
   SetKnowledgeBaseActivationRequestDto,
   SetModelModeDefaultDto,
+  SetOparlEmbeddingModelDto,
   SetOrgArchivedRequestDto,
   SetOrgDefaultModelDto,
   SetOrgLocalPasswordLoginEnabledRequestDto,
@@ -25298,6 +25300,169 @@ export const useSuperAdminOparlSystemsControllerSync = <TError = void,
         TContext
       > => {
       return useMutation(getSuperAdminOparlSystemsControllerSyncMutationOptions(options), queryClient);
+    }
+
+/**
+ * The catalog embedding model that embeds the chunks of every OParl mirror, installation-wide.
+ * @summary Get the OParl embedding model
+ */
+export const superAdminOparlEmbeddingModelControllerGet = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OparlEmbeddingModelResponseDto>(
+      {url: `/super-admin/oparl/embedding-model`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOparlEmbeddingModelControllerGetQueryKey = () => {
+    return [
+    `/super-admin/oparl/embedding-model`
+    ] as const;
+    }
+
+
+export const getSuperAdminOparlEmbeddingModelControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminOparlEmbeddingModelControllerGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>> = ({ signal }) => superAdminOparlEmbeddingModelControllerGet(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminOparlEmbeddingModelControllerGetQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>>
+export type SuperAdminOparlEmbeddingModelControllerGetQueryError = void
+
+
+export function useSuperAdminOparlEmbeddingModelControllerGet<TData = Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOparlEmbeddingModelControllerGet<TData = Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminOparlEmbeddingModelControllerGet<TData = Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the OParl embedding model
+ */
+
+export function useSuperAdminOparlEmbeddingModelControllerGet<TData = Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerGet>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminOparlEmbeddingModelControllerGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * A change embeds every chunk again in the background; until then vector search ignores the chunks of the previous model.
+ * @summary Set the OParl embedding model
+ */
+export const superAdminOparlEmbeddingModelControllerSet = (
+    setOparlEmbeddingModelDto: SetOparlEmbeddingModelDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<OparlEmbeddingModelResponseDto>(
+      {url: `/super-admin/oparl/embedding-model`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setOparlEmbeddingModelDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminOparlEmbeddingModelControllerSetMutationKey = () => ['superAdminOparlEmbeddingModelControllerSet'] as const;
+
+export const getSuperAdminOparlEmbeddingModelControllerSetMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerSet>>, TError,SuperAdminOparlEmbeddingModelControllerSetMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerSet>>, TError,SuperAdminOparlEmbeddingModelControllerSetMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminOparlEmbeddingModelControllerSetMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerSet>>, SuperAdminOparlEmbeddingModelControllerSetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminOparlEmbeddingModelControllerSet(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminOparlEmbeddingModelControllerSetMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerSet>>>
+    export type SuperAdminOparlEmbeddingModelControllerSetMutationBody = SetOparlEmbeddingModelDto
+    export type SuperAdminOparlEmbeddingModelControllerSetMutationError = void
+    export type SuperAdminOparlEmbeddingModelControllerSetMutationVariables = {data: SetOparlEmbeddingModelDto}
+
+    /**
+ * @summary Set the OParl embedding model
+ */
+export const useSuperAdminOparlEmbeddingModelControllerSet = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerSet>>, TError,SuperAdminOparlEmbeddingModelControllerSetMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminOparlEmbeddingModelControllerSet>>,
+        TError,
+        SuperAdminOparlEmbeddingModelControllerSetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminOparlEmbeddingModelControllerSetMutationOptions(options), queryClient);
     }
 
 /**

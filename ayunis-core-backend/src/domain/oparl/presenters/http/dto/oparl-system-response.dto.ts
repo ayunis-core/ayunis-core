@@ -48,6 +48,63 @@ export class OparlRunningSyncDto {
   startedAt: Date;
 }
 
+export class OparlSkippedFilesDto {
+  @ApiProperty({ description: 'Beyond the upload size limit' })
+  tooLarge: number;
+
+  @ApiProperty({ description: 'Beyond the page limit' })
+  tooManyPages: number;
+
+  @ApiProperty({ description: 'Of a type whose text is not read' })
+  unsupportedType: number;
+
+  @ApiProperty({ description: 'Damaged, protected or without text' })
+  unreadable: number;
+}
+
+export class OparlFileTextCountsDto {
+  @ApiProperty() total: number;
+
+  @ApiProperty({ description: 'Not read yet, or changed since' })
+  pending: number;
+
+  @ApiProperty() extracted: number;
+
+  @ApiProperty({ description: 'Could not be read for now; tried again later' })
+  failed: number;
+
+  @ApiProperty({
+    type: OparlSkippedFilesDto,
+    description: 'Kept as metadata only, by reason',
+  })
+  skipped: OparlSkippedFilesDto;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Error of the file that failed last',
+  })
+  lastError: string | null;
+}
+
+export class OparlIndexCountsDto {
+  @ApiProperty({ description: 'Searchable chunks' })
+  chunks: number;
+
+  @ApiProperty({
+    description: 'Chunks with a vector of the current OParl embedding model',
+  })
+  embeddedChunks: number;
+}
+
+export class OparlDocumentStatsDto {
+  @ApiProperty({ type: OparlFileTextCountsDto })
+  files: OparlFileTextCountsDto;
+
+  @ApiProperty({ type: OparlIndexCountsDto })
+  index: OparlIndexCountsDto;
+}
+
 export class OparlSystemResponseDto {
   @ApiProperty({ format: 'uuid' })
   id: string;
@@ -78,6 +135,9 @@ export class OparlSystemResponseDto {
 
   @ApiProperty({ type: OparlRunningSyncDto, nullable: true })
   running: OparlRunningSyncDto | null;
+
+  @ApiProperty({ type: OparlDocumentStatsDto })
+  documents: OparlDocumentStatsDto;
 
   @ApiProperty({ type: Date, nullable: true })
   lastDeltaSyncAt: Date | null;

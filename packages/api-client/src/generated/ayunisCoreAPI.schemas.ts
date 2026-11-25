@@ -5883,6 +5883,45 @@ export interface OparlRunningSyncDto {
   startedAt: string;
 }
 
+export interface OparlSkippedFilesDto {
+  /** Beyond the upload size limit */
+  tooLarge: number;
+  /** Beyond the page limit */
+  tooManyPages: number;
+  /** Of a type whose text is not read */
+  unsupportedType: number;
+  /** Damaged, protected or without text */
+  unreadable: number;
+}
+
+export interface OparlFileTextCountsDto {
+  total: number;
+  /** Not read yet, or changed since */
+  pending: number;
+  extracted: number;
+  /** Could not be read for now; tried again later */
+  failed: number;
+  /** Kept as metadata only, by reason */
+  skipped: OparlSkippedFilesDto;
+  /**
+     * Error of the file that failed last
+     * @nullable
+     */
+  lastError: string | null;
+}
+
+export interface OparlIndexCountsDto {
+  /** Searchable chunks */
+  chunks: number;
+  /** Chunks with a vector of the current OParl embedding model */
+  embeddedChunks: number;
+}
+
+export interface OparlDocumentStatsDto {
+  files: OparlFileTextCountsDto;
+  index: OparlIndexCountsDto;
+}
+
 export type OparlSyncRunStatus = typeof OparlSyncRunStatus[keyof typeof OparlSyncRunStatus];
 
 
@@ -5910,6 +5949,7 @@ export interface OparlSystemResponseDto {
   health: OparlSystemHealth;
   /** @nullable */
   running: OparlRunningSyncDto | null;
+  documents: OparlDocumentStatsDto;
   /** @nullable */
   lastDeltaSyncAt: string | null;
   /** @nullable */
@@ -5926,6 +5966,26 @@ export interface OparlSystemResponseDto {
 export interface AddOparlSystemDto {
   /** The URL of the OParl System object */
   url: string;
+}
+
+export interface OparlEmbeddingModelDto {
+  id: string;
+  name: string;
+  displayName: string;
+  dimensions: number;
+}
+
+export interface OparlEmbeddingModelResponseDto {
+  /**
+     * The model that embeds the mirror; without one, chunks are full-text searchable only
+     * @nullable
+     */
+  model: OparlEmbeddingModelDto | null;
+}
+
+export interface SetOparlEmbeddingModelDto {
+  /** ID of an embedding model of the catalog */
+  modelId: string;
 }
 
 export type CreateRecordingDtoOwnerType = typeof CreateRecordingDtoOwnerType[keyof typeof CreateRecordingDtoOwnerType];

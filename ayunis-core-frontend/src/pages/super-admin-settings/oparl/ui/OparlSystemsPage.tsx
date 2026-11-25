@@ -13,6 +13,7 @@ import {
 import SuperAdminSettingsLayout from '@/pages/super-admin-settings/super-admin-settings-layout';
 import { useOparlSystems } from '@/pages/super-admin-settings/oparl/api/useOparlSystems';
 import { AddOparlSystemCard } from './AddOparlSystemCard';
+import { OparlEmbeddingModelCard } from './OparlEmbeddingModelCard';
 import { OparlSystemCard } from './OparlSystemCard';
 
 function SystemList() {
@@ -66,6 +67,7 @@ export default function OparlSystemsPage() {
     <SuperAdminSettingsLayout pageTitle={t('title')}>
       <div className="space-y-6">
         <AddOparlSystemCard />
+        <OparlEmbeddingModelCard />
         <SystemList />
       </div>
     </SuperAdminSettingsLayout>

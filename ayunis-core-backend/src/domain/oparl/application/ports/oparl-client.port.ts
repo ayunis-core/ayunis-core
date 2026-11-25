@@ -10,6 +10,16 @@ export interface OparlRequestOptions {
   signal?: AbortSignal;
 }
 
+export interface OparlDownloadOptions extends OparlRequestOptions {
+  /** Larger files fail with `OparlFileTooLargeError`, without being read to the end. */
+  maxBytes: number;
+}
+
+export interface OparlDownload {
+  data: Buffer;
+  contentType: string | null;
+}
+
 /**
  * Reads an OParl API on a public host. Fails with `OparlHostBlockedError`,
  * `OparlRequestFailedError` or `OparlInvalidResponseError`.
@@ -25,4 +35,10 @@ export abstract class OparlClientPort {
     url: string,
     options?: OparlRequestOptions,
   ): Promise<OparlPage>;
+
+  /** A file (`accessUrl`, `downloadUrl`), under the same rules as the API. */
+  abstract downloadFile(
+    url: string,
+    options: OparlDownloadOptions,
+  ): Promise<OparlDownload>;
 }

@@ -1,4 +1,3 @@
-import type { FileRetrieverProcessOptions } from 'src/domain/retrievers/file-retrievers/application/ports/file-retriever.handler';
 import { createHash } from 'crypto';
 import {
   ProcessingStoppedError,
@@ -50,6 +49,7 @@ import { TranscribeRecordingUseCase } from 'src/domain/transcriptions/applicatio
 import { TranscribeCommand } from 'src/domain/transcriptions/application/use-cases/transcribe/transcribe.command';
 import { PreflightCheckUseCase } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.use-case';
 import { PreflightCheckCommand } from 'src/domain/retrievers/file-retrievers/application/use-cases/preflight-check/preflight-check.command';
+import { readTextLayerFirst, type PdfProcessOptions } from './text-layer';
 
 // Only these are processed from disk; everything else is small and read whole.
 function readsFromDisk(fileType: DetectedFileType): boolean {
@@ -129,7 +129,7 @@ export class RetrieveFileContentUseCase {
       'Retrieving file content',
     );
     const orgId = this.contextService.get('orgId');
-    if (!orgId) {
+    if (!orgId && !command.onBehalfOfPlatform) {
       throw new FileRetrieverUnauthorizedError();
     }
     return this.retrieve(command, 0);
@@ -166,6 +166,7 @@ export class RetrieveFileContentUseCase {
         ),
         {
           allowLocalParsing: command.allowLocalPdfParsing,
+          textLayerFirst: command.pdfTextLayerFirst,
           pageLimit: command.pdfPageLimit,
           context: command.processingContext,
           cacheIdentity: command.cacheIdentity,
@@ -309,12 +310,22 @@ export class RetrieveFileContentUseCase {
   }
 
   /**
-   * PDF: Prefer Mistral OCR, fallback to pdf-parse.
+   * PDF: Prefer Mistral OCR, fallback to pdf-parse. With `textLayerFirst`,
+   * a usable text layer is taken without OCR.
    */
   private async processPdf(
     file: File,
-    options: FileRetrieverProcessOptions & { allowLocalParsing?: boolean } = {},
+    options: PdfProcessOptions = {},
   ): Promise<FileRetrieverResult> {
+    const { textLayerFirst, ...ocrFirst } = options;
+    if (textLayerFirst)
+      return readTextLayerFirst(
+        this.fileRetrieverRegistry,
+        file,
+        Boolean(this.config.mistral.apiKey),
+        // The layer was read already; reading it again would lose its pages.
+        () => this.processPdf(file, { ...ocrFirst, allowLocalParsing: false }),
+      );
     const {
       allowLocalParsing = true,
       pageLimit,
@@ -389,8 +400,12 @@ export class RetrieveFileContentUseCase {
     command: RetrieveFileContentCommand,
   ): Promise<FileRetrieverResult> {
     const { fileData, fileName, processingContext: context } = command;
+    const textLayerFirst = command.pdfTextLayerFirst;
     if (command.localFile) {
-      return this.processOfficeFile(command.localFile, fileName, context);
+      return this.processOfficeFile(command.localFile, fileName, {
+        context,
+        textLayerFirst,
+      });
     }
     const pdfBuffer = await this.documentConverter.convertToPdf(
       fileData,
@@ -407,6 +422,7 @@ export class RetrieveFileContentUseCase {
       new File(pdfBuffer, pdfNameOf(fileName), MIME_TYPES.PDF),
       {
         context,
+        textLayerFirst,
         cacheIdentity: context
           ? createHash('sha256').update(fileData).digest('hex')
           : undefined,
@@ -420,7 +436,7 @@ export class RetrieveFileContentUseCase {
   private async processOfficeFile(
     original: LocalFile,
     fileName: string,
-    context?: ProcessingContext,
+    { context, textLayerFirst }: PdfProcessOptions,
   ): Promise<FileRetrieverResult> {
     const path = `${original.path}.pdf`;
     const { size } = await this.documentConverter.convertFileToPdf(
@@ -439,7 +455,11 @@ export class RetrieveFileContentUseCase {
     );
     return this.processPdf(
       new File(Buffer.alloc(0), pdfNameOf(fileName), MIME_TYPES.PDF, pdf),
-      { context, cacheIdentity: context ? original.sha256 : undefined },
+      {
+        context,
+        textLayerFirst,
+        cacheIdentity: context ? original.sha256 : undefined,
+      },
     );
   }
 

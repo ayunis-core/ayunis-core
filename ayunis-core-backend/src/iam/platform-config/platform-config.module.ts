@@ -16,6 +16,9 @@ import { SetAcademyMinimumModuleSecondsUseCase } from './application/use-cases/s
 import { SuperAdminPlatformConfigController } from './presenters/http/super-admin-platform-config.controller';
 import { AppAlertController } from './presenters/http/app-alert.controller';
 
+import { GetOparlEmbeddingModelIdUseCase } from './application/use-cases/get-oparl-embedding-model-id/get-oparl-embedding-model-id.use-case';
+import { SetOparlEmbeddingModelIdUseCase } from './application/use-cases/set-oparl-embedding-model-id/set-oparl-embedding-model-id.use-case';
+
 @Module({
   imports: [TypeOrmModule.forFeature([PlatformConfigRecord])],
   controllers: [SuperAdminPlatformConfigController, AppAlertController],
@@ -34,12 +37,16 @@ import { AppAlertController } from './presenters/http/app-alert.controller';
     SetAppAlertUseCase,
     GetAcademyMinimumModuleSecondsUseCase,
     SetAcademyMinimumModuleSecondsUseCase,
+    GetOparlEmbeddingModelIdUseCase,
+    SetOparlEmbeddingModelIdUseCase,
   ],
   exports: [
     GetCreditsPerEuroUseCase,
     GetFairUseLimitsUseCase,
     GetAppAlertUseCase,
     GetAcademyMinimumModuleSecondsUseCase,
+    GetOparlEmbeddingModelIdUseCase,
+    SetOparlEmbeddingModelIdUseCase,
   ],
 })
 export class PlatformConfigModule {}

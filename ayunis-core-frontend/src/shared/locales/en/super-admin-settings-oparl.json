@@ -67,5 +67,33 @@
     "consultation": "Consultations",
     "file": "Files",
     "location": "Locations"
+  },
+  "embeddingModel": {
+    "title": "Embedding model",
+    "description": "Embeds the documents of every system for semantic search. Changing it embeds everything again in the background; until then, semantic search leaves out documents not yet embedded with the new model. Without a model, documents are found by full-text search only.",
+    "label": "Model",
+    "none": "No model",
+    "success": "The embedding model was changed. Documents are being embedded again.",
+    "notFound": "This model is no longer in the catalog.",
+    "error": "The embedding model could not be changed.",
+    "loadError": "The embedding models could not be loaded."
+  },
+  "documents": {
+    "files": "Documents",
+    "read": "{{extracted}} of {{total}} read",
+    "pending_one": "{{count}} pending",
+    "pending_other": "{{count}} pending",
+    "failed_one": "{{count}} failed",
+    "failed_other": "{{count}} failed",
+    "skipped": "Not read",
+    "skipReasons": {
+      "tooLarge": "Too large",
+      "tooManyPages": "Too many pages",
+      "unsupportedType": "Unsupported type",
+      "unreadable": "Unreadable"
+    },
+    "lastError": "Last error",
+    "index": "Search index",
+    "chunks": "{{chunks}} passages, {{embedded}} embedded"
   }
 }

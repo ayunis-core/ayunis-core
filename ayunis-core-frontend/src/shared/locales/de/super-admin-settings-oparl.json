@@ -67,5 +67,33 @@
     "consultation": "Beratungen",
     "file": "Dateien",
     "location": "Orte"
+  },
+  "embeddingModel": {
+    "title": "Embedding-Modell",
+    "description": "Bettet die Dokumente aller Systeme für die semantische Suche ein. Ein Wechsel bettet alles im Hintergrund neu ein; bis dahin lässt die semantische Suche Dokumente aus, die noch nicht mit dem neuen Modell eingebettet sind. Ohne Modell werden Dokumente nur über die Volltextsuche gefunden.",
+    "label": "Modell",
+    "none": "Kein Modell",
+    "success": "Das Embedding-Modell wurde geändert. Die Dokumente werden neu eingebettet.",
+    "notFound": "Dieses Modell ist nicht mehr im Katalog.",
+    "error": "Das Embedding-Modell konnte nicht geändert werden.",
+    "loadError": "Die Embedding-Modelle konnten nicht geladen werden."
+  },
+  "documents": {
+    "files": "Dokumente",
+    "read": "{{extracted}} von {{total}} gelesen",
+    "pending_one": "{{count}} ausstehend",
+    "pending_other": "{{count}} ausstehend",
+    "failed_one": "{{count}} fehlgeschlagen",
+    "failed_other": "{{count}} fehlgeschlagen",
+    "skipped": "Nicht gelesen",
+    "skipReasons": {
+      "tooLarge": "Zu groß",
+      "tooManyPages": "Zu viele Seiten",
+      "unsupportedType": "Nicht unterstützter Typ",
+      "unreadable": "Nicht lesbar"
+    },
+    "lastError": "Letzter Fehler",
+    "index": "Suchindex",
+    "chunks": "{{chunks}} Abschnitte, {{embedded}} eingebettet"
   }
 }

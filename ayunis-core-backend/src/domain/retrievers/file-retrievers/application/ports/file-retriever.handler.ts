@@ -6,6 +6,8 @@ export interface FileRetrieverProcessOptions {
   pageLimit?: number;
   context?: ProcessingContext;
   cacheIdentity?: string;
+  /** Local PDF parsing: one result page per PDF page instead of one for the whole text. */
+  splitPages?: boolean;
 }
 
 export abstract class FileRetrieverHandler {
