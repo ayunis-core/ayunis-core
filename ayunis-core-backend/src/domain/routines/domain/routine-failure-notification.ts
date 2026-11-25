@@ -17,6 +17,7 @@ const MODEL_REASONS = new Set([
   'UNAUTHORIZED_ACCESS',
   'MODEL_NOT_FOUND',
   'RUN_NO_MODEL_FOUND',
+  'MODEL_MODE_UNAVAILABLE',
 ]);
 
 // The same wording as the failure reasons on the routines page.

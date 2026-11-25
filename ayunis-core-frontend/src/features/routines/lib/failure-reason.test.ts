@@ -8,6 +8,7 @@ describe('failureReasonKey', () => {
     ['ROUTINE_SUBSCRIPTION_REQUIRED', 'failureReason.subscriptionRequired'],
     ['CREDIT_BUDGET_EXCEEDED', 'failureReason.credits'],
     ['UNAUTHORIZED_ACCESS', 'failureReason.model'],
+    ['MODEL_MODE_UNAVAILABLE', 'failureReason.model'],
     ['interrupted', 'failureReason.interrupted'],
     ['ACADEMY_CERTIFICATE_REQUIRED', 'failureReason.academyCertificate'],
     ['permission_missing', 'failureReason.permissionMissing'],

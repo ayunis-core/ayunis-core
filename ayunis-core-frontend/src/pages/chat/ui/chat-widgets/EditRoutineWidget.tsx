@@ -12,6 +12,7 @@ import {
   type Routine,
   type RoutineFormFields,
 } from '@/features/routines';
+import { RoutineModelField } from '@/widgets/routine-model-field';
 import { useRoutineToEdit } from '@/pages/chat/api/useRoutineToEdit';
 import {
   editRoutineParamsToFormFields,
@@ -80,6 +81,7 @@ function EditRoutineForm({
   const { updateRoutine, isUpdating } = useUpdateRoutine(form, () =>
     setUpdated(true),
   );
+  const fieldsDisabled = !storedRoutine || isUpdating || updated;
 
   // Streaming replaces the domains array and the schedule on every update;
   // their text stays equal.
@@ -121,12 +123,15 @@ function EditRoutineForm({
       >
         <RoutineFormFieldset
           form={form}
-          disabled={!storedRoutine || isUpdating || updated}
+          disabled={fieldsDisabled}
+          modelField={
+            <RoutineModelField form={form} disabled={fieldsDisabled} />
+          }
         />
         <div className="flex w-full items-center gap-2">
           <Button
             type="submit"
-            disabled={!storedRoutine || isUpdating || updated}
+            disabled={fieldsDisabled}
             data-testid="edit-routine-widget-submit"
           >
             {updated

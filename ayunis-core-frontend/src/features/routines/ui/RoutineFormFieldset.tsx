@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,34 +10,30 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Textarea } from '@ayunis/ui/components/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@ayunis/ui/components/select';
-import { usePermittedModels } from '@/features/usePermittedModels';
 import { RoutineInternetAccessField } from '@/features/routines/ui/RoutineInternetAccessField';
 import { RoutineScheduleField } from '@/features/routines/ui/RoutineScheduleField';
 import { RoutineInputField } from '@/features/routines/ui/RoutineInputField';
-import {
-  DEFAULT_MODEL_OPTION,
-  type RoutineFormFields,
-} from '@/features/routines/model/types';
+import type { RoutineFormFields } from '@/features/routines/model/types';
 
 interface RoutineFieldsProps {
   form: UseFormReturn<RoutineFormFields>;
   disabled: boolean;
 }
 
-/** The routine's configuration, shared by its create dialog, configuration card and the chat widgets. */
-export function RoutineFormFieldset(props: Readonly<RoutineFieldsProps>) {
+/**
+ * The routine's configuration, shared by its create dialog, configuration
+ * card and the chat widgets. The model field comes from the page, since it
+ * is built on the model-select widget.
+ */
+export function RoutineFormFieldset({
+  modelField,
+  ...props
+}: Readonly<RoutineFieldsProps & { modelField: ReactNode }>) {
   return (
     <>
       <NameField {...props} />
       <PromptField {...props} />
-      <ModelField {...props} />
+      {modelField}
       <RoutineScheduleField {...props} />
       <RoutineInternetAccessField {...props} />
     </>
@@ -77,48 +74,6 @@ function PromptField({ form, disabled }: Readonly<RoutineFieldsProps>) {
             />
           </FormControl>
           <FormDescription>{t('form.promptDescription')}</FormDescription>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
-}
-
-function ModelField({ form, disabled }: Readonly<RoutineFieldsProps>) {
-  const { t } = useTranslation('routines');
-  const { models, isDisabled } = usePermittedModels();
-
-  return (
-    <FormField
-      control={form.control}
-      name="modelId"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{t('form.model')}</FormLabel>
-          <Select
-            value={field.value}
-            onValueChange={field.onChange}
-            disabled={disabled || isDisabled}
-          >
-            <FormControl>
-              <SelectTrigger data-testid="routine-form-model">
-                <SelectValue />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem
-                value={DEFAULT_MODEL_OPTION}
-                data-testid="routine-form-model-default"
-              >
-                {t('form.defaultModel')}
-              </SelectItem>
-              {models.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.displayName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <FormMessage />
         </FormItem>
       )}

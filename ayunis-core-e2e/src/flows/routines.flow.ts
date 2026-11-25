@@ -8,6 +8,17 @@ export function routineCard(page: Page, name: string) {
   });
 }
 
+/**
+ * A model in the open routine model select. Model names are catalogue data,
+ * not translated copy; the option shows the name without its provider
+ * suffix, followed by the tier.
+ */
+export function routineModelOption(page: Page, displayName: string) {
+  return page.getByRole('option', {
+    name: displayName.replace(/\s*\([^()]*\)\s*$/, ''),
+  });
+}
+
 const ROUTINE_PAGE_URL = /\/routines\/([0-9a-f-]{36})/;
 
 /** Creates a routine from the blank dialog, which opens its page. Returns its id. */

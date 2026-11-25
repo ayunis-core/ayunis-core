@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 import { getEffectiveDefaultModel } from "../../src/clients/api/models.client";
 import { getRoutine } from "../../src/clients/api/routines.client";
-import { createBlankRoutine } from "../../src/flows/routines.flow";
+import {
+  createBlankRoutine,
+  routineModelOption,
+} from "../../src/flows/routines.flow";
 import { test, expect } from "../../src/fixtures/test";
 
 const ROUTINE_PAGE_URL = /\/routines\/([0-9a-f-]{36})$/;
@@ -28,10 +31,7 @@ test("the premade routine is created from the dialog with its preset internet ac
   const name = `Verkündungsplattform ${randomUUID().slice(0, 8)}`;
   await dialog.getByTestId("routine-form-name").fill(name);
   await dialog.getByTestId("routine-form-model").click();
-  // Model names are catalogue data, not translated copy.
-  await page
-    .getByRole("option", { name: model.displayName, exact: true })
-    .click();
+  await routineModelOption(page, model.displayName).click();
   await dialog.getByTestId("routine-form-submit").click();
 
   await expect(page).toHaveURL(ROUTINE_PAGE_URL);

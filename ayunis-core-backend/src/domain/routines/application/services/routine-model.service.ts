@@ -6,7 +6,18 @@ import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
+import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import {
+  RoutineConflictingModelSelectionError,
+  RoutineModelModeUnavailableError,
+} from 'src/domain/routines/application/routines.errors';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
+
+export interface RoutineModelChoice {
+  modelId: UUID | null;
+  mode: ModelMode | null;
+}
 
 /** Which permitted model a routine uses, checked against the current user's grants. */
 @Injectable()
@@ -14,28 +25,52 @@ export class RoutineModelService {
   constructor(
     private readonly getPermittedLanguageModelUseCase: GetPermittedLanguageModelUseCase,
     private readonly getDefaultModelUseCase: GetDefaultModelUseCase,
+    private readonly resolveModelModesUseCase: ResolveModelModesUseCase,
     private readonly contextService: ContextService,
   ) {}
 
   /**
-   * The model to store for a routine. Null stands for the user's default and
-   * is stored as null, so runs follow later changes of the default; it is
-   * still resolved here so a user without a usable model is told now.
+   * The model choice to store for a routine. A mode and the user's default
+   * (neither a model nor a mode) are stored as such, so runs follow later
+   * changes of the mode's list or the default; they are still resolved here
+   * so a user without a usable model is told now.
    */
-  async select(modelId: UUID | null): Promise<UUID | null> {
+  async select(choice: {
+    modelId?: UUID | null;
+    mode?: ModelMode | null;
+  }): Promise<RoutineModelChoice> {
+    const { modelId, mode } = choice;
+    if (modelId && mode) throw new RoutineConflictingModelSelectionError();
+    if (mode) {
+      await this.assertModeAvailable(mode);
+      return { modelId: null, mode };
+    }
     if (!modelId) {
       await this.userDefault();
-      return null;
+      return { modelId: null, mode: null };
     }
     const model = await this.getPermittedLanguageModelUseCase.execute(
       new GetPermittedLanguageModelQuery({ id: modelId }),
     );
-    return model.id;
+    return { modelId: model.id, mode: null };
   }
 
-  /** Access is re-checked when the run's thread is created. */
-  async forRun(routine: Routine): Promise<UUID> {
-    return routine.modelId ?? this.userDefault();
+  /** Access is re-checked, and a mode resolved, when the run's thread is created. */
+  async forRun(
+    routine: Routine,
+  ): Promise<{ modelId: UUID } | { mode: ModelMode }> {
+    if (routine.mode) return { mode: routine.mode };
+    return { modelId: routine.modelId ?? (await this.userDefault()) };
+  }
+
+  /** The same resolution a new chat in the mode binds. */
+  private async assertModeAvailable(mode: ModelMode): Promise<void> {
+    const resolution = (await this.resolveModelModesUseCase.execute()).find(
+      (r) => r.mode === mode,
+    );
+    if (!resolution?.permittedModel && !resolution?.anonymousPermittedModel) {
+      throw new RoutineModelModeUnavailableError(mode);
+    }
   }
 
   private async userDefault(): Promise<UUID> {

@@ -5,6 +5,7 @@ export type {
   UpdateRoutineDto,
 } from '@ayunis/api-client/schemas';
 export {
+  ModelMode,
   RoutineFrequency,
   RoutineInternetAccess,
   RoutineRunStatus,

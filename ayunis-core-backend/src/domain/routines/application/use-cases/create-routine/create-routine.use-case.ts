@@ -39,9 +39,10 @@ export class CreateRoutineUseCase {
     );
     if (!internet.ok)
       throw new RoutineInvalidAllowedDomainsError(internet.problem);
-    const modelId = await this.routineModelService.select(
-      command.modelId ?? null,
-    );
+    const model = await this.routineModelService.select({
+      modelId: command.modelId,
+      mode: command.mode,
+    });
     const id = randomUUID();
     return this.routinesRepository.create(
       new Routine({
@@ -50,7 +51,7 @@ export class CreateRoutineUseCase {
         orgId,
         name: command.name,
         prompt: command.prompt,
-        modelId,
+        ...model,
         schedule,
         ...internet.settings,
         enabled: command.enabled,

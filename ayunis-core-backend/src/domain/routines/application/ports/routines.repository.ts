@@ -1,4 +1,5 @@
 import type { UUID } from 'crypto';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
 import type { RoutineRunOutcome } from 'src/domain/routines/domain/routine-run-outcome';
 import type { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
@@ -11,6 +12,7 @@ export interface RoutineDefinitionChanges {
   name?: string;
   prompt?: string;
   modelId?: UUID | null;
+  mode?: ModelMode | null;
   /** Replaced as a whole. */
   schedule?: RoutineSchedule;
   internetAccess?: RoutineInternetAccess;

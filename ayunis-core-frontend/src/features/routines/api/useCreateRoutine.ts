@@ -46,6 +46,7 @@ export function useCreateRoutine(
               break;
             case 'UNAUTHORIZED_ACCESS':
             case 'MODEL_NOT_FOUND':
+            case 'ROUTINE_MODEL_MODE_UNAVAILABLE':
               showError(t('toast.modelUnavailable'));
               break;
             case 'ROUTINE_INVALID_ALLOWED_DOMAINS':

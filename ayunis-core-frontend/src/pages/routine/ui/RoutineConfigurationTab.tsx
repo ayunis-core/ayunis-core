@@ -20,6 +20,7 @@ import {
   type Routine,
   type RoutineFormFields,
 } from '@/features/routines';
+import { RoutineModelField } from '@/widgets/routine-model-field';
 import { RoutineContextCard } from './RoutineContextCard';
 
 export function RoutineConfigurationTab({
@@ -80,7 +81,13 @@ function RoutineConfigurationCard({ routine }: Readonly<{ routine: Routine }>) {
             className="space-y-4"
             data-testid="routine-form"
           >
-            <RoutineFormFieldset form={form} disabled={isUpdating} />
+            <RoutineFormFieldset
+              form={form}
+              disabled={isUpdating}
+              modelField={
+                <RoutineModelField form={form} disabled={isUpdating} />
+              }
+            />
             <Button
               type="submit"
               disabled={isUpdating}

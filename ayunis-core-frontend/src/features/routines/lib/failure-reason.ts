@@ -9,6 +9,7 @@ const MODEL_REASONS = new Set([
   'UNAUTHORIZED_ACCESS',
   'MODEL_NOT_FOUND',
   'RUN_NO_MODEL_FOUND',
+  'MODEL_MODE_UNAVAILABLE',
 ]);
 
 const KNOWN_REASONS: Readonly<Record<string, string>> = {

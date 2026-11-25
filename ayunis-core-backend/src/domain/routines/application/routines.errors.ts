@@ -17,6 +17,8 @@ export enum RoutineErrorCode {
   ROUTINE_INTEGRATION_UNAVAILABLE = 'ROUTINE_INTEGRATION_UNAVAILABLE',
   ROUTINE_INVALID_ALLOWED_DOMAINS = 'ROUTINE_INVALID_ALLOWED_DOMAINS',
   ROUTINE_INVALID_SCHEDULE = 'ROUTINE_INVALID_SCHEDULE',
+  ROUTINE_CONFLICTING_MODEL_SELECTION = 'ROUTINE_CONFLICTING_MODEL_SELECTION',
+  ROUTINE_MODEL_MODE_UNAVAILABLE = 'ROUTINE_MODEL_MODE_UNAVAILABLE',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -118,6 +120,29 @@ export class RoutineInvalidScheduleError extends RoutineError {
       RoutineErrorCode.ROUTINE_INVALID_SCHEDULE,
       400,
       { ...problem },
+    );
+  }
+}
+
+export class RoutineConflictingModelSelectionError extends RoutineError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'Provide either a model or a mode, not both',
+      RoutineErrorCode.ROUTINE_CONFLICTING_MODEL_SELECTION,
+      400,
+      metadata,
+    );
+  }
+}
+
+/** No model the user may use is currently enabled in the mode's list. */
+export class RoutineModelModeUnavailableError extends RoutineError {
+  constructor(mode: string, metadata?: ErrorMetadata) {
+    super(
+      `No permitted model is currently available for mode '${mode}'`,
+      RoutineErrorCode.ROUTINE_MODEL_MODE_UNAVAILABLE,
+      422,
+      { mode, ...metadata },
     );
   }
 }

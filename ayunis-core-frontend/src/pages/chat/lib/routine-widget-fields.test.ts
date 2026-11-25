@@ -11,6 +11,7 @@ describe('editRoutineParamsToFormFields', () => {
     name: 'Amtsblatt',
     prompt: 'Fasse die heutigen Bekanntmachungen zusammen.',
     modelId: '890dbfa7-989f-4f2b-9808-7e722dcb2bf0',
+    mode: null,
     schedule: { frequency: 'weekly', time: '07:30', weekdays: [1, 4] },
     internetAccess: 'allowlist',
     allowedDomains: ['nrw.de', 'bund.de'],

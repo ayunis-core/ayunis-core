@@ -25,6 +25,7 @@ import {
   ROUTINE_ALLOWED_DOMAINS_MAX,
   RoutineInternetAccess,
 } from 'src/domain/routines/domain/routine-internet-access';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { RoutineScheduleDto } from './routine-schedule.dto';
 
 const NOT_BLANK = /\S/;
@@ -49,13 +50,25 @@ export class UpdateRoutineDto {
 
   @ApiPropertyOptional({
     type: String,
-    description: "Permitted model id; null for the user's default model",
+    description:
+      "Permitted model id. Sending `modelId` or `mode` replaces the routine's model choice; with both null (or one null and the other omitted) it uses the user's default model.",
     format: 'uuid',
     nullable: true,
   })
   @IsOptional()
   @IsUUID()
   modelId?: UUID | null;
+
+  @ApiPropertyOptional({
+    enum: ModelMode,
+    enumName: 'ModelMode',
+    nullable: true,
+    description:
+      'Run in a model mode, resolved for each run; mutually exclusive with a non-null `modelId`',
+  })
+  @IsOptional()
+  @IsEnum(ModelMode)
+  mode?: ModelMode | null;
 
   @ApiPropertyOptional({
     type: RoutineScheduleDto,

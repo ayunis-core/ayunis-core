@@ -13,6 +13,7 @@ import {
   type Routine,
   type RoutineFormFields,
 } from '@/features/routines';
+import { RoutineModelField } from '@/widgets/routine-model-field';
 import { useRoutineFromProposal } from '@/pages/chat/api/useRoutineFromProposal';
 import {
   createRoutineParamsToFormFields,
@@ -114,7 +115,11 @@ function CreateRoutineForm({
         }
         className="space-y-4"
       >
-        <RoutineFormFieldset form={form} disabled={disabled} />
+        <RoutineFormFieldset
+          form={form}
+          disabled={disabled}
+          modelField={<RoutineModelField form={form} disabled={disabled} />}
+        />
         <Button
           type="submit"
           disabled={disabled}

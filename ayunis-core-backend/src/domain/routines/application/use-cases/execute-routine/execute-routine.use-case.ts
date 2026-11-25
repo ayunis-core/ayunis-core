@@ -253,7 +253,7 @@ export class ExecuteRoutineUseCase {
     );
     return this.createThreadUseCase.execute(
       new CreateThreadCommand({
-        modelId: await this.routineModelService.forRun(routine),
+        ...(await this.routineModelService.forRun(routine)),
         title: routineThreadTitle(routine.name, new Date()),
         origin: { kind: ThreadOriginKind.ROUTINE, routineId: routine.id },
         mcpIntegrationIds: routine.mcpIntegrationIds,

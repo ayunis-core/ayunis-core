@@ -7,6 +7,7 @@ import { RoutineModelService } from 'src/domain/routines/application/services/ro
 import { RoutineInvalidAllowedDomainsError } from 'src/domain/routines/application/routines.errors';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import {
   TEST_MODEL_ID,
   TEST_ORG_ID,
@@ -32,7 +33,10 @@ describe('CreateRoutineUseCase', () => {
   beforeEach(async () => {
     jest.resetAllMocks();
     repository = createMockRoutinesRepository();
-    routineModelService.select.mockResolvedValue(TEST_MODEL_ID);
+    routineModelService.select.mockResolvedValue({
+      modelId: TEST_MODEL_ID,
+      mode: null,
+    });
     const module = await Test.createTestingModule({
       providers: [
         CreateRoutineUseCase,
@@ -102,12 +106,30 @@ describe('CreateRoutineUseCase', () => {
   });
 
   it("stores no model when the user's default is chosen", async () => {
-    routineModelService.select.mockResolvedValue(null);
+    routineModelService.select.mockResolvedValue({ modelId: null, mode: null });
 
     const routine = await useCase.execute(command({ modelId: undefined }));
 
-    expect(routineModelService.select).toHaveBeenCalledWith(null);
     expect(routine.modelId).toBeNull();
+    expect(routine.mode).toBeNull();
+  });
+
+  it('stores a chosen mode without a model', async () => {
+    routineModelService.select.mockResolvedValue({
+      modelId: null,
+      mode: ModelMode.AUTO,
+    });
+
+    const routine = await useCase.execute(
+      command({ modelId: undefined, mode: ModelMode.AUTO }),
+    );
+
+    expect(routineModelService.select).toHaveBeenCalledWith({
+      modelId: undefined,
+      mode: ModelMode.AUTO,
+    });
+    expect(routine.modelId).toBeNull();
+    expect(routine.mode).toBe(ModelMode.AUTO);
   });
 
   it('stores the allowed domains as hosts, once each', async () => {
