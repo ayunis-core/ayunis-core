@@ -29,12 +29,17 @@ vi.mock('@/shared/lib/toast', () => ({
   showError: vi.fn(),
   showSuccess: vi.fn(),
 }));
+// The model select needs window.matchMedia, which jsdom lacks; these tests are about the proposal.
+vi.mock('@/widgets/routine-model-field', () => ({
+  RoutineModelField: () => null,
+}));
 
 const STORED_ROUTINE = {
   id: 'routine-id',
   name: 'Stored name',
   prompt: 'Stored prompt',
   modelId: 'model-id',
+  mode: null,
   schedule: { frequency: 'weekly', time: '07:00', weekdays: [1, 4] },
   internetAccess: 'off',
   allowedDomains: [],

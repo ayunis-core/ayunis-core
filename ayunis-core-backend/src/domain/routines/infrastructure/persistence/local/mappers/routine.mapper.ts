@@ -29,6 +29,7 @@ export class RoutineMapper {
       name: record.name,
       prompt: record.prompt,
       modelId: record.modelId,
+      mode: record.mode,
       schedule: this.scheduleToDomain(record),
       internetAccess: record.internetAccess,
       allowedDomains: record.allowedDomains,
@@ -56,6 +57,7 @@ export class RoutineMapper {
     record.name = domain.name;
     record.prompt = domain.prompt;
     record.modelId = domain.modelId;
+    record.mode = domain.mode;
     Object.assign(record, this.scheduleToRecord(domain.schedule));
     record.internetAccess = domain.internetAccess;
     record.allowedDomains = domain.allowedDomains;

@@ -6,6 +6,7 @@ export {
   formatAllowedDomains,
   formFieldsToUpdateDto,
   routineToFormFields,
+  selectedModelMode,
 } from './lib/routine-form-values';
 export { routinesRefetchInterval } from './lib/routines-refetch-interval';
 export { DEFAULT_SCHEDULE_FIELDS } from './lib/routine-schedule';

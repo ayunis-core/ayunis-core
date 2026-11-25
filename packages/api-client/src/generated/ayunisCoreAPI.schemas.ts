@@ -6891,10 +6891,12 @@ export interface RoutineResponseDto {
   name: string;
   prompt: string;
   /**
-     * Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed
+     * Permitted model id; null when the routine uses a mode or the user's default model, which is also the case once its model was removed
      * @nullable
      */
   modelId: string | null;
+  /** Model mode resolved for each run; null when the routine uses `modelId` or the user's default model */
+  mode: ModelMode | null;
   schedule: RoutineScheduleDto;
   internetAccess: RoutineInternetAccess;
   /** Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode */
@@ -6937,8 +6939,10 @@ export interface CreateRoutineDto {
   name: string;
   /** The task the routine runs, sent as the first message */
   prompt: string;
-  /** Permitted model id; omit for the user's default model */
+  /** Permitted model id; omit it and `mode` for the user's default model. Mutually exclusive with `mode`. */
   modelId?: string;
+  /** Run in a model mode, resolved for each run; mutually exclusive with `modelId` */
+  mode?: ModelMode;
   schedule: RoutineScheduleDto;
   /** Whether the routine may search and read the web: not at all, any website, or only `allowedDomains` */
   internetAccess?: RoutineInternetAccess;
@@ -6956,10 +6960,12 @@ export interface UpdateRoutineDto {
   /** The task the routine runs */
   prompt?: string;
   /**
-     * Permitted model id; null for the user's default model
+     * Permitted model id. Sending `modelId` or `mode` replaces the routine's model choice; with both null (or one null and the other omitted) it uses the user's default model.
      * @nullable
      */
   modelId?: string | null;
+  /** Run in a model mode, resolved for each run; mutually exclusive with a non-null `modelId` */
+  mode?: ModelMode | null;
   /** Replaces the whole schedule; omit it to keep the schedule */
   schedule?: RoutineScheduleDto;
   /** Whether the routine may search and read the web: not at all, any website, or only `allowedDomains` */

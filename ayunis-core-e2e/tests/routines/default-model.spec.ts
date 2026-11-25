@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 import { getEffectiveDefaultModel } from "../../src/clients/api/models.client";
 import { getRoutine } from "../../src/clients/api/routines.client";
-import { createBlankRoutine } from "../../src/flows/routines.flow";
+import {
+  createBlankRoutine,
+  routineModelOption,
+} from "../../src/flows/routines.flow";
 import { test, expect } from "../../src/fixtures/test";
 
 async function defaultModelOf(api: APIRequestContext) {
@@ -25,10 +28,7 @@ test("a routine can go back to the user's default model after a model was chosen
 
   const modelSelect = page.getByTestId("routine-form-model");
   await modelSelect.click();
-  // Model names are catalogue data, not translated copy.
-  await page
-    .getByRole("option", { name: model.displayName, exact: true })
-    .click();
+  await routineModelOption(page, model.displayName).click();
   await page.getByTestId("routine-form-submit").click();
   await expect
     .poll(async () => (await getRoutine(api, routineId)).modelId)

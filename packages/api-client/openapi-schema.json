@@ -27309,7 +27309,16 @@
             "type": "string",
             "format": "uuid",
             "nullable": true,
-            "description": "Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed"
+            "description": "Permitted model id; null when the routine uses a mode or the user's default model, which is also the case once its model was removed"
+          },
+          "mode": {
+            "nullable": true,
+            "description": "Model mode resolved for each run; null when the routine uses `modelId` or the user's default model",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
           },
           "schedule": {
             "$ref": "#/components/schemas/RoutineScheduleDto"
@@ -27383,6 +27392,7 @@
           "name",
           "prompt",
           "modelId",
+          "mode",
           "schedule",
           "internetAccess",
           "allowedDomains",
@@ -27412,8 +27422,16 @@
           },
           "modelId": {
             "type": "string",
-            "description": "Permitted model id; omit for the user's default model",
+            "description": "Permitted model id; omit it and `mode` for the user's default model. Mutually exclusive with `mode`.",
             "format": "uuid"
+          },
+          "mode": {
+            "description": "Run in a model mode, resolved for each run; mutually exclusive with `modelId`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
           },
           "schedule": {
             "$ref": "#/components/schemas/RoutineScheduleDto"
@@ -27461,9 +27479,18 @@
           },
           "modelId": {
             "type": "string",
-            "description": "Permitted model id; null for the user's default model",
+            "description": "Permitted model id. Sending `modelId` or `mode` replaces the routine's model choice; with both null (or one null and the other omitted) it uses the user's default model.",
             "format": "uuid",
             "nullable": true
+          },
+          "mode": {
+            "nullable": true,
+            "description": "Run in a model mode, resolved for each run; mutually exclusive with a non-null `modelId`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModelMode"
+              }
+            ]
           },
           "schedule": {
             "description": "Replaces the whole schedule; omit it to keep the schedule",

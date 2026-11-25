@@ -110,6 +110,7 @@ export default function ModelSelectOptions({
                   <SelectItem
                     key={mode}
                     value={getModeValue(mode)}
+                    data-testid={`model-select-mode-${mode}`}
                     aria-disabled={disabled || undefined}
                     aria-describedby={
                       disabled && modesHint ? modesHintId : undefined

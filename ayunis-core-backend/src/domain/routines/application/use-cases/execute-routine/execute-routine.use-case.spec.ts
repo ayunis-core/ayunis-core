@@ -91,7 +91,7 @@ describe('ExecuteRoutineUseCase', () => {
     subscriptionGate.admit.mockResolvedValue(undefined);
     academyGate.admit.mockResolvedValue(undefined);
     hasPermission.execute.mockResolvedValue(true);
-    routineModelService.forRun.mockResolvedValue(TEST_MODEL_ID);
+    routineModelService.forRun.mockResolvedValue({ modelId: TEST_MODEL_ID });
     routineIntegrationService.assertUsable.mockResolvedValue(undefined);
     routineKnowledgeBaseService.accessible.mockResolvedValue([]);
     createThread.execute.mockResolvedValue({ id: threadId });

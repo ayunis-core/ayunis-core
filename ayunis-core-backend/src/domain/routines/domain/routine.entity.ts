@@ -1,5 +1,6 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
+import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import type { RoutineRunStatus } from './routine-run-status.enum';
 import { RoutineInternetAccess } from './routine-internet-access';
 import type { RoutineSchedule } from './routine-frequency';
@@ -10,8 +11,10 @@ export class Routine {
   readonly orgId: UUID;
   readonly name: string;
   readonly prompt: string;
-  /** Permitted model id; null means the owner's default model, also once the permit was removed. */
+  /** Permitted model id; null with no `mode` means the owner's default model, also once the permit was removed. */
   readonly modelId: UUID | null;
+  /** Resolved for each run, so runs follow the mode's model list; never set together with `modelId`. */
+  readonly mode: ModelMode | null;
   readonly schedule: RoutineSchedule;
   readonly internetAccess: RoutineInternetAccess;
   /** Normalized hosts; stored in every mode, applied only in `allowlist`. */
@@ -43,6 +46,7 @@ export class Routine {
     name: string;
     prompt: string;
     modelId: UUID | null;
+    mode?: ModelMode | null;
     schedule: RoutineSchedule;
     internetAccess?: RoutineInternetAccess;
     allowedDomains?: string[];
@@ -66,6 +70,7 @@ export class Routine {
     this.name = params.name;
     this.prompt = params.prompt;
     this.modelId = params.modelId;
+    this.mode = params.mode ?? null;
     this.schedule = params.schedule;
     this.internetAccess = params.internetAccess ?? RoutineInternetAccess.OFF;
     this.allowedDomains = params.allowedDomains ?? [];

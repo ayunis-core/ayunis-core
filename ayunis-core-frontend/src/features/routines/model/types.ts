@@ -22,7 +22,7 @@ export interface RoutineScheduleFields {
 export interface RoutineFormFields {
   name: string;
   prompt: string;
-  /** A permitted model id, or {@link DEFAULT_MODEL_OPTION}. */
+  /** A permitted model id, a `ModelMode`, or {@link DEFAULT_MODEL_OPTION}. */
   modelId: string;
   schedule: RoutineScheduleFields;
   internetAccess: RoutineInternetAccess;

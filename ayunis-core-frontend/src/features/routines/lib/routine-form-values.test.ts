@@ -4,9 +4,11 @@ import {
   type RoutineFormFields,
   type RoutineScheduleFields,
 } from '@/features/routines/model/types';
+import type { Routine } from '@/features/routines/model/openapi';
 import {
   formFieldsToCreateDto,
   formFieldsToUpdateDto,
+  routineToFormFields,
 } from './routine-form-values';
 
 describe('routine form values', () => {
@@ -36,6 +38,12 @@ describe('routine form values', () => {
         modelId,
       );
     });
+
+    it('sends a chosen mode instead of a model', () => {
+      const dto = formFieldsToCreateDto({ ...fields, modelId: 'max' });
+      expect(dto.mode).toBe('max');
+      expect(dto).not.toHaveProperty('modelId');
+    });
   });
 
   describe('formFieldsToUpdateDto', () => {
@@ -46,10 +54,23 @@ describe('routine form values', () => {
       ).toBeNull();
     });
 
-    it('sends a chosen model', () => {
-      expect(formFieldsToUpdateDto({ ...fields, modelId }).modelId).toBe(
-        modelId,
-      );
+    it('clears a stored mode for the default-model option', () => {
+      expect(
+        formFieldsToUpdateDto({ ...fields, modelId: DEFAULT_MODEL_OPTION })
+          .mode,
+      ).toBeNull();
+    });
+
+    it('sends a chosen model and clears a stored mode', () => {
+      const dto = formFieldsToUpdateDto({ ...fields, modelId });
+      expect(dto.modelId).toBe(modelId);
+      expect(dto.mode).toBeNull();
+    });
+
+    it('sends a chosen mode and clears a stored model', () => {
+      const dto = formFieldsToUpdateDto({ ...fields, modelId: 'auto' });
+      expect(dto.mode).toBe('auto');
+      expect(dto.modelId).toBeNull();
     });
 
     it('sends one allowed domain per entry, however they are separated', () => {
@@ -67,6 +88,36 @@ describe('routine form values', () => {
           allowedDomains: 'kein-host',
         }),
       ).not.toHaveProperty('allowedDomains');
+    });
+  });
+
+  describe('routineToFormFields', () => {
+    const routine = (choice: Pick<Routine, 'modelId' | 'mode'>): Routine => ({
+      id: 'f2a3c0de-6b1f-4a0e-9a7e-2f0c5d1b8e11',
+      name: fields.name,
+      prompt: fields.prompt,
+      schedule: { frequency: 'daily', time: '07:30' },
+      internetAccess: 'off',
+      allowedDomains: [],
+      enabled: true,
+      lastRunStatus: null,
+      lastRunAt: null,
+      lastRunFailureReason: null,
+      consecutiveFailureCount: 0,
+      nextRunAt: null,
+      pausedAt: null,
+      sourceToolCallId: null,
+      createdAt: '2026-11-25T08:00:00.000Z',
+      updatedAt: '2026-11-25T08:00:00.000Z',
+      ...choice,
+    });
+
+    it.each([
+      [{ modelId, mode: null }, modelId],
+      [{ modelId: null, mode: 'auto' as const }, 'auto'],
+      [{ modelId: null, mode: null }, DEFAULT_MODEL_OPTION],
+    ])('selects the stored model choice %o', (choice, selected) => {
+      expect(routineToFormFields(routine(choice)).modelId).toBe(selected);
     });
   });
 

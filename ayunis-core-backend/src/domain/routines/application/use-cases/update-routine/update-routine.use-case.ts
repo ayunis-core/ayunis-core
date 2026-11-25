@@ -44,20 +44,27 @@ export class UpdateRoutineUseCase {
   async execute(command: UpdateRoutineCommand): Promise<Routine> {
     this.logger.log({ routineId: command.id }, 'Updating routine');
     const { userId } = getRequiredUserContext(this.contextService);
-    const { id, modelId, internetAccess, allowedDomains, ...rest } = command;
+    const { id, modelId, mode, internetAccess, allowedDomains, ...rest } =
+      command;
     const changes = { ...rest, schedule: parseSchedule(command.schedule) };
     const current = await this.routinesRepository.findByIdForUpdate(userId, id);
     if (!current) throw new RoutineNotFoundError(id);
     const updated = await this.routinesRepository.updateDefinition(userId, id, {
       ...changes,
-      ...(modelId !== undefined && {
-        modelId: await this.routineModelService.select(modelId),
-      }),
+      ...(await this.modelChanges({ modelId, mode })),
       ...internetChanges(current, { internetAccess, allowedDomains }),
       ...scheduleChangesForEdit(current, changes, new Date()),
     });
     if (!updated) throw new RoutineNotFoundError(id);
     return updated;
+  }
+
+  /** A sent model or mode replaces the choice, so the other one is cleared. */
+  private async modelChanges(
+    choice: Pick<UpdateRoutineCommand, 'modelId' | 'mode'>,
+  ): Promise<Pick<RoutineDefinitionChanges, 'modelId' | 'mode'>> {
+    if (choice.modelId === undefined && choice.mode === undefined) return {};
+    return this.routineModelService.select(choice);
   }
 }
 

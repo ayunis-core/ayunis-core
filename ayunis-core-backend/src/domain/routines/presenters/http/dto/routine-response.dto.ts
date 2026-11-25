@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { RoutineScheduleDto } from './routine-schedule.dto';
 
 export class RoutineResponseDto {
@@ -18,9 +19,18 @@ export class RoutineResponseDto {
     format: 'uuid',
     nullable: true,
     description:
-      "Permitted model id; null when the routine uses the user's default model, which is also the case once its model was removed",
+      "Permitted model id; null when the routine uses a mode or the user's default model, which is also the case once its model was removed",
   })
   modelId: string | null;
+
+  @ApiProperty({
+    enum: ModelMode,
+    enumName: 'ModelMode',
+    nullable: true,
+    description:
+      "Model mode resolved for each run; null when the routine uses `modelId` or the user's default model",
+  })
+  mode: ModelMode | null;
 
   @ApiProperty({ type: RoutineScheduleDto })
   schedule: RoutineScheduleDto;

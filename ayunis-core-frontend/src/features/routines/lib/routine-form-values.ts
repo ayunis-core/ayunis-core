@@ -1,4 +1,5 @@
 import {
+  ModelMode,
   RoutineInternetAccess,
   type CreateRoutineDto,
   type Routine,
@@ -27,11 +28,18 @@ export function routineToFormFields(routine: Routine): RoutineFormFields {
   return {
     name: routine.name,
     prompt: routine.prompt,
-    modelId: routine.modelId ?? DEFAULT_MODEL_OPTION,
+    modelId: routine.mode ?? routine.modelId ?? DEFAULT_MODEL_OPTION,
     schedule: scheduleToFields(routine.schedule),
     internetAccess: routine.internetAccess,
     allowedDomains: formatAllowedDomains(routine.allowedDomains),
   };
+}
+
+const MODEL_MODES: readonly string[] = Object.values(ModelMode);
+
+/** The mode the model field's value stands for; null for a model or the default. */
+export function selectedModelMode(value: string): ModelMode | null {
+  return MODEL_MODES.includes(value) ? (value as ModelMode) : null;
 }
 
 export function formatAllowedDomains(domains: readonly string[]): string {
@@ -55,7 +63,15 @@ function allowedDomainsToSend(
     : {};
 }
 
-/** The default-model option sends no model, so the routine uses the user's default. */
+/** The default-model option sends neither, so the routine uses the user's default. */
+function modelChoiceToCreate(
+  value: string,
+): Pick<CreateRoutineDto, 'modelId' | 'mode'> {
+  const mode = selectedModelMode(value);
+  if (mode) return { mode };
+  return value === DEFAULT_MODEL_OPTION ? {} : { modelId: value };
+}
+
 export function formFieldsToCreateDto(
   fields: RoutineFormFields,
 ): CreateRoutineDto {
@@ -65,20 +81,23 @@ export function formFieldsToCreateDto(
     schedule: fieldsToSchedule(fields.schedule),
     internetAccess: fields.internetAccess,
     ...allowedDomainsToSend(fields),
-    ...(fields.modelId !== DEFAULT_MODEL_OPTION && { modelId: fields.modelId }),
+    ...modelChoiceToCreate(fields.modelId),
   };
 }
 
-/** The default-model option clears a stored model; an omitted one would keep it. */
+/** Both are always sent: omitted ones would keep a stored model or mode. */
 export function formFieldsToUpdateDto(
   fields: RoutineFormFields,
 ): UpdateRoutineDto {
+  const mode = selectedModelMode(fields.modelId);
+  const isModel = !mode && fields.modelId !== DEFAULT_MODEL_OPTION;
   return {
     name: fields.name,
     prompt: fields.prompt,
     schedule: fieldsToSchedule(fields.schedule),
     internetAccess: fields.internetAccess,
     ...allowedDomainsToSend(fields),
-    modelId: fields.modelId === DEFAULT_MODEL_OPTION ? null : fields.modelId,
+    modelId: isModel ? fields.modelId : null,
+    mode,
   };
 }

@@ -25,6 +25,7 @@ import {
   ROUTINE_ALLOWED_DOMAINS_MAX,
   RoutineInternetAccess,
 } from 'src/domain/routines/domain/routine-internet-access';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { RoutineScheduleDto } from './routine-schedule.dto';
 
 const NOT_BLANK = /\S/;
@@ -47,12 +48,23 @@ export class CreateRoutineDto {
   prompt: string;
 
   @ApiPropertyOptional({
-    description: "Permitted model id; omit for the user's default model",
+    description:
+      "Permitted model id; omit it and `mode` for the user's default model. Mutually exclusive with `mode`.",
     format: 'uuid',
   })
   @IsOptional()
   @IsUUID()
   modelId?: UUID;
+
+  @ApiPropertyOptional({
+    enum: ModelMode,
+    enumName: 'ModelMode',
+    description:
+      'Run in a model mode, resolved for each run; mutually exclusive with `modelId`',
+  })
+  @IsOptional()
+  @IsEnum(ModelMode)
+  mode?: ModelMode;
 
   @ApiProperty({ type: RoutineScheduleDto })
   @IsDefined()

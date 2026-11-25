@@ -58,6 +58,10 @@ describe('routineFailureNotification', () => {
   it.each([
     ['CREDIT_BUDGET_EXCEEDED', 'Das Credit-Limit wurde erreicht.'],
     ['MODEL_NOT_FOUND', 'Das Modell steht Ihnen nicht mehr zur Verfügung.'],
+    [
+      'MODEL_MODE_UNAVAILABLE',
+      'Das Modell steht Ihnen nicht mehr zur Verfügung.',
+    ],
     ['SOMETHING_NEW', 'Etwas ist schiefgelaufen.'],
   ])('explains the failure reason %s', (failureReason, sentence) => {
     expect(

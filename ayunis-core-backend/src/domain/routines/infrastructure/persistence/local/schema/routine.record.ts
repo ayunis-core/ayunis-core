@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   Entity,
   Index,
@@ -16,6 +17,7 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { PermittedModelRecord } from 'src/domain/models/infrastructure/persistence/local-permitted-models/schema/permitted-model.record';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import { RoutineRunStatus } from 'src/domain/routines/domain/routine-run-status.enum';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
@@ -31,6 +33,7 @@ import {
 @Entity({ name: 'routines' })
 @Index(['lastRunStatus', 'lastRunStartedAt'])
 @Unique(['userId', 'sourceToolCallId'])
+@Check(`num_nonnulls("modelId", "mode") <= 1`)
 export class RoutineRecord extends BaseRecord {
   @Column({ type: 'varchar', length: ROUTINE_NAME_MAX_LENGTH })
   name: string;
@@ -63,6 +66,9 @@ export class RoutineRecord extends BaseRecord {
   @ManyToOne(() => PermittedModelRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'modelId' })
   model?: PermittedModelRecord;
+
+  @Column({ type: 'enum', enum: ModelMode, nullable: true })
+  mode: ModelMode | null;
 
   /** HH:mm (Europe/Berlin) for every frequency; named from when routines only ran daily. */
   @Column({ type: 'varchar', length: 5 })

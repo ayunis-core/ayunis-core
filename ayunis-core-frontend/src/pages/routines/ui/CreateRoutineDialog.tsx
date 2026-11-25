@@ -16,6 +16,7 @@ import {
   useCreateRoutine,
   type RoutineFormFields,
 } from '@/features/routines';
+import { RoutineModelField } from '@/widgets/routine-model-field';
 
 interface CreateRoutineDialogProps {
   /** The fields to start from: empty, or a premade routine, whose other settings are kept. */
@@ -59,7 +60,13 @@ export function CreateRoutineDialog({
             className="space-y-4"
             data-testid="routine-form"
           >
-            <RoutineFormFieldset form={form} disabled={isCreating} />
+            <RoutineFormFieldset
+              form={form}
+              disabled={isCreating}
+              modelField={
+                <RoutineModelField form={form} disabled={isCreating} />
+              }
+            />
             <DialogFooter>
               <Button
                 type="button"

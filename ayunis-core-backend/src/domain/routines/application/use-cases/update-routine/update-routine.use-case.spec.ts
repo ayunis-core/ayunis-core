@@ -16,6 +16,7 @@ import {
 import { RoutineModelService } from 'src/domain/routines/application/services/routine-model.service';
 import { RoutineInternetAccess } from 'src/domain/routines/domain/routine-internet-access';
 import { RoutineFrequency } from 'src/domain/routines/domain/routine-frequency';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import {
   TEST_MODEL_ID,
   TEST_ROUTINE_ID,
@@ -38,7 +39,10 @@ describe('UpdateRoutineUseCase', () => {
     repository = createMockRoutinesRepository();
     repository.findByIdForUpdate.mockResolvedValue(current);
     repository.updateDefinition.mockResolvedValue(aRoutine({ enabled: false }));
-    routineModelService.select.mockResolvedValue(TEST_MODEL_ID);
+    routineModelService.select.mockResolvedValue({
+      modelId: TEST_MODEL_ID,
+      mode: null,
+    });
     const module = await Test.createTestingModule({
       providers: [
         UpdateRoutineUseCase,
@@ -177,26 +181,49 @@ describe('UpdateRoutineUseCase', () => {
       new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, modelId: TEST_MODEL_ID }),
     );
 
-    expect(routineModelService.select).toHaveBeenCalledWith(TEST_MODEL_ID);
+    expect(routineModelService.select).toHaveBeenCalledWith({
+      modelId: TEST_MODEL_ID,
+      mode: undefined,
+    });
     expect(repository.updateDefinition).toHaveBeenCalledWith(
       TEST_USER_ID,
       TEST_ROUTINE_ID,
-      expect.objectContaining({ modelId: TEST_MODEL_ID }),
+      expect.objectContaining({ modelId: TEST_MODEL_ID, mode: null }),
     );
   });
 
   it("goes back to the owner's default model when the model is cleared", async () => {
-    routineModelService.select.mockResolvedValue(null);
+    routineModelService.select.mockResolvedValue({ modelId: null, mode: null });
 
     await useCase.execute(
       new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, modelId: null }),
     );
 
-    expect(routineModelService.select).toHaveBeenCalledWith(null);
     expect(repository.updateDefinition).toHaveBeenCalledWith(
       TEST_USER_ID,
       TEST_ROUTINE_ID,
-      { modelId: null },
+      { modelId: null, mode: null },
+    );
+  });
+
+  it('clears the stored model when a mode is chosen', async () => {
+    routineModelService.select.mockResolvedValue({
+      modelId: null,
+      mode: ModelMode.MAX,
+    });
+
+    await useCase.execute(
+      new UpdateRoutineCommand({ id: TEST_ROUTINE_ID, mode: ModelMode.MAX }),
+    );
+
+    expect(routineModelService.select).toHaveBeenCalledWith({
+      modelId: undefined,
+      mode: ModelMode.MAX,
+    });
+    expect(repository.updateDefinition).toHaveBeenCalledWith(
+      TEST_USER_ID,
+      TEST_ROUTINE_ID,
+      { modelId: null, mode: ModelMode.MAX },
     );
   });
 
