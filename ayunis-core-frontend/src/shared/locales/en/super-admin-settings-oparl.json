@@ -1,0 +1,71 @@
+{
+  "title": "Council information systems",
+  "loadError": "The OParl systems could not be loaded.",
+  "retry": "Retry",
+  "empty": {
+    "title": "No systems yet",
+    "description": "Add a council information system by the URL of its OParl API. Its data is mirrored and kept up to date."
+  },
+  "add": {
+    "title": "Add system",
+    "description": "The URL of the OParl System object, e.g. https://ris.example.de/oparl/v1.1/system. All bodies of the system are imported with their full history.",
+    "urlLabel": "OParl system URL",
+    "urlPlaceholder": "https://…/oparl/v1.1/system",
+    "submit": "Add",
+    "success": "{{name}} was added. The import has started.",
+    "error": "The system could not be added.",
+    "errors": {
+      "invalidUrl": "Enter an http or https URL.",
+      "hostBlocked": "This URL is not on a public host.",
+      "notOparl": "This URL does not return an OParl system.",
+      "unreachable": "The system could not be reached.",
+      "alreadyExists": "This system has already been added."
+    },
+    "validation": {
+      "url": {
+        "isNotEmpty": "Enter a URL.",
+        "maxLength": "The URL is too long.",
+        "invalid": "Enter a valid URL."
+      },
+      "invalid": "Enter a valid URL."
+    }
+  },
+  "sync": {
+    "now": "Sync now",
+    "running": "Syncing",
+    "success": "The sync has been queued.",
+    "error": "The sync could not be started."
+  },
+  "health": {
+    "pending": "Pending",
+    "healthy": "Healthy",
+    "suspicious": "Suspicious",
+    "failing": "Failing"
+  },
+  "kind": {
+    "initial": "Initial import",
+    "delta": "Changes",
+    "full": "Full reconciliation"
+  },
+  "fields": {
+    "bodies": "Bodies",
+    "system": "System",
+    "running": "Running",
+    "lastDelta": "Last changes",
+    "lastFull": "Last full reconciliation",
+    "nextSync": "Next sync"
+  },
+  "counts": {
+    "body": "Bodies",
+    "legislativeTerm": "Legislative terms",
+    "organization": "Organizations",
+    "person": "Persons",
+    "membership": "Memberships",
+    "meeting": "Meetings",
+    "agendaItem": "Agenda items",
+    "paper": "Papers",
+    "consultation": "Consultations",
+    "file": "Files",
+    "location": "Locations"
+  }
+}

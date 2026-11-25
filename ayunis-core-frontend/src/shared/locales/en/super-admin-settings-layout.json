@@ -13,7 +13,8 @@
     "platformConfig": "Platform Config",
     "appAlerts": "App Alerts",
     "anonymization": "Anonymization",
-    "queueInspection": "Queue inspection"
+    "queueInspection": "Queue inspection",
+    "oparl": "Council information"
   },
   "groups": {
     "operations": "Operations"

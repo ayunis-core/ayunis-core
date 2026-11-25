@@ -81,6 +81,7 @@ import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from 
 import { Route as AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport } from './routes/_authenticated/super-admin-settings.anonymization.index'
 import { Route as AuthenticatedSuperAdminSettingsAppAlertsIndexRouteImport } from './routes/_authenticated/super-admin-settings.app-alerts.index'
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
+import { Route as AuthenticatedSuperAdminSettingsOparlIndexRouteImport } from './routes/_authenticated/super-admin-settings.oparl.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIndexRouteImport } from './routes/_authenticated/super-admin-settings.orgs.index'
 import { Route as AuthenticatedSuperAdminSettingsOrgsIdRouteImport } from './routes/_authenticated/super-admin-settings.orgs.$id'
 import { Route as AuthenticatedSuperAdminSettingsPlatformConfigIndexRouteImport } from './routes/_authenticated/super-admin-settings.platform-config.index'
@@ -503,6 +504,12 @@ const AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute =
     path: '/models-catalog/',
     getParentRoute: () => AuthenticatedSuperAdminSettingsRoute,
   } as any)
+const AuthenticatedSuperAdminSettingsOparlIndexRoute =
+  AuthenticatedSuperAdminSettingsOparlIndexRouteImport.update({
+    id: '/oparl/',
+    path: '/oparl/',
+    getParentRoute: () => AuthenticatedSuperAdminSettingsRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsOrgsIndexRoute =
   AuthenticatedSuperAdminSettingsOrgsIndexRouteImport.update({
     id: '/orgs/',
@@ -646,6 +653,7 @@ export interface FileRoutesByFullPath {
   '/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/super-admin-settings/oparl/': typeof AuthenticatedSuperAdminSettingsOparlIndexRoute
   '/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   '/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
@@ -727,6 +735,7 @@ export interface FileRoutesByTo {
   '/super-admin-settings/anonymization': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/super-admin-settings/app-alerts': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/super-admin-settings/oparl': typeof AuthenticatedSuperAdminSettingsOparlIndexRoute
   '/super-admin-settings/orgs': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   '/super-admin-settings/platform-config': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/super-admin-settings/skills': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
@@ -813,6 +822,7 @@ export interface FileRoutesById {
   '/_authenticated/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/_authenticated/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  '/_authenticated/super-admin-settings/oparl/': typeof AuthenticatedSuperAdminSettingsOparlIndexRoute
   '/_authenticated/super-admin-settings/orgs/': typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   '/_authenticated/super-admin-settings/platform-config/': typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   '/_authenticated/super-admin-settings/skills/': typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
@@ -899,6 +909,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/anonymization/'
     | '/super-admin-settings/app-alerts/'
     | '/super-admin-settings/models-catalog/'
+    | '/super-admin-settings/oparl/'
     | '/super-admin-settings/orgs/'
     | '/super-admin-settings/platform-config/'
     | '/super-admin-settings/skills/'
@@ -980,6 +991,7 @@ export interface FileRouteTypes {
     | '/super-admin-settings/anonymization'
     | '/super-admin-settings/app-alerts'
     | '/super-admin-settings/models-catalog'
+    | '/super-admin-settings/oparl'
     | '/super-admin-settings/orgs'
     | '/super-admin-settings/platform-config'
     | '/super-admin-settings/skills'
@@ -1065,6 +1077,7 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin-settings/anonymization/'
     | '/_authenticated/super-admin-settings/app-alerts/'
     | '/_authenticated/super-admin-settings/models-catalog/'
+    | '/_authenticated/super-admin-settings/oparl/'
     | '/_authenticated/super-admin-settings/orgs/'
     | '/_authenticated/super-admin-settings/platform-config/'
     | '/_authenticated/super-admin-settings/skills/'
@@ -1602,6 +1615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport
       parentRoute: typeof AuthenticatedSuperAdminSettingsRoute
     }
+    '/_authenticated/super-admin-settings/oparl/': {
+      id: '/_authenticated/super-admin-settings/oparl/'
+      path: '/oparl'
+      fullPath: '/super-admin-settings/oparl/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsOparlIndexRouteImport
+      parentRoute: typeof AuthenticatedSuperAdminSettingsRoute
+    }
     '/_authenticated/super-admin-settings/orgs/': {
       id: '/_authenticated/super-admin-settings/orgs/'
       path: '/orgs'
@@ -1770,6 +1790,7 @@ interface AuthenticatedSuperAdminSettingsRouteChildren {
   AuthenticatedSuperAdminSettingsAnonymizationIndexRoute: typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   AuthenticatedSuperAdminSettingsAppAlertsIndexRoute: typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
+  AuthenticatedSuperAdminSettingsOparlIndexRoute: typeof AuthenticatedSuperAdminSettingsOparlIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIndexRoute: typeof AuthenticatedSuperAdminSettingsOrgsIndexRoute
   AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute: typeof AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute
   AuthenticatedSuperAdminSettingsSkillsIndexRoute: typeof AuthenticatedSuperAdminSettingsSkillsIndexRoute
@@ -1791,6 +1812,8 @@ const AuthenticatedSuperAdminSettingsRouteChildren: AuthenticatedSuperAdminSetti
       AuthenticatedSuperAdminSettingsAppAlertsIndexRoute,
     AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute:
       AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute,
+    AuthenticatedSuperAdminSettingsOparlIndexRoute:
+      AuthenticatedSuperAdminSettingsOparlIndexRoute,
     AuthenticatedSuperAdminSettingsOrgsIndexRoute:
       AuthenticatedSuperAdminSettingsOrgsIndexRoute,
     AuthenticatedSuperAdminSettingsPlatformConfigIndexRoute:

@@ -13,7 +13,8 @@
     "platformConfig": "Plattform-Konfiguration",
     "appAlerts": "App-Hinweise",
     "anonymization": "Anonymisierung",
-    "queueInspection": "Warteschlangen"
+    "queueInspection": "Warteschlangen",
+    "oparl": "Ratsinformationssysteme"
   },
   "groups": {
     "operations": "Betrieb"

@@ -1,0 +1,71 @@
+{
+  "title": "Ratsinformationssysteme",
+  "loadError": "Die OParl-Systeme konnten nicht geladen werden.",
+  "retry": "Erneut versuchen",
+  "empty": {
+    "title": "Noch keine Systeme",
+    "description": "Füge ein Ratsinformationssystem über die URL seiner OParl-Schnittstelle hinzu. Seine Daten werden gespiegelt und aktuell gehalten."
+  },
+  "add": {
+    "title": "System hinzufügen",
+    "description": "Die URL des OParl-System-Objekts, z. B. https://ris.example.de/oparl/v1.1/system. Alle Körperschaften des Systems werden mit ihrer gesamten Historie importiert.",
+    "urlLabel": "OParl-System-URL",
+    "urlPlaceholder": "https://…/oparl/v1.1/system",
+    "submit": "Hinzufügen",
+    "success": "{{name}} wurde hinzugefügt. Der Import hat begonnen.",
+    "error": "Das System konnte nicht hinzugefügt werden.",
+    "errors": {
+      "invalidUrl": "Gib eine http- oder https-URL ein.",
+      "hostBlocked": "Diese URL liegt nicht auf einem öffentlichen Host.",
+      "notOparl": "Diese URL liefert kein OParl-System.",
+      "unreachable": "Das System ist nicht erreichbar.",
+      "alreadyExists": "Dieses System wurde bereits hinzugefügt."
+    },
+    "validation": {
+      "url": {
+        "isNotEmpty": "Gib eine URL ein.",
+        "maxLength": "Die URL ist zu lang.",
+        "invalid": "Gib eine gültige URL ein."
+      },
+      "invalid": "Gib eine gültige URL ein."
+    }
+  },
+  "sync": {
+    "now": "Jetzt synchronisieren",
+    "running": "Synchronisiert",
+    "success": "Die Synchronisierung wurde eingeplant.",
+    "error": "Die Synchronisierung konnte nicht gestartet werden."
+  },
+  "health": {
+    "pending": "Ausstehend",
+    "healthy": "In Ordnung",
+    "suspicious": "Auffällig",
+    "failing": "Fehlerhaft"
+  },
+  "kind": {
+    "initial": "Erstimport",
+    "delta": "Änderungen",
+    "full": "Vollabgleich"
+  },
+  "fields": {
+    "bodies": "Körperschaften",
+    "system": "System",
+    "running": "Läuft",
+    "lastDelta": "Letzte Änderungen",
+    "lastFull": "Letzter Vollabgleich",
+    "nextSync": "Nächste Synchronisierung"
+  },
+  "counts": {
+    "body": "Körperschaften",
+    "legislativeTerm": "Wahlperioden",
+    "organization": "Organisationen",
+    "person": "Personen",
+    "membership": "Mitgliedschaften",
+    "meeting": "Sitzungen",
+    "agendaItem": "Tagesordnungspunkte",
+    "paper": "Vorlagen",
+    "consultation": "Beratungen",
+    "file": "Dateien",
+    "location": "Orte"
+  }
+}

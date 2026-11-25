@@ -61,4 +61,11 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   connectorsEnabled: boolean;
+
+  @ApiProperty({
+    description:
+      'Council information systems (OParl) are mirrored and managed by super admins',
+    default: false,
+  })
+  oparlEnabled: boolean;
 }

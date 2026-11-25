@@ -365,6 +365,7 @@ jobs:
           FEATURE_RECORDINGS_ENABLED=true
           FEATURE_MEMORY_ENABLED=true
           FEATURE_CONNECTORS_ENABLED=true
+          FEATURE_OPARL_ENABLED=true
 
           # Release notes on, read from the Announcable stand-in, never the live feed.
           ANNOUNCABLE_ORG_ID=bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154
@@ -469,13 +470,14 @@ jobs:
             || { cat backend-external-subscriptions.log; exit 1; }
 
       # Same database, Redis and frontend build with routines, recordings,
-      # memory and connectors disabled: proves their flag-off contracts
+      # memory, connectors and OParl disabled: proves their flag-off contracts
       # (tests/routines/routines-disabled.spec.ts,
       # tests/recordings/recordings-disabled.spec.ts,
       # tests/memory/memory-disabled.spec.ts,
-      # tests/connectors/connections-disabled.spec.ts). Its routine worker
+      # tests/connectors/connections-disabled.spec.ts,
+      # tests/super-admin/oparl-disabled.spec.ts). Its routine worker
       # stays stopped, so it takes no jobs from the main run.
-      - name: Start backend with routines, recordings, memory and connectors disabled
+      - name: Start backend with routines, recordings, memory, connectors and OParl disabled
         working-directory: ayunis-core-backend
         env:
           PORT: 3003
@@ -483,6 +485,7 @@ jobs:
           FEATURE_RECORDINGS_ENABLED: 'false'
           FEATURE_MEMORY_ENABLED: 'false'
           FEATURE_CONNECTORS_ENABLED: 'false'
+          FEATURE_OPARL_ENABLED: 'false'
         run: |
           nohup node dist/src/main > backend-routines-disabled.log 2>&1 &
           timeout 60 bash -c 'until curl -sf http://localhost:3003/api/health; do sleep 2; done' \
