@@ -3,6 +3,8 @@ import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { createMockContextService } from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
+import { OnlyAnonymousModelsAvailableError } from 'src/domain/models/application/models.errors';
+import { RoutinePromptImprovementUnavailableError } from 'src/domain/routines/application/routines.errors';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
@@ -127,6 +129,33 @@ describe('RoutineModelService', () => {
       await expect(
         service.forRun(aRoutine({ modelId: null, mode: ModelMode.MAX })),
       ).resolves.toEqual({ mode: ModelMode.MAX });
+    });
+  });
+
+  describe('forPromptImprovement', () => {
+    it('rewrites with the organization default and never an anonymous-only model', async () => {
+      const model = { id: 'org-model' };
+      getDefaultModel.execute.mockResolvedValue({ id: defaultModelId, model });
+
+      await expect(service.forPromptImprovement()).resolves.toBe(model);
+      expect(getDefaultModel.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orgId: TEST_ORG_ID,
+          userId: TEST_USER_ID,
+          preferOrganizationDefault: true,
+          excludeAnonymousOnly: true,
+        }),
+      );
+    });
+
+    it('reports the rewrite as unavailable when every model is anonymous-only', async () => {
+      getDefaultModel.execute.mockRejectedValue(
+        new OnlyAnonymousModelsAvailableError(TEST_ORG_ID),
+      );
+
+      await expect(service.forPromptImprovement()).rejects.toThrow(
+        RoutinePromptImprovementUnavailableError,
+      );
     });
   });
 });

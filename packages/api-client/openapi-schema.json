@@ -16433,6 +16433,45 @@
         "summary": "Remove an integration from a routine",
         "tags": ["routines"]
       }
+    },
+    "/routines/improve-prompt": {
+      "post": {
+        "operationId": "RoutinesController_improvePrompt",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImproveRoutinePromptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImprovedRoutinePromptResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Subscription or the manage routines permission required"
+          },
+          "422": {
+            "description": "NO_DEFAULT_MODEL_FOUND when the caller may use no model at all; ROUTINE_PROMPT_IMPROVEMENT_UNAVAILABLE when every permitted model is anonymous-only"
+          },
+          "502": {
+            "description": "ROUTINE_PROMPT_IMPROVEMENT_FAILED when the model returned no usable text"
+          }
+        },
+        "summary": "Rewrite a routine's task without saving it",
+        "tags": ["routines"]
+      }
     }
   },
   "info": {
@@ -28792,6 +28831,35 @@
           "voice"
         ],
         "description": "Scopes granted to the current token surface. Empty for browser sessions."
+      },
+      "ImproveRoutinePromptDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The routine name, when it already has one"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "de"],
+            "description": "Current UI language, used when the draft language is unidentifiable; defaults to English"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The task as it currently stands in the form"
+          }
+        },
+        "required": ["prompt"]
+      },
+      "ImprovedRoutinePromptResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The rewritten task"
+          }
+        },
+        "required": ["text"]
       }
     }
   }

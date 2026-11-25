@@ -7607,6 +7607,31 @@ export interface LogoutResponseDto {
   brokerLogoutUrl: string | null;
 }
 
+/**
+ * Current UI language, used when the draft language is unidentifiable; defaults to English
+ */
+export type ImproveRoutinePromptDtoLanguage = typeof ImproveRoutinePromptDtoLanguage[keyof typeof ImproveRoutinePromptDtoLanguage];
+
+
+export const ImproveRoutinePromptDtoLanguage = {
+  en: 'en',
+  de: 'de',
+} as const;
+
+export interface ImproveRoutinePromptDto {
+  /** The routine name, when it already has one */
+  name?: string;
+  /** Current UI language, used when the draft language is unidentifiable; defaults to English */
+  language?: ImproveRoutinePromptDtoLanguage;
+  /** The task as it currently stands in the form */
+  prompt: string;
+}
+
+export interface ImprovedRoutinePromptResponseDto {
+  /** The rewritten task */
+  text: string;
+}
+
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**
  * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan

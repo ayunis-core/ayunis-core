@@ -2,15 +2,18 @@ import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { OnlyAnonymousModelsAvailableError } from 'src/domain/models/application/models.errors';
 import { GetDefaultModelUseCase } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.use-case';
 import { GetDefaultModelQuery } from 'src/domain/models/application/use-cases/get-default-model/get-default-model.query';
 import { GetPermittedLanguageModelUseCase } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.use-case';
 import { GetPermittedLanguageModelQuery } from 'src/domain/models/application/use-cases/get-permitted-language-model/get-permitted-language-model.query';
 import { ResolveModelModesUseCase } from 'src/domain/models/application/use-cases/resolve-model-modes/resolve-model-modes.use-case';
+import type { LanguageModel } from 'src/domain/models/domain/models/language.model';
 import type { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
 import {
   RoutineConflictingModelSelectionError,
   RoutineModelModeUnavailableError,
+  RoutinePromptImprovementUnavailableError,
 } from 'src/domain/routines/application/routines.errors';
 import type { Routine } from 'src/domain/routines/domain/routine.entity';
 
@@ -61,6 +64,33 @@ export class RoutineModelService {
   ): Promise<{ modelId: UUID } | { mode: ModelMode }> {
     if (routine.mode) return { mode: routine.mode };
     return { modelId: routine.modelId ?? (await this.userDefault()) };
+  }
+
+  /**
+   * The model that rewrites a routine's task: the organization default first,
+   * like the skill text improver, and never an anonymous-only model, since
+   * anonymized placeholders must not become part of the stored task.
+   */
+  async forPromptImprovement(): Promise<LanguageModel> {
+    const { userId, orgId } = getRequiredUserContext(this.contextService);
+    try {
+      const { model } = await this.getDefaultModelUseCase.execute(
+        new GetDefaultModelQuery({
+          orgId,
+          userId,
+          preferOrganizationDefault: true,
+          excludeAnonymousOnly: true,
+        }),
+      );
+      return model;
+    } catch (error) {
+      // Having no model at all is the same situation as in chat, so
+      // NO_DEFAULT_MODEL_FOUND passes through unchanged.
+      if (error instanceof OnlyAnonymousModelsAvailableError) {
+        throw new RoutinePromptImprovementUnavailableError({ orgId });
+      }
+      throw error;
+    }
   }
 
   /** The same resolution a new chat in the mode binds. */

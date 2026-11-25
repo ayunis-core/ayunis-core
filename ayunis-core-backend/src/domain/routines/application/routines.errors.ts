@@ -19,6 +19,8 @@ export enum RoutineErrorCode {
   ROUTINE_INVALID_SCHEDULE = 'ROUTINE_INVALID_SCHEDULE',
   ROUTINE_CONFLICTING_MODEL_SELECTION = 'ROUTINE_CONFLICTING_MODEL_SELECTION',
   ROUTINE_MODEL_MODE_UNAVAILABLE = 'ROUTINE_MODEL_MODE_UNAVAILABLE',
+  ROUTINE_PROMPT_IMPROVEMENT_FAILED = 'ROUTINE_PROMPT_IMPROVEMENT_FAILED',
+  ROUTINE_PROMPT_IMPROVEMENT_UNAVAILABLE = 'ROUTINE_PROMPT_IMPROVEMENT_UNAVAILABLE',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -143,6 +145,28 @@ export class RoutineModelModeUnavailableError extends RoutineError {
       RoutineErrorCode.ROUTINE_MODEL_MODE_UNAVAILABLE,
       422,
       { mode, ...metadata },
+    );
+  }
+}
+
+export class RoutinePromptImprovementFailedError extends RoutineError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'The improved task could not be generated',
+      RoutineErrorCode.ROUTINE_PROMPT_IMPROVEMENT_FAILED,
+      502,
+      metadata,
+    );
+  }
+}
+
+export class RoutinePromptImprovementUnavailableError extends RoutineError {
+  constructor(metadata?: ErrorMetadata) {
+    super(
+      'No permitted model may receive routine tasks without anonymization',
+      RoutineErrorCode.ROUTINE_PROMPT_IMPROVEMENT_UNAVAILABLE,
+      422,
+      metadata,
     );
   }
 }
