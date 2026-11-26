@@ -32,6 +32,13 @@ export function serveSurfaces(
   }
 
   router.use(staticAssets(webPath));
+  // A browser that parses the shell as a script reports an unattributable
+  // SyntaxError instead of a load failure the chunk-reload recovery handles.
+  // no-store: during a rollout an old process may 404 a hash the new one has.
+  router.use('/assets', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(404).end();
+  });
   router.get('/{*route}', (_req, res, next) =>
     sendHtml(res, next, webPath, 'index.html'),
   );

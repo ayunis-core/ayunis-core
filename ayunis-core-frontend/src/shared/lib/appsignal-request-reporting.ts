@@ -32,8 +32,17 @@ export function installWindowErrorReporting(client: Appsignal): void {
     }
   };
   window.onerror = function (event, source, line, column, error): unknown {
-    if (isAxiosError(error)) {
-      void sendErrorReport(client, error);
+    // The plugin drops source/line when it has an Error, and Firefox gives a
+    // script parse error an empty stack, leaving the failing script unnamed.
+    const stackless = error instanceof Error && !error.stack;
+    if (isAxiosError(error) || stackless) {
+      void sendErrorReport(
+        client,
+        error,
+        stackless
+          ? { script: source?.split(/[?#]/)[0], line, column }
+          : undefined,
+      );
       return previousErrorHandler?.call(
         this,
         event,
