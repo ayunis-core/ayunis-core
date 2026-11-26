@@ -6,7 +6,8 @@
   "filter": {
     "type": {
       "routine": "Routine notifications",
-      "routine_error": "Needs attention"
+      "routine_error": "Needs attention",
+      "organization": "Organization"
     },
     "clear": "Clear filter",
     "read": {
@@ -30,6 +31,7 @@
     "chatPlaceholder": "What would you like to know about this notification?",
     "openRoutineExecution": "Open routine execution",
     "openRoutine": "Open routine",
+    "openWorkspace": "Open workspace",
     "noSelection": "Select a notification to read it.",
     "back": "Inbox"
   },

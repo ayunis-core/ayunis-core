@@ -27,7 +27,7 @@ export class NotificationResponseDto {
     enum: NotificationType,
     enumName: 'NotificationType',
     description:
-      '`routine`: sent by a routine run; `routine_error`: a routine run failed',
+      '`routine`: sent by a routine run; `routine_error`: a routine run failed; `organization`: someone in the organization changed something that affects the user',
   })
   type: NotificationType;
 
@@ -59,6 +59,15 @@ export class NotificationResponseDto {
       'The routine thread of the run that sent it; null for none or once the thread is deleted',
   })
   routineThreadId: string | null;
+
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    description:
+      'The workspace it is about; the notification is deleted with it',
+  })
+  workspaceId: string | null;
 
   @ApiProperty({ type: Date, nullable: true })
   readAt: Date | null;

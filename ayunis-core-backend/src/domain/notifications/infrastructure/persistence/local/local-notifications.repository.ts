@@ -3,7 +3,7 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { UUID } from 'crypto';
-import type { EntityManager } from 'typeorm';
+import type { EntityManager, QueryDeepPartialEntity } from 'typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
@@ -37,6 +37,25 @@ export class LocalNotificationsRepository extends NotificationsRepository {
   async create(notification: Notification): Promise<Notification> {
     const saved = await this.repo.save(this.mapper.toRecord(notification));
     return this.mapper.toDomain(saved);
+  }
+
+  async createMany(notifications: Notification[]): Promise<void> {
+    if (notifications.length === 0) return;
+    await this.repo
+      .createQueryBuilder()
+      .insert()
+      .into(NotificationRecord)
+      .values(
+        notifications.map(
+          (notification) =>
+            // The record's relation properties stay unset; only their type
+            // recurses too deep for the insert's partial entity.
+            this.mapper.toRecord(
+              notification,
+            ) as QueryDeepPartialEntity<NotificationRecord>,
+        ),
+      )
+      .execute();
   }
 
   createWithinRoutineThreadLimit(

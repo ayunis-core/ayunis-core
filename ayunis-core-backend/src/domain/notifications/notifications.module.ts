@@ -10,6 +10,7 @@ import { FindNotificationUseCase } from './application/use-cases/find-notificati
 import { MarkAllNotificationsReadUseCase } from './application/use-cases/mark-all-notifications-read/mark-all-notifications-read.use-case';
 import { MarkNotificationReadUseCase } from './application/use-cases/mark-notification-read/mark-notification-read.use-case';
 import { MarkNotificationUnreadUseCase } from './application/use-cases/mark-notification-unread/mark-notification-unread.use-case';
+import { NotifyUsersUseCase } from './application/use-cases/notify-users/notify-users.use-case';
 import { LocalNotificationsRepositoryModule } from './infrastructure/persistence/local/local-notifications-repository.module';
 import { LocalNotificationsRepository } from './infrastructure/persistence/local/local-notifications.repository';
 import { NotificationDtoMapper } from './presenters/http/mappers/notification-dto.mapper';
@@ -24,6 +25,7 @@ import { NotificationsController } from './presenters/http/notifications.control
       useExisting: LocalNotificationsRepository,
     },
     CreateNotificationUseCase,
+    NotifyUsersUseCase,
     FindNotificationUseCase,
     FindMyNotificationsUseCase,
     CountUnreadNotificationsUseCase,
@@ -36,6 +38,7 @@ import { NotificationsController } from './presenters/http/notifications.control
   ],
   exports: [
     CreateNotificationUseCase,
+    NotifyUsersUseCase,
     FindNotificationUseCase,
     DeleteExpiredNotificationsUseCase,
   ],

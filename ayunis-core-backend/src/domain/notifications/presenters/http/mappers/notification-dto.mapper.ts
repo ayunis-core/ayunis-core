@@ -21,6 +21,7 @@ export class NotificationDtoMapper {
       media: notification.media && this.toMediaDto(notification.media),
       routineId: notification.routineId,
       routineThreadId: notification.routineThreadId,
+      workspaceId: notification.workspaceId,
       readAt: notification.readAt,
       createdAt: notification.createdAt,
     };

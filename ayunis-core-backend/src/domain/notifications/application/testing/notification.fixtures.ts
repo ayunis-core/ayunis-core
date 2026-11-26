@@ -40,6 +40,7 @@ export function createMockNotificationsRepository(): jest.Mocked<NotificationsRe
       .mockImplementation((notification: Notification) =>
         Promise.resolve(notification),
       ),
+    createMany: jest.fn().mockResolvedValue(undefined),
     createWithinRoutineThreadLimit: jest
       .fn()
       .mockImplementation((notification: Notification) =>

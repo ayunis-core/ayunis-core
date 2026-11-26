@@ -18,6 +18,7 @@ export class NotificationMapper {
       media: mediaToDomain(record),
       routineId: record.routineId,
       routineThreadId: record.routineThreadId,
+      workspaceId: record.workspaceId,
       readAt: record.readAt,
       createdAt: record.createdAt,
     });
@@ -35,6 +36,7 @@ export class NotificationMapper {
     Object.assign(record, mediaToRecord(domain.media));
     record.routineId = domain.routineId;
     record.routineThreadId = domain.routineThreadId;
+    record.workspaceId = domain.workspaceId;
     record.readAt = domain.readAt;
     record.createdAt = domain.createdAt;
     return record;

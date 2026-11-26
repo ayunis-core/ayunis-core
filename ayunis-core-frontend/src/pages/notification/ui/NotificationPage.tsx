@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { CalendarClock, MessagesSquare } from 'lucide-react';
+import { CalendarClock, FolderOpen, MessagesSquare } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Markdown } from '@/widgets/markdown';
@@ -113,7 +113,13 @@ function NotificationActions({ notification }: Readonly<NotificationProps>) {
   const { t } = useTranslation('inbox');
   const { can } = useMyPermissions();
   const canOpenRoutine = !!notification.routineId && can('manage_routines');
-  if (!notification.routineThreadId && !canOpenRoutine) return null;
+  if (
+    !notification.routineThreadId &&
+    !canOpenRoutine &&
+    !notification.workspaceId
+  ) {
+    return null;
+  }
   return (
     <div className="flex flex-wrap gap-2">
       {notification.routineThreadId && (
@@ -143,6 +149,21 @@ function NotificationActions({ notification }: Readonly<NotificationProps>) {
           >
             <CalendarClock />
             {t('detail.openRoutine')}
+          </Link>
+        </Button>
+      )}
+      {notification.workspaceId && (
+        <Button
+          asChild
+          variant="outline"
+          data-testid="notification-open-workspace"
+        >
+          <Link
+            to="/workspaces/$workspaceId"
+            params={{ workspaceId: notification.workspaceId }}
+          >
+            <FolderOpen />
+            {t('detail.openWorkspace')}
           </Link>
         </Button>
       )}

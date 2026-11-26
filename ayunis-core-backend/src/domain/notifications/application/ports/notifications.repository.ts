@@ -18,6 +18,8 @@ export interface NotificationsOrder {
 
 export abstract class NotificationsRepository {
   abstract create(notification: Notification): Promise<Notification>;
+  /** Inserts all notifications in one statement, however many there are. */
+  abstract createMany(notifications: Notification[]): Promise<void>;
   /**
    * Creates the notification unless its routine thread already has `limit`
    * notifications, in which case nothing is written and null is returned.

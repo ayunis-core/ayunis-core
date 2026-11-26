@@ -10,11 +10,7 @@ import {
 import { Notification } from 'src/domain/notifications/domain/notification.entity';
 import type { NotificationMedia } from 'src/domain/notifications/domain/notification-media';
 import { notificationMediaViolation } from 'src/domain/notifications/domain/notification-media';
-import {
-  NOTIFICATION_BODY_MAX_LENGTH,
-  NOTIFICATION_HEADLINE_MAX_LENGTH,
-  NOTIFICATION_SUBHEADLINE_MAX_LENGTH,
-} from 'src/domain/notifications/domain/notifications.constants';
+import { validNotificationText } from 'src/domain/notifications/application/util/valid-notification-text';
 import { CreateNotificationCommand } from './create-notification.command';
 
 @Injectable()
@@ -40,20 +36,7 @@ export class CreateNotificationUseCase {
       userId: command.userId,
       orgId: command.orgId,
       type: command.type,
-      headline: requiredText(
-        'headline',
-        command.headline,
-        NOTIFICATION_HEADLINE_MAX_LENGTH,
-      ),
-      subheadline:
-        command.subheadline === null
-          ? null
-          : requiredText(
-              'subheadline',
-              command.subheadline,
-              NOTIFICATION_SUBHEADLINE_MAX_LENGTH,
-            ),
-      body: requiredText('body', command.body, NOTIFICATION_BODY_MAX_LENGTH),
+      ...validNotificationText(command),
       media: command.media && validMedia(command.media),
       routineId: command.routineId,
       routineThreadId: command.routineThreadId,
@@ -88,19 +71,6 @@ export class CreateNotificationUseCase {
     }
     return created;
   }
-}
-
-function requiredText(field: string, value: string, maxLength: number): string {
-  const text = value.trim();
-  if (text.length === 0) {
-    throw new NotificationInvalidError(`${field} is empty`);
-  }
-  if (text.length > maxLength) {
-    throw new NotificationInvalidError(
-      `${field} is longer than ${maxLength} characters`,
-    );
-  }
-  return text;
 }
 
 function validMedia(media: NotificationMedia): NotificationMedia {

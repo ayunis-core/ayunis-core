@@ -5,6 +5,7 @@ import type { WorkspaceMemberProfile } from 'src/domain/workspaces/application/m
 import { WorkspaceMembersRepository } from 'src/domain/workspaces/application/ports/workspace-members-repository.port';
 import { WorkspaceAccessService } from 'src/domain/workspaces/application/services/workspace-access.service';
 import { WorkspaceMemberProfilesService } from 'src/domain/workspaces/application/services/workspace-member-profiles.service';
+import { WorkspaceMembersAddedNotifier } from 'src/domain/workspaces/application/services/workspace-members-added-notifier.service';
 import {
   UnexpectedWorkspaceError,
   WorkspaceMemberNotInOrgError,
@@ -15,8 +16,9 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { AddWorkspaceMembersCommand } from './add-workspace-members.command';
 
 /**
- * Adds users of the caller's organization with one role. Users who already
- * are members are skipped and keep their role, since only admins change roles.
+ * Adds users of the caller's organization with one role and notifies them.
+ * Users who already are members are skipped and keep their role, since only
+ * admins change roles, and are not notified.
  */
 @Injectable()
 export class AddWorkspaceMembersUseCase {
@@ -26,6 +28,7 @@ export class AddWorkspaceMembersUseCase {
     private readonly membersRepository: WorkspaceMembersRepository,
     private readonly workspaceAccess: WorkspaceAccessService,
     private readonly profiles: WorkspaceMemberProfilesService,
+    private readonly addedNotifier: WorkspaceMembersAddedNotifier,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedWorkspaceError)
@@ -63,6 +66,11 @@ export class AddWorkspaceMembersUseCase {
         (member) => member.id,
       ),
     );
-    return profiles.filter(({ member }) => added.has(member.id));
+    const addedProfiles = profiles.filter(({ member }) => added.has(member.id));
+    await this.addedNotifier.notify(
+      workspaceId,
+      addedProfiles.map(({ member }) => member.userId),
+    );
+    return addedProfiles;
   }
 }
