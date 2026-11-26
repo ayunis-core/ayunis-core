@@ -1,84 +1,32 @@
 import type { ChatSlots } from '@ayunis/chat/surface';
+import {
+  NewChatShell,
+  type NewChatShellPhase,
+  type NewChatShellProps,
+} from '@ayunis/chat/new-chat';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@ayunis/ui/lib/cn';
-import NewChatBackdrop, { type NewChatBackdropPhase } from './NewChatBackdrop';
-import { useComposeLift } from '@/pages/new-chat/model/useComposeLift';
 
-export type NewChatMistPhase = NewChatBackdropPhase | 'hidden';
+export type NewChatMistPhase = NewChatShellPhase;
 
-interface NewChatPageLayoutProps {
+interface NewChatPageLayoutProps extends Omit<
+  NewChatShellProps,
+  'header' | 'emptyState' | 'layout' | 'testId'
+> {
   slots: Pick<ChatSlots, 'header' | 'actions' | 'emptyState'>;
-  /** Greeting + input stack; lifted when idle, slides to chat dock when settling */
-  compose?: React.ReactNode;
-  isSettling?: boolean;
-  mistPhase?: NewChatMistPhase;
-  onMistExitComplete?: () => void;
 }
 
 export default function NewChatPageLayout({
   slots,
-  compose,
-  isSettling = false,
-  mistPhase = 'idle',
-  onMistExitComplete,
+  ...shellProps
 }: Readonly<NewChatPageLayoutProps>) {
-  const useComposeLayout = compose !== undefined;
-  const { stageRef, composeRef, liftPx } = useComposeLift(
-    useComposeLayout,
-    isSettling,
-  );
-
+  const header = slots.header ? slots.header(slots.actions) : slots.actions;
   return (
     <AppLayout>
-      <div className="absolute inset-0 overflow-hidden">
-        {mistPhase !== 'hidden' && (
-          <NewChatBackdrop
-            phase={mistPhase}
-            onExitComplete={onMistExitComplete}
-          />
-        )}
-        <div className="absolute inset-0 z-[1] flex min-h-0 flex-col">
-          <div className="content-area-page-header">
-            {slots.header ? slots.header(slots.actions) : slots.actions}
-          </div>
-
-          {useComposeLayout ? (
-            <div
-              ref={stageRef}
-              className="flex min-h-0 flex-1 flex-col justify-end px-2 pb-2 sm:px-4 sm:pb-4"
-            >
-              <div
-                ref={composeRef}
-                className={cn(
-                  'new-chat-compose mx-auto w-full max-w-[800px]',
-                  isSettling
-                    ? 'new-chat-compose--settling'
-                    : 'new-chat-compose--idle',
-                )}
-                style={
-                  isSettling
-                    ? undefined
-                    : ({
-                        '--new-chat-lift': `${liftPx}px`,
-                      } as React.CSSProperties)
-                }
-              >
-                {/* Entrance animation: 200ms delay + 700ms = 900ms. Tour targets
-                    inside mirror this via settleMs. Lives on an inner wrapper so
-                    its keyframe transform doesn't override the lift transform. */}
-                <div className="new-chat-compose__content flex w-full flex-col gap-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 fill-mode-both [animation-delay:200ms]">
-                  {slots.emptyState}
-                  {compose}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-2 pb-2 sm:px-4 sm:pb-4">
-              <div className="w-full max-w-[800px]">{slots.emptyState}</div>
-            </div>
-          )}
-        </div>
-      </div>
+      <NewChatShell
+        {...shellProps}
+        header={header}
+        emptyState={slots.emptyState}
+      />
     </AppLayout>
   );
 }

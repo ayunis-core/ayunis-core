@@ -1,5 +1,6 @@
 export {
-  default as NewChatBackdrop,
-  type NewChatBackdropPhase,
-} from './NewChatBackdrop';
-export { useComposeLift } from './use-compose-lift';
+  NewChatShell,
+  type NewChatShellPhase,
+  type NewChatShellProps,
+  type NewChatStarterPrompt,
+} from './NewChatShell';
