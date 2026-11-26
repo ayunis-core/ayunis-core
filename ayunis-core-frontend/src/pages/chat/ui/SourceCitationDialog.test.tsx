@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { useSourceCitation } from '@/pages/chat/api/useSourceCitation';
+import { PiiMaskProvider } from '@/widgets/markdown';
 import SourceCitationDialog from './SourceCitationDialog';
 
 vi.mock('react-i18next', () => ({
@@ -20,6 +21,19 @@ vi.mock('react-i18next', () => ({
 vi.mock('@/pages/chat/api/useSourceCitation', () => ({
   useSourceCitation: vi.fn(),
 }));
+
+beforeAll(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+});
+
+afterAll(() => vi.unstubAllGlobals());
 
 const threadId = '00000000-0000-0000-0000-000000000001';
 const selectedCitation = {
@@ -102,6 +116,44 @@ describe('SourceCitationDialog', () => {
 
     expect(screen.getByTestId('source-citation-error')).toBeTruthy();
     expect(screen.getByText('chat.sourceCitation.unavailable')).toBeTruthy();
+  });
+
+  it('uses the surrounding chat PII context for cited excerpts', () => {
+    const onUnmaskRequest = vi.fn();
+    const mask = {
+      id: 'mask-1',
+      token: '{{pii:PERSON_1}}',
+      value: 'Ada Lovelace',
+      category: 'PERSON',
+      unmasked: false,
+    };
+    vi.mocked(useSourceCitation).mockReturnValue({
+      citation: {
+        chunk: {
+          id: selectedCitation.chunkId,
+          content: `Contact ${mask.token}`,
+          startLine: null,
+          endLine: null,
+        },
+        source: { id: 'source-1', name: 'Source', url: null },
+        recording: null,
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    render(
+      <PiiMaskProvider masks={[mask]} onUnmaskRequest={onUnmaskRequest}>
+        <SourceCitationDialog
+          threadId={threadId}
+          selectedCitation={selectedCitation}
+          onClose={vi.fn()}
+        />
+      </PiiMaskProvider>,
+    );
+    fireEvent.click(screen.getByTestId('pii-mask'));
+
+    expect(onUnmaskRequest).toHaveBeenCalledWith(mask);
   });
 
   it.each([

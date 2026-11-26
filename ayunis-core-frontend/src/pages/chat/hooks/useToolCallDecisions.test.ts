@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Message } from '@/pages/chat/model/openapi';
-import { useToolCallDecisions } from './useToolCallDecisions';
+import { useToolCallDecisions } from '@ayunis/chat/timeline';
 
 function pausedTurn(...toolCallIds: string[]): Message[] {
   return [

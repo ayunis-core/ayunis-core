@@ -70,7 +70,7 @@ export function useThreadRunReattach(
   return {
     isRunCancellable:
       dataUpdatedAt <= sessionResetAt || (run?.cancellable ?? true),
-    isCheckingForRun: isFetching,
+    isCheckingForRun: isFetching && dataUpdatedAt <= sessionResetAt,
   };
 }
 

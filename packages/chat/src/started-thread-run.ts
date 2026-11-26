@@ -5,6 +5,7 @@ export interface StartedThreadRun {
   text: string;
   images: File[];
   voiceInput: boolean;
+  messageCountBeforeSend: number;
   request: StartedRunRequest;
 }
 
@@ -59,7 +60,14 @@ export function createStartedThreadRuns(
 }
 
 function sendFirstMessage(
-  { threadId, text, images, skillId, voiceInput = false }: ThreadRunStart,
+  {
+    threadId,
+    text,
+    images,
+    skillId,
+    voiceInput = false,
+    messageCountBeforeSend = 0,
+  }: ThreadRunStart,
   send: RunEndpoints['send'],
 ): StartedThreadRun {
   const files = images.map((image) => image.file);
@@ -79,5 +87,11 @@ function sendFirstMessage(
   );
   // The chat page handles a failed request once it takes the run.
   response.catch(() => undefined);
-  return { text, images: files, voiceInput, request: { controller, response } };
+  return {
+    text,
+    images: files,
+    voiceInput,
+    messageCountBeforeSend,
+    request: { controller, response },
+  };
 }

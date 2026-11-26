@@ -1,4 +1,5 @@
 export { default as AgentRunTimeline } from './ui/AgentRunTimeline';
+export { appTimelinePresentation } from './lib/app-timeline-presentation';
 export {
   ToolCallConfirmationContext,
   type ToolCallConfirmation,

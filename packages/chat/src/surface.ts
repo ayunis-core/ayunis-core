@@ -14,6 +14,7 @@ export { useContentScrollHeader } from './use-content-scroll-header';
 export { ChatConversation } from './chat-conversation';
 export type {
   ChatConversationAdapters,
+  ChatConversationController,
   ChatConversationProps,
   ChatConversationSlots,
   ChatModelAdapter,

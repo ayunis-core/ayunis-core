@@ -1,7 +1,4 @@
-import type {
-  GetThreadResponseDto,
-  ToolCallDecisionDto,
-} from '@ayunis/api-client';
+import type { GetThreadResponseDto } from '@ayunis/api-client';
 import { showError, showInfo } from '@/shared/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
@@ -19,17 +16,12 @@ import {
   getMcpToolAllowancesControllerListQueryKey,
   getMcpIntegrationsControllerListAvailableQueryKey,
 } from '@ayunis/api-client/endpoints';
-import {
-  activeThreadRunsQueryKey,
-  threadRunLifecycle,
-} from '@/features/thread-run';
+import { activeThreadRunsQueryKey } from '@/features/thread-run';
 import { redirectToLogin } from '@/shared/lib/redirect-to-login';
-import {
-  useChatRunLifecycle,
-  type ChatRunParams,
-  type RunEndpoints,
-  type RunExecutionRequest,
-  type RunRequestObserver,
+import type {
+  ChatRunParams,
+  RunExecutionRequest,
+  RunRequestObserver,
 } from '@ayunis/chat/runs';
 import { createRunFunnelTracker } from '@/pages/chat/lib/run-funnel-tracking';
 
@@ -107,15 +99,12 @@ function notifySendFailure(
   }
 }
 
-export function useMessageSend(
-  params: ChatRunParams,
-  transport?: RunEndpoints,
-) {
+export function useWebRunObserver() {
   const { t } = useTranslation('chat');
   const queryClient = useQueryClient();
-  const observeRequest = useCallback(
+  return useCallback(
     (
-      { threadId, isAttach }: RunExecutionRequest,
+      { threadId, isAttach, decisions }: RunExecutionRequest,
       voiceInput: boolean,
       onError: ChatRunParams['onError'],
     ): RunRequestObserver => {
@@ -127,6 +116,17 @@ export function useMessageSend(
             getThreadsControllerFindOneQueryKey(threadId),
           ),
       });
+      const refreshToolAllowances = () => {
+        if (
+          decisions?.some(
+            (decision) => decision.approved && decision.alwaysAllow,
+          )
+        ) {
+          void queryClient.invalidateQueries({
+            queryKey: getMcpToolAllowancesControllerListQueryKey(),
+          });
+        }
+      };
       return {
         onEvent(event) {
           switch (event.type) {
@@ -146,16 +146,22 @@ export function useMessageSend(
                 queryKey: getMcpIntegrationsControllerListAvailableQueryKey(),
               });
               break;
-            case 'error':
             case 'thread':
+              void queryClient.invalidateQueries({
+                queryKey: getThreadsControllerFindAllQueryKey(),
+              });
+              break;
+            case 'error':
             case 'masks':
               break;
           }
         },
+        onAbort: refreshToolAllowances,
         onUnauthorized: redirectToLogin,
         onError: (error) => notifySendFailure(error, t, onError),
         async onComplete({ failed, unauthorized }, session) {
           if (!failed) runFunnel.trackDelivered();
+          refreshToolAllowances();
           if (!unauthorized && !session.aborted) {
             await refreshThreadQueriesAfterRun(queryClient, threadId, session);
           }
@@ -164,25 +170,4 @@ export function useMessageSend(
     },
     [t, queryClient],
   );
-
-  const run = useChatRunLifecycle(threadRunLifecycle, params, {
-    transport,
-    observeRequest,
-  });
-  const { sendToolCallDecisions: sendDecisions } = run;
-  const sendToolCallDecisions = useCallback(
-    async (decisions: ToolCallDecisionDto[]) => {
-      await sendDecisions(decisions);
-      if (
-        decisions.some((decision) => decision.approved && decision.alwaysAllow)
-      ) {
-        void queryClient.invalidateQueries({
-          queryKey: getMcpToolAllowancesControllerListQueryKey(),
-        });
-      }
-    },
-    [sendDecisions, queryClient],
-  );
-
-  return { ...run, sendToolCallDecisions };
 }

@@ -1,40 +1,29 @@
-import { useEffect } from 'react';
-import { AxiosError } from 'axios';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useEffectEvent } from 'react';
 import {
   getDeferredThreadRun,
   useIsThreadRunDeferred,
   startDeferredThreadRun,
-  takeStartedThreadRun,
-  clearPendingThreadSubmission,
   startThreadSubmission,
 } from '@/features/thread-run';
-import { showError } from '@/shared/lib/toast';
-import type { SendMessageInput } from '@ayunis/chat/runs';
 
 interface UsePendingMessageParams {
   threadId: string;
-  /** Whether the chat route loaded the thread with saved messages. */
-  loadedMessageCount: number;
   hasProcessingSources: boolean;
-  sendTextMessage: (input: SendMessageInput) => Promise<void>;
+  resumeStartedRun: () => boolean;
 }
 
 /**
- * A new chat's first message is sent before navigation (see useInitiateChat),
- * after its knowledge bases and integrations were attached. Once ChatPage
- * mounts, this hook takes that started run and streams its response like any
- * other send. A chat started with files arrives with the message deferred
- * instead: it is shown as pending and sent once no file is processing.
+ * A new chat started with files waits until no source is processing. This hook
+ * exposes that Web-owned readiness signal, then hands the already-started run
+ * to the shared conversation runtime.
  */
 export function usePendingMessage({
   threadId,
-  loadedMessageCount,
   hasProcessingSources,
-  sendTextMessage,
+  resumeStartedRun,
 }: UsePendingMessageParams) {
-  const { t } = useTranslation('chat');
   const isDeferred = useIsThreadRunDeferred(threadId);
+  const resume = useEffectEvent(resumeStartedRun);
 
   useEffect(() => {
     const deferredRun = getDeferredThreadRun(threadId);
@@ -45,34 +34,6 @@ export function usePendingMessage({
       });
       return;
     }
-    const messageCountBeforeSend = startDeferredThreadRun(threadId) ?? 0;
-    const startedRun = takeStartedThreadRun(threadId);
-    if (!startedRun) return;
-
-    const { text, images, voiceInput, request } = startedRun;
-    startThreadSubmission(threadId, { text, images });
-    // The run may have saved the message before the chat route loaded the
-    // thread; a pending bubble would then show it twice.
-    if (loadedMessageCount > messageCountBeforeSend)
-      clearPendingThreadSubmission(threadId);
-
-    void (async () => {
-      try {
-        await sendTextMessage({ text, startedRequest: request, voiceInput });
-      } catch (error) {
-        if (error instanceof AxiosError && error.response?.status === 403) {
-          showError(t('chat.upgradeToProError'));
-        } else {
-          showError(t('chat.errorSendMessage'));
-        }
-      }
-    })();
-  }, [
-    threadId,
-    isDeferred,
-    loadedMessageCount,
-    hasProcessingSources,
-    sendTextMessage,
-    t,
-  ]);
+    if (startDeferredThreadRun(threadId)) resume();
+  }, [threadId, isDeferred, hasProcessingSources]);
 }

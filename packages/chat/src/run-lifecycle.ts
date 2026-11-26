@@ -17,6 +17,7 @@ import type { RunEvent } from './run-stream';
 export interface RunRequestObserver {
   readonly onEvent?: (event: RunEvent) => void;
   readonly onMessageReceived?: () => void;
+  readonly onAbort?: () => void;
   readonly onUnauthorized?: () => void;
   readonly onError?: (error: Error) => void;
   readonly onComplete?: (
@@ -137,6 +138,11 @@ interface RunRouting {
   readonly canReceiveEvents: () => boolean;
 }
 
+function abortRequest(flush: () => void, notify?: () => void) {
+  flush();
+  notify?.();
+}
+
 function routeRequest({
   threadId,
   events,
@@ -181,7 +187,7 @@ function routeRequest({
     onError: (error: Error) => {
       if (canReceiveEvents()) observer.onError?.(error);
     },
-    onAbort: messages.flush,
+    onAbort: () => abortRequest(messages.flush, observer.onAbort),
     onCleanup: () => {
       messages.flush();
       if (isCurrent()) events.discard(threadId);

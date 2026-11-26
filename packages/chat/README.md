@@ -45,7 +45,14 @@ adapters where the surface supports them.
 
 - Supply the selected thread snapshot and, for rejoin, the active run snapshot
   with its freshness timestamp. Use `onRunSettled` to refresh thread and history
-  snapshots, including for turns that finish after the user navigates away.
+  snapshots, including for turns that finish after the user navigates away. The
+  initial active-run lookup gates sending; later background refreshes do not.
+- Use `observeRun` for host analytics, authentication recovery, cache refresh,
+  and translated transport errors. The package remains the only owner of run
+  execution, event routing, cancellation, reattach, and first-message handoff.
+- Use `onStartedRun` only to mirror a pre-navigation send into host-owned
+  optimistic submission state. File-processing hosts can call
+  `resumeStartedRun` after their sources become ready.
 - Supply model and attachment operations, voice transcription, and history
   mutations for the capabilities the host enables. A host can provide draft
   storage scoped to the principal. The default keeps drafts in memory for the

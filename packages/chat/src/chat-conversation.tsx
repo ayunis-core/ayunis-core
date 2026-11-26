@@ -13,7 +13,10 @@ import {
 } from '@ayunis/chat/composer';
 import { ConfiguredComposer } from './configured-composer';
 import { ChatSurface } from './chat-surface';
-import type { ChatConversationProps } from './chat-conversation-config';
+import type {
+  ChatConversationController,
+  ChatConversationProps,
+} from './chat-conversation-config';
 import {
   ChatConversationContent,
   useConversationTimeline,
@@ -21,6 +24,7 @@ import {
 import { createChatRunLifecycle, type ChatRunLifecycle } from './run-lifecycle';
 import { useConversationRun } from './use-conversation-run';
 import { sentPrompts } from '@ayunis/chat/messages';
+import type { ChatSlots } from './chat-surface-config';
 
 export function ChatConversation<Context, Outcome>(
   props: ChatConversationProps<Context, Outcome>,
@@ -92,17 +96,11 @@ function ConversationView<Context, Outcome>(
       slots={slots}
       empty={!run.messages.length && !run.isStreaming}
       renderContent={(onOpenArtifact) => (
-        <ChatConversationContent
-          threadId={thread.id}
-          copyActions={props.compactComposer}
-          messages={run.messages}
-          masks={run.piiMasks}
-          isStreaming={run.isStreaming}
-          canDecide={!run.isStreaming && !run.isCheckingForRun}
-          decide={run.sendToolCallDecisions}
-          onOpenArtifact={onOpenArtifact}
+        <ConversationContent
+          view={props}
+          run={run}
           timeline={timeline}
-          messageImage={slots?.messageImage}
+          onOpenArtifact={onOpenArtifact}
         />
       )}
       composer={
@@ -113,6 +111,44 @@ function ConversationView<Context, Outcome>(
           draft={draft}
         />
       }
+    />
+  );
+}
+
+function ConversationContent<Context, Outcome>({
+  view,
+  run,
+  timeline,
+  onOpenArtifact,
+}: Readonly<{
+  view: ChatConversationProps<Context, Outcome>;
+  run: ReturnType<typeof useConversationRun<Context, Outcome>>;
+  timeline: ReturnType<typeof useConversationTimeline>;
+  onOpenArtifact: ChatSlots['onOpenArtifact'];
+}>) {
+  const slots = view.slots ?? {};
+  const adapters = view.adapters ?? {};
+  return (
+    <ChatConversationContent
+      threadId={view.thread.id}
+      copyActions={view.compactComposer}
+      messages={run.messages}
+      masks={run.piiMasks}
+      isStreaming={run.isStreaming}
+      canDecide={!run.isStreaming && !run.isCheckingForRun}
+      decide={run.sendToolCallDecisions}
+      onOpenArtifact={onOpenArtifact}
+      timeline={timeline}
+      messageImage={slots.messageImage}
+      messageNudge={slots.messageNudge}
+      messageMarkdown={slots.messageMarkdown}
+      pendingSubmission={view.pendingSubmission ?? null}
+      contextHint={slots.contextHint}
+      waiting={slots.waiting}
+      loading={slots.loading}
+      assistantActions={slots.assistantActions}
+      onPiiUnmaskRequest={adapters.onPiiUnmaskRequest}
+      onMessageCopied={adapters.onMessageCopied}
     />
   );
 }
@@ -134,9 +170,18 @@ function ConversationComposer({
     () => sentPrompts(run.messages, run.piiMasks),
     [run.messages, run.piiMasks],
   );
-  if (slots?.composerFallback) return <>{slots.composerFallback}</>;
+  const controller = conversationController(run);
+  if (slots?.composerFallback) {
+    return (
+      <>
+        {typeof slots.composerFallback === 'function'
+          ? slots.composerFallback(controller)
+          : slots.composerFallback}
+      </>
+    );
+  }
   const onStop =
-    run.isRunCancellable && config.transport.cancel ? run.abort : undefined;
+    run.isRunCancellable && config.transport.cancel ? run.stop : undefined;
   return (
     <>
       {slots?.composerNotice}
@@ -150,9 +195,27 @@ function ConversationComposer({
         sentPrompts={prompts}
         isStreaming={run.isStreaming}
         isCheckingForRun={run.isCheckingForRun}
-        onSend={run.send}
+        onSend={(input, accepted) => {
+          void run.send(input, accepted);
+        }}
         onStop={onStop}
       />
     </>
   );
+}
+
+function conversationController(
+  run: ReturnType<typeof useConversationRun>,
+): ChatConversationController {
+  return {
+    messages: run.messages,
+    piiMasks: run.piiMasks,
+    threadTitle: run.threadTitle,
+    isStreaming: run.isStreaming,
+    isCheckingForRun: run.isCheckingForRun,
+    isRunCancellable: run.isRunCancellable,
+    send: (input, accepted = () => undefined) => run.send(input, accepted),
+    resumeStartedRun: run.resumeStartedRun,
+    stop: run.stop,
+  };
 }

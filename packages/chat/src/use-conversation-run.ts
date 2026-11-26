@@ -1,4 +1,9 @@
-import { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import type {
   ChatConversationAdapters,
   ChatConversationProps,
@@ -17,6 +22,7 @@ import {
 import { useChatThreadState } from './use-chat-thread-state';
 import { useClientToolLifecycle } from './use-client-tool-lifecycle';
 import { useThreadRunReattach } from './use-thread-run-reattach';
+import { removePendingToolCalls } from './remove-pending-tool-calls';
 
 const NO_ACTIVE_RUN = { dataUpdatedAt: 0, isFetching: false };
 type RunEnded = ReturnType<typeof useClientToolLifecycle>['runEnded'];
@@ -35,7 +41,11 @@ function useRunObserver<Context, Outcome>(
   const selected = useRef<SelectedToolView | null>(null);
   const onAccepted = useRef<(() => void) | undefined>(undefined);
 
-  function observeRequest(request: RunExecutionRequest): RunRequestObserver {
+  function observeRequest(
+    request: RunExecutionRequest,
+    voiceInput: boolean,
+    onError?: (error: Error) => void,
+  ): RunRequestObserver {
     const accepted = onAccepted.current;
     onAccepted.current = undefined;
     return observeConversationRun(lifecycle, request, {
@@ -43,6 +53,7 @@ function useRunObserver<Context, Outcome>(
       clientTools,
       selected,
       accepted,
+      observer: adapters?.observeRun?.(request, voiceInput, onError),
     });
   }
 
@@ -59,6 +70,8 @@ function useRunObserver<Context, Outcome>(
       onMessageEvent: ({ message }) => state.handleMessage(message),
       onThreadEvent: ({ title }) => state.setThreadTitle(title),
       onMasksEvent: state.handleMasks,
+      onErrorEvent: adapters?.onRunError,
+      onError: adapters?.onError,
     },
     { transport: props.config.transport, observeRequest },
   );
@@ -71,53 +84,90 @@ interface ConversationRunOptions<Context, Outcome> {
   readonly clientTools?: ClientToolDispatch<Context, Outcome>;
   readonly selected: { current: SelectedToolView | null };
   readonly accepted?: () => void;
+  readonly observer?: RunRequestObserver;
 }
 
 function observeConversationRun<Context, Outcome>(
   lifecycle: ChatRunLifecycle,
-  { threadId, isAttach }: RunExecutionRequest,
-  {
-    adapters,
-    clientTools,
-    selected,
-    accepted,
-  }: ConversationRunOptions<Context, Outcome>,
+  request: RunExecutionRequest,
+  options: ConversationRunOptions<Context, Outcome>,
 ): RunRequestObserver {
+  const { threadId, isAttach } = request;
+  const { adapters, clientTools, selected, accepted, observer } = options;
   const messages = new Map<string, ClientToolMessage>();
-  let onAccepted = accepted;
   let receivedUserMessage = false;
-  function accept() {
-    onAccepted?.();
-    onAccepted = undefined;
-  }
+  const accept = acceptOnce(accepted);
   return {
-    onUnauthorized: adapters?.onUnauthorized,
-    onError: adapters?.onError,
+    onAbort: observer?.onAbort,
+    onUnauthorized() {
+      adapters?.onUnauthorized?.();
+      observer?.onUnauthorized?.();
+    },
+    onError(error) {
+      if (observer?.onError) observer.onError(error);
+      else adapters?.onError?.(error);
+    },
     onEvent(event) {
-      if (event.type !== 'message') return;
-      if (clientTools) messages.set(event.message.id, event.message);
-      if (event.message.role === 'user') receivedUserMessage = true;
+      observer?.onEvent?.(event);
+      if (event.type === 'message') {
+        if (clientTools) messages.set(event.message.id, event.message);
+        if (event.message.role === 'user') receivedUserMessage = true;
+      }
     },
     onMessageReceived() {
-      if (receivedUserMessage) accept();
-    },
-    onComplete(outcome) {
-      if (!outcome.failed) accept();
-      const view = selected.current;
-      if (matchesToolView(view, threadId, clientTools?.contextKey)) {
-        settleSelectedTools(
-          view,
-          outcome,
-          isAttach ? messages.size : undefined,
-        );
-      } else if (clientTools && !outcome.failed) {
-        deferToolResults(lifecycle, threadId, clientTools, [
-          ...messages.values(),
-        ]);
+      if (receivedUserMessage) {
+        accept();
+        adapters?.onMessageReceived?.(threadId);
       }
+      observer?.onMessageReceived?.();
+    },
+    async onComplete(outcome, session) {
+      if (!outcome.failed) accept();
+      settleConversationTools({
+        lifecycle,
+        threadId,
+        clientTools,
+        selected: selected.current,
+        outcome,
+        followedMessageCount: isAttach ? messages.size : undefined,
+        messages: [...messages.values()],
+      });
       adapters?.onRunSettled?.(threadId, outcome);
+      await observer?.onComplete?.(outcome, session);
     },
   };
+}
+
+function acceptOnce(callback?: () => void) {
+  let pending = callback;
+  return () => {
+    pending?.();
+    pending = undefined;
+  };
+}
+
+function settleConversationTools<Context, Outcome>({
+  lifecycle,
+  threadId,
+  clientTools,
+  selected,
+  outcome,
+  followedMessageCount,
+  messages,
+}: Readonly<{
+  lifecycle: ChatRunLifecycle;
+  threadId: string;
+  clientTools?: ClientToolDispatch<Context, Outcome>;
+  selected: SelectedToolView | null;
+  outcome: RunOutcome;
+  followedMessageCount?: number;
+  messages: readonly ClientToolMessage[];
+}>) {
+  if (matchesToolView(selected, threadId, clientTools?.contextKey)) {
+    settleSelectedTools(selected, outcome, followedMessageCount);
+  } else if (clientTools && !outcome.failed) {
+    deferToolResults(lifecycle, threadId, clientTools, messages);
+  }
 }
 
 function matchesToolView(
@@ -162,17 +212,13 @@ export function useConversationRun<Context, Outcome>(
   props: ChatConversationProps<Context, Outcome>,
 ) {
   const { thread, activeRun, clientTools, config, adapters } = props;
-  const { isStreaming, state, run, selected, onAccepted } = useRunObserver(
-    props,
+  const observed = useRunObserver(props, lifecycle);
+  const { isStreaming, state, run, selected, onAccepted } = observed;
+  const status = useConversationRunStatus(
     lifecycle,
-  );
-  const status = useThreadRunReattach(
-    lifecycle,
-    {
-      threadId: thread.id,
-      isStreaming,
-      attach: run.attach,
-    },
+    thread.id,
+    isStreaming,
+    run.attach,
     config.transport.follow ? (activeRun ?? NO_ACTIVE_RUN) : NO_ACTIVE_RUN,
   );
   const tools = useClientToolLifecycle(lifecycle, {
@@ -190,7 +236,33 @@ export function useConversationRun<Context, Outcome>(
     clientTools?.contextKey,
     tools.runEnded,
   );
+  const controls = useConversationControls({
+    lifecycle,
+    thread,
+    state,
+    run,
+    tools,
+    status,
+    onAccepted,
+    adapters,
+  });
+  return { ...state, ...status, ...run, isStreaming, ...controls };
+}
 
+interface ConversationControlsOptions {
+  readonly lifecycle: ChatRunLifecycle;
+  readonly thread: ChatConversationProps['thread'];
+  readonly state: ReturnType<typeof useChatThreadState>;
+  readonly run: ReturnType<typeof useChatRunLifecycle>;
+  readonly tools: ReturnType<typeof useClientToolLifecycle>;
+  readonly status: ReturnType<typeof useConversationRunStatus>;
+  readonly onAccepted: { current: (() => void) | undefined };
+  readonly adapters?: ChatConversationAdapters;
+}
+
+function useConversationControls(options: ConversationControlsOptions) {
+  const { lifecycle, thread, state, run, tools, status, onAccepted, adapters } =
+    options;
   useSelectedThread(
     lifecycle,
     thread,
@@ -198,17 +270,51 @@ export function useConversationRun<Context, Outcome>(
     run.sendTextMessage,
     tools.beginRun,
     adapters?.onThreadState,
+    adapters?.onStartedRun,
   );
-
+  const resumeStartedRun = useCallback(
+    () =>
+      takeStartedRun(
+        lifecycle,
+        thread,
+        run.sendTextMessage,
+        tools.beginRun,
+        adapters?.onStartedRun,
+      ),
+    [
+      lifecycle,
+      thread,
+      run.sendTextMessage,
+      tools.beginRun,
+      adapters?.onStartedRun,
+    ],
+  );
   function send(input: SendMessageInput, accepted: () => void) {
     if (status.isCheckingForRun || lifecycle.isThreadRunActive(thread.id))
-      return;
+      return Promise.resolve();
     onAccepted.current = accepted;
     tools.beginRun();
-    void run.sendTextMessage(input);
+    return run.sendTextMessage(input);
   }
+  function stop() {
+    run.abort();
+    state.setMessages(removePendingToolCalls);
+  }
+  return { send, stop, resumeStartedRun };
+}
 
-  return { ...state, ...status, ...run, isStreaming, send };
+function useConversationRunStatus(
+  lifecycle: ChatRunLifecycle,
+  threadId: string,
+  isStreaming: boolean,
+  attach: ReturnType<typeof useChatRunLifecycle>['attach'],
+  activeRun: NonNullable<ChatConversationProps['activeRun']>,
+) {
+  return useThreadRunReattach(
+    lifecycle,
+    { threadId, isStreaming, attach },
+    activeRun,
+  );
 }
 
 function useSelectedToolView(
@@ -232,6 +338,7 @@ function useSelectedThread(
   sendTextMessage: ReturnType<typeof useChatRunLifecycle>['sendTextMessage'],
   beginRun: ReturnType<typeof useClientToolLifecycle>['beginRun'],
   onThreadState?: ChatConversationAdapters['onThreadState'],
+  onStartedRun?: ChatConversationAdapters['onStartedRun'],
 ) {
   const { id } = thread;
   const { messages, piiMasks, threadTitle } = state;
@@ -239,13 +346,29 @@ function useSelectedThread(
     onThreadState?.({ id, messages, piiMasks, title: threadTitle });
   }, [id, messages, piiMasks, threadTitle, onThreadState]);
   useLayoutEffect(() => {
-    const started = lifecycle.takeStartedThreadRun(id);
-    if (!started) return;
-    beginRun({ takesOverStartedRun: true });
-    void sendTextMessage({
-      text: started.text,
-      voiceInput: started.voiceInput,
-      startedRequest: started.request,
-    });
-  }, [id, lifecycle, beginRun, sendTextMessage]);
+    takeStartedRun(lifecycle, thread, sendTextMessage, beginRun, onStartedRun);
+  }, [lifecycle, thread, beginRun, sendTextMessage, onStartedRun]);
+}
+
+function takeStartedRun(
+  lifecycle: ChatRunLifecycle,
+  thread: ChatConversationProps['thread'],
+  sendTextMessage: ReturnType<typeof useChatRunLifecycle>['sendTextMessage'],
+  beginRun: ReturnType<typeof useClientToolLifecycle>['beginRun'],
+  onStartedRun?: ChatConversationAdapters['onStartedRun'],
+): boolean {
+  const started = lifecycle.takeStartedThreadRun(thread.id);
+  if (!started) return false;
+  onStartedRun?.(
+    thread.id,
+    started,
+    thread.messages.length > started.messageCountBeforeSend,
+  );
+  beginRun({ takesOverStartedRun: true });
+  void sendTextMessage({
+    text: started.text,
+    voiceInput: started.voiceInput,
+    startedRequest: started.request,
+  });
+  return true;
 }
