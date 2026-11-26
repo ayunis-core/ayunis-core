@@ -38,6 +38,7 @@ function aMarketplaceRoutine(
     routineCategoryId: null,
     iconName: 'newspaper',
     featured: false,
+    suggested: false,
     published: true,
     schedule: { frequency: 'weekly', time: '07:30', weekdays: [1, 4] },
     internetAccess: 'allowlist',

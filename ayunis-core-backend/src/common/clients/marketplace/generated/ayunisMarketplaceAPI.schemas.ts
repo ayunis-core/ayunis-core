@@ -54,6 +54,8 @@ export interface SkillListResponseDto {
   iconName: string | null;
   /** Whether the skill is featured */
   featured: boolean;
+  /** Whether Ayunis Core suggests the entry while a user has none of its kind yet */
+  suggested: boolean;
   /** Whether the skill is published */
   published: boolean;
   /** Whether the skill is pre-installed */
@@ -146,6 +148,8 @@ export interface SkillResponseDto {
   iconName: string | null;
   /** Whether the skill is featured */
   featured: boolean;
+  /** Whether Ayunis Core suggests the entry while a user has none of its kind yet */
+  suggested: boolean;
   /** Whether the skill is published */
   published: boolean;
   /** Whether the skill is pre-installed */
@@ -518,6 +522,8 @@ export interface RoutineListItemResponseDto {
   iconName: string | null;
   /** Whether the routine is featured */
   featured: boolean;
+  /** Whether Ayunis Core suggests the entry while a user has none of its kind yet */
+  suggested: boolean;
   /** Whether the routine is published (always true here) */
   published: boolean;
   schedule: RoutineScheduleResponseDto;
@@ -604,6 +610,8 @@ export interface RoutineResponseDto {
   iconName: string | null;
   /** Whether the routine is featured */
   featured: boolean;
+  /** Whether Ayunis Core suggests the entry while a user has none of its kind yet */
+  suggested: boolean;
   /** Whether the routine is published (always true here) */
   published: boolean;
   schedule: RoutineScheduleResponseDto;

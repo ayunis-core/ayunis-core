@@ -50,3 +50,10 @@ export function requestMarketplaceRoutineInstall(
     data: { identifier },
   });
 }
+
+export function requestSuggestedMarketplaceRoutines(
+  api: APIRequestContext,
+  apiURL = config.apiURL,
+): Promise<APIResponse> {
+  return api.get(`${apiURL}/api/marketplace/suggested-routines`);
+}

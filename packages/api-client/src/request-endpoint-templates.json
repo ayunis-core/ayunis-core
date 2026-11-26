@@ -90,6 +90,8 @@
   "/marketplace/integrations/{identifier}",
   "/marketplace/routines/{identifier}",
   "/marketplace/skills/{identifier}",
+  "/marketplace/suggested-routines",
+  "/marketplace/suggested-skills",
   "/mcp-integrations",
   "/mcp-integrations/available",
   "/mcp-integrations/custom",

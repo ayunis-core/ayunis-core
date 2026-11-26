@@ -7872,6 +7872,35 @@ export interface MarketplaceRoutineResponseDto {
   allowedDomains: string[];
 }
 
+export interface MarketplaceRoutineSuggestionResponseDto {
+  /** Unique identifier (slug), used to install the entry */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /**
+     * Lucide icon name (kebab-case)
+     * @nullable
+     */
+  iconName: string | null;
+  schedule: MarketplaceRoutineScheduleResponseDto;
+}
+
+export interface MarketplaceSuggestionResponseDto {
+  /** Unique identifier (slug), used to install the entry */
+  identifier: string;
+  /** Display name */
+  name: string;
+  /** Short description for marketplace display */
+  shortDescription: string;
+  /**
+     * Lucide icon name (kebab-case)
+     * @nullable
+     */
+  iconName: string | null;
+}
+
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**
  * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan

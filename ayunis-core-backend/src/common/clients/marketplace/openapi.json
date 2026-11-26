@@ -473,6 +473,10 @@
             "type": "boolean",
             "description": "Whether the skill is featured"
           },
+          "suggested": {
+            "type": "boolean",
+            "description": "Whether Ayunis Core suggests the entry while a user has none of its kind yet"
+          },
           "published": {
             "type": "boolean",
             "description": "Whether the skill is published"
@@ -548,6 +552,7 @@
           "skillCategoryId",
           "iconName",
           "featured",
+          "suggested",
           "published",
           "preInstalled",
           "useCases",
@@ -638,6 +643,10 @@
             "type": "boolean",
             "description": "Whether the skill is featured"
           },
+          "suggested": {
+            "type": "boolean",
+            "description": "Whether Ayunis Core suggests the entry while a user has none of its kind yet"
+          },
           "published": {
             "type": "boolean",
             "description": "Whether the skill is published"
@@ -719,6 +728,7 @@
           "skillCategoryId",
           "iconName",
           "featured",
+          "suggested",
           "published",
           "preInstalled",
           "useCases",
@@ -1271,6 +1281,10 @@
             "type": "boolean",
             "description": "Whether the routine is featured"
           },
+          "suggested": {
+            "type": "boolean",
+            "description": "Whether Ayunis Core suggests the entry while a user has none of its kind yet"
+          },
           "published": {
             "type": "boolean",
             "description": "Whether the routine is published (always true here)"
@@ -1355,6 +1369,7 @@
           "routineCategoryId",
           "iconName",
           "featured",
+          "suggested",
           "published",
           "schedule",
           "internetAccess",
@@ -1437,6 +1452,10 @@
           "featured": {
             "type": "boolean",
             "description": "Whether the routine is featured"
+          },
+          "suggested": {
+            "type": "boolean",
+            "description": "Whether Ayunis Core suggests the entry while a user has none of its kind yet"
           },
           "published": {
             "type": "boolean",
@@ -1530,6 +1549,7 @@
           "routineCategoryId",
           "iconName",
           "featured",
+          "suggested",
           "published",
           "schedule",
           "internetAccess",

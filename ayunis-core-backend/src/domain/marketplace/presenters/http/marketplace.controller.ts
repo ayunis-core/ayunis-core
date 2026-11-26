@@ -12,6 +12,12 @@ import { MarketplaceConfigResponseDto } from './dto/marketplace-config-response.
 import { GetMarketplaceRoutineUseCase } from 'src/domain/marketplace/application/use-cases/get-marketplace-routine/get-marketplace-routine.use-case';
 import { GetMarketplaceRoutineQuery } from 'src/domain/marketplace/application/use-cases/get-marketplace-routine/get-marketplace-routine.query';
 import { MarketplaceRoutineResponseDto } from './dto/marketplace-routine-response.dto';
+import { ListSuggestedMarketplaceSkillsUseCase } from 'src/domain/marketplace/application/use-cases/list-suggested-marketplace-skills/list-suggested-marketplace-skills.use-case';
+import { ListSuggestedMarketplaceRoutinesUseCase } from 'src/domain/marketplace/application/use-cases/list-suggested-marketplace-routines/list-suggested-marketplace-routines.use-case';
+import {
+  MarketplaceRoutineSuggestionResponseDto,
+  MarketplaceSuggestionResponseDto,
+} from './dto/marketplace-suggestion-response.dto';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
 
@@ -24,6 +30,8 @@ export class MarketplaceController {
     private readonly getMarketplaceSkillUseCase: GetMarketplaceSkillUseCase,
     private readonly getMarketplaceIntegrationUseCase: GetMarketplaceIntegrationUseCase,
     private readonly getMarketplaceRoutineUseCase: GetMarketplaceRoutineUseCase,
+    private readonly listSuggestedMarketplaceSkillsUseCase: ListSuggestedMarketplaceSkillsUseCase,
+    private readonly listSuggestedMarketplaceRoutinesUseCase: ListSuggestedMarketplaceRoutinesUseCase,
     @Inject(marketplaceConfig.KEY)
     private readonly marketplace: ConfigType<typeof marketplaceConfig>,
   ) {}
@@ -40,6 +48,55 @@ export class MarketplaceController {
       enabled: this.marketplace.enabled,
       url: this.marketplace.serviceUrl ?? null,
     };
+  }
+
+  @Get('suggested-skills')
+  @ApiOperation({
+    summary: 'List the marketplace skills suggested to users without skills',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'At most six suggested skills, featured first, then by name',
+    type: [MarketplaceSuggestionResponseDto],
+  })
+  @ApiResponse({ status: 503, description: 'Marketplace unavailable' })
+  async listSuggestedSkills(): Promise<MarketplaceSuggestionResponseDto[]> {
+    this.logger.log('listSuggestedSkills');
+    const skills = await this.listSuggestedMarketplaceSkillsUseCase.execute();
+    return skills.map((skill) => ({
+      identifier: skill.identifier,
+      name: skill.name,
+      shortDescription: skill.shortDescription,
+      iconName: skill.iconName ?? null,
+    }));
+  }
+
+  @Get('suggested-routines')
+  @RequireFeature(FeatureFlag.Routines)
+  @ApiOperation({
+    summary:
+      'List the marketplace routines suggested to users without routines',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'At most six suggested routines, featured first, then by name',
+    type: [MarketplaceRoutineSuggestionResponseDto],
+  })
+  @ApiResponse({ status: 404, description: 'Routines are disabled' })
+  @ApiResponse({ status: 503, description: 'Marketplace unavailable' })
+  async listSuggestedRoutines(): Promise<
+    MarketplaceRoutineSuggestionResponseDto[]
+  > {
+    this.logger.log('listSuggestedRoutines');
+    const routines =
+      await this.listSuggestedMarketplaceRoutinesUseCase.execute();
+    return routines.map((routine) => ({
+      identifier: routine.identifier,
+      name: routine.name,
+      shortDescription: routine.shortDescription,
+      iconName: routine.iconName ?? null,
+      schedule: routine.schedule,
+    }));
   }
 
   @Get('skills/:identifier')
