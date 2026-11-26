@@ -38,14 +38,14 @@ export function getDeferredThreadRun(threadId: string): ThreadRunStart | null {
   return deferredRuns.get(threadId) ?? null;
 }
 
-export function startDeferredThreadRun(threadId: string): number | undefined {
+export function startDeferredThreadRun(threadId: string): boolean {
   const run = deferredRuns.get(threadId);
-  if (!run) return;
+  if (!run) return false;
   deferredRuns.delete(threadId);
   clearWaitingMessage(threadId);
   startThreadRun(run);
   notifyListeners();
-  return run.messageCountBeforeSend;
+  return true;
 }
 
 /** Returns whether a message was waiting. */

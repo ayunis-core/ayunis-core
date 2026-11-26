@@ -81,6 +81,10 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node-pnpm
 
+      - name: Run chat package tests
+        working-directory: packages/chat
+        run: pnpm run test
+
       - name: Run tests
         working-directory: ayunis-core-frontend
         run: pnpm run test

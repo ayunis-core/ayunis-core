@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentRunUnit } from '@/pages/chat/ui/agent-run-timeline';
-import AssistantRunBlock from './AssistantRunBlock';
+import { createRef } from 'react';
+import { WebAssistantActions } from './WebAssistantActions';
 
 const toggles = vi.hoisted(() => ({ readAloudEnabled: true }));
 
@@ -42,13 +43,15 @@ function readAloudButton() {
   return screen.queryByTestId('assistant-read-aloud');
 }
 
-describe('AssistantRunBlock read aloud', () => {
+const contentRef = createRef<HTMLDivElement>();
+
+describe('WebAssistantActions read aloud', () => {
   beforeEach(() => {
     toggles.readAloudEnabled = true;
   });
 
   it('offers read aloud under a completed answer', () => {
-    render(<AssistantRunBlock unit={unit()} isGroupedWithPrevious={false} />);
+    render(<WebAssistantActions unit={unit()} contentRef={contentRef} />);
 
     expect(readAloudButton()).not.toBeNull();
     expect(readAloudButton()?.getAttribute('aria-label')).toBe(
@@ -58,9 +61,9 @@ describe('AssistantRunBlock read aloud', () => {
 
   it('hides read aloud while the answer is streaming', () => {
     render(
-      <AssistantRunBlock
+      <WebAssistantActions
         unit={unit({ isStreaming: true })}
-        isGroupedWithPrevious={false}
+        contentRef={contentRef}
       />,
     );
 
@@ -69,11 +72,11 @@ describe('AssistantRunBlock read aloud', () => {
 
   it('hides read aloud for a run without text', () => {
     render(
-      <AssistantRunBlock
+      <WebAssistantActions
         unit={unit({
           blocks: [{ kind: 'routine-finished', key: 'a1-finished' }],
         })}
-        isGroupedWithPrevious={false}
+        contentRef={contentRef}
       />,
     );
 
@@ -82,7 +85,7 @@ describe('AssistantRunBlock read aloud', () => {
 
   it('hides read aloud for an answer that is only code', () => {
     render(
-      <AssistantRunBlock
+      <WebAssistantActions
         unit={unit({
           blocks: [
             {
@@ -92,7 +95,7 @@ describe('AssistantRunBlock read aloud', () => {
             },
           ],
         })}
-        isGroupedWithPrevious={false}
+        contentRef={contentRef}
       />,
     );
 
@@ -102,7 +105,7 @@ describe('AssistantRunBlock read aloud', () => {
   it('hides read aloud when it is not enabled', () => {
     toggles.readAloudEnabled = false;
 
-    render(<AssistantRunBlock unit={unit()} isGroupedWithPrevious={false} />);
+    render(<WebAssistantActions unit={unit()} contentRef={contentRef} />);
 
     expect(readAloudButton()).toBeNull();
   });

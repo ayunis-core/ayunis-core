@@ -10,14 +10,29 @@ import {
   abortActiveThreadRun,
   activeThreadRunsQueryKey,
   resetThreadRunSession,
+  threadRunLifecycle,
 } from '@/features/thread-run';
 import {
+  getMcpToolAllowancesControllerListQueryKey,
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
 } from '@ayunis/api-client/endpoints';
 import { showError, showInfo } from '@/shared/lib/toast';
 import type * as GeneratedApi from '@ayunis/api-client/endpoints';
-import { useMessageSend } from './useMessageSend';
+import {
+  useChatRunLifecycle,
+  type ChatRunParams,
+  type RunEndpoints,
+} from '@ayunis/chat/runs';
+import { useWebRunObserver } from './useWebRunObserver';
+
+function useObservedChatRun(params: ChatRunParams, transport?: RunEndpoints) {
+  const observeRequest = useWebRunObserver();
+  return useChatRunLifecycle(threadRunLifecycle, params, {
+    transport,
+    observeRequest,
+  });
+}
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -74,7 +89,7 @@ function createControlledSseResponse() {
   };
 }
 
-describe('useMessageSend', () => {
+describe('useWebRunObserver', () => {
   beforeEach(() => {
     redirectToLogin.mockClear();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -99,7 +114,12 @@ describe('useMessageSend', () => {
     );
     const { result } = renderHook(
       () =>
-        useMessageSend({ threadId, onErrorEvent, onMessageEvent, onComplete }),
+        useObservedChatRun({
+          threadId,
+          onErrorEvent,
+          onMessageEvent,
+          onComplete,
+        }),
       { wrapper },
     );
     stream.send({
@@ -144,7 +164,7 @@ describe('useMessageSend', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     const { result } = renderHook(
-      () => useMessageSend({ threadId, onError, onComplete }),
+      () => useObservedChatRun({ threadId, onError, onComplete }),
       { wrapper },
     );
 
@@ -155,6 +175,67 @@ describe('useMessageSend', () => {
     expect(redirectToLogin).toHaveBeenCalledOnce();
     expect(onError).not.toHaveBeenCalled();
     expect(onComplete).toHaveBeenCalledWith(true);
+  });
+
+  it('refreshes tool allowances after an always-allow decision', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
+    );
+    const queryClient = new QueryClient();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useObservedChatRun({ threadId }), {
+      wrapper,
+    });
+
+    await act(async () => {
+      await result.current.sendToolCallDecisions([
+        { toolCallId: 'call', approved: true, alwaysAllow: true },
+      ]);
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: getMcpToolAllowancesControllerListQueryKey(),
+    });
+  });
+
+  it('refreshes tool allowances when an always-allow continuation is stopped', async () => {
+    const stream = createControlledSseResponse();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+        init?.signal?.addEventListener('abort', () => {
+          stream.fail(
+            new DOMException('The operation was aborted', 'AbortError'),
+          );
+        });
+        return Promise.resolve(stream.response);
+      }),
+    );
+    const queryClient = new QueryClient();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useObservedChatRun({ threadId }), {
+      wrapper,
+    });
+    let continuation: Promise<void> | undefined;
+
+    act(() => {
+      continuation = result.current.sendToolCallDecisions([
+        { toolCallId: 'call', approved: true, alwaysAllow: true },
+      ]);
+    });
+    act(() => result.current.abort());
+    await act(async () => await continuation);
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: getMcpToolAllowancesControllerListQueryKey(),
+    });
   });
 
   it('asks the user to retry when the image upload cap is reached', async () => {
@@ -175,9 +256,12 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => useMessageSend({ threadId, onError }), {
-      wrapper,
-    });
+    const { result } = renderHook(
+      () => useObservedChatRun({ threadId, onError }),
+      {
+        wrapper,
+      },
+    );
 
     await act(async () => {
       await result.current.sendTextMessage({
@@ -216,7 +300,7 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => useMessageSend({ threadId }), {
+    const { result } = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
     const send = result.current.sendTextMessage({ text: 'Finish this run' });
@@ -258,7 +342,7 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => useMessageSend({ threadId }), {
+    const { result } = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
     try {
@@ -290,7 +374,7 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => useMessageSend({ threadId }), {
+    const { result } = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
 
@@ -319,7 +403,7 @@ describe('useMessageSend', () => {
     );
     const { result, rerender } = renderHook(
       ({ currentThreadId, onMessageEvent }) =>
-        useMessageSend({ threadId: currentThreadId, onMessageEvent }),
+        useObservedChatRun({ threadId: currentThreadId, onMessageEvent }),
       {
         initialProps: {
           currentThreadId: threadId,
@@ -372,7 +456,7 @@ describe('useMessageSend', () => {
     );
     const { result, rerender } = renderHook(
       ({ currentThreadId }) =>
-        useMessageSend({
+        useObservedChatRun({
           threadId: currentThreadId,
           onMessageReceived,
           onErrorEvent,
@@ -408,7 +492,7 @@ describe('useMessageSend', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     const firstHook = renderHook(
-      () => useMessageSend({ threadId, onMessageEvent: staleHandler }),
+      () => useObservedChatRun({ threadId, onMessageEvent: staleHandler }),
       { wrapper },
     );
 
@@ -420,7 +504,7 @@ describe('useMessageSend', () => {
     });
     firstHook.unmount();
     renderHook(
-      () => useMessageSend({ threadId, onMessageEvent: remountedHandler }),
+      () => useObservedChatRun({ threadId, onMessageEvent: remountedHandler }),
       { wrapper },
     );
     act(() => {
@@ -444,7 +528,7 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const firstHook = renderHook(() => useMessageSend({ threadId }), {
+    const firstHook = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
     let sendPromise: Promise<void> | undefined;
@@ -466,7 +550,7 @@ describe('useMessageSend', () => {
 
     renderHook(
       () =>
-        useMessageSend({
+        useObservedChatRun({
           threadId,
           onMessageEvent: reopenedMessages,
           onMasksEvent: reopenedMasks,
@@ -497,9 +581,10 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => useMessageSend({ threadId, onError }), {
-      wrapper,
-    });
+    const { result } = renderHook(
+      () => useObservedChatRun({ threadId, onError }),
+      { wrapper },
+    );
 
     let attachError: unknown;
     await act(async () => {
@@ -530,7 +615,7 @@ describe('useMessageSend', () => {
     );
     const { result, rerender } = renderHook(
       ({ currentThreadId, onComplete }) =>
-        useMessageSend({ threadId: currentThreadId, onComplete }),
+        useObservedChatRun({ threadId: currentThreadId, onComplete }),
       {
         initialProps: {
           currentThreadId: threadId,
@@ -585,7 +670,7 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const firstHook = renderHook(() => useMessageSend({ threadId }), {
+    const firstHook = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
 
@@ -601,7 +686,7 @@ describe('useMessageSend', () => {
     const request = fetchMock.mock.calls[0]?.[1];
     expect(request?.signal?.aborted).toBe(false);
 
-    const remountedHook = renderHook(() => useMessageSend({ threadId }), {
+    const remountedHook = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
     act(() => remountedHook.result.current.abort());
@@ -628,7 +713,7 @@ describe('useMessageSend', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
-    const { result } = renderHook(() => useMessageSend({ threadId }), {
+    const { result } = renderHook(() => useObservedChatRun({ threadId }), {
       wrapper,
     });
     let sendPromise: Promise<void> | undefined;
@@ -653,7 +738,7 @@ describe('useMessageSend', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     const { result } = renderHook(
-      () => useMessageSend({ threadId, onSessionEvent, onComplete }),
+      () => useObservedChatRun({ threadId, onSessionEvent, onComplete }),
       { wrapper },
     );
 
@@ -689,7 +774,7 @@ describe('useMessageSend', () => {
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     const { result } = renderHook(
-      () => useMessageSend({ threadId, onError, onComplete }),
+      () => useObservedChatRun({ threadId, onError, onComplete }),
       { wrapper },
     );
 
@@ -713,7 +798,7 @@ describe('useMessageSend', () => {
     });
 
     function renderStreamingHook(
-      params: Omit<Parameters<typeof useMessageSend>[0], 'threadId'>,
+      params: Omit<Parameters<typeof useObservedChatRun>[0], 'threadId'>,
       { startedBeforeMount = false } = {},
     ) {
       const stream = createControlledSseResponse();
@@ -732,7 +817,7 @@ describe('useMessageSend', () => {
         </QueryClientProvider>
       );
       const { result } = renderHook(
-        () => useMessageSend({ threadId, ...params }),
+        () => useObservedChatRun({ threadId, ...params }),
         { wrapper },
       );
       let sendPromise: Promise<void> | undefined;
@@ -875,7 +960,7 @@ describe('useMessageSend', () => {
         }),
       );
       const queryClient = new QueryClient();
-      const { result } = renderHook(() => useMessageSend({ threadId }), {
+      const { result } = renderHook(() => useObservedChatRun({ threadId }), {
         wrapper: ({ children }) =>
           createElement(QueryClientProvider, { client: queryClient }, children),
       });

@@ -15,10 +15,19 @@ import {
   type ChatThreadSnapshot,
 } from '@ayunis/chat/surface';
 import { MAX_IMAGE_SIZE_BYTES } from '@ayunis/chat/composer';
-import type { RunEndpoints, RunMessagePayload } from '@ayunis/chat/runs';
-import type { AssistantMessageResponseDto } from '@ayunis/api-client/schemas';
+import type { MarkdownProps } from '@ayunis/chat/markdown';
+import {
+  createChatRunLifecycle,
+  type RunEndpoints,
+  type RunMessagePayload,
+} from '@ayunis/chat/runs';
+import type {
+  AssistantMessageResponseDto,
+  GetThreadResponseDto,
+} from '@ayunis/api-client/schemas';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import RoutineNudgeNotice from './RoutineNudgeNotice';
 
 beforeAll(async () => {
   Element.prototype.scrollIntoView ??= () => undefined;
@@ -34,6 +43,20 @@ const second = {
   messages: [],
   piiMasks: [],
 };
+type Message = GetThreadResponseDto['messages'][number];
+
+function userMessage(
+  id: string,
+  content: Array<Record<string, unknown>>,
+): Message {
+  return {
+    id,
+    threadId: first.id,
+    role: 'user',
+    createdAt: '2026-11-24T12:00:00Z',
+    content,
+  } as unknown as Message;
+}
 
 function TestHost(props: Pick<ChatConversationProps, 'config' | 'adapters'>) {
   const [thread, setThread] = useState(first);
@@ -141,6 +164,141 @@ function deferredToolRun(
 }
 
 describe('shared chat composition', () => {
+  it('keeps user-message markdown separate from assistant timeline tracking', () => {
+    const UserMarkdown = ({ children }: Readonly<MarkdownProps>) => (
+      <p data-testid="user-markdown">{children}</p>
+    );
+    const TimelineMarkdown = ({ children }: Readonly<MarkdownProps>) => (
+      <p data-testid="timeline-markdown">{children}</p>
+    );
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={{
+          ...first,
+          messages: [
+            userMessage('u1', [{ type: 'text', text: 'User prompt' }]),
+            answer(first.id, 'a1', 'Assistant answer').message,
+          ],
+        }}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        timeline={{ toolCards: new Map(), Markdown: TimelineMarkdown }}
+        slots={{ messageMarkdown: UserMarkdown }}
+      />,
+    );
+
+    expect(screen.getByTestId('user-markdown').textContent).toBe('User prompt');
+    expect(screen.getByTestId('timeline-markdown').textContent).toBe(
+      'Assistant answer',
+    );
+  });
+
+  it('does not render an empty actions row for tool-only runs', () => {
+    const toolOnly = event(first.id, 'a1', [
+      { type: 'tool_use', id: 'call', name: 'read_context', params: {} },
+    ]).message;
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        compactComposer
+        thread={{ ...first, messages: [toolOnly] }}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        slots={{ assistantActions: () => null }}
+      />,
+    );
+
+    expect(
+      screen.getByTestId('assistant-message').nextElementSibling,
+    ).toBeNull();
+  });
+
+  it('does not rerender existing user messages during active-run polling', () => {
+    const renderUser = vi.fn();
+    const UserMarkdown = ({ children }: Readonly<MarkdownProps>) => {
+      renderUser();
+      return <p>{children}</p>;
+    };
+    const thread = {
+      ...first,
+      messages: [userMessage('u1', [{ type: 'text', text: 'First' }])],
+    };
+    const conversation = (isFetching: boolean) => (
+      <ChatConversation
+        sessionKey="test-user"
+        thread={thread}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        slots={{ messageMarkdown: UserMarkdown }}
+        activeRun={{ dataUpdatedAt: 1, isFetching }}
+      />
+    );
+    const { rerender } = render(conversation(false));
+
+    expect(renderUser).toHaveBeenCalledOnce();
+
+    rerender(conversation(true));
+
+    expect(renderUser).toHaveBeenCalledOnce();
+  });
+
+  it('does not rerender completed assistant runs while the next run streams', async () => {
+    const pending = stream();
+    const request = vi.fn(async () => pending.response);
+    const completed = answer(first.id, 'a1', 'Completed answer').message;
+    const thread = {
+      ...first,
+      messages: [
+        userMessage('u1', [{ type: 'text', text: 'First' }]),
+        completed,
+      ],
+    };
+    const renders = new Map<string, number>();
+    const assistantActions: NonNullable<
+      NonNullable<ChatConversationProps['slots']>['assistantActions']
+    > = (unit) => {
+      renders.set(unit.key, (renders.get(unit.key) ?? 0) + 1);
+      return null;
+    };
+    const onMessageCopied = vi.fn();
+    const conversation = (dataUpdatedAt: number, isFetching: boolean) => (
+      <ChatConversation
+        sessionKey="test-user"
+        thread={thread}
+        config={{ transport: { send: request }, capabilities: {} }}
+        slots={{ assistantActions }}
+        adapters={{ onMessageCopied }}
+        activeRun={{
+          dataUpdatedAt,
+          isFetching,
+        }}
+      />
+    );
+    const { rerender } = render(conversation(0, false));
+
+    send('Next question');
+    const nextUser = event(first.id, 'u2', [
+      { type: 'text', text: 'Next question' },
+    ]);
+    await act(async () => {
+      pending.push({
+        ...nextUser,
+        message: { ...nextUser.message, role: 'user' },
+      });
+    });
+    await act(async () => {
+      pending.push(answer(first.id, 'a2', 'Par'));
+    });
+    expect(await screen.findByText('Par')).toBeTruthy();
+    const completedRenders = renders.get('run-a1');
+    rerender(conversation(1, true));
+    await act(async () => {
+      pending.push(answer(first.id, 'a2', 'Partial answer'));
+    });
+
+    expect(await screen.findByText('Partial answer')).toBeTruthy();
+    expect(renders.get('run-a1')).toBe(completedRenders);
+    await act(async () => pending.close());
+  });
+
   it('preserves per-chat drafts and resumes rendering the first run after switching chats', async () => {
     const pending = stream();
     const request = vi.fn(async () => pending.response);
@@ -200,6 +358,232 @@ describe('shared chat composition', () => {
       await act(async () => pending.close());
       vi.useRealTimers();
     }
+  });
+
+  it('lets the host observe a run without owning its lifecycle', async () => {
+    const pending = stream();
+    const request = vi.fn(async () => pending.response);
+    const observer = {
+      onEvent: vi.fn(),
+      onComplete: vi.fn(),
+    };
+    const observeRun = vi.fn(() => observer);
+    const onRunSettled = vi.fn();
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        config={{ transport: { send: request }, capabilities: {} }}
+        adapters={{ observeRun, onRunSettled }}
+      />,
+    );
+
+    send('Observed prompt');
+    const message = answer(first.id, 'a1', 'Observed answer');
+    await act(async () => {
+      pending.push(message);
+      pending.close();
+    });
+
+    expect(observeRun).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        threadId: first.id,
+        text: 'Observed prompt',
+      }),
+      false,
+      undefined,
+    );
+    expect(observer.onEvent).toHaveBeenCalledWith(message);
+    expect(observer.onComplete).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ failed: false }),
+      expect.any(AbortSignal),
+    );
+    expect(onRunSettled).toHaveBeenCalledExactlyOnceWith(
+      first.id,
+      expect.objectContaining({ failed: false }),
+    );
+  });
+
+  it('owns the first-message handoff and reports its pending state to the host', async () => {
+    const pending = stream();
+    const request = vi.fn(async () => pending.response);
+    const lifecycle = createChatRunLifecycle({ send: request });
+    const onStartedRun = vi.fn();
+    lifecycle.startThreadRun({
+      threadId: first.id,
+      text: 'Started before navigation',
+      images: [],
+      messageCountBeforeSend: 0,
+    });
+
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        lifecycle={lifecycle}
+        thread={first}
+        config={{ transport: { send: request }, capabilities: {} }}
+        adapters={{ onStartedRun }}
+      />,
+    );
+    await act(async () => {
+      pending.push(answer(first.id, 'a1', 'Handoff complete'));
+      pending.close();
+    });
+
+    expect(await screen.findByText('Handoff complete')).toBeTruthy();
+    expect(request).toHaveBeenCalledOnce();
+    expect(onStartedRun).toHaveBeenCalledExactlyOnceWith(
+      first.id,
+      expect.objectContaining({
+        text: 'Started before navigation',
+        messageCountBeforeSend: 0,
+      }),
+      false,
+    );
+  });
+
+  it('places host context directly before the first user turn', () => {
+    const persisted = {
+      ...first,
+      messages: [
+        event(first.id, 'a1', [{ type: 'text', text: 'Earlier answer' }])
+          .message,
+        userMessage('u1', [{ type: 'text', text: 'First question' }]),
+      ],
+    };
+    const { container, rerender } = render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={persisted}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        slots={{ contextHint: <div data-testid="context-hint" /> }}
+      />,
+    );
+    const hint = screen.getByTestId('context-hint');
+    const message = screen.getByTestId('user-message');
+    expect(
+      hint.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    rerender(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        pendingSubmission="Pending question"
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        slots={{ contextHint: <div data-testid="context-hint" /> }}
+      />,
+    );
+    expect(
+      container.querySelector('[data-testid="context-hint"]'),
+    ).toBeTruthy();
+    expect(
+      container.querySelector('[data-testid="pending-user-message"]'),
+    ).toBeTruthy();
+  });
+
+  it('hides host context until a user turn exists', () => {
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        slots={{ contextHint: <div data-testid="context-hint" /> }}
+      />,
+    );
+    expect(screen.queryByTestId('context-hint')).toBeNull();
+  });
+
+  it('renders a routine nudge as a notice instead of a user bubble', () => {
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={{
+          ...first,
+          messages: [
+            userMessage('nudge', [
+              { type: 'text', text: 'Check in later', isNudge: true },
+            ]),
+          ],
+        }}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        slots={{ messageNudge: (text) => <RoutineNudgeNotice text={text} /> }}
+      />,
+    );
+    expect(screen.getByTestId('routine-nudge').textContent).toContain(
+      'chat.routine.nudge',
+    );
+    expect(screen.queryByTestId('user-message')).toBeNull();
+  });
+
+  it('keeps the shared default nudge presentation unchanged without a host slot', () => {
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={{
+          ...first,
+          messages: [
+            userMessage('nudge', [
+              { type: 'text', text: 'Plain surface nudge', isNudge: true },
+            ]),
+          ],
+        }}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+      />,
+    );
+    expect(screen.getByText('Plain surface nudge')).toBeTruthy();
+    expect(screen.queryByTestId('routine-nudge')).toBeNull();
+  });
+
+  it('copies the resolved user prompt and reports the host action', async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { write: vi.fn(), writeText },
+    });
+    const onMessageCopied = vi.fn();
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        compactComposer
+        thread={{
+          ...first,
+          piiMasks: [
+            {
+              id: 'mask-1',
+              token: '{{pii:PERSON_NAME_1}}',
+              value: 'Erika Mustermann',
+              category: 'person_name',
+              unmasked: false,
+            },
+          ],
+          messages: [
+            userMessage('u1', [
+              {
+                type: 'text',
+                text: 'Internal skill instruction',
+                isSkillInstruction: true,
+              },
+              {
+                type: 'text',
+                text: 'Schreibe **{{pii:PERSON_NAME_1}}** eine Antwort',
+              },
+            ]),
+          ],
+        }}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        adapters={{ onMessageCopied }}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'chat.copyToClipboard' }),
+    );
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith(
+        'Schreibe **Erika Mustermann** eine Antwort',
+      ),
+    );
+    expect(onMessageCopied).toHaveBeenCalledWith('user');
   });
 
   it('keeps a new draft on the selected thread when a previous thread is accepted', async () => {
@@ -298,6 +682,46 @@ describe('shared chat composition', () => {
     expect(follow.mock.calls).toHaveLength(1);
     pending.close();
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it('removes an unsaved streaming tool call when the shared runtime stops', async () => {
+    const pending = stream();
+    const request = vi.fn(async () => pending.response);
+    const cancel = vi.fn(async () => undefined);
+    const onThreadState = vi.fn();
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        config={{ transport: { send: request, cancel }, capabilities: {} }}
+        adapters={{ onThreadState }}
+      />,
+    );
+    send('Create a document');
+    await act(async () =>
+      pending.push(
+        event(first.id, 'a1', [
+          {
+            type: 'tool_use',
+            id: 'call',
+            name: 'create_document',
+            params: {},
+            stream: { status: 'streaming', argumentsJson: '' },
+          },
+        ]),
+      ),
+    );
+    await waitFor(() =>
+      expect(onThreadState.mock.calls.at(-1)?.[0].messages).toHaveLength(1),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+
+    await waitFor(() =>
+      expect(onThreadState.mock.calls.at(-1)?.[0].messages).toHaveLength(0),
+    );
+    expect(cancel).toHaveBeenCalledWith(first.id);
+    pending.close();
   });
 
   it('runs a registered client tool and posts its result on the same thread', async () => {

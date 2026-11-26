@@ -1,4 +1,3 @@
-import { ChatSurface, type ChatSurfaceProps } from '@ayunis/chat/surface';
 import type { ReactNode } from 'react';
 import {
   Panel,
@@ -6,18 +5,19 @@ import {
   Separator as PanelResizeHandle,
 } from 'react-resizable-panels';
 
-interface ChatInterfaceLayoutProps extends ChatSurfaceProps {
+interface ChatInterfaceLayoutProps {
+  readonly children: ReactNode;
   readonly sidePanel?: ReactNode;
 }
 
 export default function ChatInterfaceLayout({
+  children,
   sidePanel,
-  ...chat
 }: ChatInterfaceLayoutProps) {
   return (
     <PanelGroup orientation="horizontal" className="absolute inset-0">
       <Panel defaultSize={sidePanel ? 50 : 100} minSize={30}>
-        <ChatSurface {...chat} />
+        {children}
       </Panel>
       {sidePanel && (
         <>

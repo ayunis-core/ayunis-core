@@ -1,177 +1,75 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StrictMode, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   abortActiveThreadRun,
   cancelDeferredThreadRun,
   deferThreadRun,
-  startThreadRun,
-  takeStartedThreadRun,
-  completeThreadSubmission,
-  getFailedThreadSubmission,
   getPendingThreadSubmission,
   resetThreadSubmission,
+  subscribeToThreadSubmissions,
+  takeStartedThreadRun,
 } from '@/features/thread-run';
 import { useChatThread } from '@/pages/chat/api/useChatThread';
 import type { Thread } from '@/pages/chat/model/openapi';
-
 import { usePendingMessage } from './usePendingMessage';
 
 const { findThread } = vi.hoisted(() => ({ findThread: vi.fn() }));
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
 vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   threadsControllerFindOne: findThread,
 }));
 
 const threadId = '00000000-0000-0000-0000-000000000001';
+const FOUR_MINUTES_MS = 240_000;
+const TWO_POLLS_MS = 10_000;
+const message = 'Fasse den Haushalt zusammen';
 
-function renderPendingMessage(options?: {
-  hasLoadedMessages?: boolean;
-  strict?: boolean;
-}) {
-  const sendTextMessage = vi.fn().mockResolvedValue(undefined);
-  renderHook(
-    () =>
-      usePendingMessage({
-        threadId,
-        loadedMessageCount: options?.hasLoadedMessages ? 1 : 0,
-        hasProcessingSources: false,
-        sendTextMessage,
-      }),
-    options?.strict ? { wrapper: StrictMode } : undefined,
-  );
-  return { sendTextMessage };
+function threadWithSource(status: 'processing' | 'ready' | 'failed') {
+  return {
+    id: threadId,
+    messages: [],
+    sources: [{ id: 'source-1', name: 'haushalt.pdf', status }],
+  } as unknown as Thread;
 }
 
-describe(usePendingMessage.name, () => {
-  beforeEach(() => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('')));
-  });
-
-  afterEach(() => {
-    takeStartedThreadRun(threadId);
-    abortActiveThreadRun(threadId);
-    resetThreadSubmission(threadId);
-    vi.unstubAllGlobals();
-  });
-
-  it('reads the response of the already started first message', async () => {
-    const file = new File(['png'], 'screenshot.png', { type: 'image/png' });
-    startThreadRun({ threadId, text: '', images: [{ file }] });
-
-    const { sendTextMessage } = renderPendingMessage();
-
-    await waitFor(() => expect(sendTextMessage).toHaveBeenCalledTimes(1));
-    const [input] = sendTextMessage.mock.calls[0] as [
-      { text: string; startedRequest?: unknown },
-    ];
-    expect(input.text).toBe('');
-    expect(input.startedRequest).toBeDefined();
-    expect(fetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('passes on that the started first message was dictated', async () => {
-    startThreadRun({ threadId, text: 'Hallo', images: [], voiceInput: true });
-
-    const { sendTextMessage } = renderPendingMessage();
-
-    await waitFor(() =>
-      expect(sendTextMessage).toHaveBeenCalledWith(
-        expect.objectContaining({ voiceInput: true }),
+function renderChat() {
+  const resumeStartedRun = vi.fn(() => Boolean(takeStartedThreadRun(threadId)));
+  const queryClient = new QueryClient();
+  const loadedThread = threadWithSource('processing');
+  const view = renderHook(
+    () => {
+      const { thread, hasProcessingSources } = useChatThread(
+        loadedThread,
+        false,
+      );
+      usePendingMessage({
+        threadId,
+        hasProcessingSources,
+        resumeStartedRun,
+      });
+      return thread;
+    },
+    {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       ),
-    );
-  });
+    },
+  );
+  return { resumeStartedRun, ...view };
+}
 
-  it('shows the started message as pending until the thread has it', () => {
-    startThreadRun({ threadId, text: 'Hallo', images: [] });
-
-    renderPendingMessage({ hasLoadedMessages: false });
-
-    expect(getPendingThreadSubmission(threadId)).toBe('Hallo');
-  });
-
-  it('does not show a pending copy of a message the thread already loaded', () => {
-    startThreadRun({ threadId, text: 'Hallo', images: [] });
-
-    renderPendingMessage({ hasLoadedMessages: true });
-
-    expect(getPendingThreadSubmission(threadId)).toBeNull();
-    completeThreadSubmission(threadId, true);
-    expect(getFailedThreadSubmission(threadId)).toMatchObject({
-      text: 'Hallo',
-    });
-  });
-
-  it('takes the started message only once under StrictMode', async () => {
-    startThreadRun({ threadId, text: 'Hallo', images: [] });
-
-    const { sendTextMessage } = renderPendingMessage({ strict: true });
-
-    await waitFor(() => expect(sendTextMessage).toHaveBeenCalled());
-    expect(sendTextMessage).toHaveBeenCalledTimes(1);
-  });
-
-  it('sends nothing when no message was started for the thread', () => {
-    const { sendTextMessage } = renderPendingMessage();
-
-    expect(sendTextMessage).not.toHaveBeenCalled();
-    expect(getPendingThreadSubmission(threadId)).toBeNull();
-  });
-});
+function sentTexts(): unknown[] {
+  return vi
+    .mocked(fetch)
+    .mock.calls.map(([, init]) => (init?.body as FormData).get('text'));
+}
 
 describe('first message of a new chat started with a file', () => {
-  const FOUR_MINUTES_MS = 240_000;
-  const TWO_POLLS_MS = 10_000;
-  const message = 'Fasse den Haushalt zusammen';
-
-  function threadWithSource(status: 'processing' | 'ready' | 'failed') {
-    return {
-      id: threadId,
-      messages: [],
-      sources: [{ id: 'source-1', name: 'haushalt.pdf', status }],
-    } as unknown as Thread;
-  }
-
-  function renderChat() {
-    const sendTextMessage = vi.fn().mockResolvedValue(undefined);
-    const queryClient = new QueryClient();
-    const loadedThread = threadWithSource('processing');
-    const view = renderHook(
-      () => {
-        const { thread, hasProcessingSources } = useChatThread(
-          loadedThread,
-          false,
-        );
-        usePendingMessage({
-          threadId,
-          loadedMessageCount: thread.messages.length,
-          hasProcessingSources,
-          sendTextMessage,
-        });
-        return thread;
-      },
-      {
-        wrapper: ({ children }: { children: ReactNode }) => (
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        ),
-      },
-    );
-    return { sendTextMessage, ...view };
-  }
-
-  function sentTexts(): unknown[] {
-    return vi
-      .mocked(fetch)
-      .mock.calls.map(([, init]) => (init?.body as FormData).get('text'));
-  }
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('')));
@@ -180,27 +78,48 @@ describe('first message of a new chat started with a file', () => {
   });
 
   afterEach(() => {
-    cancelDeferredThreadRun(threadId);
-    takeStartedThreadRun(threadId);
-    abortActiveThreadRun(threadId);
-    resetThreadSubmission(threadId);
+    act(() => {
+      cancelDeferredThreadRun(threadId);
+      takeStartedThreadRun(threadId);
+      abortActiveThreadRun(threadId);
+      resetThreadSubmission(threadId);
+    });
     vi.unstubAllGlobals();
     vi.useRealTimers();
     vi.clearAllMocks();
   });
 
   it('shows the message as pending and holds it while the file is processing', async () => {
-    const { sendTextMessage } = renderChat();
+    const { resumeStartedRun } = renderChat();
 
     await act(() => vi.advanceTimersByTimeAsync(FOUR_MINUTES_MS));
 
     expect(getPendingThreadSubmission(threadId)).toBe(message);
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(resumeStartedRun).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('sends the message once a file that needed more than three minutes is ready', async () => {
-    const { sendTextMessage, result } = renderChat();
+  it('does not restart pending state when the resume callback changes', () => {
+    const submissionListener = vi.fn();
+    const unsubscribe = subscribeToThreadSubmissions(submissionListener);
+    const { rerender } = renderHook(
+      ({ resumeStartedRun }: { resumeStartedRun: () => boolean }) =>
+        usePendingMessage({
+          threadId,
+          hasProcessingSources: true,
+          resumeStartedRun,
+        }),
+      { initialProps: { resumeStartedRun: vi.fn(() => false) } },
+    );
+
+    expect(submissionListener).toHaveBeenCalledOnce();
+    rerender({ resumeStartedRun: vi.fn(() => false) });
+    expect(submissionListener).toHaveBeenCalledOnce();
+    unsubscribe();
+  });
+
+  it('hands the run to the shared runtime when the file becomes ready', async () => {
+    const { resumeStartedRun, result } = renderChat();
     await act(() => vi.advanceTimersByTimeAsync(FOUR_MINUTES_MS));
 
     findThread.mockResolvedValue(threadWithSource('ready'));
@@ -208,14 +127,11 @@ describe('first message of a new chat started with a file', () => {
 
     expect(result.current.sources[0].status).toBe('ready');
     expect(sentTexts()).toEqual([message]);
-    expect(sendTextMessage).toHaveBeenCalledTimes(1);
-    expect(sendTextMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ text: message }),
-    );
+    expect(resumeStartedRun).toHaveBeenCalledOnce();
   });
 
-  it('sends the message when the file ends as failed', async () => {
-    const { sendTextMessage, result } = renderChat();
+  it('hands the run over when processing ends in failure', async () => {
+    const { resumeStartedRun, result } = renderChat();
     await act(() => vi.advanceTimersByTimeAsync(FOUR_MINUTES_MS));
 
     findThread.mockResolvedValue(threadWithSource('failed'));
@@ -223,28 +139,28 @@ describe('first message of a new chat started with a file', () => {
 
     expect(result.current.sources[0].status).toBe('failed');
     expect(sentTexts()).toEqual([message]);
-    expect(sendTextMessage).toHaveBeenCalledTimes(1);
+    expect(resumeStartedRun).toHaveBeenCalledOnce();
   });
 
-  it('sends the message at once when the file is already processed on arrival', async () => {
+  it('hands the run over at once when the file is already processed', async () => {
     findThread.mockResolvedValue(threadWithSource('ready'));
-    const { sendTextMessage } = renderChat();
+    const { resumeStartedRun } = renderChat();
 
     await act(() => vi.advanceTimersByTimeAsync(0));
 
     expect(sentTexts()).toEqual([message]);
-    expect(sendTextMessage).toHaveBeenCalledTimes(1);
+    expect(resumeStartedRun).toHaveBeenCalledOnce();
   });
 
   it('sends nothing after the waiting message was cancelled', async () => {
-    const { sendTextMessage } = renderChat();
+    const { resumeStartedRun } = renderChat();
     await act(() => vi.advanceTimersByTimeAsync(TWO_POLLS_MS));
 
-    cancelDeferredThreadRun(threadId);
+    act(() => cancelDeferredThreadRun(threadId));
     findThread.mockResolvedValue(threadWithSource('ready'));
     await act(() => vi.advanceTimersByTimeAsync(TWO_POLLS_MS));
 
-    expect(sendTextMessage).not.toHaveBeenCalled();
+    expect(resumeStartedRun).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();
   });
 });

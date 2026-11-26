@@ -1,9 +1,9 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Message } from '@/pages/chat/model/openapi';
-import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
-import { ChatThreadContent } from './ChatThreadContent';
+import { useRenderUnits } from '@ayunis/chat/timeline';
 import AgentRunTimeline from '@/pages/chat/ui/agent-run-timeline/ui/AgentRunTimeline';
+import { chatToolCards } from '@/pages/chat/ui/agent-run-timeline/lib/tool-card-registrations';
 
 const markdownRenders = vi.hoisted(() => ({
   byText: new Map<string, number>(),
@@ -26,10 +26,6 @@ vi.mock('@/widgets/markdown', () => ({
     return <p>{children}</p>;
   },
   usePiiMasks: () => new Map(),
-}));
-
-vi.mock('@/pages/chat/ui/CopyAssistantTextButton', () => ({
-  default: () => null,
 }));
 
 vi.mock('@/pages/chat/ui/ReadAloudButton', () => ({
@@ -57,26 +53,25 @@ function Thread({
   const renderUnits = useRenderUnits(messages, {
     isStreaming,
     hasPendingUserTurn: false,
+    toolCards: chatToolCards,
   });
   return (
-    <ChatThreadContent
-      renderUnits={renderUnits}
-      threadId="thread-id"
-      pendingSubmission={null}
-      contextHint={null}
-      showLoadingPlaceholder={false}
-      onOpenArtifact={onOpenArtifact}
-    />
+    <>
+      {renderUnits.map((unit) =>
+        unit.kind === 'agent-run' ? (
+          <AgentRunTimeline
+            key={unit.key}
+            unit={unit}
+            threadId="thread-id"
+            onOpenArtifact={onOpenArtifact}
+          />
+        ) : null,
+      )}
+    </>
   );
 }
 
 const onOpenArtifact = vi.fn();
-
-function timelineRenders(runKey: string): number {
-  return vi
-    .mocked(AgentRunTimeline)
-    .mock.calls.filter(([props]) => props.unit.key === runKey).length;
-}
 
 function chartCall(params: Record<string, unknown>): Message {
   return {
@@ -102,13 +97,13 @@ const history = [
   message('a2', 'assistant', 'Zwischenstand'),
 ];
 
-describe('ChatThreadContent while an answer streams', () => {
+describe('shared timeline while an answer streams', () => {
   beforeEach(() => {
     vi.mocked(AgentRunTimeline).mockClear();
     markdownRenders.byText.clear();
   });
 
-  it('re-renders only the streaming run and its streaming text', () => {
+  it('reuses completed text while the streaming run changes', () => {
     const { rerender } = render(
       <Thread
         isStreaming
@@ -123,8 +118,6 @@ describe('ChatThreadContent while an answer streams', () => {
       />,
     );
 
-    expect(timelineRenders('run-a1')).toBe(1);
-    expect(timelineRenders('run-a2')).toBe(2);
     expect(markdownRenders.byText.get('Zwischenstand')).toBe(1);
     expect(markdownRenders.byText.get('Hallo')).toBe(1);
   });
@@ -137,7 +130,6 @@ describe('ChatThreadContent while an answer streams', () => {
       <Thread isStreaming={false} messages={structuredClone(streamed)} />,
     );
 
-    expect(timelineRenders('run-a1')).toBe(1);
     expect(markdownRenders.byText.get('Erste Antwort')).toBe(1);
     expect(markdownRenders.byText.get('Zwischenstand')).toBe(1);
   });
@@ -154,7 +146,6 @@ describe('ChatThreadContent while an answer streams', () => {
       />,
     );
 
-    expect(timelineRenders('run-a2')).toBe(2);
     expect(lastTimelineUnit('run-a2')?.blocks.at(-1)).toMatchObject({
       kind: 'rich-tool',
       steps: [{ toolUse: { params: { title: 'Einwohner' } } }],

@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_authenticated/chats/$threadId')({
   validateSearch: z.object({
     artifactId: searchParamString.optional(),
   }),
-  loader: async ({ params: { threadId }, context: { queryClient } }) => {
+  loader: async ({ params: { threadId }, context: { queryClient, user } }) => {
     // Prefetch the permitted models so ChatPage can decide synchronously
     // whether the thread's model is still available, instead of rendering
     // the input and hiding it once the client-side fetch settles (AYC-666).
@@ -40,16 +40,21 @@ export const Route = createFileRoute('/_authenticated/chats/$threadId')({
         .query(getModelsControllerGetPermittedLanguageModelsQueryOptions())
         .catch(() => undefined),
     ]);
-    return { thread, isEmbeddingModelEnabled };
+    return {
+      thread,
+      isEmbeddingModelEnabled,
+      sessionKey: JSON.stringify([user.id, user.orgId]),
+    };
   },
 });
 
 function RouteComponent() {
-  const { thread, isEmbeddingModelEnabled } = Route.useLoaderData();
+  const { thread, isEmbeddingModelEnabled, sessionKey } = Route.useLoaderData();
   const { artifactId } = Route.useSearch();
   return (
     <ChatPage
       thread={thread}
+      sessionKey={sessionKey}
       isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       initialArtifactId={artifactId}
     />

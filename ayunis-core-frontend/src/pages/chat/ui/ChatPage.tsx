@@ -1,169 +1,130 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
-import type { ChatSlots, ChatSurfaceProps } from '@ayunis/chat/surface';
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type RefObject,
+} from 'react';
+import {
+  ChatConversation,
+  type ChatConversationAdapters,
+  type ChatConversationSlots,
+  type ChatThreadSnapshot,
+} from '@ayunis/chat/surface';
+import { MessageImage } from '@ayunis/chat/messages';
 import { useAppChatSurface } from '@/features/chat-surface';
 import ChatInterfaceLayout from '@/layouts/chat-interface-layout/ui/ChatInterfaceLayout';
-import { ChatThreadContent } from '@/pages/chat/ui/ChatThreadContent';
 import { ChatContextHint } from '@/pages/chat/ui/ChatContextHint';
-import ChatInput, { getChatInputSubmissionState } from '@/widgets/chat-input';
-import { useMessageSend } from '@/pages/chat/api/useMessageSend';
-import { useThreadRunReattach } from '@/pages/chat/hooks/useThreadRunReattach';
 import ChatHeader, { ChatArtifactPanelButton } from './ChatHeader';
-import LongChatWarning from './LongChatWarning';
-import UnavailableModelNotice from './UnavailableModelNotice';
-import ProviderFaultNotice from './ProviderFaultNotice';
 import type { Thread } from '@/pages/chat/model/openapi';
 import { useThreadSubmissionState } from '@/pages/chat/hooks/useThreadSubmissionState';
 import {
   type ThreadSubmission,
-  cancelDeferredThreadRun,
-  deferThreadRun,
+  threadRunLifecycle,
+  useActiveThreadRuns,
   useDeleteThread,
   useIsThreadRunActive,
-  useIsThreadRunDeferred,
 } from '@/features/thread-run';
 import { showError } from '@/shared/lib/toast';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { RenameThreadDialog } from '@/widgets/rename-thread-dialog';
-
 import { useAcademyAccessStatus } from '@/features/academy';
-import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import type { RunThreadResponseDto } from '@ayunis/api-client';
-import { PiiMaskProvider } from '@/widgets/markdown';
-import type { PiiMaskEntry } from '@/widgets/markdown';
+import {
+  Markdown,
+  PiiMaskProvider,
+  type PiiMaskEntry,
+} from '@/widgets/markdown';
 import type { ArtifactPanelHandle } from '@/shared/model/artifact-panel';
 import { useUnmaskPiiMask } from '@/pages/chat/api/useUnmaskPiiMask';
 import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
-import { usePendingMessage } from '@/pages/chat/hooks/usePendingMessage';
 import { useChatFiles } from '@/pages/chat/api/useChatFiles';
 import AppLayout from '@/layouts/app-layout';
 import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
-import { useQueryClient } from '@tanstack/react-query';
-import { getThreadsControllerFindAllQueryKey } from '@ayunis/api-client/endpoints';
 import { useChatThread } from '@/pages/chat/api/useChatThread';
 import { useKnowledgeBaseAttachment } from '@/pages/chat/api/useKnowledgeBaseAttachment';
 import { useMcpIntegrationAttachment } from '@/pages/chat/api/useMcpIntegrationAttachment';
-import {
-  mergePiiMasks,
-  useChatThreadState,
-  type PendingImage,
-} from '@ayunis/chat/runs';
-import { sentPrompts } from '@/pages/chat/lib/sent-prompts';
-import { removePendingToolCalls } from '@/pages/chat/lib/remove-pending-tool-calls';
-import { useRenderUnits } from '@/pages/chat/hooks/useRenderUnits';
-import { useToolCallDecisions } from '@/pages/chat/hooks/useToolCallDecisions';
-import { ToolCallConfirmationContext } from '@/pages/chat/ui/agent-run-timeline';
 import { ChatSidePanel } from './ChatSidePanel';
 import { useChatSidePanelTransitions } from '@/pages/chat/hooks/useChatSidePanelTransitions';
 import { useChatSidePanelState } from '@/pages/chat/hooks/useChatSidePanelState';
 import SourceCitationController from './SourceCitationController';
-import { getModeValue } from '@/widgets/model-select-options';
 import { findThreadModel } from '@/pages/chat/lib/find-thread-model';
-import { ProductiveOutcomeProvider } from '@/shared/lib/openpanel-outcomes';
+import {
+  ProductiveOutcomeProvider,
+  useTrackProductiveOutcome,
+} from '@/shared/lib/openpanel-outcomes';
+import { useWebRunObserver } from '@/pages/chat/api/useWebRunObserver';
+import {
+  AgentRunTimeline,
+  appTimelinePresentation,
+} from '@/pages/chat/ui/agent-run-timeline';
+import { sourceProcessingRun } from '@/pages/chat/lib/source-processing-steps';
+import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
+import { useApiImageSrc } from '@/shared/hooks/useApiImageSrc';
+import { WebConversationComposer } from './WebConversationComposer';
+import { WebAssistantActions } from './WebAssistantActions';
+import RoutineNudgeNotice from './RoutineNudgeNotice';
 
 interface ChatPageProps {
+  readonly sessionKey: string;
   readonly thread: Thread;
   readonly isEmbeddingModelEnabled: boolean;
   readonly initialArtifactId?: string;
 }
 
 export default function ChatPage({
+  sessionKey,
   thread: initialThread,
   isEmbeddingModelEnabled,
   initialArtifactId,
 }: ChatPageProps) {
   const { t } = useTranslation('chat');
-  const { capabilities, transport } = useAppChatSurface();
+  const config = useAppChatSurface();
   const { confirm } = useConfirmation();
   const navigate = useNavigate();
-  const {
-    models,
-    isLoading: isLoadingModels,
-    error: isModelsError,
-  } = usePermittedModels();
+  const modelQuery = usePermittedModels();
   const isStreaming = useIsThreadRunActive(initialThread.id);
   const { thread, hasProcessingSources } = useChatThread(
     initialThread,
     isStreaming,
   );
-
-  const selectedModel = findThreadModel(models, thread);
-  const isVisionEnabled = selectedModel?.canVision ?? false;
-
-  // A loading or errored models query must not hide the input (AYC-666).
+  const selectedModel = findThreadModel(modelQuery.models, thread);
   const isModelUnavailable = useMemo(() => {
-    if (thread.permittedModelId)
-      return !isLoadingModels && !isModelsError && !selectedModel;
-    return false;
-  }, [thread.permittedModelId, selectedModel, isLoadingModels, isModelsError]);
-
-  const queryClient = useQueryClient();
+    if (!thread.permittedModelId) return false;
+    return !modelQuery.isLoading && !modelQuery.error && !selectedModel;
+  }, [thread.permittedModelId, modelQuery, selectedModel]);
   const chatInputRef = useRef<ChatInputRef>(null);
   const artifactPanelRef = useRef<ArtifactPanelHandle>(null);
-
-  const {
-    messages,
-    setMessages,
-    piiMasks,
-    setPiiMasks,
-    threadTitle,
-    setThreadTitle,
-    handleMessage,
-    handleMasks,
-  } = useChatThreadState(thread, isStreaming);
-
+  const [renderedThread, setRenderedThread] =
+    useState<Pick<ChatThreadSnapshot, 'id' | 'title' | 'piiMasks'>>();
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const sidePanelState = useChatSidePanelState(thread.id, initialArtifactId);
-  const {
-    artifactPanel,
-    isExporting,
-    handleSaveArtifact,
-    handleRevertArtifact,
-    handleExportArtifact,
-  } = useArtifactActions(thread.id, initialArtifactId, thread.workspaceId);
-
-  const { handleLetterheadChange } = useLetterheadChange({
-    artifactId: artifactPanel.artifact?.id ?? '',
-    threadId: thread.id,
-    workspaceId: thread.workspaceId,
-  });
-  const sidePanelTransitions = useChatSidePanelTransitions({
+  const current = renderedThread?.id === thread.id ? renderedThread : thread;
+  const sidePanel = useChatSidePanel(
+    thread,
+    initialArtifactId,
     artifactPanelRef,
-    isArtifactDetailOpen: sidePanelState.view === 'artifact-detail',
-    openArtifact: sidePanelState.openArtifact,
-    toggleArtifactPanel: sidePanelState.toggle,
-    changeTab: sidePanelState.openTab,
-  });
-
+  );
+  const submission = useWebSubmission(thread.id, isStreaming, chatInputRef, t);
+  const chatFiles = useChatFiles(thread, hasProcessingSources);
+  const knowledgeBases = useKnowledgeBaseAttachment({ threadId: thread.id });
+  const integrations = useMcpIntegrationAttachment({ threadId: thread.id });
+  const { isGated: isAcademyGated } = useAcademyAccessStatus();
+  const { unmaskPiiMask } = useUnmaskPiiMask({ threadId: thread.id });
+  const handleRunError = useRunErrorHandler(thread.id);
+  const observeRun = useWebRunObserver();
+  const activeRuns = useActiveThreadRuns();
   const { deleteChat } = useDeleteThread({
-    onBeforeDelete: resetRunState,
-    onSuccess: () => {
-      void navigate({ to: '/chat' });
-    },
+    onBeforeDelete: () => submission.resetSubmission(thread.id),
+    onSuccess: () => void navigate({ to: '/chat' }),
     onError: (error) => {
       console.error('Failed to delete thread', error);
       showError(t('chat.errorDeleteThread'));
     },
-  });
-
-  const { isGated: isAcademyGated } = useAcademyAccessStatus();
-  const isDeferred = useIsThreadRunDeferred(thread.id);
-  const chatFiles = useChatFiles(thread, hasProcessingSources);
-
-  const { addKnowledgeBase, removeKnowledgeBase } = useKnowledgeBaseAttachment({
-    threadId: thread.id,
-  });
-  const { addIntegration, removeIntegration } = useMcpIntegrationAttachment({
-    threadId: thread.id,
-  });
-  const { unmaskPiiMask } = useUnmaskPiiMask({
-    threadId: thread.id,
-    onSuccess: (masks) =>
-      setPiiMasks((current) => mergePiiMasks(current, masks)),
   });
 
   const handleUnmaskRequest = useCallback(
@@ -179,140 +140,33 @@ export default function ChatPage({
     },
     [confirm, t, unmaskPiiMask],
   );
-
-  const handleError = useRunErrorHandler(thread.id);
-
-  const restoreFailedSubmission = useCallback(
-    (submission: ThreadSubmission) =>
-      chatInputRef.current?.restoreFailedSubmission(
-        submission.text,
-        submission.images ?? [],
-      ),
-    [],
+  const { startSubmission, clearPendingSubmission } = submission;
+  const handleStartedRun = useCallback<
+    NonNullable<ChatConversationAdapters['onStartedRun']>
+  >(
+    (id, run, messageAlreadyLoaded) => {
+      startSubmission(id, { text: run.text, images: run.images });
+      if (messageAlreadyLoaded) clearPendingSubmission(id);
+    },
+    [startSubmission, clearPendingSubmission],
   );
-  const handleRestoreBlocked = useCallback(
-    () => showError(t('chat.errorRestoreFailedSubmission')),
-    [t],
-  );
-  const {
-    pendingSubmission,
-    startSubmission,
-    clearPendingSubmission,
-    completeSubmission,
-    failSubmission,
-    resetSubmission,
-  } = useThreadSubmissionState({
-    threadId: thread.id,
-    isStreaming,
-    restoreFailedSubmission,
-    onRestoreBlocked: handleRestoreBlocked,
-  });
-  const threadPrompts = useMemo(
-    () => sentPrompts(messages, piiMasks, pendingSubmission),
-    [messages, piiMasks, pendingSubmission],
-  );
-
-  const handleThread = useCallback(
-    (thread: RunThreadResponseDto) => {
-      setThreadTitle(thread.title);
-      void queryClient.invalidateQueries({
-        queryKey: getThreadsControllerFindAllQueryKey(),
+  const handleThreadState = useCallback(
+    ({ id, title, piiMasks }: ChatThreadSnapshot) => {
+      setRenderedThread((previous) => {
+        if (
+          previous?.id === id &&
+          previous.title === title &&
+          previous.piiMasks === piiMasks
+        ) {
+          return previous;
+        }
+        return { id, title, piiMasks };
       });
     },
-    [queryClient, setThreadTitle],
+    [],
   );
 
-  const { sendTextMessage, sendToolCallDecisions, abort, attach } =
-    useMessageSend(
-      {
-        threadId: thread.id,
-        onMessageReceived: () => clearPendingSubmission(thread.id),
-        onMessageEvent: (data) => handleMessage(data.message),
-        onErrorEvent: handleError,
-        onThreadEvent: handleThread,
-        onMasksEvent: handleMasks,
-        onError: (error) => {
-          console.error('Error in useMessageSend:', error);
-          showError(t('chat.errorSendMessage'));
-        },
-        onComplete: (failed) => completeSubmission(thread.id, failed),
-      },
-      transport,
-    );
-  const { isRunCancellable } = useThreadRunReattach({
-    threadId: thread.id,
-    isStreaming,
-    attach,
-  });
-  const toolCallConfirmation = useToolCallDecisions({
-    messages,
-    isStreaming,
-    sendDecisions: sendToolCallDecisions,
-  });
-
-  usePendingMessage({
-    threadId: thread.id,
-    loadedMessageCount: thread.messages.length,
-    hasProcessingSources,
-    sendTextMessage,
-  });
-
-  const isSendDisabled = chatFiles.isUploading || isAcademyGated;
-
-  async function handleSend(
-    message: string,
-    imageFiles?: Array<{ file: File; altText?: string }>,
-    voiceInput?: boolean,
-  ) {
-    try {
-      startSubmission(thread.id, {
-        text: message,
-        images: imageFiles?.map((img) => img.file),
-      });
-      chatInputRef.current?.setMessage('');
-      if (hasProcessingSources) {
-        deferThreadRun({
-          threadId: thread.id,
-          text: message,
-          images: imageFiles ?? [],
-          voiceInput,
-          messageCountBeforeSend: thread.messages.length,
-        });
-        return;
-      }
-
-      const images: PendingImage[] | undefined =
-        imageFiles && imageFiles.length > 0
-          ? imageFiles.map((img) => ({
-              file: img.file,
-              altText: img.altText ?? 'Pasted image',
-            }))
-          : undefined;
-
-      await sendTextMessage({ text: message, images, voiceInput });
-    } catch {
-      // Run errors arrive as SSE/HTTP events (handled in useMessageSend's
-      // onErrorEvent/onError); this only catches a rejected send promise.
-      failSubmission(thread.id);
-    }
-  }
-
-  function resetRunState() {
-    resetSubmission(thread.id);
-  }
-
-  function handleSendCancelled() {
-    // A first message still waiting for its files goes back into the input.
-    if (cancelDeferredThreadRun(thread.id)) {
-      failSubmission(thread.id);
-      return;
-    }
-    abort();
-    resetRunState();
-    setMessages(removePendingToolCalls);
-  }
-
-  function handleDeleteThread() {
+  function deleteThread() {
     confirm({
       title: t('chat.deleteThreadTitle'),
       description: t('chat.deleteThreadDescription'),
@@ -323,150 +177,105 @@ export default function ChatPage({
     });
   }
 
-  function handleRenameThread() {
-    // Delay to allow dropdown menu to fully close first
-    setTimeout(() => setRenameDialogOpen(true), 0);
-  }
-
-  const slots: ChatSlots = {
+  const slots: ChatConversationSlots = {
     header: (actions) => (
       <ChatHeader
         threadId={thread.id}
-        threadTitle={threadTitle}
+        threadTitle={current.title}
         isAnonymous={thread.isAnonymous}
         workspaceId={thread.workspaceId}
         origin={thread.origin}
         actions={actions}
-        onRename={capabilities.rename ? handleRenameThread : undefined}
-        onDelete={capabilities.delete ? handleDeleteThread : undefined}
+        onRename={
+          config.capabilities.rename
+            ? () => setTimeout(() => setRenameDialogOpen(true), 0)
+            : undefined
+        }
+        onDelete={config.capabilities.delete ? deleteThread : undefined}
       />
     ),
     actions: (
       <ChatArtifactPanelButton
-        open={sidePanelState.isOpen}
-        onToggle={sidePanelTransitions.toggleArtifactPanel}
+        open={sidePanel.isOpen}
+        onToggle={sidePanel.transitions.toggleArtifactPanel}
       />
     ),
-    onOpenArtifact: sidePanelTransitions.openArtifactPanel,
+    onOpenArtifact: sidePanel.transitions.openArtifactPanel,
+    contextHint: (
+      <ChatContextHint
+        threadId={thread.id}
+        workspaceId={thread.workspaceId}
+        onOpen={() => sidePanel.transitions.changeTab('context')}
+      />
+    ),
+    waiting: chatFiles.processingSteps.length > 0 && (
+      <AgentRunTimeline unit={sourceProcessingRun(chatFiles.processingSteps)} />
+    ),
+    loading: !hasProcessingSources && <LoadingAssistantBlock />,
+    messageImage: renderWebMessageImage,
+    messageNudge: renderWebMessageNudge,
+    messageMarkdown: Markdown,
+    assistantActions: renderWebAssistantActions,
+    composerFallback: (controller) => (
+      <WebConversationComposer
+        thread={thread}
+        controller={controller}
+        inputRef={chatInputRef}
+        submission={submission}
+        files={chatFiles}
+        hasProcessingSources={hasProcessingSources}
+        isAcademyGated={isAcademyGated}
+        isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+        model={selectedModel}
+        isModelUnavailable={isModelUnavailable}
+        addKnowledgeBase={knowledgeBases.addKnowledgeBase}
+        removeKnowledgeBase={knowledgeBases.removeKnowledgeBase}
+        addIntegration={integrations.addIntegration}
+        removeIntegration={integrations.removeIntegration}
+      />
+    ),
+  };
+  const activeRun = {
+    run: activeRuns.runsByThreadId.get(thread.id),
+    dataUpdatedAt: activeRuns.dataUpdatedAt,
+    isFetching: activeRuns.isFetching,
   };
 
-  const renderUnits = useRenderUnits(messages, {
-    isStreaming,
-    hasPendingUserTurn: pendingSubmission !== null,
-  });
-
-  const lastUnitKind =
-    renderUnits.length > 0
-      ? renderUnits[renderUnits.length - 1].kind
-      : undefined;
-  const showLoadingPlaceholder =
-    pendingSubmission !== null || (isStreaming && lastUnitKind === 'user');
-
-  const renderChatContent: ChatSurfaceProps['renderContent'] = (
-    openArtifact,
-  ) => (
-    <ToolCallConfirmationContext.Provider value={toolCallConfirmation}>
-      <ChatThreadContent
-        renderUnits={renderUnits}
-        threadId={thread.id}
-        pendingSubmission={pendingSubmission}
-        contextHint={
-          <ChatContextHint
-            threadId={thread.id}
-            workspaceId={thread.workspaceId}
-            onOpen={() => sidePanelTransitions.changeTab('context')}
-          />
-        }
-        processingSteps={chatFiles.processingSteps}
-        showLoadingPlaceholder={showLoadingPlaceholder && !hasProcessingSources}
-        onOpenArtifact={openArtifact}
-      />
-    </ToolCallConfirmationContext.Provider>
-  );
-
-  const chatInput = isModelUnavailable ? (
-    <UnavailableModelNotice />
-  ) : (
-    <>
-      <p className="text-xs text-muted-foreground text-center mb-2">
-        {t('chat.inputDisclaimer')}
-      </p>
-      {thread.isLongChat && <LongChatWarning key={thread.id} />}
-      <AcademyGateNotice className="mb-2" />
-      {selectedModel?.hasProviderFault && (
-        <ProviderFaultNotice modelName={selectedModel.displayName} />
-      )}
-      <ChatInput
-        key={thread.id}
-        ref={chatInputRef}
-        draftChatId={thread.id}
-        sentPrompts={threadPrompts}
-        modelId={
-          thread.mode
-            ? getModeValue(thread.mode)
-            : (selectedModel?.id ?? thread.permittedModelId)
-        }
-        isModelChangeDisabled={true}
-        isAnonymousChangeDisabled={true}
-        sources={chatFiles.files}
-        knowledgeBases={thread.knowledgeBases}
-        mcpIntegrations={thread.mcpIntegrations}
-        isAnonymous={thread.isAnonymous}
-        submissionState={getChatInputSubmissionState(
-          isStreaming,
-          pendingSubmission,
-        )}
-        isSendDisabled={isSendDisabled}
-        onModelChange={() => {}}
-        onFileUpload={chatFiles.upload}
-        onRemoveSource={chatFiles.remove}
-        onAddKnowledgeBase={(kb) => addKnowledgeBase(kb.id)}
-        onRemoveKnowledgeBase={removeKnowledgeBase}
-        onAddIntegration={(integration) => addIntegration(integration.id)}
-        onRemoveIntegration={removeIntegration}
-        onSend={(m, imageFiles, _skillId, voiceInput) =>
-          void handleSend(m, imageFiles, voiceInput)
-        }
-        onCancel={handleSendCancelled}
-        isCancelDisabled={!isRunCancellable && !isDeferred}
-        isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-        isVisionEnabled={isVisionEnabled}
-      />
-    </>
-  );
-
-  const sidePanel = sidePanelState.isOpen ? (
-    <ChatSidePanel
-      threadId={thread.id}
-      view={sidePanelState.view}
-      artifactPanelRef={artifactPanelRef}
-      artifactPanelProps={{
-        ...artifactPanel,
-        onBack: () => sidePanelState.openTab('artifacts'),
-        onClose: sidePanelState.close,
-        onSave: handleSaveArtifact,
-        onRevert: handleRevertArtifact,
-        onExport: handleExportArtifact,
-        onLetterheadChange: handleLetterheadChange,
-        isExporting,
-      }}
-      onSelectArtifact={sidePanelTransitions.openArtifactPanel}
-      onTabChange={sidePanelTransitions.changeTab}
-      onClose={sidePanelTransitions.toggleArtifactPanel}
-    />
-  ) : undefined;
   return (
     <AppLayout>
       <ProductiveOutcomeProvider threadId={thread.id}>
-        <PiiMaskProvider masks={piiMasks} onUnmaskRequest={handleUnmaskRequest}>
+        <PiiMaskProvider
+          masks={current.piiMasks}
+          onUnmaskRequest={handleUnmaskRequest}
+        >
           <SourceCitationController key={thread.id} threadId={thread.id}>
-            <ChatInterfaceLayout
-              slots={slots}
-              renderContent={renderChatContent}
-              composer={chatInput}
-              resetKey={thread.id}
-              sidePanel={sidePanel}
-            />
+            <ChatInterfaceLayout sidePanel={sidePanel.panel}>
+              <TrackedChatConversation
+                sessionKey={sessionKey}
+                compactComposer
+                config={config}
+                lifecycle={threadRunLifecycle}
+                thread={thread}
+                activeRun={activeRun}
+                pendingSubmission={submission.pendingSubmission}
+                timeline={appTimelinePresentation}
+                slots={slots}
+                adapters={{
+                  observeRun,
+                  onRunError: handleRunError,
+                  onMessageReceived: submission.clearPendingSubmission,
+                  onRunSettled: (id, outcome) =>
+                    submission.completeSubmission(id, outcome.failed),
+                  onStartedRun: handleStartedRun,
+                  onThreadState: handleThreadState,
+                  onPiiUnmaskRequest: handleUnmaskRequest,
+                  onError: (error) => {
+                    console.error('Error in shared chat conversation:', error);
+                    showError(t('chat.errorSendMessage'));
+                  },
+                }}
+              />
+            </ChatInterfaceLayout>
           </SourceCitationController>
         </PiiMaskProvider>
       </ProductiveOutcomeProvider>
@@ -474,8 +283,137 @@ export default function ChatPage({
         open={renameDialogOpen}
         onOpenChange={setRenameDialogOpen}
         threadId={thread.id}
-        currentTitle={threadTitle ?? null}
+        currentTitle={current.title ?? null}
       />
     </AppLayout>
   );
+}
+
+function useWebSubmission(
+  threadId: string,
+  isStreaming: boolean,
+  inputRef: RefObject<ChatInputRef | null>,
+  t: ReturnType<typeof useTranslation<'chat'>>['t'],
+) {
+  const restore = useCallback(
+    (submission: ThreadSubmission) =>
+      inputRef.current?.restoreFailedSubmission(
+        submission.text,
+        submission.images ?? [],
+      ),
+    [inputRef],
+  );
+  const blocked = useCallback(
+    () => showError(t('chat.errorRestoreFailedSubmission')),
+    [t],
+  );
+  return useThreadSubmissionState({
+    threadId,
+    isStreaming,
+    restoreFailedSubmission: restore,
+    onRestoreBlocked: blocked,
+  });
+}
+
+function useChatSidePanel(
+  thread: Thread,
+  initialArtifactId: string | undefined,
+  artifactPanelRef: RefObject<ArtifactPanelHandle | null>,
+) {
+  const state = useChatSidePanelState(thread.id, initialArtifactId);
+  const actions = useArtifactActions(
+    thread.id,
+    initialArtifactId,
+    thread.workspaceId,
+  );
+  const { handleLetterheadChange } = useLetterheadChange({
+    artifactId: actions.artifactPanel.artifact?.id ?? '',
+    threadId: thread.id,
+    workspaceId: thread.workspaceId,
+  });
+  const transitions = useChatSidePanelTransitions({
+    artifactPanelRef,
+    isArtifactDetailOpen: state.view === 'artifact-detail',
+    openArtifact: state.openArtifact,
+    toggleArtifactPanel: state.toggle,
+    changeTab: state.openTab,
+  });
+  const panel = state.isOpen ? (
+    <ChatSidePanel
+      threadId={thread.id}
+      view={state.view}
+      artifactPanelRef={artifactPanelRef}
+      artifactPanelProps={{
+        ...actions.artifactPanel,
+        onBack: () => state.openTab('artifacts'),
+        onClose: state.close,
+        onSave: actions.handleSaveArtifact,
+        onRevert: actions.handleRevertArtifact,
+        onExport: actions.handleExportArtifact,
+        onLetterheadChange: handleLetterheadChange,
+        isExporting: actions.isExporting,
+      }}
+      onSelectArtifact={transitions.openArtifactPanel}
+      onTabChange={transitions.changeTab}
+      onClose={transitions.toggleArtifactPanel}
+    />
+  ) : undefined;
+  return { isOpen: state.isOpen, transitions, panel };
+}
+
+function TrackedChatConversation(
+  props: ComponentProps<typeof ChatConversation>,
+) {
+  const trackOutcome = useTrackProductiveOutcome();
+  const upstreamOnMessageCopied = props.adapters?.onMessageCopied;
+  const handleMessageCopied = useCallback<
+    NonNullable<ChatConversationAdapters['onMessageCopied']>
+  >(
+    (role) => {
+      upstreamOnMessageCopied?.(role);
+      if (role === 'assistant') {
+        trackOutcome({
+          outcome_type: 'answer_copied',
+          output_type: 'answer',
+        });
+      }
+    },
+    [trackOutcome, upstreamOnMessageCopied],
+  );
+  return (
+    <ChatConversation
+      {...props}
+      adapters={{
+        ...props.adapters,
+        onMessageCopied: handleMessageCopied,
+      }}
+    />
+  );
+}
+
+const renderWebAssistantActions: NonNullable<
+  ChatConversationSlots['assistantActions']
+> = (unit, contentRef) => (
+  <WebAssistantActions unit={unit} contentRef={contentRef} />
+);
+
+const renderWebMessageImage: NonNullable<
+  ChatConversationSlots['messageImage']
+> = (message, image) => (
+  <AuthenticatedMessageImage
+    key={`${message.id}-${image.index}`}
+    path={`/threads/${message.threadId}/messages/${message.id}/images/${image.index}`}
+    altText={image.altText}
+  />
+);
+
+const renderWebMessageNudge: NonNullable<
+  ChatConversationSlots['messageNudge']
+> = (text) => <RoutineNudgeNotice text={text} />;
+
+function AuthenticatedMessageImage({
+  path,
+  altText,
+}: Readonly<{ path: string; altText?: string }>) {
+  return <MessageImage imageUrl={useApiImageSrc(path)} altText={altText} />;
 }

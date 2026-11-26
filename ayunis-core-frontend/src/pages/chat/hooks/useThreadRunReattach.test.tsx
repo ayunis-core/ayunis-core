@@ -6,7 +6,20 @@ import {
   threadRunLifecycle,
 } from '@/features/thread-run/model/thread-run-lifecycle';
 import type { ActiveThreadRunResponseDto } from '@ayunis/api-client/schemas';
-import { useThreadRunReattach } from './useThreadRunReattach';
+import {
+  createChatRunLifecycle,
+  useThreadRunReattach as useRunReattach,
+} from '@ayunis/chat/runs';
+import { useActiveThreadRuns } from '@/features/thread-run';
+
+function useThreadRunReattach(params: Parameters<typeof useRunReattach>[1]) {
+  const { runsByThreadId, dataUpdatedAt, isFetching } = useActiveThreadRuns();
+  return useRunReattach(threadRunLifecycle, params, {
+    run: runsByThreadId.get(params.threadId),
+    dataUpdatedAt,
+    isFetching,
+  });
+}
 
 const threadId = '00000000-0000-0000-0000-000000000001';
 const otherThreadId = '00000000-0000-0000-0000-000000000002';
@@ -15,6 +28,7 @@ const activeRuns = vi.hoisted(() => ({
   current: {
     runsByThreadId: new Map<string, ActiveThreadRunResponseDto>(),
     dataUpdatedAt: 0,
+    isFetching: false,
   },
 }));
 vi.mock('@/features/thread-run', () => ({
@@ -24,10 +38,15 @@ vi.mock('@/features/thread-run', () => ({
   },
 }));
 
-function listRuns(runs: ActiveThreadRunResponseDto[], dataUpdatedAt: number) {
+function listRuns(
+  runs: ActiveThreadRunResponseDto[],
+  dataUpdatedAt: number,
+  isFetching = false,
+) {
   activeRuns.current = {
     runsByThreadId: new Map(runs.map((run) => [run.threadId, run])),
     dataUpdatedAt,
+    isFetching,
   };
 }
 
@@ -79,6 +98,40 @@ describe(useThreadRunReattach.name, () => {
     const { attach } = renderReattach();
 
     expect(attach).not.toHaveBeenCalled();
+  });
+
+  it('blocks sends only until the first active-run lookup completes', () => {
+    listRuns([], 0, true);
+    const { result, rerender } = renderReattach();
+
+    expect(result.current.isCheckingForRun).toBe(true);
+
+    listRuns([], 1_000, true);
+    rerender({ streaming: false });
+
+    expect(result.current.isCheckingForRun).toBe(false);
+  });
+
+  it('blocks sends until the active-run lookup is newer than a session reset', () => {
+    vi.useFakeTimers({ now: 5_000 });
+    const lifecycle = createChatRunLifecycle({ send: vi.fn() });
+    const attach = vi.fn().mockResolvedValue(undefined);
+    lifecycle.reset();
+    const { result, rerender } = renderHook(
+      ({ updatedAt }: Readonly<{ updatedAt: number }>) =>
+        useRunReattach(
+          lifecycle,
+          { threadId, isStreaming: false, attach },
+          { dataUpdatedAt: updatedAt, isFetching: true },
+        ),
+      { initialProps: { updatedAt: 4_000 } },
+    );
+
+    expect(result.current.isCheckingForRun).toBe(true);
+
+    rerender({ updatedAt: 6_000 });
+
+    expect(result.current.isCheckingForRun).toBe(false);
   });
 
   it('does not attach while this page streams the run itself', () => {

@@ -7,7 +7,14 @@ import {
 } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCreateFileSource } from './useCreateFileSource';
-import { useMessageSend } from './useMessageSend';
+import { useChatRunLifecycle } from '@ayunis/chat/runs';
+import { threadRunLifecycle } from '@/features/thread-run';
+import { useWebRunObserver } from './useWebRunObserver';
+
+function useMessageSend(params: { threadId: string }) {
+  const observeRequest = useWebRunObserver();
+  return useChatRunLifecycle(threadRunLifecycle, params, { observeRequest });
+}
 
 // `upload` stands in for the completion call, the last step of the direct
 // upload; the session reservation and the byte transfer always succeed.

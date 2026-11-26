@@ -22,6 +22,7 @@
     "./source-errors": "./src/source-processing-error.ts"
   },
   "scripts": {
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "deps:check": "madge --circular --extensions ts,tsx src"
@@ -59,6 +60,7 @@
     "react-dom": "catalog:",
     "react-i18next": "^15.5.3",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.11",
     "typescript-eslint": "^8.68.0"
   }
 }
