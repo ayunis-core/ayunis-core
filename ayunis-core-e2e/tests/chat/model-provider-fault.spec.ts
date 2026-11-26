@@ -61,6 +61,7 @@ test('provider fault status follows a model from catalog to an existing chat', a
 
         const selector = page.getByTestId('chat-model-selector');
         await selector.click();
+        await page.getByTestId('chat-model-selector-more-models').hover();
         const modelOption = page.getByRole('menuitem', {
           name: new RegExp(displayName),
         });

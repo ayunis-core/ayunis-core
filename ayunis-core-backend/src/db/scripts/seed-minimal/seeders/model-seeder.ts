@@ -4,11 +4,13 @@ import {
   EmbeddingModelRecord,
   ImageGenerationModelRecord,
 } from 'src/domain/models/infrastructure/persistence/local-models/schema/model.record';
+import { ModelMode } from 'src/domain/models/domain/value-objects/model-mode.enum';
+import { ModelModeEntryRecord } from 'src/domain/models/infrastructure/persistence/local-model-mode-entries/schema/model-mode-entry.record';
 import { LANGUAGE_MODEL_KEYS } from 'src/db/fixtures/minimal.fixture';
 import { GlobalSeeder } from './base-seeder';
 import { log } from 'src/db/scripts/utils/seed-log';
-import type { SeedState } from '../seed-state';
-import type { LanguageModelKey } from '../seed-types';
+import type { SeedState } from 'src/db/scripts/seed-minimal/seed-state';
+import type { LanguageModelKey } from 'src/db/scripts/seed-minimal/seed-types';
 
 type LanguageModelFixture = SeedState['fixture'][LanguageModelKey];
 
@@ -20,6 +22,18 @@ export class ModelSeeder extends GlobalSeeder {
         this.seedEmbeddingModel(ctx),
         this.seedImageGenerationModel(ctx),
       ]);
+    await this.findOrCreate(
+      this.repo(ModelModeEntryRecord),
+      { mode: ModelMode.AUTO },
+      () => ({
+        id: randomUUID(),
+        mode: ModelMode.AUTO,
+        modelId: languageModels.languageModel.id,
+        position: 0,
+        enabled: true,
+      }),
+      { entity: 'Model mode', name: ModelMode.AUTO },
+    );
     ctx.setModels({ ...languageModels, embeddingModel, imageGenerationModel });
   }
 
