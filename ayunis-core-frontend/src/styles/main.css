@@ -3,6 +3,7 @@
 @import './scroll-region.css';
 @import '@ayunis/chat/surface.css';
 @import '@ayunis/chat/markdown.css';
+@import '@ayunis/chat/composer.css';
 @import './interactions.css';
 @import './scrollbar.css';
 @source '../../../packages/chat/src';

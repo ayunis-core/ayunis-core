@@ -11,6 +11,8 @@ export function insertTextPreservingUndo(
     field.setSelectionRange(end, end);
   }
   // No current editing API records a textarea undo step. This command does.
+  const insert = document.execCommand?.bind(document);
+  if (!insert) return false;
   // eslint-disable-next-line sonarjs/deprecation -- undo-preserving insert
-  return document.execCommand('insertText', false, text);
+  return insert('insertText', false, text);
 }

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 import { Button } from '@ayunis/ui/components/button';
 import { Loader2, Mic } from 'lucide-react';
 import { cn } from '@ayunis/ui/lib/cn';
@@ -31,6 +32,7 @@ type ChatAction = ReturnType<typeof useChatAction>;
 interface AttachmentProps {
   readonly threadId: string;
   readonly disabled: boolean;
+  readonly closeMenu: boolean;
   readonly compact?: boolean;
   readonly audio?: boolean;
   readonly images?: boolean;
@@ -38,21 +40,27 @@ interface AttachmentProps {
   readonly onImages: (files: File[]) => void;
   readonly onError?: (error: Error) => void;
   readonly action: ChatAction;
+  readonly menuActions?: ReactNode;
+  readonly fileInputTestId?: string;
 }
 
 type AttachmentSelection = Readonly<{
   disabled: boolean;
+  closeMenu: boolean;
   audio?: boolean;
   images?: boolean;
   onFiles?: (files: File[]) => void;
   onImages: (files: File[]) => void;
   onError?: (error: Error) => void;
+  menuActions?: ReactNode;
+  fileInputTestId?: string;
 }>;
 
 export function AttachmentFields(props: AttachmentProps) {
   const {
     threadId,
     disabled,
+    closeMenu,
     compact,
     audio,
     images,
@@ -60,13 +68,18 @@ export function AttachmentFields(props: AttachmentProps) {
     onImages,
     onError,
     action,
+    menuActions,
+    fileInputTestId,
   } = props;
   const selection: AttachmentSelection = {
     disabled: disabled || action.busy,
+    closeMenu,
     audio,
     images,
     onImages,
     onError,
+    menuActions,
+    fileInputTestId,
     onFiles: upload
       ? (files) => {
           if (files.length)
@@ -83,11 +96,14 @@ export function AttachmentFields(props: AttachmentProps) {
 
 function CompactAttachmentFields({
   disabled,
+  closeMenu,
   audio,
   images,
   onFiles,
   onImages,
   onError,
+  menuActions,
+  fileInputTestId,
 }: AttachmentSelection) {
   const selectFiles = useComposerAttachmentSelection({
     onImages: images ? onImages : undefined,
@@ -98,9 +114,12 @@ function CompactAttachmentFields({
   return (
     <AttachmentMenu
       disabled={disabled}
+      closeMenu={closeMenu}
       onFiles={onFiles || images ? selectFiles : undefined}
       onAudio={audio ? onFiles : undefined}
       accept={onFiles ? undefined : 'image/*'}
+      menuActions={menuActions}
+      fileInputTestId={fileInputTestId}
     />
   );
 }

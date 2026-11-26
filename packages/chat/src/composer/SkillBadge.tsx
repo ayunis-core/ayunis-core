@@ -7,12 +7,10 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 
-interface SkillBadgeProps {
-  skillName: string;
-  onRemove: () => void;
-}
-
-export function SkillBadge({ skillName, onRemove }: Readonly<SkillBadgeProps>) {
+export function SkillBadge({
+  skillName,
+  onRemove,
+}: Readonly<{ skillName: string; onRemove: () => void }>) {
   const { t } = useTranslation('common');
   return (
     <Tooltip>
@@ -20,7 +18,7 @@ export function SkillBadge({ skillName, onRemove }: Readonly<SkillBadgeProps>) {
         <Badge
           variant="secondary"
           className="max-w-[9rem] min-w-0 cursor-pointer"
-          onClick={() => onRemove()}
+          onClick={onRemove}
         >
           <Sparkles className="h-3 w-3 shrink-0" />
           <span className="truncate">{skillName}</span>

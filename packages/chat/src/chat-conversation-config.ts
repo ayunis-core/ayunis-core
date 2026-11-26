@@ -39,6 +39,8 @@ export interface ChatConversationAdapters {
   readonly isSendDisabled?: boolean;
   readonly imageAttachments?: boolean;
   readonly documentAttachments?: boolean;
+  /** Keeps attachment selection available for the next draft while a run streams. */
+  readonly allowAttachmentsWhileStreaming?: boolean;
   readonly onAttachmentError?: (error: Error) => void;
   readonly uploadFiles?: (
     threadId: string,
@@ -98,6 +100,10 @@ export interface ChatConversationSlots extends ChatSlots {
   readonly composerLeading?: ReactNode;
   readonly composerModel?: ReactNode;
   readonly composerNotice?: ReactNode;
+  readonly composerFrame?: (content: ReactNode) => ReactNode;
+  readonly composerAttachmentControl?: (content: ReactNode) => ReactNode;
+  readonly composerVoiceControl?: (content: ReactNode) => ReactNode;
+  readonly composerSendControl?: (content: ReactNode) => ReactNode;
   readonly composerFallback?:
     ReactNode | ((controller: ChatConversationController) => ReactNode);
   readonly messageImage?: (

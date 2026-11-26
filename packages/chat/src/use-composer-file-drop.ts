@@ -28,17 +28,18 @@ export function useComposerFileDrop(
   upload: ReturnType<typeof useChatAction>,
   attachImages: (files: File[]) => void,
 ) {
-  const documentUpload = capabilities.fileUpload
-    ? getDocumentUpload(adapters, isStreaming || Boolean(isSubmitting))
-    : undefined;
-  const imagesEnabled = capabilities.fileUpload && adapters?.imageAttachments;
+  const imageBusy = attachmentsBusy({ isSubmitting, isStreaming, adapters });
+  const documentBusy = Boolean(isSubmitting) || isStreaming;
+  const documentUpload = getDocumentUpload(
+    capabilities,
+    adapters,
+    documentBusy,
+  );
   const selectFiles = useComposerAttachmentSelection({
-    onImages: imagesEnabled ? attachImages : undefined,
-    onFiles:
-      documentUpload &&
-      ((files) => {
-        void upload.run((signal) => documentUpload(threadId, files, signal));
-      }),
+    onImages: canAttachImages(capabilities, adapters, imageBusy)
+      ? attachImages
+      : undefined,
+    onFiles: createDocumentSelection(documentUpload, threadId, upload),
     onError: adapters?.onAttachmentError ?? adapters?.onError,
   });
   return useDragOver({
@@ -49,12 +50,45 @@ export function useComposerFileDrop(
 }
 
 function getDocumentUpload(
+  capabilities: ChatCapabilities,
   adapters: ChatConversationAdapters | undefined,
   busy: boolean,
 ) {
-  return busy || adapters?.documentAttachments !== true
-    ? undefined
-    : adapters.uploadFiles;
+  if (!capabilities.fileUpload || busy) return undefined;
+  if (adapters?.documentAttachments !== true) return undefined;
+  return adapters.uploadFiles;
+}
+
+function attachmentsBusy({
+  isSubmitting,
+  isStreaming,
+  adapters,
+}: Pick<TransferProps, 'isSubmitting' | 'isStreaming' | 'adapters'>) {
+  return (
+    Boolean(isSubmitting) ||
+    (isStreaming && !adapters?.allowAttachmentsWhileStreaming)
+  );
+}
+
+function canAttachImages(
+  capabilities: ChatCapabilities,
+  adapters: ChatConversationAdapters | undefined,
+  busy: boolean,
+) {
+  return (
+    capabilities.fileUpload && Boolean(adapters?.imageAttachments) && !busy
+  );
+}
+
+function createDocumentSelection(
+  uploadFiles: ChatConversationAdapters['uploadFiles'] | undefined,
+  threadId: string,
+  action: ReturnType<typeof useChatAction>,
+) {
+  if (!uploadFiles) return undefined;
+  return (files: File[]) => {
+    void action.run((signal) => uploadFiles(threadId, files, signal));
+  };
 }
 
 export function useComposerImagePaste(
@@ -68,7 +102,10 @@ export function useComposerImagePaste(
     isFocused:
       focused &&
       Boolean(
-        props.capabilities.fileUpload && props.adapters?.imageAttachments,
+        props.capabilities.fileUpload &&
+        props.adapters?.imageAttachments &&
+        !props.isSubmitting &&
+        (!props.isStreaming || props.adapters?.allowAttachmentsWhileStreaming),
       ),
     onImagesPasted: attachImages,
   });

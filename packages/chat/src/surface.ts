@@ -21,5 +21,15 @@ export type {
   ChatThreadSnapshot,
 } from './chat-conversation-config';
 export type { ChatHistoryConfig } from './configured-history';
-export { ConfiguredComposer } from './configured-composer';
+export {
+  ConfiguredComposer,
+  type ConfiguredComposerProps,
+  type ConfiguredComposerRef,
+} from './configured-composer';
 export { ConfiguredHistory } from './configured-history';
+export {
+  IntegrationsMenuAction,
+  KnowledgeBasesMenuAction,
+  SkillsMenuAction,
+  type ComposerMenuStatus,
+} from './composer-menu-actions';
