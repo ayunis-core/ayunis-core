@@ -132,6 +132,13 @@ describe('serveSurfaces', () => {
     },
   );
 
+  it('returns 404 instead of the web shell for a missing web asset', async () => {
+    const response = await fetchPath('/assets/removed-by-deploy.js');
+    expect(response.status).toBe(404);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.text()).not.toBe(WEB_SHELL);
+  });
+
   it.each([
     '/outlook',
     '/outlook/login',

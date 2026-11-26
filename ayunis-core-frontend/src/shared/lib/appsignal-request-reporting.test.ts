@@ -191,6 +191,46 @@ describe('AppSignal request reporting', () => {
     expect(result).toBe(true);
   });
 
+  it('names the failing script for stackless window errors without its query', async () => {
+    const previous = vi.fn();
+    window.onerror = previous;
+    const client = new Appsignal({ key: 'test-key' });
+    installWindowErrorReporting(client);
+    const parseError = new SyntaxError("expected expression, got '<'");
+    parseError.stack = '';
+    window.onerror?.call(
+      window,
+      "SyntaxError: expected expression, got '<'",
+      'https://core.ayunis.com/assets/chunk-abc.js?token=secret#frag',
+      1,
+      1,
+      parseError,
+    );
+    await vi.waitFor(() => expect(payloads()).toHaveLength(1));
+    const [payload] = payloads() as { params?: Record<string, unknown> }[];
+    expect(payload.params).toEqual({
+      script: 'https://core.ayunis.com/assets/chunk-abc.js',
+      line: 1,
+      column: 1,
+    });
+    expect(JSON.stringify(payload)).not.toContain('secret');
+    expect(previous).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not drop window errors whose thrown value is not an Error', async () => {
+    const client = new Appsignal({ key: 'test-key' });
+    installWindowErrorReporting(client);
+    window.onerror?.call(
+      window,
+      'Uncaught thrown string',
+      'https://core.ayunis.com/assets/index-abc.js',
+      3,
+      7,
+      'thrown string' as unknown as Error,
+    );
+    await vi.waitFor(() => expect(payloads()).toHaveLength(1));
+  });
+
   it('keeps window error capture enabled', async () => {
     const client = new Appsignal({ key: 'test-key' });
     installWindowErrorReporting(client);
