@@ -1,6 +1,8 @@
 import type {
   IntegrationListResponseDto,
   IntegrationResponseDto,
+  RoutineCategoryResponseDto,
+  RoutineListItemResponseDto,
   RoutineResponseDto,
   SkillCategoryResponseDto,
   SkillListResponseDto,
@@ -29,5 +31,10 @@ export abstract class MarketplaceClient {
   /** Every published integration, across all catalogue pages. */
   abstract listIntegrations(): Promise<IntegrationListResponseDto[]>;
 
+  /** Every published routine, across all catalogue pages. */
+  abstract listRoutines(): Promise<RoutineListItemResponseDto[]>;
+
   abstract listCategories(): Promise<SkillCategoryResponseDto[]>;
+
+  abstract listRoutineCategories(): Promise<RoutineCategoryResponseDto[]>;
 }

@@ -1,5 +1,7 @@
 import type {
   IntegrationListResponseDto,
+  RoutineCategoryResponseDto,
+  RoutineListItemResponseDto,
   SkillCategoryResponseDto,
   SkillListResponseDto,
 } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI.schemas';
@@ -75,6 +77,52 @@ export function aMarketplaceIntegrationListEntry(
   };
 }
 
+export const TEST_ROUTINE_CATEGORY_ID = 'c0000000-0000-4000-8000-000000000002';
+
+export function aMarketplaceRoutineCategory(
+  overrides: Partial<RoutineCategoryResponseDto> = {},
+): RoutineCategoryResponseDto {
+  return {
+    id: TEST_ROUTINE_CATEGORY_ID,
+    name: 'Bekanntmachungen',
+    description: null,
+    sortOrder: 1,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+export function aMarketplaceRoutineListEntry(
+  overrides: Partial<RoutineListItemResponseDto> = {},
+): RoutineListItemResponseDto {
+  return {
+    id: 'd0000000-0000-4000-8000-000000000001',
+    identifier: 'council-agenda',
+    name: 'Neue Tagesordnungen',
+    shortDescription: 'Meldet neue Sitzungen des Gemeinderats',
+    description: null,
+    routineCategoryId: null,
+    iconName: null,
+    featured: false,
+    published: true,
+    schedule: { frequency: 'daily', time: '07:00' },
+    internetAccess: 'off',
+    allowedDomains: [],
+    useCases: [],
+    benefits: [],
+    exampleNotification: null,
+    providerName: null,
+    providerLogoUrl: null,
+    providerWebsiteUrl: null,
+    metaTitle: null,
+    metaDescription: null,
+    installCount: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
 export function createMockMarketplaceClient(): jest.Mocked<MarketplaceClient> {
   return {
     getSkillByIdentifier: jest.fn().mockResolvedValue(null),
@@ -83,6 +131,8 @@ export function createMockMarketplaceClient(): jest.Mocked<MarketplaceClient> {
     getRoutineByIdentifier: jest.fn().mockResolvedValue(null),
     listSkills: jest.fn().mockResolvedValue([]),
     listIntegrations: jest.fn().mockResolvedValue([]),
+    listRoutines: jest.fn().mockResolvedValue([]),
     listCategories: jest.fn().mockResolvedValue([]),
+    listRoutineCategories: jest.fn().mockResolvedValue([]),
   };
 }

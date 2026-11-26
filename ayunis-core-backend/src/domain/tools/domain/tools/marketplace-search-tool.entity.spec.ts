@@ -15,6 +15,9 @@ describe('MarketplaceSearchTool', () => {
     expect(tool.validateParams({ type: 'integration' })).toEqual({
       type: 'integration',
     });
+    expect(tool.validateParams({ type: 'routine' })).toEqual({
+      type: 'routine',
+    });
     expect(tool.validateParams({ type: 'all' })).toEqual({ type: 'all' });
   });
 

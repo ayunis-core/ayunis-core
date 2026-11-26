@@ -25,6 +25,7 @@ import { ModelsModule } from 'src/domain/models/models.module';
 import { UsageModule } from 'src/domain/usage/usage.module';
 import { QuotasModule } from 'src/iam/quotas/quotas.module';
 import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
+import { PermissionsModule } from 'src/iam/permissions/permissions.module';
 import { AuthorizedCsvSourceResolverService } from 'src/domain/tools/application/services/authorized-csv-source-resolver.service';
 import { McpFileHandoverService } from 'src/domain/tools/application/services/mcp-file-handover.service';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
@@ -49,6 +50,7 @@ import { AnonymizationSettingsModule } from 'src/domain/anonymization-settings/a
     UsageModule,
     QuotasModule,
     MarketplaceModule,
+    PermissionsModule,
     NotificationsModule,
     MemoryModule,
     ThreadPiiMasksModule,

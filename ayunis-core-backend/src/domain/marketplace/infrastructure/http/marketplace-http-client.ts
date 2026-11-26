@@ -4,6 +4,8 @@ import { getAyunisMarketplaceAPI } from 'src/common/clients/marketplace/generate
 import {
   IntegrationListResponseDto,
   IntegrationResponseDto,
+  RoutineCategoryResponseDto,
+  RoutineListItemResponseDto,
   RoutineResponseDto,
   SkillCategoryResponseDto,
   SkillListResponseDto,
@@ -120,8 +122,8 @@ export class MarketplaceHttpClient extends MarketplaceClient {
   // lets the model pick, because the marketplace API offers no text search,
   // only category and featured filters. Its list endpoints are paginated with
   // no "all" option and default to 10 per page, so a single request would
-  // silently return only the first page. Both list methods therefore walk
-  // every page and drop unpublished entries defensively.
+  // silently return only the first page. The catalogue list methods therefore
+  // walk every page and drop unpublished entries defensively.
   //
   // This is fine for a catalogue of dozens (~60 entries, ~10k tokens per tool
   // call today) but does not scale to thousands: the result would exceed the
@@ -167,6 +169,26 @@ export class MarketplaceHttpClient extends MarketplaceClient {
     }
   }
 
+  async listRoutines(): Promise<RoutineListItemResponseDto[]> {
+    try {
+      const routines: RoutineListItemResponseDto[] = [];
+      for (let page = 1, totalPages = 1; page <= totalPages; page += 1) {
+        const result = await this.api.publicRoutinesControllerList({
+          page,
+          limit: CATALOGUE_PAGE_LIMIT,
+        });
+        routines.push(...result.data);
+        totalPages = result.totalPages;
+      }
+      return routines.filter((routine) => routine.published);
+    } catch (error) {
+      throw this.classifyListFailure(
+        error,
+        'Failed to list marketplace routines',
+      );
+    }
+  }
+
   async listCategories(): Promise<SkillCategoryResponseDto[]> {
     try {
       return await this.api.publicSkillCategoriesControllerList();
@@ -174,6 +196,17 @@ export class MarketplaceHttpClient extends MarketplaceClient {
       throw this.classifyListFailure(
         error,
         'Failed to list marketplace categories',
+      );
+    }
+  }
+
+  async listRoutineCategories(): Promise<RoutineCategoryResponseDto[]> {
+    try {
+      return await this.api.publicRoutineCategoriesControllerList();
+    } catch (error) {
+      throw this.classifyListFailure(
+        error,
+        'Failed to list marketplace routine categories',
       );
     }
   }

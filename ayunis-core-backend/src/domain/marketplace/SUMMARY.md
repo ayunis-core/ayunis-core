@@ -11,10 +11,12 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - `ListMarketplaceSkillsUseCase` — Every published skill as the generated `SkillListResponseDto[]`, featured entries first, then by name (German collation). Consumed by the chat `marketplace_search` tool
 - `ListMarketplaceIntegrationsUseCase` — Every published integration as `IntegrationListResponseDto[]`, same ordering, same consumer
 - `ListMarketplaceSkillCategoriesUseCase` — The skill categories as `SkillCategoryResponseDto[]`, used by the tool to resolve category IDs to names
+- `ListMarketplaceRoutinesUseCase` — Every published routine as `RoutineListItemResponseDto[]` (with schedule and internet access, without the prompt), same ordering, same consumer
+- `ListMarketplaceRoutineCategoriesUseCase` — The routine categories as `RoutineCategoryResponseDto[]`, used by the tool to resolve routine category IDs to names
 
 **Ports:**
 
-- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`, `getIntegrationByIdentifier`, `getRoutineByIdentifier`, `listSkills`, `listIntegrations`, `listCategories`). The list methods walk every page of the public list API (no free-text search exists there) and return published entries only
+- `MarketplaceClient` — Abstract port for marketplace API communication (`getSkillByIdentifier`, `getPreInstalledSkills`, `getIntegrationByIdentifier`, `getRoutineByIdentifier`, `listSkills`, `listIntegrations`, `listRoutines`, `listCategories`, `listRoutineCategories`). The list methods walk every page of the public list API (no free-text search exists there) and return published entries only
 
 **Infrastructure:**
 

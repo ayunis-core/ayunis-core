@@ -6,6 +6,7 @@ import { MarketplaceHttpError } from 'src/common/clients/marketplace/client';
 import { getAyunisMarketplaceAPI } from 'src/common/clients/marketplace/generated/ayunisMarketplaceAPI';
 import {
   aMarketplaceIntegrationListEntry,
+  aMarketplaceRoutineListEntry,
   aMarketplaceSkillCategory,
   aMarketplaceSkillListEntry,
 } from 'src/domain/marketplace/application/testing/marketplace.fixtures';
@@ -25,6 +26,7 @@ describe('MarketplaceHttpClient', () => {
   const listSkills = jest.fn();
   const listIntegrations = jest.fn();
   const listCategories = jest.fn();
+  const listRoutines = jest.fn();
 
   beforeEach(() => {
     jest.mocked(getAyunisMarketplaceAPI).mockReturnValue({
@@ -32,11 +34,13 @@ describe('MarketplaceHttpClient', () => {
       publicSkillsControllerList: listSkills,
       publicIntegrationsControllerList: listIntegrations,
       publicSkillCategoriesControllerList: listCategories,
+      publicRoutinesControllerList: listRoutines,
     } as unknown as ReturnType<typeof getAyunisMarketplaceAPI>);
     getIntegrationByIdentifier.mockReset();
     listSkills.mockReset();
     listIntegrations.mockReset();
     listCategories.mockReset();
+    listRoutines.mockReset();
   });
 
   it('classifies marketplace dependency failures as unavailable', async () => {
@@ -158,6 +162,37 @@ describe('MarketplaceHttpClient', () => {
       await expect(client.listIntegrations()).rejects.toThrow(
         MarketplaceUnavailableError,
       );
+    });
+  });
+
+  describe('listRoutines', () => {
+    it('returns published routines across pages', async () => {
+      listRoutines
+        .mockResolvedValueOnce(
+          page(
+            [
+              aMarketplaceRoutineListEntry({ identifier: 'first' }),
+              aMarketplaceRoutineListEntry({
+                identifier: 'draft',
+                published: false,
+              }),
+            ],
+            1,
+            2,
+          ),
+        )
+        .mockResolvedValueOnce(
+          page([aMarketplaceRoutineListEntry({ identifier: 'second' })], 2, 2),
+        );
+      const client = new MarketplaceHttpClient();
+
+      const routines = await client.listRoutines();
+
+      expect(routines.map((routine) => routine.identifier)).toEqual([
+        'first',
+        'second',
+      ]);
+      expect(listRoutines).toHaveBeenNthCalledWith(2, { page: 2, limit: 100 });
     });
   });
 
