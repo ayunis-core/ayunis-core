@@ -19,6 +19,7 @@
     "./surface.css": "./src/content-scroll.css",
     "./upload-policy": "./src/composer/document-upload-policy.ts",
     "./new-chat": "./src/new-chat/index.ts",
+    "./attachments": "./src/attachments/index.ts",
     "./source-errors": "./src/source-processing-error.ts"
   },
   "scripts": {

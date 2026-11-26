@@ -29,7 +29,7 @@ import { usePromptHistory } from '@/widgets/chat-input/hooks/usePromptHistory';
 import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
 import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import { SourcesList } from './SourcesList';
+import { ChatAttachments } from '@ayunis/chat/attachments';
 import { ChatInputActionBar } from './ChatInputActionBar';
 import { showError } from '@/shared/lib/toast';
 import { ProcessingGlow } from '@/shared/ui/processing-glow';
@@ -334,11 +334,11 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               animateHeight={isHeightAnimationEnabled}
               attachments={
                 hasAttachmentChips ? (
-                  <SourcesList
+                  <ChatAttachments
                     sources={sources}
                     knowledgeBases={knowledgeBases}
-                    mcpIntegrations={mcpIntegrations}
-                    onRemove={onRemoveSource}
+                    integrations={mcpIntegrations}
+                    onRemoveSource={onRemoveSource}
                     onRemoveKnowledgeBase={onRemoveKnowledgeBase}
                     onRemoveIntegration={onRemoveIntegration}
                   />

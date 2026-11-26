@@ -22,7 +22,6 @@ vi.mock('@/widgets/onboarding', () => ({
   OnboardingTourTarget: ({ children }: { children: ReactNode }) => children,
   TOUR_TARGET: { chatComposer: 'chatComposer' },
 }));
-vi.mock('./SourcesList', () => ({ SourcesList: () => null }));
 vi.mock('./ChatInputActionBar', () => ({
   ChatInputActionBar: ({
     onImageSelect,

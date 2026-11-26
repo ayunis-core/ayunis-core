@@ -44,10 +44,12 @@ export function AttachmentMenu({
   disabled,
   onFiles,
   onAudio,
+  accept = ACCEPTED_FILE_PICKER_TYPES,
 }: Readonly<{
   disabled: boolean;
   onFiles?: (files: File[]) => void;
   onAudio?: (files: File[]) => void;
+  accept?: string;
 }>) {
   const files = useRef<HTMLInputElement>(null);
   const audio = useRef<HTMLInputElement>(null);
@@ -57,7 +59,7 @@ export function AttachmentMenu({
       <AttachmentInput
         inputRef={files}
         testId="chat-attach-files"
-        accept={ACCEPTED_FILE_PICKER_TYPES}
+        accept={accept}
         disabled={disabled}
         onFiles={onFiles}
       />

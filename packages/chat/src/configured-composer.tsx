@@ -275,9 +275,9 @@ function ComposerAttachmentControl(props: ComposerControls) {
       compact={compact}
       disabled={isStreaming}
       upload={
-        adapters?.documentAttachments === false
-          ? undefined
-          : adapters?.uploadFiles
+        adapters?.documentAttachments === true
+          ? adapters.uploadFiles
+          : undefined
       }
       action={upload}
       audio={capabilities.audio}
