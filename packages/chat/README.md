@@ -1,5 +1,8 @@
 # Ayunis chat
 
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the canonical Web-derived
+experience, host-boundary ownership, dependency rules, and parity baseline.
+
 `@ayunis/chat/tool-cards` exposes the chat tool-card registration contract.
 The application supplies card components keyed by tool name. A registration
 can also supply an action label, mark a tool as creating an artifact, or group

@@ -136,12 +136,12 @@ module.exports = {
     // GENERAL RULES
     // ═══════════════════════════════════════════════════════════════════════════
     {
-      name: 'chat-package-no-app',
+      name: 'chat-package-no-host-apps',
       comment:
         'Host configuration flows into the chat package through its public API.',
       severity: 'error',
       from: { path: '^\\.\\./packages/chat/src/' },
-      to: { path: '^(src/|.*ayunis-core-frontend/)' },
+      to: { path: '^(src/|\\.\\./apps/)' },
     },
     {
       name: 'no-circular-dependencies',
@@ -170,7 +170,7 @@ module.exports = {
       ],
     },
     includeOnly: {
-      path: '^(src/|\\.\\./packages/chat/src/)',
+      path: '^(src/|\\.\\./packages/chat/src/|\\.\\./apps/)',
     },
     tsPreCompilationDeps: true,
     tsConfig: {
