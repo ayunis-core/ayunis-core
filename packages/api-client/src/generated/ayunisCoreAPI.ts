@@ -150,7 +150,9 @@ import type {
   MarketplaceConfigResponseDto,
   MarketplaceIntegrationResponseDto,
   MarketplaceRoutineResponseDto,
+  MarketplaceRoutineSuggestionResponseDto,
   MarketplaceSkillResponseDto,
+  MarketplaceSuggestionResponseDto,
   McpIntegrationResponseDto,
   McpOAuthAuthorizationUrlDto,
   McpOAuthClientMetadataDto,
@@ -36124,4 +36126,190 @@ export const useRoutinesControllerInstallFromMarketplace = <TError = void,
       > => {
       return useMutation(getRoutinesControllerInstallFromMarketplaceMutationOptions(options), queryClient);
     }
+
+/**
+ * @summary List the marketplace routines suggested to users without routines
+ */
+export const marketplaceControllerListSuggestedRoutines = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<MarketplaceRoutineSuggestionResponseDto[]>(
+      {url: `/marketplace/suggested-routines`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getMarketplaceControllerListSuggestedRoutinesQueryKey = () => {
+    return [
+    `/marketplace/suggested-routines`
+    ] as const;
+    }
+
+
+export const getMarketplaceControllerListSuggestedRoutinesQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerListSuggestedRoutinesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>> = ({ signal }) => marketplaceControllerListSuggestedRoutines(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MarketplaceControllerListSuggestedRoutinesQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>>
+export type MarketplaceControllerListSuggestedRoutinesQueryError = void
+
+
+export function useMarketplaceControllerListSuggestedRoutines<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerListSuggestedRoutines<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerListSuggestedRoutines<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the marketplace routines suggested to users without routines
+ */
+
+export function useMarketplaceControllerListSuggestedRoutines<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedRoutines>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketplaceControllerListSuggestedRoutinesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary List the marketplace skills suggested to users without skills
+ */
+export const marketplaceControllerListSuggestedSkills = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<MarketplaceSuggestionResponseDto[]>(
+      {url: `/marketplace/suggested-skills`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getMarketplaceControllerListSuggestedSkillsQueryKey = () => {
+    return [
+    `/marketplace/suggested-skills`
+    ] as const;
+    }
+
+
+export const getMarketplaceControllerListSuggestedSkillsQueryOptions = <TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMarketplaceControllerListSuggestedSkillsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>> = ({ signal }) => marketplaceControllerListSuggestedSkills(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MarketplaceControllerListSuggestedSkillsQueryResult = NonNullable<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>>
+export type MarketplaceControllerListSuggestedSkillsQueryError = void
+
+
+export function useMarketplaceControllerListSuggestedSkills<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerListSuggestedSkills<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>,
+          TError,
+          Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMarketplaceControllerListSuggestedSkills<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List the marketplace skills suggested to users without skills
+ */
+
+export function useMarketplaceControllerListSuggestedSkills<TData = Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof marketplaceControllerListSuggestedSkills>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMarketplaceControllerListSuggestedSkillsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

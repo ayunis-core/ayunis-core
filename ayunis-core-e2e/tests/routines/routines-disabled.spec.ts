@@ -9,6 +9,7 @@ import { generatedApi } from "../../src/clients/api/generated-api";
 import {
   requestMarketplaceRoutine,
   requestMarketplaceRoutineInstall,
+  requestSuggestedMarketplaceRoutines,
 } from "../../src/clients/api/marketplace.client";
 import { getRolePermissions } from "../../src/clients/api/role-permissions.client";
 import {
@@ -77,6 +78,9 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
         disabledApiUrl,
       )
     ).status(),
+  ).toBe(404);
+  expect(
+    (await requestSuggestedMarketplaceRoutines(api, disabledApiUrl)).status(),
   ).toBe(404);
   expect((await requestNotifications(api, disabledApiUrl)).status()).toBe(404);
   expect(

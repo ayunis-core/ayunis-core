@@ -25,6 +25,7 @@ describe('GetMarketplaceSkillUseCase', () => {
     skillCategoryId: '660e8400-e29b-41d4-a716-446655440001',
     iconName: 'notebook-pen',
     featured: true,
+    suggested: false,
     published: true,
     preInstalled: false,
     useCases: [],

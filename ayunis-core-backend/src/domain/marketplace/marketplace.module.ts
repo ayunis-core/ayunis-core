@@ -9,6 +9,8 @@ import { ListMarketplaceIntegrationsUseCase } from './application/use-cases/list
 import { ListMarketplaceSkillCategoriesUseCase } from './application/use-cases/list-marketplace-skill-categories/list-marketplace-skill-categories.use-case';
 import { ListMarketplaceRoutinesUseCase } from './application/use-cases/list-marketplace-routines/list-marketplace-routines.use-case';
 import { ListMarketplaceRoutineCategoriesUseCase } from './application/use-cases/list-marketplace-routine-categories/list-marketplace-routine-categories.use-case';
+import { ListSuggestedMarketplaceSkillsUseCase } from './application/use-cases/list-suggested-marketplace-skills/list-suggested-marketplace-skills.use-case';
+import { ListSuggestedMarketplaceRoutinesUseCase } from './application/use-cases/list-suggested-marketplace-routines/list-suggested-marketplace-routines.use-case';
 import { MarketplaceController } from './presenters/http/marketplace.controller';
 
 @Module({
@@ -25,6 +27,8 @@ import { MarketplaceController } from './presenters/http/marketplace.controller'
     ListMarketplaceSkillCategoriesUseCase,
     ListMarketplaceRoutinesUseCase,
     ListMarketplaceRoutineCategoriesUseCase,
+    ListSuggestedMarketplaceSkillsUseCase,
+    ListSuggestedMarketplaceRoutinesUseCase,
   ],
   controllers: [MarketplaceController],
   exports: [

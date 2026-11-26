@@ -16814,6 +16814,61 @@
         "summary": "Install a routine from the marketplace",
         "tags": ["routines"]
       }
+    },
+    "/marketplace/suggested-routines": {
+      "get": {
+        "operationId": "MarketplaceController_listSuggestedRoutines",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "At most six suggested routines, featured first, then by name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MarketplaceRoutineSuggestionResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Routines are disabled"
+          },
+          "503": {
+            "description": "Marketplace unavailable"
+          }
+        },
+        "summary": "List the marketplace routines suggested to users without routines",
+        "tags": ["marketplace"]
+      }
+    },
+    "/marketplace/suggested-skills": {
+      "get": {
+        "operationId": "MarketplaceController_listSuggestedSkills",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "At most six suggested skills, featured first, then by name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MarketplaceSuggestionResponseDto"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Marketplace unavailable"
+          }
+        },
+        "summary": "List the marketplace skills suggested to users without skills",
+        "tags": ["marketplace"]
+      }
     }
   },
   "info": {
@@ -29782,6 +29837,63 @@
           }
         },
         "required": ["frequency", "time"]
+      },
+      "MarketplaceRoutineSuggestionResponseDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug), used to install the entry",
+            "example": "email-beantworter"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "iconName": {
+            "type": "string",
+            "description": "Lucide icon name (kebab-case)",
+            "nullable": true
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/MarketplaceRoutineScheduleResponseDto"
+          }
+        },
+        "required": [
+          "identifier",
+          "name",
+          "shortDescription",
+          "iconName",
+          "schedule"
+        ]
+      },
+      "MarketplaceSuggestionResponseDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug), used to install the entry",
+            "example": "email-beantworter"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "iconName": {
+            "type": "string",
+            "description": "Lucide icon name (kebab-case)",
+            "nullable": true
+          }
+        },
+        "required": ["identifier", "name", "shortDescription", "iconName"]
       }
     }
   }

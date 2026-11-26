@@ -13,6 +13,7 @@ The marketplace module provides integration with the external Ayunis Marketplace
 - `ListMarketplaceSkillCategoriesUseCase` — The skill categories as `SkillCategoryResponseDto[]`, used by the tool to resolve category IDs to names
 - `ListMarketplaceRoutinesUseCase` — Every published routine as `RoutineListItemResponseDto[]` (with schedule and internet access, without the prompt), same ordering, same consumer
 - `ListMarketplaceRoutineCategoriesUseCase` — The routine categories as `RoutineCategoryResponseDto[]`, used by the tool to resolve routine category IDs to names
+- `ListSuggestedMarketplaceSkillsUseCase` / `ListSuggestedMarketplaceRoutinesUseCase` — The published entries the marketplace marks `suggested`, at most six, featured first, then by name (`selectMarketplaceSuggestions` in `application/models/`). The empty skills and routines pages show them
 
 **Ports:**
 
@@ -30,6 +31,8 @@ The marketplace module provides integration with the external Ayunis Marketplace
 
 - `MarketplaceController` — REST controller exposing:
   - `GET /marketplace/config` — Reports local marketplace availability and public URL (derived from `MARKETPLACE_SERVICE_URL`); used by the frontend to gate the Marketplace sidebar entry and skills-page promo card
+  - `GET /marketplace/suggested-skills` — The suggested skills (identifier, name, short description, icon) as `MarketplaceSuggestionResponseDto[]`; any signed-in member may read it
+  - `GET /marketplace/suggested-routines` — The suggested routines, additionally with their `schedule`, as `MarketplaceRoutineSuggestionResponseDto[]`. Behind the `routines` feature flag (404 when off)
   - `GET /marketplace/skills/:identifier` — Preview a marketplace skill before installation
   - `GET /marketplace/integrations/:identifier` — Preview a marketplace integration before installation
   - `GET /marketplace/routines/:identifier` — Preview a marketplace routine before installation (name, descriptions, icon, schedule, internet mode and allowed domains; not the prompt). Behind the `routines` feature flag (404 when off); like the skill preview, any signed-in member may read it
