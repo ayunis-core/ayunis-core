@@ -70,6 +70,19 @@ async function readMusterstadt(
       bodyIds: [ids.bodyId],
     }),
     searchAll: await search(api, threadId, { queries: ['Kita Sonnenschein'] }),
+    searchInFile: await search(api, threadId, {
+      queries: ['Kita Sonnenschein'],
+      fileId: ids.fileId,
+    }),
+    searchOfMeeting: await search(api, threadId, {
+      queries: ['Kita Sonnenschein'],
+      meetingId: ids.meetingId,
+      types: ['agenda_item'],
+    }),
+    searchOfPaper: await search(api, threadId, {
+      queries: ['Kita Sonnenschein'],
+      paperId: ids.paperId,
+    }),
     paper: await call('oparl_get', { id: ids.paperId }),
     meeting: await call('oparl_get', { id: ids.meetingId }),
     file: await call('oparl_read_file', { fileId: ids.fileId }),
@@ -127,6 +140,9 @@ test('a user of another org gets nothing of a council body only one org linked u
     expect(denied.searchAll.map((result) => result.body)).not.toContain(
       MUSTERSTADT,
     );
+    expect(denied.searchInFile).toEqual([]);
+    expect(denied.searchOfMeeting).toEqual([]);
+    expect(denied.searchOfPaper).toEqual([]);
     expect(denied.paper).toMatch(/^No paper, meeting, organization or person/);
     expect(denied.meeting).toMatch(/^No paper, meeting, organization or person/);
     expect(denied.file).toMatch(/^No document with ID/);
@@ -145,6 +161,19 @@ test('a user of another org gets nothing of a council body only one org linked u
     );
     expect(allowed.searchAll.map((result) => result.body)).toContain(
       MUSTERSTADT,
+    );
+    expect(allowed.searchInFile.length).toBeGreaterThan(0);
+    expect(
+      allowed.searchInFile.every((result) => result.file?.id === ids.fileId),
+    ).toBe(true);
+    expect(allowed.searchOfMeeting).toEqual([
+      expect.objectContaining({
+        type: 'agenda_item',
+        meeting: expect.objectContaining({ id: ids.meetingId }),
+      }),
+    ]);
+    expect(allowed.searchOfPaper.map((result) => result.paper?.id)).toEqual(
+      expect.arrayContaining([ids.paperId]),
     );
     expect(JSON.parse(allowed.paper)).toMatchObject({
       type: 'paper',

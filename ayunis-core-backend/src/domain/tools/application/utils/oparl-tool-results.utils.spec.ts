@@ -36,6 +36,8 @@ describe('OParl tool results', () => {
     const parsed = JSON.parse(
       oparlSearchToolResult({
         mode: 'hybrid',
+        page: 1,
+        hasMore: false,
         results: [
           result({}),
           result({
@@ -67,6 +69,8 @@ describe('OParl tool results', () => {
     const parsed = JSON.parse(
       oparlSearchToolResult({
         mode: 'hybrid',
+        page: 1,
+        hasMore: false,
         results: [
           result({
             source: OparlChunkSource.FILE,

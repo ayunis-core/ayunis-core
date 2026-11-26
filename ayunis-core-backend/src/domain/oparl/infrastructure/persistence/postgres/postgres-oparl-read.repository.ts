@@ -11,6 +11,7 @@ import type {
   OparlObjectDetail,
 } from 'src/domain/oparl/application/models/oparl-read';
 import type {
+  OparlChunkMatch,
   OparlQueryVector,
   OparlReadScope,
   OparlSearchFilters,
@@ -85,11 +86,10 @@ export class PostgresOparlReadRepository extends OparlReadRepository {
     query: string,
     filters: OparlSearchFilters,
     limit: number,
-  ): Promise<UUID[]> {
+  ): Promise<OparlChunkMatch[]> {
     if (scope.bodyIds.length === 0) return [];
     const { sql, params } = fullTextSql(scope, query, filters, limit);
-    const rows = await this.dataSource.query<Array<{ id: UUID }>>(sql, params);
-    return rows.map(({ id }) => id);
+    return this.dataSource.query<OparlChunkMatch[]>(sql, params);
   }
 
   async vectorMatches(
@@ -97,19 +97,18 @@ export class PostgresOparlReadRepository extends OparlReadRepository {
     query: OparlQueryVector,
     filters: OparlSearchFilters,
     limit: number,
-  ): Promise<UUID[]> {
+  ): Promise<OparlChunkMatch[]> {
     if (scope.bodyIds.length === 0) return [];
     const { sql, params } = vectorSql(scope, query, filters, limit);
     // SET LOCAL needs the transaction; it ends with it.
-    const rows = await this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager) => {
       await manager.query(`SET LOCAL hnsw.iterative_scan = relaxed_order`);
       await manager.query(`SET LOCAL hnsw.ef_search = ${HNSW_EF_SEARCH}`);
       await manager.query(
         `SET LOCAL hnsw.max_scan_tuples = ${HNSW_MAX_SCAN_TUPLES}`,
       );
-      return manager.query<Array<{ id: UUID }>>(sql, params);
+      return manager.query<OparlChunkMatch[]>(sql, params);
     });
-    return rows.map(({ id }) => id);
   }
 
   async findHits(

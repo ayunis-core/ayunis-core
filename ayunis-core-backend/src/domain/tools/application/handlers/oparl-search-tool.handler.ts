@@ -25,14 +25,17 @@ export class OparlSearchToolHandler extends ToolExecutionHandler {
     context: ToolExecutionContext;
   }): Promise<string> {
     const { tool, input, context } = params;
-    const { queries, bodyIds, filters } = validateOparlToolInput(tool, input);
+    const { queries, bodyIds, filters, page } = validateOparlToolInput(
+      tool,
+      input,
+    );
     this.logger.log(
-      { threadId: context.threadId, queryCount: queries.length, bodyIds },
+      { threadId: context.threadId, queryCount: queries.length, bodyIds, page },
       'execute',
     );
     context.signal?.throwIfAborted();
     const outcome = await this.searchOparl.execute(
-      new SearchOparlQuery(queries, bodyIds, filters),
+      new SearchOparlQuery(queries, bodyIds, filters, page),
     );
     return oparlSearchToolResult(outcome);
   }

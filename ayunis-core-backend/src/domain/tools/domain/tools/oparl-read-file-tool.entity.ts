@@ -33,7 +33,7 @@ export class OparlReadFileTool extends Tool {
     super({
       name: ToolType.OPARL_READ_FILE,
       description:
-        'Read the text of a document of the council information system (a paper, protocol, resolution or attachment), page by page. Returns as many pages as fit and the next page to read on with.',
+        'Read the text of a document of the council information system (a paper, protocol, resolution or attachment), page by page. Returns as many pages as fit and the next page to read on with. To find a topic in a long document, search it with oparl_search and its fileId first.',
       parameters: oparlReadFileToolParameters,
       type: ToolType.OPARL_READ_FILE,
     });

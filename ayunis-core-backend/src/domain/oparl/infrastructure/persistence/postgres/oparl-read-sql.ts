@@ -74,10 +74,122 @@ const AGENDA_ITEMS_OF_PAPERS = (papers: string) => `
 const TARGET_IN_SCOPE = (table: string, id: string, bodies: string) =>
   `EXISTS (SELECT 1 FROM ${table} t WHERE t.id = ${id} AND t."bodyId" = ANY(${bodies}::varchar[]))`;
 
+type ChunkFilter = (
+  filters: OparlSearchFilters,
+  params: SqlParams,
+  bodies: string,
+) => string[];
+
+const dateConditions: ChunkFilter = (filters, params) => [
+  ...(filters.from ? [`c.date >= ${params.add(filters.from)}::date`] : []),
+  ...(filters.to ? [`c.date <= ${params.add(filters.to)}::date`] : []),
+];
+
+const sourceConditions: ChunkFilter = (filters, params) =>
+  filters.sources
+    ? [`c.source::text = ANY(${params.add(filters.sources)}::text[])`]
+    : [];
+
+const paperTypeConditions: ChunkFilter = (filters, params, bodies) => {
+  if (!filters.paperType) return [];
+  const type = params.add(containsPattern(filters.paperType));
+  const papers = `SELECT p.id FROM oparl_papers p
+    WHERE p."bodyId" = ANY(${bodies}::varchar[]) AND p."paperType" ILIKE ${type}`;
+  return [
+    `(c."paperId" IN (${papers})
+    OR c."agendaItemId" IN (${AGENDA_ITEMS_OF_PAPERS(papers)}))`,
+  ];
+};
+
+const organizationConditions: ChunkFilter = (filters, params, bodies) => {
+  if (!filters.organizationId) return [];
+  const org = params.add(filters.organizationId);
+  return [
+    TARGET_IN_SCOPE('oparl_organizations', org, bodies),
+    `(c."meetingId" IN (SELECT mo."ownerId" FROM oparl_meeting_organizations mo WHERE mo."targetId" = ${org})
+    OR c."paperId" IN (${ORGANIZATION_PAPERS(org)}))`,
+  ];
+};
+
+const personConditions: ChunkFilter = (filters, params, bodies) => {
+  if (!filters.personId) return [];
+  const person = params.add(filters.personId);
+  return [
+    TARGET_IN_SCOPE('oparl_persons', person, bodies),
+    `(c."paperId" IN (SELECT "ownerId" FROM oparl_paper_originator_persons WHERE "targetId" = ${person})
+    OR c."meetingId" IN (SELECT "ownerId" FROM oparl_meeting_participants WHERE "targetId" = ${person}))`,
+  ];
+};
+
+/** The meeting's ($m) invitation, protocols and attachments, and those of its agenda items. */
+const MEETING_FILES = (meeting: string) => `
+  SELECT unnest(ARRAY[m."invitationId", m."resultsProtocolId", m."verbatimProtocolId"])
+    FROM oparl_meetings m WHERE m.id = ${meeting}
+  UNION SELECT j."targetId" FROM oparl_meeting_auxiliary_files j WHERE j."ownerId" = ${meeting}
+  UNION SELECT a."resolutionFileId" FROM oparl_agenda_items a WHERE a."meetingId" = ${meeting}
+  UNION SELECT j."targetId" FROM oparl_agenda_item_auxiliary_files j
+    JOIN oparl_agenda_items a ON a.id = j."ownerId" WHERE a."meetingId" = ${meeting}`;
+
+/** The paper's ($p) main file and attachments, and those of the agenda items deliberating it. */
+const PAPER_FILES = (paper: string) => `
+  SELECT p."mainFileId" FROM oparl_papers p WHERE p.id = ${paper}
+  UNION SELECT j."targetId" FROM oparl_paper_auxiliary_files j WHERE j."ownerId" = ${paper}
+  UNION SELECT a."resolutionFileId" FROM oparl_agenda_items a
+    WHERE a.id IN (${AGENDA_ITEMS_OF_PAPERS(paper)})
+  UNION SELECT j."targetId" FROM oparl_agenda_item_auxiliary_files j
+    WHERE j."ownerId" IN (${AGENDA_ITEMS_OF_PAPERS(paper)})`;
+
+/**
+ * A chunk names one meeting and paper, but a document may belong to several
+ * (a protocol approved at the next meeting, a file attached to two papers),
+ * so documents are matched through every reference to them. An agenda item's
+ * chunk names its meeting but not its paper; that comes through its
+ * consultation. The IDs are collected first (`= ANY(ARRAY(…))`), so the
+ * planner reads the object's few chunks through the B-tree indexes: with
+ * `IN (subquery)` it chose the HNSW index, whose filtered scan gave up after
+ * 50,000 tuples with 1 of a meeting's 40 nearest chunks (AYC-2132).
+ */
+const objectConditions: ChunkFilter = (filters, params, bodies) => {
+  const conditions: string[] = [];
+  if (filters.meetingId) {
+    const meeting = params.add(filters.meetingId);
+    conditions.push(
+      TARGET_IN_SCOPE('oparl_meetings', meeting, bodies),
+      `(c."meetingId" = ${meeting} OR c."fileId" = ANY(ARRAY(${MEETING_FILES(meeting)})))`,
+    );
+  }
+  if (filters.paperId) {
+    const paper = params.add(filters.paperId);
+    conditions.push(
+      TARGET_IN_SCOPE('oparl_papers', paper, bodies),
+      `(c."paperId" = ${paper}
+      OR c."agendaItemId" = ANY(ARRAY(${AGENDA_ITEMS_OF_PAPERS(paper)}))
+      OR c."fileId" = ANY(ARRAY(${PAPER_FILES(paper)})))`,
+    );
+  }
+  if (filters.fileId) {
+    const file = params.add(filters.fileId);
+    conditions.push(
+      TARGET_IN_SCOPE('oparl_files', file, bodies),
+      `c."fileId" = ${file}`,
+    );
+  }
+  return conditions;
+};
+
+const CHUNK_FILTERS: ChunkFilter[] = [
+  dateConditions,
+  sourceConditions,
+  paperTypeConditions,
+  organizationConditions,
+  personConditions,
+  objectConditions,
+];
+
 /**
  * Conditions on chunk `c`: in the scope's bodies and matching every filter.
- * An organization or person filter of a body outside the scope matches
- * nothing, even where a join row ties it to an object in the scope.
+ * An organization, person, meeting, paper or file filter of a body outside
+ * the scope matches nothing, even where a reference ties it to a chunk in it.
  */
 function chunkConditions(
   scope: OparlReadScope,
@@ -85,32 +197,14 @@ function chunkConditions(
   params: SqlParams,
 ): string[] {
   const bodies = params.add(scope.bodyIds);
-  const conditions = [`c."bodyId" = ANY(${bodies}::varchar[])`];
-  if (filters.from) {
-    conditions.push(`c.date >= ${params.add(filters.from)}::date`);
-  }
-  if (filters.to) conditions.push(`c.date <= ${params.add(filters.to)}::date`);
-  if (filters.paperType) {
-    const type = params.add(containsPattern(filters.paperType));
-    const papers = `SELECT p.id FROM oparl_papers p
-      WHERE p."bodyId" = ANY(${bodies}::varchar[]) AND p."paperType" ILIKE ${type}`;
-    conditions.push(`(c."paperId" IN (${papers})
-      OR c."agendaItemId" IN (${AGENDA_ITEMS_OF_PAPERS(papers)}))`);
-  }
-  if (filters.organizationId) {
-    const org = params.add(filters.organizationId);
-    conditions.push(TARGET_IN_SCOPE('oparl_organizations', org, bodies));
-    conditions.push(`(c."meetingId" IN (SELECT mo."ownerId" FROM oparl_meeting_organizations mo WHERE mo."targetId" = ${org})
-      OR c."paperId" IN (${ORGANIZATION_PAPERS(org)}))`);
-  }
-  if (filters.personId) {
-    const person = params.add(filters.personId);
-    conditions.push(TARGET_IN_SCOPE('oparl_persons', person, bodies));
-    conditions.push(`(c."paperId" IN (SELECT "ownerId" FROM oparl_paper_originator_persons WHERE "targetId" = ${person})
-      OR c."meetingId" IN (SELECT "ownerId" FROM oparl_meeting_participants WHERE "targetId" = ${person}))`);
-  }
-  return conditions;
+  return [
+    `c."bodyId" = ANY(${bodies}::varchar[])`,
+    ...CHUNK_FILTERS.flatMap((filter) => filter(filters, params, bodies)),
+  ];
 }
+
+/** The passage chunk `c` is part of: a page of its document, or its paper, meeting or agenda item. */
+const PASSAGE = `concat_ws(':', c.source, coalesce(c."fileId", c."agendaItemId", c."paperId", c."meetingId", c.id), c."pageNumber")`;
 
 /**
  * Every word of the query may match (German stemming); ranked by how often
@@ -130,7 +224,7 @@ export function fullTextSql(
   return {
     sql: `
       WITH q AS (SELECT ${tsquery} AS q)
-      SELECT c.id FROM oparl_chunks c, q
+      SELECT c.id, ${PASSAGE} AS passage FROM oparl_chunks c, q
       WHERE c."searchVector" @@ q.q AND ${conditions.join(' AND ')}
       ORDER BY ts_rank(c."searchVector", q.q, 1) DESC, c.id
       LIMIT ${params.add(limit)}`,
@@ -157,13 +251,13 @@ export function vectorSql(
   return {
     sql: `
       WITH r AS MATERIALIZED (
-        SELECT c.id, c."${column}" <=> ${vector} AS distance
+        SELECT c.id, ${PASSAGE} AS passage, c."${column}" <=> ${vector} AS distance
         FROM oparl_chunks c
         WHERE c."${column}" IS NOT NULL AND c."embeddingModelId" = ${model}
           AND ${conditions.join(' AND ')}
         ORDER BY distance
         LIMIT ${params.add(limit)})
-      SELECT id FROM r ORDER BY distance, id`,
+      SELECT id, passage FROM r ORDER BY distance, id`,
     params: params.values,
   };
 }

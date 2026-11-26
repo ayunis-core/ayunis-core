@@ -12,6 +12,7 @@ import {
   type OparlPaperDetail,
 } from 'src/domain/oparl/application/models/oparl-read';
 import type { OparlQueryVector } from 'src/domain/oparl/application/models/oparl-search';
+import { OparlChunkSource } from 'src/domain/oparl/domain/oparl-chunk-source.enum';
 import { PostgresOparlReadRepository } from './postgres-oparl-read.repository';
 
 const DIMENSIONS = EmbeddingDimensions.DIMENSION_1024;
@@ -42,6 +43,9 @@ describe('PostgresOparlReadRepository', () => {
     foreignCommittee: id(),
     foreignPerson: id(),
     foreignMeeting: id(),
+    foreignFile: id(),
+    protocolFile: id(),
+    approvalAgendaItem: id(),
     bikePaper: id(),
     bikeAgendaItem: id(),
     person: id(),
@@ -64,6 +68,8 @@ describe('PostgresOparlReadRepository', () => {
       otherModel: id(),
       bikePaper: id(),
       bikeAgendaItem: id(),
+      crossBodyFile: id(),
+      protocolPage: id(),
     },
   };
   const scopeA = { bodyIds: [ids.bodyA] };
@@ -295,7 +301,60 @@ describe('PostgresOparlReadRepository', () => {
       agendaItemId: ids.bikeAgendaItem,
     });
 
+    // A file of body B, and a chunk of body A naming it, its meeting and its paper.
+    await insert('oparl_files', {
+      ...owned(ids.bodyB, ids.foreignFile),
+      name: 'Niederschrift Kreistag',
+    });
+
+    // The first meeting's protocol, approved under an agenda item of the
+    // later meeting, and an attachment of the bike paper; its chunk names
+    // only the approval's meeting.
+    await insert('oparl_files', {
+      ...owned(ids.bodyA, ids.protocolFile),
+      name: 'Niederschrift Bauausschuss (3. Sitzung)',
+    });
+    await db.query(
+      `UPDATE oparl_meetings SET "resultsProtocolId" = $1 WHERE id = $2`,
+      [ids.protocolFile, ids.meeting],
+    );
+    await insert('oparl_agenda_items', {
+      ...owned(ids.bodyA, ids.approvalAgendaItem),
+      number: 'TOP 1',
+      order: 1,
+      name: 'Genehmigung der Niederschrift',
+      meetingId: ids.laterMeeting,
+    });
+    for (const [table, owner] of [
+      ['oparl_agenda_item_auxiliary_files', ids.approvalAgendaItem],
+      ['oparl_paper_auxiliary_files', ids.bikePaper],
+    ]) {
+      await insert(table, {
+        ownerId: owner,
+        targetOparlId: `https://ris.example.de/oparl/${ids.protocolFile}`,
+        targetId: ids.protocolFile,
+      });
+    }
+
     const c = ids.chunks;
+    await chunk(c.protocolPage, ids.bodyA, {
+      source: 'file',
+      fileId: ids.protocolFile,
+      meetingId: ids.laterMeeting,
+      agendaItemId: ids.approvalAgendaItem,
+      pageNumber: 1,
+      date: '2026-03-12',
+      text: 'Ergebnisprotokoll zur Grünflächenpflege',
+    });
+    await chunk(c.crossBodyFile, ids.bodyA, {
+      source: 'file',
+      fileId: ids.foreignFile,
+      meetingId: ids.foreignMeeting,
+      paperId: ids.foreignPaper,
+      pageNumber: 1,
+      date: '2026-01-20',
+      text: 'Niederschrift über die Sitzung des Kreistags',
+    });
     await chunk(c.kitaPaper, ids.bodyA, {
       source: 'paper',
       paperId: ids.kitaPaper,
@@ -412,15 +471,21 @@ describe('PostgresOparlReadRepository', () => {
     vector: axis(0),
   });
 
+  const fullTextIds = async (
+    ...args: Parameters<typeof reads.fullTextMatches>
+  ) => (await reads.fullTextMatches(...args)).map((match) => match.id);
+  const vectorIds = async (...args: Parameters<typeof reads.vectorMatches>) =>
+    (await reads.vectorMatches(...args)).map((match) => match.id);
+
   describe('search', () => {
     it('ranks by German full text within the scope and finds nothing of a body outside it', async () => {
-      const inA = await reads.fullTextMatches(
+      const inA = await fullTextIds(
         scopeA,
         'Kindertagesstätte Michelbach',
         {},
         10,
       );
-      const inB = await reads.fullTextMatches(
+      const inB = await fullTextIds(
         scopeB,
         'Kindertagesstätte Michelbach',
         {},
@@ -434,20 +499,18 @@ describe('PostgresOparlReadRepository', () => {
       expect(inA).toContain(ids.chunks.budgetPaper);
       expect(inA).not.toContain(ids.chunks.foreignPaper);
       expect(inB).toEqual([ids.chunks.foreignPaper]);
-      expect(
-        await reads.fullTextMatches({ bodyIds: [] }, 'Kita', {}, 10),
-      ).toEqual([]);
+      expect(await fullTextIds({ bodyIds: [] }, 'Kita', {}, 10)).toEqual([]);
     });
 
     it('ranks by vector distance within the scope, using only vectors of the query model', async () => {
-      const nearest = await reads.vectorMatches(scopeA, query(), {}, 10);
+      const nearest = await vectorIds(scopeA, query(), {}, 10);
 
       expect(nearest).toEqual([
         ids.chunks.filePage2,
         ids.chunks.kitaPaper,
         ids.chunks.budgetPaper,
       ]);
-      expect(await reads.vectorMatches(scopeB, query(), {}, 10)).toEqual([
+      expect(await vectorIds(scopeB, query(), {}, 10)).toEqual([
         ids.chunks.foreignPaper,
       ]);
     });
@@ -457,16 +520,14 @@ describe('PostgresOparlReadRepository', () => {
         filters: Parameters<typeof reads.vectorMatches>[2],
       ) => ({
         fullText: (
-          await reads.fullTextMatches(
+          await fullTextIds(
             scopeA,
             'Kindertagesstätten Kita Bauausschuss',
             filters,
             10,
           )
         ).sort(byId),
-        vector: (await reads.vectorMatches(scopeA, query(), filters, 10)).sort(
-          byId,
-        ),
+        vector: (await vectorIds(scopeA, query(), filters, 10)).sort(byId),
       });
       const c = ids.chunks;
 
@@ -498,9 +559,7 @@ describe('PostgresOparlReadRepository', () => {
         { paperType: 'beschlussvorlage' },
       ]) {
         expect(
-          (await reads.fullTextMatches(scopeA, 'Radweg', filters, 10)).sort(
-            byId,
-          ),
+          (await fullTextIds(scopeA, 'Radweg', filters, 10)).sort(byId),
         ).toEqual(bike);
       }
       const [hit] = await reads.findHits(scopeA, [ids.chunks.bikeAgendaItem]);
@@ -512,12 +571,10 @@ describe('PostgresOparlReadRepository', () => {
         { organizationId: ids.foreignCommittee },
         { personId: ids.foreignPerson },
       ]) {
-        expect(
-          await reads.fullTextMatches(scopeA, 'Bauausschuss', filters, 10),
-        ).toEqual([]);
-        expect(await reads.vectorMatches(scopeA, query(), filters, 10)).toEqual(
+        expect(await fullTextIds(scopeA, 'Bauausschuss', filters, 10)).toEqual(
           [],
         );
+        expect(await vectorIds(scopeA, query(), filters, 10)).toEqual([]);
       }
       const page = { offset: 0, limit: 20 };
       for (const type of [OparlListType.MEETINGS, OparlListType.PERSONS]) {
@@ -556,6 +613,106 @@ describe('PostgresOparlReadRepository', () => {
           pageNumber: 2,
         },
       });
+    });
+    it('names the passage of every match: a page of its document, else its agenda item, paper or meeting', async () => {
+      const matches = await reads.fullTextMatches(
+        scopeA,
+        'Kita Michelbach Bauausschuss',
+        {},
+        10,
+      );
+      const passages = new Map(
+        matches.map((match) => [match.id, match.passage]),
+      );
+
+      expect(passages.get(ids.chunks.filePage2)).toBe(`file:${ids.file}:2`);
+      expect(passages.get(ids.chunks.agendaItem)).toBe(
+        `agenda_item:${ids.agendaItem}`,
+      );
+      expect(passages.get(ids.chunks.kitaPaper)).toBe(`paper:${ids.kitaPaper}`);
+      expect(passages.get(ids.chunks.meeting)).toBe(`meeting:${ids.meeting}`);
+      const [nearest] = await reads.vectorMatches(scopeA, query(), {}, 1);
+      expect(nearest).toEqual({
+        id: ids.chunks.filePage2,
+        passage: `file:${ids.file}:2`,
+      });
+    });
+
+    it('applies the source, meeting, paper and file filters to both rankings', async () => {
+      const both = async (
+        filters: Parameters<typeof reads.vectorMatches>[2],
+      ) => ({
+        fullText: (
+          await fullTextIds(
+            scopeA,
+            'Kindertagesstätten Kita Bauausschuss Radweg',
+            filters,
+            10,
+          )
+        ).sort(byId),
+        vector: (await vectorIds(scopeA, query(), filters, 10)).sort(byId),
+      });
+      const c = ids.chunks;
+
+      expect(await both({ sources: [OparlChunkSource.AGENDA_ITEM] })).toEqual({
+        fullText: [c.agendaItem, c.bikeAgendaItem].sort(byId),
+        vector: [],
+      });
+      expect(
+        await both({
+          sources: [OparlChunkSource.PAPER, OparlChunkSource.FILE],
+        }),
+      ).toEqual({
+        fullText: [c.bikePaper, c.budgetPaper, c.filePage2, c.kitaPaper].sort(
+          byId,
+        ),
+        vector: [c.budgetPaper, c.filePage2, c.kitaPaper].sort(byId),
+      });
+      // The meeting, its agenda items and its documents.
+      expect((await both({ meetingId: ids.meeting })).fullText).toEqual(
+        [c.agendaItem, c.bikeAgendaItem, c.meeting].sort(byId),
+      );
+      // The paper, its documents and the agenda item deliberating it.
+      expect(await both({ paperId: ids.kitaPaper })).toEqual({
+        fullText: [c.agendaItem, c.filePage2, c.kitaPaper].sort(byId),
+        vector: [c.filePage2, c.kitaPaper].sort(byId),
+      });
+      // Through a consultation that names only its agenda item.
+      expect((await both({ paperId: ids.bikePaper })).fullText).toEqual(
+        [c.bikeAgendaItem, c.bikePaper].sort(byId),
+      );
+      expect(await both({ fileId: ids.file })).toEqual({
+        fullText: [c.filePage2],
+        vector: [c.filePage2],
+      });
+    });
+
+    it('finds a document under every meeting and paper it belongs to, not only the one its chunks name', async () => {
+      const find = (filters: Parameters<typeof reads.fullTextMatches>[2]) =>
+        fullTextIds(scopeA, 'Ergebnisprotokoll Grünflächenpflege', filters, 10);
+      const protocol = [ids.chunks.protocolPage];
+
+      expect(await find({ meetingId: ids.meeting })).toEqual(protocol);
+      expect(await find({ meetingId: ids.laterMeeting })).toEqual(protocol);
+      expect(await find({ paperId: ids.bikePaper })).toEqual(protocol);
+      expect(await find({ paperId: ids.kitaPaper })).toEqual([]);
+      expect(await find({ meetingId: ids.foreignMeeting })).toEqual([]);
+    });
+
+    it('matches nothing for a meeting, paper or file of a body outside the scope, even when a chunk in it names them', async () => {
+      for (const filters of [
+        { meetingId: ids.foreignMeeting },
+        { paperId: ids.foreignPaper },
+        { fileId: ids.foreignFile },
+      ]) {
+        expect(
+          await fullTextIds(scopeA, 'Niederschrift Kreistag', filters, 10),
+        ).toEqual([]);
+      }
+      // Without a filter, the chunk itself is in the scope.
+      expect(
+        await fullTextIds(scopeA, 'Niederschrift Kreistag', {}, 10),
+      ).toEqual([ids.chunks.crossBodyFile]);
     });
   });
 
