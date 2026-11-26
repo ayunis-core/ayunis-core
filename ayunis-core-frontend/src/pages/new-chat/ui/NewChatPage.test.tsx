@@ -73,7 +73,18 @@ vi.mock('./WorkspacePicker', () => ({
   WorkspacePicker: () => <div data-testid="workspace-picker" />,
 }));
 vi.mock('./NewChatPageLayout', () => ({
-  default: ({ compose }: { compose: ReactNode }) => compose,
+  default: ({
+    leadingContent,
+    composer,
+  }: {
+    leadingContent: ReactNode;
+    composer: ReactNode;
+  }) => (
+    <>
+      {leadingContent}
+      {composer}
+    </>
+  ),
 }));
 vi.mock('@/widgets/chat-input', () => ({
   default: ({
