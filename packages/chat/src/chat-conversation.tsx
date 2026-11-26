@@ -1,11 +1,12 @@
 import {
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ComponentProps,
+  type RefObject,
 } from 'react';
-import { ConfiguredHistory } from './configured-history';
 import {
   createMemoryChatDraftStorage,
   useChatDraft,
@@ -13,10 +14,9 @@ import {
 } from '@ayunis/chat/composer';
 import { ConfiguredComposer } from './configured-composer';
 import { ChatSurface } from './chat-surface';
-import type {
-  ChatConversationController,
-  ChatConversationProps,
-} from './chat-conversation-config';
+import type { ChatConversationProps } from './chat-conversation-config';
+import type { ConfiguredComposerRef } from './configured-composer-types';
+import { UnavailableModelNotice } from './model-presentation/UnavailableModelNotice';
 import {
   ChatConversationContent,
   useConversationTimeline,
@@ -41,20 +41,11 @@ function ConversationSession<Context, Outcome>(
   const [memoryDrafts] = useState(createMemoryChatDraftStorage);
   useSessionCleanup(ownedLifecycle);
   return (
-    <>
-      {props.history && (
-        <ConfiguredHistory
-          {...props.history}
-          capabilities={props.config.capabilities}
-          onError={props.adapters?.onError}
-        />
-      )}
-      <ConversationView
-        {...props}
-        lifecycle={props.lifecycle ?? ownedLifecycle}
-        drafts={props.adapters?.drafts ?? memoryDrafts}
-      />
-    </>
+    <ConversationView
+      {...props}
+      lifecycle={props.lifecycle ?? ownedLifecycle}
+      drafts={props.adapters?.drafts ?? memoryDrafts}
+    />
   );
 }
 
@@ -86,6 +77,12 @@ function ConversationView<Context, Outcome>(
   const { thread, slots, lifecycle, drafts } = props;
   const run = useConversationRun(lifecycle, props);
   const draft = useChatDraft(thread.id, drafts);
+  const composerRef = useRef<ConfiguredComposerRef>(null);
+  useImperativeHandle(props.conversationRef, () => ({
+    restoreFailedSubmission: (text, files) =>
+      composerRef.current?.restoreFailedSubmission(text, files),
+    resumeStartedRun: run.resumeStartedRun,
+  }));
   const timeline = useConversationTimeline(
     props.timeline,
     props.clientTools?.registry,
@@ -109,6 +106,7 @@ function ConversationView<Context, Outcome>(
           run={run}
           view={props}
           draft={draft}
+          composerRef={composerRef}
         />
       }
     />
@@ -153,39 +151,50 @@ function ConversationContent<Context, Outcome>({
   );
 }
 
-function ConversationComposer({
-  run,
-  view,
-  draft,
-}: Readonly<{
+type ConversationComposerProps = Readonly<{
   run: ReturnType<typeof useConversationRun>;
   view: Pick<
     ChatConversationProps,
-    'slots' | 'config' | 'adapters' | 'compactComposer' | 'thread'
-  >;
+    | 'slots'
+    | 'config'
+    | 'adapters'
+    | 'compactComposer'
+    | 'thread'
+    | 'composer'
+    | 'pendingSubmission'
+  > & { readonly lifecycle: ChatRunLifecycle };
   draft: ComponentProps<typeof ConfiguredComposer>['draft'];
-}>) {
-  const { slots, config, adapters, compactComposer, thread } = view;
+  composerRef: RefObject<ConfiguredComposerRef | null>;
+}>;
+
+function ConversationComposer(props: ConversationComposerProps) {
+  const { run, view } = props;
   const prompts = useMemo(
-    () => sentPrompts(run.messages, run.piiMasks),
-    [run.messages, run.piiMasks],
+    () => sentPrompts(run.messages, run.piiMasks, view.pendingSubmission),
+    [run.messages, run.piiMasks, view.pendingSubmission],
   );
-  const controller = conversationController(run);
-  if (slots?.composerFallback) {
-    return (
-      <>
-        {typeof slots.composerFallback === 'function'
-          ? slots.composerFallback(controller)
-          : slots.composerFallback}
-      </>
-    );
+  if (view.composer?.unavailableModel) {
+    return <UnavailableModelNotice {...view.composer.unavailableModel} />;
   }
-  const onStop =
-    run.isRunCancellable && config.transport.cancel ? run.stop : undefined;
+  return <AvailableConversationComposer {...props} prompts={prompts} />;
+}
+
+function AvailableConversationComposer({
+  run,
+  view,
+  draft,
+  composerRef,
+  prompts,
+}: ConversationComposerProps & { readonly prompts: readonly string[] }) {
+  const { slots, config, adapters, compactComposer, thread, composer } = view;
+  const onStop = conversationStop(run, view);
+  const onSend = conversationSend(run, view);
+  const isSubmitting = !run.isStreaming && view.pendingSubmission != null;
   return (
     <>
       {slots?.composerNotice}
       <ConfiguredComposer
+        ref={composerRef}
         compact={compactComposer}
         threadId={thread.id}
         capabilities={config.capabilities}
@@ -193,29 +202,49 @@ function ConversationComposer({
         draft={draft}
         slots={slots}
         sentPrompts={prompts}
+        fileInputTestId={composer?.fileInputTestId}
+        stopTestId={composer?.stopTestId}
+        clearImagesOnSend={composer?.clearOnSend}
+        isSubmitting={isSubmitting}
         isStreaming={run.isStreaming}
         isCheckingForRun={run.isCheckingForRun}
-        onSend={(input, accepted) => {
-          void run.send(input, accepted);
-        }}
+        onSend={onSend}
         onStop={onStop}
       />
     </>
   );
 }
 
-function conversationController(
+function conversationStop(
   run: ReturnType<typeof useConversationRun>,
-): ChatConversationController {
-  return {
-    messages: run.messages,
-    piiMasks: run.piiMasks,
-    threadTitle: run.threadTitle,
-    isStreaming: run.isStreaming,
-    isCheckingForRun: run.isCheckingForRun,
-    isRunCancellable: run.isRunCancellable,
-    send: (input, accepted = () => undefined) => run.send(input, accepted),
-    resumeStartedRun: run.resumeStartedRun,
-    stop: run.stop,
+  view: ConversationComposerProps['view'],
+) {
+  const { config, adapters, thread, composer, lifecycle } = view;
+  const hasCancelTransport = Boolean(config.transport.cancel);
+  const canStopRun = run.isRunCancellable && hasCancelTransport;
+  const canStop = canStopRun || Boolean(composer?.deferredSendCancellable);
+  return canStop
+    ? () => {
+        if (adapters?.cancelDeferredSend?.(thread.id)) return;
+        if (
+          canStopRun ||
+          (hasCancelTransport && lifecycle.isThreadRunActive(thread.id))
+        ) {
+          run.stop();
+          adapters?.onRunStopped?.(thread.id);
+        }
+      }
+    : undefined;
+}
+
+function conversationSend(
+  run: ReturnType<typeof useConversationRun>,
+  view: ConversationComposerProps['view'],
+): ComponentProps<typeof ConfiguredComposer>['onSend'] {
+  return (input, accepted) => {
+    const clearImmediately = view.composer?.clearOnSend;
+    if (clearImmediately) accepted();
+    if (view.adapters?.deferSend?.(view.thread.id, input)) return;
+    void run.send(input, clearImmediately ? () => undefined : accepted);
   };
 }

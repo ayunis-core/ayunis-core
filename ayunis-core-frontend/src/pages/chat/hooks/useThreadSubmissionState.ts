@@ -49,9 +49,10 @@ export function useThreadSubmissionState({
 
   useEffect(() => {
     if (!failedSubmission) return;
-    const submission = consumeFailedThreadSubmission(threadId);
-    if (!submission) return;
-    if (restoreFailedSubmission(submission) === false) onRestoreBlocked();
+    const restored = restoreFailedSubmission(failedSubmission);
+    if (restored === undefined) return;
+    if (!consumeFailedThreadSubmission(threadId)) return;
+    if (!restored) onRestoreBlocked();
   }, [failedSubmission, onRestoreBlocked, restoreFailedSubmission, threadId]);
 
   return {

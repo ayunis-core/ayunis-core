@@ -72,6 +72,7 @@ composer, conversation timeline, history, or new-chat shell.
 | Feature availability | `ChatSurfaceConfig.capabilities`                  | Declare support; never use a surface name as the condition                  |
 | Conversation data    | `ChatConversationProps.thread` and `activeRun`    | Supply snapshots scoped to the current principal and client                 |
 | Runtime effects      | `ChatConversationAdapters`                        | Upload, transcribe, select a model, refresh host caches, handle auth/errors |
+| Deferred context     | `deferSend` and `ChatConversationHandle`          | Report host context readiness; never execute or stream the run in the host  |
 | Product extensions   | `ChatConversationSlots`                           | Supply named content/actions that remain host-owned                         |
 | Client tools         | `ClientToolDispatch` and the client-tool registry | Execute host APIs; the package coordinates lifecycle and results            |
 | Rich cards           | Tool-card registry and `TimelinePresentation`     | Register domain cards and artifact opening behavior                         |
@@ -106,6 +107,8 @@ Extract from Web first, verify Web is unchanged, then adopt the package entry in
 Outlook and future surfaces. A migration is incomplete while a host retains a
 parallel run lifecycle or a second implementation of package-owned product UI.
 
-Current follow-up slices are tracked by AYC-2117 through AYC-2123. Visitor
-endpoint adaptation remains in AYC-2049 and does not change this ownership
-contract.
+The AYC-2116 extraction is complete when Web and Outlook both use
+`ChatConversation` without a core-UI replacement slot, and the public-API
+composition suite proves send, stream, stop, rejoin, thread switching, and
+client tools. Visitor endpoint adaptation remains in AYC-2049 and does not
+change this ownership contract.

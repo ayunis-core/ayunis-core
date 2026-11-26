@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { Message } from '@/pages/chat/model/openapi';
+import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 import { sentPrompts } from './sent-prompts';
+
+type Message = GetThreadResponseDto['messages'][number];
 
 function message(
   role: 'user' | 'assistant',

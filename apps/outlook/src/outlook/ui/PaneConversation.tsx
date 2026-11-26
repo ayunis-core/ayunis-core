@@ -6,7 +6,6 @@ import {
   getModeValue,
   ModelSelector,
   ProviderFaultNotice,
-  UnavailableModelNotice,
 } from '@ayunis/chat/model-presentation';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -103,6 +102,9 @@ export function PaneConversation({
         lifecycle={lifecycle}
         activeRun={activeRun}
         clientTools={dispatch}
+        composer={{
+          unavailableModel: modelUnavailable ? { onNewChat } : undefined,
+        }}
         adapters={{
           drafts,
           uploadFiles: upload,
@@ -149,9 +151,6 @@ export function PaneConversation({
                   : undefined
               }
             />
-          ),
-          composerFallback: modelUnavailable && (
-            <UnavailableModelNotice onNewChat={onNewChat} />
           ),
           composerNotice: (
             <>

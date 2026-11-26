@@ -41,7 +41,7 @@ export default tseslint.config(
         },
         {
           selector:
-            ':matches(Identifier, JSXIdentifier)[name=/(web|word)(Pane|Host|Chat|Surface|App|Client)/i]',
+            ':matches(Identifier, JSXIdentifier)[name=/(^|[_$])isWeb($|[_$])|(^|[_$])isWeb(Pane|Host|Chat|Surface|App|Client)($|[_$]|[A-Z])|(^|[_$])(web|word)(Pane|Host|Chat|Surface|App|Client)($|[_$]|[A-Z])|(Web|Word)(Pane|Host|Chat|Surface|App|Client)($|[_$]|[A-Z])|^(WEB|WORD)(_(PANE|HOST|CHAT|SURFACE|APP|CLIENT))?$/]',
           message: 'Configure chat through host capabilities and slots.',
         },
         {
