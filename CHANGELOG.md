@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.85.0](https://github.com/ayunis-core/ayunis-core/compare/v2.84.0...v2.85.0) (2026-11-26)
+
+
+### Features
+
+* **chat:** show a routine's sent notification as an inline card (AYC-2127) ([#2562](https://github.com/ayunis-core/ayunis-core/issues/2562)) ([bd66bb8](https://github.com/ayunis-core/ayunis-core/commit/bd66bb8d425610653059e7294173c6a69c415a43))
+* **empty-state:** suggest marketplace skills and routines on the empty pages (AYC-2134) ([#2572](https://github.com/ayunis-core/ayunis-core/issues/2572)) ([7609738](https://github.com/ayunis-core/ayunis-core/commit/7609738040e5550ffe8a3e6d1fb0c9c1023da48f))
+* **favorites:** favorite routines like workspaces (AYC-2129) ([#2565](https://github.com/ayunis-core/ayunis-core/issues/2565)) ([c9cc190](https://github.com/ayunis-core/ayunis-core/commit/c9cc190441c24c4a420b9f04dcb42eef42d1bd59))
+* **inbox:** hide read notifications and mark them unread (AYC-2130) ([#2566](https://github.com/ayunis-core/ayunis-core/issues/2566)) ([8815366](https://github.com/ayunis-core/ayunis-core/commit/8815366af2872d00d6d22c048bf0f5cc9860d01d))
+* **inbox:** keep split view and add dry-humor empty state (AYC-2136) ([#2578](https://github.com/ayunis-core/ayunis-core/issues/2578)) ([220025a](https://github.com/ayunis-core/ayunis-core/commit/220025a07c3f4ca2ec5fe3f96357a1eaabf418d1))
+* **marketplace:** find and install routines from the marketplace (AYC-2085) ([#2545](https://github.com/ayunis-core/ayunis-core/issues/2545)) ([32f2701](https://github.com/ayunis-core/ayunis-core/commit/32f2701cedc85665e174306b8accb08b93afe0b0))
+* **models:** show provider flags in every model select (AYC-2111) ([#2556](https://github.com/ayunis-core/ayunis-core/issues/2556)) ([dfd286b](https://github.com/ayunis-core/ayunis-core/commit/dfd286bd863830bae10e70f05672324c9fd27308))
+* **oparl:** page, collapse and narrow council search results (AYC-2132) ([#2568](https://github.com/ayunis-core/ayunis-core/issues/2568)) ([bc8a013](https://github.com/ayunis-core/ayunis-core/commit/bc8a01359af5c47cd5c298c7f43698ac5b45af7f))
+
+
+### Bug Fixes
+
+* **assets:** 404 missing web assets and name the script in parse errors (AYC-2087) ([#2559](https://github.com/ayunis-core/ayunis-core/issues/2559)) ([976a405](https://github.com/ayunis-core/ayunis-core/commit/976a4055027e5202b2c0c87170f3a2bd2a386332))
+* **inbox:** rename routine chat button to routine execution (AYC-2128) ([#2561](https://github.com/ayunis-core/ayunis-core/issues/2561)) ([8a91166](https://github.com/ayunis-core/ayunis-core/commit/8a9116687ae83b3c9cd22c3489b369694729fbc4))
+* **outlook:** match web model picker hierarchy (AYC-1954) ([#2557](https://github.com/ayunis-core/ayunis-core/issues/2557)) ([42d13c0](https://github.com/ayunis-core/ayunis-core/commit/42d13c0d7eada35d83a231bf4798c9cb4ac88474))
+* **qa:** avoid teardown discovery SIGPIPE (AYC-000) ([#2577](https://github.com/ayunis-core/ayunis-core/issues/2577)) ([a977e5c](https://github.com/ayunis-core/ayunis-core/commit/a977e5c7d2d62bcaea07b4f1145b1f396195a3ee))
+
+
+### Code Refactoring
+
+* **marketplace:** generate the marketplace client from a checked-in openapi document (AYC-2109) ([#2570](https://github.com/ayunis-core/ayunis-core/issues/2570)) ([64746b7](https://github.com/ayunis-core/ayunis-core/commit/64746b753ad97827c497e1066fd601c1a320de99))
+
+
+### Miscellaneous
+
+* **backend:** recycle jest workers above 512 MB (AYC-000) ([#2355](https://github.com/ayunis-core/ayunis-core/issues/2355)) ([025a230](https://github.com/ayunis-core/ayunis-core/commit/025a23096b82dcea16c6180c402669d677e222d0))
+* **seed:** make auto mode available in local fixtures (AYC-1736) ([#2462](https://github.com/ayunis-core/ayunis-core/issues/2462)) ([9181a04](https://github.com/ayunis-core/ayunis-core/commit/9181a04ce479556eca06ecdeb873d49f69409eb6))
+
 ## [2.84.0](https://github.com/ayunis-core/ayunis-core/compare/v2.83.1...v2.84.0) (2026-11-25)
 
 
