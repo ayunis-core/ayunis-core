@@ -35,8 +35,13 @@ The package also provides shared chat views:
 - `@ayunis/chat/attachments` renders the canonical source, knowledge-base, and
   integration badges, including upload, processing, reindexing, and failure
   states. Hosts supply source data and removal callbacks.
-- `@ayunis/chat/history` renders history lists and entries. The app supplies
-  links, row actions, empty states, and pagination.
+- `@ayunis/chat/history` renders history lists, entries, loading/error/empty
+  states, pagination, and thread rename/delete dialogs. Hosts retain queries,
+  routing, mutation side effects, and row-specific actions; pagination exposes
+  a typed control renderer when a host must preserve router-link semantics.
+- `@ayunis/chat/model-presentation` owns the canonical academy gate,
+  unavailable-model, provider-fault, and long-chat notices. Hosts supply status
+  and actions such as academy navigation or starting a new chat.
 
 `@ayunis/chat/surface` provides the scrolling chat shell and the contracts for
 host transport, capabilities, header and empty-state slots, extra actions, and

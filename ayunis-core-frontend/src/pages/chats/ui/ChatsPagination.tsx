@@ -1,4 +1,5 @@
-import { SearchPagination } from '@/widgets/pagination';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { ChatHistoryPagination } from '@ayunis/chat/history';
 
 interface ChatsPaginationProps {
   currentPage: number;
@@ -11,12 +12,27 @@ export default function ChatsPagination({
   totalPages,
   search,
 }: Readonly<ChatsPaginationProps>) {
+  const navigate = useNavigate();
   return (
-    <SearchPagination
+    <ChatHistoryPagination
       currentPage={currentPage}
       totalPages={totalPages}
-      to="/chats"
-      search={search}
+      onPage={(page) => {
+        void navigate({ to: '/chats', search: { search, page } });
+      }}
+      renderControl={(control) => (
+        <Link
+          to="/chats"
+          search={{ search, page: control.page }}
+          disabled={control.disabled}
+          aria-current={control.current ? 'page' : undefined}
+          aria-label={control.label}
+          data-testid={control.testId}
+          className={control.className}
+        >
+          {control.children}
+        </Link>
+      )}
     />
   );
 }
