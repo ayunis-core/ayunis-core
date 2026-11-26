@@ -110,7 +110,6 @@ export function ChatSettingsCard() {
               <SelectItem value="null">{t('chat.none')}</SelectItem>
               <ModelSelectOptions
                 models={permittedModels}
-                showFlag
                 showHeading={false}
                 modes={modes}
                 modesHint={modesHint}

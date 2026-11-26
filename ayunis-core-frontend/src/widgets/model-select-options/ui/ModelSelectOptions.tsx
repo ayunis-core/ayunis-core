@@ -52,7 +52,6 @@ function preventKeyboardSelection(event: KeyboardEvent<HTMLElement>) {
 
 interface ModelSelectOptionsProps {
   models: ModelOption[];
-  showFlag?: boolean;
   showHeading?: boolean;
   showProviderFault?: boolean;
   /** Modes listed above the individual models, in this order. */
@@ -62,7 +61,6 @@ interface ModelSelectOptionsProps {
 
 export default function ModelSelectOptions({
   models,
-  showFlag = false,
   showHeading = true,
   showProviderFault = false,
   modes = [],
@@ -157,14 +155,10 @@ export default function ModelSelectOptions({
                   value={model.id}
                   onMouseEnter={() => showCardFor(model)}
                 >
-                  {showFlag ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <ProviderFlag provider={model.provider} />
-                      {name}
-                    </span>
-                  ) : (
-                    name
-                  )}
+                  <span className="inline-flex items-center gap-1.5">
+                    <ProviderFlag provider={model.provider} />
+                    {name}
+                  </span>
                   {showProviderFault && model.hasProviderFault && (
                     <ModelProviderFaultIndicator />
                   )}

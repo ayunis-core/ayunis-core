@@ -159,7 +159,6 @@ export function OrgDefaultModelCardWidget({
               <SelectContent position="popper" sideOffset={4} align="end">
                 <ModelSelectOptions
                   models={modelOptions}
-                  showFlag
                   showHeading={false}
                   modes={modes}
                   modesHint={modesHint}
