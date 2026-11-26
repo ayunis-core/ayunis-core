@@ -209,10 +209,12 @@ runs with the marketplace disabled.
 
 Rule: when one of these services ships an API change, regenerate the client
 against the deployed service in the same change set and commit the diff.
-For the marketplace, point `orval.config.ts` at the staging instance's
-`/api/docs-json` for that run, then restore the local target. Verify the
-marketplace chat tools manually against staging before a release that
-touches them.
+The marketplace is a static site without an OpenAPI endpoint; its client is
+generated from the checked-in `src/common/clients/marketplace/openapi.json`
+(`pnpm run generate:client --project marketplace`, no running service
+needed). Change that document together with the marketplace's
+`src/lib/catalog.ts`. Verify the marketplace chat tools manually against
+staging before a release that touches them.
 
 ## Testing
 

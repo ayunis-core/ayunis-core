@@ -20,7 +20,11 @@ The marketplace module provides integration with the external Ayunis Marketplace
 
 **Infrastructure:**
 
-- `MarketplaceHttpClient` — HTTP client implementation using the generated marketplace API client (regenerated with orval from a running marketplace, `orval.config.ts` target `marketplace`). `getIntegrationByIdentifier` and `getRoutineByIdentifier` return null for a 404 and throw `MarketplaceUnavailableError` for any other failure
+- `MarketplaceHttpClient` — HTTP client implementation using the generated marketplace API client. `getIntegrationByIdentifier` and `getRoutineByIdentifier` return null for a 404 and throw `MarketplaceUnavailableError` for any other failure
+
+**Marketplace API contract:**
+
+- `src/common/clients/marketplace/openapi.json` is the contract with the static marketplace (`ayunis-core-marketplace`), whose `/api/*` JSON is built by `src/lib/catalog.ts` there. It lists only the public endpoints Core reads (skills, integrations, routines and their categories). Change it together with `catalog.ts`, then regenerate the client with `pnpm run generate:client --project marketplace` (no running marketplace needed). The static lists return every entry on one page and ignore the query parameters
 
 **Presenters:**
 

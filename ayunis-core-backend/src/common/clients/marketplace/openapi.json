@@ -1,0 +1,1553 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Ayunis Marketplace API",
+    "description": "Public API for the Ayunis skill marketplace",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/skill-categories": {
+      "get": {
+        "operationId": "PublicSkillCategoriesController_list",
+        "summary": "List all skill categories",
+        "description": "Retrieve all skill categories sorted by their sort order.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillCategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/skills": {
+      "get": {
+        "operationId": "PublicSkillsController_list",
+        "summary": "List published skills",
+        "description": "Retrieve a paginated list of published skills with optional filters for category, featured status, and pagination.",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "Filter by category ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "featured",
+            "in": "query",
+            "required": false,
+            "description": "Filter by featured status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of items per page",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedSkillsResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/skills/pre-installed": {
+      "get": {
+        "operationId": "PublicSkillsController_listPreInstalled",
+        "summary": "List pre-installed skills",
+        "description": "Retrieve all published skills that are marked as pre-installed for new organizations.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SkillListResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/skills/{identifier}": {
+      "get": {
+        "operationId": "PublicSkillsController_getByIdentifier",
+        "summary": "Get a skill by identifier",
+        "description": "Retrieve full details of a published skill by its unique identifier slug.",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier (slug)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No published entry with this identifier"
+          }
+        }
+      }
+    },
+    "/api/integration-categories": {
+      "get": {
+        "operationId": "PublicIntegrationCategoriesController_list",
+        "summary": "List all integration categories",
+        "description": "Retrieve all integration categories sorted by their sort order.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationCategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations": {
+      "get": {
+        "operationId": "PublicIntegrationsController_list",
+        "summary": "List published integrations",
+        "description": "Retrieve a paginated list of published integrations with optional filters for featured status and pagination.",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "Filter by category ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "featured",
+            "in": "query",
+            "required": false,
+            "description": "Filter by featured status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of items per page",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedIntegrationsResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/pre-installed": {
+      "get": {
+        "operationId": "PublicIntegrationsController_listPreInstalled",
+        "summary": "List pre-installed integrations",
+        "description": "Retrieve all published integrations that are marked as pre-installed for new organizations.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationListResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{identifier}": {
+      "get": {
+        "operationId": "PublicIntegrationsController_getByIdentifier",
+        "summary": "Get an integration by identifier",
+        "description": "Retrieve full details of a published integration by its unique identifier slug.",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier (slug)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No published entry with this identifier"
+          }
+        }
+      }
+    },
+    "/api/routine-categories": {
+      "get": {
+        "operationId": "PublicRoutineCategoriesController_list",
+        "summary": "List all routine categories",
+        "description": "Retrieve all routine categories sorted by their sort order, then name.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoutineCategoryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/routines": {
+      "get": {
+        "operationId": "PublicRoutinesController_list",
+        "summary": "List published routines",
+        "description": "Retrieve a paginated list of published routines, sorted by name, with optional filters for category and featured status.",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "Filter by routine category ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "featured",
+            "in": "query",
+            "required": false,
+            "description": "Filter by featured status",
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of items per page",
+            "schema": {
+              "type": "number",
+              "maximum": 100
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRoutinesResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/routines/{identifier}": {
+      "get": {
+        "operationId": "PublicRoutinesController_getByIdentifier",
+        "summary": "Get a routine by identifier",
+        "description": "Retrieve a published routine by its identifier slug, including the prompt, schedule, internet access and allowed domains that Ayunis Core installs.",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier (slug)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No published entry with this identifier"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SkillCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Category UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Category name"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Category description"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "sortOrder": {
+            "type": "number",
+            "description": "Sort order"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "iconName",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SkillListResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Skill UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Longer description"
+          },
+          "skillCategoryId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Skill category ID"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the skill is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the skill is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the skill is pre-installed"
+          },
+          "useCases": {
+            "type": "array",
+            "description": "Use case bullet points",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examplePrompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example prompt"
+          },
+          "exampleResponse": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example AI response"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Benefit statements",
+            "items": {
+              "type": "string"
+            }
+          },
+          "providerName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider name"
+          },
+          "providerLogoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider logo URL"
+          },
+          "providerWebsiteUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider website URL"
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta title"
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta description"
+          },
+          "installCount": {
+            "type": "number",
+            "description": "Displayed install count"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "description",
+          "skillCategoryId",
+          "iconName",
+          "featured",
+          "published",
+          "preInstalled",
+          "useCases",
+          "examplePrompt",
+          "exampleResponse",
+          "benefits",
+          "providerName",
+          "providerLogoUrl",
+          "providerWebsiteUrl",
+          "metaTitle",
+          "metaDescription",
+          "installCount",
+          "createdAt"
+        ]
+      },
+      "PaginatedSkillsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "List of skills",
+            "items": {
+              "$ref": "#/components/schemas/SkillListResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of skills matching the query"
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Items per page"
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total number of pages"
+          }
+        },
+        "required": ["data", "total", "page", "limit", "totalPages"]
+      },
+      "SkillResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Skill UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "aiDescription": {
+            "type": "string",
+            "description": "Description shown to LLM to decide activation"
+          },
+          "instructions": {
+            "type": "string",
+            "description": "Detailed instructions injected when skill is activated"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Longer description"
+          },
+          "skillCategoryId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Skill category ID"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the skill is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the skill is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the skill is pre-installed"
+          },
+          "useCases": {
+            "type": "array",
+            "description": "Use case bullet points",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examplePrompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example prompt"
+          },
+          "exampleResponse": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example AI response"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Benefit statements",
+            "items": {
+              "type": "string"
+            }
+          },
+          "providerName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider name"
+          },
+          "providerLogoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider logo URL"
+          },
+          "providerWebsiteUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider website URL"
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta title"
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta description"
+          },
+          "installCount": {
+            "type": "number",
+            "description": "Displayed install count"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "aiDescription",
+          "instructions",
+          "description",
+          "skillCategoryId",
+          "iconName",
+          "featured",
+          "published",
+          "preInstalled",
+          "useCases",
+          "examplePrompt",
+          "exampleResponse",
+          "benefits",
+          "providerName",
+          "providerLogoUrl",
+          "providerWebsiteUrl",
+          "metaTitle",
+          "metaDescription",
+          "installCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "IntegrationCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Category UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Category name"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Category description"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "sortOrder": {
+            "type": "number",
+            "description": "Sort order"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "iconName",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "IntegrationKind": {
+        "type": "string",
+        "enum": ["MCP", "LINK"]
+      },
+      "IntegrationListResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Integration UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "kind": {
+            "description": "MCP connects an MCP server on install; LINK points to a page inside Ayunis Core",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationKind"
+              }
+            ]
+          },
+          "linkPath": {
+            "type": "string",
+            "nullable": true,
+            "description": "Path inside Ayunis Core that a LINK integration opens. Null for MCP integrations."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "description": {
+            "type": "string",
+            "description": "Full description"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Absolute URL to the integration logo image"
+          },
+          "integrationCategoryId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Integration category ID"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the integration is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the integration is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the integration is pre-installed"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Benefits of this integration",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examplePrompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example prompt for the integration"
+          },
+          "exampleResponse": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example response for the integration"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "kind",
+          "linkPath",
+          "name",
+          "shortDescription",
+          "description",
+          "iconName",
+          "integrationCategoryId",
+          "featured",
+          "published",
+          "preInstalled",
+          "benefits",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginatedIntegrationsResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "List of integrations",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationListResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of integrations matching the query"
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Items per page"
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total number of pages"
+          }
+        },
+        "required": ["data", "total", "page", "limit", "totalPages"]
+      },
+      "IntegrationAuthType": {
+        "type": "string",
+        "enum": ["NO_AUTH", "BEARER_TOKEN", "CUSTOM_HEADER", "OAUTH"]
+      },
+      "IntegrationConfigFieldDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Configuration field key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable field label"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["text", "url", "secret"]
+          },
+          "headerName": {
+            "type": "string",
+            "description": "HTTP header populated by this field"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Prefix applied to the configured value"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the field must be configured"
+          },
+          "help": {
+            "type": "string",
+            "description": "Help text shown during installation"
+          },
+          "value": {
+            "type": "string",
+            "description": "Fixed, non-secret configuration value"
+          }
+        },
+        "required": ["key", "label", "type", "required"]
+      },
+      "IntegrationOAuthConfigDto": {
+        "type": "object",
+        "properties": {
+          "clientRegistration": {
+            "type": "string",
+            "description": "How the OAuth client is registered",
+            "enum": ["automatic", "static"]
+          },
+          "scopes": {
+            "type": "array",
+            "description": "OAuth scopes requested for each user connection",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["clientRegistration"]
+      },
+      "IntegrationConfigSchemaDto": {
+        "type": "object",
+        "properties": {
+          "authType": {
+            "$ref": "#/components/schemas/IntegrationAuthType"
+          },
+          "orgFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationConfigFieldDto"
+            }
+          },
+          "userFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationConfigFieldDto"
+            }
+          },
+          "oauth": {
+            "$ref": "#/components/schemas/IntegrationOAuthConfigDto"
+          }
+        },
+        "required": ["authType", "orgFields", "userFields"]
+      },
+      "IntegrationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Integration UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "kind": {
+            "description": "MCP connects an MCP server on install; LINK points to a page inside Ayunis Core",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationKind"
+              }
+            ]
+          },
+          "linkPath": {
+            "type": "string",
+            "nullable": true,
+            "description": "Path inside Ayunis Core that a LINK integration opens. Null for MCP integrations."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for marketplace display"
+          },
+          "description": {
+            "type": "string",
+            "description": "Full description"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "logoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Absolute URL to the integration logo image"
+          },
+          "serverUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "MCP server URL. Null when the customer provides the server URL."
+          },
+          "customerProvidesServerUrl": {
+            "type": "boolean",
+            "description": "Whether the customer enters the URL of their own MCP server at install time"
+          },
+          "serverUrlHint": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tells the customer which server URL to enter"
+          },
+          "configSchema": {
+            "description": "Configuration schema (authType, orgFields, userFields, oauth)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationConfigSchemaDto"
+              }
+            ]
+          },
+          "integrationCategoryId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Integration category ID"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the integration is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the integration is published"
+          },
+          "preInstalled": {
+            "type": "boolean",
+            "description": "Whether the integration is pre-installed"
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Benefits of this integration",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examplePrompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example prompt for the integration"
+          },
+          "exampleResponse": {
+            "type": "string",
+            "nullable": true,
+            "description": "Example response for the integration"
+          },
+          "legalTextUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to the legal text page the installer must confirm"
+          },
+          "legalTextVersion": {
+            "type": "string",
+            "nullable": true,
+            "description": "Version of the legal text"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "kind",
+          "linkPath",
+          "name",
+          "shortDescription",
+          "description",
+          "iconName",
+          "serverUrl",
+          "customerProvidesServerUrl",
+          "serverUrlHint",
+          "configSchema",
+          "integrationCategoryId",
+          "featured",
+          "published",
+          "preInstalled",
+          "benefits",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RoutineCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Category UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Category name"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Category description"
+          },
+          "sortOrder": {
+            "type": "number",
+            "description": "Sort order (lower = first)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RoutineFrequency": {
+        "type": "string",
+        "enum": ["daily", "weekly", "monthly"]
+      },
+      "RoutineScheduleResponseDto": {
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "description": "Daily, weekly on `weekdays`, or monthly on `monthDay`.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineFrequency"
+              }
+            ]
+          },
+          "time": {
+            "type": "string",
+            "description": "Run time as HH:mm (Europe/Berlin)"
+          },
+          "weekdays": {
+            "type": "array",
+            "description": "Weekly only: ISO weekdays, 1 (Monday) to 7 (Sunday), ascending, without duplicates. Absent for the other frequencies.",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 7
+            }
+          },
+          "monthDay": {
+            "description": "Monthly only: the day of the month, 1 to 28, or `last` for its last day. Absent for the other frequencies.",
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 28
+              },
+              {
+                "type": "string",
+                "enum": ["last"]
+              }
+            ]
+          }
+        },
+        "required": ["frequency", "time"]
+      },
+      "RoutineInternetAccess": {
+        "type": "string",
+        "enum": ["off", "all", "allowlist"]
+      },
+      "RoutineListItemResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Routine UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name, also the name of the installed routine"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for cards and listings"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Longer description"
+          },
+          "routineCategoryId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Routine category ID"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the routine is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the routine is published (always true here)"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/RoutineScheduleResponseDto"
+          },
+          "internetAccess": {
+            "description": "Whether the routine may use the web: not at all, any website, or only `allowedDomains`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineInternetAccess"
+              }
+            ]
+          },
+          "allowedDomains": {
+            "type": "array",
+            "description": "Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useCases": {
+            "type": "array",
+            "description": "Use case bullet points",
+            "items": {
+              "type": "string"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Benefit statements",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exampleNotification": {
+            "type": "string",
+            "nullable": true,
+            "description": "Sample of the notification the routine sends"
+          },
+          "providerName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider name"
+          },
+          "providerLogoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider logo URL"
+          },
+          "providerWebsiteUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider website URL"
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta title"
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta description"
+          },
+          "installCount": {
+            "type": "number",
+            "description": "Displayed install count"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "description",
+          "routineCategoryId",
+          "iconName",
+          "featured",
+          "published",
+          "schedule",
+          "internetAccess",
+          "allowedDomains",
+          "useCases",
+          "benefits",
+          "exampleNotification",
+          "providerName",
+          "providerLogoUrl",
+          "providerWebsiteUrl",
+          "metaTitle",
+          "metaDescription",
+          "installCount",
+          "createdAt"
+        ]
+      },
+      "PaginatedRoutinesResponseDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "description": "List of routines",
+            "items": {
+              "$ref": "#/components/schemas/RoutineListItemResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of routines matching the query"
+          },
+          "page": {
+            "type": "number",
+            "description": "Current page number"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Items per page"
+          },
+          "totalPages": {
+            "type": "number",
+            "description": "Total number of pages"
+          }
+        },
+        "required": ["data", "total", "page", "limit", "totalPages"]
+      },
+      "RoutineResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Routine UUID"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier (slug)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name, also the name of the installed routine"
+          },
+          "shortDescription": {
+            "type": "string",
+            "description": "Short description for cards and listings"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "description": "Longer description"
+          },
+          "routineCategoryId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Routine category ID"
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lucide icon name"
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the routine is featured"
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Whether the routine is published (always true here)"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/RoutineScheduleResponseDto"
+          },
+          "internetAccess": {
+            "description": "Whether the routine may use the web: not at all, any website, or only `allowedDomains`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoutineInternetAccess"
+              }
+            ]
+          },
+          "allowedDomains": {
+            "type": "array",
+            "description": "Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode",
+            "items": {
+              "type": "string"
+            }
+          },
+          "useCases": {
+            "type": "array",
+            "description": "Use case bullet points",
+            "items": {
+              "type": "string"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "description": "Benefit statements",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exampleNotification": {
+            "type": "string",
+            "nullable": true,
+            "description": "Sample of the notification the routine sends"
+          },
+          "providerName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider name"
+          },
+          "providerLogoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider logo URL"
+          },
+          "providerWebsiteUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Provider website URL"
+          },
+          "metaTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta title"
+          },
+          "metaDescription": {
+            "type": "string",
+            "nullable": true,
+            "description": "SEO meta description"
+          },
+          "installCount": {
+            "type": "number",
+            "description": "Displayed install count"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "The task the routine runs, sent as its first message"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "identifier",
+          "name",
+          "shortDescription",
+          "description",
+          "routineCategoryId",
+          "iconName",
+          "featured",
+          "published",
+          "schedule",
+          "internetAccess",
+          "allowedDomains",
+          "useCases",
+          "benefits",
+          "exampleNotification",
+          "providerName",
+          "providerLogoUrl",
+          "providerWebsiteUrl",
+          "metaTitle",
+          "metaDescription",
+          "installCount",
+          "createdAt",
+          "prompt",
+          "updatedAt"
+        ]
+      }
+    }
+  }
+}
