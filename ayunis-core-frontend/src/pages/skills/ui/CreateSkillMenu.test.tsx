@@ -18,6 +18,11 @@ vi.mock('@tanstack/react-router', () => ({
 
 vi.mock('@/features/marketplace', () => ({
   useSkillMarketplaceUrl: () => mocks.marketplaceUrl,
+  useSuggestedMarketplaceSkills: () => ({
+    marketplaceUrl: mocks.marketplaceUrl,
+    suggestions: [],
+    isLoading: false,
+  }),
 }));
 
 vi.mock('@/features/permissions', () => ({

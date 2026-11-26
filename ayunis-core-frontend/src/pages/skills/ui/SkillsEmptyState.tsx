@@ -2,16 +2,17 @@ import CreateSkillMenu from './CreateSkillMenu';
 import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
+  Bot,
   ExternalLink,
   MessageSquareText,
   PencilLine,
   Sparkles,
   Store,
 } from 'lucide-react';
-import { EmptyState } from '@/widgets/empty-state';
+import { EmptyState, EmptyStateMarketplace } from '@/widgets/empty-state';
 import { ChatStarter, type ChatStarterDefaults } from '@/widgets/chat-starter';
 import { Button } from '@ayunis/ui/components/button';
-import { useSkillMarketplaceUrl } from '@/features/marketplace';
+import { useSuggestedMarketplaceSkills } from '@/features/marketplace';
 import { useMyPermissions } from '@/features/permissions';
 
 interface SkillsEmptyStateProps {
@@ -22,12 +23,20 @@ export default function SkillsEmptyState({
   chatStarter,
 }: Readonly<SkillsEmptyStateProps>) {
   const { t } = useTranslation('skills');
-  const marketplaceUrl = useSkillMarketplaceUrl();
+  const {
+    marketplaceUrl,
+    suggestions,
+    isLoading: isLoadingSuggestions,
+  } = useSuggestedMarketplaceSkills();
   const { can, isLoading: isLoadingPermissions } = useMyPermissions();
   // Assume can-create while permissions load, matching CreateSkillMenu, so the
   // prompt doesn't flicker; drop the create copy/action only once we know the
   // member lacks the permission (they can still read skills shared with them).
   const canCreate = isLoadingPermissions || can('manage_skills');
+  // The suggestions bring their own "Show all" link, so the browse button
+  // only stays as the fallback entry point without them.
+  const browseUrl =
+    isLoadingSuggestions || suggestions.length > 0 ? null : marketplaceUrl;
 
   return (
     <EmptyState
@@ -58,7 +67,7 @@ export default function SkillsEmptyState({
       ]}
       helpPath="skills/"
       action={
-        canCreate || marketplaceUrl ? (
+        canCreate || browseUrl ? (
           <>
             {canCreate && (
               <CreateSkillMenu
@@ -66,10 +75,10 @@ export default function SkillsEmptyState({
                 showIcon={true}
               />
             )}
-            {marketplaceUrl && (
+            {browseUrl && (
               <Button variant="ghost" className="text-brand" asChild>
                 <a
-                  href={marketplaceUrl}
+                  href={browseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="skills-empty-marketplace"
@@ -82,6 +91,17 @@ export default function SkillsEmptyState({
             )}
           </>
         ) : undefined
+      }
+      suggestions={
+        marketplaceUrl &&
+        suggestions.length > 0 && (
+          <EmptyStateMarketplace
+            kind="skill"
+            entries={suggestions}
+            marketplaceUrl={marketplaceUrl}
+            fallbackIcon={Bot}
+          />
+        )
       }
       guide={
         <ChatStarter

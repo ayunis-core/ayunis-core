@@ -12,6 +12,7 @@ interface EmptyStateProps {
   icon?: LucideIcon;
   steps?: readonly EmptyStateStep[];
   helpPath?: string;
+  suggestions?: ReactNode;
   guide?: ReactNode;
   testId?: string;
 }
@@ -23,6 +24,7 @@ export default function EmptyState({
   icon,
   steps,
   helpPath,
+  suggestions,
   guide,
   testId,
 }: Readonly<EmptyStateProps>) {
@@ -49,7 +51,12 @@ export default function EmptyState({
         {description}
       </p>
       {steps && steps.length > 0 && <EmptyStateSteps steps={steps} />}
-      <EmptyStateGuide action={action} helpPath={helpPath} guide={guide} />
+      <EmptyStateGuide
+        action={action}
+        helpPath={helpPath}
+        suggestions={suggestions}
+        guide={guide}
+      />
     </div>
   );
 }
