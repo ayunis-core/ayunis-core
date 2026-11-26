@@ -9,24 +9,20 @@ import { cn } from '@ayunis/ui/lib/cn';
 
 const FADE_MASK = 'linear-gradient(to top, transparent 0, black 1.25rem)';
 
-interface ScrollFadeContainerProps {
-  children: ReactNode;
-  className?: string;
-}
-
 export function ScrollFadeContainer({
   children,
   className,
-}: Readonly<ScrollFadeContainerProps>) {
+}: Readonly<{ children: ReactNode; className?: string }>) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [showFade, setShowFade] = useState(false);
 
   const updateFade = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const hasOverflow = el.scrollHeight > el.clientHeight + 1;
-    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    const element = scrollRef.current;
+    if (!element) return;
+    const hasOverflow = element.scrollHeight > element.clientHeight + 1;
+    const atBottom =
+      element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
     setShowFade(hasOverflow && !atBottom);
   }, []);
 

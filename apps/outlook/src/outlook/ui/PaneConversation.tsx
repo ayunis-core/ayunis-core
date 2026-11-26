@@ -1,5 +1,5 @@
 import { toast } from '@ayunis/ui/lib/toast';
-import { PaneSourceChips } from '@/outlook/ui/PaneSourceChips';
+import { ChatAttachments } from '@ayunis/chat/attachments';
 import { PaneAcademyNotice } from '@/outlook/ui/PaneAcademyNotice';
 import {
   LongChatWarning,
@@ -190,9 +190,9 @@ export function PaneConversation({
             </p>
           ),
           attachments: visibleSources.length > 0 && (
-            <PaneSourceChips
+            <ChatAttachments
               sources={visibleSources}
-              remove={(id) => {
+              onRemoveSource={(id) => {
                 void threadSourcesControllerRemoveSource(thread.id, id)
                   .then(() => actions.refreshThread(thread.id))
                   .catch(onError);

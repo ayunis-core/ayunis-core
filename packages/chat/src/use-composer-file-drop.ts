@@ -52,9 +52,9 @@ function getDocumentUpload(
   adapters: ChatConversationAdapters | undefined,
   busy: boolean,
 ) {
-  return busy || adapters?.documentAttachments === false
+  return busy || adapters?.documentAttachments !== true
     ? undefined
-    : adapters?.uploadFiles;
+    : adapters.uploadFiles;
 }
 
 export function useComposerImagePaste(

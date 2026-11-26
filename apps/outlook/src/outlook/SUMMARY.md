@@ -12,6 +12,8 @@ The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
 - `ui/OutlookChatApp.tsx` owns the pane's new-chat, conversation, and history
   views. It supplies the bearer transport, scope-derived capabilities, thread
   operations, and session-owned drafts and run state to `@ayunis/chat`.
+  Attachment and source badges use the package's canonical Web-derived
+  presentation while the pane retains upload and removal transport ownership.
   A new conversation's first send uses the package handoff after attachments
   are ready. Stop and explicit pane navigation cancel preparation. Web chat
   uses its own router and build.

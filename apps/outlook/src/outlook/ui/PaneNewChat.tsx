@@ -14,7 +14,7 @@ import {
 import type { SendMessageInput } from '@ayunis/chat/runs';
 import type { useStartPaneThread } from '@/outlook/lib/use-start-pane-thread';
 import { useOrgChatSettingsControllerGetChatStartDefaults } from '@ayunis/api-client/endpoints';
-import { PaneSourceChips } from '@/outlook/ui/PaneSourceChips';
+import { ChatAttachments } from '@ayunis/chat/attachments';
 import { PaneAcademyNotice } from '@/outlook/ui/PaneAcademyNotice';
 import { ModelSelector } from '@ayunis/chat/model-presentation';
 import { PaneNewChatLayout } from '@/outlook/ui/PaneNewChatLayout';
@@ -125,14 +125,14 @@ export function PaneNewChat({
                 />
               ),
               attachments: files.length > 0 && (
-                <PaneSourceChips
+                <ChatAttachments
                   sources={files.map(({ name, type }, index) => ({
                     id: String(index),
                     name,
                     type: 'text',
                     fileType: type.startsWith('audio/') ? 'audio' : undefined,
                   }))}
-                  remove={(id) =>
+                  onRemoveSource={(id) =>
                     setFiles((current) =>
                       current.filter((_, index) => String(index) !== id),
                     )

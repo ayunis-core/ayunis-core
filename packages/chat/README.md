@@ -28,6 +28,9 @@ The package also provides shared chat views:
 - `@ayunis/chat/composer` renders the composer field and attachment previews.
   The app supplies input state, controls, and handlers. Import
   `@ayunis/chat/composer.css` for the composer styles.
+- `@ayunis/chat/attachments` renders the canonical source, knowledge-base, and
+  integration badges, including upload, processing, reindexing, and failure
+  states. Hosts supply source data and removal callbacks.
 - `@ayunis/chat/history` renders history lists and entries. The app supplies
   links, row actions, empty states, and pagination.
 
@@ -57,9 +60,9 @@ adapters where the surface supports them.
   mutations for the capabilities the host enables. A host can provide draft
   storage scoped to the principal. The default keeps drafts in memory for the
   mounted session.
-- Use slots for host actions, attachment chips, and authenticated message
-  images. Hosts also provide the translation resources and import the
-  package styles through their Tailwind stylesheet.
+- Use slots for host actions, the package-owned attachment presentation, and
+  authenticated message images. Hosts also provide the translation resources
+  and import the package styles through their Tailwind stylesheet.
 
 Client tools can register an executor, a custom card, or both by tool name.
 The shared lifecycle coordinates execution and routes results to the run.

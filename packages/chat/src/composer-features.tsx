@@ -100,6 +100,7 @@ function CompactAttachmentFields({
       disabled={disabled}
       onFiles={onFiles || images ? selectFiles : undefined}
       onAudio={audio ? onFiles : undefined}
+      accept={onFiles ? undefined : 'image/*'}
     />
   );
 }

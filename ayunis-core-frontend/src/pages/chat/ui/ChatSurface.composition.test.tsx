@@ -1119,6 +1119,7 @@ describe('shared chat composition', () => {
           select: selectModel,
         },
         uploadFiles,
+        documentAttachments: true,
         transcribe,
       },
       history: { chats: [first], onSelect: vi.fn(), rename, remove },
