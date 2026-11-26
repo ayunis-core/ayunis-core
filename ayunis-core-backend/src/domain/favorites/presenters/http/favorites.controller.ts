@@ -20,6 +20,7 @@ import { ReorderFavoritesUseCase } from 'src/domain/favorites/application/use-ca
 import { ToggleFavoriteCommand } from 'src/domain/favorites/application/use-cases/toggle-favorite/toggle-favorite.command';
 import { ToggleFavoriteUseCase } from 'src/domain/favorites/application/use-cases/toggle-favorite/toggle-favorite.use-case';
 import {
+  RoutineFavoriteResponseDto,
   ThreadFavoriteResponseDto,
   type FavoriteResponseDto,
   WorkspaceFavoriteResponseDto,
@@ -31,7 +32,11 @@ import { ToggleFavoriteDto } from './dtos/toggle-favorite.dto';
 // behind the workspaces flag; the API is gated with it so a disabled feature
 // has no reachable server surface.
 @ApiTags('favorites')
-@ApiExtraModels(WorkspaceFavoriteResponseDto, ThreadFavoriteResponseDto)
+@ApiExtraModels(
+  WorkspaceFavoriteResponseDto,
+  ThreadFavoriteResponseDto,
+  RoutineFavoriteResponseDto,
+)
 @Controller('favorites')
 export class FavoritesController {
   private readonly logger = new Logger(FavoritesController.name);
@@ -52,6 +57,7 @@ export class FavoritesController {
         oneOf: [
           { $ref: getSchemaPath(WorkspaceFavoriteResponseDto) },
           { $ref: getSchemaPath(ThreadFavoriteResponseDto) },
+          { $ref: getSchemaPath(RoutineFavoriteResponseDto) },
         ],
         discriminator: { propertyName: 'referenceType' },
       },

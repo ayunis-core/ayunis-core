@@ -4844,6 +4844,7 @@ export type ToggleFavoriteDtoReferenceType = typeof ToggleFavoriteDtoReferenceTy
 export const ToggleFavoriteDtoReferenceType = {
   workspace: 'workspace',
   thread: 'thread',
+  routine: 'routine',
 } as const;
 
 export interface ToggleFavoriteDto {
@@ -7800,6 +7801,22 @@ export interface LogoutResponseDto {
      * @nullable
      */
   brokerLogoutUrl: string | null;
+}
+
+export type RoutineFavoriteResponseDtoReferenceType = typeof RoutineFavoriteResponseDtoReferenceType[keyof typeof RoutineFavoriteResponseDtoReferenceType];
+
+
+export const RoutineFavoriteResponseDtoReferenceType = {
+  routine: 'routine',
+} as const;
+
+export interface RoutineFavoriteResponseDto {
+  id: string;
+  /** @minimum 0 */
+  position: number;
+  referenceId: string;
+  referenceType: RoutineFavoriteResponseDtoReferenceType;
+  name: string;
 }
 
 export type SuperAdminOrgsControllerGetAllOrgsParams = {

@@ -206,6 +206,7 @@ import type {
   RetentionPolicyResponseDto,
   RevertArtifactDto,
   RolePermissionsResponseDto,
+  RoutineFavoriteResponseDto,
   RoutineResponseDto,
   RunErrorResponseDto,
   RunIntegrationWarningResponseDto,
@@ -3578,8 +3579,8 @@ const workspaceContextControllerUpdateInstruction = (
  */
 const favoritesControllerFindAll = (
 
- options?: SecondParameter<typeof playwrightApiClient<(WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto)[]>>,) => {
-      return playwrightApiClient<(WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto)[]>(
+ options?: SecondParameter<typeof playwrightApiClient<(WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto | RoutineFavoriteResponseDto)[]>>,) => {
+      return playwrightApiClient<(WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto | RoutineFavoriteResponseDto)[]>(
       {url: `/favorites`, method: 'GET'
     },
       options);

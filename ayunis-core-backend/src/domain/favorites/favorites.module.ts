@@ -10,6 +10,7 @@ import { FavoriteWorkspaceDeletionRequestedListener } from './application/listen
 import { FavoriteWorkspaceMemberRemovedListener } from 'src/domain/favorites/application/listeners/workspace-member-removed.listener';
 import { WorkspacesModule } from 'src/domain/workspaces/workspaces.module';
 import { ThreadsModule } from 'src/domain/threads/threads.module';
+import { FavoriteRoutineDeletedListener } from 'src/domain/favorites/application/listeners/routine-deleted.listener';
 import { FavoriteReferenceResolver } from './application/services/favorite-reference-resolver.service';
 import { FavoritesController } from './presenters/http/favorites.controller';
 
@@ -17,6 +18,7 @@ import { FavoritesController } from './presenters/http/favorites.controller';
 // (auto-favorite on create) and threads (favorite cleanup on cascade delete)
 // call back into favorites, so every module reference on this cycle is a
 // forwardRef — a plain reference would be undefined at import evaluation.
+// Routines are looked up at call time instead (see FavoriteReferenceResolver).
 @Module({
   imports: [
     LocalFavoritesRepositoryModule,
@@ -34,6 +36,7 @@ import { FavoritesController } from './presenters/http/favorites.controller';
     FavoriteWorkspaceDeletionRequestedListener,
     FavoriteWorkspaceMemberRemovedListener,
     FavoriteThreadDeletionRequestedListener,
+    FavoriteRoutineDeletedListener,
   ],
   exports: [
     AddFavoriteUseCase,

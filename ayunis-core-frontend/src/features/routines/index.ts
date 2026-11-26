@@ -21,6 +21,7 @@ export { DEFAULT_MODEL_OPTION, LAST_MONTH_DAY } from './model/types';
 export type { RoutineFormFields, RoutineScheduleFields } from './model/types';
 export { RoutineEnabledSwitch } from './ui/RoutineEnabledSwitch';
 export { RoutineFormFieldset } from './ui/RoutineFormFieldset';
+export { RoutinePinButton } from './ui/RoutinePinButton';
 export { RoutineRunNowButton } from './ui/RoutineRunNowButton';
 export { RoutineRunStatusLine } from './ui/RoutineRunStatusLine';
 export { RoutineScheduleLine } from './ui/RoutineScheduleLine';

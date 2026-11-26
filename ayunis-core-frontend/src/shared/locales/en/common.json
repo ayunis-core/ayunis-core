@@ -66,6 +66,7 @@
     "moveUp": "Move up",
     "moveDown": "Move down",
     "unpinWorkspace": "Remove from favorites",
+    "unpinRoutine": "Remove from favorites",
     "deleteWorkspace": "Delete",
     "dragWorkspace": "Move workspace",
     "settings": "Settings",

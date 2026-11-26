@@ -1,7 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { login } from "../../src/clients/api/auth.client";
+import {
+  requestFavoriteToggle,
+  requestFavorites,
+  toggleFavorite,
+} from "../../src/clients/api/favorites.client";
+import { generatedApi } from "../../src/clients/api/generated-api";
 import { getRolePermissions } from "../../src/clients/api/role-permissions.client";
 import {
+  createRoutine,
+  finishingRoutine,
   requestFeatureToggles,
   requestRoutineLinkAdd,
   requestRoutineLinkRemoval,
@@ -73,6 +81,35 @@ test("with routines disabled there are no routine or inbox endpoints or UI, and 
   await expect(page.getByTestId("assistant-message").last()).toContainText(
     `${org.defaultModel.provider}::${org.defaultModel.name}`,
   );
+});
+
+test("with routines disabled, routine favorites are hidden and cannot be added, and other favorites stay", async ({
+  api,
+}) => {
+  const key = randomUUID().slice(0, 8);
+  const favorited = await createRoutine(
+    api,
+    finishingRoutine(`Amtsblatt ${key}`),
+  );
+  const other = await createRoutine(api, finishingRoutine(`Gesetzblatt ${key}`));
+  const workspace = await generatedApi.workspacesControllerCreate(
+    { name: `Haushalt ${key}` },
+    { api },
+  );
+  await toggleFavorite(api, "routine", favorited.id);
+  await toggleFavorite(api, "workspace", workspace.id);
+
+  const favorites = await requestFavorites(api, disabledApiUrl);
+  expect(favorites.status()).toBe(200);
+  const referenceIds = ((await favorites.json()) as { referenceId: string }[])
+    .map((favorite) => favorite.referenceId);
+  expect(referenceIds).toContain(workspace.id);
+  expect(referenceIds).not.toContain(favorited.id);
+  expect(
+    (
+      await requestFavoriteToggle(api, "routine", other.id, disabledApiUrl)
+    ).status(),
+  ).toBe(404);
 });
 
 // Changes the MANAGER role of its own organization, so it cannot affect the

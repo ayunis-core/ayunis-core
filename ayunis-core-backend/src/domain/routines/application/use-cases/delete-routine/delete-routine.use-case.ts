@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { RoutineDeletedEvent } from 'src/domain/routines/application/events/routine-deleted.event';
 import { RoutinesRepository } from 'src/domain/routines/application/ports/routines.repository';
 import {
   RoutineNotFoundError,
@@ -17,6 +19,7 @@ export class DeleteRoutineUseCase {
   constructor(
     private readonly routinesRepository: RoutinesRepository,
     private readonly contextService: ContextService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedRoutineError)
@@ -26,5 +29,9 @@ export class DeleteRoutineUseCase {
     if (!(await this.routinesRepository.delete(userId, command.id))) {
       throw new RoutineNotFoundError(command.id);
     }
+    await this.eventEmitter.emitAsync(
+      RoutineDeletedEvent.EVENT_NAME,
+      new RoutineDeletedEvent(command.id, userId),
+    );
   }
 }

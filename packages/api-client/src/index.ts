@@ -3,6 +3,7 @@ import type {
   EmbeddingModelResponseDto,
   ImageGenerationModelResponseDto,
   LanguageModelResponseDto,
+  RoutineFavoriteResponseDto,
   SystemMessageResponseDto,
   ThreadFavoriteResponseDto,
   ToolResultMessageResponseDto,
@@ -12,7 +13,9 @@ import type {
 
 // Compatibility aliases for anonymous response types no longer emitted by Orval 8.
 export type FavoritesControllerFindAll200Item =
-  WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto;
+  | WorkspaceFavoriteResponseDto
+  | ThreadFavoriteResponseDto
+  | RoutineFavoriteResponseDto;
 export type RunMessageResponseDtoMessage =
   | UserMessageResponseDto
   | AssistantMessageResponseDto

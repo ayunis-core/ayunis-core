@@ -1,5 +1,5 @@
 import type { UUID } from 'crypto';
-import type { FavoriteReferenceType } from '../../../domain/value-objects/favorite-reference-type.enum';
+import type { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 
 interface FavoriteResultBase {
   id: UUID;
@@ -20,4 +20,10 @@ export interface ThreadFavoriteResult extends FavoriteResultBase {
   workspaceId: UUID | null;
 }
 
-export type FavoriteResult = WorkspaceFavoriteResult | ThreadFavoriteResult;
+export interface RoutineFavoriteResult extends FavoriteResultBase {
+  referenceType: FavoriteReferenceType.Routine;
+  name: string;
+}
+
+export type FavoriteResult =
+  WorkspaceFavoriteResult | ThreadFavoriteResult | RoutineFavoriteResult;

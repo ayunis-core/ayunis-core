@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import {
+  getFavoritesControllerFindAllQueryKey,
   getRoutinesControllerFindAllQueryKey,
   getRoutinesControllerFindOneQueryKey,
   routinesControllerDelete,
@@ -21,6 +22,10 @@ export function useDeleteRoutine() {
     onSuccess: async (_, id) => {
       void queryClient.invalidateQueries({
         queryKey: getRoutinesControllerFindAllQueryKey(),
+      });
+      // The backend removes the routine's favorite.
+      void queryClient.invalidateQueries({
+        queryKey: getFavoritesControllerFindAllQueryKey(),
       });
       showSuccess(t('toast.deleteSuccess'));
       await navigate({ to: '/routines' });

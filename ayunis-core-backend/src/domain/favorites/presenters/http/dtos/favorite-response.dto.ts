@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { FavoriteReferenceType } from '../../../domain/value-objects/favorite-reference-type.enum';
+import { FavoriteReferenceType } from 'src/domain/favorites/domain/value-objects/favorite-reference-type.enum';
 
 class FavoriteResponseDtoBase {
   @ApiProperty({ format: 'uuid' })
@@ -38,5 +38,15 @@ export class ThreadFavoriteResponseDto extends FavoriteResponseDtoBase {
   workspaceId: UUID | null;
 }
 
+export class RoutineFavoriteResponseDto extends FavoriteResponseDtoBase {
+  @ApiProperty({ enum: [FavoriteReferenceType.Routine] })
+  referenceType: FavoriteReferenceType.Routine;
+
+  @ApiProperty()
+  name: string;
+}
+
 export type FavoriteResponseDto =
-  WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto;
+  | WorkspaceFavoriteResponseDto
+  | ThreadFavoriteResponseDto
+  | RoutineFavoriteResponseDto;
