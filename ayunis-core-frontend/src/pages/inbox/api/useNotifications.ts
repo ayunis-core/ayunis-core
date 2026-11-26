@@ -14,17 +14,26 @@ import { NOTIFICATIONS_PER_PAGE } from '@/pages/inbox/model/constants';
  */
 const NOTIFICATIONS_REFETCH_INTERVAL_MS = 60_000;
 
-export function notificationsPageParams(page: number, type?: NotificationType) {
+export function notificationsPageParams(
+  page: number,
+  type?: NotificationType,
+  showRead = false,
+) {
   return {
     limit: NOTIFICATIONS_PER_PAGE,
     offset: (page - 1) * NOTIFICATIONS_PER_PAGE,
     ...(type && { type }),
+    ...(showRead ? { unreadFirst: true } : { unread: true }),
   };
 }
 
-export function useNotifications(page: number, type?: NotificationType) {
+export function useNotifications(
+  page: number,
+  type?: NotificationType,
+  showRead = false,
+) {
   const queryClient = useQueryClient();
-  const params = notificationsPageParams(page, type);
+  const params = notificationsPageParams(page, type, showRead);
   const { data, isLoading, error } = useNotificationsControllerFindAll(params, {
     query: {
       queryKey: getNotificationsControllerFindAllQueryKey(params),

@@ -8,16 +8,23 @@
       "routine": "Routine notifications",
       "routine_error": "Needs attention"
     },
-    "clear": "Clear filter"
+    "clear": "Clear filter",
+    "read": {
+      "label": "Filter inbox",
+      "show": "Show read notifications"
+    }
   },
   "emptyState": {
     "title": "No notifications",
-    "description": "Your notifications appear here."
+    "description": "Your notifications appear here.",
+    "unreadTitle": "No unread notifications",
+    "unreadDescription": "Show read notifications with the filter."
   },
   "item": {
     "unread": "Unread",
     "error": "Needs attention",
-    "markRead": "Mark as read"
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread"
   },
   "detail": {
     "chatPlaceholder": "What would you like to know about this notification?",
@@ -29,6 +36,7 @@
   "toast": {
     "notFound": "The notification was not found.",
     "markReadError": "The notification could not be marked as read.",
+    "markUnreadError": "The notification could not be marked as unread.",
     "markAllReadError": "The notifications could not be marked as read."
   }
 }

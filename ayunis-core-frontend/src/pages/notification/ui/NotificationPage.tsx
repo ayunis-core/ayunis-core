@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { CalendarClock, MessagesSquare } from 'lucide-react';
@@ -36,9 +36,13 @@ export default function NotificationPage(
     useNotification(props.notification.id).notification ?? props.notification;
   const { mutate: markRead } = useMarkNotificationRead();
   const isUnread = notification.readAt === null;
+  const openedId = useRef<string | null>(null);
 
-  // Opening a notification reads it.
+  // Opening a notification reads it, once: marking the open one unread again
+  // must not read it right away.
   useEffect(() => {
+    if (openedId.current === notification.id) return;
+    openedId.current = notification.id;
     if (isUnread) markRead(notification.id);
   }, [isUnread, markRead, notification.id]);
 

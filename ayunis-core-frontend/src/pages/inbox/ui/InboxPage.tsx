@@ -15,12 +15,16 @@ import { EmptyState } from '@/widgets/empty-state';
 import { useUnreadNotificationCount } from '@/features/notifications';
 import { useNotifications } from '@/pages/inbox/api/useNotifications';
 import { useMarkAllNotificationsRead } from '@/pages/inbox/api/useMarkAllNotificationsRead';
+import { useOpenNotification } from '@/pages/inbox/api/useOpenNotification';
+import { withOpenNotification } from '@/pages/inbox/lib/with-open-notification';
 import { InboxList } from './InboxList';
+import { InboxReadFilter } from './InboxReadFilter';
 import { InboxTypeFilter } from './InboxTypeFilter';
 
 interface InboxPageProps {
   page: number;
   type?: NotificationType;
+  showRead: boolean;
   /** The notification open next to the list; its page is `children`. */
   selectedId?: string;
   children: ReactNode;
@@ -29,20 +33,36 @@ interface InboxPageProps {
 export default function InboxPage({
   page,
   type,
+  showRead,
   selectedId,
   children,
 }: Readonly<InboxPageProps>) {
   const { t } = useTranslation('inbox');
-  const { notifications, total, isLoading } = useNotifications(page, type);
-  const header = <InboxHeader type={type} notifications={notifications} />;
+  const { notifications, total, isLoading } = useNotifications(
+    page,
+    type,
+    showRead,
+  );
+  const openNotification = useOpenNotification(selectedId);
+  const listed = withOpenNotification(notifications, openNotification, {
+    type,
+    unreadFirst: showRead,
+  });
+  const header = (
+    <InboxHeader type={type} showRead={showRead} notifications={listed} />
+  );
 
   if (!selectedId && !isLoading && notifications.length === 0 && page === 1) {
     return (
       <AppLayout>
         <FullScreenMessageLayout header={header}>
           <EmptyState
-            title={t('emptyState.title')}
-            description={t('emptyState.description')}
+            title={t(showRead ? 'emptyState.title' : 'emptyState.unreadTitle')}
+            description={t(
+              showRead
+                ? 'emptyState.description'
+                : 'emptyState.unreadDescription',
+            )}
           />
         </FullScreenMessageLayout>
       </AppLayout>
@@ -57,7 +77,7 @@ export default function InboxPage({
         <div className="flex min-h-0 flex-1">
           <InboxList
             className={cn(selectedId && 'max-md:hidden')}
-            notifications={notifications}
+            notifications={listed}
             page={page}
             total={total}
             selectedId={selectedId}
@@ -81,10 +101,15 @@ export default function InboxPage({
 
 interface InboxHeaderProps {
   type?: NotificationType;
+  showRead: boolean;
   notifications: NotificationResponseDto[];
 }
 
-function InboxHeader({ type, notifications }: Readonly<InboxHeaderProps>) {
+function InboxHeader({
+  type,
+  showRead,
+  notifications,
+}: Readonly<InboxHeaderProps>) {
   const { t } = useTranslation('inbox');
   const { unreadCount } = useUnreadNotificationCount();
   const markAllRead = useMarkAllNotificationsRead();
@@ -95,7 +120,12 @@ function InboxHeader({ type, notifications }: Readonly<InboxHeaderProps>) {
   return (
     <ContentAreaHeader
       breadcrumbs={[{ label: t('page.title') }]}
-      badge={type && <InboxTypeFilter type={type} />}
+      badge={
+        <>
+          <InboxReadFilter showRead={showRead} />
+          {type && <InboxTypeFilter type={type} />}
+        </>
+      }
       action={
         <Button
           variant="outline"

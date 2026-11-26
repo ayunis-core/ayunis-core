@@ -139,6 +139,7 @@
   "/notifications/{id}",
   "/notifications/{id}/image",
   "/notifications/{id}/read",
+  "/notifications/{id}/unread",
   "/onboarding",
   "/onboarding/stage",
   "/onboarding/welcome-video-seen",

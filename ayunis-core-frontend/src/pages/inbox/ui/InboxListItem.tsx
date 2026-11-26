@@ -11,6 +11,7 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { cn } from '@ayunis/ui/lib/cn';
 import {
   NotificationMarkReadButton,
+  NotificationMarkUnreadButton,
   NotificationTypeIcon,
 } from '@/features/notifications';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
@@ -32,8 +33,8 @@ export function InboxListItem({
   const isUnread = notification.readAt === null;
 
   return (
-    // The link stretches over the whole item so the mark-read button can sit
-    // above it instead of being nested inside an anchor.
+    // The link stretches over the whole item so the read toggle can sit above
+    // it instead of being nested inside an anchor.
     <Item
       size="sm"
       className={cn(
@@ -93,14 +94,20 @@ export function InboxListItem({
           </Badge>
         )}
       </ItemContent>
-      {isUnread && (
-        <ItemActions className="relative z-10 -my-1 -mr-2">
+      {/* Touch screens below md have no hover, so the toggle always shows there. */}
+      <ItemActions className="relative z-10 -my-1 -mr-2 group-focus-within/item:opacity-100 group-hover/item:opacity-100 md:opacity-0">
+        {isUnread ? (
           <NotificationMarkReadButton
             notificationId={notification.id}
             size="icon-sm"
           />
-        </ItemActions>
-      )}
+        ) : (
+          <NotificationMarkUnreadButton
+            notificationId={notification.id}
+            size="icon-sm"
+          />
+        )}
+      </ItemActions>
     </Item>
   );
 }

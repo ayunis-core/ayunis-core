@@ -15,6 +15,12 @@ import { NotificationType } from 'src/domain/notifications/domain/notification-t
 export const DEFAULT_NOTIFICATIONS_PAGE_SIZE = 20;
 const MAX_NOTIFICATIONS_PAGE_SIZE = 100;
 
+function parseBooleanQueryParam({ value }: { value: unknown }): unknown {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return value;
+}
+
 export class FindNotificationsQueryParamsDto {
   @ApiPropertyOptional({
     description: 'Maximum number of notifications to return',
@@ -61,11 +67,17 @@ export class FindNotificationsQueryParamsDto {
     type: Boolean,
   })
   @IsOptional()
-  @Transform(({ value }: { value: unknown }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return value;
-  })
+  @Transform(parseBooleanQueryParam)
   @IsBoolean()
   unread?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Unread notifications before read ones when true; within each, newest first',
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(parseBooleanQueryParam)
+  @IsBoolean()
+  unreadFirst?: boolean;
 }

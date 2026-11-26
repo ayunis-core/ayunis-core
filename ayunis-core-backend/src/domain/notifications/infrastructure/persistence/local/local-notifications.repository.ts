@@ -8,7 +8,10 @@ import { IsNull, LessThan, Repository } from 'typeorm';
 import { Paginated } from 'src/common/pagination/paginated.entity';
 import type { PaginatedQueryParams } from 'src/common/pagination/paginated.query';
 import type { UnreadNotificationTypeCount } from 'src/domain/notifications/application/models/unread-notification-counts';
-import type { NotificationsFilter } from 'src/domain/notifications/application/ports/notifications.repository';
+import type {
+  NotificationsFilter,
+  NotificationsOrder,
+} from 'src/domain/notifications/application/ports/notifications.repository';
 import { NotificationsRepository } from 'src/domain/notifications/application/ports/notifications.repository';
 import type { Notification } from 'src/domain/notifications/domain/notification.entity';
 import type { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
@@ -66,18 +69,23 @@ export class LocalNotificationsRepository extends NotificationsRepository {
     userId: UUID,
     { limit, offset }: PaginatedQueryParams,
     { routineId, type, unread }: NotificationsFilter = {},
+    { unreadFirst }: NotificationsOrder = {},
   ): Promise<Paginated<Notification>> {
-    const [records, total] = await this.repo.findAndCount({
-      where: {
-        userId,
-        ...(routineId && { routineId }),
-        ...(type && { type }),
-        ...(unread && { readAt: IsNull() }),
-      },
-      order: { createdAt: 'DESC', id: 'DESC' },
-      take: limit,
-      skip: offset,
-    });
+    const query = this.repo
+      .createQueryBuilder('notification')
+      .where('notification.userId = :userId', { userId });
+    if (routineId) {
+      query.andWhere('notification.routineId = :routineId', { routineId });
+    }
+    if (type) query.andWhere('notification.type = :type', { type });
+    if (unread) query.andWhere('notification.readAt IS NULL');
+    if (unreadFirst) query.addOrderBy('notification.readAt IS NULL', 'DESC');
+    const [records, total] = await query
+      .addOrderBy('notification.createdAt', 'DESC')
+      .addOrderBy('notification.id', 'DESC')
+      .take(limit)
+      .skip(offset)
+      .getManyAndCount();
     return new Paginated({
       data: records.map((record) => this.mapper.toDomain(record)),
       limit,
@@ -112,6 +120,18 @@ export class LocalNotificationsRepository extends NotificationsRepository {
       .set({ readAt: () => 'COALESCE("readAt", :readAt)' })
       .where('id = :id AND "userId" = :userId', { id, userId })
       .setParameters({ readAt })
+      .returning('*')
+      .execute();
+    const record = (result.raw as NotificationRecord[]).at(0);
+    return record ? this.mapper.toDomain(record) : null;
+  }
+
+  async markUnread(userId: UUID, id: UUID): Promise<Notification | null> {
+    const result = await this.repo
+      .createQueryBuilder()
+      .update(NotificationRecord)
+      .set({ readAt: null })
+      .where('id = :id AND "userId" = :userId', { id, userId })
       .returning('*')
       .execute();
     const record = (result.raw as NotificationRecord[]).at(0);

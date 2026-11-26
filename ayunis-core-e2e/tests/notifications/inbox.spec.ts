@@ -83,7 +83,7 @@ test("a routine's notification lands in the inbox, opens next to the list, links
   await expect(page).toHaveURL(new RegExp(`/inbox/${notification.id}`));
 });
 
-test("a notification can be marked read from the inbox list without opening it", async ({
+test("the inbox hides read notifications until shown, and the list marks a notification read and unread again, also while it is open", async ({
   api,
   page,
 }) => {
@@ -106,13 +106,34 @@ test("a notification can be marked read from the inbox list without opening it",
   await page.goto("/inbox");
   const item = inboxItem(page, notification.headline);
   await expect(item).toHaveAttribute("data-unread", "true");
+  await expect(item.getByTestId("notification-mark-unread")).toHaveCount(0);
   await item.getByTestId("notification-mark-read").click();
 
-  await expect(item).toHaveAttribute("data-unread", "false");
-  await expect(item.getByTestId("notification-unread-dot")).toHaveCount(0);
-  await expect(item.getByTestId("notification-mark-read")).toHaveCount(0);
+  await expect(item).toHaveCount(0);
   await expect(page).toHaveURL(/\/inbox$/);
   expect((await getNotification(api, notification.id)).readAt).not.toBeNull();
+
+  await page.getByTestId("inbox-read-filter").click();
+  await page.getByTestId("inbox-read-filter-show-read").click();
+  await expect(page).toHaveURL(/\/inbox\?showRead=true$/);
+  await expect(item).toHaveAttribute("data-unread", "false");
+  await expect(item.getByTestId("notification-mark-read")).toHaveCount(0);
+  await item.getByTestId("notification-mark-unread").click();
+
+  await expect(item).toHaveAttribute("data-unread", "true");
+  await expect(item.getByTestId("notification-unread-dot")).toBeVisible();
+  expect((await getNotification(api, notification.id)).readAt).toBeNull();
+
+  // Opening reads it; marking the open notification unread keeps it unread.
+  await item.click();
+  await expect(item).toHaveAttribute("data-selected", "true");
+  await expect(item).toHaveAttribute("data-unread", "false");
+  await item.getByTestId("notification-mark-unread").click();
+  await expect(item).toHaveAttribute("data-unread", "true");
+  await expect(page).toHaveURL(
+    new RegExp(`/inbox/${notification.id}\\?showRead=true$`),
+  );
+  expect((await getNotification(api, notification.id)).readAt).toBeNull();
 });
 
 test("a routine that finds nothing relevant ends without a notification", async ({

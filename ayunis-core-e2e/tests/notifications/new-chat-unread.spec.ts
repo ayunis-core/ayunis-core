@@ -107,7 +107,8 @@ test("unread notifications show in tabs per type under the new chat input, open 
     const inboxItems = page.getByTestId("notification-item");
     await expect(inboxItems).toHaveCount(2);
     await inboxItems.first().getByTestId("notification-mark-read").click();
-    await expect(inboxItems.first()).toHaveAttribute("data-unread", "false");
+    // The inbox hides read notifications by default.
+    await expect(inboxItems).toHaveCount(1);
 
     // Read notifications leave the panel's list, not only its count.
     await page.getByTestId("sidebar-navigation-new-chat").click();
