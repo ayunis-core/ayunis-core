@@ -125,6 +125,7 @@
         "create_routine": "Routine erstellt",
         "edit_routine": "Routine bearbeitet",
         "add_anonymization_exception": "Ausnahme von der Anonymisierung vorgeschlagen",
+        "send_notification": "Benachrichtigung gesendet",
         "activate_skill": "Fähigkeit aktiviert",
         "get_memory": "Erinnerung gelesen",
         "set_memory": "Erinnerung aktualisiert",
@@ -258,6 +259,10 @@
         "invalidPattern": "Die Regel ist ungültig und wurde nicht gespeichert.",
         "ruleChanged": "Die Regel dieser Kategorie wurde inzwischen geändert. Bitte prüfen Sie die Ausnahme erneut.",
         "error": "Die Ausnahme konnte nicht gespeichert werden."
+      },
+      "send_notification": {
+        "title": "Benachrichtigung",
+        "open": "Benachrichtigung öffnen"
       },
       "create_document": {
         "title": "Dokument",

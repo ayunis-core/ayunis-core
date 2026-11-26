@@ -6,6 +6,7 @@ import {
 } from 'src/domain/notifications/application/notifications.errors';
 import {
   aNotification,
+  TEST_NOTIFICATION_ID,
   TEST_ORG_ID,
   TEST_USER_ID,
 } from 'src/domain/notifications/application/testing/notification.fixtures';
@@ -58,6 +59,17 @@ describe('SendNotificationToolHandler', () => {
         limitPerRoutineThread: 3,
       }),
     );
+  });
+
+  it('returns the sent notification id, which the chat links its notification card to', async () => {
+    const { handler } = setup();
+
+    const result = await handler.execute({ tool, input, context });
+
+    expect(JSON.parse(result)).toEqual({
+      notificationId: TEST_NOTIFICATION_ID,
+      message: expect.stringMatching(/sent/i),
+    });
   });
 
   it('tells the model to stop and finish once the run sent 3 notifications', async () => {

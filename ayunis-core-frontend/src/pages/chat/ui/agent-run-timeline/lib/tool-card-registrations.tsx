@@ -17,6 +17,7 @@ import EditSkillWidget from '@/pages/chat/ui/chat-widgets/EditSkillWidget';
 import CreateRoutineWidget from '@/pages/chat/ui/chat-widgets/CreateRoutineWidget';
 import EditRoutineWidget from '@/pages/chat/ui/chat-widgets/EditRoutineWidget';
 import InstallMarketplaceSkillWidget from '@/pages/chat/ui/chat-widgets/InstallMarketplaceSkillWidget';
+import SendNotificationWidget from '@/pages/chat/ui/chat-widgets/SendNotificationWidget';
 import AddAnonymizationExceptionWidget from '@/pages/chat/ui/chat-widgets/AddAnonymizationExceptionWidget';
 import GenerateImageWidget from '@/pages/chat/ui/chat-widgets/GenerateImageWidget';
 import LazyGeoJsonMapWidget from '@/pages/chat/ui/chat-widgets/LazyGeoJsonMapWidget';
@@ -112,6 +113,19 @@ export const chatToolCards = createToolCardRegistry<ArtifactFamily>({
     action: { labelKey: 'chat.timeline.actions.add_anonymization_exception' },
     render: ({ toolUse, isStreaming, result }) => (
       <AddAnonymizationExceptionWidget
+        content={toolUse}
+        isStreaming={isStreaming}
+        result={result}
+      />
+    ),
+  },
+  send_notification: {
+    action: {
+      labelKey: 'chat.timeline.actions.send_notification',
+      targetParams: ['headline'],
+    },
+    render: ({ toolUse, isStreaming, result }) => (
+      <SendNotificationWidget
         content={toolUse}
         isStreaming={isStreaming}
         result={result}

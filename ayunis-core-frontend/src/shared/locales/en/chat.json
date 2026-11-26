@@ -125,6 +125,7 @@
         "create_routine": "Created routine",
         "edit_routine": "Edited routine",
         "add_anonymization_exception": "Proposed an anonymization exception",
+        "send_notification": "Sent notification",
         "activate_skill": "Activated skill",
         "get_memory": "Read memory",
         "set_memory": "Updated memory",
@@ -258,6 +259,10 @@
         "invalidPattern": "The rule is invalid and was not saved.",
         "ruleChanged": "The rule for this category has changed in the meantime. Please review the exception again.",
         "error": "The exception could not be saved."
+      },
+      "send_notification": {
+        "title": "Notification",
+        "open": "Open notification"
       },
       "create_document": {
         "title": "Document",

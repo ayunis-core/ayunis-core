@@ -50,8 +50,8 @@ export class SendNotificationToolHandler extends ToolExecutionHandler {
     );
     const { headline, subheadline, body } = this.validateInput(tool, input);
     const { userId } = getRequiredUserContext(this.contextService);
-    try {
-      await this.createNotificationUseCase.execute(
+    const notification = await this.createNotificationUseCase
+      .execute(
         new CreateNotificationCommand({
           userId,
           orgId: context.orgId,
@@ -63,11 +63,15 @@ export class SendNotificationToolHandler extends ToolExecutionHandler {
           routineThreadId: context.threadId,
           limitPerRoutineThread: SEND_NOTIFICATION_LIMIT_PER_RUN,
         }),
-      );
-    } catch (error) {
-      throw toToolError(tool.name, error);
-    }
-    return SENT_MESSAGE;
+      )
+      .catch((error: unknown) => {
+        throw toToolError(tool.name, error);
+      });
+    // The chat links its notification card to the id.
+    return JSON.stringify({
+      notificationId: notification.id,
+      message: SENT_MESSAGE,
+    });
   }
 
   // A schema violation must reach the model so it can correct the call;
