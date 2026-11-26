@@ -6,7 +6,8 @@
   "filter": {
     "type": {
       "routine": "Routine-Benachrichtigungen",
-      "routine_error": "Zu prüfen"
+      "routine_error": "Zu prüfen",
+      "organization": "Organisation"
     },
     "clear": "Filter entfernen",
     "read": {
@@ -30,6 +31,7 @@
     "chatPlaceholder": "Was möchten Sie zu dieser Benachrichtigung wissen?",
     "openRoutineExecution": "Routine-Ausführung öffnen",
     "openRoutine": "Routine öffnen",
+    "openWorkspace": "Arbeitsbereich öffnen",
     "noSelection": "Wählen Sie eine Benachrichtigung aus.",
     "back": "Posteingang"
   },

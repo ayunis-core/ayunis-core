@@ -14,7 +14,7 @@ import { NotificationMapper } from './mappers/notification.mapper';
 import { NotificationRecord } from './schema/notification.record';
 
 // The table without its foreign keys, so the test needs no users, orgs,
-// routines or threads.
+// routines, threads or workspaces.
 const notificationSchema = new EntitySchema<NotificationRecord>({
   name: 'NotificationRecord',
   target: NotificationRecord,
@@ -35,6 +35,7 @@ const notificationSchema = new EntitySchema<NotificationRecord>({
     mediaContentType: { type: String, nullable: true },
     routineId: { type: 'uuid', nullable: true },
     routineThreadId: { type: 'uuid', nullable: true },
+    workspaceId: { type: 'uuid', nullable: true },
     readAt: { type: 'timestamptz', nullable: true },
   },
 });
@@ -89,6 +90,38 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
       }),
     );
   }
+
+  describe('createMany', () => {
+    it('stores every recipient with the same content and workspace link', async () => {
+      const workspaceId = randomUUID();
+      const content = {
+        orgId: org,
+        type: NotificationType.ORGANIZATION,
+        headline: 'Sie wurden zu einem Arbeitsbereich hinzugefügt',
+        subheadline: 'Bürgeranfragen',
+        body: 'Clara hat Sie zum Arbeitsbereich „Bürgeranfragen“ hinzugefügt.',
+        routineId: null,
+        routineThreadId: null,
+        workspaceId,
+      };
+
+      await repository.createMany(
+        [owner, otherUser].map((userId) =>
+          aNotification({ id: randomUUID(), userId, ...content }),
+        ),
+      );
+
+      for (const userId of [owner, otherUser]) {
+        const page = await repository.findPageByUserId(userId, {
+          limit: 10,
+          offset: 0,
+        });
+        expect(page.data).toEqual([
+          expect.objectContaining({ userId, readAt: null, ...content }),
+        ]);
+      }
+    });
+  });
 
   describe('createWithinRoutineThreadLimit', () => {
     it('creates at most the limit of notifications for one thread, even when sent at once', async () => {

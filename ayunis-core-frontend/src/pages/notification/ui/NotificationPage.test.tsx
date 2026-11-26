@@ -65,6 +65,7 @@ function notification(
     media: null,
     routineId: '0b7d9c3e-2f4a-4c8e-b1d6-5a9e8f7c6b5a',
     routineThreadId: null,
+    workspaceId: null,
     readAt: '2026-11-07T08:00:00.000Z',
     createdAt: '2026-11-07T06:35:00.000Z',
     ...overrides,

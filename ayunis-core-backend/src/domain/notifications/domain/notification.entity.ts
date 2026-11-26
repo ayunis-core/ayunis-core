@@ -5,7 +5,8 @@ import type { NotificationType } from './notification-type.enum';
 
 /**
  * A message in a user's inbox. The origin links are dropped, not the
- * notification, when the routine or its thread is deleted.
+ * notification, when the routine or its thread is deleted; deleting the
+ * workspace deletes the notification.
  */
 export class Notification {
   readonly id: UUID;
@@ -20,6 +21,7 @@ export class Notification {
   readonly media: NotificationMedia | null;
   readonly routineId: UUID | null;
   readonly routineThreadId: UUID | null;
+  readonly workspaceId: UUID | null;
   readonly readAt: Date | null;
   readonly createdAt: Date;
 
@@ -34,6 +36,7 @@ export class Notification {
     media?: NotificationMedia | null;
     routineId?: UUID | null;
     routineThreadId?: UUID | null;
+    workspaceId?: UUID | null;
     readAt?: Date | null;
     createdAt?: Date;
   }) {
@@ -47,6 +50,7 @@ export class Notification {
     this.media = params.media ?? null;
     this.routineId = params.routineId ?? null;
     this.routineThreadId = params.routineThreadId ?? null;
+    this.workspaceId = params.workspaceId ?? null;
     this.readAt = params.readAt ?? null;
     this.createdAt = params.createdAt ?? new Date();
   }

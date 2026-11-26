@@ -444,7 +444,8 @@
     "unreadNotifications": {
       "tabs": {
         "routine_error": "Zu prüfen",
-        "routine": "Routinen"
+        "routine": "Routinen",
+        "organization": "Organisation"
       },
       "viewAll": "Alle im Posteingang ansehen"
     },

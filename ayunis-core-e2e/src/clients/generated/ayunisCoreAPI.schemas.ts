@@ -4914,6 +4914,7 @@ export type NotificationType = typeof NotificationType[keyof typeof Notification
 export const NotificationType = {
   routine: 'routine',
   routine_error: 'routine_error',
+  organization: 'organization',
 } as const;
 
 export type NotificationMediaType = typeof NotificationMediaType[keyof typeof NotificationMediaType];
@@ -4935,7 +4936,7 @@ export interface NotificationMediaResponseDto {
 
 export interface NotificationResponseDto {
   id: string;
-  /** `routine`: sent by a routine run; `routine_error`: a routine run failed */
+  /** `routine`: sent by a routine run; `routine_error`: a routine run failed; `organization`: someone in the organization changed something that affects the user */
   type: NotificationType;
   headline: string;
   /** @nullable */
@@ -4954,6 +4955,11 @@ export interface NotificationResponseDto {
      * @nullable
      */
   routineThreadId: string | null;
+  /**
+     * The workspace it is about; the notification is deleted with it
+     * @nullable
+     */
+  workspaceId: string | null;
   /** @nullable */
   readAt: string | null;
   createdAt: string;

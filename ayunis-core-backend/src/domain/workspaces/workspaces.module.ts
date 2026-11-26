@@ -31,6 +31,8 @@ import { UpdateWorkspaceMemberRoleUseCase } from './application/use-cases/update
 import { RemoveWorkspaceMemberUseCase } from './application/use-cases/remove-workspace-member/remove-workspace-member.use-case';
 import { LeaveWorkspaceUseCase } from './application/use-cases/leave-workspace/leave-workspace.use-case';
 import { WorkspaceMemberRemovalService } from './application/services/workspace-member-removal.service';
+import { WorkspaceMembersAddedNotifier } from './application/services/workspace-members-added-notifier.service';
+import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { WorkspaceMembersController } from './presenters/http/workspace-members.controller';
 import { WorkspaceMemberDtoMapper } from './presenters/http/mappers/workspace-member-dto.mapper';
 import { LocalWorkspacesRepositoryModule } from './infrastructure/persistence/local/local-workspaces-repository.module';
@@ -46,6 +48,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     LocalWorkspacesRepositoryModule,
     PermissionsModule,
     UsersModule,
+    NotificationsModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => SkillsModule),
     forwardRef(() => KnowledgeBasesModule),
@@ -85,6 +88,7 @@ import { WorkspaceDtoMapper } from './presenters/http/mappers/workspace-dto.mapp
     WorkspaceDeletionService,
     WorkspaceMemberRemovalService,
     WorkspaceMemberProfilesService,
+    WorkspaceMembersAddedNotifier,
     WorkspacesUserDeletionRequestedListener,
     AssertWorkspaceReadAccessUseCase,
     AssertWorkspaceWriteAccessUseCase,

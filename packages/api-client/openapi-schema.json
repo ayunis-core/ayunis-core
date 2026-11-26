@@ -24221,7 +24221,7 @@
       },
       "NotificationType": {
         "type": "string",
-        "enum": ["routine", "routine_error"]
+        "enum": ["routine", "routine_error", "organization"]
       },
       "NotificationMediaType": {
         "type": "string",
@@ -24253,7 +24253,7 @@
             "format": "uuid"
           },
           "type": {
-            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed",
+            "description": "`routine`: sent by a routine run; `routine_error`: a routine run failed; `organization`: someone in the organization changed something that affects the user",
             "allOf": [
               {
                 "$ref": "#/components/schemas/NotificationType"
@@ -24292,6 +24292,12 @@
             "nullable": true,
             "description": "The routine thread of the run that sent it; null for none or once the thread is deleted"
           },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The workspace it is about; the notification is deleted with it"
+          },
           "readAt": {
             "format": "date-time",
             "type": "string",
@@ -24311,6 +24317,7 @@
           "media",
           "routineId",
           "routineThreadId",
+          "workspaceId",
           "readAt",
           "createdAt"
         ]

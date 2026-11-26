@@ -4,4 +4,6 @@ export enum NotificationType {
   ROUTINE = 'routine',
   /** Posted by the system when a routine run failed. */
   ROUTINE_ERROR = 'routine_error',
+  /** Someone in the user's organization changed something that affects them. */
+  ORGANIZATION = 'organization',
 }

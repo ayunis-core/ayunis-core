@@ -444,7 +444,8 @@
     "unreadNotifications": {
       "tabs": {
         "routine_error": "Needs attention",
-        "routine": "Routines"
+        "routine": "Routines",
+        "organization": "Organization"
       },
       "viewAll": "View all in inbox"
     },

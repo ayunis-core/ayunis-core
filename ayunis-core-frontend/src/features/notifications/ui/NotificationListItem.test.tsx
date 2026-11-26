@@ -43,6 +43,7 @@ function aNotification(
     media: null,
     routineId: null,
     routineThreadId: null,
+    workspaceId: null,
     readAt,
     createdAt: '2026-11-07T08:00:00.000Z',
     ...overrides,

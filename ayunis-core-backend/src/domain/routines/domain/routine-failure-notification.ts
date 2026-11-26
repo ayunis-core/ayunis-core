@@ -1,3 +1,4 @@
+import { escapeMarkdown } from 'src/common/util/markdown.util';
 import { ROUTINE_PAUSE_AFTER_FAILURES } from './routines.constants';
 
 export interface RoutineFailureNotificationText {
@@ -73,8 +74,4 @@ function reasonSentence(reason: string): string {
     return 'Das Modell steht Ihnen nicht mehr zur Verfügung.';
   }
   return REASON_SENTENCES[reason] ?? UNKNOWN_REASON;
-}
-
-function escapeMarkdown(text: string): string {
-  return text.replace(/[\\`*_{}[\]()<>#+\-!|~]/g, '\\$&');
 }

@@ -5,6 +5,7 @@ import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { RoutineRecord } from 'src/domain/routines/infrastructure/persistence/local/schema/routine.record';
 import { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import { WorkspaceRecord } from 'src/domain/workspaces/infrastructure/persistence/local/schema/workspace.record';
 import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
 import { NotificationType } from 'src/domain/notifications/domain/notification-type.enum';
 import {
@@ -86,6 +87,15 @@ export class NotificationRecord extends BaseRecord {
   @ManyToOne(() => ThreadRecord, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'routineThreadId' })
   routineThread?: ThreadRecord;
+
+  /** Deleting the workspace deletes the notification, so no link dangles. */
+  @Column({ type: 'varchar', nullable: true })
+  @Index()
+  workspaceId: UUID | null;
+
+  @ManyToOne(() => WorkspaceRecord, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'workspaceId' })
+  workspace?: WorkspaceRecord;
 
   @Column({ type: 'timestamptz', nullable: true })
   readAt: Date | null;
