@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell } from 'lucide-react';
+import { Megaphone } from 'lucide-react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { SidebarMenuButton } from '@ayunis/ui/components/sidebar';
@@ -9,7 +9,7 @@ import { useUnreadReleaseNoteCount } from '@/features/release-notes';
 import config from '@/shared/config';
 
 /**
- * With release notes on, the bell opens the product updates page; with
+ * With release notes on, the megaphone opens the product updates page; with
  * routines off it opens the Announcable widget. Waits for the toggles,
  * because the Announcable script cannot be unloaded once injected.
  */
@@ -40,7 +40,7 @@ function ProductUpdatesBell() {
         title={t('bell.label')}
         data-testid="sidebar-product-updates"
       >
-        <Bell className="size-4" />
+        <Megaphone className="size-4" />
         {unreadCount > 0 && (
           <span
             className="absolute top-1 right-1 size-2 rounded-full bg-brand"
@@ -81,7 +81,7 @@ function AnnouncableReleaseNotesButton() {
       size="sm"
     >
       <button ref={buttonRef} id="updates-button">
-        <Bell className="size-4" />
+        <Megaphone className="size-4" />
         {hasNewReleaseNotes && (
           <span className="absolute top-1 right-1 size-2 rounded-full bg-red-500" />
         )}

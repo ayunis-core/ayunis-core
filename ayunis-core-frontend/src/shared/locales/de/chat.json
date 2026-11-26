@@ -444,9 +444,11 @@
     "unreadNotifications": {
       "tabs": {
         "routine_error": "Zu prüfen",
-        "routine": "Routinen"
+        "routine": "Routinen",
+        "product_updates": "Produkt Updates"
       },
-      "viewAll": "Alle im Posteingang ansehen"
+      "viewAll": "Alle im Posteingang ansehen",
+      "viewAllProductUpdates": "Alle Produkt Updates ansehen"
     },
     "embedded": {
       "prepareReply": "Antwort vorbereiten",

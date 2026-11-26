@@ -4,7 +4,7 @@ import {
   getReleaseNotesControllerFindAllQueryKey,
 } from '@ayunis/api-client/endpoints';
 
-/** Refreshes the product updates list and the bell's unread dot. */
+/** Refreshes the product updates list and the unread count. */
 export function invalidateReleaseNoteQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({
     queryKey: getReleaseNotesControllerFindAllQueryKey(),
