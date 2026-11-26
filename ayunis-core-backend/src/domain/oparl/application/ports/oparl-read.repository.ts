@@ -7,6 +7,7 @@ import type {
   OparlObjectDetail,
 } from 'src/domain/oparl/application/models/oparl-read';
 import type {
+  OparlChunkMatch,
   OparlQueryVector,
   OparlReadScope,
   OparlSearchFilters,
@@ -18,21 +19,21 @@ import type {
  * an object of another body is not found, a filter naming one matches nothing.
  */
 export abstract class OparlReadRepository {
-  /** Chunk IDs by German full-text rank, best first. */
+  /** Chunks by German full-text rank, best first. */
   abstract fullTextMatches(
     scope: OparlReadScope,
     query: string,
     filters: OparlSearchFilters,
     limit: number,
-  ): Promise<UUID[]>;
+  ): Promise<OparlChunkMatch[]>;
 
-  /** Chunk IDs with a vector of the query's model, nearest first. */
+  /** Chunks with a vector of the query's model, nearest first. */
   abstract vectorMatches(
     scope: OparlReadScope,
     query: OparlQueryVector,
     filters: OparlSearchFilters,
     limit: number,
-  ): Promise<UUID[]>;
+  ): Promise<OparlChunkMatch[]>;
 
   /** The chunks with their paper, meeting, agenda item and file, in no particular order. */
   abstract findHits(

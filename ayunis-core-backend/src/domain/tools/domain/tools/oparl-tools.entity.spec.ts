@@ -14,13 +14,15 @@ describe('OParl tools', () => {
   describe('oparl_search', () => {
     const tool = new OparlSearchTool(scope);
 
-    it('takes a date range of calendar days', () => {
+    it('takes a date range of calendar days, the result types and the page', () => {
       expect(
         tool.validateParams({
           queries: [' Kita Erweiterung '],
           from: '2024-01-01',
           to: '2024-12-31',
           paperType: 'Antrag',
+          types: ['agenda_item', 'file', 'agenda_item'],
+          page: 2,
         }),
       ).toEqual({
         queries: ['Kita Erweiterung'],
@@ -28,11 +30,12 @@ describe('OParl tools', () => {
         filters: {
           from: '2024-01-01',
           to: '2024-12-31',
-          organizationId: undefined,
-          personId: undefined,
           paperType: 'Antrag',
+          sources: ['agenda_item', 'file'],
         },
+        page: 2,
       });
+      expect(tool.validateParams({ queries: ['Kita'] }).page).toBe(1);
     });
 
     it.each([
@@ -45,6 +48,8 @@ describe('OParl tools', () => {
       ],
       [{ queries: ['   '] }, /must not contain empty queries/],
       [{ paperType: '   ' }, /'paperType' must not be blank/],
+      [{ types: ['protocol'] }, /types/],
+      [{ page: 0 }, /page/],
     ])('refuses %j with an error the model can act on', (params, message) => {
       expect(() =>
         tool.validateParams({ queries: ['Kita'], ...params }),

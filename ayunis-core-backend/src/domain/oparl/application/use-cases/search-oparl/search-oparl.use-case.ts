@@ -7,6 +7,7 @@ import { EmbedTextCommand } from 'src/domain/rag/embeddings/application/use-case
 import { EmbedTextUseCase } from 'src/domain/rag/embeddings/application/use-cases/embed-text/embed-text.use-case';
 import { EmbeddingPriority } from 'src/domain/rag/embeddings/domain/embedding-priority.enum';
 import type {
+  OparlChunkMatch,
   OparlQueryVector,
   OparlReadScope,
   OparlSearchHit,
@@ -17,20 +18,25 @@ import { OparlReadRepository } from 'src/domain/oparl/application/ports/oparl-re
 import { OparlChunkEmbedder } from 'src/domain/oparl/application/services/oparl-chunk-embedder.service';
 import { OparlReadScopeService } from 'src/domain/oparl/application/services/oparl-read-scope.service';
 import {
+  bestPerPassage,
   fuseRankings,
   type OparlFusedMatch,
   type OparlRanking,
 } from 'src/domain/oparl/domain/oparl-rank-fusion';
 import { SearchOparlQuery } from './search-oparl.query';
 
-/** Candidates per query and ranking, fused into the results. */
+/**
+ * Candidates per query and ranking, fused into the results. The same for
+ * every page, so the pages split one ranking.
+ */
 const CANDIDATES = 40;
-const MAX_RESULTS = 10;
+const PAGE_SIZE = 10;
 
 /**
  * Hybrid search of the org's linked bodies: German full-text ranks and, with
- * an OParl embedding model, vector ranks, fused by reciprocal rank. Without
- * a model, or when its provider fails, full-text alone.
+ * an OParl embedding model, vector ranks, fused by reciprocal rank, one
+ * result per passage, a page at a time. Without a model, or when its
+ * provider fails, full-text alone.
  */
 @Injectable()
 export class SearchOparlUseCase {
@@ -49,17 +55,27 @@ export class SearchOparlUseCase {
       { queryCount: query.queries.length, bodyIds: query.bodyIds },
       'Searching OParl',
     );
+    const { page } = query;
     const scope = await this.scopes.resolve(query.bodyIds);
-    if (scope.bodyIds.length === 0) return { results: [], mode: 'full_text' };
+    if (scope.bodyIds.length === 0) {
+      return { results: [], page, hasMore: false, mode: 'full_text' };
+    }
     const vectors = await this.embedQueries(query.queries);
-    const rankings = await this.rank(scope, query, vectors);
-    const matches = fuseRankings(rankings).slice(0, MAX_RESULTS);
+    const { rankings, passages } = await this.rank(scope, query, vectors);
+    const ranked = bestPerPassage(
+      fuseRankings(rankings),
+      (id) => passages.get(id) ?? id,
+    );
+    const start = (page - 1) * PAGE_SIZE;
+    const matches = ranked.slice(start, start + PAGE_SIZE);
     const hits = await this.reads.findHits(
       scope,
       matches.map(({ id }) => id),
     );
     return {
       results: inFusedOrder(matches, hits),
+      page,
+      hasMore: ranked.length > start + PAGE_SIZE,
       mode: vectors ? 'hybrid' : 'full_text',
     };
   }
@@ -68,8 +84,16 @@ export class SearchOparlUseCase {
     scope: OparlReadScope,
     query: SearchOparlQuery,
     vectors: OparlQueryVector[] | null,
-  ): Promise<OparlRanking<UUID>[]> {
+  ): Promise<{
+    rankings: OparlRanking<UUID>[];
+    passages: Map<UUID, string>;
+  }> {
     const rankings: OparlRanking<UUID>[] = [];
+    const passages = new Map<UUID, string>();
+    const record = (text: string, matches: OparlChunkMatch[]) => {
+      for (const { id, passage } of matches) passages.set(id, passage);
+      rankings.push({ query: text, ids: matches.map(({ id }) => id) });
+    };
     // One query at a time, its two rankings at once: at most two connections.
     for (const [index, text] of query.queries.entries()) {
       const vector = vectors?.[index];
@@ -79,12 +103,10 @@ export class SearchOparlUseCase {
           ? this.reads.vectorMatches(scope, vector, query.filters, CANDIDATES)
           : Promise.resolve([]),
       ]);
-      rankings.push(
-        { query: text, ids: fullText },
-        { query: text, ids: nearest },
-      );
+      record(text, fullText);
+      record(text, nearest);
     }
-    return rankings;
+    return { rankings, passages };
   }
 
   private async embedQueries(

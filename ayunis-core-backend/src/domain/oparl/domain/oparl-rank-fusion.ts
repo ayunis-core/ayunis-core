@@ -34,3 +34,29 @@ export function fuseRankings<T>(
   }
   return [...fused.values()].sort((a, b) => b.score - a.score);
 }
+
+/**
+ * The best match of every passage, in the order of `matches`, with the
+ * queries that found any of the passage's chunks.
+ */
+export function bestPerPassage<T>(
+  matches: readonly OparlFusedMatch<T>[],
+  passageOf: (id: T) => string,
+): OparlFusedMatch<T>[] {
+  const best = new Map<string, OparlFusedMatch<T>>();
+  for (const match of matches) {
+    const passage = passageOf(match.id);
+    const kept = best.get(passage);
+    if (!kept) {
+      best.set(passage, {
+        ...match,
+        matchedQueries: [...match.matchedQueries],
+      });
+      continue;
+    }
+    for (const query of match.matchedQueries) {
+      if (!kept.matchedQueries.includes(query)) kept.matchedQueries.push(query);
+    }
+  }
+  return [...best.values()];
+}

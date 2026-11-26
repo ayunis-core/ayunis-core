@@ -11,7 +11,8 @@ const MODEL = {
   id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee' as UUID,
   dimensions: EmbeddingDimensions.DIMENSION_1024,
 };
-const chunk = (n: number) => `00000000-0000-4000-8000-00000000000${n}` as UUID;
+const chunk = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, '0')}` as UUID;
 
 function hit(chunkId: UUID): OparlSearchHit {
   return {
@@ -33,13 +34,17 @@ describe('SearchOparlUseCase', () => {
     embed?: () => Promise<Array<{ vector: number[] }>>;
     fullText?: Record<string, UUID[]>;
     vector?: UUID[];
+    /** The passage of a chunk; its own ID when not given. */
+    passages?: Record<UUID, string>;
     bodyIds?: UUID[];
   }) {
+    const matches = (ids: UUID[] = []) =>
+      ids.map((id) => ({ id, passage: options.passages?.[id] ?? id }));
     const reads = {
       fullTextMatches: jest.fn((_scope, text: string) =>
-        Promise.resolve(options.fullText?.[text] ?? []),
+        Promise.resolve(matches(options.fullText?.[text])),
       ),
-      vectorMatches: jest.fn(() => Promise.resolve(options.vector ?? [])),
+      vectorMatches: jest.fn(() => Promise.resolve(matches(options.vector))),
       findHits: jest.fn((_scope, ids: UUID[]) =>
         Promise.resolve([...ids].reverse().map(hit)),
       ),
@@ -65,8 +70,8 @@ describe('SearchOparlUseCase', () => {
     return { useCase, reads, embedText };
   }
 
-  const search = (queries: string[]) =>
-    new SearchOparlQuery(queries, [], { from: '2026-01-01' });
+  const search = (queries: string[], page?: number) =>
+    new SearchOparlQuery(queries, [], { from: '2026-01-01' }, page);
 
   it('fuses full-text and vector ranks of every query: what more rankings found ranks first, with the queries that found it', async () => {
     const { useCase } = setup({
@@ -88,6 +93,46 @@ describe('SearchOparlUseCase', () => {
       'Kita',
       'Kindertagesstätte',
     ]);
+  });
+
+  it('returns one result per passage: the best-ranked chunk of a document page, with the queries that found any of its chunks', async () => {
+    const protocolPage = 'file:protocol:3';
+    const { useCase } = setup({
+      fullText: {
+        Friedhof: [chunk(1), chunk(2), chunk(3)],
+        Bestattung: [chunk(3)],
+      },
+      passages: { [chunk(1)]: protocolPage, [chunk(3)]: protocolPage },
+    });
+
+    const outcome = await useCase.execute(search(['Friedhof', 'Bestattung']));
+
+    expect(
+      outcome.results.map(({ chunkId, matchedQueries }) => ({
+        chunkId,
+        matchedQueries,
+      })),
+    ).toEqual([
+      { chunkId: chunk(3), matchedQueries: ['Friedhof', 'Bestattung'] },
+      { chunkId: chunk(2), matchedQueries: ['Friedhof'] },
+    ]);
+  });
+
+  it('pages through the same ranking: a later page goes on where the one before ended and tells when nothing follows', async () => {
+    const ranked = Array.from({ length: 12 }, (_, index) => chunk(index + 1));
+    const { useCase } = setup({ fullText: { Friedhof: ranked } });
+
+    const first = await useCase.execute(search(['Friedhof']));
+    const second = await useCase.execute(search(['Friedhof'], 2));
+
+    expect(first.results.map((result) => result.chunkId)).toEqual(
+      ranked.slice(0, 10),
+    );
+    expect(first).toMatchObject({ page: 1, hasMore: true });
+    expect(second.results.map((result) => result.chunkId)).toEqual(
+      ranked.slice(10),
+    );
+    expect(second).toMatchObject({ page: 2, hasMore: false });
   });
 
   it('searches full text only while no OParl embedding model is set', async () => {
@@ -128,6 +173,8 @@ describe('SearchOparlUseCase', () => {
 
     expect(await useCase.execute(search(['Kita']))).toEqual({
       results: [],
+      page: 1,
+      hasMore: false,
       mode: 'full_text',
     });
     expect(reads.fullTextMatches).not.toHaveBeenCalled();

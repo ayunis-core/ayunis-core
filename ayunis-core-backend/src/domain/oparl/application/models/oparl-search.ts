@@ -21,6 +21,24 @@ export interface OparlSearchFilters {
   personId?: UUID;
   /** Part of the paper type as the RIS names it, case-insensitive. */
   paperType?: string;
+  /** Only chunks taken from these sources; all when omitted. */
+  sources?: OparlChunkSource[];
+  /** The meeting's own chunk, its agenda items and its documents. */
+  meetingId?: UUID;
+  /** The paper's own chunk, its documents and the agenda items deliberating it. */
+  paperId?: UUID;
+  /** The passages of one document. */
+  fileId?: UUID;
+}
+
+/**
+ * A chunk a ranking found and the passage it belongs to: a page of a
+ * document, or a paper, meeting or agenda item. Overlapping chunks of one
+ * passage are one result.
+ */
+export interface OparlChunkMatch {
+  id: UUID;
+  passage: string;
 }
 
 export interface OparlQueryVector {
@@ -68,6 +86,9 @@ export interface OparlSearchResult extends OparlSearchHit {
 
 export interface OparlSearchOutcome {
   results: OparlSearchResult[];
+  page: number;
+  /** Whether a later page holds further results. */
+  hasMore: boolean;
   /** `full_text` while no OParl embedding model is set or the provider failed. */
   mode: 'hybrid' | 'full_text';
 }

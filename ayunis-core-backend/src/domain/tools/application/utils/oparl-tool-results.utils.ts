@@ -111,6 +111,8 @@ function toSearchResult(result: OparlSearchResult): Json | undefined {
 export function oparlSearchToolResult(outcome: OparlSearchOutcome): string {
   return JSON.stringify({
     mode: outcome.mode,
+    page: outcome.page,
+    hasMore: outcome.hasMore,
     resultCount: outcome.results.length,
     results: outcome.results.map(toSearchResult),
   });
