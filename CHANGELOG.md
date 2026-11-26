@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.86.0](https://github.com/ayunis-core/ayunis-core/compare/v2.85.0...v2.86.0) (2026-11-26)
+
+
+### Features
+
+* **chat:** share attachment presentation (AYC-2120) ([#2569](https://github.com/ayunis-core/ayunis-core/issues/2569)) ([7e52272](https://github.com/ayunis-core/ayunis-core/commit/7e52272d54aa201a65eeedf18d45f396d0971094))
+* **chat:** share canonical new-chat shell (AYC-2118) ([#2567](https://github.com/ayunis-core/ayunis-core/issues/2567)) ([cc755c7](https://github.com/ayunis-core/ayunis-core/commit/cc755c7b1708fbb7596de3265080401b27f1e39c))
+* **release-notes:** show product updates under the new-chat input (AYC-2137) ([#2580](https://github.com/ayunis-core/ayunis-core/issues/2580)) ([b7c56a3](https://github.com/ayunis-core/ayunis-core/commit/b7c56a395ec2c92a423d5861f897b8b0dac4a459))
+
+
+### Code Refactoring
+
+* **chat:** enforce shared conversation boundary (AYC-2119) ([#2576](https://github.com/ayunis-core/ayunis-core/issues/2576)) ([8ef8a85](https://github.com/ayunis-core/ayunis-core/commit/8ef8a85e31a2bba4b5be3a5bee6614820de921ae))
+* **chat:** share canonical composer (AYC-2122) ([#2574](https://github.com/ayunis-core/ayunis-core/issues/2574)) ([746bb7f](https://github.com/ayunis-core/ayunis-core/commit/746bb7f6d03edd0c73b9b5059720ca57dd8e7178))
+* **chat:** use shared conversation runtime on web (AYC-2117) ([#2563](https://github.com/ayunis-core/ayunis-core/issues/2563)) ([e7414a2](https://github.com/ayunis-core/ayunis-core/commit/e7414a2b3b8155ec49add74edf0c8505d7b69787))
+
+
+### Miscellaneous
+
+* **chat:** establish parity guardrails (AYC-2121) ([#2560](https://github.com/ayunis-core/ayunis-core/issues/2560)) ([ac7359c](https://github.com/ayunis-core/ayunis-core/commit/ac7359c93edff52885402ac2e865688d66b0d4be))
+
 ## [2.85.0](https://github.com/ayunis-core/ayunis-core/compare/v2.84.0...v2.85.0) (2026-11-26)
 
 
