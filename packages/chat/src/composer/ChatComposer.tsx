@@ -108,3 +108,4 @@ export {
 } from './insert-text';
 export { useImagePaste } from './use-image-paste';
 export { AnonymousButton } from './AnonymousButton';
+export { SkillBadge } from './SkillBadge';

@@ -1,4 +1,10 @@
-import { useRef, type ReactNode, type RefObject } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import {
   ACCEPTED_AUDIO_PICKER_TYPES,
   ACCEPTED_FILE_PICKER_TYPES,
@@ -42,14 +48,20 @@ export function ComposerToolbar({
 
 export function AttachmentMenu({
   disabled,
+  closeMenu,
   onFiles,
   onAudio,
   accept = ACCEPTED_FILE_PICKER_TYPES,
+  menuActions,
+  fileInputTestId = 'chat-attach-files',
 }: Readonly<{
   disabled: boolean;
+  closeMenu: boolean;
   onFiles?: (files: File[]) => void;
   onAudio?: (files: File[]) => void;
   accept?: string;
+  menuActions?: ReactNode;
+  fileInputTestId?: string;
 }>) {
   const files = useRef<HTMLInputElement>(null);
   const audio = useRef<HTMLInputElement>(null);
@@ -58,7 +70,7 @@ export function AttachmentMenu({
     <>
       <AttachmentInput
         inputRef={files}
-        testId="chat-attach-files"
+        testId={fileInputTestId}
         accept={accept}
         disabled={disabled}
         onFiles={onFiles}
@@ -72,9 +84,12 @@ export function AttachmentMenu({
         />
       )}
       <AttachmentMenuTrigger
-        disabled={disabled || !onFiles}
+        disabled={disabled || (!onFiles && !menuActions)}
+        closeMenu={closeMenu}
         onPick={() => files.current?.click()}
         onPickAudio={onAudio && (() => audio.current?.click())}
+        hasFiles={Boolean(onFiles)}
+        menuActions={menuActions}
       />
     </>
   );
@@ -112,18 +127,28 @@ function AttachmentInput({
 
 function AttachmentMenuTrigger({
   disabled,
+  closeMenu,
   onPick,
   onPickAudio,
+  hasFiles,
+  menuActions,
 }: Readonly<{
   disabled: boolean;
+  closeMenu: boolean;
   onPick: () => void;
   onPickAudio?: () => void;
+  hasFiles: boolean;
+  menuActions?: ReactNode;
 }>) {
   const { t } = useTranslation('common');
   const label = t('chatInput.addButtonTooltip');
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (disabled || closeMenu) setOpen(false);
+  }, [closeMenu, disabled]);
   return (
     <Tooltip>
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <TooltipTrigger asChild>
             <Button
@@ -137,22 +162,45 @@ function AttachmentMenuTrigger({
           </TooltipTrigger>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuGroup>
-            <DropdownMenuItem onSelect={onPick}>
-              <Paperclip className="h-4 w-4" />
-              <span>{t('chatInput.uploadFile')}</span>
-            </DropdownMenuItem>
-            {onPickAudio && (
-              <DropdownMenuItem onSelect={onPickAudio}>
-                <AudioLines className="h-4 w-4" />
-                <span>{t('chatInput.uploadAudio')}</span>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
+          <AttachmentUploadItems
+            hasFiles={hasFiles}
+            onPick={onPick}
+            onPickAudio={onPickAudio}
+          />
+          {menuActions}
         </DropdownMenuContent>
       </DropdownMenu>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
+  );
+}
+
+function AttachmentUploadItems({
+  hasFiles,
+  onPick,
+  onPickAudio,
+}: Readonly<{
+  hasFiles: boolean;
+  onPick: () => void;
+  onPickAudio?: () => void;
+}>) {
+  const { t } = useTranslation('common');
+  if (!hasFiles && !onPickAudio) return null;
+  return (
+    <DropdownMenuGroup>
+      {hasFiles && (
+        <DropdownMenuItem onSelect={onPick}>
+          <Paperclip className="h-4 w-4" />
+          <span>{t('chatInput.uploadFile')}</span>
+        </DropdownMenuItem>
+      )}
+      {onPickAudio && (
+        <DropdownMenuItem onSelect={onPickAudio}>
+          <AudioLines className="h-4 w-4" />
+          <span>{t('chatInput.uploadAudio')}</span>
+        </DropdownMenuItem>
+      )}
+    </DropdownMenuGroup>
   );
 }
 
@@ -161,11 +209,13 @@ export function ToolbarSendButton({
   canSend,
   submit,
   onStop,
+  stopTestId = 'stop',
 }: Readonly<{
   isStreaming: boolean;
   canSend: boolean;
   submit: () => void;
   onStop?: () => void;
+  stopTestId?: string;
 }>) {
   const { t } = useTranslation('common');
   const readyState = canSend ? 'ready' : 'disabled';
@@ -182,7 +232,7 @@ export function ToolbarSendButton({
             size="icon"
             className={`chat-input-send-button chat-input-send-button--${state} rounded-full`}
             aria-label={label}
-            data-testid={isStreaming ? 'stop' : 'send'}
+            data-testid={isStreaming ? stopTestId : 'send'}
             disabled={isStreaming ? !onStop : !canSend}
             onClick={isStreaming ? onStop : submit}
           >

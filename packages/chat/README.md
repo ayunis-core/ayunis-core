@@ -26,8 +26,12 @@ The package also provides shared chat views:
 - `@ayunis/chat/markdown` renders Markdown, citations, and PII reveal controls.
   The app supplies callbacks through the existing citation and mask providers.
 - `@ayunis/chat/composer` renders the composer field and attachment previews.
-  The app supplies input state, controls, and handlers. Import
-  `@ayunis/chat/composer.css` for the composer styles.
+  `ConfiguredComposer` from `@ayunis/chat/surface` adds the canonical Web-derived
+  toolbar, upload menu, prompt recall, paste/drop handling, voice input,
+  send/stop lifecycle, and host-fed skill, knowledge-base, and integration menu
+  sections. Hosts supply draft storage, model/upload/transcription adapters,
+  typed menu data, and narrowly named decorators for host-only behavior such as
+  onboarding targets. Import `@ayunis/chat/composer.css` for the styles.
 - `@ayunis/chat/attachments` renders the canonical source, knowledge-base, and
   integration badges, including upload, processing, reindexing, and failure
   states. Hosts supply source data and removal callbacks.
@@ -60,9 +64,11 @@ adapters where the surface supports them.
   mutations for the capabilities the host enables. A host can provide draft
   storage scoped to the principal. The default keeps drafts in memory for the
   mounted session.
-- Use slots for host actions, the package-owned attachment presentation, and
-  authenticated message images. Hosts also provide the translation resources
-  and import the package styles through their Tailwind stylesheet.
+- Use slots for host actions, the package-owned attachment presentation,
+  authenticated message images, and data-fed composer menu sections. Core
+  composer controls and their hierarchy stay package-owned; hosts may decorate
+  named controls but do not replace them. Hosts also provide the translation
+  resources and import the package styles through their Tailwind stylesheet.
 
 Client tools can register an executor, a custom card, or both by tool name.
 The shared lifecycle coordinates execution and routes results to the run.

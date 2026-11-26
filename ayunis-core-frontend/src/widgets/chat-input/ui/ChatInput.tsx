@@ -1,17 +1,4 @@
-import {
-  MAX_IMAGES,
-  MAX_IMAGE_SIZE_MIB,
-  MAX_TOTAL_IMAGE_SIZE_MIB,
-} from '@/widgets/chat-input/model/image-upload-policy';
-import {
-  useState,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-} from 'react';
-import useKeyboardShortcut from '@/features/useKeyboardShortcut';
-import { useTranslation } from 'react-i18next';
+import { forwardRef, type ReactNode } from 'react';
 import type {
   SourceProcessingErrorCode,
   FileSourceResponseDtoFileType,
@@ -19,54 +6,43 @@ import type {
   SourceResponseDtoStatus,
   SourceResponseDtoType,
 } from '@ayunis/api-client';
-import { useAppChatSurface } from '@/features/chat-surface';
-import { usePendingImages } from '@/widgets/chat-input/hooks/usePendingImages';
-import { useImagePaste } from '@/widgets/chat-input/hooks/useImagePaste';
-import { useFileDrop } from '@/widgets/chat-input/hooks/useFileDrop';
-import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
-import { insertTextPreservingUndo } from '@/widgets/chat-input/lib/insert-text';
-import { usePromptHistory } from '@/widgets/chat-input/hooks/usePromptHistory';
-import { useDraftCursorAtEnd } from '@/widgets/chat-input/hooks/useDraftCursorAtEnd';
-import { ACCEPTED_DOCUMENT_EXTENSIONS } from '@/widgets/chat-input/utils/fileHandlers';
-import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import { ChatAttachments } from '@ayunis/chat/attachments';
-import { ChatInputActionBar } from './ChatInputActionBar';
-import { showError } from '@/shared/lib/toast';
-import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import {
-  canSubmitMessage,
-  ChatComposer,
+  ConfiguredComposer,
+  type ChatConversationSlots,
+  type ConfiguredComposerRef,
+} from '@ayunis/chat/surface';
+import {
+  AnonymousButton,
+  SkillBadge,
   type ChatInputSubmissionState,
 } from '@ayunis/chat/composer';
-import '@ayunis/chat/composer.css';
-
-export type { ChatInputSubmissionState } from '@ayunis/chat/composer';
+import { ChatAttachments } from '@ayunis/chat/attachments';
+import { useTranslation } from 'react-i18next';
+import { useAppChatSurface } from '@/features/chat-surface';
+import { useIsFeatureEnabled } from '@/features/feature-toggles';
+import { useChatDraft } from '@/widgets/chat-input/hooks/useChatDraft';
+import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
+import { showError } from '@/shared/lib/toast';
+import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
 } from '@/shared/contexts/chat/chatContext';
+import { useTranscribe } from '@/widgets/chat-input/api/useTranscribe';
+import ModelSelector from './ModelSelector';
+import { SkillsSubmenu } from './SkillsSubmenu';
+import { KnowledgeBasesSubmenu } from './KnowledgeBasesSubmenu';
+import { IntegrationsSubmenu } from './IntegrationsSubmenu';
+
+export type { ChatInputSubmissionState } from '@ayunis/chat/composer';
+export type ChatInputRef = ConfiguredComposerRef;
 
 interface ChatInputProps {
   modelId: string | undefined;
-  sources: {
-    id: string;
-    name: string;
-    type: SourceResponseDtoType;
-    fileType?: FileSourceResponseDtoFileType;
-    createdBy?: SourceResponseDtoCreatedBy;
-    status?: SourceResponseDtoStatus;
-    processingError?: string;
-    processingErrorCode?: SourceProcessingErrorCode;
-    uploadProgress?: number;
-  }[];
+  sources: SourceItem[];
   knowledgeBases?: KnowledgeBaseSummary[];
   mcpIntegrations?: IntegrationSummary[];
-  /** Default `'idle'`. See {@link ChatInputSubmissionState}. */
   submissionState?: ChatInputSubmissionState;
-  /**
-   * Extra reason to disable the send button even when `submissionState` is
-   * `'idle'` — e.g. existing-chat sources still processing server-side.
-   */
   isSendDisabled?: boolean;
   isModelChangeDisabled?: boolean;
   isAnonymousChangeDisabled?: boolean;
@@ -81,324 +57,225 @@ interface ChatInputProps {
     message: string,
     imageFiles?: Array<{ file: File; altText?: string }>,
     skillId?: string,
-    /** The prompt contains text from a successful transcription. */
     voiceInput?: boolean,
   ) => void;
-  /** Fired when the user clicks the cancel button while in-flight. */
   onCancel: () => void;
-  /** Disables the cancel button for a run that cannot be stopped. */
   isCancelDisabled?: boolean;
   selectedSkillId?: string;
   selectedSkillName?: string;
   onSkillRemove?: () => void;
-  /** Adds a skill picker to the plus menu when the host supports skills. */
   onSkillSelect?: (skillId: string, skillName: string) => void;
   isEmbeddingModelEnabled: boolean;
-  /** Whether anonymous mode is enabled (PII redaction). Only shown for new chats. */
   isAnonymous: boolean;
-  /** Callback when anonymous mode is toggled. If not provided, toggle is hidden. */
   onAnonymousChange?: (isAnonymous: boolean) => void;
-  /** Whether anonymous mode is enforced by the selected model. */
   isAnonymousEnforced?: boolean;
-  /** Whether the selected model supports vision (image upload) */
   isVisionEnabled?: boolean;
   initialMessage?: string;
-  /** Replaces the default "How can I help?" prompt. */
   placeholder?: string;
   draftChatId?: string;
-  /** The thread's sent prompts, oldest first, recalled with ArrowUp/ArrowDown. */
   sentPrompts?: readonly string[];
 }
 
-export interface ChatInputRef {
-  setMessage: (message: string) => void;
-  sendMessage: (message: string) => void;
-  restoreFailedSubmission: (text: string, files: File[]) => boolean;
+interface SourceItem {
+  id: string;
+  name: string;
+  type: SourceResponseDtoType;
+  fileType?: FileSourceResponseDtoFileType;
+  createdBy?: SourceResponseDtoCreatedBy;
+  status?: SourceResponseDtoStatus;
+  processingError?: string;
+  processingErrorCode?: SourceProcessingErrorCode;
+  uploadProgress?: number;
 }
 
 const NO_PROMPTS: readonly string[] = [];
 
 const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
-  (
-    {
-      modelId,
-      sources,
-      knowledgeBases,
-      mcpIntegrations,
-      submissionState = 'idle',
-      isSendDisabled,
-      isModelChangeDisabled,
-      isAnonymousChangeDisabled,
-      onModelChange,
-      onFileUpload,
-      onRemoveSource,
-      onAddKnowledgeBase,
-      onRemoveKnowledgeBase,
-      onAddIntegration,
-      onRemoveIntegration,
-      onSend,
-      onCancel,
-      isCancelDisabled = false,
-      isEmbeddingModelEnabled: hasEmbeddingModel,
-      isAnonymous,
-      onAnonymousChange,
-      isAnonymousEnforced,
-      isVisionEnabled: hasVisionModel = false,
-      selectedSkillId,
-      selectedSkillName,
-      onSkillRemove,
-      onSkillSelect,
-      initialMessage,
-      placeholder,
-      draftChatId,
-      sentPrompts = NO_PROMPTS,
-    },
-    ref,
-  ) => {
+  function ChatInput(props, ref) {
     const { capabilities } = useAppChatSurface();
-    const isEmbeddingModelEnabled = Boolean(
-      capabilities.fileUpload && hasEmbeddingModel,
-    );
-    const isVisionEnabled = Boolean(capabilities.fileUpload && hasVisionModel);
-    const [isFocused, setIsFocused] = useState<boolean>(false);
-    const { message, setMessage } = useChatDraft(draftChatId, initialMessage);
-    const hasDictationRef = useRef(false);
-    useEffect(() => {
-      if (!message) hasDictationRef.current = false;
-    }, [message]);
-    const isSubmitting = submissionState === 'submitting';
-    const inFlight = submissionState !== 'idle';
-    const showProcessingGlow = inFlight;
-    const { t } = useTranslation('common');
-    const containerRef = useRef<HTMLDivElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-    useDraftCursorAtEnd(textareaRef, draftChatId);
-    const handlePromptHistoryKey = usePromptHistory(
-      message,
-      setMessage,
-      sentPrompts,
-    );
-
-    // TextareaAutosize corrects its height during mount; the height transition
-    // must not be active yet or that correction animates as a visible shrink
-    // (flickers on every navigation because ChatPage keys the input by thread).
-    // Double rAF: the class may only land after the corrected height has been
-    // painted once — a plain effect flushes into the same style recalc and the
-    // browser still animates from the pre-correction height.
-    const [isHeightAnimationEnabled, setIsHeightAnimationEnabled] =
-      useState(false);
-    useEffect(() => {
-      let secondFrame = 0;
-      const firstFrame = requestAnimationFrame(() => {
-        secondFrame = requestAnimationFrame(() =>
-          setIsHeightAnimationEnabled(true),
-        );
-      });
-      return () => {
-        cancelAnimationFrame(firstFrame);
-        cancelAnimationFrame(secondFrame);
-      };
-    }, []);
-
-    const { pendingImages, addImages, removeImage, clearImages } =
-      usePendingImages();
-
-    const attachImages = (files: File[]) => {
-      const result = addImages(files);
-      if (result.oversizedRejected) {
-        showError(t('chatInput.imageTooLarge', { maxMiB: MAX_IMAGE_SIZE_MIB }));
-      }
-      if (result.limitExceeded) {
-        showError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
-      }
-      if (result.totalExceeded) {
-        showError(
-          t('chatInput.imageTotalTooLarge', {
-            maxMiB: MAX_TOTAL_IMAGE_SIZE_MIB,
-          }),
-        );
-      }
+    const voiceEnabled = useIsFeatureEnabled('voiceEnabled');
+    const enabledCapabilities = {
+      ...capabilities,
+      voice: capabilities.voice && voiceEnabled,
     };
-
-    useImagePaste({
-      containerRef,
-      isFocused: isFocused && isVisionEnabled,
-      onImagesPasted: attachImages,
-    });
-
-    const { isDragging } = useFileDrop({
-      containerRef,
-      onDocumentDrop: onFileUpload,
-      onImagesDrop: attachImages,
-      isDocumentUploadEnabled: isEmbeddingModelEnabled && !inFlight,
-      isImageUploadEnabled: isVisionEnabled,
-      acceptedDocumentExtensions: ACCEPTED_DOCUMENT_EXTENSIONS,
-    });
-
-    useImperativeHandle(ref, () => ({
-      setMessage,
-      sendMessage: (text: string) => submit(text),
-      // Restore only into a pristine input; false when a draft blocks it.
-      restoreFailedSubmission: (text: string, files: File[]) => {
-        if (message.trim() || pendingImages.length > 0) return false;
-        setMessage(text);
-        if (files.length > 0) addImages(files);
-        return true;
-      },
-    }));
-
-    const canSendText = (text: string) =>
-      canSubmitMessage({
-        text,
-        hasAttachments: pendingImages.length > 0,
-        hasSkill: Boolean(selectedSkillId),
-        busy: !modelId || inFlight || Boolean(isSendDisabled),
-      });
-
-    const submit = (text: string) => {
-      if (!canSendText(text)) return;
-
-      // Pass File objects to parent - upload happens in ChatPage/NewChatPage
-      const imageFiles = pendingImages.map((img) => ({
-        file: img.file,
-        altText: img.file.name || 'Pasted image',
-      }));
-
-      onSend(
-        text,
-        imageFiles.length > 0 ? imageFiles : undefined,
-        selectedSkillId,
-        hasDictationRef.current,
-      );
-      // Note: we deliberately do NOT clear `message` here. Parents can call
-      // `chatInputRef.current.setMessage('')` once the submit has actually
-      // committed (e.g. after navigation). This way the typed text survives
-      // the upload pipeline and any cancellation/error.
-      clearImages();
-    };
-
-    const handleSend = () => submit(message);
-
-    useKeyboardShortcut(
-      ['Enter'],
-      () => {
-        if (isFocused) {
-          handleSend();
-        }
-      },
-      {
-        exclusive: true,
-      },
-    );
-
-    const handleImageSelect = (files: FileList | null) => {
-      if (!files) return;
-      const imageFiles = Array.from(files).filter((file) =>
-        file.type.startsWith('image/'),
-      );
-      if (imageFiles.length > 0) attachImages(imageFiles);
-    };
-
-    const canSend = canSendText(message);
-
-    const hasAttachmentChips =
-      sources.length > 0 ||
-      (knowledgeBases?.length ?? 0) > 0 ||
-      (mcpIntegrations?.length ?? 0) > 0;
-
-    function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
-      const pastedText = e.clipboardData.getData('text/plain');
-      if (!pastedText) return;
-
-      if (insertTextPreservingUndo(e.currentTarget, pastedText)) {
-        e.preventDefault();
-      }
-    }
-
+    const draft = useChatDraft(props.draftChatId, props.initialMessage);
+    const { transcribe } = useTranscribe();
+    const state = props.submissionState ?? 'idle';
+    const slots = composerSlots(props, enabledCapabilities);
     return (
-      <div
-        ref={containerRef}
-        className="w-full space-y-2"
-        data-testid="chat-input"
-      >
-        <ProcessingGlow
-          isActive={showProcessingGlow}
-          className="chat-input-shell"
-          aria-busy={showProcessingGlow}
-          data-processing={showProcessingGlow ? 'true' : undefined}
-        >
-          <OnboardingTourTarget name={TOUR_TARGET.chatComposer} settleMs={900}>
-            <ChatComposer
-              state={submissionState}
-              dragging={isDragging}
-              animateHeight={isHeightAnimationEnabled}
-              attachments={
-                hasAttachmentChips ? (
-                  <ChatAttachments
-                    sources={sources}
-                    knowledgeBases={knowledgeBases}
-                    integrations={mcpIntegrations}
-                    onRemoveSource={onRemoveSource}
-                    onRemoveKnowledgeBase={onRemoveKnowledgeBase}
-                    onRemoveIntegration={onRemoveIntegration}
-                  />
-                ) : undefined
-              }
-              images={pendingImages}
-              onRemoveImage={removeImage}
-              textarea={{
-                ref: textareaRef,
-                value: message,
-                onChange: (event) => setMessage(event.target.value),
-                onPaste: handlePaste,
-                onKeyDown: isSubmitting ? undefined : handlePromptHistoryKey,
-                onFocus: () => setIsFocused(true),
-                onBlur: () => setIsFocused(false),
-                placeholder: placeholder ?? t('chatInput.placeholder'),
-                'aria-label': placeholder ?? t('chatInput.placeholder'),
-              }}
-              actions={
-                <ChatInputActionBar
-                  capabilities={capabilities}
-                  isSubmitting={isSubmitting}
-                  isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-                  isVisionEnabled={isVisionEnabled}
-                  knowledgeBases={knowledgeBases}
-                  mcpIntegrations={mcpIntegrations}
-                  onFileUpload={onFileUpload}
-                  onImageSelect={handleImageSelect}
-                  onAddKnowledgeBase={onAddKnowledgeBase}
-                  onAddIntegration={onAddIntegration}
-                  isAnonymous={isAnonymous}
-                  onAnonymousChange={onAnonymousChange}
-                  isAnonymousChangeDisabled={isAnonymousChangeDisabled}
-                  isAnonymousEnforced={isAnonymousEnforced}
-                  selectedSkillId={selectedSkillId}
-                  selectedSkillName={selectedSkillName}
-                  onSkillRemove={onSkillRemove}
-                  onSkillSelect={onSkillSelect}
-                  isModelChangeDisabled={isModelChangeDisabled}
-                  modelId={modelId}
-                  onModelChange={onModelChange}
-                  inFlight={inFlight}
-                  canSend={!!canSend}
-                  onSend={handleSend}
-                  onCancel={onCancel}
-                  isCancelDisabled={isCancelDisabled}
-                  setMessage={setMessage}
-                  textareaRef={textareaRef}
-                  onDictation={() => {
-                    hasDictationRef.current = true;
-                  }}
-                />
-              }
-            />
-          </OnboardingTourTarget>
-        </ProcessingGlow>
-      </div>
+      <ConfiguredComposer
+        ref={ref}
+        compact
+        threadId={props.draftChatId ?? 'new-chat'}
+        capabilities={enabledCapabilities}
+        draft={draft}
+        slots={slots}
+        sentPrompts={props.sentPrompts ?? NO_PROMPTS}
+        placeholder={props.placeholder}
+        selectedSkillId={props.selectedSkillId}
+        fileInputTestId="chat-file-upload-input"
+        stopTestId="cancel"
+        clearImagesOnSend
+        isSubmitting={state === 'submitting'}
+        isStreaming={state === 'streaming'}
+        isCheckingForRun={false}
+        adapters={composerAdapters(props, transcribe)}
+        onSend={(input) =>
+          props.onSend(
+            input.text,
+            input.images,
+            input.skillId,
+            input.voiceInput,
+          )
+        }
+        onStop={props.isCancelDisabled ? undefined : props.onCancel}
+      />
     );
   },
 );
+
+function composerAdapters(
+  props: ChatInputProps,
+  transcribe: ReturnType<typeof useTranscribe>['transcribe'],
+) {
+  return {
+    isSendDisabled: !props.modelId || Boolean(props.isSendDisabled),
+    imageAttachments: Boolean(props.isVisionEnabled),
+    documentAttachments: props.isEmbeddingModelEnabled,
+    allowAttachmentsWhileStreaming: true,
+    onError: showComposerError,
+    onAttachmentError: showComposerError,
+    uploadFiles: (_threadId: string, files: File[], signal: AbortSignal) => {
+      signal.throwIfAborted();
+      props.onFileUpload(files);
+      return Promise.resolve();
+    },
+    transcribe: async (audio: Blob, name: string, signal: AbortSignal) => {
+      signal.throwIfAborted();
+      return transcribe(audio, name);
+    },
+  };
+}
+
+function showComposerError(error: unknown) {
+  showError(error instanceof Error ? error.message : String(error));
+}
+
+function composerSlots(
+  props: ChatInputProps,
+  capabilities: ReturnType<typeof useAppChatSurface>['capabilities'],
+): ChatConversationSlots {
+  return {
+    attachments: attachmentChips(props),
+    composerLeading: <ComposerLeading {...props} />,
+    composerModel: capabilities.modelSelection && <ComposerModel {...props} />,
+    skills:
+      capabilities.skills && props.onSkillSelect ? (
+        <SkillsSubmenu
+          onSkillSelect={props.onSkillSelect}
+          selectedSkillId={props.selectedSkillId}
+        />
+      ) : undefined,
+    knowledgeBases:
+      capabilities.knowledgeBases && props.onAddKnowledgeBase ? (
+        <KnowledgeBasesSubmenu
+          onKnowledgeBaseSelect={props.onAddKnowledgeBase}
+          attachedKnowledgeBaseIds={
+            props.knowledgeBases?.map(({ id }) => id) ?? []
+          }
+        />
+      ) : undefined,
+    integrations:
+      capabilities.integrations && props.onAddIntegration ? (
+        <IntegrationsSubmenu
+          onIntegrationSelect={props.onAddIntegration}
+          attachedIntegrationIds={
+            props.mcpIntegrations?.map(({ id }) => id) ?? []
+          }
+        />
+      ) : undefined,
+    composerFrame: (content) => tourTarget(TOUR_TARGET.chatComposer, content),
+    composerAttachmentControl: (content) =>
+      tourTarget(TOUR_TARGET.chatUpload, content),
+    composerVoiceControl: (content) =>
+      tourTarget(TOUR_TARGET.voiceInput, content),
+    composerSendControl: (content) =>
+      tourTarget(TOUR_TARGET.sendMessage, content),
+  };
+}
+
+function ComposerLeading(props: Readonly<ChatInputProps>) {
+  return (
+    <>
+      {tourTarget(
+        TOUR_TARGET.anonymousMode,
+        <AnonymousButton
+          isAnonymous={props.isAnonymous}
+          onAnonymousChange={props.onAnonymousChange}
+          isDisabled={props.isAnonymousChangeDisabled}
+          isEnforced={props.isAnonymousEnforced}
+        />,
+      )}
+      {props.selectedSkillId &&
+        props.selectedSkillName &&
+        props.onSkillRemove && (
+          <SkillBadge
+            skillName={props.selectedSkillName}
+            onRemove={props.onSkillRemove}
+          />
+        )}
+    </>
+  );
+}
+
+function ComposerModel(props: Readonly<ChatInputProps>) {
+  const { t } = useTranslation('common');
+  const disabled = props.isModelChangeDisabled ?? false;
+  return (
+    <TooltipIf
+      condition={disabled}
+      tooltip={t('chatInput.modelChangeDisabledTooltip')}
+    >
+      <OnboardingTourTarget name={TOUR_TARGET.modelSelector}>
+        <ModelSelector
+          isDisabled={disabled}
+          isAnonymous={props.isAnonymous}
+          selectedModelId={props.modelId}
+          onModelChange={props.onModelChange}
+        />
+      </OnboardingTourTarget>
+    </TooltipIf>
+  );
+}
+
+function attachmentChips(props: ChatInputProps) {
+  const hasAttachments =
+    props.sources.length > 0 ||
+    Boolean(props.knowledgeBases?.length) ||
+    Boolean(props.mcpIntegrations?.length);
+  if (!hasAttachments) return undefined;
+  return (
+    <ChatAttachments
+      sources={props.sources}
+      knowledgeBases={props.knowledgeBases}
+      integrations={props.mcpIntegrations}
+      onRemoveSource={props.onRemoveSource}
+      onRemoveKnowledgeBase={props.onRemoveKnowledgeBase}
+      onRemoveIntegration={props.onRemoveIntegration}
+    />
+  );
+}
+
+function tourTarget(
+  name: Parameters<typeof OnboardingTourTarget>[0]['name'],
+  content: ReactNode,
+) {
+  return (
+    <OnboardingTourTarget name={name} settleMs={900}>
+      {content}
+    </OnboardingTourTarget>
+  );
+}
 
 ChatInput.displayName = 'ChatInput';
 
