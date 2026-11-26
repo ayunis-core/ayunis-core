@@ -9,6 +9,7 @@ interface InboxListProps {
   notifications: NotificationResponseDto[];
   page: number;
   total: number;
+  showRead: boolean;
   selectedId?: string;
   className?: string;
 }
@@ -17,6 +18,7 @@ export function InboxList({
   notifications,
   page,
   total,
+  showRead,
   selectedId,
   className,
 }: Readonly<InboxListProps>) {
@@ -36,7 +38,7 @@ export function InboxList({
       >
         {notifications.length === 0 && (
           <p className="px-2 py-3 text-sm text-muted-foreground">
-            {t('emptyState.title')}
+            {t(showRead ? 'emptyState.title' : 'emptyState.unreadTitle')}
           </p>
         )}
         {notifications.map((notification) => (

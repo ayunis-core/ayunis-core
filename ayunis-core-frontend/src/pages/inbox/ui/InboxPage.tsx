@@ -9,14 +9,13 @@ import type {
   NotificationType,
 } from '@ayunis/api-client/schemas';
 import AppLayout from '@/layouts/app-layout';
-import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { EmptyState } from '@/widgets/empty-state';
 import { useUnreadNotificationCount } from '@/features/notifications';
 import { useNotifications } from '@/pages/inbox/api/useNotifications';
 import { useMarkAllNotificationsRead } from '@/pages/inbox/api/useMarkAllNotificationsRead';
 import { useOpenNotification } from '@/pages/inbox/api/useOpenNotification';
 import { withOpenNotification } from '@/pages/inbox/lib/with-open-notification';
+import { InboxEmpty } from './InboxEmpty';
 import { InboxList } from './InboxList';
 import { InboxReadFilter } from './InboxReadFilter';
 import { InboxTypeFilter } from './InboxTypeFilter';
@@ -37,7 +36,6 @@ export default function InboxPage({
   selectedId,
   children,
 }: Readonly<InboxPageProps>) {
-  const { t } = useTranslation('inbox');
   const { notifications, total, isLoading } = useNotifications(
     page,
     type,
@@ -51,33 +49,21 @@ export default function InboxPage({
   const header = (
     <InboxHeader type={type} showRead={showRead} notifications={listed} />
   );
+  const isEmpty =
+    !selectedId && !isLoading && notifications.length === 0 && page === 1;
+  const showsDetailPane = Boolean(selectedId) || isEmpty;
 
-  if (!selectedId && !isLoading && notifications.length === 0 && page === 1) {
-    return (
-      <AppLayout>
-        <FullScreenMessageLayout header={header}>
-          <EmptyState
-            title={t(showRead ? 'emptyState.title' : 'emptyState.unreadTitle')}
-            description={t(
-              showRead
-                ? 'emptyState.description'
-                : 'emptyState.unreadDescription',
-            )}
-          />
-        </FullScreenMessageLayout>
-      </AppLayout>
-    );
-  }
-
-  // Below md only one pane shows: the list, or the open notification.
+  // Below md only one pane shows: the list, or the open notification (or the
+  // empty state, which says more than an empty list).
   return (
     <AppLayout>
       <div className="absolute inset-0 flex flex-col">
         <div className="content-area-page-header">{header}</div>
         <div className="flex min-h-0 flex-1">
           <InboxList
-            className={cn(selectedId && 'max-md:hidden')}
+            className={cn(showsDetailPane && 'max-md:hidden')}
             notifications={listed}
+            showRead={showRead}
             page={page}
             total={total}
             selectedId={selectedId}
@@ -86,12 +72,12 @@ export default function InboxPage({
             key={selectedId}
             className={cn(
               'min-w-0 flex-1 overflow-y-auto px-3 pb-4 sm:px-6',
-              !selectedId && 'max-md:hidden',
+              !showsDetailPane && 'max-md:hidden',
             )}
             data-testid="inbox-detail-pane"
           >
             {selectedId && <BackToList />}
-            {children}
+            {isEmpty ? <InboxEmpty showRead={showRead} /> : children}
           </section>
         </div>
       </div>
