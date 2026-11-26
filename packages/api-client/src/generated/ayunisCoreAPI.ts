@@ -35894,3 +35894,69 @@ export const useRoutineMcpIntegrationsControllerRemove = <TError = void,
       return useMutation(getRoutineMcpIntegrationsControllerRemoveMutationOptions(options), queryClient);
     }
 
+/**
+ * @summary Mark one of the current user’s notifications unread
+ */
+export const notificationsControllerMarkUnread = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<NotificationResponseDto>(
+      {url: `/notifications/${id}/unread`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getNotificationsControllerMarkUnreadMutationKey = () => ['notificationsControllerMarkUnread'] as const;
+
+export const getNotificationsControllerMarkUnreadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkUnread>>, TError,NotificationsControllerMarkUnreadMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkUnread>>, TError,NotificationsControllerMarkUnreadMutationVariables, TContext> => {
+
+const mutationKey = getNotificationsControllerMarkUnreadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkUnread>>, NotificationsControllerMarkUnreadMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  notificationsControllerMarkUnread(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerMarkUnreadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkUnread>>>
+
+    export type NotificationsControllerMarkUnreadMutationError = void
+    export type NotificationsControllerMarkUnreadMutationVariables = {id: string}
+
+    /**
+ * @summary Mark one of the current user’s notifications unread
+ */
+export const useNotificationsControllerMarkUnread = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkUnread>>, TError,NotificationsControllerMarkUnreadMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerMarkUnread>>,
+        TError,
+        NotificationsControllerMarkUnreadMutationVariables,
+        TContext
+      > => {
+      return useMutation(getNotificationsControllerMarkUnreadMutationOptions(options), queryClient);
+    }
+

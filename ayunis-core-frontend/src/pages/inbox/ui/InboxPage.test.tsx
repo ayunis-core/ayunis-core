@@ -67,6 +67,12 @@ vi.mock('@/pages/inbox/api/useNotifications', () => ({
 vi.mock('@/pages/inbox/api/useMarkAllNotificationsRead', () => ({
   useMarkAllNotificationsRead: () => ({ mutate: vi.fn(), isPending: false }),
 }));
+vi.mock('@/pages/inbox/api/useOpenNotification', () => ({
+  useOpenNotification: () => undefined,
+}));
+vi.mock('@/pages/inbox/ui/InboxReadFilter', () => ({
+  InboxReadFilter: () => null,
+}));
 
 afterEach(cleanup);
 
@@ -79,7 +85,11 @@ describe('InboxPage', () => {
     mocks.notifications = [{ id: 'n1', readAt: null }];
     mocks.unreadCount = 0;
 
-    render(<InboxPage page={1}>{null}</InboxPage>);
+    render(
+      <InboxPage page={1} showRead={false}>
+        {null}
+      </InboxPage>,
+    );
 
     expect(markAllRead().disabled).toBe(false);
   });
@@ -88,7 +98,11 @@ describe('InboxPage', () => {
     mocks.notifications = [{ id: 'n1', readAt: '2026-11-07T08:00:00.000Z' }];
     mocks.unreadCount = 0;
 
-    render(<InboxPage page={1}>{null}</InboxPage>);
+    render(
+      <InboxPage page={1} showRead={false}>
+        {null}
+      </InboxPage>,
+    );
 
     expect(markAllRead().disabled).toBe(true);
   });
@@ -96,9 +110,17 @@ describe('InboxPage', () => {
   it('lists all types without a filter', () => {
     mocks.notifications = [{ id: 'n1', readAt: null }];
 
-    render(<InboxPage page={1}>{null}</InboxPage>);
+    render(
+      <InboxPage page={1} showRead={false}>
+        {null}
+      </InboxPage>,
+    );
 
-    expect(mocks.useNotifications).toHaveBeenLastCalledWith(1, undefined);
+    expect(mocks.useNotifications).toHaveBeenLastCalledWith(
+      1,
+      undefined,
+      false,
+    );
     expect(screen.queryByTestId('inbox-type-filter')).toBeNull();
   });
 
@@ -106,12 +128,16 @@ describe('InboxPage', () => {
     mocks.notifications = [{ id: 'n1', readAt: null }];
 
     render(
-      <InboxPage page={2} type="routine_error">
+      <InboxPage page={2} type="routine_error" showRead={false}>
         {null}
       </InboxPage>,
     );
 
-    expect(mocks.useNotifications).toHaveBeenLastCalledWith(2, 'routine_error');
+    expect(mocks.useNotifications).toHaveBeenLastCalledWith(
+      2,
+      'routine_error',
+      false,
+    );
     expect(screen.getByTestId('inbox-type-filter').textContent).toContain(
       'filter.type.routine_error',
     );
@@ -122,7 +148,7 @@ describe('InboxPage', () => {
     mocks.notifications = [];
 
     render(
-      <InboxPage page={1} type="routine">
+      <InboxPage page={1} type="routine" showRead={false}>
         {null}
       </InboxPage>,
     );
@@ -134,7 +160,11 @@ describe('InboxPage', () => {
   it('shows the empty inbox instead of an empty list while nothing is open', () => {
     mocks.notifications = [];
 
-    render(<InboxPage page={1}>{null}</InboxPage>);
+    render(
+      <InboxPage page={1} showRead={false}>
+        {null}
+      </InboxPage>,
+    );
 
     expect(screen.getByTestId('inbox-empty-state')).toBeTruthy();
     expect(screen.queryByTestId('inbox-list')).toBeNull();
@@ -144,7 +174,7 @@ describe('InboxPage', () => {
     mocks.notifications = [];
 
     render(
-      <InboxPage page={1} type="routine" selectedId="n1">
+      <InboxPage page={1} type="routine" showRead={false} selectedId="n1">
         <article data-testid="notification-detail" />
       </InboxPage>,
     );

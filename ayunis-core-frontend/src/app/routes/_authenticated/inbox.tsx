@@ -16,6 +16,7 @@ import { getFeatureToggles } from './-routines-enabled-query';
 const searchSchema = z.object({
   page: z.number().min(1).optional().catch(1),
   type: z.enum(NotificationType).optional().catch(undefined),
+  showRead: z.boolean().optional().catch(undefined),
 });
 
 // The list stays mounted next to whichever notification is open, so the
@@ -30,18 +31,21 @@ export const Route = createFileRoute('/_authenticated/inbox')({
   },
   loaderDeps: ({ search }) => search,
   component: RouteComponent,
-  loader: async ({ deps: { page = 1, type }, context: { queryClient } }) => {
-    const params = notificationsPageParams(page, type);
+  loader: async ({
+    deps: { page = 1, type, showRead = false },
+    context: { queryClient },
+  }) => {
+    const params = notificationsPageParams(page, type, showRead);
     await queryClient.query({
       queryKey: getNotificationsControllerFindAllQueryKey(params),
       queryFn: () => notificationsControllerFindAll(params),
     });
-    return { page, type };
+    return { page, type, showRead };
   },
 });
 
 function RouteComponent() {
-  const { page, type } = Route.useLoaderData();
+  const { page, type, showRead } = Route.useLoaderData();
   const selected = useMatch({
     from: '/_authenticated/inbox/$notificationId',
     shouldThrow: false,
@@ -50,6 +54,7 @@ function RouteComponent() {
     <InboxPage
       page={page}
       type={type}
+      showRead={showRead}
       selectedId={selected?.params.notificationId}
     >
       <Outlet />

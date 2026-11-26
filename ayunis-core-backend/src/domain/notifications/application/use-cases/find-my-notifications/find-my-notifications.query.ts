@@ -7,17 +7,20 @@ export class FindMyNotificationsQuery extends PaginatedQuery {
   public readonly routineId?: UUID;
   public readonly type?: NotificationType;
   public readonly unread?: boolean;
+  public readonly unreadFirst?: boolean;
 
   constructor(
     params: PaginatedQueryParams & {
       routineId?: UUID;
       type?: NotificationType;
       unread?: boolean;
+      unreadFirst?: boolean;
     },
   ) {
     super(params);
     this.routineId = params.routineId;
     this.type = params.type;
     this.unread = params.unread;
+    this.unreadFirst = params.unreadFirst;
   }
 }

@@ -28,6 +28,7 @@ export class FindMyNotificationsUseCase {
         routineId: query.routineId,
         type: query.type,
         unread: query.unread,
+        unreadFirst: query.unreadFirst,
       },
       'Finding notifications',
     );
@@ -36,6 +37,7 @@ export class FindMyNotificationsUseCase {
       userId,
       { limit: query.limit, offset: query.offset },
       { routineId: query.routineId, type: query.type, unread: query.unread },
+      { unreadFirst: query.unreadFirst },
     );
   }
 }

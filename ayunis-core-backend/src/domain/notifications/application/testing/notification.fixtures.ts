@@ -56,6 +56,7 @@ export function createMockNotificationsRepository(): jest.Mocked<NotificationsRe
     ),
     countUnreadByType: jest.fn().mockResolvedValue([]),
     markRead: jest.fn().mockResolvedValue(null),
+    markUnread: jest.fn().mockResolvedValue(null),
     markAllRead: jest.fn().mockResolvedValue(0),
     countByOrgCreatedBefore: jest.fn().mockResolvedValue(0),
     deleteByOrgCreatedBefore: jest.fn().mockResolvedValue(0),

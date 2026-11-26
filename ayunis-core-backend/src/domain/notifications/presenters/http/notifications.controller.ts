@@ -27,6 +27,8 @@ import { FindNotificationUseCase } from 'src/domain/notifications/application/us
 import { MarkAllNotificationsReadUseCase } from 'src/domain/notifications/application/use-cases/mark-all-notifications-read/mark-all-notifications-read.use-case';
 import { MarkNotificationReadCommand } from 'src/domain/notifications/application/use-cases/mark-notification-read/mark-notification-read.command';
 import { MarkNotificationReadUseCase } from 'src/domain/notifications/application/use-cases/mark-notification-read/mark-notification-read.use-case';
+import { MarkNotificationUnreadCommand } from 'src/domain/notifications/application/use-cases/mark-notification-unread/mark-notification-unread.command';
+import { MarkNotificationUnreadUseCase } from 'src/domain/notifications/application/use-cases/mark-notification-unread/mark-notification-unread.use-case';
 import {
   DEFAULT_NOTIFICATIONS_PAGE_SIZE,
   FindNotificationsQueryParamsDto,
@@ -61,6 +63,7 @@ export class NotificationsController {
     private readonly countUnreadNotificationsUseCase: CountUnreadNotificationsUseCase,
     private readonly findNotificationUseCase: FindNotificationUseCase,
     private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
+    private readonly markNotificationUnreadUseCase: MarkNotificationUnreadUseCase,
     private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadUseCase,
     private readonly downloadNotificationImageUseCase: DownloadNotificationImageUseCase,
     private readonly notificationDtoMapper: NotificationDtoMapper,
@@ -75,7 +78,12 @@ export class NotificationsController {
     @Query() query: FindNotificationsQueryParamsDto,
   ): Promise<PaginatedNotificationsResponseDto> {
     this.logger.log(
-      { routineId: query.routineId, type: query.type, unread: query.unread },
+      {
+        routineId: query.routineId,
+        type: query.type,
+        unread: query.unread,
+        unreadFirst: query.unreadFirst,
+      },
       'findAll',
     );
     const page = await this.findMyNotificationsUseCase.execute(
@@ -85,6 +93,7 @@ export class NotificationsController {
         routineId: query.routineId,
         type: query.type,
         unread: query.unread,
+        unreadFirst: query.unreadFirst,
       }),
     );
     return this.notificationDtoMapper.toPaginatedDto(page);
@@ -164,6 +173,23 @@ export class NotificationsController {
     this.logger.log({ id }, 'markRead');
     const notification = await this.markNotificationReadUseCase.execute(
       new MarkNotificationReadCommand(id),
+    );
+    return this.notificationDtoMapper.toDto(notification);
+  }
+
+  @Post(':id/unread')
+  @ApiOperation({
+    summary: 'Mark one of the current user’s notifications unread',
+  })
+  @ApiParam(NOTIFICATION_ID_PARAM)
+  @ApiResponse({ status: 201, type: NotificationResponseDto })
+  @ApiResponse({ status: 404, description: 'Not found or not the user’s' })
+  async markUnread(
+    @Param('id', ParseUUIDPipe) id: UUID,
+  ): Promise<NotificationResponseDto> {
+    this.logger.log({ id }, 'markUnread');
+    const notification = await this.markNotificationUnreadUseCase.execute(
+      new MarkNotificationUnreadCommand(id),
     );
     return this.notificationDtoMapper.toDto(notification);
   }

@@ -8165,6 +8165,10 @@ type?: NotificationType;
  * Only the unread notifications when true
  */
 unread?: boolean;
+/**
+ * Unread notifications before read ones when true; within each, newest first
+ */
+unreadFirst?: boolean;
 };
 
 export type UsageControllerGetUserUsageParams = {

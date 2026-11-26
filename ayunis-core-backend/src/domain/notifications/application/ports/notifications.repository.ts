@@ -11,6 +11,11 @@ export interface NotificationsFilter {
   unread?: boolean;
 }
 
+export interface NotificationsOrder {
+  /** Unread before read; within each, still newest first. */
+  unreadFirst?: boolean;
+}
+
 export abstract class NotificationsRepository {
   abstract create(notification: Notification): Promise<Notification>;
   /**
@@ -28,6 +33,7 @@ export abstract class NotificationsRepository {
     userId: UUID,
     page: PaginatedQueryParams,
     filter?: NotificationsFilter,
+    order?: NotificationsOrder,
   ): Promise<Paginated<Notification>>;
   /** Only the types with unread notifications, ordered by type. */
   abstract countUnreadByType(
@@ -39,6 +45,7 @@ export abstract class NotificationsRepository {
     id: UUID,
     readAt: Date,
   ): Promise<Notification | null>;
+  abstract markUnread(userId: UUID, id: UUID): Promise<Notification | null>;
   /** Returns how many notifications were unread. */
   abstract markAllRead(userId: UUID, readAt: Date): Promise<number>;
   abstract countByOrgCreatedBefore(orgId: UUID, before: Date): Promise<number>;

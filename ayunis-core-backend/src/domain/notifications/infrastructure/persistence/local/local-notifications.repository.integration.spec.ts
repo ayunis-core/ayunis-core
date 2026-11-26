@@ -183,6 +183,18 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
         (await repository.findById(owner, notification.id))?.readAt,
       ).toBeNull();
     });
+
+    it("does not mark another user's notification unread", async () => {
+      const readAt = new Date('2026-11-07T08:00:00.000Z');
+      const notification = await stored({ readAt });
+
+      await expect(
+        repository.markUnread(otherUser, notification.id),
+      ).resolves.toBeNull();
+      expect(
+        (await repository.findById(owner, notification.id))?.readAt,
+      ).toEqual(readAt);
+    });
   });
 
   describe('findPageByUserId', () => {
@@ -289,6 +301,45 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
       expect(page.data.map((n) => n.id)).toEqual([unread.id, olderUnread.id]);
     });
 
+    it('lists unread notifications before read ones, each newest first, when asked to', async () => {
+      const readAt = new Date('2026-11-08T08:00:00.000Z');
+      const newestRead = await stored({
+        readAt,
+        createdAt: new Date('2026-11-07T06:00:00.000Z'),
+      });
+      const olderUnread = await stored({
+        createdAt: new Date('2026-11-05T06:00:00.000Z'),
+      });
+      const olderRead = await stored({
+        readAt,
+        createdAt: new Date('2026-11-04T06:00:00.000Z'),
+      });
+      const newerUnread = await stored({
+        createdAt: new Date('2026-11-06T06:00:00.000Z'),
+      });
+
+      const page = await repository.findPageByUserId(
+        owner,
+        { limit: 3, offset: 0 },
+        {},
+        { unreadFirst: true },
+      );
+
+      expect(page.total).toBe(4);
+      expect(page.data.map((n) => n.id)).toEqual([
+        newerUnread.id,
+        olderUnread.id,
+        newestRead.id,
+      ]);
+      const next = await repository.findPageByUserId(
+        owner,
+        { limit: 3, offset: 3 },
+        {},
+        { unreadFirst: true },
+      );
+      expect(next.data.map((n) => n.id)).toEqual([olderRead.id]);
+    });
+
     it("finds nothing for another user's routine", async () => {
       const routineId = randomUUID();
       await stored({ userId: otherUser, routineId });
@@ -316,6 +367,19 @@ describe('LocalNotificationsRepository (PostgreSQL)', () => {
       );
 
       expect(again?.readAt).toEqual(firstRead);
+    });
+
+    it('marks a read notification unread', async () => {
+      const notification = await stored({
+        readAt: new Date('2026-11-07T08:00:00.000Z'),
+      });
+
+      const unread = await repository.markUnread(owner, notification.id);
+
+      expect(unread?.readAt).toBeNull();
+      await expect(repository.countUnreadByType(owner)).resolves.toEqual([
+        { type: NotificationType.ROUTINE, count: 1 },
+      ]);
     });
 
     it("counts and marks all of only the user's unread notifications", async () => {

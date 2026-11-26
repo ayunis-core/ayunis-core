@@ -9597,6 +9597,15 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "unreadFirst",
+            "required": false,
+            "in": "query",
+            "description": "Unread notifications before read ones when true; within each, newest first",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -16688,6 +16697,40 @@
         },
         "summary": "Remove an integration from a routine",
         "tags": ["routines"]
+      }
+    },
+    "/notifications/{id}/unread": {
+      "post": {
+        "operationId": "NotificationsController_markUnread",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The UUID of the notification",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not the user’s"
+          }
+        },
+        "summary": "Mark one of the current user’s notifications unread",
+        "tags": ["notifications"]
       }
     }
   },

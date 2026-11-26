@@ -65,6 +65,7 @@ describe('inbox route', () => {
     await expect(runRoute('routine_error')).resolves.toEqual({
       page: 1,
       type: 'routine_error',
+      showRead: false,
     });
   });
 

@@ -8,16 +8,23 @@
       "routine": "Routine-Benachrichtigungen",
       "routine_error": "Zu prüfen"
     },
-    "clear": "Filter entfernen"
+    "clear": "Filter entfernen",
+    "read": {
+      "label": "Posteingang filtern",
+      "show": "Gelesene Benachrichtigungen anzeigen"
+    }
   },
   "emptyState": {
     "title": "Keine Benachrichtigungen",
-    "description": "Hier erscheinen Ihre Benachrichtigungen."
+    "description": "Hier erscheinen Ihre Benachrichtigungen.",
+    "unreadTitle": "Keine ungelesenen Benachrichtigungen",
+    "unreadDescription": "Gelesene Benachrichtigungen blenden Sie über den Filter ein."
   },
   "item": {
     "unread": "Ungelesen",
     "error": "Zu prüfen",
-    "markRead": "Als gelesen markieren"
+    "markRead": "Als gelesen markieren",
+    "markUnread": "Als ungelesen markieren"
   },
   "detail": {
     "chatPlaceholder": "Was möchten Sie zu dieser Benachrichtigung wissen?",
@@ -29,6 +36,7 @@
   "toast": {
     "notFound": "Die Benachrichtigung wurde nicht gefunden.",
     "markReadError": "Die Benachrichtigung konnte nicht als gelesen markiert werden.",
+    "markUnreadError": "Die Benachrichtigung konnte nicht als ungelesen markiert werden.",
     "markAllReadError": "Die Benachrichtigungen konnten nicht als gelesen markiert werden."
   }
 }
