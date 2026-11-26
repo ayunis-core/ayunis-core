@@ -6,7 +6,7 @@
     "button": "New routine",
     "first": "Create your first routine",
     "blank": "Blank routine",
-    "premade": "Premade"
+    "marketplace": "From the marketplace"
   },
   "emptyState": {
     "title": "Let the AI handle recurring work",
@@ -15,7 +15,7 @@
     "steps": {
       "describe": {
         "title": "Describe the task",
-        "description": "Write what the routine should do, or start from a premade routine."
+        "description": "Write what the routine should do."
       },
       "schedule": {
         "title": "Pick a schedule",
@@ -33,7 +33,7 @@
     "namePlaceholder": "e.g. Official gazette",
     "prompt": "Task",
     "promptPlaceholder": "Describe what the routine should do on each run.",
-    "promptDescription": "The routine runs this task without you. Replace the parts in square brackets.",
+    "promptDescription": "The routine runs this task without you.",
     "model": "Model",
     "defaultModel": "My default model",
     "schedule": "Schedule",

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
+import { getMarketplaceConfig } from "../../src/clients/api/marketplace.client";
 import { getEffectiveDefaultModel } from "../../src/clients/api/models.client";
 import { getRoutine } from "../../src/clients/api/routines.client";
 import {
@@ -16,20 +17,21 @@ async function defaultModelOf(api: APIRequestContext) {
   return model;
 }
 
-test("the premade routine is created from the dialog with its preset internet access and the model chosen there", async ({
+test("a blank routine is created without internet access and with the model chosen in the dialog", async ({
   api,
   page,
 }) => {
   const model = await defaultModelOf(api);
   await page.goto("/routines");
   await page.getByTestId("create-routine-menu").click();
-  await page
-    .getByTestId("create-routine-premade-verkuendungsplattform")
-    .click();
+  await page.getByTestId("create-routine-blank").click();
 
   const dialog = page.getByRole("dialog");
-  const name = `Verkündungsplattform ${randomUUID().slice(0, 8)}`;
+  const name = `Amtsblatt ${randomUUID().slice(0, 8)}`;
   await dialog.getByTestId("routine-form-name").fill(name);
+  await dialog
+    .getByTestId("routine-form-prompt")
+    .fill("Prüfe das heutige Amtsblatt auf neue Satzungen.");
   await dialog.getByTestId("routine-form-model").click();
   await routineModelOption(page, model.displayName).click();
   await dialog.getByTestId("routine-form-submit").click();
@@ -38,7 +40,7 @@ test("the premade routine is created from the dialog with its preset internet ac
   const routineId = ROUTINE_PAGE_URL.exec(page.url())?.[1] ?? "";
   expect(await getRoutine(api, routineId)).toMatchObject({
     name,
-    internetAccess: "all",
+    internetAccess: "off",
     modelId: model.id,
     enabled: true,
   });
@@ -71,6 +73,26 @@ test("a blank routine is created with the internet access chosen in the dialog",
     allowedDomains: ["nrw.de"],
     modelId: null,
   });
+});
+
+test("the create menu opens the marketplace's routines in a new tab", async ({
+  api,
+  page,
+}) => {
+  const marketplace = await getMarketplaceConfig(api);
+  expect(marketplace.enabled).toBe(true);
+
+  // The e2e marketplace has no public site, so the new tab gets an empty page.
+  await page
+    .context()
+    .route(`${marketplace.url}/**`, (route) => route.fulfill({ body: "" }));
+
+  await page.goto("/routines");
+  await page.getByTestId("create-routine-menu").click();
+  const popup = page.waitForEvent("popup");
+  await page.getByTestId("create-routine-marketplace").click();
+
+  expect((await popup).url()).toBe(`${marketplace.url}/routines`);
 });
 
 test("the configuration limits a routine's internet access to the domains entered, stored as hosts", async ({
