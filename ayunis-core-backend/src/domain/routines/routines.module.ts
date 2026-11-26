@@ -12,6 +12,7 @@ import { TrialsModule } from 'src/iam/trials/trials.module';
 import { UsersModule } from 'src/iam/users/users.module';
 import { AcademyAccessModule } from 'src/iam/academy-access/academy-access.module';
 import { PermissionsModule } from 'src/iam/permissions/permissions.module';
+import { MarketplaceModule } from 'src/domain/marketplace/marketplace.module';
 import { RoutineExecutionQueue } from './application/ports/routine-execution-queue.port';
 import { RoutinesRepository } from './application/ports/routines.repository';
 import { RoutineModelService } from './application/services/routine-model.service';
@@ -27,6 +28,7 @@ import { ExecuteRoutineUseCase } from './application/use-cases/execute-routine/e
 import { FindAllRoutinesUseCase } from './application/use-cases/find-all-routines/find-all-routines.use-case';
 import { FindManageableRoutinesUseCase } from './application/use-cases/find-manageable-routines/find-manageable-routines.use-case';
 import { FindRoutineUseCase } from './application/use-cases/find-routine/find-routine.use-case';
+import { InstallRoutineFromMarketplaceUseCase } from './application/use-cases/install-routine-from-marketplace/install-routine-from-marketplace.use-case';
 import { RunRoutineNowUseCase } from './application/use-cases/run-routine-now/run-routine-now.use-case';
 import { SweepDueRoutinesUseCase } from './application/use-cases/sweep-due-routines/sweep-due-routines.use-case';
 import { UpdateRoutineUseCase } from './application/use-cases/update-routine/update-routine.use-case';
@@ -66,6 +68,7 @@ import { RoutineKnowledgeBasesController } from './presenters/http/routine-knowl
     AcademyAccessModule,
     PermissionsModule,
     NotificationsModule,
+    MarketplaceModule,
   ],
   controllers: [
     RoutinesController,
@@ -97,6 +100,7 @@ import { RoutineKnowledgeBasesController } from './presenters/http/routine-knowl
     RemoveKnowledgeBaseFromRoutineUseCase,
     DeleteRoutineUseCase,
     RunRoutineNowUseCase,
+    InstallRoutineFromMarketplaceUseCase,
     ExecuteRoutineUseCase,
     SweepDueRoutinesUseCase,
     RoutineDtoMapper,

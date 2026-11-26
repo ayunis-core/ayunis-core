@@ -460,11 +460,26 @@ export interface IntegrationCategoryResponseDto {
   updatedAt: string;
 }
 
+export type IntegrationKind =
+  (typeof IntegrationKind)[keyof typeof IntegrationKind];
+
+export const IntegrationKind = {
+  MCP: 'MCP',
+  LINK: 'LINK',
+} as const;
+
 export interface IntegrationListResponseDto {
   /** Integration UUID */
   id: string;
   /** Unique identifier (slug) */
   identifier: string;
+  /** MCP connects an MCP server on install; LINK points to a page inside Ayunis Core */
+  kind: IntegrationKind;
+  /**
+   * Path inside Ayunis Core that a LINK integration opens. Null for MCP integrations.
+   * @nullable
+   */
+  linkPath: string | null;
   /** Display name */
   name: string;
   /** Short description for marketplace display */
@@ -590,6 +605,13 @@ export interface IntegrationResponseDto {
   id: string;
   /** Unique identifier (slug) */
   identifier: string;
+  /** MCP connects an MCP server on install; LINK points to a page inside Ayunis Core */
+  kind: IntegrationKind;
+  /**
+   * Path inside Ayunis Core that a LINK integration opens. Null for MCP integrations.
+   * @nullable
+   */
+  linkPath: string | null;
   /** Display name */
   name: string;
   /** Short description for marketplace display */
@@ -677,8 +699,15 @@ export interface CreateIntegrationDto {
   shortDescription: string;
   /** Full description shown on the detail page */
   description: string;
+  /** MCP connects an MCP server on install; LINK points to a page inside Ayunis Core */
+  kind?: IntegrationKind;
   /**
-   * MCP server URL. Required unless the customer provides the server URL.
+   * Path inside Ayunis Core that a LINK integration opens, e.g. /admin-settings/integrations
+   * @maxLength 500
+   */
+  linkPath?: string;
+  /**
+   * MCP server URL. Required for MCP integrations unless the customer provides the server URL.
    * @maxLength 500
    */
   serverUrl?: string;
@@ -736,8 +765,15 @@ export interface UpdateIntegrationDto {
   shortDescription?: string;
   /** Full description */
   description?: string;
+  /** MCP connects an MCP server on install; LINK points to a page inside Ayunis Core */
+  kind?: IntegrationKind;
   /**
-   * MCP server URL. Ignored when the customer provides the server URL.
+   * Path inside Ayunis Core that a LINK integration opens, e.g. /admin-settings/integrations
+   * @maxLength 500
+   */
+  linkPath?: string;
+  /**
+   * MCP server URL. Ignored for LINK integrations and when the customer provides the server URL.
    * @maxLength 500
    */
   serverUrl?: string;
@@ -775,6 +811,220 @@ export interface UpdateIntegrationDto {
    * @maxLength 50
    */
   legalTextVersion?: string;
+}
+
+export interface RoutineCategoryResponseDto {
+  /** Category UUID */
+  id: string;
+  /** Category name */
+  name: string;
+  /**
+   * Category description
+   * @nullable
+   */
+  description: string | null;
+  /** Sort order (lower = first) */
+  sortOrder: number;
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string;
+}
+
+export type RoutineFrequency =
+  (typeof RoutineFrequency)[keyof typeof RoutineFrequency];
+
+export const RoutineFrequency = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface RoutineScheduleResponseDto {
+  /** Daily, weekly on `weekdays`, or monthly on `monthDay`. */
+  frequency: RoutineFrequency;
+  /** Run time as HH:mm (Europe/Berlin) */
+  time: string;
+  /**
+   * Weekly only: ISO weekdays, 1 (Monday) to 7 (Sunday), ascending, without duplicates. Absent for the other frequencies.
+   * @items.minimum 1
+   * @items.maximum 7
+   */
+  weekdays?: number[];
+  /** Monthly only: the day of the month, 1 to 28, or `last` for its last day. Absent for the other frequencies. */
+  monthDay?: number | 'last';
+}
+
+export type RoutineInternetAccess =
+  (typeof RoutineInternetAccess)[keyof typeof RoutineInternetAccess];
+
+export const RoutineInternetAccess = {
+  off: 'off',
+  all: 'all',
+  allowlist: 'allowlist',
+} as const;
+
+export interface RoutineListItemResponseDto {
+  /** Routine UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name, also the name of the installed routine */
+  name: string;
+  /** Short description for cards and listings */
+  shortDescription: string;
+  /**
+   * Longer description
+   * @nullable
+   */
+  description: string | null;
+  /**
+   * Routine category ID
+   * @nullable
+   */
+  routineCategoryId: string | null;
+  /**
+   * Lucide icon name
+   * @nullable
+   */
+  iconName: string | null;
+  /** Whether the routine is featured */
+  featured: boolean;
+  /** Whether the routine is published (always true here) */
+  published: boolean;
+  schedule: RoutineScheduleResponseDto;
+  /** Whether the routine may use the web: not at all, any website, or only `allowedDomains` */
+  internetAccess: RoutineInternetAccess;
+  /** Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode */
+  allowedDomains: string[];
+  /** Use case bullet points */
+  useCases: string[];
+  /** Benefit statements */
+  benefits: string[];
+  /**
+   * Sample of the notification the routine sends
+   * @nullable
+   */
+  exampleNotification: string | null;
+  /**
+   * Provider name
+   * @nullable
+   */
+  providerName: string | null;
+  /**
+   * Provider logo URL
+   * @nullable
+   */
+  providerLogoUrl: string | null;
+  /**
+   * Provider website URL
+   * @nullable
+   */
+  providerWebsiteUrl: string | null;
+  /**
+   * SEO meta title
+   * @nullable
+   */
+  metaTitle: string | null;
+  /**
+   * SEO meta description
+   * @nullable
+   */
+  metaDescription: string | null;
+  /** Displayed install count */
+  installCount: number;
+  /** Creation timestamp */
+  createdAt: string;
+}
+
+export interface PaginatedRoutinesResponseDto {
+  /** List of routines */
+  data: RoutineListItemResponseDto[];
+  /** Total number of routines matching the query */
+  total: number;
+  /** Current page number */
+  page: number;
+  /** Items per page */
+  limit: number;
+  /** Total number of pages */
+  totalPages: number;
+}
+
+export interface RoutineResponseDto {
+  /** Routine UUID */
+  id: string;
+  /** Unique identifier (slug) */
+  identifier: string;
+  /** Display name, also the name of the installed routine */
+  name: string;
+  /** Short description for cards and listings */
+  shortDescription: string;
+  /**
+   * Longer description
+   * @nullable
+   */
+  description: string | null;
+  /**
+   * Routine category ID
+   * @nullable
+   */
+  routineCategoryId: string | null;
+  /**
+   * Lucide icon name
+   * @nullable
+   */
+  iconName: string | null;
+  /** Whether the routine is featured */
+  featured: boolean;
+  /** Whether the routine is published (always true here) */
+  published: boolean;
+  schedule: RoutineScheduleResponseDto;
+  /** Whether the routine may use the web: not at all, any website, or only `allowedDomains` */
+  internetAccess: RoutineInternetAccess;
+  /** Normalized hosts the routine may access, with their subdomains; applied only in `allowlist` mode */
+  allowedDomains: string[];
+  /** Use case bullet points */
+  useCases: string[];
+  /** Benefit statements */
+  benefits: string[];
+  /**
+   * Sample of the notification the routine sends
+   * @nullable
+   */
+  exampleNotification: string | null;
+  /**
+   * Provider name
+   * @nullable
+   */
+  providerName: string | null;
+  /**
+   * Provider logo URL
+   * @nullable
+   */
+  providerLogoUrl: string | null;
+  /**
+   * Provider website URL
+   * @nullable
+   */
+  providerWebsiteUrl: string | null;
+  /**
+   * SEO meta title
+   * @nullable
+   */
+  metaTitle: string | null;
+  /**
+   * SEO meta description
+   * @nullable
+   */
+  metaDescription: string | null;
+  /** Displayed install count */
+  installCount: number;
+  /** Creation timestamp */
+  createdAt: string;
+  /** The task the routine runs, sent as its first message */
+  prompt: string;
+  /** Last update timestamp */
+  updatedAt: string;
 }
 
 export interface SubmitSkillDto {
@@ -872,3 +1122,31 @@ export type AdminIntegrationsControllerNewFormParams = {
 export type AdminIntegrationsControllerEditFormParams = {
   error: string;
 };
+
+export type PublicRoutinesControllerListParams = {
+  /**
+   * Filter by routine category ID
+   */
+  categoryId?: string;
+  /**
+   * Filter by featured status
+   */
+  featured?: PublicRoutinesControllerListFeatured;
+  /**
+   * Maximum number of items per page
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * Page number
+   */
+  page?: number;
+};
+
+export type PublicRoutinesControllerListFeatured =
+  (typeof PublicRoutinesControllerListFeatured)[keyof typeof PublicRoutinesControllerListFeatured];
+
+export const PublicRoutinesControllerListFeatured = {
+  true: 'true',
+  false: 'false',
+} as const;

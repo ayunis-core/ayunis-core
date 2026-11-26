@@ -4,15 +4,23 @@ import { useRoutineMarketplaceUrl } from './useRoutineMarketplaceUrl';
 
 const mocks = vi.hoisted(() => ({
   config: { enabled: true, url: null as string | null },
+  granted: [] as string[],
 }));
 
 vi.mock('./useMarketplaceConfig', () => ({
   useMarketplaceConfig: () => mocks.config,
 }));
 
+vi.mock('@/features/permissions', () => ({
+  useMyPermissions: () => ({
+    can: (permission: string) => mocks.granted.includes(permission),
+  }),
+}));
+
 describe('useRoutineMarketplaceUrl', () => {
   beforeEach(() => {
     mocks.config = { enabled: true, url: 'https://marketplace.ayunis.com' };
+    mocks.granted = ['manage_routines', 'install_marketplace_routines'];
   });
 
   it("links to the marketplace's routines listing", () => {
@@ -36,4 +44,15 @@ describe('useRoutineMarketplaceUrl', () => {
 
     expect(result.current).toBeNull();
   });
+
+  it.each([['manage_routines'], ['install_marketplace_routines']])(
+    'hides the marketplace from members who only hold %s',
+    (permission) => {
+      mocks.granted = [permission];
+
+      const { result } = renderHook(() => useRoutineMarketplaceUrl());
+
+      expect(result.current).toBeNull();
+    },
+  );
 });

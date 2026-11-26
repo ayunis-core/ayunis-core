@@ -136,7 +136,7 @@ const userCreationsCounter = makeCounterProvider({
 
 const marketplaceInstallsCounter = makeCounterProvider({
   name: AYUNIS_MARKETPLACE_INSTALLS_TOTAL,
-  help: 'Total number of marketplace installs (skill or integration)',
+  help: 'Total number of marketplace installs (skill, integration or routine)',
   labelNames: [
     LABEL_USER_ID,
     LABEL_ORG_ID,

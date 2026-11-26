@@ -19,6 +19,7 @@ export enum RoutineErrorCode {
   ROUTINE_INVALID_SCHEDULE = 'ROUTINE_INVALID_SCHEDULE',
   ROUTINE_CONFLICTING_MODEL_SELECTION = 'ROUTINE_CONFLICTING_MODEL_SELECTION',
   ROUTINE_MODEL_MODE_UNAVAILABLE = 'ROUTINE_MODEL_MODE_UNAVAILABLE',
+  ROUTINE_INVALID_MARKETPLACE_ENTRY = 'ROUTINE_INVALID_MARKETPLACE_ENTRY',
   UNEXPECTED_ROUTINE_ERROR = 'UNEXPECTED_ROUTINE_ERROR',
 }
 
@@ -143,6 +144,22 @@ export class RoutineModelModeUnavailableError extends RoutineError {
       RoutineErrorCode.ROUTINE_MODEL_MODE_UNAVAILABLE,
       422,
       { mode, ...metadata },
+    );
+  }
+}
+
+/**
+ * The Marketplace entry's name, prompt or internet mode does not meet what
+ * Ayunis Core accepts for a routine, so it cannot be installed. Its schedule
+ * and allowed domains are checked like any other routine's.
+ */
+export class RoutineInvalidMarketplaceEntryError extends RoutineError {
+  constructor(identifier: string, field: string) {
+    super(
+      `The Marketplace routine '${identifier}' has an invalid ${field}`,
+      RoutineErrorCode.ROUTINE_INVALID_MARKETPLACE_ENTRY,
+      400,
+      { identifier, field },
     );
   }
 }

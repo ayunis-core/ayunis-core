@@ -34,7 +34,7 @@ export const PERMISSION_SECTIONS: readonly PermissionGroupSection[] = [
   },
   {
     group: 'routines',
-    permissions: ['manage_routines'],
+    permissions: ['manage_routines', 'install_marketplace_routines'],
     feature: 'routinesEnabled',
   },
   {

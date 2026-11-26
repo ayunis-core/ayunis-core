@@ -1,0 +1,40 @@
+{
+  "detail": {
+    "schedule": "Läuft",
+    "internet": "Internetzugriff",
+    "internetAccess": {
+      "off": "Aus",
+      "all": "Alle Websites",
+      "allowlist": "Nur diese Domains"
+    },
+    "installNote": "Die Routine wird Ihren Routinen hinzugefügt und eingeschaltet. Sie nutzt Ihr Standardmodell; die Einstellungen können Sie nach der Installation ändern."
+  },
+  "action": {
+    "install": "Routine installieren",
+    "installing": "Wird installiert…",
+    "cancel": "Abbrechen",
+    "backToRoutines": "Zurück zu Routinen",
+    "backToChat": "Zurück zum Chat"
+  },
+  "success": "Routine installiert",
+  "error": {
+    "disabled": {
+      "title": "Routinen nicht verfügbar",
+      "description": "Routinen sind in Ihrer Organisation nicht verfügbar, daher kann diese Routine nicht installiert werden."
+    },
+    "noPermission": {
+      "title": "Installation nicht freigeschaltet",
+      "description": "Sie dürfen keine Routinen aus dem Marketplace installieren. Wenden Sie sich an Ihre Administration."
+    },
+    "notFound": {
+      "title": "Routine nicht gefunden",
+      "description": "Die Routine wurde im Marketplace nicht gefunden. Sie wurde möglicherweise entfernt oder nicht mehr veröffentlicht."
+    },
+    "unavailable": {
+      "title": "Marketplace nicht erreichbar",
+      "description": "Der Marketplace ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut."
+    },
+    "invalidEntry": "Diese Routine hat Einstellungen, die Ayunis Core nicht akzeptiert, daher kann sie nicht installiert werden.",
+    "generic": "Beim Installieren der Routine ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+  }
+}

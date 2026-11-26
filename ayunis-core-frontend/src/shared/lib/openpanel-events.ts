@@ -94,6 +94,7 @@ type OpenPanelEvents = {
   integration_installed: { marketplace_slug: string };
   /** `null` for custom integrations, whose name must never be sent. */
   integration_connected: { marketplace_slug: string | null };
+  routine_installed: { marketplace_slug: string };
   favorite_added: { resource_type: ToggleFavoriteDtoReferenceType };
   favorite_opened: { resource_type: ToggleFavoriteDtoReferenceType };
   welcome_video_seen: undefined;

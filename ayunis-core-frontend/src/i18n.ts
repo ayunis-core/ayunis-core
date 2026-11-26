@@ -38,6 +38,8 @@ import enInstall from './shared/locales/en/install.json';
 import deInstall from './shared/locales/de/install.json';
 import enInstallIntegration from './shared/locales/en/install-integration.json';
 import deInstallIntegration from './shared/locales/de/install-integration.json';
+import enInstallRoutine from './shared/locales/en/install-routine.json';
+import deInstallRoutine from './shared/locales/de/install-routine.json';
 import enWorkspaces from './shared/locales/en/workspaces.json';
 import deWorkspaces from './shared/locales/de/workspaces.json';
 import enWorkspace from './shared/locales/en/workspace.json';
@@ -124,6 +126,7 @@ const resources = {
     chats: enChats,
     install: enInstall,
     'install-integration': enInstallIntegration,
+    'install-routine': enInstallRoutine,
     skills: enSkills,
     routines: enRoutines,
     inbox: enInbox,
@@ -176,6 +179,7 @@ const resources = {
     chats: deChats,
     install: deInstall,
     'install-integration': deInstallIntegration,
+    'install-routine': deInstallRoutine,
     skills: deSkills,
     routines: deRoutines,
     inbox: deInbox,

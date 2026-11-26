@@ -14,6 +14,7 @@ export class CreateRoutineCommand {
   readonly allowedDomains: string[];
   readonly enabled: boolean;
   readonly sourceToolCallId?: string;
+  readonly marketplaceIdentifier?: string;
 
   constructor(params: {
     name: string;
@@ -25,6 +26,7 @@ export class CreateRoutineCommand {
     allowedDomains?: string[];
     enabled?: boolean;
     sourceToolCallId?: string;
+    marketplaceIdentifier?: string;
   }) {
     this.name = params.name;
     this.prompt = params.prompt;
@@ -35,5 +37,6 @@ export class CreateRoutineCommand {
     this.allowedDomains = params.allowedDomains ?? [];
     this.enabled = params.enabled ?? true;
     this.sourceToolCallId = params.sourceToolCallId;
+    this.marketplaceIdentifier = params.marketplaceIdentifier;
   }
 }

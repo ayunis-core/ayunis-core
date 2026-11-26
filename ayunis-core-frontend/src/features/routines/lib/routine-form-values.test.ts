@@ -107,6 +107,7 @@ describe('routine form values', () => {
       nextRunAt: null,
       pausedAt: null,
       sourceToolCallId: null,
+      marketplaceIdentifier: null,
       createdAt: '2026-11-25T08:00:00.000Z',
       updatedAt: '2026-11-25T08:00:00.000Z',
       ...choice,

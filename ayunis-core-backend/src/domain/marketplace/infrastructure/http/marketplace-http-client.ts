@@ -4,6 +4,7 @@ import { getAyunisMarketplaceAPI } from 'src/common/clients/marketplace/generate
 import {
   IntegrationListResponseDto,
   IntegrationResponseDto,
+  RoutineResponseDto,
   SkillCategoryResponseDto,
   SkillListResponseDto,
   SkillResponseDto,
@@ -85,6 +86,31 @@ export class MarketplaceHttpClient extends MarketplaceClient {
             error instanceof MarketplaceHttpError ? error.status : undefined,
         },
         'Failed to fetch marketplace integration',
+      );
+      throw new MarketplaceUnavailableError();
+    }
+  }
+
+  async getRoutineByIdentifier(
+    identifier: string,
+  ): Promise<RoutineResponseDto | null> {
+    try {
+      return await this.api.publicRoutinesControllerGetByIdentifier(
+        encodeURIComponent(identifier),
+      );
+    } catch (error) {
+      if (error instanceof MarketplaceHttpError && error.status === 404) {
+        this.logger.debug({ identifier }, 'Marketplace routine not found');
+        return null;
+      }
+      this.logger.warn(
+        {
+          identifier,
+          err: error as Error,
+          status:
+            error instanceof MarketplaceHttpError ? error.status : undefined,
+        },
+        'Failed to fetch marketplace routine',
       );
       throw new MarketplaceUnavailableError();
     }

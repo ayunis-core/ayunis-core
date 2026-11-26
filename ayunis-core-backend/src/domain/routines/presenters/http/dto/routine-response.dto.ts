@@ -104,6 +104,15 @@ export class RoutineResponseDto {
   })
   sourceToolCallId: string | null;
 
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'The Marketplace routine this routine was installed from; null when it was created in Ayunis Core',
+    example: 'amtsblatt-nrw',
+  })
+  marketplaceIdentifier: string | null;
+
   @ApiProperty()
   createdAt: string;
 

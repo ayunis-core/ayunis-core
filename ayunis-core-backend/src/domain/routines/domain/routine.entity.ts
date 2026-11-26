@@ -36,6 +36,8 @@ export class Routine {
   readonly pausedAt: Date | null;
   /** The chat `create_routine` call the routine was created from, so the proposal is not saved twice. */
   readonly sourceToolCallId: string | null;
+  /** The Marketplace entry the routine was installed from; the routine is an independent copy. */
+  readonly marketplaceIdentifier: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 
@@ -61,6 +63,7 @@ export class Routine {
     lastRunStartedAt?: Date | null;
     pausedAt?: Date | null;
     sourceToolCallId?: string | null;
+    marketplaceIdentifier?: string | null;
     createdAt?: Date;
     updatedAt?: Date;
   }) {
@@ -85,6 +88,7 @@ export class Routine {
     this.lastRunStartedAt = params.lastRunStartedAt ?? null;
     this.pausedAt = params.pausedAt ?? null;
     this.sourceToolCallId = params.sourceToolCallId ?? null;
+    this.marketplaceIdentifier = params.marketplaceIdentifier ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
   }

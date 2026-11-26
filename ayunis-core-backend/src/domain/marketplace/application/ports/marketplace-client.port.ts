@@ -1,6 +1,7 @@
 import type {
   IntegrationListResponseDto,
   IntegrationResponseDto,
+  RoutineResponseDto,
   SkillCategoryResponseDto,
   SkillListResponseDto,
   SkillResponseDto,
@@ -16,6 +17,11 @@ export abstract class MarketplaceClient {
   abstract getIntegrationByIdentifier(
     identifier: string,
   ): Promise<IntegrationResponseDto | null>;
+
+  /** A published routine; null when it does not exist or is unpublished. */
+  abstract getRoutineByIdentifier(
+    identifier: string,
+  ): Promise<RoutineResponseDto | null>;
 
   /** Every published skill, across all catalogue pages. */
   abstract listSkills(): Promise<SkillListResponseDto[]>;

@@ -10,10 +10,13 @@ hold whatever an org admin grants them.
   `manage_teams`, `assign_users_to_teams`, `manage_skills`,
   `install_marketplace_skills`, `share_skills_with_teams`, `share_skills_with_org`, `manage_knowledge_bases`,
   `share_knowledge_bases_with_teams`, `share_knowledge_bases_with_org`,
-  `manage_routines`, `manage_workspace`, `manage_workspace_members`,
+  `manage_routines`, `install_marketplace_routines`, `manage_workspace`,
+  `manage_workspace_members`,
   `manage_recordings`, `manage_team_recordings`, `manage_org_recordings`.
   Installing a Marketplace skill needs only `install_marketplace_skills`, not
-  `manage_skills`. Sharing
+  `manage_skills`; installing a Marketplace routine needs both
+  `manage_routines` (route guard) and `install_marketplace_routines` (checked
+  by the routines module's install use case). Sharing
   is split by audience: `*_with_teams` covers teams the member belongs to,
   `*_with_org` the whole organisation (the `SplitSharePermissionsByScope`
   migration granted both wherever the former `share_*` permission was held).
@@ -32,12 +35,15 @@ hold whatever an org admin grants them.
   configured. `ADMIN` is intentionally excluded (implicit-all, never persisted).
 - `DEFAULT_ROLE_PERMISSIONS` — defaults granted on org creation. Chosen to
   preserve pre-RBAC behaviour (all skill + knowledge-base permissions,
-  `install_marketplace_skills`, `manage_routines` and the three recording
-  permissions for both MANAGER and USER; teams stay admin-only). In a
+  `install_marketplace_skills`, `manage_routines`,
+  `install_marketplace_routines` and the three recording permissions for both
+  MANAGER and USER; teams stay admin-only). In a
   workspace, MANAGER gets `manage_workspace` and `manage_workspace_members`,
   USER neither. **Kept in sync with the backfill VALUES lists in the
   `CreateRolePermissions`, `GrantManageRoutines`, `GrantWorkspacePermissions`
-  and `GrantRecordingPermissions` migrations.**
+  and `GrantRecordingPermissions` migrations.** The `GrantInstallMarketplaceSkills`
+  and `GrantInstallMarketplaceRoutines` migrations derive their grants from
+  `manage_skills` and `manage_routines` instead.
 
 ## Enforcement
 
@@ -72,7 +78,9 @@ team or org share permission from the share's scope).
   which grants the three recording permissions to MANAGER and USER, and by the
   `GrantInstallMarketplaceSkills` migration, which grants
   `install_marketplace_skills` to every role that held `manage_skills`, since
-  installing required it before.
+  installing required it before, and by the `GrantInstallMarketplaceRoutines`
+  migration, which grants `install_marketplace_routines` to every role that
+  holds `manage_routines`.
 
 ## Management
 

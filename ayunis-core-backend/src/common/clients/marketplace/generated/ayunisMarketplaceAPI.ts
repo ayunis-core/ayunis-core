@@ -19,10 +19,14 @@ import type {
   IntegrationListResponseDto,
   IntegrationResponseDto,
   PaginatedIntegrationsResponseDto,
+  PaginatedRoutinesResponseDto,
   PaginatedSkillsResponseDto,
   ProviderResponseDto,
   PublicIntegrationsControllerListParams,
+  PublicRoutinesControllerListParams,
   PublicSkillsControllerListParams,
+  RoutineCategoryResponseDto,
+  RoutineResponseDto,
   SkillCategoryResponseDto,
   SkillListResponseDto,
   SkillResponseDto,
@@ -585,6 +589,154 @@ export const getAyunisMarketplaceAPI = () => {
   };
 
   /**
+   * Retrieve all routine categories sorted by their sort order, then name.
+   * @summary List all routine categories
+   */
+  const publicRoutineCategoriesControllerList = () => {
+    return marketplaceAxiosInstance<RoutineCategoryResponseDto[]>({
+      url: `/api/routine-categories`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutineCategoriesControllerList = () => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutineCategoriesControllerCreate = () => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories`,
+      method: 'POST',
+    });
+  };
+
+  const adminRoutineCategoriesControllerNewForm = () => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories/new`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutineCategoriesControllerEditForm = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories/${id}/edit`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutineCategoriesControllerUpdate = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories/${id}`,
+      method: 'POST',
+    });
+  };
+
+  const adminRoutineCategoriesControllerDeleteConfirm = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories/${id}/delete`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutineCategoriesControllerDelete = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routine-categories/${id}/delete`,
+      method: 'POST',
+    });
+  };
+
+  /**
+   * Retrieve a paginated list of published routines, sorted by name, with optional filters for category and featured status.
+   * @summary List published routines
+   */
+  const publicRoutinesControllerList = (
+    params?: PublicRoutinesControllerListParams,
+  ) => {
+    return marketplaceAxiosInstance<PaginatedRoutinesResponseDto>({
+      url: `/api/routines`,
+      method: 'GET',
+      params,
+    });
+  };
+
+  /**
+   * Retrieve a published routine by its identifier slug, including the prompt, schedule, internet access and allowed domains that Ayunis Core installs.
+   * @summary Get a routine by identifier
+   */
+  const publicRoutinesControllerGetByIdentifier = (identifier: string) => {
+    return marketplaceAxiosInstance<RoutineResponseDto>({
+      url: `/api/routines/${identifier}`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutinesControllerList = () => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutinesControllerCreate = () => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines`,
+      method: 'POST',
+    });
+  };
+
+  const adminRoutinesControllerNewForm = () => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/new`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutinesControllerEditForm = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/${id}/edit`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutinesControllerUpdate = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/${id}`,
+      method: 'POST',
+    });
+  };
+
+  const adminRoutinesControllerDeleteConfirm = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/${id}/delete`,
+      method: 'GET',
+    });
+  };
+
+  const adminRoutinesControllerDelete = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/${id}/delete`,
+      method: 'POST',
+    });
+  };
+
+  const adminRoutinesControllerPublish = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/${id}/publish`,
+      method: 'POST',
+    });
+  };
+
+  const adminRoutinesControllerUnpublish = (id: string) => {
+    return marketplaceAxiosInstance<void>({
+      url: `/admin/routines/${id}/unpublish`,
+      method: 'POST',
+    });
+  };
+
+  /**
    * @summary Submit a skill for review
    */
   const skillSubmissionsControllerSubmit = (submitSkillDto: SubmitSkillDto) => {
@@ -682,6 +834,25 @@ export const getAyunisMarketplaceAPI = () => {
     adminIntegrationsControllerDelete,
     adminIntegrationsControllerPublish,
     adminIntegrationsControllerUnpublish,
+    publicRoutineCategoriesControllerList,
+    adminRoutineCategoriesControllerList,
+    adminRoutineCategoriesControllerCreate,
+    adminRoutineCategoriesControllerNewForm,
+    adminRoutineCategoriesControllerEditForm,
+    adminRoutineCategoriesControllerUpdate,
+    adminRoutineCategoriesControllerDeleteConfirm,
+    adminRoutineCategoriesControllerDelete,
+    publicRoutinesControllerList,
+    publicRoutinesControllerGetByIdentifier,
+    adminRoutinesControllerList,
+    adminRoutinesControllerCreate,
+    adminRoutinesControllerNewForm,
+    adminRoutinesControllerEditForm,
+    adminRoutinesControllerUpdate,
+    adminRoutinesControllerDeleteConfirm,
+    adminRoutinesControllerDelete,
+    adminRoutinesControllerPublish,
+    adminRoutinesControllerUnpublish,
     skillSubmissionsControllerSubmit,
     integrationSubmissionsControllerSubmit,
     deployAdminControllerTriggerDeploy,
@@ -1237,6 +1408,173 @@ export type AdminIntegrationsControllerUnpublishResult = NonNullable<
       ReturnType<
         typeof getAyunisMarketplaceAPI
       >['adminIntegrationsControllerUnpublish']
+    >
+  >
+>;
+export type PublicRoutineCategoriesControllerListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['publicRoutineCategoriesControllerList']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerList']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerCreateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerCreate']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerNewFormResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerNewForm']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerEditFormResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerEditForm']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerUpdateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerUpdate']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerDeleteConfirmResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerDeleteConfirm']
+    >
+  >
+>;
+export type AdminRoutineCategoriesControllerDeleteResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutineCategoriesControllerDelete']
+    >
+  >
+>;
+export type PublicRoutinesControllerListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAyunisMarketplaceAPI>['publicRoutinesControllerList']
+    >
+  >
+>;
+export type PublicRoutinesControllerGetByIdentifierResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['publicRoutinesControllerGetByIdentifier']
+    >
+  >
+>;
+export type AdminRoutinesControllerListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAyunisMarketplaceAPI>['adminRoutinesControllerList']
+    >
+  >
+>;
+export type AdminRoutinesControllerCreateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerCreate']
+    >
+  >
+>;
+export type AdminRoutinesControllerNewFormResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerNewForm']
+    >
+  >
+>;
+export type AdminRoutinesControllerEditFormResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerEditForm']
+    >
+  >
+>;
+export type AdminRoutinesControllerUpdateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerUpdate']
+    >
+  >
+>;
+export type AdminRoutinesControllerDeleteConfirmResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerDeleteConfirm']
+    >
+  >
+>;
+export type AdminRoutinesControllerDeleteResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerDelete']
+    >
+  >
+>;
+export type AdminRoutinesControllerPublishResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerPublish']
+    >
+  >
+>;
+export type AdminRoutinesControllerUnpublishResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAyunisMarketplaceAPI
+      >['adminRoutinesControllerUnpublish']
     >
   >
 >;

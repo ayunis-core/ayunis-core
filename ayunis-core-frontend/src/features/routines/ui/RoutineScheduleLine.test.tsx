@@ -25,6 +25,7 @@ function routine(overrides: Partial<Routine>): Routine {
     nextRunAt: '2026-11-08T06:34:00.000Z',
     pausedAt: null,
     sourceToolCallId: null,
+    marketplaceIdentifier: null,
     createdAt: '2026-11-01T08:00:00.000Z',
     updatedAt: '2026-11-01T08:00:00.000Z',
     ...overrides,
