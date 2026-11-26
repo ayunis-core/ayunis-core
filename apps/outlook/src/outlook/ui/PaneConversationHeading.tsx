@@ -15,10 +15,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { PaneHeading } from '@/outlook/ui/PaneHeading';
-import {
-  PaneDeleteDialog,
-  PaneRenameDialog,
-} from '@/outlook/ui/PaneThreadDialogs';
+import { DeleteThreadDialog, RenameThreadDialog } from '@ayunis/chat/history';
 
 export function PaneConversationHeading({
   title,
@@ -34,7 +31,7 @@ export function PaneConversationHeading({
   remove?: () => void;
 }>) {
   const { t } = useTranslation('chat');
-  const [newTitle, setNewTitle] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const displayTitle = title || t('chat.untitled');
 
@@ -73,7 +70,7 @@ export function PaneConversationHeading({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {rename && (
-                  <DropdownMenuItem onSelect={() => setNewTitle(displayTitle)}>
+                  <DropdownMenuItem onSelect={() => setRenaming(true)}>
                     <Pencil className="h-4 w-4" />
                     <span>{t('chat.renameThread')}</span>
                   </DropdownMenuItem>
@@ -90,19 +87,20 @@ export function PaneConversationHeading({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          <PaneRenameDialog
-            title={newTitle}
-            onChange={setNewTitle}
-            onClose={() => setNewTitle(null)}
+          <RenameThreadDialog
+            open={renaming}
+            currentTitle={displayTitle}
+            onOpenChange={setRenaming}
             onRename={(value) => {
               rename?.(value);
-              setNewTitle(null);
+              setRenaming(false);
             }}
           />
-          <PaneDeleteDialog
+          <DeleteThreadDialog
             title={displayTitle}
             open={deleting}
-            onClose={() => setDeleting(false)}
+            dismissible={false}
+            onOpenChange={setDeleting}
             onDelete={() => remove?.()}
           />
         </>

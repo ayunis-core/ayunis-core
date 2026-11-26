@@ -1,12 +1,5 @@
-import { Lock } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
-import { Button } from '@ayunis/ui/components/button';
-import {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from '@ayunis/ui/components/alert';
+import { AcademyGateNotice as SharedAcademyGateNotice } from '@ayunis/chat/model-presentation';
 import { useAcademyAccessStatus } from '@/features/academy';
 
 interface AcademyGateNoticeProps {
@@ -23,7 +16,6 @@ export default function AcademyGateNotice({
   className,
   withAction = true,
 }: Readonly<AcademyGateNoticeProps>) {
-  const { t } = useTranslation('academy');
   const navigate = useNavigate();
   const { isGated } = useAcademyAccessStatus();
   // The Outlook pane can't open the academy.
@@ -33,22 +25,11 @@ export default function AcademyGateNotice({
   }
 
   return (
-    <Alert variant="warning" className={className}>
-      <Lock />
-      <AlertTitle>{t('gate.title')}</AlertTitle>
-      <AlertDescription>
-        {t('gate.description')}
-        {withAction && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void navigate({ to: '/academy' })}
-            className="mt-2"
-          >
-            {t('gate.action')}
-          </Button>
-        )}
-      </AlertDescription>
-    </Alert>
+    <SharedAcademyGateNotice
+      className={className}
+      onOpenAcademy={
+        withAction ? () => void navigate({ to: '/academy' }) : undefined
+      }
+    />
   );
 }

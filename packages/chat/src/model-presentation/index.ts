@@ -24,3 +24,4 @@ export { ModelSelector, type ModelSelectorProps } from './ModelSelector';
 export { LongChatWarning } from './LongChatWarning';
 export { ProviderFaultNotice } from './ProviderFaultNotice';
 export { UnavailableModelNotice } from './UnavailableModelNotice';
+export { AcademyGateNotice } from './AcademyGateNotice';

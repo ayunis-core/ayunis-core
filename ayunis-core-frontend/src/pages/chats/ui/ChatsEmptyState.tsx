@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { EmptyState } from '@/widgets/empty-state';
 import { Button } from '@ayunis/ui/components/button';
 import { Link } from '@tanstack/react-router';
 import { MessageCircle } from 'lucide-react';
+import { ChatHistoryEmptyState } from '@ayunis/chat/history';
 
 interface ChatsEmptyStateProps {
   hasFilters: boolean;
@@ -15,7 +15,7 @@ export default function ChatsEmptyState({
 
   if (hasFilters) {
     return (
-      <EmptyState
+      <ChatHistoryEmptyState
         title={t('emptyState.noResultsTitle')}
         description={t('emptyState.noResultsDescription')}
       />
@@ -23,7 +23,7 @@ export default function ChatsEmptyState({
   }
 
   return (
-    <EmptyState
+    <ChatHistoryEmptyState
       title={t('emptyState.title')}
       description={t('emptyState.description')}
       action={

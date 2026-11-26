@@ -1,17 +1,22 @@
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageCircle, Trash2 } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { ChatHistory, ChatHistoryEntry } from '@ayunis/chat/history';
+import {
+  ChatHistory,
+  ChatHistoryDeleteAction,
+  ChatHistoryEmptyState,
+  ChatHistoryEntry,
+  ChatHistoryError,
+  ChatHistoryLoading,
+  ChatHistoryPagination,
+} from '@ayunis/chat/history';
 import {
   useContentScrollHeader,
   type ChatCapabilities,
 } from '@ayunis/chat/surface';
 import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
-import { PaneLoadError } from '@/outlook/ui/PaneLoadError';
 import { PaneHeading } from '@/outlook/ui/PaneHeading';
-import { PaneHistoryPagination } from '@/outlook/ui/PaneHistoryPagination';
-import { PaneDeleteDialog } from '@/outlook/ui/PaneThreadDialogs';
 import {
   PANE_HISTORY_PAGE_SIZE,
   usePaneHistory,
@@ -36,6 +41,7 @@ export function PaneChatHistory({
   session,
 }: PaneHistoryProps) {
   const { t } = useTranslation('chats');
+  const { t: outlook } = useTranslation('outlook');
   const [offset, setOffset] = useState(0);
   const history = usePaneHistory(offset);
   const actions = usePaneThreadActions();
@@ -79,7 +85,9 @@ export function PaneChatHistory({
   if (history.isError && !history.data) {
     return (
       <HistoryFrame header={header}>
-        <PaneLoadError
+        <ChatHistoryError
+          message={outlook('chat.requestFailed')}
+          retryLabel={outlook('chat.retry')}
           onRetry={() => {
             void history.refetch();
           }}
@@ -90,9 +98,7 @@ export function PaneChatHistory({
   if (history.isPending) {
     return (
       <HistoryFrame header={header}>
-        <p role="status" className="p-4">
-          {t('page.title')}
-        </p>
+        <ChatHistoryLoading label={t('page.title')} />
       </HistoryFrame>
     );
   }
@@ -133,9 +139,10 @@ export function PaneChatHistory({
         )}
         empty={<EmptyHistory onBack={onBack} />}
         pagination={
-          <PaneHistoryPagination
+          <ChatHistoryPagination
             currentPage={currentPage}
             totalPages={totalPages}
+            testIdPrefix="outlook-history"
             onPage={(page) => setOffset((page - 1) * PANE_HISTORY_PAGE_SIZE)}
           />
         }
@@ -185,7 +192,6 @@ function HistoryCard({
   onError: (error: unknown) => void;
 }>) {
   const { t } = useTranslation('chats');
-  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const untitled = t('card.untitled');
   return (
@@ -209,20 +215,10 @@ function HistoryCard({
       actions={
         remove && (
           <>
-            <Button
-              type="button"
-              variant="destructive-ghost"
-              size="icon"
-              aria-label={t('card.confirmDelete.title')}
-              disabled={busy}
-              onClick={() => setConfirming(true)}
-            >
-              <Trash2 />
-            </Button>
-            <PaneDeleteDialog
+            <ChatHistoryDeleteAction
               title={chat.title || untitled}
-              open={confirming}
-              onClose={() => setConfirming(false)}
+              busy={busy}
+              dismissible={false}
               onDelete={() => {
                 setBusy(true);
                 void remove()
@@ -240,17 +236,15 @@ function HistoryCard({
 function EmptyHistory({ onBack }: Readonly<{ onBack: () => void }>) {
   const { t } = useTranslation('chats');
   return (
-    <div className="mx-auto flex max-w-md flex-col items-center justify-center px-4 py-16 text-center">
-      <h3 className="mb-2 text-lg font-semibold">{t('emptyState.title')}</h3>
-      <p className="mb-6 max-w-md text-balance text-muted-foreground">
-        {t('emptyState.description')}
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-2">
+    <ChatHistoryEmptyState
+      title={t('emptyState.title')}
+      description={t('emptyState.description')}
+      action={
         <Button type="button" onClick={onBack}>
           <MessageCircle />
           {t('emptyState.startChat')}
         </Button>
-      </div>
-    </div>
+      }
+    />
   );
 }

@@ -1,6 +1,5 @@
-import { Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@ayunis/ui/components/button';
+import { ChatHistoryDeleteAction } from '@ayunis/chat/history';
 import {
   isFavorite,
   useFavorites,
@@ -8,7 +7,6 @@ import {
 } from '@/features/favorites';
 import { useDeleteChat } from '@/features/useDeleteChat';
 import { ChatWorkspaceMenuButton } from '@/widgets/chat-workspace-menu';
-import { useConfirmation } from '@/widgets/confirmation-modal';
 import { ChatListItem } from '@/shared/ui/chat-list-item';
 import { PinButton } from '@/shared/ui/pin-button';
 import type { ChatListItem as Chat } from '@/pages/chats/model/types';
@@ -22,20 +20,8 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
   const { deleteChat, isDeleting } = useDeleteChat();
   const { favorites } = useFavorites();
   const { toggle: toggleFavorite } = useToggleFavorite();
-  const { confirm } = useConfirmation();
   const title = chat.title || t('card.untitled');
   const isPinned = isFavorite(favorites, chat.id, 'thread');
-
-  function handleDelete() {
-    confirm({
-      title: t('card.confirmDelete.title'),
-      description: t('card.confirmDelete.description', { title }),
-      confirmText: t('card.confirmDelete.confirmText'),
-      cancelText: t('card.confirmDelete.cancelText'),
-      variant: 'destructive',
-      onConfirm: () => deleteChat(chat.id),
-    });
-  }
 
   return (
     <ChatListItem
@@ -55,15 +41,11 @@ export default function ChatCard({ chat }: Readonly<ChatCardProps>) {
             threadId={chat.id}
             workspaceId={chat.workspaceId}
           />
-          <Button
-            variant="destructive-ghost"
-            size="icon"
-            aria-label={t('card.confirmDelete.title')}
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            <Trash2 />
-          </Button>
+          <ChatHistoryDeleteAction
+            title={title}
+            busy={isDeleting}
+            onDelete={() => deleteChat(chat.id)}
+          />
         </>
       }
     />
