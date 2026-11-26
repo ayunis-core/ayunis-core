@@ -26,13 +26,14 @@ const model = {
   displayName: 'Mistral Large',
 } as PermittedLanguageModelResponseDto;
 
-function renderMenu() {
+function renderMenu(modelListPresentation?: 'responsive' | 'submenu') {
   render(
     <DropdownMenu open>
       <DropdownMenuTrigger>open</DropdownMenuTrigger>
       <DropdownMenuContent>
         <ModelSelectorMenu
           models={[model]}
+          modelListPresentation={modelListPresentation}
           selectedValue={undefined}
           isAnonymous={false}
           onSelect={vi.fn()}
@@ -95,5 +96,20 @@ describe('ModelSelectorMenu', () => {
     expect(screen.getByText('models.modes.heading')).toBeTruthy();
     expect(screen.queryByText('models.modes.moreModels')).toBeNull();
     expect(screen.getByTestId('chat-model-selector-model')).toBeTruthy();
+  });
+
+  it('keeps the Web hierarchy in a narrow desktop pane', () => {
+    isMobile.current = true;
+    resolutions.current = [
+      {
+        mode: 'auto',
+        permittedModelId: 'mistral-large',
+        anonymousPermittedModelId: 'mistral-large',
+      },
+    ];
+    renderMenu('submenu');
+    expect(screen.getByText('models.modes.heading')).toBeTruthy();
+    expect(screen.getByText('models.modes.moreModels')).toBeTruthy();
+    expect(screen.queryByTestId('chat-model-selector-model')).toBeNull();
   });
 });

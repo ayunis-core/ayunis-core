@@ -171,6 +171,7 @@ export function PaneConversation({
             <ModelSelector
               models={models.data ?? []}
               resolutions={[]}
+              modelListPresentation="submenu"
               placeholder="Select a model"
               selectedModelId={
                 thread.mode
