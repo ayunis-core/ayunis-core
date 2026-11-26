@@ -30,12 +30,28 @@ export default tseslint.config(
         'error',
         {
           selector:
-            'Identifier[name=/(outlook|excel|powerpoint|wordPane|officePane|webChat|visitorChat|embeddedChat)/i]',
+            ':matches(Identifier, JSXIdentifier)[name=/^(web|outlook|excel|powerpoint|office|visitor|embedded)$/i]',
+          message: 'Configure chat through host capabilities and slots.',
+        },
+        {
+          // Keep this case-sensitive: /i would make [A-Z] match lowercase.
+          selector:
+            ':matches(Identifier, JSXIdentifier)[name=/(^|[_$])(outlook|excel|power[Pp]oint|office|visitor|embedded)([_$]|[A-Z])|(Outlook|Excel|PowerPoint|Office|Visitor|Embedded)($|[_$]|[A-Z])|(^|[_$])(OUTLOOK|EXCEL|POWERPOINT|OFFICE|VISITOR|EMBEDDED)($|[_$])/]',
+          message: 'Configure chat through host capabilities and slots.',
+        },
+        {
+          selector:
+            ':matches(Identifier, JSXIdentifier)[name=/(web|word)(Pane|Host|Chat|Surface|App|Client)/i]',
           message: 'Configure chat through host capabilities and slots.',
         },
         {
           selector:
             'Literal[value=/^(web|outlook|excel|powerpoint|word|office|visitor|embedded)($|[ _.:-])/i]',
+          message: 'Keep surface names in the host configuration.',
+        },
+        {
+          selector:
+            'TemplateElement[value.raw=/^(web|outlook|excel|powerpoint|word|office|visitor|embedded)($|[ _.:-])/i]',
           message: 'Keep surface names in the host configuration.',
         },
       ],
