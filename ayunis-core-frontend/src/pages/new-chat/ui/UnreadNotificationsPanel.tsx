@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Megaphone } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   Item,
@@ -19,6 +19,7 @@ import {
   isKnownNotificationType,
   useUnreadNotificationCount,
 } from '@/features/notifications';
+import { useUnreadReleaseNoteCount } from '@/features/release-notes';
 import type {
   NotificationResponseDto,
   NotificationType,
@@ -26,7 +27,18 @@ import type {
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import { useUnreadNotifications } from '@/pages/new-chat/api/useUnreadNotifications';
 import { useViewportMaxHeight } from '@/pages/new-chat/lib/useViewportMaxHeight';
+import { UnreadReleaseNoteList } from './UnreadReleaseNoteList';
 import './unread-notifications-panel.css';
+
+const PRODUCT_UPDATES_TAB = 'product_updates';
+
+/** One tab per notification type, plus product updates, which are not notifications. */
+type UnreadTab = NotificationType | typeof PRODUCT_UPDATES_TAB;
+
+const UNREAD_TABS: UnreadTab[] = [
+  ...Object.keys(NOTIFICATION_TYPE_APPEARANCE).filter(isKnownNotificationType),
+  PRODUCT_UPDATES_TAB,
+];
 
 interface UnreadNotificationsPanelProps {
   isCollapsed: boolean;
@@ -36,26 +48,26 @@ export function UnreadNotificationsPanel({
   isCollapsed,
 }: Readonly<UnreadNotificationsPanelProps>) {
   const { unreadByType } = useUnreadNotificationCount();
-  const [openType, setOpenType] = useState<NotificationType | null>(null);
+  const { unreadCount: unreadReleaseNotes } = useUnreadReleaseNoteCount();
+  const [openType, setOpenType] = useState<UnreadTab | null>(null);
   const [shown, setShown] = useState<{
-    type: NotificationType;
+    type: UnreadTab;
     opening: number;
   }>();
   const rootRef = useRef<HTMLDivElement>(null);
   const bodyId = useId();
-  const counts = new Map<string, number>(
-    unreadByType.map(({ type, count }) => [type, count]),
-  );
-  const unreadTypes = Object.keys(NOTIFICATION_TYPE_APPEARANCE)
-    .filter(isKnownNotificationType)
-    .filter((type) => (counts.get(type) ?? 0) > 0);
+  const counts = new Map<string, number>([
+    ...unreadByType.map(({ type, count }): [string, number] => [type, count]),
+    [PRODUCT_UPDATES_TAB, unreadReleaseNotes],
+  ]);
+  const unreadTypes = UNREAD_TABS.filter((type) => (counts.get(type) ?? 0) > 0);
   const activeType =
     openType && unreadTypes.includes(openType) ? openType : null;
   if (openType && !activeType) setOpenType(null);
   useDismiss(rootRef, activeType !== null, setOpenType);
   if (unreadTypes.length === 0) return null;
 
-  function toggle(type: NotificationType) {
+  function toggle(type: UnreadTab) {
     if (activeType === type) {
       setOpenType(null);
       return;
@@ -129,14 +141,17 @@ function UnreadTypeChip({
   controls,
   onToggle,
 }: Readonly<{
-  type: NotificationType;
+  type: UnreadTab;
   count: number;
   isOpen: boolean;
   controls: string;
   onToggle: () => void;
 }>) {
   const { t } = useTranslation('chat');
-  const { labelClassName, countClassName } = NOTIFICATION_TYPE_APPEARANCE[type];
+  const { labelClassName, countClassName } =
+    type === PRODUCT_UPDATES_TAB
+      ? { labelClassName: '', countClassName: 'text-brand' }
+      : NOTIFICATION_TYPE_APPEARANCE[type];
   const bumps = useIncreaseCount(count);
 
   return (
@@ -150,7 +165,11 @@ function UnreadTypeChip({
       data-testid="new-chat-unread-notifications-tab"
       data-type={type}
     >
-      <NotificationTypeIcon type={type} />
+      {type === PRODUCT_UPDATES_TAB ? (
+        <Megaphone className="text-muted-foreground" aria-hidden />
+      ) : (
+        <NotificationTypeIcon type={type} />
+      )}
       <span className={labelClassName}>
         {t(`newChat.unreadNotifications.tabs.${type}`)}
       </span>
@@ -185,7 +204,7 @@ function UnreadPanelBody({
   isOpen,
 }: Readonly<{
   id: string;
-  shown?: { type: NotificationType; opening: number };
+  shown?: { type: UnreadTab; opening: number };
   isOpen: boolean;
 }>) {
   const { ref, maxHeight } = useViewportMaxHeight(isOpen);
@@ -194,8 +213,12 @@ function UnreadPanelBody({
     <div id={id} className="unread-panel__body" inert={!isOpen}>
       <div className="min-h-0 overflow-hidden">
         <div ref={ref} className="unread-panel__scroll" style={{ maxHeight }}>
-          {shown && (
-            <UnreadNotificationList key={shown.opening} type={shown.type} />
+          {shown?.type === PRODUCT_UPDATES_TAB ? (
+            <UnreadReleaseNoteList key={shown.opening} />
+          ) : (
+            shown && (
+              <UnreadNotificationList key={shown.opening} type={shown.type} />
+            )
           )}
         </div>
       </div>

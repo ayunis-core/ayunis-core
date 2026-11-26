@@ -444,9 +444,11 @@
     "unreadNotifications": {
       "tabs": {
         "routine_error": "Needs attention",
-        "routine": "Routines"
+        "routine": "Routines",
+        "product_updates": "Product updates"
       },
-      "viewAll": "View all in inbox"
+      "viewAll": "View all in inbox",
+      "viewAllProductUpdates": "View all product updates"
     },
     "embedded": {
       "prepareReply": "Prepare reply",
