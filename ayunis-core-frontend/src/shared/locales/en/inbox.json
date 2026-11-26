@@ -21,7 +21,7 @@
   },
   "detail": {
     "chatPlaceholder": "What would you like to know about this notification?",
-    "openRoutineChat": "Open routine chat",
+    "openRoutineExecution": "Open routine execution",
     "openRoutine": "Open routine",
     "noSelection": "Select a notification to read it.",
     "back": "Inbox"

@@ -21,7 +21,7 @@
   },
   "detail": {
     "chatPlaceholder": "Was möchten Sie zu dieser Benachrichtigung wissen?",
-    "openRoutineChat": "Routine-Chat öffnen",
+    "openRoutineExecution": "Routine-Ausführung öffnen",
     "openRoutine": "Routine öffnen",
     "noSelection": "Wählen Sie eine Benachrichtigung aus.",
     "back": "Posteingang"

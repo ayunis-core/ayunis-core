@@ -123,7 +123,7 @@ function NotificationActions({ notification }: Readonly<NotificationProps>) {
             params={{ threadId: notification.routineThreadId }}
           >
             <MessagesSquare />
-            {t('detail.openRoutineChat')}
+            {t('detail.openRoutineExecution')}
           </Link>
         </Button>
       )}
