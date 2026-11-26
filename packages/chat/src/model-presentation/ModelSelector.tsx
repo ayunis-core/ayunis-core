@@ -24,6 +24,7 @@ import './max-mode.css';
 export interface ModelSelectorProps {
   readonly models: PermittedLanguageModelResponseDto[];
   readonly resolutions?: ModelModeResolutionResponseDto[];
+  readonly modelListPresentation?: 'responsive' | 'submenu';
   readonly renderMenu?: (
     props: Omit<ModelSelectorMenuProps, 'resolutions'>,
   ) => ReactNode;
@@ -37,6 +38,7 @@ export interface ModelSelectorProps {
 export function ModelSelector({
   models,
   resolutions = [],
+  modelListPresentation = 'responsive',
   renderMenu,
   placeholder,
   isDisabled,
@@ -48,6 +50,7 @@ export function ModelSelector({
   const isLocked = isDisabled || !selectedModelId;
   const menu = {
     models,
+    modelListPresentation,
     selectedValue: selectedModelId,
     isAnonymous,
     onSelect: onModelChange,

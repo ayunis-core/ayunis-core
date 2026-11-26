@@ -108,6 +108,7 @@ export function PaneNewChat({
                 <ModelSelector
                   models={modelSelection.models}
                   resolutions={modelSelection.resolutions}
+                  modelListPresentation="submenu"
                   selectedModelId={modelSelection.value}
                   isAnonymous={isAnonymous}
                   isDisabled={waiting || modelSelection.failed}

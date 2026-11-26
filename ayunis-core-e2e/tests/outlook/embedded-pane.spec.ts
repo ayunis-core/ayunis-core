@@ -1,6 +1,7 @@
 import { stubOfficeHost } from "../../src/clients/office-host-stub";
 import { expect, test } from "../../src/fixtures/outlook";
 import { sendMessage } from "../../src/flows/chat.flow";
+import { getEffectiveDefaultModel } from "../../src/clients/api/models.client";
 import {
   openSignedInPane,
   storedRefreshToken,
@@ -27,6 +28,37 @@ test("loads the pane script and styles from the Outlook build", async ({
   expect(document).toMatch(/<script[^>]+src="\/outlook\/assets\/[^"]+\.js"/);
   expect(document).toMatch(/<link[^>]+href="\/outlook\/assets\/[^"]+\.css"/);
   expect(document).not.toMatch(/(?:src|href)="\/assets\//);
+});
+
+test("keeps the Web model-picker hierarchy in a narrow pane", async ({
+  page,
+  api,
+}) => {
+  const model = (await getEffectiveDefaultModel(api))!;
+  await page.route("**/api/models/modes", (route) =>
+    route.fulfill({
+      json: [
+        {
+          mode: "auto",
+          permittedModelId: model.id,
+          anonymousPermittedModelId: model.id,
+        },
+      ],
+    }),
+  );
+  await page.reload();
+  await page.setViewportSize({ width: 420, height: 720 });
+  await page.getByTestId("chat-model-selector").click();
+
+  await expect(
+    page.getByTestId("chat-model-selector-more-models"),
+  ).toBeVisible();
+  await expect(page.getByTestId("chat-model-selector-model")).toHaveCount(0);
+
+  await page.getByTestId("chat-model-selector-more-models").hover();
+  await expect(
+    page.getByTestId("chat-model-selector-model").first(),
+  ).toBeVisible();
 });
 
 test("keeps the chat app on the pane document through navigation and reload", async ({

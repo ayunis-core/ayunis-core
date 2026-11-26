@@ -36,6 +36,7 @@ type Model = PermittedLanguageModelResponseDto;
 export interface ModelSelectorMenuProps {
   models: Model[];
   resolutions: ModelModeResolutionResponseDto[];
+  modelListPresentation?: 'responsive' | 'submenu';
   selectedValue: string | undefined;
   isAnonymous: boolean;
   onSelect: (value: string) => void;
@@ -61,7 +62,12 @@ type MenuChoice = Pick<ModelSelectorMenuProps, 'selectedValue' | 'onSelect'>;
 export function ModelSelectorMenu(props: Readonly<ModelSelectorMenuProps>) {
   const isMobile = useIsMobile();
   const modeCard = useHoverCard<ModelMode>();
-  const { models, resolutions, isAnonymous } = props;
+  const {
+    models,
+    resolutions,
+    isAnonymous,
+    modelListPresentation = 'responsive',
+  } = props;
   const resolve = (mode: ModelMode) =>
     resolveModeModel(mode, models, resolutions, isAnonymous);
   const availableModes = MODEL_MODES.filter((mode) => resolve(mode));
@@ -77,7 +83,7 @@ export function ModelSelectorMenu(props: Readonly<ModelSelectorMenuProps>) {
         card={modeCard}
       />
       <DropdownMenuSeparator />
-      {isMobile ? (
+      {isMobile && modelListPresentation === 'responsive' ? (
         modelList
       ) : (
         <MoreModels closeModeCard={modeCard.scheduleClose}>
