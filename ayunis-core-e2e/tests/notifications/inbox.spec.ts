@@ -16,7 +16,7 @@ import { sendMessage } from "../../src/flows/chat.flow";
 import { inboxItem } from "../../src/flows/notifications.flow";
 import { test, expect } from "../../src/fixtures/test";
 
-test("a routine's notification lands in the inbox, opens next to the list, links to its routine chat and can be discussed in a chat started from its page", async ({
+test("a routine's notification lands in the inbox, opens next to the list, links to its routine chat, which shows it and links back, and can be discussed in a chat started from its page", async ({
   api,
   page,
 }) => {
@@ -64,8 +64,14 @@ test("a routine's notification lands in the inbox, opens next to the list, links
   await page.getByTestId("notification-open-routine-chat").click();
   await expect(page).toHaveURL(new RegExp(`/chats/${routineThread.id}`));
   await expect(page.getByTestId("routine-finished")).toBeVisible();
+  // The run's chat shows what it sent, outside the collapsed steps.
+  const sentNotification = page.getByTestId("send-notification-widget");
+  await expect(
+    sentNotification.getByTestId("send-notification-widget-headline"),
+  ).toContainText(headline);
 
-  await page.goBack();
+  await sentNotification.getByTestId("send-notification-widget-open").click();
+  await expect(page).toHaveURL(new RegExp(`/inbox/${notification.id}$`));
   await expect(page.getByTestId("notification-chat-starter")).toBeVisible();
   await sendMessage(page, "E2E quote notification");
   await expect(page).toHaveURL(/\/chats\/[0-9a-f-]+/);
