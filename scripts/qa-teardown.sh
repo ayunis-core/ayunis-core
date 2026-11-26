@@ -20,8 +20,10 @@
 #                                       registering it or writing anything (incl. `ln -sf` of .env)
 set -euo pipefail
 
-# Main checkout = first entry of `git worktree list`, resolved from the current directory.
-REPO="$(git worktree list --porcelain | sed -n 's/^worktree //p;1q')"
+# Main checkout = first entry of `git worktree list`. Consume the full stream:
+# closing it after the first match makes Git exit 141 under `pipefail`.
+REPO="$(git worktree list --porcelain | awk '!found && sub(/^worktree /, "") { print; found=1 }')"
+[ -n "$REPO" ] || { echo "ERROR: could not resolve the main checkout" >&2; exit 1; }
 REGISTRY="$REPO/.dev/qa-worktrees"
 
 # Compare on paths stripped of trailing slashes: the skill registers $WT as given,

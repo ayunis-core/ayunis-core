@@ -2,9 +2,25 @@
 # Self-check for qa-teardown.sh: registered worktrees are torn down, everything else is untouched.
 set -euo pipefail
 
-SCRIPT="$(cd "$(dirname "$0")" && pwd)/qa-teardown.sh"
+SCRIPT="${QA_TEARDOWN_SCRIPT:-$(cd "$(dirname "$0")" && pwd)/qa-teardown.sh}"
 T="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/qa-teardown.XXXXXX")" && pwd -P)"   # realpath: git reports resolved paths
 trap 'chmod -R u+w "$T" 2>/dev/null; rm -rf "$T"; kill "${STRAY:-}" 2>/dev/null || true' EXIT
+
+# Repository discovery must not SIGPIPE under the script's `pipefail` setting.
+REAL_GIT="$(command -v git)"; export REAL_GIT
+mkdir -p "$T/fake-bin"
+awk 'BEGIN { for (i = 0; i < 10000; i++) print "worktree /tmp/fixture-" i }' > "$T/worktrees"
+cat > "$T/fake-bin/git" <<'GIT'
+#!/usr/bin/env bash
+if [ "$*" = "worktree list --porcelain" ]; then
+  exec cat "$GIT_WORKTREE_FIXTURE"
+fi
+exec "$REAL_GIT" "$@"
+GIT
+chmod +x "$T/fake-bin/git"
+mkdir -p "$T/discovery-probe/ayunis-core-backend" "$T/discovery-probe/ayunis-core-frontend"
+set +e; PATH="$T/fake-bin:$PATH" GIT_WORKTREE_FIXTURE="$T/worktrees" "$SCRIPT" --guard "$T/discovery-probe" >/dev/null; rc_discovery=$?; set -e
+[ "$rc_discovery" -eq 0 ] || { echo "FAIL: clean guard exited $rc_discovery during repository discovery"; exit 1; }
 
 # Main repo with a fake ./dev that records its calls.
 git -C "$T" init -q main
@@ -46,7 +62,7 @@ node -e 'setInterval(() => {}, 1000)' "$T/decoy/ayunis-core-backend/dist/src/mai
 DECOY=$!
 trap 'chmod -R u+w "$T" 2>/dev/null; rm -rf "$T"; kill "${STRAY:-}" "${STRAY_RE:-}" "${DECOY:-}" 2>/dev/null || true' EXIT
 
-set +e; (cd "$T/main" && "$SCRIPT" >/dev/null 2>&1); rc=$?; set -e   # no args = sweep every registered worktree
+set +e; (cd "$T/qa-wt" && "$SCRIPT" >/dev/null 2>&1); rc=$?; set -e   # linked worktree still sweeps the main registry
 set +e; (cd "$T/main" && "$SCRIPT" "$T/user-wt" >/dev/null 2>&1); rc_unreg=$?; set -e   # explicit but unregistered → refused, non-zero
 sleep 3
 
