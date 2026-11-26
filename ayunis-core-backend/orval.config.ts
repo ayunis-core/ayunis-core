@@ -47,7 +47,7 @@ export default defineConfig({
   },
   marketplace: {
     input: {
-      target: 'http://localhost:3002/api/docs-json',
+      target: './src/common/clients/marketplace/openapi.json',
     },
     output: {
       target: './src/common/clients/marketplace/generated',
