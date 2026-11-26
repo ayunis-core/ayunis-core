@@ -11,6 +11,7 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import {
   RoutineEnabledSwitch,
+  RoutinePinButton,
   RoutineRunNowButton,
   type Routine,
 } from '@/features/routines';
@@ -60,6 +61,7 @@ export default function RoutinePage(props: Readonly<RoutinePageProps>) {
                   routine={routine}
                   testId="routine-detail-run-now"
                 />
+                <RoutinePinButton routineId={routine.id} />
                 <RoutineDeleteButton routine={routine} />
               </>
             }

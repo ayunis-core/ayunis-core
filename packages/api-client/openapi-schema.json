@@ -9343,6 +9343,9 @@
                       },
                       {
                         "$ref": "#/components/schemas/ThreadFavoriteResponseDto"
+                      },
+                      {
+                        "$ref": "#/components/schemas/RoutineFavoriteResponseDto"
                       }
                     ],
                     "discriminator": {
@@ -24031,7 +24034,7 @@
         "properties": {
           "referenceType": {
             "type": "string",
-            "enum": ["workspace", "thread"]
+            "enum": ["workspace", "thread", "routine"]
           },
           "referenceId": {
             "type": "string",
@@ -29506,6 +29509,31 @@
           "voice"
         ],
         "description": "Scopes granted to the current token surface. Empty for browser sessions."
+      },
+      "RoutineFavoriteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "number",
+            "minimum": 0
+          },
+          "referenceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "referenceType": {
+            "type": "string",
+            "enum": ["routine"]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "position", "referenceId", "referenceType", "name"]
       }
     }
   }

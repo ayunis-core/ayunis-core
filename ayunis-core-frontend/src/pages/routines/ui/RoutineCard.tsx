@@ -11,6 +11,7 @@ import {
 import { Badge } from '@ayunis/ui/components/badge';
 import {
   RoutineEnabledSwitch,
+  RoutinePinButton,
   RoutineRunNowButton,
   RoutineRunStatusLine,
   RoutineInternetAccess,
@@ -61,6 +62,7 @@ export default function RoutineCard({ routine }: Readonly<RoutineCardProps>) {
       <ItemActions className="relative z-10">
         <RoutineEnabledSwitch routine={routine} testId="routine-card-enabled" />
         <RoutineRunNowButton routine={routine} testId="routine-card-run-now" />
+        <RoutinePinButton routineId={routine.id} />
       </ItemActions>
     </Item>
   );

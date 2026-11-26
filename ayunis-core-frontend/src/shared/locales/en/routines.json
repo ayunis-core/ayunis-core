@@ -69,7 +69,9 @@
     "disabled": "Paused",
     "enabledLabel": "Run on schedule",
     "runNow": "Run now",
-    "delete": "Delete routine"
+    "delete": "Delete routine",
+    "pin": "Add to favorites",
+    "unpin": "Remove from favorites"
   },
   "detail": {
     "tabs": {

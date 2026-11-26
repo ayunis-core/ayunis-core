@@ -69,7 +69,9 @@
     "disabled": "Pausiert",
     "enabledLabel": "Nach Zeitplan ausführen",
     "runNow": "Jetzt ausführen",
-    "delete": "Routine löschen"
+    "delete": "Routine löschen",
+    "pin": "Zu Favoriten hinzufügen",
+    "unpin": "Aus Favoriten entfernen"
   },
   "detail": {
     "tabs": {

@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
+  getFavoritesControllerFindAllQueryKey,
   getRoutinesControllerFindAllQueryKey,
   getRoutinesControllerFindOneQueryKey,
   useRoutinesControllerUpdate,
@@ -30,6 +31,10 @@ export function useUpdateRoutine(
         queryClient.setQueryData(queryKey, routine);
         void queryClient.invalidateQueries({
           queryKey: getRoutinesControllerFindAllQueryKey(),
+        });
+        // Favorite rows embed the routine name.
+        void queryClient.invalidateQueries({
+          queryKey: getFavoritesControllerFindAllQueryKey(),
         });
         if (form) showSuccess(t('toast.updateSuccess'));
         onSuccess?.();

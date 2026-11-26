@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowDown,
   ArrowUp,
+  CalendarClock,
   Loader2,
   MessageCircle,
   MoreHorizontal,
@@ -58,6 +59,55 @@ function FavoriteThreadIcon({ isRunning }: Readonly<{ isRunning: boolean }>) {
   );
 }
 
+function FavoriteIcon({
+  item,
+  isRunning,
+}: Readonly<{ item: Favorite; isRunning: boolean }>) {
+  switch (item.referenceType) {
+    case 'workspace':
+      return (
+        <WorkspaceIcon
+          icon={item.icon}
+          color={item.color}
+          variant="plain"
+          // Collapse the icon's box to the glyph so workspace rows line up
+          // with the chat rows' bare 16px lucide icon.
+          className="size-4"
+        />
+      );
+    case 'routine':
+      return <CalendarClock />;
+    case 'thread':
+      return <FavoriteThreadIcon isRunning={isRunning} />;
+  }
+}
+
+function favoriteRoute(item: Favorite) {
+  switch (item.referenceType) {
+    case 'workspace':
+      return {
+        to: '/workspaces/$workspaceId',
+        params: { workspaceId: item.referenceId },
+      } as const;
+    case 'routine':
+      return {
+        to: '/routines/$routineId',
+        params: { routineId: item.referenceId },
+      } as const;
+    case 'thread':
+      return {
+        to: '/chats/$threadId',
+        params: { threadId: item.referenceId },
+      } as const;
+  }
+}
+
+const UNPIN_LABEL_KEYS = {
+  workspace: 'sidebar.unpinWorkspace',
+  thread: 'sidebar.unpinChat',
+  routine: 'sidebar.unpinRoutine',
+} as const;
+
 export function FavoriteSidebarItem({
   item,
   workspace,
@@ -77,48 +127,33 @@ export function FavoriteSidebarItem({
   const { requestDialogOpen, handleCloseAutoFocus } =
     useDropdownDialogTransition();
   const isWorkspace = item.referenceType === 'workspace';
-  const threadWorkspaceId =
-    item.referenceType === 'thread' ? item.workspaceId : undefined;
+  const isThread = item.referenceType === 'thread';
+  const threadWorkspaceId = isThread ? item.workspaceId : undefined;
   const title = item.name ?? t('sidebar.untitled');
   const access = workspace ? getWorkspaceAccess(workspace) : undefined;
   const canEditWorkspace = !!workspace && !!access?.canManage;
+  const activeReferenceId = {
+    workspace: params.workspaceId,
+    thread: params.threadId,
+    routine: params.routineId,
+  }[item.referenceType];
 
   return (
     <>
       <SidebarMenuItem>
         <SidebarMenuButton
           asChild
-          isActive={
-            isWorkspace
-              ? params.workspaceId === item.referenceId
-              : params.threadId === item.referenceId
-          }
+          isActive={activeReferenceId === item.referenceId}
         >
           <Link
-            to={isWorkspace ? '/workspaces/$workspaceId' : '/chats/$threadId'}
-            params={
-              isWorkspace
-                ? { workspaceId: item.referenceId }
-                : { threadId: item.referenceId }
-            }
+            {...favoriteRoute(item)}
             onClick={() =>
               trackOpenPanelEvent('favorite_opened', {
                 resource_type: item.referenceType,
               })
             }
           >
-            {isWorkspace ? (
-              <WorkspaceIcon
-                icon={item.icon}
-                color={item.color}
-                variant="plain"
-                // Collapse the icon's box to the glyph so workspace rows line up
-                // with the chat rows' bare 16px lucide icon.
-                className="size-4"
-              />
-            ) : (
-              <FavoriteThreadIcon isRunning={isRunning} />
-            )}
+            <FavoriteIcon item={item} isRunning={isRunning} />
             <span className="truncate">{title}</span>
           </Link>
         </SidebarMenuButton>
@@ -136,19 +171,17 @@ export function FavoriteSidebarItem({
             collisionPadding={8}
             onCloseAutoFocus={handleCloseAutoFocus}
           >
-            {isWorkspace ? (
-              workspace &&
-              access?.canManage && (
-                <DropdownMenuItem
-                  onClick={() =>
-                    requestDialogOpen(() => onOpenWorkspaceSettings(workspace))
-                  }
-                >
-                  <Pencil />
-                  <span>{tWorkspaces('actions.edit')}</span>
-                </DropdownMenuItem>
-              )
-            ) : (
+            {isWorkspace && workspace && access?.canManage && (
+              <DropdownMenuItem
+                onClick={() =>
+                  requestDialogOpen(() => onOpenWorkspaceSettings(workspace))
+                }
+              >
+                <Pencil />
+                <span>{tWorkspaces('actions.edit')}</span>
+              </DropdownMenuItem>
+            )}
+            {isThread && (
               <DropdownMenuItem
                 onClick={() =>
                   requestDialogOpen(() => onRename(item.referenceId, item.name))
@@ -158,7 +191,7 @@ export function FavoriteSidebarItem({
                 <span>{t('sidebar.renameChat')}</span>
               </DropdownMenuItem>
             )}
-            {(!isWorkspace || canEditWorkspace) && <DropdownMenuSeparator />}
+            {(isThread || canEditWorkspace) && <DropdownMenuSeparator />}
             <DropdownMenuItem
               disabled={!canMoveUp}
               onClick={() => onMove(item.id, 'up')}
@@ -178,13 +211,9 @@ export function FavoriteSidebarItem({
               onClick={() => toggle(item.referenceType, item.referenceId)}
             >
               <StarOff />
-              <span>
-                {isWorkspace
-                  ? t('sidebar.unpinWorkspace')
-                  : t('sidebar.unpinChat')}
-              </span>
+              <span>{t(UNPIN_LABEL_KEYS[item.referenceType])}</span>
             </DropdownMenuItem>
-            {!isWorkspace && (
+            {isThread && (
               <ChatWorkspaceSubmenu
                 threadId={item.referenceId}
                 workspaceId={threadWorkspaceId}
@@ -193,7 +222,7 @@ export function FavoriteSidebarItem({
                 }
               />
             )}
-            {(!isWorkspace || access?.isAdmin) && (
+            {(isThread || (isWorkspace && access?.isAdmin)) && (
               <DropdownMenuItem
                 onClick={() => requestDialogOpen(() => onDelete(item))}
                 variant="destructive"

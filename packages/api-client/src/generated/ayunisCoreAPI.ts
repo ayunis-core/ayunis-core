@@ -227,6 +227,7 @@ import type {
   RetentionPolicyResponseDto,
   RevertArtifactDto,
   RolePermissionsResponseDto,
+  RoutineFavoriteResponseDto,
   RoutineResponseDto,
   RunErrorResponseDto,
   RunIntegrationWarningResponseDto,
@@ -18772,7 +18773,7 @@ export const favoritesControllerFindAll = (
 ) => {
 
 
-      return customAxiosInstance<(WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto)[]>(
+      return customAxiosInstance<(WorkspaceFavoriteResponseDto | ThreadFavoriteResponseDto | RoutineFavoriteResponseDto)[]>(
       {url: `/favorites`, method: 'GET', signal
     },
       );
