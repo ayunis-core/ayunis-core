@@ -285,6 +285,10 @@
   },
   "emptyState": {
     "learnMore": "Mehr erfahren",
-    "askHowItWorks": "Oder fragen Sie, wie es funktioniert"
+    "askHowItWorks": "Oder fragen Sie, wie es funktioniert",
+    "marketplace": {
+      "title": "Aus dem Marketplace",
+      "showAll": "Alle im Marketplace ansehen"
+    }
   }
 }

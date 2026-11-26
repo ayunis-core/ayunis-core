@@ -2,18 +2,20 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
-import { Separator } from '@ayunis/ui/components/separator';
 import { getHelpCenterUrl } from '@/shared/lib/help-center';
+import { EmptyStateSectionHeading } from './EmptyStateSectionHeading';
 
 interface EmptyStateGuideProps {
   action?: ReactNode;
   helpPath?: string;
+  suggestions?: ReactNode;
   guide?: ReactNode;
 }
 
 export function EmptyStateGuide({
   action,
   helpPath,
+  suggestions,
   guide,
 }: Readonly<EmptyStateGuideProps>) {
   const { t } = useTranslation('common');
@@ -39,20 +41,12 @@ export function EmptyStateGuide({
           )}
         </div>
       )}
+      {suggestions}
       {guide && (
         <div className="mt-10 w-full text-left">
-          <div className="mb-3 flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="flex-1">
-              <Separator />
-            </div>
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="size-4 text-brand" />
-              {t('emptyState.askHowItWorks')}
-            </span>
-            <div className="flex-1">
-              <Separator />
-            </div>
-          </div>
+          <EmptyStateSectionHeading icon={Sparkles}>
+            {t('emptyState.askHowItWorks')}
+          </EmptyStateSectionHeading>
           {guide}
         </div>
       )}

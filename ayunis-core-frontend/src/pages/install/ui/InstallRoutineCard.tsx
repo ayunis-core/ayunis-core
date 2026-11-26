@@ -8,9 +8,9 @@ import {
   CardTitle,
 } from '@ayunis/ui/components/card';
 import { CalendarClock } from 'lucide-react';
-import { DynamicIcon, iconNames, type IconName } from 'lucide-react/dynamic';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
+import { MarketplaceEntryIcon } from '@/features/marketplace';
 import {
   RoutineInternetAccess,
   RoutineScheduleSummary,
@@ -34,7 +34,11 @@ export function InstallRoutineCard({
     <Card className="w-full max-w-lg" data-testid="install-routine-card">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <RoutineIcon iconName={routine.iconName} />
+          <MarketplaceEntryIcon
+            iconName={routine.iconName}
+            fallback={CalendarClock}
+            className="h-8 w-8 text-primary"
+          />
         </div>
         <CardTitle className="text-xl">{routine.name}</CardTitle>
         <CardDescription>{routine.shortDescription}</CardDescription>
@@ -85,20 +89,4 @@ export function InstallRoutineCard({
       </CardFooter>
     </Card>
   );
-}
-
-function RoutineIcon({ iconName }: Readonly<{ iconName: string | null }>) {
-  const fallback = <CalendarClock className="h-8 w-8 text-primary" />;
-  if (!isIconName(iconName)) return fallback;
-  return (
-    <DynamicIcon
-      name={iconName}
-      fallback={() => fallback}
-      className="h-8 w-8 text-primary"
-    />
-  );
-}
-
-function isIconName(name: string | null): name is IconName {
-  return !!name && (iconNames as string[]).includes(name);
 }

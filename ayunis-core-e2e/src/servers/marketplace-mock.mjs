@@ -7,7 +7,8 @@ import { URL } from "node:url";
 // catalogue. It has no pre-installed skills, so new users start without any.
 const port = Number(process.env.E2E_MARKETPLACE_PORT ?? 3197);
 
-// Keep in sync with MARKETPLACE_SKILL in tests/skills/marketplace-install-permission.spec.ts.
+// Keep in sync with MARKETPLACE_SKILL in tests/skills/marketplace-install-permission.spec.ts
+// and tests/marketplace/empty-state-suggestions.spec.ts.
 const skills = [
   {
     id: "4f1d2c3b-5a6e-4b7c-8d9e-0f1a2b3c4d5e",
@@ -19,6 +20,7 @@ const skills = [
     skillCategoryId: null,
     iconUrl: null,
     featured: false,
+    suggested: true,
     published: true,
     preInstalled: false,
     createdAt: "2026-11-09T09:00:00.000Z",
@@ -26,7 +28,8 @@ const skills = [
   },
 ];
 
-// Keep in sync with tests/routines/marketplace-install.spec.ts and
+// Keep in sync with tests/routines/marketplace-install.spec.ts,
+// tests/marketplace/empty-state-suggestions.spec.ts and
 // tests/routines/marketplace-search.spec.ts.
 const ROUTINE_UNAVAILABLE = "e2e-marketplace-down";
 const routines = [
@@ -37,6 +40,7 @@ const routines = [
     prompt: "Prüfe das Amtsblatt auf neue Bekanntmachungen.",
     internetAccess: "allowlist",
     allowedDomains: ["recht.nrw.de", "amtsblatt.example.de"],
+    suggested: true,
   }),
   routine({
     identifier: "e2e-ip-domain",
@@ -115,6 +119,7 @@ function routine(fields) {
     routineCategoryId: null,
     iconName: "newspaper",
     featured: false,
+    suggested: false,
     published: true,
     useCases: [],
     benefits: [],
