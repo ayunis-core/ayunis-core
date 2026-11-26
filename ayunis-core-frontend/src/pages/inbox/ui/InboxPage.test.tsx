@@ -14,25 +14,8 @@ vi.mock('react-i18next', () => ({
 vi.mock('@/layouts/app-layout', () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }));
-vi.mock(
-  '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout',
-  () => ({
-    default: ({
-      header,
-      children,
-    }: {
-      header: ReactNode;
-      children: ReactNode;
-    }) => (
-      <>
-        {header}
-        {children}
-      </>
-    ),
-  }),
-);
-vi.mock('@/widgets/empty-state', () => ({
-  EmptyState: () => <div data-testid="inbox-empty-state" />,
+vi.mock('@/pages/inbox/ui/InboxEmpty', () => ({
+  InboxEmpty: () => <div data-testid="inbox-empty-state" />,
 }));
 vi.mock('@/pages/inbox/ui/InboxList', () => ({
   InboxList: () => <div data-testid="inbox-list" />,
@@ -157,17 +140,18 @@ describe('InboxPage', () => {
     expect(screen.getByTestId('inbox-type-filter-clear')).toBeTruthy();
   });
 
-  it('shows the empty inbox instead of an empty list while nothing is open', () => {
+  it('shows the empty inbox in place of the selection hint while nothing is listed or open', () => {
     mocks.notifications = [];
 
     render(
       <InboxPage page={1} showRead={false}>
-        {null}
+        <p data-testid="inbox-no-selection" />
       </InboxPage>,
     );
 
     expect(screen.getByTestId('inbox-empty-state')).toBeTruthy();
-    expect(screen.queryByTestId('inbox-list')).toBeNull();
+    expect(screen.getByTestId('inbox-list')).toBeTruthy();
+    expect(screen.queryByTestId('inbox-no-selection')).toBeNull();
   });
 
   it('keeps an opened notification on screen when its filter lists nothing', () => {
