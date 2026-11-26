@@ -9,7 +9,6 @@ import {
   setThreadRunPrincipal,
 } from '@/features/thread-run';
 
-import { getChatInputSubmissionState } from '@/widgets/chat-input/model/chatInputSubmissionState';
 import { writeWaitingMessage } from '@/shared/lib/waiting-message-storage';
 import { useThreadSubmissionState } from './useThreadSubmissionState';
 
@@ -74,7 +73,7 @@ describe(useThreadSubmissionState.name, () => {
   });
 
   it.each(['Summarise the minutes', ''])(
-    'keeps the composer submitting while the message %j waits for its files',
+    'keeps message %j pending while it waits for its files',
     (text) => {
       const { result } = renderHook(() =>
         useThreadSubmissionState({
@@ -90,9 +89,7 @@ describe(useThreadSubmissionState.name, () => {
         deferThreadRun({ threadId: threadA, text, images: [] });
       });
 
-      expect(
-        getChatInputSubmissionState(false, result.current.pendingSubmission),
-      ).toBe('submitting');
+      expect(result.current.pendingSubmission).toBe(text);
       act(() => {
         cancelDeferredThreadRun(threadA);
       });
@@ -154,5 +151,38 @@ describe(useThreadSubmissionState.name, () => {
 
     expect(currentRestore).toHaveBeenCalledWith({ text: 'Message A' });
     expect(currentRestore).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a failed submission until the composer can restore it', () => {
+    const unavailableRestore = vi.fn().mockReturnValue(undefined);
+    const availableRestore = vi.fn().mockReturnValue(true);
+    const onRestoreBlocked = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ available }) =>
+        useThreadSubmissionState({
+          threadId: threadA,
+          isStreaming: false,
+          restoreFailedSubmission: available
+            ? availableRestore
+            : unavailableRestore,
+          onRestoreBlocked,
+        }),
+      { initialProps: { available: false } },
+    );
+
+    act(() => {
+      result.current.startSubmission(threadA, { text: 'Message A' });
+      result.current.completeSubmission(threadA, true);
+    });
+
+    expect(unavailableRestore).toHaveBeenCalledWith({ text: 'Message A' });
+    expect(getFailedThreadSubmission(threadA)?.text).toBe('Message A');
+    expect(onRestoreBlocked).not.toHaveBeenCalled();
+
+    rerender({ available: true });
+
+    expect(availableRestore).toHaveBeenCalledWith({ text: 'Message A' });
+    expect(getFailedThreadSubmission(threadA)).toBeNull();
+    expect(onRestoreBlocked).not.toHaveBeenCalled();
   });
 });

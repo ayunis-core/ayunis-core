@@ -9,6 +9,7 @@ import {
 import {
   ChatConversation,
   type ChatConversationAdapters,
+  type ChatConversationHandle,
   type ChatConversationSlots,
   type ChatThreadSnapshot,
 } from '@ayunis/chat/surface';
@@ -43,7 +44,6 @@ import { useRunErrorHandler } from '@/pages/chat/hooks/useRunErrorHandler';
 import { useLetterheadChange } from '@/pages/chat/hooks/useLetterheadChange';
 import { useChatFiles } from '@/pages/chat/api/useChatFiles';
 import AppLayout from '@/layouts/app-layout';
-import type { ChatInputRef } from '@/widgets/chat-input/ui/ChatInput';
 import { useArtifactActions } from '@/pages/chat/hooks/useArtifactActions';
 import { usePermittedModels } from '@/features/usePermittedModels';
 import { useChatThread } from '@/pages/chat/api/useChatThread';
@@ -66,7 +66,7 @@ import {
 import { sourceProcessingRun } from '@/pages/chat/lib/source-processing-steps';
 import LoadingAssistantBlock from '@/pages/chat/ui/LoadingAssistantBlock';
 import { useApiImageSrc } from '@/shared/hooks/useApiImageSrc';
-import { WebConversationComposer } from './WebConversationComposer';
+import { useWebConversationComposer } from './useWebConversationComposer';
 import { WebAssistantActions } from './WebAssistantActions';
 import RoutineNudgeNotice from './RoutineNudgeNotice';
 
@@ -98,7 +98,7 @@ export default function ChatPage({
     if (!thread.permittedModelId) return false;
     return !modelQuery.isLoading && !modelQuery.error && !selectedModel;
   }, [thread.permittedModelId, modelQuery, selectedModel]);
-  const chatInputRef = useRef<ChatInputRef>(null);
+  const conversationRef = useRef<ChatConversationHandle>(null);
   const artifactPanelRef = useRef<ArtifactPanelHandle>(null);
   const [renderedThread, setRenderedThread] =
     useState<Pick<ChatThreadSnapshot, 'id' | 'title' | 'piiMasks'>>();
@@ -109,7 +109,13 @@ export default function ChatPage({
     initialArtifactId,
     artifactPanelRef,
   );
-  const submission = useWebSubmission(thread.id, isStreaming, chatInputRef, t);
+  const submission = useWebSubmission(
+    thread.id,
+    isStreaming,
+    isModelUnavailable,
+    conversationRef,
+    t,
+  );
   const chatFiles = useChatFiles(thread, hasProcessingSources);
   const knowledgeBases = useKnowledgeBaseAttachment({ threadId: thread.id });
   const integrations = useMcpIntegrationAttachment({ threadId: thread.id });
@@ -118,6 +124,26 @@ export default function ChatPage({
   const handleRunError = useRunErrorHandler(thread.id);
   const observeRun = useWebRunObserver();
   const activeRuns = useActiveThreadRuns();
+  const handleNewChat = useCallback(
+    () => void navigate({ to: '/chat' }),
+    [navigate],
+  );
+  const composer = useWebConversationComposer({
+    thread,
+    conversationRef,
+    submission,
+    files: chatFiles,
+    hasProcessingSources,
+    isAcademyGated,
+    isEmbeddingModelEnabled,
+    model: selectedModel,
+    isModelUnavailable,
+    onNewChat: handleNewChat,
+    addKnowledgeBase: knowledgeBases.addKnowledgeBase,
+    removeKnowledgeBase: knowledgeBases.removeKnowledgeBase,
+    addIntegration: integrations.addIntegration,
+    removeIntegration: integrations.removeIntegration,
+  });
   const { deleteChat } = useDeleteThread({
     onBeforeDelete: () => submission.resetSubmission(thread.id),
     onSuccess: () => void navigate({ to: '/chat' }),
@@ -178,6 +204,7 @@ export default function ChatPage({
   }
 
   const slots: ChatConversationSlots = {
+    ...composer.slots,
     header: (actions) => (
       <ChatHeader
         threadId={thread.id}
@@ -216,24 +243,6 @@ export default function ChatPage({
     messageNudge: renderWebMessageNudge,
     messageMarkdown: Markdown,
     assistantActions: renderWebAssistantActions,
-    composerFallback: (controller) => (
-      <WebConversationComposer
-        thread={thread}
-        controller={controller}
-        inputRef={chatInputRef}
-        submission={submission}
-        files={chatFiles}
-        hasProcessingSources={hasProcessingSources}
-        isAcademyGated={isAcademyGated}
-        isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-        model={selectedModel}
-        isModelUnavailable={isModelUnavailable}
-        addKnowledgeBase={knowledgeBases.addKnowledgeBase}
-        removeKnowledgeBase={knowledgeBases.removeKnowledgeBase}
-        addIntegration={integrations.addIntegration}
-        removeIntegration={integrations.removeIntegration}
-      />
-    ),
   };
   const activeRun = {
     run: activeRuns.runsByThreadId.get(thread.id),
@@ -253,14 +262,17 @@ export default function ChatPage({
               <TrackedChatConversation
                 sessionKey={sessionKey}
                 compactComposer
-                config={config}
+                config={{ ...config, capabilities: composer.capabilities }}
                 lifecycle={threadRunLifecycle}
                 thread={thread}
                 activeRun={activeRun}
+                composer={composer.composer}
+                conversationRef={conversationRef}
                 pendingSubmission={submission.pendingSubmission}
                 timeline={appTimelinePresentation}
                 slots={slots}
                 adapters={{
+                  ...composer.adapters,
                   observeRun,
                   onRunError: handleRunError,
                   onMessageReceived: submission.clearPendingSubmission,
@@ -269,7 +281,7 @@ export default function ChatPage({
                   onStartedRun: handleStartedRun,
                   onThreadState: handleThreadState,
                   onPiiUnmaskRequest: handleUnmaskRequest,
-                  onError: (error) => {
+                  onRunTransportError: (error) => {
                     console.error('Error in shared chat conversation:', error);
                     showError(t('chat.errorSendMessage'));
                   },
@@ -292,16 +304,19 @@ export default function ChatPage({
 function useWebSubmission(
   threadId: string,
   isStreaming: boolean,
-  inputRef: RefObject<ChatInputRef | null>,
+  isModelUnavailable: boolean,
+  conversationRef: RefObject<ChatConversationHandle | null>,
   t: ReturnType<typeof useTranslation<'chat'>>['t'],
 ) {
   const restore = useCallback(
-    (submission: ThreadSubmission) =>
-      inputRef.current?.restoreFailedSubmission(
+    (submission: ThreadSubmission) => {
+      if (isModelUnavailable) return undefined;
+      return conversationRef.current?.restoreFailedSubmission(
         submission.text,
         submission.images ?? [],
-      ),
-    [inputRef],
+      );
+    },
+    [conversationRef, isModelUnavailable],
   );
   const blocked = useCallback(
     () => showError(t('chat.errorRestoreFailedSubmission')),

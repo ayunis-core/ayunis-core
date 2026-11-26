@@ -43,11 +43,12 @@ The package also provides shared chat views:
   unavailable-model, provider-fault, and long-chat notices. Hosts supply status
   and actions such as academy navigation or starting a new chat.
 
-`@ayunis/chat/surface` provides the scrolling chat shell and the contracts for
-host transport, capabilities, header and empty-state slots, extra actions, and
-artifact opening. Hosts import `@ayunis/chat/surface.css` and supply the
-conversation content and composer. The header receives the host actions so the
-host can place them next to its navigation.
+`@ayunis/chat/surface` provides the configured conversation, scrolling shell,
+composer, run lifecycle, and the contracts for host transport, capabilities,
+named content slots, extra actions, and artifact opening. Hosts import
+`@ayunis/chat/surface.css`; they do not supply replacement conversation or
+composer renderers. The header receives host actions so the host can place them
+next to its navigation.
 
 For a configured surface, render `ChatConversation` from
 `@ayunis/chat/surface` with the selected thread, transport, and capabilities.
@@ -63,8 +64,9 @@ adapters where the surface supports them.
   and translated transport errors. The package remains the only owner of run
   execution, event routing, cancellation, reattach, and first-message handoff.
 - Use `onStartedRun` only to mirror a pre-navigation send into host-owned
-  optimistic submission state. File-processing hosts can call
-  `resumeStartedRun` after their sources become ready.
+  optimistic submission state. File-processing hosts may defer a send while
+  their context is processing, then call `resumeStartedRun` on the narrow
+  `ChatConversationHandle` after starting the shared lifecycle handoff.
 - Supply model and attachment operations, voice transcription, and history
   mutations for the capabilities the host enables. A host can provide draft
   storage scoped to the principal. The default keeps drafts in memory for the
@@ -78,3 +80,20 @@ adapters where the surface supports them.
 Client tools can register an executor, a custom card, or both by tool name.
 The shared lifecycle coordinates execution and routes results to the run.
 The host supplies the executor invocation and its context.
+
+## Supported host entry points
+
+| Entry point | Purpose |
+| --- | --- |
+| `@ayunis/chat/surface` | Configured conversation, composer, surface shell, capabilities, adapters, slots, and client-tool registration |
+| `@ayunis/chat/runs` | Transport contracts and the shared session lifecycle used for pre-navigation handoff |
+| `@ayunis/chat/new-chat` | Canonical new-chat shell and presentation primitives |
+| `@ayunis/chat/history` | Canonical history list, rows, states, pagination, rename, and delete presentation |
+| `@ayunis/chat/model-presentation` | Canonical selector hierarchy, modes, model metadata, and shared notices |
+| `@ayunis/chat/attachments` | Canonical source, knowledge-base, and integration badges |
+| `@ayunis/chat/messages`, `@ayunis/chat/timeline`, `@ayunis/chat/tool-cards` | Message/timeline rendering and registered rich tool cards |
+| `@ayunis/chat/markdown` | Markdown, citations, PII reveal, and legal-reference presentation |
+
+Internal files under `packages/chat/src` are not host APIs. The package does not
+export a generic configured-history wrapper or a composer replacement slot;
+hosts compose routing and queries around the canonical public primitives.

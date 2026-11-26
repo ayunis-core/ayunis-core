@@ -14,19 +14,18 @@ export { useContentScrollHeader } from './use-content-scroll-header';
 export { ChatConversation } from './chat-conversation';
 export type {
   ChatConversationAdapters,
-  ChatConversationController,
+  ChatConversationComposerConfig,
+  ChatConversationHandle,
   ChatConversationProps,
   ChatConversationSlots,
   ChatModelAdapter,
   ChatThreadSnapshot,
 } from './chat-conversation-config';
-export type { ChatHistoryConfig } from './configured-history';
 export {
   ConfiguredComposer,
   type ConfiguredComposerProps,
   type ConfiguredComposerRef,
 } from './configured-composer';
-export { ConfiguredHistory } from './configured-history';
 export {
   IntegrationsMenuAction,
   KnowledgeBasesMenuAction,

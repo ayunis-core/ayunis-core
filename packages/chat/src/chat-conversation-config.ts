@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode, RefObject } from 'react';
+import type { ComponentType, ReactNode, Ref, RefObject } from 'react';
 import type {
   GetThreadResponseDto,
   ImageMessageContentResponseDto,
@@ -9,7 +9,6 @@ import type {
   MarkdownProps,
   PiiUnmaskRequestHandler,
 } from '@ayunis/chat/markdown';
-import type { ChatHistoryConfig } from './configured-history';
 import type { AgentRunUnit, TimelinePresentation } from '@ayunis/chat/timeline';
 import type { ChatSlots, ChatSurfaceConfig } from './chat-surface-config';
 import type { ClientToolDispatch } from './client-tool-dispatch';
@@ -55,6 +54,8 @@ export interface ChatConversationAdapters {
   readonly model?: ChatModelAdapter;
   readonly onThreadState?: (thread: ChatThreadSnapshot) => void;
   readonly onRunSettled?: (threadId: string, outcome: RunOutcome) => void;
+  /** Handles request/stream failures without replacing composer-control errors. */
+  readonly onRunTransportError?: (error: Error) => void;
   readonly observeRun?: (
     request: RunExecutionRequest,
     voiceInput: boolean,
@@ -71,21 +72,28 @@ export interface ChatConversationAdapters {
   ) => void;
   readonly onUnauthorized?: () => void;
   readonly onError?: (error: unknown) => void;
+  /** Returns true when host-owned context has queued this send until it is ready. */
+  readonly deferSend?: (threadId: string, input: SendMessageInput) => boolean;
+  /** Returns true when a host-queued send was cancelled. */
+  readonly cancelDeferredSend?: (threadId: string) => boolean;
+  readonly onRunStopped?: (threadId: string) => void;
 }
 
-export interface ChatConversationController {
-  readonly messages: ChatThreadSnapshot['messages'];
-  readonly piiMasks: ChatThreadSnapshot['piiMasks'];
-  readonly threadTitle?: string;
-  readonly isStreaming: boolean;
-  readonly isCheckingForRun: boolean;
-  readonly isRunCancellable: boolean;
-  readonly send: (
-    input: SendMessageInput,
-    accepted?: () => void,
-  ) => Promise<void>;
+export interface ChatConversationHandle {
+  readonly restoreFailedSubmission: (
+    text: string,
+    files: File[],
+  ) => boolean | undefined;
   readonly resumeStartedRun: () => boolean;
-  readonly stop: () => void;
+}
+
+export interface ChatConversationComposerConfig {
+  readonly unavailableModel?: { readonly onNewChat: () => void };
+  /** Clears the submitted draft and pending images before the run responds. */
+  readonly clearOnSend?: boolean;
+  readonly fileInputTestId?: string;
+  readonly stopTestId?: string;
+  readonly deferredSendCancellable?: boolean;
 }
 
 export interface ChatConversationSlots extends ChatSlots {
@@ -104,8 +112,6 @@ export interface ChatConversationSlots extends ChatSlots {
   readonly composerAttachmentControl?: (content: ReactNode) => ReactNode;
   readonly composerVoiceControl?: (content: ReactNode) => ReactNode;
   readonly composerSendControl?: (content: ReactNode) => ReactNode;
-  readonly composerFallback?:
-    ReactNode | ((controller: ChatConversationController) => ReactNode);
   readonly messageImage?: (
     message: ChatThreadSnapshot['messages'][number],
     image: ImageMessageContentResponseDto,
@@ -124,7 +130,6 @@ export interface ChatConversationProps<Context = unknown, Outcome = unknown> {
   readonly config: ChatSurfaceConfig;
   readonly lifecycle?: ChatRunLifecycle;
   readonly thread: ChatThreadSnapshot;
-  readonly history?: ChatHistoryConfig;
   readonly adapters?: ChatConversationAdapters;
   readonly slots?: ChatConversationSlots;
   readonly activeRun?: {
@@ -135,4 +140,6 @@ export interface ChatConversationProps<Context = unknown, Outcome = unknown> {
   readonly clientTools?: ClientToolDispatch<Context, Outcome>;
   readonly timeline?: TimelinePresentation;
   readonly pendingSubmission?: string | null;
+  readonly composer?: ChatConversationComposerConfig;
+  readonly conversationRef?: Ref<ChatConversationHandle>;
 }

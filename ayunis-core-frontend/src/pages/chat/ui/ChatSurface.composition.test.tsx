@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createRef, useState } from 'react';
 import {
   act,
   fireEvent,
@@ -11,6 +11,7 @@ import {
   ChatConversation,
   ChatSurface,
   createClientToolRegistry,
+  type ChatConversationHandle,
   type ChatConversationProps,
   type ChatThreadSnapshot,
 } from '@ayunis/chat/surface';
@@ -27,7 +28,6 @@ import type {
 } from '@ayunis/api-client/schemas';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import RoutineNudgeNotice from './RoutineNudgeNotice';
 
 beforeAll(async () => {
   Element.prototype.scrollIntoView ??= () => undefined;
@@ -61,16 +61,20 @@ function userMessage(
 function TestHost(props: Pick<ChatConversationProps, 'config' | 'adapters'>) {
   const [thread, setThread] = useState(first);
   return (
-    <ChatConversation
-      {...props}
-      sessionKey="test-user"
-      thread={thread}
-      history={{
-        chats: [first, second],
-        onSelect: (id) => setThread(id === first.id ? first : second),
-      }}
-    />
+    <>
+      <button type="button" onClick={() => setThread(first)}>
+        {first.title}
+      </button>
+      <button type="button" onClick={() => setThread(second)}>
+        {second.title}
+      </button>
+      <ChatConversation {...props} sessionKey="test-user" thread={thread} />
+    </>
   );
+}
+
+function NudgeNotice({ text }: Readonly<{ text: string }>) {
+  return <aside data-testid="routine-nudge">{text}</aside>;
 }
 
 function event(
@@ -164,6 +168,93 @@ function deferredToolRun(
 }
 
 describe('shared chat composition', () => {
+  it('owns the unavailable-model state without a host composer replacement', () => {
+    const onNewChat = vi.fn();
+    const conversation = createRef<ChatConversationHandle>();
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        conversationRef={conversation}
+        thread={first}
+        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        composer={{ unavailableModel: { onNewChat } }}
+      />,
+    );
+
+    expect(screen.queryByRole('textbox', { name: 'Message' })).toBeNull();
+    expect(
+      conversation.current?.restoreFailedSubmission('Keep this prompt', []),
+    ).toBeUndefined();
+    fireEvent.click(screen.getByRole('button'));
+    expect(onNewChat).toHaveBeenCalledOnce();
+  });
+
+  it('lets a neutral host defer a send and resume it through the conversation handle', async () => {
+    const pending = stream();
+    const request = vi.fn(async () => pending.response);
+    const lifecycle = createChatRunLifecycle({ send: request });
+    const conversation = createRef<ChatConversationHandle>();
+    const deferSend = vi.fn(() => true);
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        conversationRef={conversation}
+        lifecycle={lifecycle}
+        thread={first}
+        config={{ transport: { send: request }, capabilities: {} }}
+        composer={{ clearOnSend: true }}
+        adapters={{ deferSend }}
+      />,
+    );
+
+    send('Wait for the host');
+    expect(deferSend).toHaveBeenCalledWith(
+      first.id,
+      expect.objectContaining({ text: 'Wait for the host' }),
+    );
+    expect(request).not.toHaveBeenCalled();
+    expect(screen.queryByDisplayValue('Wait for the host')).toBeNull();
+
+    lifecycle.startThreadRun({
+      threadId: first.id,
+      text: 'Wait for the host',
+      images: [],
+    });
+    expect(conversation.current?.resumeStartedRun()).toBe(true);
+    await act(async () => {
+      pending.push(answer(first.id, 'a1', 'Ready now'));
+      pending.close();
+    });
+    expect(await screen.findByText('Ready now')).toBeTruthy();
+  });
+
+  it('does not clear or hand a draft to the host while an active run is being checked', () => {
+    const request = vi.fn(async () => new Response(null, { status: 204 }));
+    const deferSend = vi.fn(() => false);
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        activeRun={{ dataUpdatedAt: 0, isFetching: true }}
+        config={{
+          transport: { send: request, follow: vi.fn() },
+          capabilities: {},
+        }}
+        composer={{ clearOnSend: true }}
+        adapters={{ deferSend }}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+      target: { value: 'Keep this draft' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(screen.getByDisplayValue('Keep this draft')).toBeTruthy();
+    expect(deferSend).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+  });
+
   it('keeps user-message markdown separate from assistant timeline tracking', () => {
     const UserMarkdown = ({ children }: Readonly<MarkdownProps>) => (
       <p data-testid="user-markdown">{children}</p>
@@ -507,11 +598,11 @@ describe('shared chat composition', () => {
           ],
         }}
         config={{ transport: { send: vi.fn() }, capabilities: {} }}
-        slots={{ messageNudge: (text) => <RoutineNudgeNotice text={text} /> }}
+        slots={{ messageNudge: (text) => <NudgeNotice text={text} /> }}
       />,
     );
-    expect(screen.getByTestId('routine-nudge').textContent).toContain(
-      'chat.routine.nudge',
+    expect(screen.getByTestId('routine-nudge').textContent).toBe(
+      'Check in later',
     );
     expect(screen.queryByTestId('user-message')).toBeNull();
   });
@@ -608,6 +699,61 @@ describe('shared chat composition', () => {
     expect(screen.queryByDisplayValue('First prompt')).toBeNull();
   });
 
+  it('keeps a follow-up image when the sent message is accepted later', async () => {
+    const pending = stream();
+    const request = vi.fn(async () => pending.response);
+    const sent = new File(['sent'], 'sent.png', { type: 'image/png' });
+    const followUp = new File(['follow-up'], 'follow-up.png', {
+      type: 'image/png',
+    });
+    vi.stubGlobal(
+      'URL',
+      class extends URL {
+        static override readonly createObjectURL = (file: File) =>
+          `blob:${file.name}`;
+        static override readonly revokeObjectURL = () => undefined;
+      },
+    );
+    const { unmount } = render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        config={{
+          transport: { send: request },
+          capabilities: { fileUpload: true },
+        }}
+        composer={{ clearOnSend: true }}
+        adapters={{
+          imageAttachments: true,
+          allowAttachmentsWhileStreaming: true,
+        }}
+      />,
+    );
+    try {
+      fireEvent.change(screen.getByLabelText('Attach images'), {
+        target: { files: [sent] },
+      });
+      send('First prompt');
+      fireEvent.change(screen.getByLabelText('Attach images'), {
+        target: { files: [followUp] },
+      });
+      expect(screen.getByRole('img', { name: 'follow-up.png' })).toBeDefined();
+
+      await act(async () => {
+        pending.push({
+          type: 'message',
+          message: userMessage('u1', [{ type: 'text', text: 'First prompt' }]),
+        });
+        pending.close();
+      });
+
+      expect(screen.getByRole('img', { name: 'follow-up.png' })).toBeDefined();
+    } finally {
+      unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('aborts the old session and opens a fresh draft when the principal changes', async () => {
     const prior = stream();
     const request = vi
@@ -682,6 +828,43 @@ describe('shared chat composition', () => {
     expect(follow.mock.calls).toHaveLength(1);
     pending.close();
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it('stops a deferred send that becomes active before cancellation', () => {
+    const cancel = vi.fn(async () => undefined);
+    const follow = vi.fn(() => new Promise<Response>(() => undefined));
+    const request = vi.fn(async () => new Response(null, { status: 204 }));
+    const lifecycle = createChatRunLifecycle({ send: request, cancel });
+    const controller = new AbortController();
+    const cancelDeferredSend = vi.fn(() => {
+      lifecycle.registerActiveThreadRun(first.id, controller);
+      return false;
+    });
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        lifecycle={lifecycle}
+        thread={first}
+        pendingSubmission="Question"
+        activeRun={{
+          run: { cancellable: false },
+          dataUpdatedAt: Date.now(),
+          isFetching: false,
+        }}
+        config={{
+          transport: { send: request, follow, cancel },
+          capabilities: {},
+        }}
+        composer={{ deferredSendCancellable: true }}
+        adapters={{ cancelDeferredSend }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+
+    expect(cancelDeferredSend).toHaveBeenCalledWith(first.id);
+    expect(cancel).toHaveBeenCalledWith(first.id);
+    expect(controller.signal.aborted).toBe(true);
   });
 
   it('removes an unsaved streaming tool call when the shared runtime stops', async () => {
@@ -1061,6 +1244,30 @@ describe('shared chat composition', () => {
     }
   });
 
+  it('keeps run failures separate from composer failures', async () => {
+    const composerError = vi.fn();
+    const sendError = vi.fn();
+    const request = vi.fn(async () => {
+      throw new Error('Offline');
+    });
+    render(
+      <ChatConversation
+        sessionKey="test-user"
+        thread={first}
+        config={{ transport: { send: request }, capabilities: {} }}
+        adapters={{
+          onError: composerError,
+          onRunTransportError: sendError,
+        }}
+      />,
+    );
+
+    send('Try to send');
+
+    await waitFor(() => expect(sendError).toHaveBeenCalledOnce());
+    expect(composerError).not.toHaveBeenCalled();
+  });
+
   it('keeps an accepted photo and explains why the larger one was rejected', () => {
     const onError = vi.fn();
     const send = vi.fn(async () => new Response(null, { status: 204 }));
@@ -1099,12 +1306,10 @@ describe('shared chat composition', () => {
     }
   });
 
-  it('suppresses disabled actions and routes enabled actions to the host adapters', async () => {
+  it('suppresses disabled composer actions and routes enabled actions to the host adapters', async () => {
     const selectModel = vi.fn(async () => undefined);
     const uploadFiles = vi.fn(async () => undefined);
     const transcribe = vi.fn(async () => null);
-    const rename = vi.fn(async () => undefined);
-    const remove = vi.fn(async () => undefined);
     const request = vi.fn(async () => new Response(null, { status: 204 }));
     const props = {
       sessionKey: 'test-user',
@@ -1122,7 +1327,6 @@ describe('shared chat composition', () => {
         documentAttachments: true,
         transcribe,
       },
-      history: { chats: [first], onSelect: vi.fn(), rename, remove },
     };
     const transport = { send: request };
     const { rerender } = render(
@@ -1130,17 +1334,9 @@ describe('shared chat composition', () => {
     );
     expect(screen.queryByLabelText('Attach files')).toBeNull();
     expect(screen.queryByLabelText('Model')).toBeNull();
-    expect(
-      screen.queryByRole('button', { name: 'Rename First chat' }),
-    ).toBeNull();
-    expect(
-      screen.queryByRole('button', { name: 'Delete First chat' }),
-    ).toBeNull();
     expect(selectModel).not.toHaveBeenCalled();
     expect(uploadFiles).not.toHaveBeenCalled();
     expect(transcribe).not.toHaveBeenCalled();
-    expect(rename).not.toHaveBeenCalled();
-    expect(remove).not.toHaveBeenCalled();
 
     rerender(
       <ChatConversation
@@ -1150,8 +1346,6 @@ describe('shared chat composition', () => {
           capabilities: {
             fileUpload: true,
             modelSelection: true,
-            rename: true,
-            delete: true,
           },
         }}
       />,
@@ -1177,24 +1371,6 @@ describe('shared chat composition', () => {
       first.id,
       'b',
       expect.any(AbortSignal),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Rename First chat' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Chat title' }), {
-      target: { value: 'New title' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Save title' }));
-    await waitFor(() =>
-      expect(rename).toHaveBeenCalledWith(
-        first.id,
-        'New title',
-        expect.any(AbortSignal),
-      ),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Delete First chat' }));
-    expect(remove).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Delete chat' }));
-    await waitFor(() =>
-      expect(remove).toHaveBeenCalledWith(first.id, expect.any(AbortSignal)),
     );
   });
 });
