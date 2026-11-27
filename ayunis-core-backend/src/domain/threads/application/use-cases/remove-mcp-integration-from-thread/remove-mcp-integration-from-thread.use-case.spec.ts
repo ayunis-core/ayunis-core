@@ -25,7 +25,7 @@ describe('RemoveMcpIntegrationFromThreadUseCase', () => {
 
   beforeAll(async () => {
     const mockThreadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
       updateMcpIntegrations: jest.fn(),
     };
 
@@ -59,7 +59,7 @@ describe('RemoveMcpIntegrationFromThreadUseCase', () => {
       mcpIntegrationIds: [mockMcpIntegrationId, mockMcpIntegrationId2],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.updateMcpIntegrations.mockResolvedValue(undefined);
 
     const command = new RemoveMcpIntegrationFromThreadCommand(
@@ -72,6 +72,7 @@ describe('RemoveMcpIntegrationFromThreadUseCase', () => {
     expect(threadsRepository.updateMcpIntegrations).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       mcpIntegrationIds: [mockMcpIntegrationId2],
     });
   });
@@ -84,7 +85,7 @@ describe('RemoveMcpIntegrationFromThreadUseCase', () => {
       mcpIntegrationIds: [mockMcpIntegrationId2],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     const command = new RemoveMcpIntegrationFromThreadCommand(
       mockThreadId,
@@ -97,7 +98,7 @@ describe('RemoveMcpIntegrationFromThreadUseCase', () => {
   });
 
   it('should throw ThreadNotFoundError when thread does not exist', async () => {
-    threadsRepository.findOne.mockResolvedValue(null);
+    threadsRepository.findOneForSurface.mockResolvedValue(null);
 
     const command = new RemoveMcpIntegrationFromThreadCommand(
       mockThreadId,

@@ -6,6 +6,7 @@ import type { RunEvent } from 'src/domain/runs/application/run-events';
 import { UnexpectedRunError } from 'src/domain/runs/application/runs.errors';
 import { ActiveThreadRuns } from 'src/domain/runs/application/services/active-thread-runs.service';
 import { AttachToThreadRunQuery } from './attach-to-thread-run.query';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 export type ThreadRunSubscription = (
   signal: AbortSignal,
@@ -30,7 +31,11 @@ export class AttachToThreadRunUseCase {
   ): Promise<ThreadRunSubscription | null> {
     const { userId } = getRequiredUserContext(this.contextService);
     this.logger.log({ threadId: query.threadId }, 'attachToThreadRun');
-    const run = this.activeThreadRuns.find(query.threadId, userId);
+    const run = this.activeThreadRuns.find(
+      query.threadId,
+      userId,
+      getCurrentThreadClient(this.contextService),
+    );
     return Promise.resolve(
       run ? (signal: AbortSignal) => run.subscribe(signal) : null,
     );

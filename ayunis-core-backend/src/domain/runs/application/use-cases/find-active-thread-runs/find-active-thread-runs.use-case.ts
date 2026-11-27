@@ -7,6 +7,7 @@ import {
   ActiveThreadRuns,
   type ActiveThreadRunSummary,
 } from 'src/domain/runs/application/services/active-thread-runs.service';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class FindActiveThreadRunsUseCase {
@@ -21,6 +22,11 @@ export class FindActiveThreadRunsUseCase {
   execute(): Promise<ActiveThreadRunSummary[]> {
     const { userId } = getRequiredUserContext(this.contextService);
     this.logger.debug({ userId }, 'findActiveThreadRuns');
-    return Promise.resolve(this.activeThreadRuns.listForUser(userId));
+    return Promise.resolve(
+      this.activeThreadRuns.listForUser(
+        userId,
+        getCurrentThreadClient(this.contextService),
+      ),
+    );
   }
 }

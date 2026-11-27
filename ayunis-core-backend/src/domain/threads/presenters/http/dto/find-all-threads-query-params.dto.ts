@@ -52,9 +52,10 @@ export class FindAllThreadsQueryParamsDto {
 
   @ApiPropertyOptional({
     description:
-      'Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit to list only threads started in the web app.',
+      'Deprecated and ignored. Thread visibility is derived from the authenticated session client.',
     enum: SESSION_CLIENTS,
     enumName: 'SessionClient',
+    deprecated: true,
   })
   @IsOptional()
   @IsIn(SESSION_CLIENTS)

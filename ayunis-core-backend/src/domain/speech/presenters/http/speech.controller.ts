@@ -11,11 +11,14 @@ import { SynthesizeSpeechUseCase } from 'src/domain/speech/application/use-cases
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
 import { ApiSynthesizeSpeech } from './decorators/api-synthesize-speech.decorator';
 import { SynthesizeSpeechDto } from './dto/synthesize-speech.dto';
+import { SurfaceScope } from 'src/config/surface-scope';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 
 @ApiTags('speech')
 @ApiBearerAuth()
 @RequireAcademyCertificate()
 @RequireFeature(FeatureFlag.ReadAloud)
+@RequireSurfaceScope(SurfaceScope.VOICE)
 @Controller('speech')
 export class SpeechController {
   private readonly logger = new Logger(SpeechController.name);

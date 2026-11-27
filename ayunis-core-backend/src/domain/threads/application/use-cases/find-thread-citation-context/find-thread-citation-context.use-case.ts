@@ -9,6 +9,7 @@ import {
   UnexpecteThreadError,
 } from 'src/domain/threads/application/threads.errors';
 import { FindThreadCitationContextQuery } from './find-thread-citation-context.query';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class FindThreadCitationContextUseCase {
@@ -33,6 +34,7 @@ export class FindThreadCitationContextUseCase {
     const context = await this.threadsRepository.findCitationContext(
       query.threadId,
       userId,
+      getCurrentThreadClient(this.contextService),
     );
     if (!context) throw new ThreadNotFoundError(query.threadId, userId);
     return context;

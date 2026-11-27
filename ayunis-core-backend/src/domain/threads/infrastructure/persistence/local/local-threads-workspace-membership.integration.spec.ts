@@ -262,11 +262,13 @@ describe('Workspace chats require current membership (PostgreSQL)', () => {
     return {
       list: (await listedIds(creator)).includes(chatId),
       workspaceList: (await listedIds(creator, workspaceId)).includes(chatId),
-      detail: (await threads.findOne(chatId, creator)) !== null,
-      images: await threads.existsForUser(chatId, creator),
-      aiContext: (await threads.findContextRefs(chatId, creator)) !== null,
-      citations: (await threads.findCitationContext(chatId, creator)) !== null,
-      byIds: (await threads.findAllByIds(creator, [chatId])).length === 1,
+      detail: (await threads.findOneForSurface(chatId, creator, null)) !== null,
+      images: await threads.existsForSurface(chatId, creator, null),
+      aiContext:
+        (await threads.findContextRefs(chatId, creator, null)) !== null,
+      citations:
+        (await threads.findCitationContext(chatId, creator, null)) !== null,
+      byIds: (await threads.findAllByIds(creator, [chatId], null)).length === 1,
     };
   }
 
@@ -289,7 +291,7 @@ describe('Workspace chats require current membership (PostgreSQL)', () => {
    * chat.
    */
   function writes(chatId: UUID) {
-    const ref = { threadId: chatId, userId: creator };
+    const ref = { threadId: chatId, userId: creator, client: null };
     const knowledgeBase = { ...ref, knowledgeBaseId: randomUUID() };
     return {
       rename: () => threads.updateTitle({ ...ref, title: 'Haushalt 2028' }),
@@ -387,12 +389,17 @@ describe('Workspace chats require current membership (PostgreSQL)', () => {
 
   it('never shows another member the creator’s chats in their workspace', async () => {
     expect(await listedIds(colleague, workspaceId)).toEqual([colleagueChat]);
-    expect(await threads.findOne(workspaceChat, colleague)).toBeNull();
-    expect(await threads.findAllByIds(colleague, [workspaceChat])).toEqual([]);
+    expect(
+      await threads.findOneForSurface(workspaceChat, colleague, null),
+    ).toBeNull();
+    expect(
+      await threads.findAllByIds(colleague, [workspaceChat], null),
+    ).toEqual([]);
     await expect(
       threads.updateTitle({
         threadId: workspaceChat,
         userId: colleague,
+        client: null,
         title: 'Taken over',
       }),
     ).rejects.toBeInstanceOf(ThreadNotFoundError);

@@ -12,6 +12,7 @@ import { CountMessagesTokensCommand } from 'src/domain/messages/application/use-
 import { getLongChatWarningThresholdTokens } from 'src/common/token-counter/application/util/context-budget.helper';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 export interface FindThreadResult {
   thread: Thread;
@@ -32,7 +33,11 @@ export class FindThreadUseCase {
   async execute(query: FindThreadQuery): Promise<FindThreadResult> {
     this.logger.log({ threadId: query.id }, 'findOne');
     const { userId } = getRequiredUserContext(this.contextService);
-    const thread = await this.threadsRepository.findOne(query.id, userId);
+    const thread = await this.threadsRepository.findOneForSurface(
+      query.id,
+      userId,
+      getCurrentThreadClient(this.contextService),
+    );
     if (!thread) {
       throw new ThreadNotFoundError(query.id, userId);
     }

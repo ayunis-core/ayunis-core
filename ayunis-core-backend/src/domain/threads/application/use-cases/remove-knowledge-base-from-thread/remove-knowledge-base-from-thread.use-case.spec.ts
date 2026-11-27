@@ -26,7 +26,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
 
   beforeAll(async () => {
     const mockThreadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
       removeKnowledgeBaseAssignment: jest.fn(),
     };
 
@@ -70,7 +70,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
       ],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.removeKnowledgeBaseAssignment.mockResolvedValue(
       undefined,
     );
@@ -87,6 +87,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     ).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       knowledgeBaseId: mockKbId,
       originSkillId: undefined,
     });
@@ -109,7 +110,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
       ],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.removeKnowledgeBaseAssignment.mockResolvedValue(
       undefined,
     );
@@ -127,6 +128,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     ).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       knowledgeBaseId: mockKbId,
       originSkillId: mockSkillId,
     });
@@ -144,7 +146,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
       ],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.removeKnowledgeBaseAssignment.mockResolvedValue(
       undefined,
     );
@@ -161,6 +163,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     ).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       knowledgeBaseId: mockKbId,
       originSkillId: undefined,
     });
@@ -178,7 +181,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
       ],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     const command = new RemoveKnowledgeBaseFromThreadCommand(
       mockThreadId,
@@ -205,7 +208,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
       ],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     const command = new RemoveKnowledgeBaseFromThreadCommand(
       mockThreadId,
@@ -221,7 +224,7 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
   });
 
   it('should throw ThreadNotFoundError when thread does not exist', async () => {
-    threadsRepository.findOne.mockResolvedValue(null);
+    threadsRepository.findOneForSurface.mockResolvedValue(null);
 
     const command = new RemoveKnowledgeBaseFromThreadCommand(
       mockThreadId,
@@ -242,6 +245,6 @@ describe('RemoveKnowledgeBaseFromThreadUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
     );
-    expect(threadsRepository.findOne).not.toHaveBeenCalled();
+    expect(threadsRepository.findOneForSurface).not.toHaveBeenCalled();
   });
 });

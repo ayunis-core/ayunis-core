@@ -40,7 +40,7 @@ test('a pane session uploads an attachment through the direct-upload flow', asyn
   test.setTimeout(90_000);
   await permitEmbeddingModel(api);
   const { accessToken } = await handOffSessionToOutlook(api);
-  const thread = await createEmptyThread(api, await defaultModelId(api));
+  const modelId = await defaultModelId(api);
   const pdf = createPdf('Haushalt 2026', 'AYC-1591-PANE-UPLOAD');
 
   const pane = await apiRequest.newContext({
@@ -51,6 +51,7 @@ test('a pane session uploads an attachment through the direct-upload flow', asyn
     extraHTTPHeaders: { Authorization: `Bearer ${accessToken}` },
   });
   try {
+    const thread = await createEmptyThread(pane, modelId);
     const reserved = await pane.post(
       `${config.apiURL}/api/threads/${thread.id}/uploads`,
       {

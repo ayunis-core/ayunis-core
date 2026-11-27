@@ -162,7 +162,6 @@ export class ThreadsController {
           workspaceId: queryParams.workspaceId,
           isRoutine: toIsRoutineFilter(queryParams.type),
           routineId: queryParams.routineId,
-          client: queryParams.client,
         },
         { limit: queryParams.limit, offset: queryParams.offset },
       ),

@@ -9,6 +9,7 @@ import { ApplicationError } from 'src/common/errors/base.error';
 import { ContextService } from 'src/common/context/services/context.service';
 import { SourceAlreadyAssignedError } from 'src/domain/threads/application/threads.errors';
 import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/util/thread-source-capacity';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class AddSourceToThreadUseCase {
@@ -35,9 +36,11 @@ export class AddSourceToThreadUseCase {
       }
 
       // Load fresh thread from DB to avoid stale in-memory duplicate checks
-      const freshThread = await this.threadsRepository.findOne(
+      const client = getCurrentThreadClient(this.contextService);
+      const freshThread = await this.threadsRepository.findOneForSurface(
         command.thread.id,
         userId,
+        client,
       );
       if (!freshThread) {
         throw new SourceAdditionError(
@@ -52,6 +55,7 @@ export class AddSourceToThreadUseCase {
       return await this.threadsRepository.addSourceAssignment({
         threadId: command.thread.id,
         userId,
+        client,
         sourceAssignment: new SourceAssignment({
           source: command.source,
           originSkillId: command.originSkillId,

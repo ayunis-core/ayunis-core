@@ -17,6 +17,7 @@ import {
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { DownloadMessageImageQuery } from './download-message-image.query';
 import { getRequiredOrgId } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 export interface MessageImageDownload {
   stream: NodeJS.ReadableStream;
@@ -49,9 +50,10 @@ export class DownloadMessageImageUseCase {
 
     const orgId = getRequiredOrgId(this.contextService);
 
-    const thread = await this.threadsRepository.findOne(
+    const thread = await this.threadsRepository.findOneForSurface(
       query.threadId,
       query.userId,
+      getCurrentThreadClient(this.contextService),
     );
     if (!thread) {
       throw new ThreadNotFoundError(query.threadId, query.userId);

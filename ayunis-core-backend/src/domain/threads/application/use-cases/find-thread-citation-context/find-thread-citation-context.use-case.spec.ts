@@ -1,5 +1,9 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
+import {
+  aUserContext,
+  getFromStore,
+} from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
@@ -18,7 +22,9 @@ describe('FindThreadCitationContextUseCase', () => {
       findCitationContext: jest.fn(),
     } as unknown as jest.Mocked<ThreadsRepository>;
     contextService = {
-      get: jest.fn().mockReturnValue(userId),
+      get: jest.fn(
+        getFromStore({ ...aUserContext({ userId }), client: 'excel' }),
+      ),
     } as unknown as jest.Mocked<ContextService>;
     useCase = new FindThreadCitationContextUseCase(repository, contextService);
   });
@@ -42,6 +48,7 @@ describe('FindThreadCitationContextUseCase', () => {
     expect(repository.findCitationContext).toHaveBeenCalledWith(
       threadId,
       userId,
+      'excel',
     );
   });
 
@@ -54,7 +61,7 @@ describe('FindThreadCitationContextUseCase', () => {
   });
 
   it('requires an authenticated user', async () => {
-    contextService.get.mockReturnValue(undefined);
+    contextService.get.mockImplementation(() => undefined);
 
     await expect(
       useCase.execute(new FindThreadCitationContextQuery(threadId)),

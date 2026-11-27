@@ -7,6 +7,7 @@ import { GetMcpIntegrationsByIdsUseCase } from 'src/domain/mcp/application/use-c
 import { GetMcpIntegrationsByIdsQuery } from 'src/domain/mcp/application/use-cases/get-mcp-integrations-by-ids/get-mcp-integrations-by-ids.query';
 import { McpIntegrationNotFoundError } from 'src/domain/mcp/application/mcp.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class AddMcpIntegrationToThreadUseCase {
@@ -29,9 +30,11 @@ export class AddMcpIntegrationToThreadUseCase {
 
     const { userId } = getRequiredUserContext(this.contextService);
 
-    const thread = await this.threadsRepository.findOne(
+    const client = getCurrentThreadClient(this.contextService);
+    const thread = await this.threadsRepository.findOneForSurface(
       command.threadId,
       userId,
+      client,
     );
 
     if (!thread) {
@@ -59,6 +62,7 @@ export class AddMcpIntegrationToThreadUseCase {
     await this.threadsRepository.updateMcpIntegrations({
       threadId: command.threadId,
       userId,
+      client,
       mcpIntegrationIds: updatedIds,
     });
   }

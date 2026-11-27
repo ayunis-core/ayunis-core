@@ -5,6 +5,7 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 import { UnexpectedRunError } from 'src/domain/runs/application/runs.errors';
 import { ActiveThreadRuns } from 'src/domain/runs/application/services/active-thread-runs.service';
 import { CancelThreadRunCommand } from './cancel-thread-run.command';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 /**
  * Stops the current user's runs on the thread, which then roll back their
@@ -24,7 +25,11 @@ export class CancelThreadRunUseCase {
   execute(command: CancelThreadRunCommand): Promise<void> {
     const { userId } = getRequiredUserContext(this.contextService);
     this.logger.log({ threadId: command.threadId }, 'cancelThreadRun');
-    this.activeThreadRuns.cancel(command.threadId, userId);
+    this.activeThreadRuns.cancel(
+      command.threadId,
+      userId,
+      getCurrentThreadClient(this.contextService),
+    );
     return Promise.resolve();
   }
 }

@@ -20,4 +20,20 @@ This module is the entry point for all identity verification in Ayunis. The publ
 
 `RefreshTokenSingleFlightService` collapses simultaneous refreshes for the same opaque token and refresh mode before they enter `RefreshTokenUseCase`. The global guard and the public refresh endpoint share this singleton, so parallel browser requests reuse one cookie refresh without occupying additional database connections. Cookie and client-bound body refreshes use separate flights because the body path enforces the stricter client-binding contract. Settled flights are removed after both success and failure; later reuse and grace-window decisions therefore remain owned by the sessions module.
 
-**Token clients.** `JwtStrategy` reads the access token from the cookie and, when no cookie is present, from `Authorization: Bearer` (`common/util/access-token.util.ts`; the cookie wins when both are sent). Tokens with a `client` claim yield an `ActiveUser` with that `client`; a claim outside the session client registry is rejected. `GET /auth/me` returns that verified token surface’s granted scopes and returns an empty list for cookie sessions. `SessionHandoffController` (`POST /auth/session/handoff`, public, same IP budget as refresh) gives the Office add-in pane its own session, authenticated by the dialog's cookie session: `HandOffSessionUseCase` validates the refresh cookie like a refresh would (reuse revokes its family, organisation policy applies), forks a new family bound to the requested client through `ForkSessionUseCase` and returns `{ accessToken, refreshToken, expiresIn }` (`SessionTokensResponseDtoMapper`). The cookie session and its cookies stay untouched, because on Outlook on the web the dialog shares cookies with the web app. The handoff is accepted only from the frontend origin (`Origin` header), because the dialog always runs there and permissive CORS on self-hosted deployments would otherwise let a same-site page read the tokens. `POST /auth/refresh` and `POST /auth/logout` accept `{ refreshToken }` in the body only when no refresh cookie is present and then write no cookies; the body refresh is `clientBound`, so a session without a `client` is rejected there and a browser session's token cannot become an unrestricted bearer token. On both refresh paths only a rejected session answers 401 (clients drop their token on it); an outage keeps its own status so the session survives; `GET /auth/me` resolves the Bearer token. These three routes are marked `@RequireSurfaceScope(...)`. `JwtAuthGuard`'s inline refresh stays cookie-only, so a Bearer client refreshes explicitly.
+**Token clients.** `JwtStrategy` reads the access token from the cookie and,
+when no cookie is present, from `Authorization: Bearer`
+(`common/util/access-token.util.ts`; the cookie wins when both are sent).
+Tokens with a `client` claim yield an `ActiveUser` with that `client`; a claim
+outside the session client registry is rejected. `GET /auth/me` returns that
+verified token surface’s granted scopes and returns an empty list for cookie
+sessions. `SessionHandoffController` (`POST /auth/session/handoff`, public,
+same IP budget as refresh) gives the Office add-in pane its own session,
+authenticated by the dialog's cookie session. `HandOffSessionUseCase` validates
+the refresh cookie like a refresh would, forks a separate family bound to the
+requested client, and returns its tokens without changing the cookie session.
+The handoff is accepted only from the frontend origin. Excel is independently
+boot-gated: while its flag is off, new handoffs return 404 and existing Excel
+tokens retain only `session` scope for `/auth/me`, refresh, and logout; Outlook
+remains fully available. Excel task-pane and manifest delivery belong to the
+add-in application follow-up. Body-token refresh and logout are accepted only
+without a refresh cookie, remain client-bound, and write no cookies.

@@ -13,6 +13,10 @@ import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import { ThreadSourceLimitExceededError } from 'src/domain/threads/application/threads.errors';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
+import {
+  aUserContext,
+  createMockContextService,
+} from 'src/common/context/testing/context.fixtures';
 
 const THREAD_ID = '33333333-3333-3333-3333-333333333333' as UUID;
 const UPLOAD_ID = '44444444-4444-4444-4444-444444444444' as UUID;
@@ -35,14 +39,14 @@ describe('CompleteThreadSourceUploadUseCase', () => {
   const threadsRepository = {
     attachSourcesWithinCapacity: jest.fn().mockResolvedValue(undefined),
   };
-  const contextService = {
-    get: jest.fn((key: string) => (key === 'userId' ? USER_ID : ORG_ID)),
-  };
+  const contextService = createMockContextService(
+    aUserContext({ userId: USER_ID, orgId: ORG_ID }),
+  );
   const useCase = new CompleteThreadSourceUploadUseCase(
     findThread as never,
     completeUpload as never,
     threadsRepository as never,
-    contextService as never,
+    contextService,
   );
   const attached = source('00000000-0000-0000-0000-00000000000a');
   const fresh = source('00000000-0000-0000-0000-00000000000b');
@@ -82,6 +86,7 @@ describe('CompleteThreadSourceUploadUseCase', () => {
     expect(threadsRepository.attachSourcesWithinCapacity).toHaveBeenCalledWith({
       threadId: THREAD_ID,
       userId: USER_ID,
+      client: null,
       sourceIds: [fresh.id, second.id],
       maxSources: ThreadsConstants.MAX_SOURCES,
     });

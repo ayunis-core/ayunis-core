@@ -418,6 +418,14 @@ At least one must be configured:
   required — see above)
 - `OUTLOOK_ADDIN_FRAME_ORIGINS`: comma-separated origins allowed to frame the
   Outlook task pane and event runtime. See [Outlook Add-in](#outlook-add-in).
+- `FEATURE_EXCEL_ADDIN_ENABLED`: `true` permits Excel session handoff and
+  scoped API access. Off by default and independent of Outlook. Restart the
+  backend after changing it. The Excel application and manifest are delivered
+  by the follow-up add-in work; this flag reserves their surface configuration.
+- `EXCEL_ADDIN_FRAME_ORIGINS`: comma-separated origins allowed to frame the
+  Excel task pane. Unset allows Excel on the web
+  (`https://excel.cloud.microsoft`); setting it replaces that list. The Excel
+  manifest and Microsoft 365 deployment are added separately.
 - `FEATURE_OPARL_ENABLED`: `true` lets super admins add council information
   systems (OParl) whose data is mirrored and synced daily from the API or
   ingestion worker, which then makes outbound requests to those public hosts.

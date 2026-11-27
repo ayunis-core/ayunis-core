@@ -3,11 +3,14 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Inject,
   Logger,
+  NotFoundException,
   Post,
   Req,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -32,6 +35,8 @@ import {
 } from 'src/iam/authentication/presenters/http/dtos/session-tokens.dto';
 import { ErrorResponseDto } from 'src/iam/authentication/presenters/http/dtos/auth-response.dto';
 import { SessionTokensResponseDtoMapper } from 'src/iam/authentication/presenters/http/mappers/session-tokens-response-dto.mapper';
+import { featuresConfig } from 'src/config/features.config';
+import { isTokenSurfaceEnabled } from 'src/config/surface-registry';
 
 @ApiTags('Authentication')
 @Controller('auth/session')
@@ -42,6 +47,8 @@ export class SessionHandoffController {
     private readonly handOffSessionUseCase: HandOffSessionUseCase,
     private readonly configService: ConfigService,
     private readonly sessionTokensMapper: SessionTokensResponseDtoMapper,
+    @Inject(featuresConfig.KEY)
+    private readonly features: ConfigType<typeof featuresConfig>,
   ) {}
 
   @Public()
@@ -72,6 +79,9 @@ export class SessionHandoffController {
     @Req() req: Request,
     @Body() body: SessionHandoffRequestDto,
   ): Promise<SessionTokensResponseDto> {
+    if (!isTokenSurfaceEnabled(body.client, this.features)) {
+      throw new NotFoundException();
+    }
     this.logger.log({ client: body.client }, 'handoff');
     this.assertDialogOrigin(req);
     const refreshToken = this.refreshCookie(req);

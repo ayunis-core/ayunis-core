@@ -14,6 +14,7 @@ import { ActiveUser } from 'src/iam/authentication/domain/active-user.entity';
 import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 import { SystemRole } from 'src/iam/users/domain/value-objects/system-role.enum';
+import { featuresConfig } from 'src/config/features.config';
 
 createLoggerMock();
 
@@ -26,6 +27,10 @@ class FixtureController {
   @RequireSurfaceScope(SurfaceScope.CHAT)
   @Get('new-chat-operation')
   newChatOperation() {}
+
+  @RequireSurfaceScope(SurfaceScope.SESSION)
+  @Get('session')
+  session() {}
 
   @SetMetadata(SURFACE_SCOPE_KEY, 'ungranted-test-scope')
   @Get('ungranted')
@@ -58,6 +63,7 @@ function principal(
 const webUser = principal('web-user', STADT_A, null);
 const paneUser = principal('pane-user', STADT_A, 'outlook');
 const otherOrgPaneUser = principal('other-pane-user', STADT_B, 'outlook');
+const excelUser = principal('excel-user', STADT_A, 'excel');
 
 function contextFor(
   handler: keyof FixtureController,
@@ -77,7 +83,12 @@ function contextFor(
 }
 
 describe(SurfaceScopeGuard.name, () => {
-  const guard = new SurfaceScopeGuard(new Reflector());
+  const features = { ...featuresConfig(), excelAddinEnabled: false };
+  const guard = new SurfaceScopeGuard(new Reflector(), features);
+
+  beforeEach(() => {
+    features.excelAddinEnabled = false;
+  });
 
   it.each([
     ['a pane user', paneUser],
@@ -105,6 +116,19 @@ describe(SurfaceScopeGuard.name, () => {
     expect(() => guard.canActivate(contextFor('ungranted', paneUser))).toThrow(
       ClientNotAllowedError,
     );
+  });
+
+  it('allows disabled Excel sessions to use shared session cleanup only', () => {
+    expect(guard.canActivate(contextFor('session', excelUser))).toBe(true);
+    expect(() => guard.canActivate(contextFor('marked', excelUser))).toThrow(
+      ClientNotAllowedError,
+    );
+  });
+
+  it('allows declared Excel operations when the surface is enabled', () => {
+    features.excelAddinEnabled = true;
+
+    expect(guard.canActivate(contextFor('marked', excelUser))).toBe(true);
   });
 
   it.each(['marked', 'ungranted', 'unmarked'] as const)(

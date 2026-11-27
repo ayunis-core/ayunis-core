@@ -61,4 +61,10 @@ export class FeatureTogglesResponseDto {
     default: false,
   })
   oparlEnabled: boolean;
+
+  @ApiProperty({
+    description: 'The independently deployed Excel add-in surface is available',
+    default: false,
+  })
+  excelAddinEnabled: boolean;
 }

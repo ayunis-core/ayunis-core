@@ -73,6 +73,7 @@ describe('CreateSourceUploadSessionUseCase', () => {
     );
     expect(session.multipart).toBe(false);
     expect(session.fileType).toBe('application/pdf');
+    expect(session.surface).toBe('web');
     expect(partSizeBytes).toBeGreaterThan(0);
     expect(sessions.save).toHaveBeenCalledTimes(1);
   });

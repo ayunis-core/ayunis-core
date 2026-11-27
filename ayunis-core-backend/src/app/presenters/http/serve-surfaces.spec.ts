@@ -8,6 +8,10 @@ import type { Express } from 'express';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import {
+  featuresConfig,
+  type FeaturesConfig,
+} from 'src/config/features.config';
 import { SURFACE_REGISTRY } from 'src/config/surface-registry';
 import { serveSurfaces } from './serve-surfaces';
 
@@ -15,7 +19,7 @@ const WEB_SHELL = '<div id="app"></div>';
 const SELF = "frame-ancestors 'self'";
 
 function writeFixture(rootPath: string): void {
-  for (const dir of ['web/assets', 'outlook/assets', 'website']) {
+  for (const dir of ['web/assets', 'outlook/assets', 'excel', 'website']) {
     mkdirSync(join(rootPath, dir), { recursive: true });
   }
   writeFileSync(join(rootPath, 'web/index.html'), WEB_SHELL);
@@ -25,7 +29,38 @@ function writeFixture(rootPath: string): void {
   }
   writeFileSync(join(rootPath, 'outlook/assets/icon.png'), 'icon');
   writeFileSync(join(rootPath, 'outlook/events-classic.js'), '(() => {})()');
+  writeFileSync(join(rootPath, 'excel/taskpane.html'), '<div>excel</div>');
   writeFileSync(join(rootPath, 'website/widget.html'), '<div>widget</div>');
+}
+
+async function createTestApp(rootPath: string, features: FeaturesConfig) {
+  @Module({})
+  class TestModule implements OnModuleInit {
+    constructor(private readonly adapterHost: HttpAdapterHost) {}
+
+    onModuleInit() {
+      this.adapterHost.httpAdapter.getInstance<Express>().use(
+        serveSurfaces(rootPath, features, {
+          ...SURFACE_REGISTRY,
+          website: {
+            ...SURFACE_REGISTRY.website,
+            framing: {
+              documents: ['widget.html'],
+              resolveOrigins: async (request) => {
+                await Promise.resolve();
+                return request.query.channel === 'one'
+                  ? ['https://one.example', 'https://invalid.example;']
+                  : ['https://two.example'];
+              },
+            },
+          },
+        }),
+      );
+    }
+  }
+  const app = await NestFactory.create(TestModule, { logger: false });
+  await app.listen(0, '127.0.0.1');
+  return app;
 }
 
 describe('serveSurfaces', () => {
@@ -38,32 +73,10 @@ describe('serveSurfaces', () => {
   beforeAll(async () => {
     rootPath = mkdtempSync(join(tmpdir(), '.surface-builds-'));
     writeFixture(rootPath);
-    @Module({})
-    class TestModule implements OnModuleInit {
-      constructor(private readonly adapterHost: HttpAdapterHost) {}
-
-      onModuleInit() {
-        this.adapterHost.httpAdapter.getInstance<Express>().use(
-          serveSurfaces(rootPath, {
-            ...SURFACE_REGISTRY,
-            website: {
-              ...SURFACE_REGISTRY.website,
-              framing: {
-                documents: ['widget.html'],
-                resolveOrigins: async (request) => {
-                  await Promise.resolve();
-                  return request.query.channel === 'one'
-                    ? ['https://one.example', 'https://invalid.example;']
-                    : ['https://two.example'];
-                },
-              },
-            },
-          }),
-        );
-      }
-    }
-    app = await NestFactory.create(TestModule, { logger: false });
-    await app.listen(0, '127.0.0.1');
+    app = await createTestApp(rootPath, {
+      ...featuresConfig(),
+      excelAddinEnabled: false,
+    });
     baseUrl = await app.getUrl();
   });
 
@@ -124,12 +137,40 @@ describe('serveSurfaces', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 
+  it('returns 404 for the disabled Excel task pane', async () => {
+    expect((await fetchPath('/excel/taskpane.html')).status).toBe(404);
+  });
+
+  it('serves Excel from an independently enabled application instance', async () => {
+    const enabledApp = await createTestApp(rootPath, {
+      ...featuresConfig(),
+      excelAddinEnabled: true,
+    });
+    try {
+      const enabledUrl = await enabledApp.getUrl();
+      const taskPane = await fetch(`${enabledUrl}/excel/taskpane.html`);
+
+      expect(taskPane.status).toBe(200);
+      expect(taskPane.headers.get('content-security-policy')).toBe(
+        `${SELF} https://excel.cloud.microsoft`,
+      );
+    } finally {
+      await enabledApp.close();
+    }
+  });
+
   it.each(['/outlook/unknown', '/outlook/assets/unknown.js', '/embed/unknown'])(
     'returns 404 for missing non-web paths at %s',
     async (path) => {
       expect((await fetchPath(path)).status).toBe(404);
     },
   );
+
+  it('returns 404 instead of the web shell for an unmatched API route', async () => {
+    const response = await fetchPath('/api/office-addins/excel/manifest.xml');
+    expect(response.status).toBe(404);
+    expect(await response.text()).not.toBe(WEB_SHELL);
+  });
 
   it('returns 404 instead of the web shell for a missing web asset', async () => {
     const response = await fetchPath('/assets/removed-by-deploy.js');

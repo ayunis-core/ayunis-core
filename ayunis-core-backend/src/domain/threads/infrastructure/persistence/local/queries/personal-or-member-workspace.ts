@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
-import { Raw, type FindOperator, type FindOptionsWhere } from 'typeorm';
+import { IsNull, Raw, type FindOperator, type FindOptionsWhere } from 'typeorm';
 import type { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 /**
  * A chat filed in a workspace is reachable only while its creator is a member
@@ -32,4 +33,15 @@ export function accessibleThread(
   userId: UUID,
 ): FindOptionsWhere<ThreadRecord> {
   return { id, userId, workspaceId: personalOrMemberWorkspace(userId) };
+}
+
+export function accessibleThreadForSurface(
+  id: UUID,
+  userId: UUID,
+  client: SessionClient | null,
+): FindOptionsWhere<ThreadRecord> {
+  return {
+    ...accessibleThread(id, userId),
+    client: client ?? IsNull(),
+  };
 }

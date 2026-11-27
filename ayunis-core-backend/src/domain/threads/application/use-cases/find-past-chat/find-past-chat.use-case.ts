@@ -9,6 +9,7 @@ import {
 } from 'src/domain/threads/application/threads.errors';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { FindPastChatQuery } from './find-past-chat.query';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 /**
  * One of the current user's past chats with its messages. A chat outside the
@@ -32,6 +33,7 @@ export class FindPastChatUseCase {
     const { userId } = getRequiredUserContext(this.contextService);
     const thread = await this.threadsRepository.findPastChat({
       userId,
+      client: getCurrentThreadClient(this.contextService),
       scope: query.scope,
       threadId: query.threadId,
     });

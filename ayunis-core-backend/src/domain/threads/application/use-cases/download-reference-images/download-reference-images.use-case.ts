@@ -20,6 +20,7 @@ import {
   UploadedImageRef,
 } from './download-reference-images.query';
 import { getRequiredOrgId } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 export interface ReferenceImageDownload {
   data: Buffer;
@@ -60,9 +61,10 @@ export class DownloadReferenceImagesUseCase {
 
     const orgId = getRequiredOrgId(this.contextService);
 
-    const thread = await this.threadsRepository.findOne(
+    const thread = await this.threadsRepository.findOneForSurface(
       query.threadId,
       query.userId,
+      getCurrentThreadClient(this.contextService),
     );
     if (!thread) {
       throw new ThreadNotFoundError(query.threadId, query.userId);

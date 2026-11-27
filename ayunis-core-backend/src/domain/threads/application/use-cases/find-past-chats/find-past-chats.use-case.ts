@@ -7,6 +7,7 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
 import type { Thread } from 'src/domain/threads/domain/thread.entity';
 import { FindPastChatsQuery } from './find-past-chats.query';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 /** The current user's chats a run may look back on, without their messages. */
 @Injectable()
@@ -27,6 +28,7 @@ export class FindPastChatsUseCase {
     const { userId } = getRequiredUserContext(this.contextService);
     return this.threadsRepository.findPastChats({
       userId,
+      client: getCurrentThreadClient(this.contextService),
       scope: query.scope,
       activity: query.activity,
       pagination: { limit: query.limit, offset: query.offset },

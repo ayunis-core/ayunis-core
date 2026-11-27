@@ -16,6 +16,7 @@ export function buildUploadSession(
     id: UPLOAD_SESSION_ID,
     orgId: UPLOAD_ORG_ID,
     userId: UPLOAD_USER_ID,
+    surface: 'web',
     targetType: SourceUploadTargetType.THREAD,
     targetId: UPLOAD_TARGET_ID,
     fileName: 'Protokoll.pdf',
@@ -53,13 +54,18 @@ export function createMockSourceUploadSessionRepository(): jest.Mocked<SourceUpl
 
 /** A context double for the owning user; `getRequiredUserContext` reads all four keys. */
 export function createOwnerContext(
-  overrides: Partial<{ userId: UUID; orgId: UUID }> = {},
+  overrides: Partial<{
+    userId: UUID;
+    orgId: UUID;
+    client: 'outlook' | 'excel';
+  }> = {},
 ): { get: jest.Mock } {
   const values: Record<string, unknown> = {
     userId: overrides.userId ?? UPLOAD_USER_ID,
     orgId: overrides.orgId ?? UPLOAD_ORG_ID,
     role: 'user',
     systemRole: 'user',
+    client: overrides.client,
   };
   return { get: jest.fn((key: string) => values[key]) };
 }

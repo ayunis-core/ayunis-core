@@ -6,6 +6,7 @@ import { getRequiredUserContext } from 'src/common/context/required-context';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { ThreadDeletionService } from 'src/domain/threads/application/services/thread-deletion.service';
 import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class DeleteThreadUseCase {
@@ -24,7 +25,11 @@ export class DeleteThreadUseCase {
     const { userId, orgId } = getRequiredUserContext(this.contextService);
     const logContext = { threadId: command.id, userId };
 
-    const thread = await this.threadsRepository.findOne(command.id, userId);
+    const thread = await this.threadsRepository.findOneForSurface(
+      command.id,
+      userId,
+      getCurrentThreadClient(this.contextService),
+    );
     if (!thread) {
       this.logger.warn(
         logContext,

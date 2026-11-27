@@ -1,11 +1,13 @@
 import { BaseModule } from './base.module';
 import { ConditionalModule } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { ingestionInApi } from 'src/config/ingestion.config';
 import {
   Module,
   MiddlewareConsumer,
   NestModule,
   OnModuleInit,
+  Inject,
 } from '@nestjs/common';
 import { SubscriptionSyncModule } from 'src/integrations/core-connect/subscription-sync/subscription-sync.module';
 import { APP_FILTER, HttpAdapterHost } from '@nestjs/core';
@@ -70,6 +72,7 @@ import { PayloadTooLargeExceptionFilter } from 'src/common/filters/payload-too-l
 import { IntegrationsModule } from 'src/integrations/integrations.module';
 import { QueueInspectionModule } from 'src/integrations/queue-inspection/queue-inspection.module';
 import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-telemetry.module';
+import { featuresConfig } from 'src/config/features.config';
 
 @Module({
   imports: [
@@ -154,12 +157,18 @@ import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-tel
   ],
 })
 export class AppModule implements NestModule, OnModuleInit {
-  constructor(private readonly adapterHost: HttpAdapterHost) {}
+  constructor(
+    private readonly adapterHost: HttpAdapterHost,
+    @Inject(featuresConfig.KEY)
+    private readonly features: ConfigType<typeof featuresConfig>,
+  ) {}
 
   onModuleInit() {
     // Controller routes, including /config.js, are registered before this hook.
     const expressApp = this.adapterHost.httpAdapter.getInstance<Express>();
-    expressApp.use(serveSurfaces(join(__dirname, '..', '..', 'frontend')));
+    expressApp.use(
+      serveSurfaces(join(__dirname, '..', '..', 'frontend'), this.features),
+    );
   }
 
   configure(consumer: MiddlewareConsumer) {

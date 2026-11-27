@@ -12,6 +12,7 @@ import {
 import { GeneratedImage } from 'src/domain/threads/domain/generated-image.entity';
 import { DownloadGeneratedImageUseCase } from './download-generated-image.use-case';
 import { DownloadGeneratedImageQuery } from './download-generated-image.query';
+import type { ContextService } from 'src/common/context/services/context.service';
 
 describe('DownloadGeneratedImageUseCase', () => {
   let useCase: DownloadGeneratedImageUseCase;
@@ -42,8 +43,7 @@ describe('DownloadGeneratedImageUseCase', () => {
 
   beforeEach(() => {
     threadsRepository = {
-      findOne: jest.fn(),
-      existsForUser: jest.fn(),
+      existsForSurface: jest.fn(),
     } as unknown as jest.Mocked<ThreadsRepository>;
     generatedImagesRepository = {
       findByIdAndThreadId: jest.fn(),
@@ -56,12 +56,15 @@ describe('DownloadGeneratedImageUseCase', () => {
       threadsRepository,
       generatedImagesRepository,
       downloadObjectUseCase,
+      {
+        get: jest.fn((key: string) => (key === 'client' ? 'excel' : undefined)),
+      } as unknown as ContextService,
     );
   });
 
   it('streams the image of an owned thread with its stored content type', async () => {
     const stream = new Readable();
-    threadsRepository.existsForUser.mockResolvedValue(true);
+    threadsRepository.existsForSurface.mockResolvedValue(true);
     generatedImagesRepository.findByIdAndThreadId.mockResolvedValue(
       buildImage(),
     );
@@ -74,11 +77,11 @@ describe('DownloadGeneratedImageUseCase', () => {
       contentType: 'image/png',
       filename: `${imageId}.png`,
     });
-    expect(threadsRepository.existsForUser).toHaveBeenCalledWith(
+    expect(threadsRepository.existsForSurface).toHaveBeenCalledWith(
       threadId,
       userId,
+      'excel',
     );
-    expect(threadsRepository.findOne).not.toHaveBeenCalled();
     expect(generatedImagesRepository.findByIdAndThreadId).toHaveBeenCalledWith(
       imageId,
       threadId,
@@ -89,7 +92,7 @@ describe('DownloadGeneratedImageUseCase', () => {
   });
 
   it('throws ThreadNotFoundError when the user does not own the thread', async () => {
-    threadsRepository.existsForUser.mockResolvedValue(false);
+    threadsRepository.existsForSurface.mockResolvedValue(false);
 
     await expect(useCase.execute(query())).rejects.toThrow(ThreadNotFoundError);
     expect(
@@ -99,7 +102,7 @@ describe('DownloadGeneratedImageUseCase', () => {
   });
 
   it('throws GeneratedImageNotFoundError when the image is not in the thread', async () => {
-    threadsRepository.existsForUser.mockResolvedValue(true);
+    threadsRepository.existsForSurface.mockResolvedValue(true);
     generatedImagesRepository.findByIdAndThreadId.mockResolvedValue(null);
 
     await expect(useCase.execute(query())).rejects.toThrow(
@@ -109,7 +112,7 @@ describe('DownloadGeneratedImageUseCase', () => {
   });
 
   it('refuses to serve a stored content type outside the image allow-list', async () => {
-    threadsRepository.existsForUser.mockResolvedValue(true);
+    threadsRepository.existsForSurface.mockResolvedValue(true);
     generatedImagesRepository.findByIdAndThreadId.mockResolvedValue(
       buildImage('image/svg+xml'),
     );
@@ -121,7 +124,7 @@ describe('DownloadGeneratedImageUseCase', () => {
   });
 
   it('passes through ObjectNotFoundError when the blob is missing', async () => {
-    threadsRepository.existsForUser.mockResolvedValue(true);
+    threadsRepository.existsForSurface.mockResolvedValue(true);
     generatedImagesRepository.findByIdAndThreadId.mockResolvedValue(
       buildImage(),
     );

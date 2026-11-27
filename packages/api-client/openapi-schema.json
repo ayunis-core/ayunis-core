@@ -5558,7 +5558,8 @@
             "name": "client",
             "required": false,
             "in": "query",
-            "description": "Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit to list only threads started in the web app.",
+            "description": "Deprecated and ignored. Thread visibility is derived from the authenticated session client.",
+            "deprecated": true,
             "schema": {
               "$ref": "#/components/schemas/SessionClient"
             }
@@ -17266,6 +17267,11 @@
             "type": "boolean",
             "description": "Council information systems (OParl) are mirrored and managed by super admins",
             "default": false
+          },
+          "excelAddinEnabled": {
+            "type": "boolean",
+            "description": "The independently deployed Excel add-in surface is available",
+            "default": false
           }
         },
         "required": [
@@ -17277,7 +17283,8 @@
           "readAloudEnabled",
           "memoryEnabled",
           "connectorsEnabled",
-          "oparlEnabled"
+          "oparlEnabled",
+          "excelAddinEnabled"
         ]
       },
       "CreateOrgRequestDto": {
@@ -22254,7 +22261,7 @@
       },
       "SessionClient": {
         "type": "string",
-        "enum": ["outlook"]
+        "enum": ["outlook", "excel"]
       },
       "GetThreadsResponseDto": {
         "type": "object",
@@ -29523,7 +29530,7 @@
           "client": {
             "type": "string",
             "description": "Token client that takes over the session",
-            "enum": ["outlook"],
+            "enum": ["outlook", "excel"],
             "example": "outlook"
           }
         },

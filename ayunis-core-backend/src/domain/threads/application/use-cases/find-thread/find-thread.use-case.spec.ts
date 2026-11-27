@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
+import {
+  aUserContext,
+  getFromStore,
+} from 'src/common/context/testing/context.fixtures';
 import { UnauthorizedAccessError } from 'src/common/errors/unauthorized-access.error';
 import type { CountMessagesTokensUseCase } from 'src/domain/messages/application/use-cases/count-messages-tokens/count-messages-tokens.use-case';
 import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
@@ -25,10 +29,12 @@ describe('FindThreadUseCase', () => {
         } as PermittedLanguageModel,
       });
       const threadsRepository = {
-        findOne: jest.fn().mockResolvedValue(thread),
+        findOneForSurface: jest.fn().mockResolvedValue(thread),
       } as unknown as jest.Mocked<ThreadsRepository>;
       const contextService = {
-        get: jest.fn().mockReturnValue(userId),
+        get: jest.fn(
+          getFromStore({ ...aUserContext({ userId }), client: 'excel' }),
+        ),
       } as unknown as jest.Mocked<ContextService>;
       const countMessagesTokensUseCase = {
         execute: jest.fn().mockReturnValue(tokenCount),
@@ -42,6 +48,11 @@ describe('FindThreadUseCase', () => {
       const result = await useCase.execute(new FindThreadQuery(thread.id));
 
       expect(result.isLongChat).toBe(expectedIsLongChat);
+      expect(threadsRepository.findOneForSurface).toHaveBeenCalledWith(
+        thread.id,
+        userId,
+        'excel',
+      );
     },
   );
 
@@ -54,10 +65,10 @@ describe('FindThreadUseCase', () => {
       const userId = randomUUID();
       const thread = new Thread({ userId, messages: [] });
       const threadsRepository = {
-        findOne: jest.fn().mockResolvedValue(thread),
+        findOneForSurface: jest.fn().mockResolvedValue(thread),
       } as unknown as jest.Mocked<ThreadsRepository>;
       const contextService = {
-        get: jest.fn().mockReturnValue(userId),
+        get: jest.fn(getFromStore(aUserContext({ userId }))),
       } as unknown as jest.Mocked<ContextService>;
       const countMessagesTokensUseCase = {
         execute: jest.fn().mockReturnValue(tokenCount),
@@ -71,12 +82,17 @@ describe('FindThreadUseCase', () => {
       const result = await useCase.execute(new FindThreadQuery(thread.id));
 
       expect(result.isLongChat).toBe(expectedIsLongChat);
+      expect(threadsRepository.findOneForSurface).toHaveBeenCalledWith(
+        thread.id,
+        userId,
+        null,
+      );
     },
   );
 
   it('rejects requests without a user context', async () => {
     const threadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
     } as unknown as jest.Mocked<ThreadsRepository>;
     const contextService = {
       get: jest.fn().mockReturnValue(undefined),
@@ -93,13 +109,15 @@ describe('FindThreadUseCase', () => {
     await expect(
       useCase.execute(new FindThreadQuery(randomUUID())),
     ).rejects.toThrow(UnauthorizedAccessError);
-    expect(threadsRepository.findOne).not.toHaveBeenCalled();
+    expect(threadsRepository.findOneForSurface).not.toHaveBeenCalled();
   });
 
   it('wraps unexpected repository failures', async () => {
     const userId = randomUUID();
     const threadsRepository = {
-      findOne: jest.fn().mockRejectedValue(new Error('database unavailable')),
+      findOneForSurface: jest
+        .fn()
+        .mockRejectedValue(new Error('database unavailable')),
     } as unknown as jest.Mocked<ThreadsRepository>;
     const contextService = {
       get: jest.fn().mockReturnValue(userId),

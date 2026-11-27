@@ -14,12 +14,12 @@ describe('FindActiveThreadRunsUseCase', () => {
   beforeEach(() => {
     activeThreadRuns = new ActiveThreadRuns();
     activeThreadRuns.startDetached(
-      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID },
+      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID, client: null },
       runUntilAborted,
     );
   });
 
-  afterEach(() => activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID));
+  afterEach(() => activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID, null));
 
   it('lists the current user’s runs', async () => {
     const useCase = new FindActiveThreadRunsUseCase(

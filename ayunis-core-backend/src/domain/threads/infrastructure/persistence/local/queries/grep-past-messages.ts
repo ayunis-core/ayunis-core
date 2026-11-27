@@ -80,8 +80,8 @@ function matchingMessagesQuery(
   threadRepository: Repository<ThreadRecord>,
   params: GrepPastMessagesParams,
 ) {
-  const { userId, scope, pattern, created, limit } = params;
-  const query = pastChatsQuery(threadRepository, userId, scope)
+  const { userId, client, scope, pattern, created, limit } = params;
+  const query = pastChatsQuery(threadRepository, userId, client, scope)
     .innerJoin(MessageRecord, 'message', 'message.threadId = thread.id')
     .select('message.id', 'id')
     .addSelect('message.threadId', 'threadId')

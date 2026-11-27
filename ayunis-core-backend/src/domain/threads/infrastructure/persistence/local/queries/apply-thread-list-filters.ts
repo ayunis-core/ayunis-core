@@ -42,8 +42,8 @@ function applyRoutineThreadFilter(
   );
 }
 
-// Chats from a token client (the Outlook pane) stay out of the web app's lists
-// unless that client's threads are asked for.
+// Chats from token clients stay out of web lists, and each token surface sees
+// only its own chats.
 function applyThreadClientFilter(
   queryBuilder: SelectQueryBuilder<ThreadRecord>,
   client?: SessionClient,

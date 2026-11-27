@@ -58,6 +58,7 @@ export interface ThreadContextRefs {
 
 export interface FindPastChatsParams {
   userId: UUID;
+  client: SessionClient | null;
   scope: PastChatScope;
   activity: PastChatActivityRange;
   pagination: ThreadsPagination;
@@ -65,12 +66,14 @@ export interface FindPastChatsParams {
 
 export interface FindPastChatParams {
   userId: UUID;
+  client: SessionClient | null;
   scope: PastChatScope;
   threadId: UUID;
 }
 
 export interface GrepPastMessagesParams {
   userId: UUID;
+  client: SessionClient | null;
   scope: PastChatScope;
   pattern: string;
   created: PastChatActivityRange;
@@ -79,17 +82,31 @@ export interface GrepPastMessagesParams {
 
 export abstract class ThreadsRepository {
   abstract create(thread: Thread): Promise<Thread>;
-  abstract findOne(id: UUID, userId: UUID): Promise<Thread | null>;
-  abstract existsForUser(id: UUID, userId: UUID): Promise<boolean>;
+  abstract findOneForSurface(
+    id: UUID,
+    userId: UUID,
+    client: SessionClient | null,
+  ): Promise<Thread | null>;
+  abstract existsForSurface(
+    id: UUID,
+    userId: UUID,
+    client: SessionClient | null,
+  ): Promise<boolean>;
   abstract findContextRefs(
     id: UUID,
     userId: UUID,
+    client: SessionClient | null,
   ): Promise<ThreadContextRefs | null>;
   abstract findCitationContext(
     id: UUID,
     userId: UUID,
+    client: SessionClient | null,
   ): Promise<ThreadCitationContext | null>;
-  abstract findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]>;
+  abstract findAllByIds(
+    userId: UUID,
+    ids: UUID[],
+    client: SessionClient | null,
+  ): Promise<Thread[]>;
   /**
    * The user's own non-anonymous chats in the scope, with the same workspace
    * membership condition as every user-scoped read. Routine threads and the
@@ -134,6 +151,7 @@ export abstract class ThreadsRepository {
   abstract updateTitle(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     title: string;
   }): Promise<void>;
   /**
@@ -148,6 +166,7 @@ export abstract class ThreadsRepository {
   abstract addSourceAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     sourceAssignment: SourceAssignment;
   }): Promise<void>;
   /**
@@ -158,23 +177,27 @@ export abstract class ThreadsRepository {
   abstract attachSourcesWithinCapacity(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     sourceIds: UUID[];
     maxSources: number;
   }): Promise<void>;
   abstract updateMcpIntegrations(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     mcpIntegrationIds: UUID[];
   }): Promise<void>;
   abstract addKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void>;
   abstract removeKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void>;
@@ -186,6 +209,7 @@ export abstract class ThreadsRepository {
   abstract assignToWorkspace(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     workspaceId: UUID | null;
   }): Promise<void>;
   /**

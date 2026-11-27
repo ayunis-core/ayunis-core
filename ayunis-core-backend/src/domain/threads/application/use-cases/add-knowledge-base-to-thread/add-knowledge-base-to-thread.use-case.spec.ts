@@ -31,7 +31,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
 
   beforeAll(async () => {
     const mockThreadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
       addKnowledgeBaseAssignment: jest.fn(),
     };
 
@@ -93,7 +93,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       userId: mockUserId,
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
@@ -104,6 +104,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     expect(threadsRepository.addKnowledgeBaseAssignment).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       knowledgeBaseId: mockKbId,
       originSkillId: undefined,
     });
@@ -124,7 +125,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       userId: mockUserId,
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
@@ -139,6 +140,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     expect(threadsRepository.addKnowledgeBaseAssignment).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       knowledgeBaseId: mockKbId,
       originSkillId: mockSkillId,
     });
@@ -163,7 +165,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       userId: mockUserId,
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
@@ -192,7 +194,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       userId: mockUserId,
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
     threadsRepository.addKnowledgeBaseAssignment.mockResolvedValue(undefined);
 
@@ -207,6 +209,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     expect(threadsRepository.addKnowledgeBaseAssignment).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       knowledgeBaseId: mockKbId,
       originSkillId: mockSkillId,
     });
@@ -232,7 +235,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       userId: mockUserId,
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(knowledgeBase);
 
     const command = new AddKnowledgeBaseToThreadCommand(
@@ -247,7 +250,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
   });
 
   it('should throw ThreadNotFoundError when thread does not exist', async () => {
-    threadsRepository.findOne.mockResolvedValue(null);
+    threadsRepository.findOneForSurface.mockResolvedValue(null);
 
     const command = new AddKnowledgeBaseToThreadCommand(mockThreadId, mockKbId);
 
@@ -262,7 +265,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       knowledgeBaseAssignments: [],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(mockKbId),
     );
@@ -289,7 +292,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       userId: mockUserId,
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockResolvedValue(
       foreignKnowledgeBase,
     );
@@ -309,7 +312,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
       messages: [],
       knowledgeBaseAssignments: [],
     });
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     findAccessibleKnowledgeBaseUseCase.execute.mockRejectedValue(
       new KnowledgeBaseNotFoundError(mockKbId),
     );
@@ -330,7 +333,7 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
     );
-    expect(threadsRepository.findOne).not.toHaveBeenCalled();
+    expect(threadsRepository.findOneForSurface).not.toHaveBeenCalled();
   });
 
   it('should throw UnauthorizedAccessError when orgId is not set in context', async () => {
@@ -344,6 +347,6 @@ describe('AddKnowledgeBaseToThreadUseCase', () => {
     await expect(useCase.execute(command)).rejects.toThrow(
       UnauthorizedAccessError,
     );
-    expect(threadsRepository.findOne).not.toHaveBeenCalled();
+    expect(threadsRepository.findOneForSurface).not.toHaveBeenCalled();
   });
 });

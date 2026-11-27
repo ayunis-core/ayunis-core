@@ -9,6 +9,7 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { AssignThreadToWorkspaceCommand } from './assign-thread-to-workspace.command';
 import { AssignThreadToWorkspaceUseCase } from './assign-thread-to-workspace.use-case';
+import { getFromUserContext } from 'src/common/context/testing/context.fixtures';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;
 const THREAD_ID = '22222222-2222-4222-8222-222222222222' as UUID;
@@ -37,7 +38,11 @@ describe('AssignThreadToWorkspaceUseCase', () => {
         },
         {
           provide: ContextService,
-          useValue: { get: jest.fn(() => context.userId) },
+          useValue: {
+            get: context.userId
+              ? jest.fn(getFromUserContext({ userId: context.userId }))
+              : jest.fn(() => undefined),
+          },
         },
       ],
     }).compile();
@@ -63,6 +68,7 @@ describe('AssignThreadToWorkspaceUseCase', () => {
     expect(threadsRepository.assignToWorkspace).toHaveBeenCalledWith({
       threadId: THREAD_ID,
       userId: USER_ID,
+      client: null,
       workspaceId: WORKSPACE_ID,
     });
   });
@@ -79,6 +85,7 @@ describe('AssignThreadToWorkspaceUseCase', () => {
     expect(threadsRepository.assignToWorkspace).toHaveBeenCalledWith({
       threadId: THREAD_ID,
       userId: USER_ID,
+      client: null,
       workspaceId: null,
     });
   });

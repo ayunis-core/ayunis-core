@@ -34,10 +34,10 @@ describe('LocalThreadsRepository', () => {
     const threadId = randomUUID();
     const userId = randomUUID();
 
-    await repository.findOne(threadId, userId);
+    await repository.findOneForSurface(threadId, userId, 'excel');
 
     expect(threadRepository.findOne).toHaveBeenCalledWith({
-      where: expect.objectContaining({ id: threadId, userId }),
+      where: expect.objectContaining({ id: threadId, userId, client: 'excel' }),
       relationLoadStrategy: 'query',
       relations: [
         'messages',
@@ -80,18 +80,18 @@ describe('LocalThreadsRepository', () => {
     const threadId = randomUUID();
 
     await expect(
-      repository.findCitationContext(threadId, citationContext.userId),
+      repository.findCitationContext(threadId, citationContext.userId, 'excel'),
     ).resolves.toBe(citationContext);
     expect(threadRepository.query).toHaveBeenCalledTimes(1);
     expect(threadRepository.query).toHaveBeenCalledWith(
       expect.not.stringContaining('messages'),
-      [threadId, citationContext.userId],
+      [threadId, citationContext.userId, 'excel'],
     );
     expect(threadRepository.query).toHaveBeenCalledWith(
       expect.stringMatching(
         /thread_source_assignments[\s\S]+thread_knowledge_base_assignments/,
       ),
-      [threadId, citationContext.userId],
+      [threadId, citationContext.userId, 'excel'],
     );
   });
 
@@ -109,7 +109,7 @@ describe('LocalThreadsRepository', () => {
     );
 
     await expect(
-      repository.findCitationContext(randomUUID(), randomUUID()),
+      repository.findCitationContext(randomUUID(), randomUUID(), null),
     ).resolves.toBeNull();
   });
 
@@ -142,7 +142,11 @@ describe('LocalThreadsRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    const thread = await repository.findOne(randomUUID(), randomUUID());
+    const thread = await repository.findOneForSurface(
+      randomUUID(),
+      randomUUID(),
+      null,
+    );
 
     expect(thread?.messages).toEqual([olderMessage, newerMessage]);
   });
@@ -175,18 +179,22 @@ describe('LocalThreadsRepository', () => {
       } as unknown as TransactionHost<TransactionalAdapterTypeOrm>,
     );
 
-    await expect(repository.findContextRefs(threadId, userId)).resolves.toEqual(
-      {
-        workspaceId,
-        knowledgeBaseIds: [knowledgeBaseId],
-      },
-    );
+    await expect(
+      repository.findContextRefs(threadId, userId, 'excel'),
+    ).resolves.toEqual({
+      workspaceId,
+      knowledgeBaseIds: [knowledgeBaseId],
+    });
     expect(queryBuilder.where).toHaveBeenCalledWith('thread.id = :id', {
       id: threadId,
     });
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'thread.userId = :userId',
       { userId },
+    );
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      'thread.client IS NOT DISTINCT FROM :client',
+      { client: 'excel' },
     );
   });
 });

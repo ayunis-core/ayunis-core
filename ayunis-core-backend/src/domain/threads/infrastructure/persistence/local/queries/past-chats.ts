@@ -22,8 +22,8 @@ export async function findPastChats(
   threadMapper: ThreadMapper,
   params: FindPastChatsParams,
 ): Promise<Paginated<Thread>> {
-  const { userId, scope, activity, pagination } = params;
-  const query = pastChatsQuery(threadRepository, userId, scope);
+  const { userId, client, scope, activity, pagination } = params;
+  const query = pastChatsQuery(threadRepository, userId, client, scope);
   applyPastChatActivity(query, activity);
   // Ties on the timestamp are broken by ID, so pages never overlap.
   const [records, total] = await query
@@ -48,8 +48,8 @@ export async function findPastChat(
   threadMapper: ThreadMapper,
   params: FindPastChatParams,
 ): Promise<Thread | null> {
-  const { userId, scope, threadId } = params;
-  const record = await pastChatsQuery(threadRepository, userId, scope)
+  const { userId, client, scope, threadId } = params;
+  const record = await pastChatsQuery(threadRepository, userId, client, scope)
     .andWhere('thread.id = :threadId', { threadId })
     .leftJoinAndSelect('thread.messages', 'message')
     .orderBy('message.createdAt', 'ASC')
@@ -61,11 +61,13 @@ export async function findPastChat(
 export function pastChatsQuery(
   threadRepository: Repository<ThreadRecord>,
   userId: UUID,
+  client: FindPastChatsParams['client'],
   scope: PastChatScope,
 ): SelectQueryBuilder<ThreadRecord> {
   const query = threadRepository
     .createQueryBuilder('thread')
     .where('thread.userId = :userId', { userId })
+    .andWhere('thread.client IS NOT DISTINCT FROM :client', { client })
     .andWhere(personalOrMemberWorkspaceSql('thread.workspaceId', ':userId'))
     .andWhere('thread.isAnonymous = false')
     .andWhere('thread.origin <> :routineOrigin', {

@@ -16,7 +16,8 @@ import {
 import type { SourceAssignment } from 'src/domain/threads/domain/thread-source-assignment.entity';
 import type { McpIntegrationRecord } from 'src/domain/mcp/infrastructure/persistence/postgres/schema/mcp-integration.record';
 import type { StaleThreadSourceRef } from 'src/domain/threads/application/ports/threads.repository';
-import { accessibleThread } from './queries/personal-or-member-workspace';
+import { accessibleThreadForSurface } from './queries/personal-or-member-workspace';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 // Resolves each directly-assigned thread's latest message once (top-1 probe on
 // the messages (threadId, createdAt) index) instead of probing messages per
@@ -110,6 +111,7 @@ export class LocalThreadAssignmentsRepository {
   async addSourceAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     sourceAssignment: SourceAssignment;
   }): Promise<void> {
     this.logger.log(
@@ -122,7 +124,11 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadExists = await this.threadRepository.exists({
-      where: accessibleThread(params.threadId, params.userId),
+      where: accessibleThreadForSurface(
+        params.threadId,
+        params.userId,
+        params.client,
+      ),
     });
 
     if (!threadExists) {
@@ -139,6 +145,7 @@ export class LocalThreadAssignmentsRepository {
   async attachSourcesWithinCapacity(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     sourceIds: UUID[];
     maxSources: number;
   }): Promise<void> {
@@ -151,7 +158,7 @@ export class LocalThreadAssignmentsRepository {
     // count is read after acquiring it, so the second one sees the first.
     const thread = await this.threadRepository.findOne({
       select: { id: true },
-      where: accessibleThread(threadId, userId),
+      where: accessibleThreadForSurface(threadId, userId, params.client),
       lock: { mode: 'pessimistic_write' },
     });
     if (!thread) throw new ThreadNotFoundError(threadId, userId);
@@ -174,6 +181,7 @@ export class LocalThreadAssignmentsRepository {
   async updateMcpIntegrations(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     mcpIntegrationIds: UUID[];
   }): Promise<void> {
     this.logger.log(
@@ -185,7 +193,11 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadEntity = await this.threadRepository.findOne({
-      where: accessibleThread(params.threadId, params.userId),
+      where: accessibleThreadForSurface(
+        params.threadId,
+        params.userId,
+        params.client,
+      ),
       relations: ['mcpIntegrations'],
     });
 
@@ -203,6 +215,7 @@ export class LocalThreadAssignmentsRepository {
   async addKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
@@ -216,7 +229,11 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadEntity = await this.threadRepository.findOne({
-      where: accessibleThread(params.threadId, params.userId),
+      where: accessibleThreadForSurface(
+        params.threadId,
+        params.userId,
+        params.client,
+      ),
     });
 
     if (!threadEntity) {
@@ -235,6 +252,7 @@ export class LocalThreadAssignmentsRepository {
   async removeKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
@@ -248,7 +266,11 @@ export class LocalThreadAssignmentsRepository {
     );
 
     const threadEntity = await this.threadRepository.findOne({
-      where: accessibleThread(params.threadId, params.userId),
+      where: accessibleThreadForSurface(
+        params.threadId,
+        params.userId,
+        params.client,
+      ),
     });
 
     if (!threadEntity) {
