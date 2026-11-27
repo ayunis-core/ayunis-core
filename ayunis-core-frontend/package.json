@@ -80,7 +80,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "catalog:",
-    "react-i18next": "^15.5.3",
+    "react-i18next": "^18.0.3",
     "react-joyride": "^3.2.0",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^4.12.3",
