@@ -6,7 +6,6 @@ import {
   type ClipboardEvent,
   type ForwardedRef,
   type KeyboardEvent,
-  type ReactNode,
   type RefObject,
 } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,8 +17,7 @@ import {
   MAX_TOTAL_IMAGE_SIZE_MIB,
   usePendingImages,
 } from '@ayunis/chat/composer';
-import type { ChatConversationAdapters } from './chat-conversation-config';
-import { useChatAction } from './use-chat-action';
+import { ChatAttachments } from '@ayunis/chat/attachments';
 import { ProcessingGlow } from './composer/ProcessingGlow';
 import { usePromptHistory } from './composer/use-prompt-history';
 import { useDraftCursorAtEnd } from './composer/use-draft-cursor-at-end';
@@ -30,12 +28,9 @@ import {
 } from './use-composer-file-drop';
 import { useComposerHeightAnimation } from './use-composer-height-animation';
 import { ComposerActions } from './configured-composer-controls';
+import { showComposerError } from './composer-errors';
+import { TourTarget } from './tour-target';
 import type {
-  ConfiguredComposerProps,
-  ConfiguredComposerRef,
-} from './configured-composer-types';
-
-export type {
   ConfiguredComposerProps,
   ConfiguredComposerRef,
 } from './configured-composer-types';
@@ -45,26 +40,13 @@ function useSubmission(
   voiceInput: RefObject<boolean>,
 ) {
   const images = usePendingImages();
-  const attachImages = useImageSelection(
-    images,
-    onAttachmentError(props.adapters),
-  );
-  const upload = useChatAction(
-    props.adapters?.onError,
-    props.capabilities.fileUpload,
-  );
-  const model = useChatAction(
-    props.adapters?.onError,
-    props.capabilities.modelSelection,
-  );
-  const busy = isComposerBusy(props, upload.busy, model.busy);
+  const attachImages = useImageSelection(images);
+  const busy = isComposerBusy(props);
 
   return {
     images,
     canSend: canSubmitDraft(props, images, busy, props.draft.message),
     submit: createSubmit(props, images, busy, voiceInput),
-    upload,
-    model,
     attachImages,
     markVoiceInput: () => {
       voiceInput.current = true;
@@ -72,18 +54,12 @@ function useSubmission(
   };
 }
 
-function isComposerBusy(
-  props: ConfiguredComposerProps,
-  uploadBusy: boolean,
-  modelBusy: boolean,
-) {
+function isComposerBusy(props: ConfiguredComposerProps) {
   return (
     props.isStreaming ||
     Boolean(props.isSubmitting) ||
     props.isCheckingForRun ||
-    uploadBusy ||
-    modelBusy ||
-    Boolean(props.adapters?.isSendDisabled)
+    props.features.sendDisabled
   );
 }
 
@@ -95,9 +71,8 @@ function canSubmitDraft(
 ) {
   return canSubmitMessage({
     text,
-    hasAttachments:
-      props.capabilities.fileUpload && images.pendingImages.length > 0,
-    hasSkill: Boolean(props.selectedSkillId),
+    hasAttachments: images.pendingImages.length > 0,
+    hasSkill: Boolean(props.config.skills?.selected),
     busy,
   });
 }
@@ -113,10 +88,8 @@ function createSubmit(
     props.onSend(
       {
         text,
-        images: props.capabilities.fileUpload
-          ? images.getImagesForContext()
-          : undefined,
-        skillId: props.selectedSkillId,
+        images: images.getImagesForContext(),
+        skillId: props.config.skills?.selected?.id,
         voiceInput: voiceInput.current,
       },
       () => acceptSubmission(props, images, text),
@@ -137,12 +110,27 @@ function acceptSubmission(
 export const ConfiguredComposer = forwardRef<
   ConfiguredComposerRef,
   ConfiguredComposerProps
->(function ConfiguredComposer(props, forwardedRef): ReactNode {
+>(function ConfiguredComposer(props, forwardedRef) {
   const state = useConfiguredComposerState(props, forwardedRef);
-  const composer = <ComposerBody props={props} state={state} />;
-  const framed = props.slots?.composerFrame?.(composer) ?? composer;
-  if (!props.compact) return <>{framed}</>;
-  return <CompactComposer props={props} state={state} content={framed} />;
+  const processing = props.isStreaming || Boolean(props.isSubmitting);
+  return (
+    <div
+      ref={state.container}
+      className="w-full space-y-2"
+      data-testid="chat-input"
+    >
+      <ProcessingGlow
+        isActive={processing}
+        className="chat-input-shell"
+        aria-busy={processing}
+        data-processing={processing ? 'true' : undefined}
+      >
+        <TourTarget name={props.config.tourTargets?.composer} settles>
+          <ComposerBody props={props} state={state} />
+        </TourTarget>
+      </ProcessingGlow>
+    </div>
+  );
 });
 
 function useConfiguredComposerState(
@@ -153,7 +141,7 @@ function useConfiguredComposerState(
   const submission = useSubmission(props, voiceInput);
   const textarea = useConfiguredTextarea(props, submission.submit);
   const container = useRef<HTMLDivElement>(null);
-  const animateHeight = useComposerHeightAnimation(Boolean(props.compact));
+  const animateHeight = useComposerHeightAnimation(true);
   useEffect(() => {
     if (!props.draft.message) voiceInput.current = false;
   }, [props.draft.message]);
@@ -161,7 +149,6 @@ function useConfiguredComposerState(
   const transfer = useComposerFileDrop(
     container,
     props,
-    submission.upload,
     submission.attachImages,
   );
   const setFocused = useComposerImagePaste(
@@ -215,12 +202,8 @@ function ComposerBody({
       state={submissionState}
       dragging={state.transfer.isDragging}
       animateHeight={state.animateHeight}
-      attachments={props.slots?.attachments}
-      images={
-        props.capabilities.fileUpload
-          ? state.submission.images.pendingImages
-          : []
-      }
+      attachments={composerAttachments(props)}
+      images={state.submission.images.pendingImages}
       onRemoveImage={state.submission.images.removeImage}
       textarea={{
         ...state.textarea,
@@ -238,31 +221,23 @@ function ComposerBody({
   );
 }
 
-function CompactComposer({
-  props,
-  state,
-  content,
-}: Readonly<{
-  props: ConfiguredComposerProps;
-  state: ConfiguredComposerState;
-  content: ReactNode;
-}>) {
-  const processing = props.isStreaming || Boolean(props.isSubmitting);
+function composerAttachments({ config, features }: ConfiguredComposerProps) {
+  const knowledgeBases = config.knowledgeBases?.attached ?? [];
+  const integrations = config.integrations?.attached ?? [];
+  const hasSources = features.sources.some(
+    ({ createdBy }) => createdBy !== 'system',
+  );
+  if (!hasSources && !knowledgeBases.length && !integrations.length)
+    return undefined;
   return (
-    <div
-      ref={state.container}
-      className="w-full space-y-2"
-      data-testid="chat-input"
-    >
-      <ProcessingGlow
-        isActive={processing}
-        className="chat-input-shell"
-        aria-busy={processing}
-        data-processing={processing ? 'true' : undefined}
-      >
-        {content}
-      </ProcessingGlow>
-    </div>
+    <ChatAttachments
+      sources={features.sources}
+      knowledgeBases={knowledgeBases}
+      integrations={integrations}
+      onRemoveSource={features.removeSource}
+      onRemoveKnowledgeBase={config.knowledgeBases?.detach}
+      onRemoveIntegration={config.integrations?.detach}
+    />
   );
 }
 
@@ -272,30 +247,22 @@ function useConfiguredTextarea(
   props: ConfiguredComposerProps,
   submit: () => void,
 ) {
-  const {
-    compact,
-    threadId,
-    isSubmitting,
-    draft,
-    sentPrompts = NO_PROMPTS,
-  } = props;
+  const { threadId, isSubmitting, draft, sentPrompts = NO_PROMPTS } = props;
   const { message, setMessage } = draft;
   const { t } = useTranslation('common');
   const ref = useRef<HTMLTextAreaElement>(null);
-  useDraftCursorAtEnd(ref, compact ? threadId : undefined);
+  useDraftCursorAtEnd(ref, threadId);
   const recall = usePromptHistory(message, setMessage, sentPrompts);
-  const placeholder =
-    props.placeholder ?? (compact ? t('chatInput.placeholder') : undefined);
+  const placeholder = props.placeholder ?? t('chatInput.placeholder');
 
   return {
     ref,
     value: message,
-    'aria-label':
-      placeholder ?? t('chatSurface.message', { defaultValue: 'Message' }),
+    'aria-label': placeholder,
     placeholder,
     onChange: ({ target }: React.ChangeEvent<HTMLTextAreaElement>) =>
       setMessage(target.value),
-    onPaste: compact ? pasteWithUndo : undefined,
+    onPaste: pasteWithUndo,
     onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => {
       if (isSubmitting) return;
       if (
@@ -338,38 +305,26 @@ function focusAtEnd(textarea: RefObject<HTMLTextAreaElement | null>) {
   field.setSelectionRange(end, end);
 }
 
-function onAttachmentError(adapters: ChatConversationAdapters | undefined) {
-  return adapters?.onAttachmentError ?? adapters?.onError;
-}
-
-function useImageSelection(
-  images: ReturnType<typeof usePendingImages>,
-  onError?: (error: Error) => void,
-) {
+function useImageSelection(images: ReturnType<typeof usePendingImages>) {
   const { t } = useTranslation('common');
 
   return (files: File[]) => {
     if (!files.length) return;
     const { oversizedRejected, limitExceeded, totalExceeded } =
       images.addImages(files);
-    if (!onError) return;
     if (oversizedRejected) {
-      onError(
-        new Error(t('chatInput.imageTooLarge', { maxMiB: MAX_IMAGE_SIZE_MIB })),
+      showComposerError(
+        t('chatInput.imageTooLarge', { maxMiB: MAX_IMAGE_SIZE_MIB }),
       );
     }
     if (limitExceeded) {
-      onError(
-        new Error(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES })),
-      );
+      showComposerError(t('chatInput.imageLimitExceeded', { max: MAX_IMAGES }));
     }
     if (totalExceeded) {
-      onError(
-        new Error(
-          t('chatInput.imageTotalTooLarge', {
-            maxMiB: MAX_TOTAL_IMAGE_SIZE_MIB,
-          }),
-        ),
+      showComposerError(
+        t('chatInput.imageTotalTooLarge', {
+          maxMiB: MAX_TOTAL_IMAGE_SIZE_MIB,
+        }),
       );
     }
   };

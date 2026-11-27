@@ -1,5 +1,11 @@
 import { Toaster } from '@ayunis/ui/components/sonner';
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type ComponentProps,
+} from 'react';
 import {
   QueryClient,
   QueryClientProvider,
@@ -7,7 +13,6 @@ import {
 } from '@tanstack/react-query';
 import {
   activeRunsControllerCancel,
-  useAppControllerFeatureToggles,
   useAcademyAccessControllerGetStatus,
 } from '@ayunis/api-client/endpoints';
 import { SurfaceScope, type MeResponseDto } from '@ayunis/api-client/schemas';
@@ -22,7 +27,6 @@ import { useTranslation } from 'react-i18next';
 import type { OfficeAddinSession } from '@ayunis/office-addin/session';
 import { currentOutlookItemKey } from '@/features/outlook-tools';
 import { useStartPaneThread } from '@/outlook/lib/use-start-pane-thread';
-import { outlookChatCapabilities } from '@/outlook/lib/outlook-chat-capabilities';
 import { startPaneItemChats } from '@/outlook/lib/pane-item-chats';
 import {
   newChatDraftKey,
@@ -117,25 +121,12 @@ function usePaneRuntime({ user, session }: PaneProps) {
 }
 
 type PaneRuntime = ReturnType<typeof usePaneRuntime>;
-type PaneCapabilities = ReturnType<typeof outlookChatCapabilities> & {
-  voice: boolean;
-};
 
-function usePaneCapabilities(user: MeResponseDto) {
-  const toggles = useAppControllerFeatureToggles();
+function useAcademyGate() {
   const academy = useAcademyAccessControllerGetStatus({
-    query: {
-      enabled: user.scopes.includes(SurfaceScope['academy:read']),
-      retry: false,
-    },
+    query: { retry: false },
   });
-  const capabilities: PaneCapabilities = {
-    ...outlookChatCapabilities(user.scopes),
-    voice:
-      user.scopes.includes(SurfaceScope.voice) &&
-      toggles.data?.voiceEnabled === true,
-  };
-  return { capabilities, isAcademyGated: academy.data?.allowed === false };
+  return academy.data?.allowed === false;
 }
 
 function PaneRequestFailed({ onDismiss }: Readonly<{ onDismiss: () => void }>) {
@@ -178,21 +169,14 @@ interface PaneViewProps {
   readonly session: OfficeAddinSession;
   readonly runtime: PaneRuntime;
   readonly startAttempt: ReturnType<typeof useStartPaneThread>;
-  readonly capabilities: PaneCapabilities;
   readonly isAcademyGated: boolean;
   readonly onError: () => void;
 }
 
-function PaneHistoryView({
-  session,
-  runtime,
-  capabilities,
-  onError,
-}: PaneViewProps) {
+function PaneHistoryView({ session, runtime, onError }: PaneViewProps) {
   const { navigation, lifecycle } = runtime;
   return (
     <PaneChatHistory
-      capabilities={capabilities}
       onBack={() => navigation.startNewChat(currentOutlookItemKey())}
       onSignOut={session.signOut}
       session={lifecycle.getSessionSignal()}
@@ -204,12 +188,9 @@ function PaneHistoryView({
 
 function PaneNewChatView({
   view,
-  user,
   runtime,
   startAttempt,
-  capabilities,
   isAcademyGated,
-  onError,
 }: PaneViewProps & { readonly view: Extract<PaneView, { kind: 'new' }> }) {
   function showHistory() {
     startAttempt.stop();
@@ -220,28 +201,31 @@ function PaneNewChatView({
       key={`${view.revision}:${view.draftKey}`}
       draftKey={view.draftKey}
       header={<NewChatHeading onHistory={showHistory} />}
-      drafts={runtime.drafts}
-      capabilities={capabilities}
-      onError={onError}
+      config={{ layout: 'narrow', drafts: runtime.drafts }}
       startAttempt={startAttempt}
       isAcademyGated={isAcademyGated}
-      canReadDefaults={user.scopes.includes(SurfaceScope['chat-settings:read'])}
     />
   );
 }
 
-function PaneThread({
-  threadId,
-  user,
-  runtime,
-  startAttempt,
-  capabilities,
-  isAcademyGated,
-  onError,
-}: PaneViewProps & { readonly threadId: string }) {
+function paneChatConfig(
+  { user, runtime, onError }: PaneViewProps,
+  onNewChat: () => void,
+): ComponentProps<typeof PaneConversation>['config'] {
+  return {
+    sessionKey: user.id,
+    transport: runtime.transport,
+    layout: 'narrow',
+    drafts: runtime.drafts,
+    events: { onNewChat, onError },
+  };
+}
+
+function PaneThread(props: PaneViewProps & { readonly threadId: string }) {
+  const { threadId, runtime, startAttempt, onError } = props;
   const { t } = useTranslation('outlook');
   const thread = usePaneThread(threadId);
-  const { lifecycle, transport, drafts, navigation } = runtime;
+  const { lifecycle, navigation } = runtime;
   function startNewChat() {
     const itemKey = currentOutlookItemKey();
     startAttempt.stop();
@@ -251,12 +235,9 @@ function PaneThread({
   if (thread.data) {
     return (
       <PaneConversation
-        userId={user.id}
         thread={thread.data}
-        config={{ transport, capabilities }}
+        config={paneChatConfig(props, startNewChat)}
         lifecycle={lifecycle}
-        drafts={drafts}
-        isAcademyGated={isAcademyGated}
         onNewChat={startNewChat}
         onDeleted={navigation.showHistoryAfterDelete}
         onError={onError}
@@ -293,7 +274,7 @@ function PaneChat(props: PaneProps) {
   });
   const viewProps: PaneViewProps = {
     ...props,
-    ...usePaneCapabilities(props.user),
+    isAcademyGated: useAcademyGate(),
     runtime,
     startAttempt,
     onError,

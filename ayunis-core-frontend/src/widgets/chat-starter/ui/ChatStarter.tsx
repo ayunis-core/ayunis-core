@@ -1,22 +1,15 @@
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import ChatInput from '@/widgets/chat-input';
+import { NewChatComposer, type NewChatStart } from '@ayunis/chat/surface';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
+import {
+  WEB_CHAT_TOUR_TARGETS,
+  useChatResourceSelection,
+  useWebIntegrations,
+  useWebKnowledgeBases,
+} from '@/widgets/chat-input';
 import {
   useInitiateChat,
   type CreateThreadOrigin,
-  type SourceUploadStatus,
 } from '@/features/chat-initiation';
-import { usePermittedModels } from '@/features/usePermittedModels';
-import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
-import { useSelectedModel } from '@/widgets/model-select-options';
-import { useAcademyAccessStatus } from '@/features/academy';
-import { showError } from '@/shared/lib/toast';
-import { generateUUID } from '@/shared/lib/uuid';
-import {
-  SourceResponseDtoStatus,
-  SourceResponseDtoType,
-} from '@ayunis/api-client/schemas';
 import type {
   IntegrationSummary,
   KnowledgeBaseSummary,
@@ -24,44 +17,14 @@ import type {
 
 /** What a route loads before the composer renders, so its model is preselected. */
 export interface ChatStarterDefaults {
+  /** A model id or `mode:<mode>`. */
   selectedModelId?: string;
-  isEmbeddingModelEnabled: boolean;
 }
 
 interface ChatStarterProps extends ChatStarterDefaults {
   workspaceId?: string;
   origin?: CreateThreadOrigin;
   placeholder?: string;
-}
-
-type LocalSource = {
-  id: string;
-  name: string;
-  type: SourceResponseDtoType;
-  file: File;
-  status?: SourceResponseDtoStatus;
-  processingError?: string;
-  uploadProgress?: number;
-};
-
-function applySourceStatus(
-  source: LocalSource,
-  status: SourceUploadStatus,
-): LocalSource {
-  if (status.kind === 'failed') {
-    return {
-      ...source,
-      status: SourceResponseDtoStatus.failed,
-      processingError: status.message,
-      uploadProgress: undefined,
-    };
-  }
-  return {
-    ...source,
-    status: SourceResponseDtoStatus.processing,
-    processingError: undefined,
-    uploadProgress: status.kind === 'uploading' ? status.progress : undefined,
-  };
 }
 
 /**
@@ -74,130 +37,48 @@ export function ChatStarter({
   origin,
   placeholder,
   selectedModelId,
-  isEmbeddingModelEnabled,
 }: Readonly<ChatStarterProps>) {
-  const { t } = useTranslation('chat');
   const { initiateChat, cancel, isCreating } = useInitiateChat({
     settleAnimation: false,
   });
-  const { models } = usePermittedModels();
-  const { isGated: isAcademyGated } = useAcademyAccessStatus();
+  const selectedKnowledgeBases =
+    useChatResourceSelection<KnowledgeBaseSummary>();
+  const selectedIntegrations = useChatResourceSelection<IntegrationSummary>();
+  const knowledgeBases = useWebKnowledgeBases(selectedKnowledgeBases);
+  const integrations = useWebIntegrations(selectedIntegrations);
 
-  const [modelId, setModelId] = useState(selectedModelId);
-  const { isAnonymousByDefault } = useAnonymousModeDefault();
-  const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
-  const [sources, setSources] = useState<LocalSource[]>([]);
-  const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
-    KnowledgeBaseSummary[]
-  >([]);
-  const [selectedIntegrations, setSelectedIntegrations] = useState<
-    IntegrationSummary[]
-  >([]);
-
-  const {
-    model: selectedModel,
-    modelId: resolvedModelId,
-    mode: selectedMode,
-    isAnonymousEnforced,
-  } = useSelectedModel(modelId, models, isAnonymous);
-  const isVisionEnabled = selectedModel?.canVision ?? false;
-
-  function handleFileUpload(files: File[]) {
-    const newSources: LocalSource[] = files.map((file) => ({
-      id: generateUUID(),
-      name: file.name,
-      type: file.name.endsWith('.csv')
-        ? SourceResponseDtoType.data
-        : SourceResponseDtoType.text,
-      file,
-    }));
-    setSources((prev) => [...prev, ...newSources]);
-  }
-
-  function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
-    setSources((prev) =>
-      prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
-    );
-  }
-
-  function handleSend(
-    message: string,
-    imageFiles?: Array<{ file: File; altText?: string }>,
-    skillId?: string,
-    voiceInput?: boolean,
-  ) {
-    if (!resolvedModelId) {
-      showError(t('newChat.noModelOrAgentError'));
-      return;
-    }
-
+  function handleStart(start: NewChatStart) {
     void initiateChat({
-      message,
-      images: imageFiles ?? [],
-      ...(selectedMode ? { mode: selectedMode } : { modelId: resolvedModelId }),
-      sources,
-      knowledgeBases: selectedKnowledgeBases,
-      mcpIntegrations: selectedIntegrations,
-      isAnonymous,
+      message: start.text,
+      images: start.images ?? [],
+      ...(start.mode ? { mode: start.mode } : { modelId: start.modelId }),
+      sources: [...start.sources],
+      knowledgeBases: selectedKnowledgeBases.attached,
+      mcpIntegrations: selectedIntegrations.attached,
+      isAnonymous: start.isAnonymous,
       workspaceId,
       origin,
-      skillId,
-      voiceInput,
-      onSourceStatus: handleSourceStatus,
+      skillId: start.skillId,
+      voiceInput: start.voiceInput,
+      onSourceStatus: start.onSourceStatus,
     });
-  }
-
-  function handleCancel() {
-    cancel();
-    setSources((prev) =>
-      prev.map((s) => ({
-        ...s,
-        status: undefined,
-        processingError: undefined,
-        uploadProgress: undefined,
-      })),
-    );
   }
 
   return (
     <div>
       <AcademyGateNotice className="mb-2" />
-      <ChatInput
-        modelId={modelId}
-        sources={sources}
-        knowledgeBases={selectedKnowledgeBases}
-        mcpIntegrations={selectedIntegrations}
-        submissionState={isCreating ? 'submitting' : 'idle'}
-        isSendDisabled={isAcademyGated || !resolvedModelId}
-        onModelChange={setModelId}
-        onSend={handleSend}
-        onCancel={handleCancel}
-        onFileUpload={handleFileUpload}
-        onRemoveSource={(sourceId) =>
-          setSources((prev) => prev.filter((s) => s.id !== sourceId))
-        }
-        onAddKnowledgeBase={(kb) => {
-          setSelectedKnowledgeBases((prev) => [...prev, kb]);
+      <NewChatComposer
+        config={{
+          layout: 'page',
+          knowledgeBases,
+          integrations,
+          tourTargets: WEB_CHAT_TOUR_TARGETS,
         }}
-        onRemoveKnowledgeBase={(kbId) => {
-          setSelectedKnowledgeBases((prev) =>
-            prev.filter((kb) => kb.id !== kbId),
-          );
-        }}
-        onAddIntegration={(integration) => {
-          setSelectedIntegrations((prev) => [...prev, integration]);
-        }}
-        onRemoveIntegration={(integrationId) => {
-          setSelectedIntegrations((prev) =>
-            prev.filter((integration) => integration.id !== integrationId),
-          );
-        }}
-        isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-        isAnonymous={isAnonymous}
-        onAnonymousChange={setIsAnonymous}
-        isAnonymousEnforced={isAnonymousEnforced}
-        isVisionEnabled={isVisionEnabled}
+        initialModel={selectedModelId}
         placeholder={placeholder}
+        busy={isCreating}
+        onStart={handleStart}
+        onStop={cancel}
       />
     </div>
   );

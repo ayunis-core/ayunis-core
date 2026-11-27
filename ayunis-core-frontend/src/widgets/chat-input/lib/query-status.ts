@@ -1,9 +1,9 @@
-import type { ComposerMenuStatus } from '@ayunis/chat/surface';
+import type { ChatMenuStatus } from '@ayunis/chat/surface';
 
 export function queryStatus(query: {
   isLoading: boolean;
   error: unknown;
-}): ComposerMenuStatus {
+}): ChatMenuStatus {
   if (query.isLoading) return 'loading';
   return query.error ? 'error' : 'ready';
 }

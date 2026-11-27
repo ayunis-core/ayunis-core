@@ -15,7 +15,6 @@ import { useReleaseNote } from '@/pages/release-note/api/useReleaseNote';
 interface ReleaseNotePageProps {
   releaseNote: ReleaseNoteResponseDto;
   selectedModelId?: string;
-  isEmbeddingModelEnabled: boolean;
 }
 
 export default function ReleaseNotePage(props: Readonly<ReleaseNotePageProps>) {
@@ -60,7 +59,6 @@ export default function ReleaseNotePage(props: Readonly<ReleaseNotePageProps>) {
             <ReleaseNoteChatStarter
               releaseNoteId={releaseNote.id}
               selectedModelId={props.selectedModelId}
-              isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
             />
           </article>
         }

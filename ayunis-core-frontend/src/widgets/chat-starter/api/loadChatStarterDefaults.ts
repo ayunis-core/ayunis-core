@@ -13,7 +13,8 @@ import {
 export async function loadChatStarterDefaults(
   queryClient: QueryClient,
 ): Promise<ChatStarterDefaults> {
-  const [defaultSelection, embeddingModelResponse] = await Promise.all([
+  // The embedding status and the anonymous default are cached for the composer.
+  const [defaultSelection] = await Promise.all([
     queryClient.query(defaultModelSelectionQueryOptions()).catch(() => null),
     queryClient
       .query({
@@ -23,9 +24,5 @@ export async function loadChatStarterDefaults(
       .catch(() => null),
     queryClient.query(anonymousModeDefaultQueryOptions()),
   ]);
-  return {
-    selectedModelId: toComposerValue(defaultSelection),
-    isEmbeddingModelEnabled:
-      embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
-  };
+  return { selectedModelId: toComposerValue(defaultSelection) };
 }

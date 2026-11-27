@@ -53,7 +53,6 @@ export function AttachmentMenu({
   onAudio,
   accept = ACCEPTED_FILE_PICKER_TYPES,
   menuActions,
-  fileInputTestId = 'chat-attach-files',
 }: Readonly<{
   disabled: boolean;
   closeMenu: boolean;
@@ -61,7 +60,6 @@ export function AttachmentMenu({
   onAudio?: (files: File[]) => void;
   accept?: string;
   menuActions?: ReactNode;
-  fileInputTestId?: string;
 }>) {
   const files = useRef<HTMLInputElement>(null);
   const audio = useRef<HTMLInputElement>(null);
@@ -70,7 +68,7 @@ export function AttachmentMenu({
     <>
       <AttachmentInput
         inputRef={files}
-        testId={fileInputTestId}
+        testId="chat-file-upload-input"
         accept={accept}
         disabled={disabled}
         onFiles={onFiles}
@@ -209,13 +207,11 @@ export function ToolbarSendButton({
   canSend,
   submit,
   onStop,
-  stopTestId = 'stop',
 }: Readonly<{
   isStreaming: boolean;
   canSend: boolean;
   submit: () => void;
   onStop?: () => void;
-  stopTestId?: string;
 }>) {
   const { t } = useTranslation('common');
   const readyState = canSend ? 'ready' : 'disabled';
@@ -232,7 +228,7 @@ export function ToolbarSendButton({
             size="icon"
             className={`chat-input-send-button chat-input-send-button--${state} rounded-full`}
             aria-label={label}
-            data-testid={isStreaming ? stopTestId : 'send'}
+            data-testid={isStreaming ? 'cancel' : 'send'}
             disabled={isStreaming ? !onStop : !canSend}
             onClick={isStreaming ? onStop : submit}
           >

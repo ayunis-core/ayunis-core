@@ -14,6 +14,7 @@ import type {
   InlineToolRunBlock,
   ToolTimelineStep,
 } from './types';
+import { Markdown } from '@ayunis/chat/markdown';
 import AgentRunTimelineRow from './AgentRunTimelineRow';
 import { renderRichToolCard } from './render-rich-tool-card';
 import { getArtifactToolTarget } from './artifact-tool-target';
@@ -122,11 +123,12 @@ function AnswerText({
   text,
   isStreaming,
 }: Readonly<{ text: string; isStreaming: boolean }>) {
-  const { Markdown } = useTimelinePresentation();
+  const { onCodeCopied } = useTimelinePresentation();
   return (
     <div data-copyable="true">
       <Markdown
         isStreaming={isStreaming}
+        onCodeCopied={onCodeCopied}
         renderLegalReferences
         renderSourceCitations
         renderUrlReferences

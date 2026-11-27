@@ -25,7 +25,6 @@ interface NotificationProps {
 
 interface NotificationPageProps extends NotificationProps {
   selectedModelId?: string;
-  isEmbeddingModelEnabled: boolean;
 }
 
 export default function NotificationPage(
@@ -68,7 +67,6 @@ export default function NotificationPage(
           origin={{ kind: 'notification', notificationId: notification.id }}
           placeholder={t('detail.chatPlaceholder')}
           selectedModelId={props.selectedModelId}
-          isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
         />
       </div>
     </article>

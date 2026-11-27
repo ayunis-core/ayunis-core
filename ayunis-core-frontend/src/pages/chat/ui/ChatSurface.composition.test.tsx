@@ -1,22 +1,19 @@
-import { createRef, useState } from 'react';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { createRef, useState, type ReactElement } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getThreadsControllerFindOneQueryKey } from '@ayunis/api-client/endpoints';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ChatConversation,
   ChatSurface,
   createClientToolRegistry,
+  type ChatConfig,
   type ChatConversationHandle,
   type ChatConversationProps,
   type ChatThreadSnapshot,
 } from '@ayunis/chat/surface';
 import { MAX_IMAGE_SIZE_BYTES } from '@ayunis/chat/composer';
-import type { MarkdownProps } from '@ayunis/chat/markdown';
+import { toast } from '@ayunis/ui/lib/toast';
 import {
   createChatRunLifecycle,
   type RunEndpoints,
@@ -25,16 +22,83 @@ import {
 import type {
   AssistantMessageResponseDto,
   GetThreadResponseDto,
+  PermittedLanguageModelResponseDto,
 } from '@ayunis/api-client/schemas';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import {
+  renderWithQueryClient,
+  serveChatApi,
+} from '@/shared/api/serve-chat-api';
+
+vi.mock('@ayunis/ui/lib/toast', () => ({ toast: { error: vi.fn() } }));
+const sourceUpload = vi.hoisted(() => ({ uploadSourceFile: vi.fn() }));
+vi.mock('@ayunis/api-client/source-upload', () => sourceUpload);
 
 beforeAll(async () => {
   Element.prototype.scrollIntoView ??= () => undefined;
   await createInstance()
     .use(initReactI18next)
-    .init({ lng: 'en', resources: { en: { common: {} } } });
+    .init({
+      lng: 'en',
+      resources: {
+        en: {
+          common: {
+            chatInput: {
+              placeholder: 'Message',
+              sendTooltip: 'Send',
+              cancelTooltip: 'Stop',
+              microphoneTooltip: 'Dictate',
+              microphoneRecording: 'Stop recording',
+            },
+          },
+        },
+      },
+    });
 });
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  serveChatApi();
+});
+
+const render = (ui: ReactElement) => renderWithQueryClient(ui);
+
+function chatConfig<Context = unknown, Outcome = unknown>(
+  transport: RunEndpoints,
+  overrides: Partial<ChatConfig<Context, Outcome>> = {},
+): ChatConfig<Context, Outcome> {
+  return {
+    sessionKey: 'test-user',
+    transport,
+    layout: 'page',
+    ...overrides,
+    events: { onNewChat: vi.fn(), ...overrides.events },
+  };
+}
+
+const visionModel = {
+  id: 'vision-model',
+  modelId: 'catalog-vision',
+  name: 'vision',
+  provider: 'mistral',
+  displayName: 'Vision',
+  canVision: true,
+} as PermittedLanguageModelResponseDto;
+
+/** A model that accepts images, so the composer offers image attachments. */
+function serveVisionModel(routes: Parameters<typeof serveChatApi>[0] = {}) {
+  serveChatApi({
+    'GET /models/permitted/language-models': [visionModel],
+    ...routes,
+  });
+}
+
+async function imagePicker() {
+  const picker = screen.getByTestId<HTMLInputElement>('chat-file-upload-input');
+  await waitFor(() => expect(picker.disabled).toBe(false));
+  return picker;
+}
 
 const first = { id: 'first', title: 'First chat', messages: [], piiMasks: [] };
 const second = {
@@ -68,7 +132,7 @@ function TestHost(props: Pick<ChatConversationProps, 'config' | 'adapters'>) {
       <button type="button" onClick={() => setThread(second)}>
         {second.title}
       </button>
-      <ChatConversation {...props} sessionKey="test-user" thread={thread} />
+      <ChatConversation {...props} thread={thread} />
     </>
   );
 }
@@ -128,7 +192,7 @@ function send(text: string) {
 
 function deferredToolRun(
   policy: Pick<
-    NonNullable<ChatConversationProps['clientTools']>,
+    NonNullable<ChatConfig['clientTools']>,
     'canDispatch' | 'contextKey' | 'resumeOnOpen'
   > = {},
 ) {
@@ -145,16 +209,19 @@ function deferredToolRun(
   const execute = vi.fn(async () => 'test result');
   const onRunSettled = vi.fn();
   const props = {
-    sessionKey: 'test-user',
-    config: { transport: { send: request }, capabilities: {} },
-    adapters: { onRunSettled },
-    clientTools: {
-      registry: createClientToolRegistry<undefined, string>({
-        read_context: { execute },
-      }),
-      invoke: (executor, call) => executor(call, undefined),
-      ...policy,
-    },
+    config: chatConfig<undefined, string>(
+      { send: request },
+      {
+        events: { onNewChat: vi.fn(), onRunSettled },
+        clientTools: {
+          registry: createClientToolRegistry<undefined, string>({
+            read_context: { execute },
+          }),
+          invoke: (executor, call) => executor(call, undefined),
+          ...policy,
+        },
+      },
+    ),
   } satisfies Omit<ChatConversationProps<undefined, string>, 'thread'>;
   const saved: ChatThreadSnapshot = { ...first, messages: [toolCall.message] };
   async function finish() {
@@ -168,20 +235,20 @@ function deferredToolRun(
 }
 
 describe('shared chat composition', () => {
-  it('owns the unavailable-model state without a host composer replacement', () => {
+  it('replaces the composer with a new-chat offer once the chat model is no longer permitted', async () => {
     const onNewChat = vi.fn();
     const conversation = createRef<ChatConversationHandle>();
     render(
       <ChatConversation
-        sessionKey="test-user"
         conversationRef={conversation}
-        thread={first}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
-        composer={{ unavailableModel: { onNewChat } }}
+        thread={{ ...first, permittedModelId: 'withdrawn-model' }}
+        config={chatConfig({ send: vi.fn() }, { events: { onNewChat } })}
       />,
     );
 
-    expect(screen.queryByRole('textbox', { name: 'Message' })).toBeNull();
+    await waitFor(() =>
+      expect(screen.queryByRole('textbox', { name: 'Message' })).toBeNull(),
+    );
     expect(
       conversation.current?.restoreFailedSubmission('Keep this prompt', []),
     ).toBeUndefined();
@@ -197,11 +264,10 @@ describe('shared chat composition', () => {
     const deferSend = vi.fn(() => true);
     render(
       <ChatConversation
-        sessionKey="test-user"
         conversationRef={conversation}
         lifecycle={lifecycle}
         thread={first}
-        config={{ transport: { send: request }, capabilities: {} }}
+        config={chatConfig({ send: request })}
         composer={{ clearOnSend: true }}
         adapters={{ deferSend }}
       />,
@@ -233,13 +299,9 @@ describe('shared chat composition', () => {
     const deferSend = vi.fn(() => false);
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
         activeRun={{ dataUpdatedAt: 0, isFetching: true }}
-        config={{
-          transport: { send: request, follow: vi.fn() },
-          capabilities: {},
-        }}
+        config={chatConfig({ send: request, follow: vi.fn() })}
         composer={{ clearOnSend: true }}
         adapters={{ deferSend }}
       />,
@@ -255,45 +317,14 @@ describe('shared chat composition', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
-  it('keeps user-message markdown separate from assistant timeline tracking', () => {
-    const UserMarkdown = ({ children }: Readonly<MarkdownProps>) => (
-      <p data-testid="user-markdown">{children}</p>
-    );
-    const TimelineMarkdown = ({ children }: Readonly<MarkdownProps>) => (
-      <p data-testid="timeline-markdown">{children}</p>
-    );
-    render(
-      <ChatConversation
-        sessionKey="test-user"
-        thread={{
-          ...first,
-          messages: [
-            userMessage('u1', [{ type: 'text', text: 'User prompt' }]),
-            answer(first.id, 'a1', 'Assistant answer').message,
-          ],
-        }}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
-        timeline={{ toolCards: new Map(), Markdown: TimelineMarkdown }}
-        slots={{ messageMarkdown: UserMarkdown }}
-      />,
-    );
-
-    expect(screen.getByTestId('user-markdown').textContent).toBe('User prompt');
-    expect(screen.getByTestId('timeline-markdown').textContent).toBe(
-      'Assistant answer',
-    );
-  });
-
   it('does not render an empty actions row for tool-only runs', () => {
     const toolOnly = event(first.id, 'a1', [
       { type: 'tool_use', id: 'call', name: 'read_context', params: {} },
     ]).message;
     render(
       <ChatConversation
-        sessionKey="test-user"
-        compactComposer
         thread={{ ...first, messages: [toolOnly] }}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        config={chatConfig({ send: vi.fn() })}
         slots={{ assistantActions: () => null }}
       />,
     );
@@ -304,21 +335,22 @@ describe('shared chat composition', () => {
   });
 
   it('does not rerender existing user messages during active-run polling', () => {
-    const renderUser = vi.fn();
-    const UserMarkdown = ({ children }: Readonly<MarkdownProps>) => {
-      renderUser();
-      return <p>{children}</p>;
-    };
+    const renderUser = vi.fn(() => null);
     const thread = {
       ...first,
-      messages: [userMessage('u1', [{ type: 'text', text: 'First' }])],
+      messages: [
+        userMessage('u1', [
+          { type: 'text', text: 'First' },
+          { type: 'image', index: 0, altText: 'Plan' },
+        ]),
+      ],
     };
+    const config = chatConfig({ send: vi.fn() });
     const conversation = (isFetching: boolean) => (
       <ChatConversation
-        sessionKey="test-user"
         thread={thread}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
-        slots={{ messageMarkdown: UserMarkdown }}
+        config={config}
+        slots={{ messageImage: renderUser }}
         activeRun={{ dataUpdatedAt: 1, isFetching }}
       />
     );
@@ -350,13 +382,15 @@ describe('shared chat composition', () => {
       return null;
     };
     const onMessageCopied = vi.fn();
+    const config = chatConfig(
+      { send: request },
+      { events: { onNewChat: vi.fn(), onMessageCopied } },
+    );
     const conversation = (dataUpdatedAt: number, isFetching: boolean) => (
       <ChatConversation
-        sessionKey="test-user"
         thread={thread}
-        config={{ transport: { send: request }, capabilities: {} }}
+        config={config}
         slots={{ assistantActions }}
-        adapters={{ onMessageCopied }}
         activeRun={{
           dataUpdatedAt,
           isFetching,
@@ -393,9 +427,7 @@ describe('shared chat composition', () => {
   it('preserves per-chat drafts and resumes rendering the first run after switching chats', async () => {
     const pending = stream();
     const request = vi.fn(async () => pending.response);
-    render(
-      <TestHost config={{ transport: { send: request }, capabilities: {} }} />,
-    );
+    render(<TestHost config={chatConfig({ send: request })} />);
     send('Question');
     expect(request).toHaveBeenCalledWith(
       { threadId: first.id, text: 'Question', streaming: true },
@@ -428,11 +460,7 @@ describe('shared chat composition', () => {
     const pending = stream();
     try {
       const request = vi.fn(async () => pending.response);
-      render(
-        <TestHost
-          config={{ transport: { send: request }, capabilities: {} }}
-        />,
-      );
+      render(<TestHost config={chatConfig({ send: request })} />);
       send('Visible prompt');
       const echoed = answer(first.id, 'u1', 'Visible prompt');
       await act(async () =>
@@ -462,10 +490,11 @@ describe('shared chat composition', () => {
     const onRunSettled = vi.fn();
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
-        config={{ transport: { send: request }, capabilities: {} }}
-        adapters={{ observeRun, onRunSettled }}
+        config={chatConfig(
+          { send: request },
+          { events: { onNewChat: vi.fn(), observeRun, onRunSettled } },
+        )}
       />,
     );
 
@@ -509,10 +538,9 @@ describe('shared chat composition', () => {
 
     render(
       <ChatConversation
-        sessionKey="test-user"
         lifecycle={lifecycle}
         thread={first}
-        config={{ transport: { send: request }, capabilities: {} }}
+        config={chatConfig({ send: request })}
         adapters={{ onStartedRun }}
       />,
     );
@@ -544,9 +572,8 @@ describe('shared chat composition', () => {
     };
     const { container, rerender } = render(
       <ChatConversation
-        sessionKey="test-user"
         thread={persisted}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        config={chatConfig({ send: vi.fn() })}
         slots={{ contextHint: <div data-testid="context-hint" /> }}
       />,
     );
@@ -558,10 +585,9 @@ describe('shared chat composition', () => {
 
     rerender(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
         pendingSubmission="Pending question"
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        config={chatConfig({ send: vi.fn() })}
         slots={{ contextHint: <div data-testid="context-hint" /> }}
       />,
     );
@@ -576,9 +602,8 @@ describe('shared chat composition', () => {
   it('hides host context until a user turn exists', () => {
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        config={chatConfig({ send: vi.fn() })}
         slots={{ contextHint: <div data-testid="context-hint" /> }}
       />,
     );
@@ -588,7 +613,6 @@ describe('shared chat composition', () => {
   it('renders a routine nudge as a notice instead of a user bubble', () => {
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={{
           ...first,
           messages: [
@@ -597,7 +621,7 @@ describe('shared chat composition', () => {
             ]),
           ],
         }}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        config={chatConfig({ send: vi.fn() })}
         slots={{ messageNudge: (text) => <NudgeNotice text={text} /> }}
       />,
     );
@@ -610,7 +634,6 @@ describe('shared chat composition', () => {
   it('keeps the shared default nudge presentation unchanged without a host slot', () => {
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={{
           ...first,
           messages: [
@@ -619,7 +642,7 @@ describe('shared chat composition', () => {
             ]),
           ],
         }}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
+        config={chatConfig({ send: vi.fn() })}
       />,
     );
     expect(screen.getByText('Plain surface nudge')).toBeTruthy();
@@ -635,8 +658,6 @@ describe('shared chat composition', () => {
     const onMessageCopied = vi.fn();
     render(
       <ChatConversation
-        sessionKey="test-user"
-        compactComposer
         thread={{
           ...first,
           piiMasks: [
@@ -662,8 +683,10 @@ describe('shared chat composition', () => {
             ]),
           ],
         }}
-        config={{ transport: { send: vi.fn() }, capabilities: {} }}
-        adapters={{ onMessageCopied }}
+        config={chatConfig(
+          { send: vi.fn() },
+          { events: { onNewChat: vi.fn(), onMessageCopied } },
+        )}
       />,
     );
     fireEvent.click(
@@ -677,14 +700,41 @@ describe('shared chat composition', () => {
     expect(onMessageCopied).toHaveBeenCalledWith('user');
   });
 
+  it('reports a copied code block of an answer to the host', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { write: vi.fn(), writeText: vi.fn(async () => undefined) },
+    });
+    const onCodeCopied = vi.fn();
+    render(
+      <ChatConversation
+        thread={{
+          ...first,
+          messages: [
+            answer(first.id, 'a1', '```js\nconst permit = 1;\n```').message,
+          ],
+        }}
+        config={chatConfig(
+          { send: vi.fn() },
+          { events: { onNewChat: vi.fn(), onCodeCopied } },
+        )}
+      />,
+    );
+    const [copyCode] = screen.getAllByRole('button', {
+      name: 'chat.copyToClipboard',
+    });
+
+    fireEvent.click(copyCode);
+
+    await waitFor(() => expect(onCodeCopied).toHaveBeenCalledOnce());
+  });
+
   it('keeps a new draft on the selected thread when a previous thread is accepted', async () => {
     const pending = stream();
     const request = vi
       .fn<RunEndpoints['send']>()
       .mockResolvedValue(pending.response);
-    render(
-      <TestHost config={{ transport: { send: request }, capabilities: {} }} />,
-    );
+    render(<TestHost config={chatConfig({ send: request })} />);
     send('First prompt');
     fireEvent.click(screen.getByRole('button', { name: second.title }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
@@ -714,27 +764,20 @@ describe('shared chat composition', () => {
         static override readonly revokeObjectURL = () => undefined;
       },
     );
+    serveVisionModel();
     const { unmount } = render(
       <ChatConversation
-        sessionKey="test-user"
-        thread={first}
-        config={{
-          transport: { send: request },
-          capabilities: { fileUpload: true },
-        }}
+        thread={{ ...first, permittedModelId: visionModel.id }}
+        config={chatConfig({ send: request })}
         composer={{ clearOnSend: true }}
-        adapters={{
-          imageAttachments: true,
-          allowAttachmentsWhileStreaming: true,
-        }}
       />,
     );
     try {
-      fireEvent.change(screen.getByLabelText('Attach images'), {
+      fireEvent.change(await imagePicker(), {
         target: { files: [sent] },
       });
       send('First prompt');
-      fireEvent.change(screen.getByLabelText('Attach images'), {
+      fireEvent.change(await imagePicker(), {
         target: { files: [followUp] },
       });
       expect(screen.getByRole('img', { name: 'follow-up.png' })).toBeDefined();
@@ -762,26 +805,20 @@ describe('shared chat composition', () => {
       .mockResolvedValueOnce(
         new Response(chunk(answer(first.id, 'a2', 'New session response'))),
       );
-    const config = { transport: { send: request }, capabilities: {} };
     const onRunSettled = vi.fn();
+    const config = (sessionKey: string) =>
+      chatConfig(
+        { send: request },
+        { sessionKey, events: { onNewChat: vi.fn(), onRunSettled } },
+      );
     const { rerender } = render(
-      <ChatConversation
-        sessionKey="first-user"
-        thread={first}
-        config={config}
-        adapters={{ onRunSettled }}
-      />,
+      <ChatConversation thread={first} config={config('first-user')} />,
     );
     send('Old session prompt');
     const signal = request.mock.calls[0][1];
     await act(async () => {
       rerender(
-        <ChatConversation
-          sessionKey="second-user"
-          thread={first}
-          config={config}
-          adapters={{ onRunSettled }}
-        />,
+        <ChatConversation thread={first} config={config('second-user')} />,
       );
     });
     expect(signal.aborted).toBe(true);
@@ -803,17 +840,13 @@ describe('shared chat composition', () => {
     const request = vi.fn(async () => new Response(null, { status: 204 }));
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
         activeRun={{
           run: { cancellable: true },
           dataUpdatedAt: Date.now(),
           isFetching: false,
         }}
-        config={{
-          transport: { send: request, follow, cancel },
-          capabilities: {},
-        }}
+        config={chatConfig({ send: request, follow, cancel })}
       />,
     );
     await waitFor(() =>
@@ -842,7 +875,6 @@ describe('shared chat composition', () => {
     });
     render(
       <ChatConversation
-        sessionKey="test-user"
         lifecycle={lifecycle}
         thread={first}
         pendingSubmission="Question"
@@ -851,10 +883,7 @@ describe('shared chat composition', () => {
           dataUpdatedAt: Date.now(),
           isFetching: false,
         }}
-        config={{
-          transport: { send: request, follow, cancel },
-          capabilities: {},
-        }}
+        config={chatConfig({ send: request, follow, cancel })}
         composer={{ deferredSendCancellable: true }}
         adapters={{ cancelDeferredSend }}
       />,
@@ -874,9 +903,8 @@ describe('shared chat composition', () => {
     const onThreadState = vi.fn();
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
-        config={{ transport: { send: request, cancel }, capabilities: {} }}
+        config={chatConfig({ send: request, cancel })}
         adapters={{ onThreadState }}
       />,
     );
@@ -921,13 +949,16 @@ describe('shared chat composition', () => {
     const registry = createClientToolRegistry({ read_context: { execute } });
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
-        config={{ transport: { send: request }, capabilities: {} }}
-        clientTools={{
-          registry,
-          invoke: (executor, call) => executor(call, undefined),
-        }}
+        config={chatConfig(
+          { send: request },
+          {
+            clientTools: {
+              registry,
+              invoke: (executor, call) => executor(call, undefined),
+            },
+          },
+        )}
       />,
     );
     send('Run the tool');
@@ -1037,7 +1068,7 @@ describe('shared chat composition', () => {
         />,
       );
       await waitFor(() =>
-        expect(props.adapters.onRunSettled).toHaveBeenCalledTimes(2),
+        expect(props.config.events.onRunSettled).toHaveBeenCalledTimes(2),
       );
       expect(follow).toHaveBeenCalledWith(first.id, expect.any(AbortSignal));
       expect(execute).not.toHaveBeenCalled();
@@ -1120,7 +1151,13 @@ describe('shared chat composition', () => {
       <ChatConversation
         {...props}
         thread={saved}
-        clientTools={{ ...props.clientTools, contextKey: 'different' }}
+        config={{
+          ...props.config,
+          clientTools: {
+            ...props.config.clientTools!,
+            contextKey: 'different',
+          },
+        }}
       />,
     );
     expect(execute).not.toHaveBeenCalled();
@@ -1142,7 +1179,13 @@ describe('shared chat composition', () => {
       <ChatConversation
         {...props}
         thread={first}
-        clientTools={{ ...props.clientTools, contextKey: 'different' }}
+        config={{
+          ...props.config,
+          clientTools: {
+            ...props.config.clientTools!,
+            contextKey: 'different',
+          },
+        }}
       />,
     );
 
@@ -1177,12 +1220,15 @@ describe('shared chat composition', () => {
         rerender(
           <ChatConversation
             {...props}
-            sessionKey={sessionKey}
             thread={saved}
-            clientTools={{
-              ...props.clientTools,
-              contextKey,
-              resumeOnOpen: resume === undefined ? undefined : () => resume,
+            config={{
+              ...props.config,
+              sessionKey,
+              clientTools: {
+                ...props.config.clientTools!,
+                contextKey,
+                resumeOnOpen: resume === undefined ? undefined : () => resume,
+              },
             }}
           />,
         );
@@ -1219,57 +1265,55 @@ describe('shared chat composition', () => {
     });
     vi.useFakeTimers({ toFake: ['Date'] });
     try {
-      const onError = vi.fn();
-      const transcribe = vi.fn().mockRejectedValue(new Error('Offline'));
+      const requests = serveChatApi({
+        'GET /feature-toggles': { voiceEnabled: true },
+      });
       const send = vi.fn(async () => new Response(null, { status: 204 }));
-      render(
-        <TestHost
-          config={{ transport: { send }, capabilities: { voice: true } }}
-          adapters={{ onError, transcribe }}
-        />,
-      );
+      render(<TestHost config={chatConfig({ send })} />);
+      const dictate = await screen.findByRole('button', { name: 'Dictate' });
       await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'Dictate' }));
+        fireEvent.click(dictate);
       });
       vi.setSystemTime(Date.now() + 2000);
       await act(async () => {
         fireEvent.click(screen.getByRole('button', { name: 'Stop recording' }));
       });
 
-      expect(transcribe).toHaveBeenCalledOnce();
-      expect(onError).toHaveBeenCalledExactlyOnceWith(expect.any(Error));
+      await waitFor(() => expect(toast.error).toHaveBeenCalled());
+      expect(
+        requests.filter(({ url }) => url === '/transcriptions'),
+      ).toHaveLength(1);
+      expect(toast.error).toHaveBeenCalledOnce();
     } finally {
       vi.useRealTimers();
       vi.unstubAllGlobals();
     }
   });
 
-  it('keeps run failures separate from composer failures', async () => {
-    const composerError = vi.fn();
+  it('reports a failed send to the run handler instead of the generic error event', async () => {
+    const onError = vi.fn();
     const sendError = vi.fn();
     const request = vi.fn(async () => {
       throw new Error('Offline');
     });
     render(
       <ChatConversation
-        sessionKey="test-user"
         thread={first}
-        config={{ transport: { send: request }, capabilities: {} }}
-        adapters={{
-          onError: composerError,
-          onRunTransportError: sendError,
-        }}
+        config={chatConfig(
+          { send: request },
+          { events: { onNewChat: vi.fn(), onError } },
+        )}
+        adapters={{ onRunTransportError: sendError }}
       />,
     );
 
     send('Try to send');
 
     await waitFor(() => expect(sendError).toHaveBeenCalledOnce());
-    expect(composerError).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
   });
 
-  it('keeps an accepted photo and explains why the larger one was rejected', () => {
-    const onError = vi.fn();
+  it('keeps an accepted photo and explains why the larger one was rejected', async () => {
     const send = vi.fn(async () => new Response(null, { status: 204 }));
     const valid = new File(['fixture'], 'small.png', { type: 'image/png' });
     const oversized = new File(['fixture'], 'large.png', { type: 'image/png' });
@@ -1284,21 +1328,23 @@ describe('shared chat composition', () => {
       },
     );
     vi.stubGlobal('crypto', { randomUUID: undefined });
+    serveVisionModel();
     const { unmount } = render(
-      <TestHost
-        config={{ transport: { send }, capabilities: { fileUpload: true } }}
-        adapters={{ imageAttachments: true, onError }}
+      <ChatConversation
+        thread={{ ...first, permittedModelId: visionModel.id }}
+        config={chatConfig({ send })}
       />,
     );
     try {
-      fireEvent.change(screen.getByLabelText('Attach images'), {
+      fireEvent.change(await imagePicker(), {
         target: { files: [valid, oversized] },
       });
 
       expect(screen.getByRole('img', { name: 'small.png' })).toBeDefined();
       expect(screen.queryByRole('img', { name: 'large.png' })).toBeNull();
-      expect(onError).toHaveBeenCalledExactlyOnceWith(
-        new Error('chatInput.imageTooLarge'),
+      expect(toast.error).toHaveBeenCalledExactlyOnceWith(
+        'chatInput.imageTooLarge',
+        expect.anything(),
       );
     } finally {
       unmount();
@@ -1306,72 +1352,106 @@ describe('shared chat composition', () => {
     }
   });
 
-  it('suppresses disabled composer actions and routes enabled actions to the host adapters', async () => {
-    const selectModel = vi.fn(async () => undefined);
-    const uploadFiles = vi.fn(async () => undefined);
-    const transcribe = vi.fn(async () => null);
-    const request = vi.fn(async () => new Response(null, { status: 204 }));
-    const props = {
-      sessionKey: 'test-user',
-      thread: first,
-      adapters: {
-        model: {
-          selected: 'a',
-          available: [
-            { id: 'a', name: 'Model A' },
-            { id: 'b', name: 'Model B' },
-          ],
-          select: selectModel,
+  it.each([
+    ['fails', () => Promise.reject(new Error('Offline'))],
+    ['is still running', () => new Promise<never>(() => undefined)],
+  ])(
+    'shows an uploaded source once and holds sending while it processes when the thread refresh %s',
+    async (_state, refreshThread) => {
+      serveChatApi({
+        'GET /models/embedding/enabled': { isEmbeddingModelEnabled: true },
+      });
+      sourceUpload.uploadSourceFile.mockResolvedValue([
+        {
+          id: 'source-1',
+          threadId: first.id,
+          name: 'notes.txt',
+          type: 'text',
+          createdBy: 'user',
+          status: 'processing',
         },
-        uploadFiles,
-        documentAttachments: true,
-        transcribe,
-      },
-    };
-    const transport = { send: request };
-    const { rerender } = render(
-      <ChatConversation {...props} config={{ transport, capabilities: {} }} />,
-    );
-    expect(screen.queryByLabelText('Attach files')).toBeNull();
-    expect(screen.queryByLabelText('Model')).toBeNull();
-    expect(selectModel).not.toHaveBeenCalled();
-    expect(uploadFiles).not.toHaveBeenCalled();
-    expect(transcribe).not.toHaveBeenCalled();
+      ]);
+      function CachedThreadHost() {
+        const { data } = useQuery({
+          queryKey: getThreadsControllerFindOneQueryKey(first.id),
+          queryFn: refreshThread,
+          initialData: {
+            ...first,
+            sources: [],
+          } as unknown as GetThreadResponseDto,
+          staleTime: Infinity,
+        });
+        return (
+          <ChatConversation
+            thread={data}
+            config={chatConfig({ send: vi.fn() })}
+          />
+        );
+      }
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+      render(<CachedThreadHost />);
+      const picker = screen.getByTestId<HTMLInputElement>(
+        'chat-file-upload-input',
+      );
+      await waitFor(() => expect(picker.accept).not.toBe('image/*'));
 
-    rerender(
+      fireEvent.change(picker, {
+        target: {
+          files: [new File(['notes'], 'notes.txt', { type: 'text/plain' })],
+        },
+      });
+
+      await waitFor(() =>
+        expect(
+          screen
+            .getAllByTestId('chat-source')
+            .map((chip) => chip.getAttribute('data-source-id')),
+        ).toEqual(['source-1']),
+      );
+      fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+        target: { value: 'Summarise the notes' },
+      });
+      expect(screen.getByTestId<HTMLButtonElement>('send').disabled).toBe(true);
+      vi.unstubAllGlobals();
+    },
+  );
+
+  it('does not upload a document dropped while a reply streams', async () => {
+    const pending = stream();
+    const requests = serveChatApi({
+      'GET /models/embedding/enabled': { isEmbeddingModelEnabled: true },
+    });
+    render(
       <ChatConversation
-        {...props}
-        config={{
-          transport,
-          capabilities: {
-            fileUpload: true,
-            modelSelection: true,
-          },
-        }}
+        thread={first}
+        config={chatConfig({ send: vi.fn(async () => pending.response) })}
       />,
     );
-    const file = new File(['fixture'], 'fixture.txt', { type: 'text/plain' });
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText('Attach files'), {
-        target: { files: [file] },
-      });
-    });
-    expect(uploadFiles).toHaveBeenCalledWith(
-      first.id,
-      [file],
-      expect.any(AbortSignal),
+    await waitFor(() =>
+      expect(
+        screen.getByTestId<HTMLInputElement>('chat-file-upload-input').accept,
+      ).not.toBe('image/*'),
     );
-    fireEvent.keyDown(screen.getByRole('combobox', { name: 'Model' }), {
-      key: 'Enter',
+    send('Summarise the permit');
+
+    fireEvent.drop(screen.getByTestId('chat-input'), {
+      dataTransfer: {
+        files: [
+          new File(['permit'], 'permit.pdf', { type: 'application/pdf' }),
+        ],
+      },
     });
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('option', { name: 'Model B' }));
-    });
-    expect(selectModel).toHaveBeenCalledWith(
-      first.id,
-      'b',
-      expect.any(AbortSignal),
-    );
+    await act(() => Promise.resolve());
+
+    expect(requests.some(({ method }) => method === 'POST')).toBe(false);
+    await act(async () => pending.close());
   });
 });
 

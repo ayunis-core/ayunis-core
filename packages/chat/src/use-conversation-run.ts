@@ -5,8 +5,10 @@ import {
   useSyncExternalStore,
 } from 'react';
 import type {
-  ChatConversationAdapters,
-  ChatConversationProps,
+  ChatActiveRunSnapshot,
+  ChatThreadSnapshot,
+  ConversationRuntime,
+  ConversationRuntimeAdapters,
 } from './chat-conversation-config';
 import type { ChatRunLifecycle, RunRequestObserver } from './run-lifecycle';
 import {
@@ -34,7 +36,7 @@ interface SelectedToolView {
 }
 
 function useRunObserver<Context, Outcome>(
-  props: ChatConversationProps<Context, Outcome>,
+  props: ConversationRuntime<Context, Outcome>,
   lifecycle: ChatRunLifecycle,
 ) {
   const { thread, adapters, clientTools } = props;
@@ -73,14 +75,14 @@ function useRunObserver<Context, Outcome>(
       onErrorEvent: adapters?.onRunError,
       onError: adapters?.onRunTransportError ?? adapters?.onError,
     },
-    { transport: props.config.transport, observeRequest },
+    { transport: props.transport, observeRequest },
   );
 
   return { isStreaming, state, run, selected, onAccepted };
 }
 
 interface ConversationRunOptions<Context, Outcome> {
-  readonly adapters?: ChatConversationAdapters;
+  readonly adapters?: ConversationRuntimeAdapters;
   readonly clientTools?: ClientToolDispatch<Context, Outcome>;
   readonly selected: { current: SelectedToolView | null };
   readonly accepted?: () => void;
@@ -209,9 +211,9 @@ function deferToolResults<Context, Outcome>(
 
 export function useConversationRun<Context, Outcome>(
   lifecycle: ChatRunLifecycle,
-  props: ChatConversationProps<Context, Outcome>,
+  props: ConversationRuntime<Context, Outcome>,
 ) {
-  const { thread, activeRun, clientTools, config, adapters } = props;
+  const { thread, activeRun, clientTools, transport, adapters } = props;
   const observed = useRunObserver(props, lifecycle);
   const { isStreaming, state, run, selected, onAccepted } = observed;
   const status = useConversationRunStatus(
@@ -219,7 +221,7 @@ export function useConversationRun<Context, Outcome>(
     thread.id,
     isStreaming,
     run.attach,
-    config.transport.follow ? (activeRun ?? NO_ACTIVE_RUN) : NO_ACTIVE_RUN,
+    transport.follow ? (activeRun ?? NO_ACTIVE_RUN) : NO_ACTIVE_RUN,
   );
   const tools = useClientToolLifecycle(lifecycle, {
     threadId: thread.id,
@@ -251,13 +253,13 @@ export function useConversationRun<Context, Outcome>(
 
 interface ConversationControlsOptions {
   readonly lifecycle: ChatRunLifecycle;
-  readonly thread: ChatConversationProps['thread'];
+  readonly thread: ChatThreadSnapshot;
   readonly state: ReturnType<typeof useChatThreadState>;
   readonly run: ReturnType<typeof useChatRunLifecycle>;
   readonly tools: ReturnType<typeof useClientToolLifecycle>;
   readonly status: ReturnType<typeof useConversationRunStatus>;
   readonly onAccepted: { current: (() => void) | undefined };
-  readonly adapters?: ChatConversationAdapters;
+  readonly adapters?: ConversationRuntimeAdapters;
 }
 
 function useConversationControls(options: ConversationControlsOptions) {
@@ -308,7 +310,7 @@ function useConversationRunStatus(
   threadId: string,
   isStreaming: boolean,
   attach: ReturnType<typeof useChatRunLifecycle>['attach'],
-  activeRun: NonNullable<ChatConversationProps['activeRun']>,
+  activeRun: ChatActiveRunSnapshot,
 ) {
   return useThreadRunReattach(
     lifecycle,
@@ -333,12 +335,12 @@ function useSelectedToolView(
 
 function useSelectedThread(
   lifecycle: ChatRunLifecycle,
-  thread: ChatConversationProps['thread'],
+  thread: ChatThreadSnapshot,
   state: ReturnType<typeof useChatThreadState>,
   sendTextMessage: ReturnType<typeof useChatRunLifecycle>['sendTextMessage'],
   beginRun: ReturnType<typeof useClientToolLifecycle>['beginRun'],
-  onThreadState?: ChatConversationAdapters['onThreadState'],
-  onStartedRun?: ChatConversationAdapters['onStartedRun'],
+  onThreadState?: ConversationRuntimeAdapters['onThreadState'],
+  onStartedRun?: ConversationRuntimeAdapters['onStartedRun'],
 ) {
   const { id } = thread;
   const { messages, piiMasks, threadTitle } = state;
@@ -352,10 +354,10 @@ function useSelectedThread(
 
 function takeStartedRun(
   lifecycle: ChatRunLifecycle,
-  thread: ChatConversationProps['thread'],
+  thread: ChatThreadSnapshot,
   sendTextMessage: ReturnType<typeof useChatRunLifecycle>['sendTextMessage'],
   beginRun: ReturnType<typeof useClientToolLifecycle>['beginRun'],
-  onStartedRun?: ChatConversationAdapters['onStartedRun'],
+  onStartedRun?: ConversationRuntimeAdapters['onStartedRun'],
 ): boolean {
   const started = lifecycle.takeStartedThreadRun(thread.id);
   if (!started) return false;

@@ -1,4 +1,4 @@
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 import {
   orgChatSettingsControllerGetChatStartDefaults,
   getOrgChatSettingsControllerGetChatStartDefaultsQueryKey,
@@ -11,9 +11,4 @@ export function anonymousModeDefaultQueryOptions() {
       orgChatSettingsControllerGetChatStartDefaults(signal),
     staleTime: 0,
   });
-}
-
-export function useAnonymousModeDefault() {
-  const { data } = useSuspenseQuery(anonymousModeDefaultQueryOptions());
-  return { isAnonymousByDefault: data.anonymousModeByDefault };
 }

@@ -12,8 +12,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
+import { useDarkTheme } from '@ayunis/ui/hooks/use-dark-theme';
 
 export interface CodeBlockProps {
+  /** Defaults to the document's theme. */
   readonly isDark?: boolean;
   language?: string;
   children: string;
@@ -26,13 +28,14 @@ export interface CodeBlockProps {
 
 function CodeBlock({
   language,
-  isDark = false,
+  isDark,
   children,
   inline = false,
   className = '',
   highlight = true,
   onCopied,
 }: Readonly<CodeBlockProps>) {
+  const documentIsDark = useDarkTheme();
   if (inline) {
     return (
       <code
@@ -49,7 +52,7 @@ function CodeBlock({
   return (
     <div className="relative my-4 max-w-full">
       <SyntaxHighlighter
-        style={isDark ? oneDark : oneLight}
+        style={(isDark ?? documentIsDark) ? oneDark : oneLight}
         language={highlight ? (language ?? 'text') : 'text'}
         PreTag="div"
         showLineNumbers={showLineNumbers}

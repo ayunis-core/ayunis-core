@@ -42,21 +42,17 @@ vi.mock('@/shared/api/extract-error-data', () => ({
 
 const { Route } = await import('./chat.index');
 
-interface LoaderResult {
-  selectedModelId?: string;
-}
-
 function appQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 5 * 60 * 1000 } },
   });
 }
 
-async function runLoader(queryClient: QueryClient): Promise<LoaderResult> {
+async function runLoader(queryClient: QueryClient): Promise<unknown> {
   const loader = Route.options.loader as (args: {
     deps: { modelId?: string };
     context: { queryClient: QueryClient };
-  }) => Promise<LoaderResult>;
+  }) => Promise<unknown>;
 
   return loader({ deps: {}, context: { queryClient } });
 }
@@ -93,9 +89,12 @@ describe('new chat route', () => {
       permittedModelId: 'terra',
     });
 
-    const result = await runLoader(queryClient);
+    await runLoader(queryClient);
 
-    expect(result.selectedModelId).toBe('sol');
+    expect(queryClient.getQueryData(['default-selection'])).toEqual({
+      mode: null,
+      permittedModelId: 'sol',
+    });
     expect(mocks.getDefaultSelection).toHaveBeenCalledOnce();
   });
 
@@ -117,28 +116,13 @@ describe('new chat route', () => {
   it('opens the new chat when the onboarding stage cannot be loaded', async () => {
     mocks.getOnboardingStage.mockRejectedValue(new Error('offline'));
 
-    const result = await runLoader(appQueryClient());
-
-    expect(result.selectedModelId).toBe('sol');
+    await expect(runLoader(appQueryClient())).resolves.toBeDefined();
   });
 
-  it('preselects a mode when the default is a mode', async () => {
-    mocks.getDefaultSelection.mockResolvedValue({
-      mode: 'auto',
-      permittedModelId: 'sol',
-    });
-
-    const result = await runLoader(appQueryClient());
-
-    expect(result.selectedModelId).toBe('mode:auto');
-  });
-
-  it('renders without a preselected model when the default cannot be loaded', async () => {
+  it('opens the new chat when the default cannot be loaded', async () => {
     mocks.getDefaultSelection.mockRejectedValue(new Error('offline'));
 
-    const result = await runLoader(appQueryClient());
-
-    expect(result.selectedModelId).toBeUndefined();
+    await expect(runLoader(appQueryClient())).resolves.toBeDefined();
   });
 
   it('preserves the no-default-model error for the route error page', async () => {

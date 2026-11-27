@@ -1,9 +1,21 @@
 export { ChatSurface, type ChatSurfaceProps } from './chat-surface';
+export type { ChatSlots } from './chat-surface-config';
 export type {
-  ChatCapabilities,
-  ChatSlots,
-  ChatSurfaceConfig,
-} from './chat-surface-config';
+  ChatConfig,
+  ChatEvents,
+  ChatIntegrationItem,
+  ChatIntegrations,
+  ChatIntegrationSummary,
+  ChatKnowledgeBaseItem,
+  ChatKnowledgeBases,
+  ChatLayout,
+  ChatMenuStatus,
+  ChatNavigationTarget,
+  ChatResourceSummary,
+  ChatSelectedSkill,
+  ChatSkills,
+  ChatTourTarget,
+} from './chat-config';
 export {
   createClientToolRegistry,
   type ClientToolCall,
@@ -18,17 +30,15 @@ export type {
   ChatConversationHandle,
   ChatConversationProps,
   ChatConversationSlots,
-  ChatModelAdapter,
   ChatThreadSnapshot,
 } from './chat-conversation-config';
 export {
-  ConfiguredComposer,
-  type ConfiguredComposerProps,
-  type ConfiguredComposerRef,
-} from './configured-composer';
-export {
-  IntegrationsMenuAction,
-  KnowledgeBasesMenuAction,
-  SkillsMenuAction,
-  type ComposerMenuStatus,
-} from './composer-menu-actions';
+  NewChatComposer,
+  type NewChatComposerHandle,
+  type NewChatComposerProps,
+  type NewChatModel,
+  type NewChatSelection,
+  type NewChatSourceFile,
+  type NewChatSourceStatus,
+  type NewChatStart,
+} from './new-chat-composer';

@@ -1,16 +1,24 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@ayunis/ui/components/button';
-import type { ChatConversationAdapters } from './chat-conversation-config';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@ayunis/ui/components/tooltip';
+import { AnonymousButton } from './composer/AnonymousButton';
+import { SkillBadge } from './composer/SkillBadge';
+import { ModelSelector } from './model-presentation/ModelSelector';
 import type { ConfiguredComposerProps } from './configured-composer-types';
-import type { useChatAction } from './use-chat-action';
-import { AttachmentFields, ModelField, VoiceField } from './composer-features';
+import { AttachmentFields, VoiceField } from './composer-features';
 import { ComposerToolbar, ToolbarSendButton } from './composer-toolbar';
+import {
+  IntegrationsMenuAction,
+  KnowledgeBasesMenuAction,
+} from './composer-menu-actions';
+import { TourTarget } from './tour-target';
 
 type ComposerControls = ConfiguredComposerProps & {
   readonly attachImages: (files: File[]) => void;
-  readonly upload: ReturnType<typeof useChatAction>;
-  readonly model: ReturnType<typeof useChatAction>;
   readonly markVoiceInput: () => void;
   readonly onTranscript: (text: string) => void;
   readonly canSend: boolean;
@@ -18,228 +26,163 @@ type ComposerControls = ConfiguredComposerProps & {
 };
 
 export function ComposerActions(props: ComposerControls) {
-  const { capabilities, slots } = props;
-  const attachments = <ComposerAttachmentControl {...props} />;
-  const model = <ComposerModelControl {...props} />;
-  const voice = <ComposerVoiceControl {...props} />;
-  const send = <SendOrStop {...props} />;
-
-  if (props.compact) {
-    return (
-      <ComposerToolbar
-        leading={
-          <>
-            {attachments}
-            {slots?.composerLeading}
-          </>
-        }
-        model={slots?.composerModel ?? model}
-        trailing={
-          <>
-            {voice}
-            {send}
-          </>
-        }
-      />
-    );
-  }
+  const { tourTargets } = props.config;
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {attachments}
-      {model}
-      {voice}
-      <HostComposerActions capabilities={capabilities} slots={slots} />
-      {send}
-    </div>
+    <ComposerToolbar
+      leading={
+        <>
+          <TourTarget name={tourTargets?.upload} settles>
+            <ComposerAttachmentControl {...props} />
+          </TourTarget>
+          <TourTarget name={tourTargets?.anonymous} settles>
+            <ComposerAnonymousControl {...props} />
+          </TourTarget>
+          <ComposerSkillBadge {...props} />
+        </>
+      }
+      model={<ComposerModelControl {...props} />}
+      trailing={
+        <>
+          <ComposerVoiceControl {...props} />
+          <ComposerSendControl {...props} />
+        </>
+      }
+    />
   );
 }
 
 function ComposerAttachmentControl(props: ComposerControls) {
-  const hasMenuActions = hasComposerMenuActions(props);
-  if (!props.capabilities.fileUpload && !hasMenuActions) return null;
-  const uploadsEnabled = Boolean(props.capabilities.fileUpload);
-  const control = (
+  const { config, features } = props;
+  const hasMenuActions = Boolean(config.knowledgeBases || config.integrations);
+  return (
     <AttachmentFields
-      threadId={props.threadId}
-      compact={props.compact}
-      disabled={attachmentsDisabled(props)}
+      disabled={Boolean(props.isSubmitting)}
       closeMenu={Boolean(props.isSubmitting) || props.isStreaming}
-      upload={uploadsEnabled ? documentUpload(props.adapters) : undefined}
-      action={props.upload}
-      audio={uploadsEnabled && props.capabilities.audio}
-      images={uploadsEnabled && props.adapters?.imageAttachments}
+      upload={features.uploadFiles}
+      images={features.imageAttachments}
       onImages={props.attachImages}
-      onError={onAttachmentError(props.adapters)}
-      menuActions={hasMenuActions ? <HostComposerActions {...props} /> : null}
-      fileInputTestId={props.fileInputTestId}
-    />
-  );
-  return wrapControl(control, props.slots?.composerAttachmentControl);
-}
-
-function hasComposerMenuActions({
-  capabilities,
-  slots,
-}: Pick<ComposerControls, 'capabilities' | 'slots'>) {
-  const skills = capabilities.skills && Boolean(slots?.skills);
-  const knowledge =
-    capabilities.knowledgeBases && Boolean(slots?.knowledgeBases);
-  const integrations =
-    capabilities.integrations && Boolean(slots?.integrations);
-  return skills || knowledge || integrations;
-}
-
-function attachmentsDisabled({
-  isSubmitting,
-  isStreaming,
-  adapters,
-}: Pick<ComposerControls, 'isSubmitting' | 'isStreaming' | 'adapters'>) {
-  return (
-    Boolean(isSubmitting) ||
-    (isStreaming && !adapters?.allowAttachmentsWhileStreaming)
-  );
-}
-
-function documentUpload(adapters: ChatConversationAdapters | undefined) {
-  return adapters?.documentAttachments === true
-    ? adapters.uploadFiles
-    : undefined;
-}
-
-function ComposerModelControl({
-  capabilities,
-  adapters,
-  threadId,
-  isStreaming,
-  model,
-}: ComposerControls) {
-  if (!capabilities.modelSelection || !adapters?.model) return null;
-  return (
-    <ModelField
-      threadId={threadId}
-      disabled={isStreaming}
-      adapter={adapters.model}
-      action={model}
+      menuActions={
+        hasMenuActions ? <ComposerMenuActions config={config} /> : null
+      }
     />
   );
 }
 
-function ComposerVoiceControl({
-  capabilities,
-  adapters,
-  compact,
-  markVoiceInput,
-  onTranscript,
-  slots,
-}: ComposerControls) {
-  if (!capabilities.voice || !adapters?.transcribe) return null;
-  const control = (
-    <VoiceField
-      compact={compact}
-      transcribe={adapters.transcribe}
-      onError={adapters.onError}
-      onTranscript={(text) => {
-        onTranscript(text);
-        markVoiceInput();
-      }}
-    />
-  );
-  return wrapControl(control, slots?.composerVoiceControl);
-}
-
-function HostComposerActions({
-  capabilities,
-  slots,
-}: Readonly<Pick<ConfiguredComposerProps, 'capabilities' | 'slots'>>) {
+function ComposerMenuActions({
+  config: { knowledgeBases, integrations },
+}: Readonly<Pick<ConfiguredComposerProps, 'config'>>) {
   return (
     <>
-      {capabilities.skills && slots?.skills}
-      {capabilities.knowledgeBases && slots?.knowledgeBases}
-      {capabilities.integrations && slots?.integrations}
+      {knowledgeBases && (
+        <KnowledgeBasesMenuAction
+          items={knowledgeBases.items}
+          status={knowledgeBases.status}
+          attachedIds={knowledgeBases.attached.map(({ id }) => id)}
+          onSelect={knowledgeBases.attach}
+          onCreate={knowledgeBases.create}
+        />
+      )}
+      {integrations && (
+        <IntegrationsMenuAction
+          items={integrations.items}
+          status={integrations.status}
+          attachedIds={integrations.attached.map(({ id }) => id)}
+          onSelect={integrations.attach}
+        />
+      )}
     </>
   );
 }
 
-function SendOrStop({
+function ComposerAnonymousControl({ features }: ComposerControls) {
+  const { anonymous } = features;
+  return (
+    <AnonymousButton
+      isAnonymous={anonymous.isAnonymous}
+      onAnonymousChange={anonymous.onChange}
+      isDisabled={anonymous.disabled}
+      isEnforced={anonymous.isEnforced}
+    />
+  );
+}
+
+function ComposerSkillBadge({ config }: ComposerControls) {
+  const selected = config.skills?.selected;
+  if (!selected || !config.skills) return null;
+  return (
+    <SkillBadge skillName={selected.name} onRemove={config.skills.clear} />
+  );
+}
+
+function ComposerModelControl({ config, features }: ComposerControls) {
+  const { t } = useTranslation('common');
+  const { model, anonymous } = features;
+  const selector = (
+    <TourTarget name={config.tourTargets?.model}>
+      <ModelSelector
+        models={model.models}
+        resolutions={model.resolutions}
+        modelListPresentation={
+          config.layout === 'narrow' ? 'submenu' : 'responsive'
+        }
+        placeholder={model.placeholder}
+        isDisabled={model.disabled}
+        isAnonymous={anonymous.isAnonymous}
+        selectedModelId={model.value}
+        onModelChange={model.onChange}
+      />
+    </TourTarget>
+  );
+  if (!model.locked) return selector;
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div>{selector}</div>
+        </TooltipTrigger>
+        <TooltipContent>
+          {t('chatInput.modelChangeDisabledTooltip')}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function ComposerVoiceControl(props: ComposerControls) {
+  if (!props.features.voice) return null;
+  return (
+    <TourTarget name={props.config.tourTargets?.voice} settles>
+      <VoiceField
+        onTranscript={(text) => {
+          props.onTranscript(text);
+          props.markVoiceInput();
+        }}
+      />
+    </TourTarget>
+  );
+}
+
+function ComposerSendControl({
+  config,
   isStreaming,
   isSubmitting,
   canSend,
   submit,
   onStop,
-  compact,
-  slots,
-  stopTestId,
-}: ComposerControls): ReactNode {
+}: ComposerControls) {
   const inFlight = isStreaming || Boolean(isSubmitting);
-  if (!compact) {
-    return (
-      <LabeledSendOrStop
-        inFlight={inFlight}
-        canSend={canSend}
-        submit={submit}
-        onStop={onStop}
-      />
-    );
-  }
   const control = (
     <ToolbarSendButton
       isStreaming={inFlight}
       canSend={canSend}
       submit={() => submit()}
       onStop={onStop}
-      stopTestId={stopTestId}
     />
   );
-  const decorated = inFlight
-    ? control
-    : wrapControl(control, slots?.composerSendControl);
-  return <>{decorated}</>;
-}
-
-function LabeledSendOrStop({
-  inFlight,
-  canSend,
-  submit,
-  onStop,
-}: Readonly<{
-  inFlight: boolean;
-  canSend: boolean;
-  submit: () => void;
-  onStop?: () => void;
-}>) {
-  const { t } = useTranslation('common');
+  if (inFlight) return control;
   return (
-    <div className="ml-auto">
-      {inFlight ? (
-        <Button
-          type="button"
-          data-testid="stop"
-          disabled={!onStop}
-          onClick={onStop}
-        >
-          {t('chatSurface.stop', { defaultValue: 'Stop' })}
-        </Button>
-      ) : (
-        <Button
-          type="button"
-          data-testid="send"
-          disabled={!canSend}
-          onClick={() => submit()}
-        >
-          {t('chatSurface.send', { defaultValue: 'Send' })}
-        </Button>
-      )}
-    </div>
+    <TourTarget name={config.tourTargets?.send} settles>
+      {control}
+    </TourTarget>
   );
-}
-
-function onAttachmentError(adapters: ChatConversationAdapters | undefined) {
-  return adapters?.onAttachmentError ?? adapters?.onError;
-}
-
-function wrapControl(
-  content: ReactNode,
-  decorate?: (content: ReactNode) => ReactNode,
-) {
-  return decorate?.(content) ?? content;
 }

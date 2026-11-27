@@ -28,12 +28,12 @@ export const Route = createFileRoute('/_authenticated/chats/$threadId')({
     artifactId: searchParamString.optional(),
   }),
   loader: async ({ params: { threadId }, context: { queryClient, user } }) => {
-    // Prefetch the permitted models so ChatPage can decide synchronously
-    // whether the thread's model is still available, instead of rendering
-    // the input and hiding it once the client-side fetch settles (AYC-666).
-    // The models error is swallowed so a failing request never blocks
-    // navigation.
-    const [thread, { isEmbeddingModelEnabled }] = await Promise.all([
+    // Prefetch the permitted models and the embedding status so the composer
+    // can decide synchronously whether the thread's model is still available
+    // and documents can be attached, instead of rendering the input and
+    // hiding it once the client-side fetch settles (AYC-666). The models
+    // error is swallowed so a failing request never blocks navigation.
+    const [thread] = await Promise.all([
       queryClient.query(threadQueryOptions(threadId)),
       queryClient.query(queryIsEmbeddingModelEnabledOptions()),
       queryClient
@@ -42,20 +42,18 @@ export const Route = createFileRoute('/_authenticated/chats/$threadId')({
     ]);
     return {
       thread,
-      isEmbeddingModelEnabled,
       sessionKey: JSON.stringify([user.id, user.orgId]),
     };
   },
 });
 
 function RouteComponent() {
-  const { thread, isEmbeddingModelEnabled, sessionKey } = Route.useLoaderData();
+  const { thread, sessionKey } = Route.useLoaderData();
   const { artifactId } = Route.useSearch();
   return (
     <ChatPage
       thread={thread}
       sessionKey={sessionKey}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       initialArtifactId={artifactId}
     />
   );

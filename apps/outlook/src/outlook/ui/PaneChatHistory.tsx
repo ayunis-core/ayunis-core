@@ -11,10 +11,7 @@ import {
   ChatHistoryLoading,
   ChatHistoryPagination,
 } from '@ayunis/chat/history';
-import {
-  useContentScrollHeader,
-  type ChatCapabilities,
-} from '@ayunis/chat/surface';
+import { useContentScrollHeader } from '@ayunis/chat/surface';
 import type { GetThreadsResponseDtoItem } from '@ayunis/api-client/schemas';
 import { PaneHeading } from '@/outlook/ui/PaneHeading';
 import {
@@ -24,7 +21,6 @@ import {
 } from '@/outlook/lib/use-pane-chat-data';
 
 interface PaneHistoryProps {
-  readonly capabilities: ChatCapabilities;
   readonly onSelect: (id: string) => void;
   readonly onBack: () => void;
   readonly onSignOut: () => Promise<void>;
@@ -84,15 +80,11 @@ function HistoryList({
   offset,
   total,
   setOffset,
-  capabilities,
   onSelect,
   onBack,
   onError,
   session,
-}: Pick<
-  PaneHistoryProps,
-  'capabilities' | 'onSelect' | 'onBack' | 'onError' | 'session'
-> & {
+}: Pick<PaneHistoryProps, 'onSelect' | 'onBack' | 'onError' | 'session'> & {
   readonly chats: GetThreadsResponseDtoItem[];
   readonly offset: number;
   readonly total: number | undefined;
@@ -106,11 +98,7 @@ function HistoryList({
         <HistoryCard
           chat={chat}
           select={() => onSelect(chat.id)}
-          remove={
-            capabilities.delete
-              ? () => actions.remove(chat.id, session)
-              : undefined
-          }
+          remove={() => actions.remove(chat.id, session)}
           onError={onError}
         />
       )}

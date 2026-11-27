@@ -71,7 +71,7 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         queryFn: () => threadsControllerFindAll(chatsParams),
       });
 
-      const [defaultSelection, embeddingModelResponse] = await Promise.all([
+      const [defaultSelection] = await Promise.all([
         queryClient
           .query(defaultModelSelectionQueryOptions())
           .catch(() => null),
@@ -88,8 +88,6 @@ export const Route = createFileRoute('/_authenticated/workspaces/$workspaceId')(
         chatSearch: search,
         chatPage: page,
         selectedModelId: toComposerValue(defaultSelection),
-        isEmbeddingModelEnabled:
-          embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
       };
     },
   },
@@ -105,7 +103,6 @@ function RouteComponent() {
     chatSearch,
     chatPage,
     selectedModelId,
-    isEmbeddingModelEnabled,
   } = Route.useLoaderData();
   return (
     <WorkspacePage
@@ -118,7 +115,6 @@ function RouteComponent() {
       chatSearch={chatSearch}
       chatPage={chatPage}
       selectedModelId={selectedModelId}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />
   );
 }
