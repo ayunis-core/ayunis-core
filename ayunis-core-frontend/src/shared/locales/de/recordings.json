@@ -35,7 +35,12 @@
       "nameLabel": "Name",
       "namePlaceholder": "z. B. Stadtratssitzung 12. November",
       "fileLabel": "Audiodatei",
-      "fileDescription": "MP3, M4A, WAV oder WebM. Sie wird mit Sprecherkennzeichnung transkribiert."
+      "fileDescription": "MP3, M4A, WAV oder WebM. Sie wird mit Sprecherkennzeichnung transkribiert.",
+      "drop": {
+        "select": "Datei auswählen",
+        "hint": "Audiodatei hierher ziehen",
+        "replace": "Andere Datei wählen"
+      }
     },
     "validation": {
       "nameRequired": "Name ist erforderlich",
@@ -118,11 +123,20 @@
         "empty": "Die Zusammenfassung konnte nicht erstellt werden: Das Audio enthält keine Sprache.",
         "unavailable": "Die Zusammenfassung konnte nicht erstellt werden: Der Modellanbieter ist nicht erreichbar.",
         "failed": "Die Zusammenfassung konnte nicht erstellt werden."
+      },
+      "edit": {
+        "label": "Bearbeiten",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
+      },
+      "speakersHint": {
+        "title": "Sprecher benennen",
+        "description": "{{missing}} von {{total}} Sprechern haben noch keinen Namen. Ergänzen Sie sie im Transkript."
       }
     },
     "transcript": {
       "title": "Transkript",
-      "description": "Was gesagt wurde, nach Sprechern. Die Sprecherkennzeichnungen stammen aus der Transkription und sind keine Namen.",
+      "description": "Was gesagt wurde, nach Sprechern.",
       "status": {
         "uploading": "Wird hochgeladen",
         "transcribing": "Wird transkribiert",
@@ -142,6 +156,11 @@
         "timeout": "Die Transkription hat zu lange gedauert. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch.",
         "unavailable": "Der Transkriptionsdienst ist nicht erreichbar. Löschen Sie die Besprechung und laden Sie die Datei später erneut hoch.",
         "failed": "Das Audio konnte nicht transkribiert werden. Löschen Sie die Besprechung und laden Sie die Datei erneut hoch. Wenn das Problem bleibt, wenden Sie sich an den Support."
+      },
+      "speakers": {
+        "placeholder": "Name",
+        "recognized": "Aus dem Gespräch erkannt. Bitte prüfen.",
+        "unclear": "Nicht eindeutig: {{names}}. Bitte prüfen."
       }
     },
     "audio": {
@@ -149,7 +168,14 @@
       "uploadHint": "Laden Sie das Audio hoch, um ein Transkript und eine Zusammenfassung zu erhalten.",
       "waitingHint": "Sobald das Audio hochgeladen ist, erscheinen hier Transkript und Zusammenfassung.",
       "upload": "Audio hochladen"
-    }
+    },
+    "export": {
+      "copy": "Kopieren",
+      "copied": "In die Zwischenablage kopiert",
+      "copyError": "Kopieren hat nicht geklappt. Bitte versuchen Sie es erneut.",
+      "downloadSummary": "Als PDF herunterladen"
+    },
+    "chatPlaceholder": "Fragen Sie etwas zu dieser Besprechung"
   },
   "audio": {
     "alreadyUploaded": "Diese Besprechung hat bereits ihr Audio. Erstellen Sie für eine weitere Datei eine neue Besprechung.",

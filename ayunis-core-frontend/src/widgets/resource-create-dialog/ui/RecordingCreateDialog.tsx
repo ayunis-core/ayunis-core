@@ -10,13 +10,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@ayunis/ui/components/form';
-import { Input } from '@ayunis/ui/components/input';
 import { NameField } from '@/widgets/entity-form-fields';
 import type { OwnerSelection } from '@/features/resource-ownership';
-import {
-  ACCEPTED_AUDIO_PICKER_TYPES,
-  isAudioFileName,
-} from '@/shared/lib/audio-files';
+import { isAudioFileName } from '@/shared/lib/audio-files';
+import { AudioFileDropField } from './AudioFileDropField';
 import {
   OwnedResourceCreateDialog,
   type OwnedResourceCreateDialogProps,
@@ -76,14 +73,18 @@ export function RecordingCreateDialog(
           <FormItem>
             <FormLabel>{t('createDialog.form.fileLabel')}</FormLabel>
             <FormControl>
-              <Input
-                type="file"
-                accept={ACCEPTED_AUDIO_PICKER_TYPES}
-                data-testid="recording-create-audio"
+              <AudioFileDropField
+                file={field.value}
                 name={field.name}
-                ref={field.ref}
                 onBlur={field.onBlur}
-                onChange={(event) => field.onChange(event.target.files?.[0])}
+                onSelect={(file) => {
+                  field.onChange(file);
+                  if (file && !form.getValues('name').trim()) {
+                    form.setValue('name', nameFromFile(file.name), {
+                      shouldValidate: true,
+                    });
+                  }
+                }}
               />
             </FormControl>
             <FormDescription>
@@ -95,4 +96,11 @@ export function RecordingCreateDialog(
       />
     </OwnedResourceCreateDialog>
   );
+}
+
+function nameFromFile(fileName: string): string {
+  return fileName
+    .replace(/\.[^.]+$/, '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
 }

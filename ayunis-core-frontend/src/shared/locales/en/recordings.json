@@ -35,7 +35,12 @@
       "nameLabel": "Name",
       "namePlaceholder": "e.g. Council meeting 12 November",
       "fileLabel": "Audio file",
-      "fileDescription": "MP3, M4A, WAV or WebM. It is transcribed with speaker labels."
+      "fileDescription": "MP3, M4A, WAV or WebM. It is transcribed with speaker labels.",
+      "drop": {
+        "select": "Choose file",
+        "hint": "Drag the audio file here",
+        "replace": "Choose another file"
+      }
     },
     "validation": {
       "nameRequired": "Name is required",
@@ -118,11 +123,20 @@
         "empty": "The summary could not be generated: the audio contains no speech.",
         "unavailable": "The summary could not be generated: the model provider is not available.",
         "failed": "The summary could not be generated."
+      },
+      "edit": {
+        "label": "Edit",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "speakersHint": {
+        "title": "Name the speakers",
+        "description": "{{missing}} of {{total}} speakers have no name yet. Add them in the transcript."
       }
     },
     "transcript": {
       "title": "Transcript",
-      "description": "What was said, by speaker. Speaker labels come from the transcription and are not names.",
+      "description": "What was said, by speaker.",
       "status": {
         "uploading": "Uploading",
         "transcribing": "Transcribing",
@@ -142,6 +156,11 @@
         "timeout": "The transcription took too long. Delete the meeting and upload the file again.",
         "unavailable": "The transcription service is not available. Delete the meeting and upload the file again later.",
         "failed": "The audio could not be transcribed. Delete the meeting and upload the file again. If the problem persists, contact support."
+      },
+      "speakers": {
+        "placeholder": "Name",
+        "recognized": "Recognized from the conversation. Please check.",
+        "unclear": "Not clear: {{names}}. Please check."
       }
     },
     "audio": {
@@ -149,7 +168,14 @@
       "uploadHint": "Upload the audio to get a transcript and a summary.",
       "waitingHint": "Once the audio is uploaded, the transcript and summary appear here.",
       "upload": "Upload audio"
-    }
+    },
+    "export": {
+      "copy": "Copy",
+      "copied": "Copied to clipboard",
+      "copyError": "Copying failed. Please try again.",
+      "downloadSummary": "Download as PDF"
+    },
+    "chatPlaceholder": "Ask something about this meeting"
   },
   "audio": {
     "alreadyUploaded": "This meeting already has its audio. Create a new meeting for another file.",

@@ -10,6 +10,7 @@ import {
   teamsControllerListMyTeams,
   workspacesControllerFindOne,
 } from '@ayunis/api-client/endpoints';
+import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
 import { requireRecordingsEnabled } from './-recordings-enabled';
 
 export const Route = createFileRoute('/_authenticated/recordings/$id')({
@@ -26,7 +27,7 @@ export const Route = createFileRoute('/_authenticated/recordings/$id')({
       });
     // Teams and permissions decide who may manage team and organization
     // recordings, so they are loaded before the first paint.
-    const [workspace] = await Promise.all([
+    const [workspace, chatStarter] = await Promise.all([
       recording.workspaceId
         ? queryClient.query({
             queryKey: getWorkspacesControllerFindOneQueryKey(
@@ -35,6 +36,7 @@ export const Route = createFileRoute('/_authenticated/recordings/$id')({
             queryFn: () => workspacesControllerFindOne(recording.workspaceId!),
           })
         : undefined,
+      loadChatStarterDefaults(queryClient),
       queryClient.query({
         queryKey: getTeamsControllerListMyTeamsQueryKey(),
         queryFn: () => teamsControllerListMyTeams(),
@@ -44,17 +46,18 @@ export const Route = createFileRoute('/_authenticated/recordings/$id')({
         queryFn: () => myPermissionsControllerGetMine(),
       }),
     ]);
-    return { recording, workspace };
+    return { recording, workspace, chatStarter };
   },
 });
 
 function RouteComponent() {
-  const { recording, workspace } = Route.useLoaderData();
+  const { recording, workspace, chatStarter } = Route.useLoaderData();
   return (
     <RecordingPage
       key={recording.id}
       recording={recording}
       workspace={workspace}
+      chatStarter={chatStarter}
     />
   );
 }

@@ -21,6 +21,7 @@ import type {
   WorkspaceResponseDto,
 } from '@ayunis/api-client/schemas';
 import { useConfirmation } from '@/widgets/confirmation-modal';
+import { ChatStarter, type ChatStarterDefaults } from '@/widgets/chat-starter';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { ResourceOwnerCard } from '@/widgets/resource-owner-card';
 import { RecordingPropertiesCard } from '@/widgets/resource-properties-card';
@@ -35,10 +36,12 @@ import { RecordingTabs } from './RecordingTabs';
 export function RecordingPage({
   recording: loaded,
   workspace,
+  chatStarter,
 }: Readonly<{
   recording: RecordingResponseDto;
   /** The owning workspace of a workspace recording. */
   workspace?: WorkspaceResponseDto;
+  chatStarter: ChatStarterDefaults;
 }>) {
   const recording = useRecording(loaded);
   const { t } = useTranslation('recordings');
@@ -134,6 +137,16 @@ export function RecordingPage({
             <RecordingTabs
               recording={recording}
               canManage={isManageable}
+              chat={
+                recording.status === 'ready' ? (
+                  <div data-testid="recording-chat-starter">
+                    <ChatStarter
+                      {...chatStarter}
+                      placeholder={t('detail.chatPlaceholder')}
+                    />
+                  </div>
+                ) : null
+              }
               configuration={
                 <>
                   {isManageable && (
