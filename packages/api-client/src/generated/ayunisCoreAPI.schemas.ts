@@ -7901,6 +7901,14 @@ export interface MarketplaceSuggestionResponseDto {
   iconName: string | null;
 }
 
+export interface InstantOpenReleaseNoteResponseDto {
+  /**
+     * The newest release note Announcable wants opened right away, while the current user has not read it; else null
+     * @nullable
+     */
+  releaseNote: ReleaseNoteResponseDto | null;
+}
+
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**
  * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan

@@ -1,6 +1,7 @@
 import type { UUID } from 'crypto';
 import { randomUUID } from 'crypto';
 import type { NotificationMedia } from 'src/domain/notifications/domain/notification-media';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 
 /**
  * Ayunis' copy of a release note written in Announcable, shown to every user
@@ -30,6 +31,7 @@ export class ReleaseNote {
   readonly createdAt: Date;
   /** Announcable's date of the note, as `YYYY-MM-DD`. */
   readonly publishedOn: string | null;
+  readonly attentionMechanism: ReleaseNoteAttentionMechanism;
 
   constructor(params: {
     id?: UUID;
@@ -42,6 +44,7 @@ export class ReleaseNote {
     announced?: boolean;
     createdAt?: Date;
     publishedOn?: string | null;
+    attentionMechanism?: ReleaseNoteAttentionMechanism;
   }) {
     this.id = params.id ?? randomUUID();
     this.announcableId = params.announcableId;
@@ -53,6 +56,8 @@ export class ReleaseNote {
     this.announced = params.announced ?? false;
     this.createdAt = params.createdAt ?? new Date();
     this.publishedOn = params.publishedOn ?? null;
+    this.attentionMechanism =
+      params.attentionMechanism ?? ReleaseNoteAttentionMechanism.SHOW_INDICATOR;
   }
 
   /** The day shown for the note, as `YYYY-MM-DD`. */

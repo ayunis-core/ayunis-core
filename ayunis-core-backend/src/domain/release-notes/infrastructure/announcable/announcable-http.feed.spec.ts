@@ -10,6 +10,7 @@ import {
   TEST_ANNOUNCABLE_ORG_ID,
   TEST_IMAGE_SRC,
 } from 'src/domain/release-notes/application/testing/release-note.fixtures';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import type { ConfigService } from '@nestjs/config';
 import { AnnouncableHttpFeed } from './announcable-http.feed';
 
@@ -75,7 +76,30 @@ describe('AnnouncableHttpFeed', () => {
           ctaLabelOverride: 'Zur Anmeldung',
           ctaHrefOverride:
             'https://app.livestorm.co/locaboo/ayunis-core-einstieg',
+          attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
         },
+      ]);
+    });
+
+    it('takes a missing or unknown attention mechanism for the indicator only, so no unforeseen value opens a modal', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          json({
+            data: [
+              feedNote('n1', { attentionMechanism: 'show_indicator' }),
+              feedNote('n2', { attentionMechanism: 'confetti' }),
+              feedNote('n3', { attentionMechanism: undefined }),
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(json({ data: [] }));
+
+      const notes = await feed.fetchReleaseNotes(TEST_ANNOUNCABLE_ORG_ID);
+
+      expect(notes.map((note) => note.attentionMechanism)).toEqual([
+        ReleaseNoteAttentionMechanism.SHOW_INDICATOR,
+        ReleaseNoteAttentionMechanism.SHOW_INDICATOR,
+        ReleaseNoteAttentionMechanism.SHOW_INDICATOR,
       ]);
     });
 

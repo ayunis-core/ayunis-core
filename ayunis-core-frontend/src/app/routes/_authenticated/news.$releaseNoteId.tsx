@@ -10,7 +10,7 @@ import {
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
-} from './-default-model-selection-query';
+} from '@/widgets/model-select-options';
 import { getFeatureToggles } from './-routines-enabled-query';
 
 export const Route = createFileRoute('/_authenticated/news/$releaseNoteId')({

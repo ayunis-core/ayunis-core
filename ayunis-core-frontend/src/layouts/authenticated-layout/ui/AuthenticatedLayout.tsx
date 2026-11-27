@@ -5,6 +5,7 @@ import {
   useOpenPanelOnboardingStage,
 } from '@/widgets/onboarding';
 import { WelcomeVideoDialog } from '@/widgets/welcome-video-dialog';
+import { ReleaseNoteAnnouncementDialog } from '@/widgets/release-note-announcement';
 
 export default function AuthenticatedLayout() {
   return (
@@ -21,6 +22,7 @@ function Onboarding() {
     <>
       <OnboardingReturnButton />
       <WelcomeVideoDialog />
+      <ReleaseNoteAnnouncementDialog />
     </>
   );
 }

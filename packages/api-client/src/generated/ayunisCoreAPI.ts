@@ -127,6 +127,7 @@ import type {
   InstallRoutineFromMarketplaceDto,
   InstallSkillFromMarketplaceDto,
   InstalledMarketplaceSkillResponseDto,
+  InstantOpenReleaseNoteResponseDto,
   InviteDetailResponseDto,
   InvitesControllerGetInvitesParams,
   IpAllowlistResponseDto,
@@ -36301,6 +36302,99 @@ export function useMarketplaceControllerListSuggestedSkills<TData = Awaited<Retu
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMarketplaceControllerListSuggestedSkillsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get the release note to open right away for the current user
+ */
+export const releaseNotesControllerFindInstantOpen = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<InstantOpenReleaseNoteResponseDto>(
+      {url: `/release-notes/instant-open`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerFindInstantOpenQueryKey = () => {
+    return [
+    `/release-notes/instant-open`
+    ] as const;
+    }
+
+
+export const getReleaseNotesControllerFindInstantOpenQueryOptions = <TData = Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReleaseNotesControllerFindInstantOpenQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>> = ({ signal }) => releaseNotesControllerFindInstantOpen(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReleaseNotesControllerFindInstantOpenQueryResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>>
+export type ReleaseNotesControllerFindInstantOpenQueryError = unknown
+
+
+export function useReleaseNotesControllerFindInstantOpen<TData = Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerFindInstantOpen<TData = Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>,
+          TError,
+          Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReleaseNotesControllerFindInstantOpen<TData = Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the release note to open right away for the current user
+ */
+
+export function useReleaseNotesControllerFindInstantOpen<TData = Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof releaseNotesControllerFindInstantOpen>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReleaseNotesControllerFindInstantOpenQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -24,6 +24,11 @@ export abstract class ReleaseNotesRepository {
     id: UUID,
   ): Promise<UserReleaseNote | null>;
 
+  /** The newest note Announcable wants opened right away, read or not. */
+  abstract findNewestInstantOpenForUser(
+    userId: UUID,
+  ): Promise<UserReleaseNote | null>;
+
   /** Unread notes among the newest `limit`, the ones the list shows. */
   abstract countUnread(userId: UUID, limit: number): Promise<number>;
 

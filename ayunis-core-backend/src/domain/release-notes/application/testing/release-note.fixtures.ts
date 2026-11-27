@@ -3,6 +3,7 @@ import type { UserReleaseNote } from 'src/domain/release-notes/application/model
 import type { AnnouncableReleaseNote } from 'src/domain/release-notes/application/models/announcable-release-note';
 import type { AnnouncableFeed } from 'src/domain/release-notes/application/ports/announcable-feed.port';
 import { ReleaseNotesRepository } from 'src/domain/release-notes/application/ports/release-notes.repository';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import { ReleaseNote } from 'src/domain/release-notes/domain/release-note.entity';
 
 export const TEST_ANNOUNCABLE_ORG_ID = 'bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154';
@@ -29,6 +30,7 @@ export function anAnnouncableNote(
     lastUpdateOn: '2026-11-05 14:13:59.695765 +0000 UTC',
     ctaLabelOverride: '',
     ctaHrefOverride: '',
+    attentionMechanism: ReleaseNoteAttentionMechanism.SHOW_INDICATOR,
     ...overrides,
   };
 }
@@ -88,6 +90,19 @@ export class InMemoryReleaseNotesRepository extends ReleaseNotesRepository {
   findOneForUser(userId: UUID, id: UUID): Promise<UserReleaseNote | null> {
     const note = this.notes.get(id);
     return Promise.resolve(note ? this.forUser(userId, note) : null);
+  }
+
+  async findNewestInstantOpenForUser(
+    userId: UUID,
+  ): Promise<UserReleaseNote | null> {
+    const notes = await this.findNewestForUser(userId, this.notes.size);
+    return (
+      notes.find(
+        ({ note }) =>
+          note.attentionMechanism ===
+          ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+      ) ?? null
+    );
   }
 
   async countUnread(userId: UUID, limit = this.notes.size): Promise<number> {

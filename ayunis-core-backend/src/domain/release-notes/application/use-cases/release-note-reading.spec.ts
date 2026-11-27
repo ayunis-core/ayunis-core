@@ -12,11 +12,13 @@ import {
   TEST_LOOM_URL,
   TEST_RELEASE_NOTE_ID,
 } from 'src/domain/release-notes/application/testing/release-note.fixtures';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import type { DownloadObjectUseCase } from 'src/domain/storage/application/use-cases/download-object/download-object.use-case';
 import { CountUnreadReleaseNotesUseCase } from './count-unread-release-notes/count-unread-release-notes.use-case';
 import { DownloadReleaseNoteImageQuery } from './download-release-note-image/download-release-note-image.query';
 import { DownloadReleaseNoteImageUseCase } from './download-release-note-image/download-release-note-image.use-case';
+import { FindInstantOpenReleaseNoteUseCase } from './find-instant-open-release-note/find-instant-open-release-note.use-case';
 import { FindMyReleaseNotesUseCase } from './find-my-release-notes/find-my-release-notes.use-case';
 import { FindReleaseNoteQuery } from './find-release-note/find-release-note.query';
 import { FindReleaseNoteUseCase } from './find-release-note/find-release-note.use-case';
@@ -55,6 +57,10 @@ async function setup(contextService = createMockContextService()) {
     downloadObject,
     findMine: new FindMyReleaseNotesUseCase(repository, contextService),
     findOne: new FindReleaseNoteUseCase(repository, contextService),
+    findInstantOpen: new FindInstantOpenReleaseNoteUseCase(
+      repository,
+      contextService,
+    ),
     countUnread: new CountUnreadReleaseNotesUseCase(repository, contextService),
     markRead: new MarkReleaseNoteReadUseCase(repository, contextService),
     downloadImage: new DownloadReleaseNoteImageUseCase(
@@ -94,6 +100,36 @@ describe('reading release notes', () => {
     ).resolves.toMatchObject({ unread: false });
     await expect(countUnread.execute()).resolves.toBe(0);
     await expect(repository.countUnread(colleague)).resolves.toBe(1);
+  });
+
+  it('opens only the newest instant-open note, and only while it is unread, so an older unread one never pops up', async () => {
+    const { repository, findInstantOpen, markRead } = await setup();
+    const newest = aReleaseNote({
+      id: '33333333-3333-4333-8333-333333333333',
+      announcableId: '0c77830d-8211-4cad-a159-0330c5ada41b',
+      announced: true,
+      attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+      publishedOn: '2026-11-20',
+    });
+    await repository.insertMany([
+      aReleaseNote({
+        id: '44444444-4444-4444-8444-444444444444',
+        announcableId: 'e2e0c0de-7a2b-4c1d-9e8f-1a2b3c4d5e6f',
+        announced: true,
+        attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+        publishedOn: '2026-11-10',
+      }),
+      newest,
+    ]);
+
+    await expect(findInstantOpen.execute()).resolves.toMatchObject({
+      unread: true,
+      note: { id: newest.id },
+    });
+
+    await markRead.execute(new MarkReleaseNoteReadCommand(newest.id));
+
+    await expect(findInstantOpen.execute()).resolves.toBeNull();
   });
 
   it('answers a note that does not exist with not found', async () => {
@@ -149,10 +185,19 @@ describe('reading release notes', () => {
   });
 
   it('requires a signed-in user', async () => {
-    const { findMine, findOne, countUnread, markRead, downloadImage } =
-      await setup(createMockContextService({}));
+    const {
+      findMine,
+      findOne,
+      findInstantOpen,
+      countUnread,
+      markRead,
+      downloadImage,
+    } = await setup(createMockContextService({}));
 
     await expect(findMine.execute()).rejects.toThrow(UnauthorizedAccessError);
+    await expect(findInstantOpen.execute()).rejects.toThrow(
+      UnauthorizedAccessError,
+    );
     await expect(countUnread.execute()).rejects.toThrow(
       UnauthorizedAccessError,
     );

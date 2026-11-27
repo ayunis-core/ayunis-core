@@ -4,11 +4,11 @@ import {
   getModelsControllerIsEmbeddingModelEnabledQueryKey,
   modelsControllerIsEmbeddingModelEnabled,
 } from '@ayunis/api-client/endpoints';
-import type { ChatStarterDefaults } from '@/widgets/chat-starter';
+import type { ChatStarterDefaults } from '@/widgets/chat-starter/ui/ChatStarter';
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
-} from './-default-model-selection-query';
+} from '@/widgets/model-select-options';
 
 export async function loadChatStarterDefaults(
   queryClient: QueryClient,

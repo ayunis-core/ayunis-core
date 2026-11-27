@@ -18,6 +18,7 @@ import {
   TEST_IMAGE_SRC,
   TEST_LOOM_URL,
 } from 'src/domain/release-notes/application/testing/release-note.fixtures';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import { ObjectNotFoundError } from 'src/domain/storage/application/storage.errors';
 import type { DeleteObjectUseCase } from 'src/domain/storage/application/use-cases/delete-object/delete-object.use-case';
 import type { ListObjectsUseCase } from 'src/domain/storage/application/use-cases/list-objects/list-objects.use-case';
@@ -313,6 +314,26 @@ describe('SyncReleaseNotesUseCase', () => {
     expect(repository.byAnnouncableId(WEBINAR_ID)).toMatchObject({
       publishedOn: '2026-10-27',
       announced: false,
+    });
+  });
+
+  it('stores an attention mechanism changed in Announcable, also without a new last_update_on, so notes stored before it was kept get it', async () => {
+    const { feed, repository, useCase } = setup();
+    feed.fetchReleaseNotes.mockResolvedValue([webinarNote]);
+    await useCase.execute();
+    const noteId = repository.byAnnouncableId(WEBINAR_ID)?.id as UUID;
+    feed.fetchReleaseNotes.mockResolvedValue([
+      {
+        ...webinarNote,
+        attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+      },
+    ]);
+
+    await expect(useCase.execute()).resolves.toMatchObject({ updated: 1 });
+
+    expect(repository.byAnnouncableId(WEBINAR_ID)).toMatchObject({
+      id: noteId,
+      attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
     });
   });
 

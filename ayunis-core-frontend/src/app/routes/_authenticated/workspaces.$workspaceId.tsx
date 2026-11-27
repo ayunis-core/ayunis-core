@@ -13,7 +13,7 @@ import {
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
-} from './-default-model-selection-query';
+} from '@/widgets/model-select-options';
 import { searchParamString } from '@/shared/lib/search-params';
 
 const WORKSPACE_CHATS_LIMIT = 20;

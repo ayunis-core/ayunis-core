@@ -1,6 +1,7 @@
 import { Check, Column, Entity } from 'typeorm';
 import { BaseRecord } from 'src/common/db/base-record';
 import { NotificationMediaType } from 'src/domain/notifications/domain/notification-media';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import {
   NOTIFICATION_HEADLINE_MAX_LENGTH,
   NOTIFICATION_MEDIA_URL_MAX_LENGTH,
@@ -47,4 +48,11 @@ export class ReleaseNoteRecord extends BaseRecord {
 
   @Column({ type: 'date', nullable: true })
   publishedOn: string | null;
+
+  @Column({
+    type: 'enum',
+    enum: ReleaseNoteAttentionMechanism,
+    default: ReleaseNoteAttentionMechanism.SHOW_INDICATOR,
+  })
+  attentionMechanism: ReleaseNoteAttentionMechanism;
 }
