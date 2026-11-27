@@ -429,6 +429,7 @@
     "configureModel": "Modell konfigurieren",
     "upgradeToProError": "Sie müssen ein Abonnement haben, um diese Funktion zu verwenden.",
     "privacyHint": "Nur Sie sehen Ihre Chats.",
+    "adventCalendarCard": "Türchen {{day}} ist offen",
     "onboardingHint": {
       "profile": {
         "title": "Darf ich Sie kennenlernen?",

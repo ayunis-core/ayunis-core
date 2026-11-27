@@ -21,6 +21,7 @@ test.describe.configure({ mode: "serial" });
 
 const DUE_DOOR = 4;
 const LOCKED_DOOR = 20;
+const TODAYS_DOOR = 10;
 const key = randomUUID().slice(0, 8);
 const PROMPT = `Schreibe ein Gedicht über den Advent ${key}`;
 
@@ -65,6 +66,7 @@ test.afterAll(async () => {
   await setAdventCalendarEnabled(superAdminApi, false);
   await clearAdventCalendarDoor(superAdminApi, DUE_DOOR);
   await clearAdventCalendarDoor(superAdminApi, LOCKED_DOOR);
+  await clearAdventCalendarDoor(superAdminApi, TODAYS_DOOR);
   await superAdminApi.dispose();
 });
 
@@ -160,4 +162,41 @@ test("with the switch off users see no calendar while a super admin previews it"
   } finally {
     await superAdminContext.close();
   }
+});
+
+test("the new chat page offers today's door until it was opened", async ({
+  page,
+}) => {
+  await setAdventCalendarEnabled(superAdminApi, true);
+  await clearAdventCalendarDoor(superAdminApi, TODAYS_DOOR);
+  const card = page.getByTestId("new-chat-advent-calendar-card");
+  // The sidebar item reads the same calendar query, so once it shows the
+  // card has had its data too.
+  const calendarLoaded = page.getByTestId("sidebar-advent-calendar");
+
+  await page.goto("/chat");
+  await expect(calendarLoaded).toBeVisible();
+  await expect(card).toHaveCount(0);
+
+  await saveAdventCalendarDoor(superAdminApi, TODAYS_DOOR, {
+    title: `Heute ${key}`,
+    body: "Das heutige Türchen.",
+    buttons: [],
+  });
+  await page.reload();
+  await expect(card).toHaveAttribute("data-day", String(TODAYS_DOOR));
+  await card.click();
+  await expect(page).toHaveURL(
+    new RegExp(`/advent-calendar\\?door=${TODAYS_DOOR}$`),
+  );
+  await expect(page.getByTestId("advent-calendar-door-title")).toHaveText(
+    `Heute ${key}`,
+  );
+
+  await page.goto("/chat");
+  await expect(calendarLoaded).toBeVisible();
+  await expect(card).toHaveCount(0);
+  await page.reload();
+  await expect(calendarLoaded).toBeVisible();
+  await expect(card).toHaveCount(0);
 });
