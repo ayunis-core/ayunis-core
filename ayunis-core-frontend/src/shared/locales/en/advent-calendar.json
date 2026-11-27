@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Advent calendar"
+  },
+  "preview": {
+    "title": "Preview",
+    "description": "As a super admin, you see every door with content. Users see a door only from its day on, and only while the calendar is switched on."
+  },
+  "notAvailable": {
+    "title": "The advent calendar isn't available right now",
+    "description": "Check back during Advent."
+  },
+  "error": {
+    "title": "The advent calendar couldn't be loaded",
+    "retry": "Try again"
+  },
+  "wreath": {
+    "label_one": "Advent wreath: {{count}} of 4 candles lit",
+    "label_other": "Advent wreath: {{count}} of 4 candles lit"
+  },
+  "door": {
+    "today": "Today",
+    "label": {
+      "locked": "Door {{day}}, opens on {{day}} December",
+      "empty": "Door {{day}}, empty",
+      "openable": "Open door {{day}}",
+      "opened": "Door {{day}}, already opened"
+    }
+  },
+  "dialog": {
+    "kicker": "Door {{day}}"
+  },
+  "quiz": {
+    "correct": "Correct!",
+    "incorrect": "Not quite.",
+    "tryAgain": "Try again"
+  }
+}

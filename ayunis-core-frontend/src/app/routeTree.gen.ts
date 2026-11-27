@@ -19,6 +19,7 @@ import { Route as onboardingLoginRouteImport } from './routes/(onboarding)/login
 import { Route as onboardingRegisterRouteImport } from './routes/(onboarding)/register'
 import { Route as onboardingTwoFactorRouteImport } from './routes/(onboarding)/two-factor'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin-settings'
+import { Route as AuthenticatedAdventCalendarRouteImport } from './routes/_authenticated/advent-calendar'
 import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedInstallRouteImport } from './routes/_authenticated/install'
 import { Route as AuthenticatedSuperAdminSettingsRouteImport } from './routes/_authenticated/super-admin-settings'
@@ -144,6 +145,12 @@ const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/admin-settings',
     path: '/admin-settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdventCalendarRoute =
+  AuthenticatedAdventCalendarRouteImport.update({
+    id: '/advent-calendar',
+    path: '/advent-calendar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
@@ -603,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof onboardingRegisterRoute
   '/two-factor': typeof onboardingTwoFactorRoute
   '/admin-settings': typeof AuthenticatedAdminSettingsRouteWithChildren
+  '/advent-calendar': typeof AuthenticatedAdventCalendarRoute
   '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/install': typeof AuthenticatedInstallRoute
   '/super-admin-settings': typeof AuthenticatedSuperAdminSettingsRouteWithChildren
@@ -689,6 +697,7 @@ export interface FileRoutesByTo {
   '/login': typeof onboardingLoginRoute
   '/register': typeof onboardingRegisterRoute
   '/two-factor': typeof onboardingTwoFactorRoute
+  '/advent-calendar': typeof AuthenticatedAdventCalendarRoute
   '/install': typeof AuthenticatedInstallRoute
   '/account/activate': typeof onboardingAccountActivateRoute
   '/outlook/handoff': typeof onboardingOutlookHandoffRoute
@@ -776,6 +785,7 @@ export interface FileRoutesById {
   '/(onboarding)/register': typeof onboardingRegisterRoute
   '/(onboarding)/two-factor': typeof onboardingTwoFactorRoute
   '/_authenticated/admin-settings': typeof AuthenticatedAdminSettingsRouteWithChildren
+  '/_authenticated/advent-calendar': typeof AuthenticatedAdventCalendarRoute
   '/_authenticated/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/_authenticated/install': typeof AuthenticatedInstallRoute
   '/_authenticated/super-admin-settings': typeof AuthenticatedSuperAdminSettingsRouteWithChildren
@@ -865,6 +875,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/two-factor'
     | '/admin-settings'
+    | '/advent-calendar'
     | '/inbox'
     | '/install'
     | '/super-admin-settings'
@@ -951,6 +962,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/two-factor'
+    | '/advent-calendar'
     | '/install'
     | '/account/activate'
     | '/outlook/handoff'
@@ -1037,6 +1049,7 @@ export interface FileRouteTypes {
     | '/(onboarding)/register'
     | '/(onboarding)/two-factor'
     | '/_authenticated/admin-settings'
+    | '/_authenticated/advent-calendar'
     | '/_authenticated/inbox'
     | '/_authenticated/install'
     | '/_authenticated/super-admin-settings'
@@ -1205,6 +1218,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-settings'
       fullPath: '/admin-settings'
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/advent-calendar': {
+      id: '/_authenticated/advent-calendar'
+      path: '/advent-calendar'
+      fullPath: '/advent-calendar'
+      preLoaderRoute: typeof AuthenticatedAdventCalendarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/inbox': {
@@ -1878,6 +1898,7 @@ const AuthenticatedSuperAdminSettingsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRouteWithChildren
+  AuthenticatedAdventCalendarRoute: typeof AuthenticatedAdventCalendarRoute
   AuthenticatedInboxRoute: typeof AuthenticatedInboxRouteWithChildren
   AuthenticatedInstallRoute: typeof AuthenticatedInstallRoute
   AuthenticatedSuperAdminSettingsRoute: typeof AuthenticatedSuperAdminSettingsRouteWithChildren
@@ -1914,6 +1935,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRouteWithChildren,
+  AuthenticatedAdventCalendarRoute: AuthenticatedAdventCalendarRoute,
   AuthenticatedInboxRoute: AuthenticatedInboxRouteWithChildren,
   AuthenticatedInstallRoute: AuthenticatedInstallRoute,
   AuthenticatedSuperAdminSettingsRoute:

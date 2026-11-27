@@ -44,6 +44,7 @@ import { useTheme } from '@/features/theme';
 import { MeResponseDtoSystemRole } from '@ayunis/api-client/schemas';
 import { ReleaseNotesButton } from './ReleaseNotesButton';
 import { InboxSidebarItem } from './InboxSidebarItem';
+import { AdventCalendarSidebarItem } from './AdventCalendarSidebarItem';
 import { useSkillMarketplaceUrl } from '@/features/marketplace';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
 import {
@@ -230,6 +231,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <AdventCalendarSidebarItem />
           </SidebarMenu>
         </SidebarGroup>
 

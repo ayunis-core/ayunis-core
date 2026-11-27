@@ -372,6 +372,9 @@ jobs:
           ANNOUNCABLE_ORG_ID=bbcb0cc9-f4b8-4e54-a2a7-bfcac8b98154
           ANNOUNCABLE_URL=http://127.0.0.1:3198
 
+          # Advent calendar clock starts on 10 Dec (tests/advent-calendar).
+          ADVENT_CALENDAR_NOW=2026-12-10T09:00:00+01:00
+
           # Marketplace entry points on, served by the Marketplace stand-in.
           MARKETPLACE_SERVICE_URL=http://127.0.0.1:3197
 

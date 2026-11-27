@@ -1,0 +1,1 @@
+export { VimeoEmbed } from './VimeoEmbed';
