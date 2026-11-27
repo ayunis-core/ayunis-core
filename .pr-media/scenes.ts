@@ -28,7 +28,13 @@ async function showCard(page: Page) {
   setup ??= fillTodaysDoor();
   await setup;
   await page.reload();
-  return page.getByTestId('new-chat-advent-calendar-card');
+  const card = page.getByTestId('new-chat-advent-calendar-card');
+  await card.waitFor();
+  // Let the new-chat entrance fade finish before the screenshot.
+  await page
+    .locator('.new-chat-compose__content')
+    .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  return card;
 }
 
 export default [
