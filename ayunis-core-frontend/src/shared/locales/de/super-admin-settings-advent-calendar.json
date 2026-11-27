@@ -1,0 +1,144 @@
+{
+  "title": "Adventskalender",
+  "loadError": "Der Adventskalender konnte nicht geladen werden.",
+  "enabled": {
+    "title": "Adventskalender anzeigen",
+    "description": "Ist der Schalter an, sehen alle Benutzer den Kalender vom 1. Dezember bis 6. Januar. Super-Admins sehen auf der Kalenderseite jederzeit eine Vorschau."
+  },
+  "doors": {
+    "title": "Türchen",
+    "description": "Türchen N öffnet sich am N. Dezember um Mitternacht (Berliner Zeit). Ein Türchen braucht seinen Inhalt erst an seinem Tag.",
+    "day": "Türchen {{day}}",
+    "noTitle": "Noch kein Inhalt",
+    "filled": "Befüllt",
+    "empty": "Leer"
+  },
+  "door": {
+    "title": "Titel",
+    "body": "Text",
+    "bodyDescription": "Markdown wird unterstützt.",
+    "save": "Speichern",
+    "clear": "Türchen leeren",
+    "clearConfirm": {
+      "title": "Türchen {{day}} leeren?",
+      "description": "Titel, Text, Buttons und Bild werden gelöscht. Das Türchen bleibt leer, bis es neu befüllt wird.",
+      "confirm": "Leeren",
+      "cancel": "Abbrechen"
+    }
+  },
+  "media": {
+    "label": "Medien",
+    "kinds": {
+      "none": "Keine",
+      "image": "Bild",
+      "vimeo": "Vimeo-Video"
+    },
+    "image": "Bild",
+    "imageDescription": "JPEG, PNG, GIF oder WebP, bis 10 MB. Wird beim Speichern des Türchens hochgeladen.",
+    "uploadImage": "Bild hochladen",
+    "replaceImage": "Ersetzen",
+    "removeImage": "Entfernen",
+    "vimeoUrl": "Vimeo-URL",
+    "vimeoUrlDescription": "z. B. https://vimeo.com/<id>, https://vimeo.com/<id>/<hash> oder https://player.vimeo.com/video/<id>?h=<hash>"
+  },
+  "buttons": {
+    "label": "Buttons",
+    "description": "Bis zu zwei Buttons, höchstens einer davon ein Quiz.",
+    "kinds": {
+      "link": "Link",
+      "prompt": "Prompt",
+      "quiz": "Quiz"
+    },
+    "add": {
+      "link": "Link",
+      "prompt": "Prompt",
+      "quiz": "Quiz"
+    },
+    "remove": "Button entfernen",
+    "buttonLabel": "Beschriftung",
+    "url": "URL",
+    "urlDescription": "Eine https://-Adresse öffnet sich in einem neuen Tab, ein Pfad in der App wie /marketplace im selben Tab.",
+    "prompt": "Prompt",
+    "promptDescription": "Wird in einen neuen Chat eingefügt, aber nicht gesendet."
+  },
+  "quiz": {
+    "question": "Frage",
+    "answers": "Antworten",
+    "answersDescription": "Markieren Sie die eine richtige Antwort.",
+    "answerPlaceholder": "Antwort {{number}}",
+    "markCorrect": "Antwort {{number}} ist richtig",
+    "removeAnswer": "Antwort entfernen",
+    "addAnswer": "Antwort hinzufügen",
+    "explanation": "Erklärung (optional)"
+  },
+  "toast": {
+    "enabled": "Der Adventskalender ist eingeschaltet.",
+    "disabled": "Der Adventskalender ist ausgeschaltet.",
+    "enabledError": "Der Adventskalender konnte nicht umgeschaltet werden.",
+    "saved": "Türchen {{day}} gespeichert.",
+    "saveError": "Das Türchen konnte nicht gespeichert werden.",
+    "imageError": "Der Text wurde gespeichert, das Bild konnte aber nicht geändert werden.",
+    "cleared": "Türchen {{day}} geleert.",
+    "clearError": "Türchen {{day}} konnte nicht geleert werden."
+  },
+  "validation": {
+    "title": {
+      "isNotEmpty": "Ein Titel ist erforderlich.",
+      "maxLength": "Der Titel darf höchstens 200 Zeichen lang sein.",
+      "invalid": "Ungültiger Titel."
+    },
+    "body": {
+      "maxLength": "Der Text darf höchstens 5.000 Zeichen lang sein.",
+      "invalid": "Ungültiger Text."
+    },
+    "vimeoUrl": {
+      "isVimeoUrl": "Geben Sie eine Video-URL von vimeo.com oder player.vimeo.com ein.",
+      "invalid": "Geben Sie eine Video-URL von vimeo.com oder player.vimeo.com ein."
+    },
+    "imageFile": {
+      "unsupported": "Das Bild muss eine JPEG-, PNG-, GIF- oder WebP-Datei sein.",
+      "tooLarge": "Das Bild darf höchstens 10 MB groß sein.",
+      "notSaved": "Das Bild konnte nicht hochgeladen werden. Das Türchen wurde nicht gespeichert."
+    },
+    "buttons": {
+      "arrayMaxSize": "Ein Türchen kann höchstens zwei Buttons haben.",
+      "atMostOneQuiz": "Ein Türchen kann höchstens ein Quiz haben.",
+      "invalid": "Ungültige Buttons.",
+      "label": {
+        "isNotEmpty": "Eine Beschriftung ist erforderlich.",
+        "maxLength": "Die Beschriftung darf höchstens 40 Zeichen lang sein.",
+        "invalid": "Ungültige Beschriftung."
+      },
+      "url": {
+        "isLinkUrl": "Geben Sie eine http(s)-URL oder einen Pfad in der App ein, der mit / beginnt.",
+        "maxLength": "Die URL darf höchstens 2.000 Zeichen lang sein.",
+        "invalid": "Geben Sie eine http(s)-URL oder einen Pfad in der App ein, der mit / beginnt."
+      },
+      "prompt": {
+        "isNotEmpty": "Ein Prompt ist erforderlich.",
+        "maxLength": "Der Prompt darf höchstens 4.000 Zeichen lang sein.",
+        "invalid": "Ungültiger Prompt."
+      },
+      "question": {
+        "isNotEmpty": "Eine Frage ist erforderlich.",
+        "maxLength": "Die Frage darf höchstens 300 Zeichen lang sein.",
+        "invalid": "Ungültige Frage."
+      },
+      "answers": {
+        "arrayMinSize": "Ein Quiz braucht mindestens zwei Antworten.",
+        "arrayMaxSize": "Ein Quiz kann höchstens vier Antworten haben.",
+        "isNotEmpty": "Jede Antwort braucht einen Text.",
+        "maxLength": "Antworten dürfen höchstens 150 Zeichen lang sein.",
+        "invalid": "Ungültige Antworten."
+      },
+      "correctAnswerIndex": {
+        "invalid": "Markieren Sie genau eine Antwort als richtig."
+      },
+      "explanation": {
+        "maxLength": "Die Erklärung darf höchstens 1.000 Zeichen lang sein.",
+        "invalid": "Ungültige Erklärung."
+      }
+    },
+    "invalid": "Ungültige Eingabe."
+  }
+}
