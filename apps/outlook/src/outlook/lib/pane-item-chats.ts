@@ -13,7 +13,7 @@ import {
   type PaneChatNavigation,
 } from '@/outlook/lib/follow-outlook-item';
 import { createItemChats } from '@/outlook/lib/item-chats';
-import { officeReady } from '@/outlook/lib/office-ready';
+import { officeReady } from '@ayunis/office-addin/office';
 import {
   getThreadsControllerCreateMutationKey,
   getThreadsControllerFindOneQueryOptions,

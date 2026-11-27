@@ -22,6 +22,7 @@
   "dependencies": {
     "@ayunis/api-client": "workspace:*",
     "@ayunis/chat": "workspace:*",
+    "@ayunis/office-addin": "workspace:*",
     "@ayunis/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "axios": "catalog:",
@@ -29,7 +30,6 @@
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-i18next": "^15.5.3",
-    "zod": "^4.5.4"
+    "react-i18next": "^15.5.3"
   }
 }

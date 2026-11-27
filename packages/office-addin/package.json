@@ -1,0 +1,52 @@
+{
+  "name": "@ayunis/office-addin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./auth": "./src/auth.ts",
+    "./auth-shell": "./src/auth-shell.tsx",
+    "./language": "./src/language.ts",
+    "./office": "./src/office.ts",
+    "./session": "./src/session.ts",
+    "./session-handoff": "./src/session-handoff.ts",
+    "./sign-in-dialog": "./src/sign-in-dialog.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "deps:check": "madge --circular --extensions ts,tsx src"
+  },
+  "dependencies": {
+    "@ayunis/api-client": "workspace:*",
+    "@ayunis/ui": "workspace:*",
+    "axios": "catalog:",
+    "zod": "^4.5.4"
+  },
+  "peerDependencies": {
+    "i18next": "^26.4.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/office-js": "^1.0.616",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-sonarjs": "^4.2.1",
+    "globals": "^16.5.0",
+    "i18next": "^26.4.0",
+    "jsdom": "^29.1.1",
+    "madge": "^8.0.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
+  }
+}

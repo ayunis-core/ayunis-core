@@ -1,6 +1,3 @@
-// Office.onReady never settles when one of Office.js's own follow-up scripts
-// is blocked (OfficeDev/office-js#6040), so the pages give up after a while
-// instead of spinning forever.
 const OFFICE_READY_TIMEOUT_MS = 15_000;
 
 export function officeReady(): Promise<void> {
@@ -19,9 +16,6 @@ export function officeReady(): Promise<void> {
   });
 }
 
-// Outside an Office client office.js still loads, but leaves the context
-// empty, which its types don't express. Before Office is ready the context
-// may also be missing or refuse to be read.
 function officeContext(): Partial<Office.Context> | undefined {
   if (typeof Office === 'undefined') return undefined;
   try {
@@ -39,7 +33,6 @@ export function officeDisplayLanguage(): string {
   return officeContext()?.displayLanguage ?? navigator.language;
 }
 
-/** Waits for Office; true inside a client that can open the sign-in dialog. */
 export function officeDialogAvailable(): Promise<boolean> {
   return officeReady().then(
     () => typeof officeUi()?.displayDialogAsync === 'function',
