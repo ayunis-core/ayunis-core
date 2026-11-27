@@ -15,7 +15,7 @@ vi.mock('@/shared/lib/toast', () => ({ showError }));
 
 describe('useRunErrorHandler', () => {
   it('shows the anonymization limit explanation for an oversized message', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: 'Text exceeds maximum anonymization length: 60001 > 60000',
@@ -38,7 +38,7 @@ describe('useRunErrorHandler', () => {
     'PROVIDER_UNAVAILABLE_SERVER_ANONYMIZE',
     'PROVIDER_UNAVAILABLE_REJECTED_ANONYMIZE',
   ])('shows the anonymization outage explanation for %s', (code) => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: 'Anonymization provider unavailable',
@@ -55,7 +55,7 @@ describe('useRunErrorHandler', () => {
   });
 
   it('asks the user to retry while the previous answer is still stopping', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: 'The previous answer in this chat is still being stopped.',
@@ -70,7 +70,7 @@ describe('useRunErrorHandler', () => {
   });
 
   it('shows the context-budget explanation for an oversized latest turn', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: 'The latest conversation turn is too large.',
@@ -85,7 +85,7 @@ describe('useRunErrorHandler', () => {
   });
 
   it('shows the tool-failure explanation when the repeated-failure breaker aborts the run', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: "Tool 'generate_image' execution failed",
@@ -100,7 +100,7 @@ describe('useRunErrorHandler', () => {
   });
 
   it('explains that the model response was cut off when a tool call hit the output token limit', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message:
@@ -124,7 +124,7 @@ describe('useRunErrorHandler', () => {
   });
 
   it('explains that the model used its whole response budget without an answer', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message:
@@ -142,7 +142,7 @@ describe('useRunErrorHandler', () => {
   it.each(['unparseable_arguments', 'tool_disabled_fallback'])(
     'asks for a retry when the model produced an invalid tool call (%s)',
     (malformedReason) => {
-      const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+      const { result } = renderHook(() => useRunErrorHandler());
       const error: RunErrorResponseDto = {
         type: 'error',
         message:
@@ -160,7 +160,7 @@ describe('useRunErrorHandler', () => {
   );
 
   it('asks for a retry when a malformed tool call arrives without details', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: 'Internal server error',
@@ -175,7 +175,7 @@ describe('useRunErrorHandler', () => {
   });
 
   it('shows the timeout explanation when the provider stream stalls', () => {
-    const { result } = renderHook(() => useRunErrorHandler('thread-1'));
+    const { result } = renderHook(() => useRunErrorHandler());
     const error: RunErrorResponseDto = {
       type: 'error',
       message: 'Model stream produced no data for 180000ms',

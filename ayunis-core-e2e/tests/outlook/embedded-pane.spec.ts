@@ -70,7 +70,7 @@ test("keeps the chat app on the pane document through navigation and reload", as
   await expect(page.getByTestId("assistant-message").last()).toBeVisible();
   expect(new URL(page.url()).pathname).toBe(PANE_PATH);
 
-  await page.getByTestId("embedded-new-chat").click();
+  await page.getByTestId("chat-header-new-chat").click();
   await page.getByTestId("embedded-history").click();
   await expect(page.getByTestId("chat-card")).toHaveCount(1);
   expect(new URL(page.url()).pathname).toBe(PANE_PATH);
@@ -118,7 +118,7 @@ test("can retry a saved Outlook chat that fails to load", async ({ page }) => {
     { times: 1 },
   );
   await page.getByTestId("chat-card").click();
-  await page.getByTestId("outlook-thread-retry").click();
+  await page.getByTestId("chat-thread-retry").click();
   await expect(page.getByTestId("assistant-message").last()).toBeVisible();
 });
 

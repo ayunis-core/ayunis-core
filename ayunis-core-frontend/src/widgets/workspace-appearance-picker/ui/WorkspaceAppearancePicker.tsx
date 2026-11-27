@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
 import { cn } from '@ayunis/ui/lib/cn';
-import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
+import { WorkspaceIcon } from '@ayunis/chat/workspaces';
 import {
   DEFAULT_CUSTOM_WORKSPACE_COLOR,
   WORKSPACE_COLOR_ORDER,
@@ -16,7 +16,7 @@ import {
   WORKSPACE_ICON_OPTIONS,
   isLightColor,
   isWorkspaceColorKey,
-} from '@/shared/lib/workspace-appearance';
+} from '@ayunis/chat/workspaces';
 
 interface WorkspaceAppearancePickerProps {
   name: string;

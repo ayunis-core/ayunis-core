@@ -1,4 +1,4 @@
-import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
+import { WorkspaceIcon } from '@ayunis/chat/workspaces';
 import type { Workspace } from '@/features/workspaces';
 
 interface WorkspaceHeroProps {

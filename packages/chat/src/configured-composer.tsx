@@ -94,7 +94,6 @@ function createSubmit(
       },
       () => acceptSubmission(props, images, text),
     );
-    if (props.clearImagesOnSend) images.clearImages();
   };
 }
 

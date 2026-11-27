@@ -2,13 +2,13 @@ import type {
   GetThreadResponseDto,
   ToolCallDecisionDto,
 } from '@ayunis/api-client/schemas';
-import { memo, useMemo, type ReactNode, type RefObject } from 'react';
+import { memo, useMemo, useState, type RefObject } from 'react';
 import {
   Markdown,
   PiiMaskProvider,
-  PiiText,
+  SourceCitationProvider,
   usePiiMasks,
-  type PiiUnmaskRequestHandler,
+  type SourceCitation,
 } from '@ayunis/chat/markdown';
 import {
   AssistantMessageFrame,
@@ -26,37 +26,41 @@ import {
   type AgentRunUnit,
   type TimelinePresentation,
 } from '@ayunis/chat/timeline';
+import type { ChatViewConfig } from './chat-config';
 import type { ClientToolRegistration } from './client-tools';
 import type { ToolCardRegistration } from './tool-cards';
 import type { ToolCards } from './timeline/tool-card-types';
-import type { ChatConversationSlots } from './chat-conversation-config';
-import type { ChatSlots } from './chat-surface-config';
+import { SourceCitationDialog } from './source-citation-dialog';
+import { ContextHint } from './conversation-context-hint';
+import { ConversationMessageImage } from './messages/ConversationMessageImage';
+import { ResponseStartOrb } from './messages/ResponseStartOrb';
+import { RoutineNudgeNotice } from './messages/RoutineNudgeNotice';
+import { ReadAloudAction } from './read-aloud/ReadAloudAction';
+import { usePiiUnmask } from './use-pii-unmask';
 
 type Message = GetThreadResponseDto['messages'][number];
 
+// One element for every render: the timeline presentation is memoized on it.
+const RESPONSE_START_ORB = <ResponseStartOrb />;
+
 interface ContentProps {
+  readonly config: ChatViewConfig;
   readonly threadId: string;
   readonly messages: Message[];
   readonly masks: GetThreadResponseDto['piiMasks'];
   readonly isStreaming: boolean;
   readonly canDecide: boolean;
   readonly decide: (decisions: ToolCallDecisionDto[]) => Promise<void>;
-  readonly onOpenArtifact: ChatSlots['onOpenArtifact'];
-  readonly timeline?: TimelinePresentation;
-  readonly messageImage: ChatConversationSlots['messageImage'];
-  readonly messageNudge: ChatConversationSlots['messageNudge'];
+  readonly timeline: TimelinePresentation;
   readonly pendingSubmission: string | null;
-  readonly contextHint?: ReactNode;
-  readonly waiting?: ReactNode;
-  readonly loading?: ReactNode;
-  readonly assistantActions: ChatConversationSlots['assistantActions'];
-  readonly onPiiUnmaskRequest?: PiiUnmaskRequestHandler;
-  readonly onMessageCopied?: (role: 'user' | 'assistant') => void;
+  /** The files a waiting message is held for, as a running activity. */
+  readonly processing?: AgentRunUnit;
+  /** False while files are processing: their activity shows instead of the orb. */
+  readonly showOrb: boolean;
 }
 
 export function useConversationTimeline<Context, Outcome>(
   registeredCards: ToolCards | undefined,
-  pendingIndicator: ReactNode,
   onCodeCopied: (() => void) | undefined,
   registry?: ReadonlyMap<string, ClientToolRegistration<Context, Outcome>>,
 ): TimelinePresentation {
@@ -65,39 +69,47 @@ export function useConversationTimeline<Context, Outcome>(
     for (const [name, { render }] of registry ?? []) {
       if (render && !toolCards.has(name)) toolCards.set(name, { render });
     }
-    return { toolCards, pendingIndicator, onCodeCopied };
-  }, [registeredCards, pendingIndicator, onCodeCopied, registry]);
+    return { toolCards, pendingIndicator: RESPONSE_START_ORB, onCodeCopied };
+  }, [registeredCards, onCodeCopied, registry]);
 }
 
 export function ChatConversationContent(props: ContentProps) {
-  const { timeline, isStreaming, canDecide, decide } = props;
+  const { timeline, isStreaming, canDecide, decide, threadId } = props;
   const units = useRenderUnits(props.messages, {
-    isStreaming: props.isStreaming,
+    isStreaming,
     hasPendingUserTurn: props.pendingSubmission !== null,
-    toolCards: timeline?.toolCards,
+    toolCards: timeline.toolCards,
   });
   const showLoading =
     props.pendingSubmission !== null ||
     (isStreaming && units.at(-1)?.kind === 'user');
-  const showWaiting = props.pendingSubmission !== null && props.waiting;
   const confirmation = useToolCallDecisions({
     messages: props.messages,
     isStreaming: !canDecide,
     sendDecisions: decide,
   });
+  const pii = usePiiUnmask(threadId);
+  const [citation, setCitation] = useState<SourceCitation | null>(null);
   return (
-    <PiiMaskProvider
-      masks={props.masks}
-      onUnmaskRequest={props.onPiiUnmaskRequest}
-    >
-      <ToolCallConfirmationContext.Provider value={confirmation}>
-        <ConversationMessages
-          content={props}
-          units={units}
-          showWaiting={showWaiting}
-          showLoading={showLoading}
+    <PiiMaskProvider masks={props.masks} onUnmaskRequest={pii.onUnmaskRequest}>
+      <SourceCitationProvider onCitationClick={setCitation}>
+        <ToolCallConfirmationContext.Provider value={confirmation}>
+          <ConversationMessages
+            content={props}
+            units={units}
+            showLoading={showLoading}
+          />
+        </ToolCallConfirmationContext.Provider>
+      </SourceCitationProvider>
+      {citation && (
+        <SourceCitationDialog
+          threadId={threadId}
+          selectedCitation={citation}
+          events={props.config.events}
+          onClose={() => setCitation(null)}
         />
-      </ToolCallConfirmationContext.Provider>
+      )}
+      {pii.dialog}
     </PiiMaskProvider>
   );
 }
@@ -105,25 +117,25 @@ export function ChatConversationContent(props: ContentProps) {
 function ConversationMessages({
   content,
   units,
-  showWaiting,
   showLoading,
 }: Readonly<{
   content: ContentProps;
   units: ReturnType<typeof useRenderUnits>;
-  showWaiting: ReactNode;
   showLoading: boolean;
 }>) {
+  const { config } = content;
+  const waiting = content.pendingSubmission !== null && content.processing;
   return (
     <ChatMessageList<AgentRunUnit>
       units={units}
       pendingSubmission={content.pendingSubmission}
-      contextHint={content.contextHint}
+      contextHint={
+        config.contextHint && <ContextHint hint={config.contextHint} />
+      }
       renderUser={(message) => (
         <ConversationUserMessage
           message={message}
-          messageImage={content.messageImage}
-          messageNudge={content.messageNudge}
-          onCopied={content.onMessageCopied}
+          onCopied={config.events.onMessageCopied}
         />
       )}
       renderRun={(unit, grouped) => (
@@ -131,14 +143,21 @@ function ConversationMessages({
           unit={unit}
           grouped={grouped}
           threadId={content.threadId}
-          onOpenArtifact={content.onOpenArtifact}
+          onOpenArtifact={config.events.onOpenArtifact}
           timeline={content.timeline}
-          assistantActions={content.assistantActions}
-          onMessageCopied={content.onMessageCopied}
+          onMessageCopied={config.events.onMessageCopied}
         />
       )}
-      waiting={showWaiting}
-      loading={showLoading && !showWaiting ? content.loading : undefined}
+      waiting={
+        waiting && (
+          <AgentRunTimeline unit={waiting} presentation={content.timeline} />
+        )
+      }
+      loading={
+        showLoading && !waiting && content.showOrb ? (
+          <div className="mt-4">{RESPONSE_START_ORB}</div>
+        ) : undefined
+      }
     />
   );
 }
@@ -149,16 +168,14 @@ const ConversationAssistantRun = memo(function ConversationAssistantRun({
   threadId,
   onOpenArtifact,
   timeline,
-  assistantActions,
   onMessageCopied,
 }: Readonly<{
   unit: AgentRunUnit;
   grouped: boolean;
   threadId: string;
-  onOpenArtifact: ContentProps['onOpenArtifact'];
+  onOpenArtifact: ChatViewConfig['events']['onOpenArtifact'];
   timeline: ContentProps['timeline'];
-  assistantActions: ContentProps['assistantActions'];
-  onMessageCopied: ContentProps['onMessageCopied'];
+  onMessageCopied: ChatViewConfig['events']['onMessageCopied'];
 }>) {
   const hasText = unit.blocks.some((block) => block.kind === 'text');
   return (
@@ -172,7 +189,7 @@ const ConversationAssistantRun = memo(function ConversationAssistantRun({
                   contentRef={ref}
                   onCopied={() => onMessageCopied?.('assistant')}
                 />
-                {assistantActions?.(unit, ref)}
+                <ReadAloudAction unit={unit} contentRef={ref} />
               </>
             )
           : undefined
@@ -190,22 +207,26 @@ const ConversationAssistantRun = memo(function ConversationAssistantRun({
 
 const ConversationUserMessage = memo(function ConversationUserMessage({
   message,
-  messageImage,
-  messageNudge,
   onCopied,
 }: Readonly<{
   message: Message;
-  messageImage: ContentProps['messageImage'];
-  messageNudge: ContentProps['messageNudge'];
-  onCopied: ContentProps['onMessageCopied'];
+  onCopied: ChatViewConfig['events']['onMessageCopied'];
 }>) {
   const masks = usePiiMasks();
   return (
     <UserMessage
       message={message}
       renderText={(text) => <Markdown className="[&_p]:!my-0">{text}</Markdown>}
-      renderNudge={(text) => messageNudge?.(text) ?? <PiiText>{text}</PiiText>}
-      renderImage={(image) => messageImage?.(message, image)}
+      renderNudge={(text) => <RoutineNudgeNotice text={text} />}
+      renderImage={(image) => (
+        <ConversationMessageImage
+          key={`${message.id}-${image.index}`}
+          threadId={message.threadId}
+          messageId={message.id}
+          index={image.index}
+          altText={image.altText}
+        />
+      )}
       actions={
         <CopyMessageButton
           getContent={() => ({

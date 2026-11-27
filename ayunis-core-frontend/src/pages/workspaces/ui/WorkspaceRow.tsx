@@ -9,7 +9,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
-import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
+import { WorkspaceIcon } from '@ayunis/chat/workspaces';
 import { TOUR_TARGET } from '@/widgets/onboarding';
 import type { Workspace } from '@/features/workspaces';
 import { WorkspacePinButton } from './WorkspacePinButton';

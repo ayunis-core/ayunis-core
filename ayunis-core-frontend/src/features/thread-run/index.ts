@@ -26,23 +26,9 @@ export {
   cancelDeferredThreadRun,
   deferThreadRun,
   getDeferredThreadRun,
-  startDeferredThreadRun,
-  takeInterruptedThreadRunText,
-  useIsThreadRunDeferred,
 } from './model/deferred-thread-run';
 export { threadRunLifecycle } from './model/thread-run-lifecycle';
 export {
   resetThreadRunSession,
   setThreadRunPrincipal,
 } from './model/thread-run-session';
-export {
-  clearPendingThreadSubmission,
-  completeThreadSubmission,
-  consumeFailedThreadSubmission,
-  getFailedThreadSubmission,
-  getPendingThreadSubmission,
-  resetThreadSubmission,
-  startThreadSubmission,
-  subscribeToThreadSubmissions,
-  type ThreadSubmission,
-} from './model/pending-submissions';

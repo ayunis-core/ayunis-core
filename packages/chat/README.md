@@ -24,9 +24,9 @@ The package also provides shared chat views:
   previews, and assistant message frame. The app supplies message actions,
   authenticated image URLs, and rich run content.
 - `@ayunis/chat/markdown` renders Markdown, citations, and PII reveal controls.
-  The app supplies callbacks through the existing citation and mask providers.
+  The conversation provides the citation and mask handlers itself.
 - `@ayunis/chat/composer` renders the composer field and attachment previews.
-  The configured composer inside `ChatConversation` and `NewChatComposer` from
+  The configured composer inside `Conversation` and `NewChatComposer` from
   `@ayunis/chat/surface` adds the canonical Web-derived toolbar, model picker,
   anonymous button, upload menu with the audio picker, prompt recall,
   paste/drop handling, voice input, send/stop lifecycle, attachment chips, and
@@ -43,11 +43,13 @@ The package also provides shared chat views:
   unavailable-model, provider-fault, and long-chat notices. Hosts supply status
   and actions such as academy navigation or starting a new chat.
 
-`@ayunis/chat/surface` provides the configured conversation, the new-chat
+- `@ayunis/chat/workspaces` renders workspace icons and the workspace picker
+  menu body, from the workspace's id, name, icon and colour.
+
+`@ayunis/chat/surface` provides the `Conversation` screen, the new-chat
 composer, scrolling shell, run lifecycle, and the `ChatConfig` contract. Hosts
-import `@ayunis/chat/surface.css`; they do not supply replacement conversation or
-composer renderers. The header receives host actions so the host can place them
-next to its navigation.
+import `@ayunis/chat/surface.css`; they do not supply replacement conversation,
+header or composer renderers.
 
 ## ChatConfig
 
@@ -61,11 +63,19 @@ Each surface describes itself with one `ChatConfig`:
 - `knowledgeBases`, `integrations`, `skills`: surface-specific data. A feature
   shows when its data is passed and is absent, with no requests, otherwise.
   Hosts load the menu items themselves and keep the attached or selected items.
+- `workspaces` (Move to workspace in the header menu, with `create` opening the
+  host's own creation), `favorites` (the pin), `artifactPanel` (its header
+  button), `contextHint` (the summary before the first message and the action
+  that opens it), `trail` (the breadcrumbs before the title, as navigation
+  targets) and `newChat` (a New chat button in the header): conversation
+  features shown only when their data is passed.
 - `toolCards` and `clientTools`: the rich-card and client-tool registries.
-- `events`: `onNewChat` (the notices' New chat action), `onNavigate` (links that
-  leave the chat, such as the academy; without it they are not shown),
-  `onRunSettled`, `observeRun`, `onMessageCopied`, `onCodeCopied`,
-  `onUnauthorized` and `onError`.
+- `events`: `onNewChat` (the notices' New chat action), `onNavigate` and
+  `hrefFor` (links that leave the chat: the academy, the trail, a chat's
+  origin and a cited recording; without `onNavigate` they are not shown),
+  `onOpenArtifact`, `onThreadState` (the chat's live messages and masks),
+  `onThreadDeleted`, `onRunError`, `onRunSettled`, `observeRun`,
+  `onMessageCopied`, `onCodeCopied`, `onUnauthorized` and `onError`.
 - `tourTargets`: `data-tour` names the package puts on its composer, upload,
   voice, send, model and anonymous controls.
 
@@ -82,25 +92,34 @@ model and anonymous choice and the queued files; the host starts the chat in
 
 ## Conversation
 
-For a configured surface, render `ChatConversation` from
-`@ayunis/chat/surface` with the selected thread and the surface's `ChatConfig`.
-It connects the run lifecycle, composer, history actions, timeline and registered
-client tools. Supply the following where the surface supports them.
+Render `Conversation` from `@ayunis/chat/surface` with the surface's
+`ChatConfig` and a `threadId`. The package loads the thread (polling while a
+file processes), the server's runs in progress, file-processing progress and
+citations through `@ayunis/api-client`, and renders the whole screen:
 
-- Supply the selected thread snapshot and, for rejoin, the active run snapshot
-  with its freshness timestamp. Use `onRunSettled` to refresh thread and history
-  snapshots, including for turns that finish after the user navigates away. The
-  initial active-run lookup gates sending; later background refreshes do not.
-- Use `observeRun` for host analytics, authentication recovery, cache refresh,
-  and translated transport errors. The package remains the only owner of run
-  execution, event routing, cancellation, reattach, and first-message handoff.
-- Use `onStartedRun` only to mirror a pre-navigation send into host-owned
-  optimistic submission state. File-processing hosts may defer a send while
-  their context is processing, then call `resumeStartedRun` on the narrow
-  `ChatConversationHandle` after starting the shared lifecycle handoff.
-- Use slots for host actions, the header, the context hint, authenticated
-  message images and routine nudges. Hosts also provide the translation
-  resources and import the package styles through their Tailwind stylesheet.
+- the header with the title, the anonymous badge, the ⋮ menu with Rename and
+  Delete, the sidebar toggle when the chat sits inside a `@ayunis/ui`
+  `SidebarProvider`, and the controls of the passed optional data. `layout:
+  'narrow'` keeps the header on one row;
+- the timeline with copy, read aloud (following the instance's
+  `readAloudEnabled`), message images loaded with the configured transport,
+  routine nudges, the citation dialog, PII reveal through the unmask endpoint,
+  the response-start orb and the per-file processing rows;
+- the composer. A sent message leaves the composer at once and shows as
+  pending; one that fails comes back into it. While a file of the chat is
+  processing, a message waits for it and Stop takes it back. A host can keep
+  waiting messages beyond a reload with the lifecycle's `waitingMessages`
+  storage.
+
+Pass the run `lifecycle` when the host starts a new chat's first message
+itself (`startThreadRun` or `deferThreadRun`), so the conversation takes it
+over; otherwise the conversation owns one per `sessionKey`. Use
+`onRunSettled` to refresh host caches, including for turns that finish after
+the user navigates away, and `observeRun` for host analytics, authentication
+recovery and translated transport errors. The package remains the only owner
+of run execution, event routing, cancellation, reattach, and first-message
+handoff. Hosts provide the translation resources and import the package styles
+through their Tailwind stylesheet.
 
 Client tools can register an executor, a custom card, or both by tool name.
 The shared lifecycle coordinates execution and routes results to the run.
@@ -110,7 +129,7 @@ The host supplies the executor invocation and its context.
 
 | Entry point | Purpose |
 | --- | --- |
-| `@ayunis/chat/surface` | `ChatConfig`, configured conversation, new-chat composer, surface shell, adapters, slots, and client-tool registration |
+| `@ayunis/chat/surface` | `ChatConfig`, the `Conversation` screen, new-chat composer, surface shell, slots, and client-tool registration |
 | `@ayunis/chat/runs` | Transport contracts and the shared session lifecycle used for pre-navigation handoff |
 | `@ayunis/chat/new-chat` | Canonical new-chat shell and presentation primitives |
 | `@ayunis/chat/history` | Canonical history list, rows, states, pagination, rename, and delete presentation |
@@ -118,6 +137,7 @@ The host supplies the executor invocation and its context.
 | `@ayunis/chat/attachments` | Canonical source, knowledge-base, and integration badges |
 | `@ayunis/chat/messages`, `@ayunis/chat/timeline`, `@ayunis/chat/tool-cards` | Message/timeline rendering and registered rich tool cards |
 | `@ayunis/chat/markdown` | Markdown, citations, PII reveal, and legal-reference presentation |
+| `@ayunis/chat/workspaces` | Workspace icons, appearance catalogue, and picker menu body |
 
 Internal files under `packages/chat/src` are not host APIs. The package does not
 export a generic configured-history wrapper or a composer replacement slot;

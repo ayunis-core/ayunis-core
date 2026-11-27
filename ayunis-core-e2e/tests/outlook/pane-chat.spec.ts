@@ -279,7 +279,7 @@ test('keeps pane chats out of the web app and web chats out of the pane', async 
     await webContext.close();
   }
 
-  await page.getByTestId('embedded-new-chat').click();
+  await page.getByTestId('chat-header-new-chat').click();
   await page.getByTestId('embedded-history').click();
   await expect(page.getByTestId('chat-card')).toHaveCount(1);
 });

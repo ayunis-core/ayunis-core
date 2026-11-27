@@ -46,6 +46,7 @@ function routesByScope(threadId: string): Record<string, RouteCall[]> {
     session: [{ method: "GET", path: "/auth/me" }],
     uploads: [
       { method: "GET", path: `/threads/${threadId}/sources` },
+      { method: "GET", path: `/threads/${threadId}/sources/progress` },
       { method: "DELETE", path: `/threads/${threadId}/sources/${MISSING}` },
     ],
     voice: [

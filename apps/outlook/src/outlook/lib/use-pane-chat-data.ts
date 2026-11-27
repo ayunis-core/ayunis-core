@@ -7,8 +7,6 @@ import {
   threadsControllerDelete,
   threadsControllerUpdateTitle,
   useThreadsControllerFindAll,
-  useThreadsControllerFindOne,
-  useActiveRunsControllerFindActive,
 } from '@ayunis/api-client/endpoints';
 import { SessionClient, ThreadType } from '@ayunis/api-client/schemas';
 
@@ -21,29 +19,6 @@ export function usePaneHistory(offset: number) {
     limit: PANE_HISTORY_PAGE_SIZE,
     offset,
   });
-}
-
-export function usePaneThread(threadId: string | undefined) {
-  return useThreadsControllerFindOne(threadId ?? '', {
-    query: {
-      enabled: Boolean(threadId),
-      refetchInterval: (query) =>
-        query.state.data?.sources.some(({ status }) => status === 'processing')
-          ? 2000
-          : false,
-    },
-  });
-}
-
-export function usePaneActiveRun(threadId: string | undefined) {
-  const active = useActiveRunsControllerFindActive({
-    query: { enabled: Boolean(threadId) },
-  });
-  return {
-    run: active.data?.find((run) => run.threadId === threadId),
-    dataUpdatedAt: active.dataUpdatedAt,
-    isFetching: Boolean(threadId && active.isFetching),
-  };
 }
 
 export function usePaneThreadActions() {

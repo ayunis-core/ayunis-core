@@ -12,9 +12,15 @@ The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
   principal's local run state and query cache.
 - `ui/OutlookChatApp.tsx` owns the pane's new-chat, conversation, and history
   views. It supplies a `ChatConfig` with the bearer transport, the `narrow`
-  layout, session-owned drafts, client tools and events, plus thread
-  operations and run state, to `@ayunis/chat`. The package renders and loads
-  the composer itself, including the model picker, uploads, voice and notices.
+  layout, session-owned drafts, client tools and events to `@ayunis/chat`.
+  `ui/PaneConversation.tsx` renders the package `Conversation` screen for the
+  open chat: the package loads the thread and renders its header (title,
+  anonymous badge, Rename and Delete, and the New chat button the pane asks
+  for through `ChatConfig.newChat`), the composer, citations with their dialog,
+  PII reveal, read aloud and the sent, waiting and failed message. The pane
+  passes no workspaces, favorites, trail, artifact panel or navigation, so
+  those controls and the citation's recording link do not show. After a delete
+  the pane opens the history (`events.onThreadDeleted`).
   History queries remain scoped to `SessionClient.outlook`, while the list,
   empty/loading/error states, pagination, thread dialogs, and academy notice use
   the canonical package presentation. The pane supplies offset navigation,

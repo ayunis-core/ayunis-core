@@ -31,4 +31,4 @@ Chat search matches titles and persisted user/assistant text blocks case-insensi
 
 Source assignments are unique per `(threadId, sourceId)` at the database level. The application duplicate check provides a fast 409 response; the database constraint also rejects concurrent duplicate inserts, which map to the same `SourceAlreadyAssignedError`.
 
-`GET /threads/:id/sources/progress` authorizes the thread through `GetThreadSourcesUseCase` before reading queue-derived source progress.
+`GET /threads/:id/sources/progress` authorizes the thread through `GetThreadSourcesUseCase` before reading queue-derived source progress. Like the other thread-source routes it requires the `uploads` surface scope, so the Outlook pane can show a waiting message's file progress.

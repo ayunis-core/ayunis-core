@@ -71,6 +71,7 @@ export class ThreadSourcesController {
     private readonly getSourceProgress: GetThreadSourceProgressUseCase,
   ) {}
 
+  @RequireSurfaceScope(SurfaceScope.UPLOADS)
   @Get(':id/sources/progress')
   @ApiOperation({
     summary:

@@ -1,68 +1,29 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ChatConversation,
+  Conversation,
   type ChatConfig,
-  type ChatConversationSlots,
-  type ChatThreadSnapshot,
+  type ChatThreadState,
 } from '@ayunis/chat/surface';
 import type { ChatRunLifecycle } from '@ayunis/chat/runs';
-import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
-import { PaneConversationHeading } from '@/outlook/ui/PaneConversationHeading';
-import { PaneMessageImage } from '@/outlook/ui/PaneMessageImage';
 import { OutlookToolBridgeContext } from '@/outlook/model/outlook-tool-bridge';
-import {
-  usePaneActiveRun,
-  usePaneThreadActions,
-} from '@/outlook/lib/use-pane-chat-data';
+import { usePaneThreadActions } from '@/outlook/lib/use-pane-chat-data';
 import { useStandaloneOutlookTools } from '@/outlook/lib/use-standalone-outlook-tools';
 
 type PaneChatConfig = Omit<ChatConfig, 'clientTools' | 'events'> & {
-  readonly events: Omit<ChatConfig['events'], 'onRunSettled'>;
+  readonly events: Omit<ChatConfig['events'], 'onRunSettled' | 'onThreadState'>;
 };
 
 interface PaneConversationProps {
-  readonly thread: GetThreadResponseDto;
+  readonly threadId: string;
   readonly config: PaneChatConfig;
   readonly lifecycle: ChatRunLifecycle;
-  readonly onNewChat: () => void;
-  readonly onDeleted: (threadId: string) => void;
-  readonly onError: (error: unknown) => void;
 }
 
-function ConversationHeader({
-  thread,
-  title,
-  lifecycle,
-  onNewChat,
-  onDeleted,
-  onError,
-}: Pick<
-  PaneConversationProps,
-  'thread' | 'lifecycle' | 'onNewChat' | 'onDeleted' | 'onError'
-> & { readonly title?: string }) {
-  const actions = usePaneThreadActions();
-  const rename = (value: string) => {
-    void actions
-      .rename(thread.id, value, lifecycle.getSessionSignal())
-      .catch(onError);
-  };
-  const remove = () => {
-    void actions
-      .remove(thread.id, lifecycle.getSessionSignal())
-      .then(() => onDeleted(thread.id))
-      .catch(onError);
-  };
-  return (
-    <PaneConversationHeading
-      title={title}
-      anonymous={thread.isAnonymous}
-      onNewChat={onNewChat}
-      rename={rename}
-      remove={remove}
-    />
-  );
-}
+const NO_STATE: Pick<ChatThreadState, 'messages' | 'piiMasks'> = {
+  messages: [],
+  piiMasks: [],
+};
 
 function ConversationEmptyState() {
   const { t } = useTranslation('outlook');
@@ -73,53 +34,35 @@ function ConversationEmptyState() {
   );
 }
 
-function conversationSlots(
-  props: PaneConversationProps,
-  title: string | undefined,
-): ChatConversationSlots {
-  const { thread } = props;
-  return {
-    header: () => (
-      <ConversationHeader key={thread.id} {...props} title={title} />
-    ),
-    emptyState: <ConversationEmptyState />,
-    messageImage: (message, { index, altText }) => (
-      <PaneMessageImage
-        key={message.id + '-' + index}
-        threadId={thread.id}
-        messageId={message.id}
-        index={index}
-        altText={altText}
-      />
-    ),
-  };
-}
-
-export function PaneConversation(props: PaneConversationProps) {
-  const { thread, config, lifecycle } = props;
-  const [renderedThread, setRenderedThread] = useState<ChatThreadSnapshot>();
-  const activeRun = usePaneActiveRun(thread.id);
+export function PaneConversation({
+  threadId,
+  config,
+  lifecycle,
+}: PaneConversationProps) {
+  const [threadState, setThreadState] = useState<ChatThreadState>();
   const { refreshRun } = usePaneThreadActions();
-  const current = renderedThread?.id === thread.id ? renderedThread : thread;
+  const current = threadState?.id === threadId ? threadState : NO_STATE;
   const { bridge, dispatch } = useStandaloneOutlookTools({
-    threadId: thread.id,
+    threadId,
     messages: current.messages,
     piiMasks: current.piiMasks,
   });
 
   return (
     <OutlookToolBridgeContext.Provider value={bridge}>
-      <ChatConversation
-        thread={thread}
+      <Conversation
+        threadId={threadId}
         config={{
           ...config,
           clientTools: dispatch,
-          events: { ...config.events, onRunSettled: refreshRun },
+          events: {
+            ...config.events,
+            onRunSettled: refreshRun,
+            onThreadState: setThreadState,
+          },
         }}
         lifecycle={lifecycle}
-        activeRun={activeRun}
-        adapters={{ onThreadState: setRenderedThread }}
-        slots={conversationSlots(props, current.title)}
+        emptyState={<ConversationEmptyState />}
       />
     </OutlookToolBridgeContext.Provider>
   );

@@ -1,7 +1,9 @@
 import { QueryClient } from '@tanstack/react-query';
 import { afterEach, expect, it, vi } from 'vitest';
 
-vi.mock('./started-thread-run', () => ({ startThreadRun: vi.fn() }));
+vi.mock('@/features/chat-surface', () => ({
+  threadRunEndpoints: { send: vi.fn(() => new Promise(() => undefined)) },
+}));
 
 const threadId = 'thread-1';
 const waiting = { threadId, text: 'Summarise the minutes', images: [] };

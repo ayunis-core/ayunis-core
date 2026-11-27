@@ -161,6 +161,7 @@
     "pagination": {
       "previous": "Previous",
       "next": "Next"
-    }
+    },
+    "loading": "Loading..."
   }
 }

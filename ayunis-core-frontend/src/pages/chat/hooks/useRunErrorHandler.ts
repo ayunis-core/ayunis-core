@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { RunErrorResponseDto } from '@ayunis/api-client/schemas';
 import { showError } from '@/shared/lib/toast';
 
-export function useRunErrorHandler(_threadId: string) {
+export function useRunErrorHandler() {
   const { t } = useTranslation('chat');
 
   return useCallback(

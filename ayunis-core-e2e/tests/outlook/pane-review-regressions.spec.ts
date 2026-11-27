@@ -39,7 +39,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function reopenLatestThread(page: Page, prompt: string): Promise<void> {
-  await page.getByTestId("embedded-new-chat").click();
+  await page.getByTestId("chat-header-new-chat").click();
   await page.getByTestId("embedded-history").click();
   await page.getByTestId("chat-card").first().click();
   await expect(page.getByTestId("outlook-conversation")).toBeVisible();
@@ -69,7 +69,9 @@ test("posts the email read result when the thread remounts before the run finish
     await sendMessage(page, "Summarize this email.");
     await expect.poll(() => calls).toBe(1);
     await reopenLatestThread(page, prompt);
-    await expect(page.getByTestId("input")).toHaveValue(
+    // A sent message leaves the composer at once and waits as pending.
+    await expect(page.getByTestId("input")).toHaveValue("");
+    await expect(page.getByTestId("pending-user-message")).toContainText(
       "Summarize this email.",
     );
   } finally {

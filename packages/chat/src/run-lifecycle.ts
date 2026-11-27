@@ -3,6 +3,11 @@ import { createActiveThreadRuns } from './active-thread-run';
 import { createDeferredClientTools } from './deferred-client-tools';
 import { createStoppedThreadRuns } from './stopped-thread-runs';
 import { createStartedThreadRuns } from './started-thread-run';
+import {
+  createDeferredThreadRuns,
+  type WaitingMessageStorage,
+} from './deferred-thread-runs';
+import { createThreadSubmissions } from './thread-submissions';
 import { createFrameCoalescer } from './frame-coalescer';
 import { createRunEventRouting } from './run-event-routing';
 import { stopRun } from './run-cancellation';
@@ -28,27 +33,63 @@ export interface RunRequestObserver {
 
 export type ChatRunLifecycle = ReturnType<typeof createChatRunLifecycle>;
 
+export interface ChatRunLifecycleOptions {
+  readonly waitingMessages?: WaitingMessageStorage;
+}
+
+/** Messages on their way into a chat: started, waiting for files, or sent. */
+function createPendingMessages(
+  endpoints: RunEndpoints,
+  activity: ReturnType<typeof createActiveThreadRuns>,
+  options: ChatRunLifecycleOptions,
+) {
+  const handoffs = createStartedThreadRuns(activity.registerActiveThreadRun);
+  const submissions = createThreadSubmissions();
+  const deferred = createDeferredThreadRuns(
+    (run) => handoffs.startRun(run, endpoints.send),
+    options.waitingMessages,
+  );
+  return {
+    handoffs,
+    submissions,
+    deferred,
+    startThreadRun: (request: Parameters<typeof handoffs.startRun>[0]) => {
+      handoffs.startRun(request, endpoints.send);
+    },
+    takeStartedThreadRun: handoffs.takeStartedThreadRun,
+    clear() {
+      handoffs.clearStartedThreadRuns();
+      deferred.clearDeferredThreadRuns();
+      submissions.clearSubmissions();
+    },
+  };
+}
+
 /** One lifecycle per surface session. Open or close views without ending their runs. */
-export function createChatRunLifecycle(endpoints: RunEndpoints) {
+export function createChatRunLifecycle(
+  endpoints: RunEndpoints,
+  options: ChatRunLifecycleOptions = {},
+) {
   const activity = createActiveThreadRuns();
   const stopped = createStoppedThreadRuns();
-  const handoffs = createStartedThreadRuns(activity.registerActiveThreadRun);
+  const messages = createPendingMessages(endpoints, activity, options);
   const events = createRunEventRouting();
   const executor = createRunExecutor(activity, events);
   const deferredClientTools = createDeferredClientTools();
   let sessionResetAt = 0;
   let session = new AbortController();
 
-  function stopThreadRun(threadId: string, transport = endpoints): void {
+  const stopThreadRun = (threadId: string, transport = endpoints): void =>
     stopRun(threadId, transport.cancel, {
       ...stopped,
       abortActiveThreadRun: activity.abortActiveThreadRun,
     });
-  }
 
   return {
     ...activity,
     ...stopped,
+    ...messages.submissions,
+    ...messages.deferred,
     deferredClientTools,
     subscribe: events.subscribe,
     run: (
@@ -57,12 +98,10 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
       transport = endpoints,
     ) => executor.run(request, observer, transport, session.signal),
     stopThreadRun,
-    startThreadRun: (request: Parameters<typeof handoffs.startRun>[0]) => {
-      handoffs.startRun(request, endpoints.send);
-    },
-    takeStartedThreadRun: handoffs.takeStartedThreadRun,
+    startThreadRun: messages.startThreadRun,
+    takeStartedThreadRun: messages.takeStartedThreadRun,
     cancelStartedThreadRun: (threadId: string) =>
-      handoffs.cancelStartedRun(threadId, stopThreadRun),
+      messages.handoffs.cancelStartedRun(threadId, stopThreadRun),
     getSessionResetAt: () => sessionResetAt,
     getSessionSignal: () => session.signal,
     reset() {
@@ -73,7 +112,7 @@ export function createChatRunLifecycle(endpoints: RunEndpoints) {
       executor.reset();
       previousSession.abort();
       events.clear();
-      handoffs.clearStartedThreadRuns();
+      messages.clear();
       stopped.clearStoppedThreadRuns();
       activity.abortAllThreadRuns();
     },

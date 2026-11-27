@@ -56,6 +56,11 @@ function useSidebar(): SidebarContextProps {
   return context;
 }
 
+/** The sidebar of the surrounding layout, or null when there is none. */
+function useOptionalSidebar(): SidebarContextProps | null {
+  return React.useContext(SidebarContext);
+}
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -883,6 +888,8 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  // eslint-disable-next-line react-refresh/only-export-components
+  useOptionalSidebar,
   // eslint-disable-next-line react-refresh/only-export-components
   useSidebar,
 };

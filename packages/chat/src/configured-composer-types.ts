@@ -56,7 +56,6 @@ export interface ConfiguredComposerProps {
   readonly isSubmitting?: boolean;
   readonly sentPrompts?: readonly string[];
   readonly placeholder?: string;
-  readonly clearImagesOnSend?: boolean;
   readonly draft: ReturnType<typeof useChatDraft>;
   readonly isStreaming: boolean;
   readonly isCheckingForRun: boolean;

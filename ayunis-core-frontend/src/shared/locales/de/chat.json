@@ -419,7 +419,12 @@
       "confirmed": "Bestätigt",
       "rejected": "Abgelehnt"
     },
-    "integrationUnavailable": "{{name}} ist nicht verfügbar. Prüfen Sie die Verbindungseinstellungen oder wenden Sie sich an Ihre Administration. Ihr Chat kann mit den anderen verfügbaren Integrationen fortgesetzt werden."
+    "integrationUnavailable": "{{name}} ist nicht verfügbar. Prüfen Sie die Verbindungseinstellungen oder wenden Sie sich an Ihre Administration. Ihr Chat kann mit den anderen verfügbaren Integrationen fortgesetzt werden.",
+    "conversation": {
+      "loading": "Wird geladen …",
+      "loadFailed": "Die Anfrage ist fehlgeschlagen. Versuchen Sie es erneut.",
+      "retry": "Erneut versuchen"
+    }
   },
   "newChat": {
     "newChat": "Neuer Chat",
