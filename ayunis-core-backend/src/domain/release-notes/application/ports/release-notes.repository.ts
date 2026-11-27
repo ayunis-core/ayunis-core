@@ -34,4 +34,7 @@ export abstract class ReleaseNotesRepository {
 
   /** Does nothing for a note the user has read before or that is gone. */
   abstract markRead(userId: UUID, id: UUID): Promise<void>;
+
+  /** Marks every note that is unread for the user read. */
+  abstract markAllRead(userId: UUID): Promise<void>;
 }

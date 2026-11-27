@@ -9,6 +9,7 @@ import { DownloadReleaseNoteImageUseCase } from './application/use-cases/downloa
 import { FindInstantOpenReleaseNoteUseCase } from './application/use-cases/find-instant-open-release-note/find-instant-open-release-note.use-case';
 import { FindMyReleaseNotesUseCase } from './application/use-cases/find-my-release-notes/find-my-release-notes.use-case';
 import { FindReleaseNoteUseCase } from './application/use-cases/find-release-note/find-release-note.use-case';
+import { MarkAllReleaseNotesReadUseCase } from './application/use-cases/mark-all-release-notes-read/mark-all-release-notes-read.use-case';
 import { MarkReleaseNoteReadUseCase } from './application/use-cases/mark-release-note-read/mark-release-note-read.use-case';
 import { SyncReleaseNotesUseCase } from './application/use-cases/sync-release-notes/sync-release-notes.use-case';
 import { AnnouncableHttpFeed } from './infrastructure/announcable/announcable-http.feed';
@@ -40,6 +41,7 @@ import { ReleaseNotesController } from './presenters/http/release-notes.controll
     CountUnreadReleaseNotesUseCase,
     FindInstantOpenReleaseNoteUseCase,
     MarkReleaseNoteReadUseCase,
+    MarkAllReleaseNotesReadUseCase,
     DownloadReleaseNoteImageUseCase,
     ReleaseNoteDtoMapper,
   ],

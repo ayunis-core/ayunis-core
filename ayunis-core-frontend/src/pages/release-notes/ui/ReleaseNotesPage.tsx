@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { CheckCheck } from 'lucide-react';
+import { Button } from '@ayunis/ui/components/button';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
@@ -6,6 +8,7 @@ import type { ReleaseNoteResponseDto } from '@ayunis/api-client/schemas';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { EmptyState } from '@/widgets/empty-state';
 import { useReleaseNotes } from '@/pages/release-notes/api/useReleaseNotes';
+import { useMarkAllReleaseNotesRead } from '@/pages/release-notes/api/useMarkAllReleaseNotesRead';
 import { ReleaseNoteListItem } from './ReleaseNoteListItem';
 
 interface ReleaseNotesPageProps {
@@ -17,8 +20,24 @@ export default function ReleaseNotesPage(
 ) {
   const { t } = useTranslation('release-notes');
   const { releaseNotes } = useReleaseNotes(props.releaseNotes);
+  const markAllRead = useMarkAllReleaseNotesRead();
+  const hasUnread = releaseNotes.some((releaseNote) => releaseNote.unread);
   const header = (
-    <ContentAreaHeader breadcrumbs={[{ label: t('page.title') }]} />
+    <ContentAreaHeader
+      breadcrumbs={[{ label: t('page.title') }]}
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          data-testid="release-notes-mark-all-read"
+          disabled={!hasUnread || markAllRead.isPending}
+          onClick={() => markAllRead.mutate()}
+        >
+          <CheckCheck />
+          {t('page.markAllRead')}
+        </Button>
+      }
+    />
   );
 
   if (releaseNotes.length === 0) {

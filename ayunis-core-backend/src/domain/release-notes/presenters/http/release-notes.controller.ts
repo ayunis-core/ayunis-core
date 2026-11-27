@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Logger,
   Param,
   Post,
@@ -17,6 +19,7 @@ import { DownloadReleaseNoteImageQuery } from 'src/domain/release-notes/applicat
 import { DownloadReleaseNoteImageUseCase } from 'src/domain/release-notes/application/use-cases/download-release-note-image/download-release-note-image.use-case';
 import { FindInstantOpenReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-instant-open-release-note/find-instant-open-release-note.use-case';
 import { FindMyReleaseNotesUseCase } from 'src/domain/release-notes/application/use-cases/find-my-release-notes/find-my-release-notes.use-case';
+import { MarkAllReleaseNotesReadUseCase } from 'src/domain/release-notes/application/use-cases/mark-all-release-notes-read/mark-all-release-notes-read.use-case';
 import { FindReleaseNoteQuery } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.query';
 import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
 import { MarkReleaseNoteReadCommand } from 'src/domain/release-notes/application/use-cases/mark-release-note-read/mark-release-note-read.command';
@@ -45,6 +48,7 @@ export class ReleaseNotesController {
     private readonly findInstantOpenReleaseNoteUseCase: FindInstantOpenReleaseNoteUseCase,
     private readonly findReleaseNoteUseCase: FindReleaseNoteUseCase,
     private readonly markReleaseNoteReadUseCase: MarkReleaseNoteReadUseCase,
+    private readonly markAllReleaseNotesReadUseCase: MarkAllReleaseNotesReadUseCase,
     private readonly downloadReleaseNoteImageUseCase: DownloadReleaseNoteImageUseCase,
     private readonly releaseNoteDtoMapper: ReleaseNoteDtoMapper,
   ) {}
@@ -75,6 +79,17 @@ export class ReleaseNotesController {
     return {
       releaseNote: releaseNote && this.releaseNoteDtoMapper.toDto(releaseNote),
     };
+  }
+
+  @Post('read-all')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Mark every release note read for the current user',
+  })
+  @ApiResponse({ status: 204 })
+  async markAllRead(): Promise<void> {
+    this.logger.log('markAllRead');
+    await this.markAllReleaseNotesReadUseCase.execute();
   }
 
   @Get(':id')

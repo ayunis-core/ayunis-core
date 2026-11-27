@@ -1,6 +1,8 @@
 {
   "page": {
-    "title": "Neuigkeiten"
+    "title": "Neuigkeiten",
+    "markAllRead": "Alle als gelesen markieren",
+    "markAllReadError": "Die Neuigkeiten konnten nicht als gelesen markiert werden."
   },
   "bell": {
     "label": "Neuigkeiten",
