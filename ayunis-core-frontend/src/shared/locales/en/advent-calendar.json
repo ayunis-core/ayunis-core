@@ -2,6 +2,9 @@
   "page": {
     "title": "Advent calendar"
   },
+  "effects": {
+    "label": "Effects"
+  },
   "preview": {
     "title": "Preview",
     "description": "As a super admin, you see every door with content. Users see a door only from its day on, and only while the calendar is switched on."
@@ -20,6 +23,8 @@
   },
   "door": {
     "today": "Today",
+    "daysLeft_one": "in {{count}} day",
+    "daysLeft_other": "in {{count}} days",
     "label": {
       "locked": "Door {{day}}, opens on {{day}} December",
       "empty": "Door {{day}}, empty",

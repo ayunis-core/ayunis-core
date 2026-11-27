@@ -2,6 +2,9 @@
   "page": {
     "title": "Adventskalender"
   },
+  "effects": {
+    "label": "Effekte"
+  },
   "preview": {
     "title": "Vorschau",
     "description": "Als Super Admin sehen Sie alle Türchen mit Inhalt. Nutzer sehen ein Türchen erst ab seinem Tag und nur, solange der Kalender eingeschaltet ist."
@@ -20,6 +23,8 @@
   },
   "door": {
     "today": "Heute",
+    "daysLeft_one": "noch {{count}} Tag",
+    "daysLeft_other": "noch {{count}} Tage",
     "label": {
       "locked": "Türchen {{day}}, öffnet am {{day}}. Dezember",
       "empty": "Türchen {{day}}, leer",
