@@ -78,7 +78,13 @@ export function useRunErrorHandler(_threadId: string) {
           break;
         case undefined:
         default:
-          showError(t('chat.errorUnexpected'));
+          // Model-provider outages carry a per-provider code
+          // (PROVIDER_UNAVAILABLE_<CLASS>_<PROVIDER>); anonymizer ones match above.
+          showError(
+            error.code?.startsWith('PROVIDER_UNAVAILABLE_')
+              ? t('chat.errorProviderUnavailable')
+              : t('chat.errorUnexpected'),
+          );
       }
     },
     [t],

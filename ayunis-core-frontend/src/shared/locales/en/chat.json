@@ -66,6 +66,7 @@
     "errorOutputLimit": "The model reached its maximum response length before it could answer. Please narrow your request or split it into smaller steps.",
     "errorMalformedToolCall": "The model produced an invalid tool call. Please try again.",
     "errorUnexpected": "An unexpected error occurred",
+    "errorProviderUnavailable": "The AI model provider is temporarily unavailable. Please try again in a moment or choose another model.",
     "errorNoModelFound": "No model found",
     "errorMaxIterationsReached": "Maximal number of iterations reached",
     "errorToolNotFound": "Tool not found",

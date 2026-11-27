@@ -172,6 +172,41 @@ describe('OpenAI provider error contract', () => {
     });
   });
 
+  const inStreamError = (message: string) =>
+    Object.assign(new Error(message), {
+      status: undefined,
+      code: 400,
+      type: 'BadRequestError',
+      error: { message, type: 'BadRequestError', param: null, code: 400 },
+    });
+
+  it('marks the vLLM structured-output backend conflict as a server failure', async () => {
+    const cause = inStreamError(
+      "Structured output processing only supports one backend per engine. The engine is already using 'guidance', but this request resolved to 'xgrammar'.",
+    );
+    createMock.mockResolvedValueOnce(scriptedStream([cause]));
+
+    const provider = openai({ apiKey: 'test', model: 'qwen-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'server',
+      stage: 'stream_consumption',
+      cause,
+    });
+  });
+
+  it('leaves other in-stream provider errors unclassified', async () => {
+    const cause = inStreamError("Invalid grammar specification: 'triggers'");
+    createMock.mockResolvedValueOnce(scriptedStream([cause]));
+
+    const provider = openai({ apiKey: 'test', model: 'qwen-test' });
+
+    await expect(drain(provider.stream(request()))).rejects.toMatchObject({
+      kind: 'unknown',
+      stage: 'stream_consumption',
+    });
+  });
+
   it('preserves a normalized next failure over a rejecting iterator cleanup', async () => {
     const cause = Object.assign(new Error('connection lost'), {
       code: 'ECONNRESET',
