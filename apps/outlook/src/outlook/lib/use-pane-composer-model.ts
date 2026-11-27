@@ -3,10 +3,26 @@ import {
   useModelModesControllerGetModelModes,
   useModelsControllerGetPermittedLanguageModels,
 } from '@ayunis/api-client/endpoints';
+import type {
+  DefaultModelSelectionResponseDto,
+  PermittedLanguageModelResponseDto,
+} from '@ayunis/api-client/schemas';
 import {
   getModeValue,
   resolveSelectedModel,
 } from '@ayunis/chat/model-presentation';
+
+function initialValue(
+  selection: DefaultModelSelectionResponseDto | undefined,
+  models: readonly PermittedLanguageModelResponseDto[],
+): string | undefined {
+  if (selection?.mode) return getModeValue(selection.mode);
+  return (
+    selection?.permittedModelId ??
+    models.find(({ isDefault }) => isDefault)?.id ??
+    models[0]?.id
+  );
+}
 
 export function usePaneComposerModel({
   enabled,
@@ -21,12 +37,7 @@ export function usePaneComposerModel({
   });
   const models = permitted.data ?? [];
   const resolutions = modes.data ?? [];
-  const initial = selection.data?.mode
-    ? getModeValue(selection.data.mode)
-    : (selection.data?.permittedModelId ??
-      models.find(({ isDefault }) => isDefault)?.id ??
-      models[0]?.id);
-  const value = selectedValue ?? initial;
+  const value = selectedValue ?? initialValue(selection.data, models);
 
   return {
     models,

@@ -14,13 +14,13 @@ import { Input } from '@ayunis/ui/components/input';
 import { NameField } from '@/widgets/entity-form-fields';
 import type { OwnerSelection } from '@/features/resource-ownership';
 import {
-  ACCEPTED_AUDIO_PICKER_TYPES,
-  isAudioFileName,
-} from '@/shared/lib/audio-files';
-import {
   OwnedResourceCreateDialog,
   type OwnedResourceCreateDialogProps,
 } from './OwnedResourceCreateDialog';
+import {
+  ACCEPTED_AUDIO_PICKER_TYPES,
+  isAudioFileName,
+} from '@ayunis/chat/upload-policy';
 
 export interface CreateRecordingFormData {
   name: string;

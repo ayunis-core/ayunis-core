@@ -4,8 +4,8 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGES,
   MAX_TOTAL_IMAGE_SIZE_BYTES,
-} from '@/widgets/chat-input/model/image-upload-policy';
-import { usePendingImages } from '@/widgets/chat-input/hooks/usePendingImages';
+  usePendingImages,
+} from '@ayunis/chat/composer';
 
 function imageOf(bytes: number, name = 'photo.jpg'): File {
   const file = new File([''], name, { type: 'image/jpeg' });

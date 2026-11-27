@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useVoiceRecording } from '@/widgets/chat-input/hooks/useVoiceRecording';
+import { useVoiceRecording } from '@ayunis/chat/composer';
 
 // Chromium's MediaRecorder emits exactly this many bytes (the WebM container
 // header) when the track delivered no audio frames before stop().

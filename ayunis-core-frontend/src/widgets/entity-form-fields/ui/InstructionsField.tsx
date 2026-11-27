@@ -6,10 +6,10 @@ import {
   FormMessage,
 } from '@ayunis/ui/components/form';
 import { Textarea } from '@ayunis/ui/components/textarea';
-import { ProcessingGlow } from '@/shared/ui/processing-glow';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
+import { ProcessingGlow } from '@ayunis/chat/composer';
 
 interface InstructionsFieldProps<TFieldValues extends FieldValues> {
   control: Control<TFieldValues>;

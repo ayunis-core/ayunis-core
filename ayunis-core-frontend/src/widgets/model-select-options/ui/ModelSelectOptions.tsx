@@ -19,17 +19,18 @@ import {
   SelectLabel,
   SelectSeparator,
 } from '@ayunis/ui/components/select';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
 import {
+  ProviderFlag,
   compareModels,
   getModeValue,
   type ModelMode,
-} from '@/widgets/model-select-options/lib/model-modes';
-import { stripProviderSuffix } from '@/widgets/model-select-options/lib/model-display-name';
-import ModelModeIcon from './ModelModeIcon';
-import ModelModeInfoCard from './ModelModeInfoCard';
-import ModelInfoCard, { type ModelInfoModel } from './ModelInfoCard';
-import ModelProviderFaultIndicator from './ModelProviderFaultIndicator';
+  stripProviderSuffix,
+  ModelModeIcon,
+  ModelModeInfoCard,
+  ModelInfoCard,
+  type ModelInfoModel,
+  ModelProviderFaultIndicator,
+} from '@ayunis/chat/model-presentation';
 
 export type ModelOption = ModelInfoModel & { id: string };
 

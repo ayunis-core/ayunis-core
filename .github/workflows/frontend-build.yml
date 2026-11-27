@@ -77,6 +77,10 @@ jobs:
         working-directory: ayunis-core-frontend
         run: pnpm run lint
 
+      - name: Lint Outlook
+        working-directory: apps/outlook
+        run: pnpm run lint
+
   test:
     name: Frontend tests
     runs-on: ubuntu-latest

@@ -11,8 +11,7 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
-import { ModelTierStars } from '@/widgets/model-select-options';
+import { ProviderFlag, ModelTierStars } from '@ayunis/chat/model-presentation';
 
 interface ModelItemProps {
   model: SuperAdminCatalogModelsControllerGetAllCatalogModels200Item;

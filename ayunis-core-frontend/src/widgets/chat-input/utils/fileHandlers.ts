@@ -11,7 +11,6 @@ export {
   MAX_SOURCE_FILE_SIZE_BYTES,
   MAX_PDF_FILE_SIZE_BYTES,
 } from '@ayunis/chat/upload-policy';
-export { ACCEPTED_AUDIO_PICKER_TYPES } from '@/shared/lib/audio-files';
 
 // Rejects oversized files before any upload request is sent, with one toast
 // per rejected file. Sizes round up so a file just over the limit never reads

@@ -31,11 +31,10 @@ import {
 } from '@ayunis/ui/components/dropdown-menu';
 import { ItemGroup } from '@ayunis/ui/components/item';
 import type { LanguageModelResponseDto } from '@ayunis/api-client';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
-import type { ModelMode } from '@/widgets/model-select-options';
 import { reorderVisibleEntries } from '@/pages/super-admin-settings/models-catalog/lib/reorder-visible-entries';
 import { useModelModeEntries } from '@/pages/super-admin-settings/models-catalog/api/useModelModeEntries';
 import { ModeModelRow } from './ModeModelRow';
+import { ProviderFlag, type ModelMode } from '@ayunis/chat/model-presentation';
 
 const restrictToVerticalAxis: Modifier = ({ transform }) => ({
   ...transform,

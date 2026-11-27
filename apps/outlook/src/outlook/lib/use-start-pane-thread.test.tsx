@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { createChatRunLifecycle } from '@ayunis/chat/runs';
 import type { ReactNode } from 'react';
+import type * as apiEndpoints from '@ayunis/api-client/endpoints';
 import { expect, it, vi } from 'vitest';
 import { useStartPaneThread } from './use-start-pane-thread';
 
@@ -11,7 +12,7 @@ const { create, upload, waitForFiles } = vi.hoisted(() => ({
   waitForFiles: vi.fn(
     (_threadId: string, signal: AbortSignal) =>
       new Promise<{ id: string }>((_, reject) => {
-        signal.addEventListener('abort', () => reject(signal.reason), {
+        signal.addEventListener('abort', () => reject(signal.reason as Error), {
           once: true,
         });
       }),
@@ -19,7 +20,7 @@ const { create, upload, waitForFiles } = vi.hoisted(() => ({
 }));
 
 vi.mock('@ayunis/api-client/endpoints', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@ayunis/api-client/endpoints')>()),
+  ...(await importOriginal<typeof apiEndpoints>()),
   threadsControllerCreate: create,
 }));
 

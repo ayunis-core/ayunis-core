@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getThreadsControllerCreateMutationKey,
@@ -24,7 +24,7 @@ interface PaneThreadStartOptions {
 }
 
 function useStartAttempt(draftKey: string | undefined) {
-  const attempts = useRef(new Map<string, AbortController>()).current;
+  const [attempts] = useState(() => new Map<string, AbortController>());
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
 
   function begin(key: string) {

@@ -27,7 +27,9 @@ The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
   and captures the mail when creation or navigation begins.
 - `lib/use-standalone-outlook-tools.ts` registers the Office.js executors and
   draft cards. A draft belongs to its original email and can open or fill a reply
-  only for that email. The shared lifecycle governs tool execution and results.
+  only for that email. The shared lifecycle governs tool execution and results;
+  `lib/use-outlook-tool-dispatch.ts` ties each run and call to the email it was
+  made for.
 
 The backend surface registry governs framing and API scopes.
 `pnpm run build:surfaces` bundles web and Outlook separately for one backend

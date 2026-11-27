@@ -3,7 +3,7 @@ import { SourceProcessingErrorCode as Code } from '@ayunis/api-client/schemas';
 import {
   getSourceProcessingErrorKey,
   getSourceProcessingErrorReason,
-} from './source-processing-error';
+} from '@ayunis/chat/source-errors';
 
 describe('getSourceProcessingErrorKey', () => {
   it.each([

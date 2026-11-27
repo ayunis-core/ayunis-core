@@ -32,28 +32,13 @@ interface PaneHistoryProps {
   readonly session: AbortSignal;
 }
 
-export function PaneChatHistory({
-  capabilities,
-  onSelect,
+function HistoryHeader({
   onBack,
   onSignOut,
   onError,
-  session,
-}: PaneHistoryProps) {
+}: Pick<PaneHistoryProps, 'onBack' | 'onSignOut' | 'onError'>) {
   const { t } = useTranslation('chats');
-  const { t: outlook } = useTranslation('outlook');
-  const [offset, setOffset] = useState(0);
-  const history = usePaneHistory(offset);
-  const actions = usePaneThreadActions();
-  const total = history.data?.pagination.total;
-  if (total !== undefined && offset > 0 && offset >= total) {
-    const lastPage = Math.floor(
-      Math.max(total - 1, 0) / PANE_HISTORY_PAGE_SIZE,
-    );
-    setOffset(lastPage * PANE_HISTORY_PAGE_SIZE);
-    return null;
-  }
-  const header = (
+  return (
     <PaneHeading
       title={t('page.title')}
       actions={
@@ -82,6 +67,96 @@ export function PaneChatHistory({
       }
     />
   );
+}
+
+function historyPageCount(
+  offset: number,
+  total: number | undefined,
+  shown: number,
+): number {
+  if (total !== undefined) return Math.ceil(total / PANE_HISTORY_PAGE_SIZE);
+  const currentPage = offset / PANE_HISTORY_PAGE_SIZE + 1;
+  return currentPage + Number(shown === PANE_HISTORY_PAGE_SIZE);
+}
+
+function HistoryList({
+  chats,
+  offset,
+  total,
+  setOffset,
+  capabilities,
+  onSelect,
+  onBack,
+  onError,
+  session,
+}: Pick<
+  PaneHistoryProps,
+  'capabilities' | 'onSelect' | 'onBack' | 'onError' | 'session'
+> & {
+  readonly chats: GetThreadsResponseDtoItem[];
+  readonly offset: number;
+  readonly total: number | undefined;
+  readonly setOffset: (offset: number) => void;
+}) {
+  const actions = usePaneThreadActions();
+  return (
+    <ChatHistory
+      chats={chats}
+      renderChat={(chat) => (
+        <HistoryCard
+          chat={chat}
+          select={() => onSelect(chat.id)}
+          remove={
+            capabilities.delete
+              ? () => actions.remove(chat.id, session)
+              : undefined
+          }
+          onError={onError}
+        />
+      )}
+      empty={<EmptyHistory onBack={onBack} />}
+      pagination={
+        <ChatHistoryPagination
+          currentPage={offset / PANE_HISTORY_PAGE_SIZE + 1}
+          totalPages={historyPageCount(offset, total, chats.length)}
+          testIdPrefix="outlook-history"
+          onPage={(page) => setOffset((page - 1) * PANE_HISTORY_PAGE_SIZE)}
+        />
+      }
+    />
+  );
+}
+
+function EmptyHistoryPage({
+  header,
+  onBack,
+}: Readonly<{ header: ReactNode; onBack: () => void }>) {
+  return (
+    <div className="absolute inset-0 flex flex-col">
+      <div className="outlook-page-header">{header}</div>
+      <div className="flex min-h-0 w-full flex-1 overflow-y-auto">
+        <div className="m-auto flex w-full justify-center pb-20">
+          <EmptyHistory onBack={onBack} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PaneChatHistory(props: PaneHistoryProps) {
+  const { t } = useTranslation('chats');
+  const { t: outlook } = useTranslation('outlook');
+  const [offset, setOffset] = useState(0);
+  const history = usePaneHistory(offset);
+  const total = history.data?.pagination.total;
+  if (total !== undefined && offset > 0 && offset >= total) {
+    const lastPage = Math.floor(
+      Math.max(total - 1, 0) / PANE_HISTORY_PAGE_SIZE,
+    );
+    setOffset(lastPage * PANE_HISTORY_PAGE_SIZE);
+    return null;
+  }
+  const header = <HistoryHeader {...props} />;
   if (history.isError && !history.data) {
     return (
       <HistoryFrame header={header}>
@@ -102,50 +177,18 @@ export function PaneChatHistory({
       </HistoryFrame>
     );
   }
-
-  const chats = history.data?.data ?? [];
+  const chats = history.data.data;
   if (chats.length === 0 && offset === 0) {
-    return (
-      <div className="absolute inset-0 flex flex-col">
-        <div className="outlook-page-header">{header}</div>
-        <div className="flex min-h-0 w-full flex-1 overflow-y-auto">
-          <div className="m-auto flex w-full justify-center pb-20">
-            <EmptyHistory onBack={onBack} />
-          </div>
-        </div>
-      </div>
-    );
+    return <EmptyHistoryPage header={header} onBack={props.onBack} />;
   }
-  const currentPage = offset / PANE_HISTORY_PAGE_SIZE + 1;
-  const totalPages =
-    total === undefined
-      ? currentPage + Number(chats.length === PANE_HISTORY_PAGE_SIZE)
-      : Math.ceil(total / PANE_HISTORY_PAGE_SIZE);
   return (
     <HistoryFrame header={header}>
-      <ChatHistory
+      <HistoryList
+        {...props}
         chats={chats}
-        renderChat={(chat) => (
-          <HistoryCard
-            chat={chat}
-            select={() => onSelect(chat.id)}
-            remove={
-              capabilities.delete && actions.remove
-                ? () => actions.remove(chat.id, session)
-                : undefined
-            }
-            onError={onError}
-          />
-        )}
-        empty={<EmptyHistory onBack={onBack} />}
-        pagination={
-          <ChatHistoryPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            testIdPrefix="outlook-history"
-            onPage={(page) => setOffset((page - 1) * PANE_HISTORY_PAGE_SIZE)}
-          />
-        }
+        offset={offset}
+        total={total}
+        setOffset={setOffset}
       />
     </HistoryFrame>
   );
@@ -192,7 +235,6 @@ function HistoryCard({
   onError: (error: unknown) => void;
 }>) {
   const { t } = useTranslation('chats');
-  const [busy, setBusy] = useState(false);
   const untitled = t('card.untitled');
   return (
     <ChatHistoryEntry
@@ -214,21 +256,38 @@ function HistoryCard({
       )}
       actions={
         remove && (
-          <>
-            <ChatHistoryDeleteAction
-              title={chat.title || untitled}
-              busy={busy}
-              dismissible={false}
-              onDelete={() => {
-                setBusy(true);
-                void remove()
-                  .catch(onError)
-                  .finally(() => setBusy(false));
-              }}
-            />
-          </>
+          <HistoryDeleteAction
+            title={chat.title || untitled}
+            remove={remove}
+            onError={onError}
+          />
         )
       }
+    />
+  );
+}
+
+function HistoryDeleteAction({
+  title,
+  remove,
+  onError,
+}: Readonly<{
+  title: string;
+  remove: () => Promise<void>;
+  onError: (error: unknown) => void;
+}>) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <ChatHistoryDeleteAction
+      title={title}
+      busy={busy}
+      dismissible={false}
+      onDelete={() => {
+        setBusy(true);
+        void remove()
+          .catch(onError)
+          .finally(() => setBusy(false));
+      }}
     />
   );
 }

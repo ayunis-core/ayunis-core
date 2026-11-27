@@ -25,8 +25,8 @@ import type {
 import { useDeleteModel } from '@/pages/super-admin-settings/models-catalog/api/useDeleteModel';
 import { useConfirmation } from '@/widgets/confirmation-modal';
 import { isLanguageModel } from '@/features/models';
-import { MODEL_MODES } from '@/widgets/model-select-options';
 import { ModeModelList } from './ModeModelList';
+import { MODEL_MODES } from '@ayunis/chat/model-presentation';
 
 export default function ModelsCatalogPage({
   models,

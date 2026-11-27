@@ -5,6 +5,9 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
 } from 'react';
 import {
   addAttachmentAsSource,
@@ -12,15 +15,11 @@ import {
   currentOutlookItemKey,
   currentOutlookMailboxItem,
   currentOutlookReplySourceKey,
-  isAwaitingResultTool,
   isOutlookDraftTool,
-  isOutlookTool,
   openOutlookReply,
   outlookDraftSource,
   outlookToolCalls,
   OUTLOOK_TOOL,
-  rememberChatItem,
-  rememberOutlookDraftSource,
   waitsForUser,
   subscribeToOutlookItem,
   type OutlookReplyRecipients,
@@ -28,10 +27,14 @@ import {
   type OutlookToolDependencies,
   type OutlookToolOutcome,
 } from '@/features/outlook-tools';
-import { latestToolMessages, type ClientToolDispatch } from '@ayunis/chat/runs';
+import { latestToolMessages } from '@ayunis/chat/runs';
 import type { ClientToolCall, ClientToolExecutor } from '@ayunis/chat/surface';
 import { resolvePiiTokens } from '@ayunis/chat/markdown';
 import { outlookClientTools } from '@/outlook/model/outlook-client-tools';
+import {
+  useOutlookToolDispatch,
+  type CallItemKeys,
+} from '@/outlook/lib/use-outlook-tool-dispatch';
 import { outlookAttachmentSourceApi } from '@/outlook/api/outlook-attachment-source-api';
 import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 type Message = GetThreadResponseDto['messages'][number];
@@ -64,6 +67,8 @@ interface TrackedToolState {
   replyItem?: unknown;
 }
 
+type ToolStates = Partial<Record<string, TrackedToolState>>;
+
 /**
  * What goes into Outlook leaves the chat, so it carries the original values
  * of an anonymous chat's `{{pii:…}}` tokens, as a copied email does.
@@ -90,62 +95,65 @@ function latestDraftCallId(messages: readonly Message[]): string | undefined {
     .find(({ name }) => isOutlookDraftTool(name))?.id;
 }
 
-/**
- * The mail a run is about. A new chat's first run belongs to the mail the
- * chat was created next to, even if the user moved on before it opened;
- * every later message the user sends is about the mail open now.
- */
-function itemKeyForRun(threadId: string, takesOverStartedRun: boolean) {
-  const created = chatItemKey(threadId);
-  // A chat created with no mail open is about none: null is kept, so the
-  // run refuses to act on a mail opened since.
-  if (takesOverStartedRun && created !== undefined) return created;
-  const itemKey = currentOutlookItemKey();
-  rememberChatItem(threadId, itemKey);
-  return itemKey;
+function useLatestGetter<T>(value: T): () => T {
+  const ref = useRef(value);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+  return useCallback(() => ref.current, []);
 }
 
-/**
- * Runs the Outlook tools of the chat's runs in the Outlook pane. Only calls
- * made while the chat was open run: reopening a chat must not write an old
- * draft into the open email again. Outside the pane it does nothing.
- */
-export function useStandaloneOutlookTools({
-  threadId,
-  messages,
-  piiMasks,
-}: UseOutlookToolBridgeParams) {
-  const mailboxItem = useSyncExternalStore(
-    subscribeToOutlookItem,
-    currentOutlookMailboxItem,
-  );
-  const [toolStates, setToolStates] = useState<
-    Partial<Record<string, TrackedToolState>>
-  >({});
-  const messagesRef = useRef(messages);
+function useMaskLookup(
+  piiMasks: readonly PiiMask[],
+): RefObject<ReadonlyMap<string, PiiMask>> {
   const masksRef = useRef<ReadonlyMap<string, PiiMask>>(new Map());
-  // The mail the run started on; the tools refuse to act on another. A run
-  // the chat did not start, such as one reattached after a reload, belongs
-  // to the mail the chat was opened next to.
-  const runOrigin = useRef<{
-    itemKey: string | null;
-    observingFromReply: boolean;
-  }>({ itemKey: null, observingFromReply: false });
-  // The mail each call was made for. A draft from read mode can only be
-  // inserted into a reply to that mail.
-  const [callItemKeys, setCallItemKeys] = useState<
-    Record<string, string | null>
-  >({});
-
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
   useEffect(() => {
     masksRef.current = new Map(piiMasks.map((mask) => [mask.token, mask]));
   }, [piiMasks]);
+  return masksRef;
+}
 
-  const executeRegistered = useCallback(
+/** Applies a call's outcome unless a newer execution of it took over. */
+function settleToolState(
+  setToolStates: Dispatch<SetStateAction<ToolStates>>,
+  callId: string,
+  running: TrackedToolState,
+  settled: TrackedToolState | undefined,
+): void {
+  setToolStates((current) =>
+    current[callId] === running ? { ...current, [callId]: settled } : current,
+  );
+}
+
+function toolDependencies(
+  threadId: string,
+  callId: string,
+  options: ExecutionOptions,
+): OutlookToolDependencies {
+  return {
+    extractAttachmentText: (file) =>
+      addAttachmentAsSource(
+        outlookAttachmentSourceApi,
+        threadId,
+        file,
+        options.signal,
+      ),
+    signal: options.signal,
+    expectedItemKey: options.expectedItemKey,
+    expectedReplySourceKey: options.expectedReplySourceKey,
+    draftId: callId,
+  };
+}
+
+type SetToolStates = Dispatch<SetStateAction<ToolStates>>;
+type MaskLookup = RefObject<ReadonlyMap<string, PiiMask>>;
+
+function useExecuteRegistered(
+  threadId: string,
+  masksRef: MaskLookup,
+  setToolStates: SetToolStates,
+) {
+  return useCallback(
     async (
       executeTool: Executor,
       call: ClientToolCall,
@@ -159,49 +167,22 @@ export function useStandaloneOutlookTools({
       const params = resolveParams(call.params, masksRef.current);
       const outcome = await executeTool(
         { ...call, params },
-        {
-          extractAttachmentText: (file) =>
-            addAttachmentAsSource(
-              outlookAttachmentSourceApi,
-              threadId,
-              file,
-              options.signal,
-            ),
-          signal: options.signal,
-          expectedItemKey: options.expectedItemKey,
-          expectedReplySourceKey: options.expectedReplySourceKey,
-          draftId: call.id,
-        },
+        toolDependencies(threadId, call.id, options),
       );
-      setToolStates((current) =>
-        current[call.id] === running
-          ? {
-              ...current,
-              [call.id]: options.signal?.aborted
-                ? undefined
-                : { ...running, state: outcome },
-            }
-          : current,
+      settleToolState(
+        setToolStates,
+        call.id,
+        running,
+        options.signal?.aborted ? undefined : { ...running, state: outcome },
       );
       return outcome;
     },
-    [threadId],
+    [threadId, masksRef, setToolStates],
   );
+}
 
-  const execute = useCallback(
-    async (
-      call: OutlookToolCall,
-      options: ExecutionOptions,
-    ): Promise<OutlookToolOutcome> => {
-      const executor = outlookClientTools.get(call.name)?.execute;
-      return executor
-        ? executeRegistered(executor, call, options)
-        : { status: 'failed', failure: 'officeFailed' };
-    },
-    [executeRegistered],
-  );
-
-  const reply = useCallback(
+function useOpenReply(masksRef: MaskLookup, setToolStates: SetToolStates) {
+  return useCallback(
     async (
       call: OutlookToolCall,
       recipients: OutlookReplyRecipients,
@@ -215,78 +196,49 @@ export function useStandaloneOutlookTools({
         typeof body === 'string' ? body : '',
         { expectedItemKey, draftId: call.id },
       );
-      setToolStates((current) =>
-        current[call.id] === running
-          ? {
-              ...current,
-              [call.id]:
-                outcome.status === 'opened' ? undefined : { state: outcome },
-            }
-          : current,
+      settleToolState(
+        setToolStates,
+        call.id,
+        running,
+        outcome.status === 'opened' ? undefined : { state: outcome },
       );
     },
-    [],
+    [masksRef, setToolStates],
   );
+}
 
-  const dispatch: ClientToolDispatch<
-    OutlookToolDependencies,
-    OutlookToolOutcome
-  > = {
-    registry: outlookClientTools,
-    expectsResult: ({ name }) => isAwaitingResultTool(name),
-    resumeOnOpen() {
-      const chatItem = chatItemKey(threadId);
-      const itemKey =
-        chatItem === undefined ? currentOutlookItemKey() : chatItem;
-      runOrigin.current = {
-        itemKey,
-        observingFromReply:
-          itemKey !== null && itemKey === currentOutlookReplySourceKey(),
-      };
-      // Reopening can continue a read on the same mail. Earlier writes stay handled.
-      return Boolean(chatItem) && chatItem === currentOutlookItemKey();
+function useToolExecution(threadId: string, masksRef: MaskLookup) {
+  const [toolStates, setToolStates] = useState<ToolStates>({});
+  const executeRegistered = useExecuteRegistered(
+    threadId,
+    masksRef,
+    setToolStates,
+  );
+  const execute = useCallback(
+    async (
+      call: OutlookToolCall,
+      options: ExecutionOptions,
+    ): Promise<OutlookToolOutcome> => {
+      const executor = outlookClientTools.get(call.name)?.execute;
+      return executor
+        ? executeRegistered(executor, call, options)
+        : { status: 'failed', failure: 'officeFailed' };
     },
-    onBeginRun(takesOverStartedRun) {
-      runOrigin.current = {
-        itemKey: itemKeyForRun(threadId, takesOverStartedRun),
-        observingFromReply: false,
-      };
-    },
-    canDispatch() {
-      const { itemKey, observingFromReply } = runOrigin.current;
-      // A separate reply pane can observe the original run without executing it.
-      return !observingFromReply || itemKey !== currentOutlookReplySourceKey();
-    },
-    shouldExecute({ name }) {
-      return (
-        isOutlookTool(name) && !waitsForUser(name, runOrigin.current.itemKey)
-      );
-    },
-    onCalls(calls) {
-      const { itemKey } = runOrigin.current;
-      const latestDraft = calls
-        .filter(({ name }) => isOutlookTool(name) && isOutlookDraftTool(name))
-        .at(-1);
-      if (latestDraft)
-        rememberOutlookDraftSource(threadId, latestDraft.id, itemKey);
-      setCallItemKeys((current) => ({
-        ...current,
-        ...Object.fromEntries(calls.map(({ id }) => [id, itemKey])),
-      }));
-    },
-    async invoke(executor, call, signal) {
-      const outcome = await executeRegistered(executor, call, {
-        signal,
-        expectedItemKey: runOrigin.current.itemKey,
-      });
-      return outcome.status === 'result' ? outcome.result : undefined;
-    },
-  };
+    [executeRegistered],
+  );
+  const reply = useOpenReply(masksRef, setToolStates);
+  return { toolStates, executeRegistered, execute, reply };
+}
 
-  // A recorded draft keeps its own source across panes. For an older chat
-  // with no record, only the latest turn can use the chat's current email.
+// A recorded draft keeps its own source across panes. For an older chat
+// with no record, only the latest turn can use the chat's current email.
+function useReplyItemKey(
+  threadId: string,
+  messages: readonly Message[],
+  callItemKeys: CallItemKeys,
+) {
   const latestDraftId = useMemo(() => latestDraftCallId(messages), [messages]);
-  const replyItemKey = useCallback(
+  return useCallback(
     (toolCallId: string): string | null => {
       if (toolCallId !== latestDraftId) return null;
       if (toolCallId in callItemKeys) return callItemKeys[toolCallId];
@@ -299,53 +251,134 @@ export function useStandaloneOutlookTools({
     },
     [callItemKeys, latestDraftId, messages, threadId],
   );
+}
 
+function visibleToolState(
+  tracked: TrackedToolState | undefined,
+  mailboxItem: unknown,
+): OutlookToolState | undefined {
+  if (tracked && 'replyItem' in tracked && tracked.replyItem !== mailboxItem) {
+    return undefined;
+  }
+  return tracked?.state;
+}
+
+interface ToolBridgeInputs extends Pick<
+  ReturnType<typeof useToolExecution>,
+  'toolStates' | 'execute' | 'reply'
+> {
+  replyItemKey: (toolCallId: string) => string | null;
+  latestMessages: () => readonly Message[];
+  mailboxItem: unknown;
+  openItemKey: string | null;
+  replySourceKey: string | null;
+}
+
+function createToolBridge({
+  toolStates,
+  execute,
+  reply,
+  replyItemKey,
+  latestMessages,
+  mailboxItem,
+  openItemKey,
+  replySourceKey,
+}: ToolBridgeInputs): OutlookToolBridge {
+  // Only the latest draft, still waiting for the user, can leave the chat.
+  const draftSource = (call: OutlookToolCall) => {
+    if (call.id !== latestDraftCallId(latestMessages())) return null;
+    const source = replyItemKey(call.id);
+    return source && waitsForUser(call.name, source) ? source : null;
+  };
+  return {
+    stateFor: (toolCallId) =>
+      visibleToolState(toolStates[toolCallId], mailboxItem),
+    draftAction: ({ id, name }) => {
+      const source = replyItemKey(id);
+      if (!source || !waitsForUser(name, source)) return null;
+      if (source === replySourceKey) return 'insert';
+      return source === openItemKey ? 'reply' : null;
+    },
+    insertDraft: (call) => {
+      const source = draftSource(call);
+      if (!source) return;
+      void execute(
+        { ...call, name: OUTLOOK_TOOL.moveEmailToComposer },
+        { expectedReplySourceKey: source },
+      );
+    },
+    openReply: (call, recipients) => {
+      const source = draftSource(call);
+      if (source) void reply(call, recipients, source);
+    },
+  };
+}
+
+function useToolBridge(
+  inputs: Omit<
+    ToolBridgeInputs,
+    'mailboxItem' | 'openItemKey' | 'replySourceKey'
+  >,
+): OutlookToolBridge | null {
+  const mailboxItem = useSyncExternalStore(
+    subscribeToOutlookItem,
+    currentOutlookMailboxItem,
+  );
   const openItemKey = currentOutlookItemKey();
   const replySourceKey = currentOutlookReplySourceKey();
-  const bridge = useMemo<OutlookToolBridge | null>(() => {
-    return {
-      stateFor: (toolCallId) => {
-        const tracked = toolStates[toolCallId];
-        if (
-          tracked &&
-          'replyItem' in tracked &&
-          tracked.replyItem !== mailboxItem
-        ) {
-          return undefined;
-        }
-        return tracked?.state;
-      },
-      draftAction: ({ id, name }) => {
-        const source = replyItemKey(id);
-        if (!source || !waitsForUser(name, source)) return null;
-        if (source === replySourceKey) return 'insert';
-        return source === openItemKey ? 'reply' : null;
-      },
-      insertDraft: (call) => {
-        if (call.id !== latestDraftCallId(messagesRef.current)) return;
-        const source = replyItemKey(call.id);
-        if (!source || !waitsForUser(call.name, source)) return;
-        void execute(
-          { ...call, name: OUTLOOK_TOOL.moveEmailToComposer },
-          { expectedReplySourceKey: source },
-        );
-      },
-      openReply: (call, recipients) => {
-        if (call.id !== latestDraftCallId(messagesRef.current)) return;
-        const source = replyItemKey(call.id);
-        if (!source || !waitsForUser(call.name, source)) return;
-        void reply(call, recipients, source);
-      },
-    };
-  }, [
-    openItemKey,
-    replySourceKey,
-    mailboxItem,
+  const { toolStates, execute, reply, replyItemKey, latestMessages } = inputs;
+  return useMemo(
+    () =>
+      createToolBridge({
+        toolStates,
+        execute,
+        reply,
+        replyItemKey,
+        latestMessages,
+        mailboxItem,
+        openItemKey,
+        replySourceKey,
+      }),
+    [
+      openItemKey,
+      replySourceKey,
+      mailboxItem,
+      toolStates,
+      replyItemKey,
+      execute,
+      reply,
+      latestMessages,
+    ],
+  );
+}
+
+/**
+ * Runs the Outlook tools of the chat's runs in the Outlook pane. Only calls
+ * made while the chat was open run: reopening a chat must not write an old
+ * draft into the open email again. Outside the pane it does nothing.
+ */
+export function useStandaloneOutlookTools({
+  threadId,
+  messages,
+  piiMasks,
+}: UseOutlookToolBridgeParams) {
+  const latestMessages = useLatestGetter(messages);
+  const masksRef = useMaskLookup(piiMasks);
+  const { toolStates, executeRegistered, execute, reply } = useToolExecution(
+    threadId,
+    masksRef,
+  );
+  const { dispatch, callItemKeys } = useOutlookToolDispatch(
+    threadId,
+    executeRegistered,
+  );
+  const replyItemKey = useReplyItemKey(threadId, messages, callItemKeys);
+  const bridge = useToolBridge({
     toolStates,
-    replyItemKey,
     execute,
     reply,
-  ]);
-
+    replyItemKey,
+    latestMessages,
+  });
   return { bridge, dispatch };
 }

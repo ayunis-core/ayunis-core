@@ -4,7 +4,7 @@ import {
   getModelModeDefaultsControllerGetDefaultSelectionQueryKey,
   type DefaultModelSelectionResponseDto,
 } from '@ayunis/api-client';
-import { resolveSelectedModel } from '@/widgets/model-select-options/lib/model-modes';
+import { resolveSelectedModel } from '@ayunis/chat/model-presentation';
 
 /**
  * Resolves the composer value (a model id or `mode:<mode>`) to the model a

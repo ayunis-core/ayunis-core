@@ -7,7 +7,7 @@ import {
   getFlagCodeByProvider,
   getHostedInByProvider,
   getHostingPriority,
-} from './model-provider-metadata';
+} from '@ayunis/chat/model-presentation';
 
 describe('model provider metadata', () => {
   it('returns backend hosted-in values for providers', () => {

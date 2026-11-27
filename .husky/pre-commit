@@ -37,13 +37,17 @@ E2E_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^ayunis-core-e2e/.*\.(ts|tsx
 PKG_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^packages/[^/]+/(src|examples)/.*\.(ts|tsx)$' | grep -v '/generated/' || true)
 PKG_DIRS=$(printf "%s\n" "$PKG_TS_STAGED" | sed -E 's#^(packages/[^/]+)/.*#\1#' | sort -u)
 
-# Complexity gate scope: ALL staged backend + workspace-package TS/TSX files. This
+# Standalone apps (apps/*): staged TS/TSX files, plus the distinct app dirs touched
+APP_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^apps/[^/]+/.*\.(ts|tsx)$' || true)
+APP_DIRS=$(printf "%s\n" "$APP_TS_STAGED" | sed -E 's#^(apps/[^/]+)/.*#\1#' | sort -u)
+
+# Complexity gate scope: ALL staged backend, workspace-package and app TS/TSX files. This
 # is intentionally broader than the lint scopes above (which target src/apps/
 # libs/test and src/examples) so it matches the CI "Complexity Check" workflow
 # (.github/workflows/complexity-check.yml) exactly — including root config files
 # like orval.config.ts / tsup.config.ts that CI complexity-checks but the lint
 # jobs skip. The eslint.complexity.config.mjs `ignores` handle exclusions.
-COMPLEXITY_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^(ayunis-core-backend|packages)/.*\.(ts|tsx)$' || true)
+COMPLEXITY_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '^(ayunis-core-backend|packages|apps)/.*\.(ts|tsx)$' || true)
 
 # All staged TS/TSX files (for file size check)
 ALL_TS_STAGED=$(printf "%s" "$STAGED_FILES" | grep -E '\.(ts|tsx)$' || true)
@@ -181,7 +185,7 @@ run_be_eslint() {
 # globbed `ignores`/`files` resolve identically for backend and package files.
 run_complexity() {
   STATUS_FILE="$1"
-  print_section "Complexity • ESLint (staged backend + packages TS/TSX)"
+  print_section "Complexity • ESLint (staged backend + packages + apps TS/TSX)"
   printf "%s\n" "$COMPLEXITY_TS_STAGED" | sed 's#^# - #'
   set +e
   printf "%s" "$COMPLEXITY_TS_STAGED" \
@@ -274,6 +278,25 @@ run_pkg_checks() {
   # shellcheck disable=SC2086
   ./scripts/check-duplication.sh "$pkg_dir" $pkg_src_staged || st=1
   printf "%s" "$st" > "$STATUS_FILE"
+}
+
+# ESLint for one standalone app under apps/*. Complexity is owned by the
+# dedicated `run_complexity` job (same eslint.complexity.config.mjs check as CI).
+run_app_checks() {
+  app_dir="$1"; STATUS_FILE="$2"
+  app_name=$(basename "$app_dir")
+  app_rel=$(printf "%s\n" "$APP_TS_STAGED" | grep -E "^${app_dir}/" | sed "s#^${app_dir}/##")
+  print_section "App ${app_name} • ESLint (staged TS/TSX)"
+  printf "%s\n" "$app_rel" | sed 's#^# - #'
+  set +e
+  (
+    cd "$app_dir" >/dev/null 2>&1
+    printf "%s" "$app_rel" | tr '\n' '\0' \
+      | xargs -0 pnpm exec eslint --format stylish --max-warnings=0 --no-warn-ignored $ESLINT_FIX_ARGS
+  )
+  STATUS=$?
+  set -e
+  printf "%s" "$STATUS" > "$STATUS_FILE"
 }
 
 run_e2e_checks() {
@@ -429,6 +452,17 @@ if [ -n "$PKG_TS_STAGED" ]; then
   done
 fi
 
+# Standalone app checks (apps/*) — one parallel job per touched app
+APP_STATUS_ENTRIES=""
+if [ -n "$APP_TS_STAGED" ]; then
+  for app_dir in $APP_DIRS; do
+    app_safe=$(printf "%s" "$app_dir" | tr '/' '_')
+    app_status_file="$STATUS_DIR/${app_safe}.status"
+    APP_STATUS_ENTRIES="$APP_STATUS_ENTRIES ${app_dir}:${app_status_file}"
+    run_app_checks "$app_dir" "$app_status_file" &
+  done
+fi
+
 # File size check (all staged TS/TSX)
 if [ -n "$ALL_TS_STAGED" ]; then
   run_file_size "$FILE_SIZE_STATUS_FILE" &
@@ -565,6 +599,20 @@ if [ -n "$PKG_TS_STAGED" ]; then
       FAILED=1
     else
       printf "%b\n" "${GREEN}✅ Package ${pkg_name} checks passed${NC}"
+    fi
+  done
+fi
+if [ -n "$APP_TS_STAGED" ]; then
+  for entry in $APP_STATUS_ENTRIES; do
+    app_dir=${entry%%:*}
+    app_status_file=${entry#*:}
+    app_name=$(basename "$app_dir")
+    app_status=$(cat "$app_status_file" 2>/dev/null || printf "0")
+    if [ "$app_status" -ne 0 ]; then
+      printf "%b\n" "${RED}❌ App ${app_name} ESLint failed${NC}"
+      FAILED=1
+    else
+      printf "%b\n" "${GREEN}✅ App ${app_name} ESLint passed${NC}"
     fi
   done
 fi

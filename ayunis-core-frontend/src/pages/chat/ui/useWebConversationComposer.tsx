@@ -9,6 +9,7 @@ import type {
 import {
   LongChatWarning,
   ProviderFaultNotice,
+  getModeValue,
 } from '@ayunis/chat/model-presentation';
 import type { SendMessageInput } from '@ayunis/chat/runs';
 import {
@@ -24,7 +25,6 @@ import {
   deferThreadRun,
   useIsThreadRunDeferred,
 } from '@/features/thread-run';
-import { getModeValue } from '@/widgets/model-select-options';
 import { useTranslation } from 'react-i18next';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
 import { readChatDraft, writeChatDraft } from '@/shared/lib/chat-draft-storage';

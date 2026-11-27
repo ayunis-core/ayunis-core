@@ -350,7 +350,8 @@ This installs Husky and configures Git to use the hooks in the `.husky/` directo
 - **pre-commit**: Runs linting and formatting checks on staged files
   - Frontend: ESLint, Prettier, and TypeScript type checking
   - Backend: ESLint, Prettier, and TypeScript type checking
-  - Complexity check (ESLint `complexity` / `max-lines-per-function` on staged backend and package `.ts` files, same rules as CI)
+  - Outlook app (`apps/outlook`): ESLint, including Prettier
+  - Complexity check (ESLint `complexity` / `max-lines-per-function` on staged backend, package and app `.ts`/`.tsx` files, same rules as CI)
   - Auto-fixes issues when possible (set `PRECOMMIT_NO_FIX=1` to disable auto-fix)
 
 - **commit-msg**: Validates commit message format
