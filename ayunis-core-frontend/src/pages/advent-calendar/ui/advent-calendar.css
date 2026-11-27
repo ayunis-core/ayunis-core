@@ -1,0 +1,232 @@
+.advent-calendar-scene {
+  --advent-snow: color-mix(in oklab, var(--brand) 45%, var(--background));
+}
+
+.dark .advent-calendar-scene {
+  --advent-snow: oklch(0.97 0 0);
+}
+
+/* String of lights */
+
+.advent-calendar-bulb {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  margin-top: 2px;
+  margin-left: -4px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background: var(--bulb);
+  box-shadow: 0 0 8px 1px color-mix(in oklab, var(--bulb) 75%, transparent);
+}
+
+.advent-calendar-bulb::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 1.5px;
+  width: 5px;
+  height: 4px;
+  border-radius: 1px;
+  background: var(--muted-foreground);
+}
+
+.advent-calendar-bulb:nth-of-type(4n + 1) {
+  --bulb: var(--destructive);
+}
+
+.advent-calendar-bulb:nth-of-type(4n + 2) {
+  --bulb: var(--warning);
+}
+
+.advent-calendar-bulb:nth-of-type(4n + 3) {
+  --bulb: var(--chart-2);
+}
+
+.advent-calendar-bulb:nth-of-type(4n + 4) {
+  --bulb: var(--brand);
+}
+
+.advent-calendar-scene[data-effects='on'] .advent-calendar-bulb {
+  animation: advent-calendar-twinkle ease-in-out infinite alternate;
+}
+
+/* Snow: each column falls the height of the scene, its flake sways. */
+
+.advent-calendar-snowfall {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  animation: advent-calendar-snowfall linear infinite;
+  will-change: transform, opacity;
+}
+
+.advent-calendar-flake {
+  display: block;
+  border-radius: 9999px;
+  background: var(--advent-snow);
+  box-shadow: 0 0 3px var(--advent-snow);
+  animation: advent-calendar-sway ease-in-out infinite alternate;
+}
+
+/* Doors */
+
+.advent-calendar-door {
+  perspective: 700px;
+}
+
+.advent-calendar-door:hover,
+.advent-calendar-door:focus-visible {
+  z-index: 1;
+}
+
+.advent-calendar-door__leaf {
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+
+.advent-calendar-door__leaf::before {
+  content: '';
+  position: absolute;
+  inset: 6%;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 4px);
+  pointer-events: none;
+}
+
+.advent-calendar-door__knob {
+  position: absolute;
+  top: 50%;
+  right: 13%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 35% 35%,
+    color-mix(in oklab, var(--warning) 35%, white),
+    var(--warning) 55%,
+    color-mix(in oklab, var(--warning) 55%, black)
+  );
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.25);
+}
+
+.advent-calendar-door[data-state='empty'] .advent-calendar-door__knob {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.advent-calendar-door__inside {
+  background:
+    radial-gradient(
+      circle at 75% 50%,
+      color-mix(in oklab, var(--warning) 40%, transparent),
+      transparent 65%
+    ),
+    var(--muted);
+}
+
+.advent-calendar-door[data-state='opened'] .advent-calendar-door__leaf {
+  transform: rotateY(-48deg);
+}
+
+.advent-calendar-scene[data-effects='on'] .advent-calendar-door__leaf {
+  transition:
+    transform 450ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 450ms ease;
+}
+
+.advent-calendar-scene[data-effects='on']
+  .advent-calendar-door[data-state='openable']:is(:hover, :focus-visible)
+  .advent-calendar-door__leaf {
+  transform: rotateY(-32deg);
+  box-shadow: 8px 4px 16px -8px rgb(0 0 0 / 0.45);
+}
+
+.advent-calendar-scene[data-effects='on']
+  .advent-calendar-door[data-state='opened']:is(:hover, :focus-visible)
+  .advent-calendar-door__leaf {
+  transform: rotateY(-60deg);
+}
+
+.advent-calendar-scene[data-effects='on']
+  .advent-calendar-door[data-today='true']::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: 0 0 20px 4px color-mix(in oklab, var(--brand) 60%, transparent);
+  pointer-events: none;
+  animation: advent-calendar-glow 2.4s ease-in-out infinite alternate;
+}
+
+/* Candle flames on the wreath */
+
+.advent-calendar-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.advent-calendar-scene[data-effects='on'] .advent-calendar-flame {
+  animation: advent-calendar-flicker 1.4s ease-in-out infinite alternate;
+}
+
+.advent-calendar-scene[data-effects='on']
+  .advent-calendar-candle:nth-of-type(even)
+  .advent-calendar-flame {
+  animation-duration: 1.1s;
+  animation-delay: -0.4s;
+}
+
+@keyframes advent-calendar-twinkle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+@keyframes advent-calendar-snowfall {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  8%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes advent-calendar-sway {
+  from {
+    transform: translateX(-6px);
+  }
+  to {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes advent-calendar-glow {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes advent-calendar-flicker {
+  0% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(0.9, 1.08) skewX(3deg);
+  }
+  100% {
+    transform: scale(1.05, 0.94) skewX(-3deg);
+  }
+}

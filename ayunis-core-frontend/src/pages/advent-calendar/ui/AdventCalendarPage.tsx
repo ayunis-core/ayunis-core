@@ -8,6 +8,8 @@ import {
   AlertTitle,
 } from '@ayunis/ui/components/alert';
 import { Button } from '@ayunis/ui/components/button';
+import { Label } from '@ayunis/ui/components/label';
+import { Switch } from '@ayunis/ui/components/switch';
 import {
   Empty,
   EmptyContent,
@@ -22,14 +24,11 @@ import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayou
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import {
   adventSeasonYear,
-  litCandleCount,
-  todaysDoor,
   useAdventCalendar,
   useOpenedAdventDoors,
 } from '@/features/advent-calendar';
-import { doorDisplayState } from '@/pages/advent-calendar/model/door-display-state';
-import { AdventWreath } from './AdventWreath';
-import { AdventCalendarDoor } from './AdventCalendarDoor';
+import { useAdventEffects } from '@/pages/advent-calendar/lib/useAdventEffects';
+import { AdventCalendarBoard } from './AdventCalendarBoard';
 import { AdventCalendarDoorDialog } from './AdventCalendarDoorDialog';
 
 interface AdventCalendarPageProps {
@@ -40,11 +39,21 @@ export default function AdventCalendarPage({
   door,
 }: Readonly<AdventCalendarPageProps>) {
   const { t } = useTranslation('advent-calendar');
-  const { calendar, isShown, isLoading, error, refetch } = useAdventCalendar();
+  const { calendar, receivedAt, isShown, isLoading, error, refetch } =
+    useAdventCalendar();
+  const { effectsOn, setEffectsOn } = useAdventEffects();
 
   let content = null;
   if (calendar && isShown) {
-    content = <AdventCalendar calendar={calendar} selectedDoor={door} />;
+    content = (
+      <AdventCalendar
+        calendar={calendar}
+        receivedAt={receivedAt}
+        effectsOn={effectsOn}
+        selectedDoor={door}
+        onDoorDue={() => void refetch()}
+      />
+    );
   } else if (error) {
     content = (
       <CalendarMessage
@@ -70,7 +79,15 @@ export default function AdventCalendarPage({
     <AppLayout>
       <ContentAreaLayout
         contentHeader={
-          <ContentAreaHeader breadcrumbs={[{ label: t('page.title') }]} />
+          <ContentAreaHeader
+            breadcrumbs={[{ label: t('page.title') }]}
+            action={
+              calendar &&
+              isShown && (
+                <EffectsSwitch checked={effectsOn} onChange={setEffectsOn} />
+              )
+            }
+          />
         }
         contentArea={content}
       />
@@ -78,20 +95,46 @@ export default function AdventCalendarPage({
   );
 }
 
+interface EffectsSwitchProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+function EffectsSwitch({ checked, onChange }: Readonly<EffectsSwitchProps>) {
+  const { t } = useTranslation('advent-calendar');
+  return (
+    <div className="flex items-center gap-2">
+      <Switch
+        id="advent-calendar-effects"
+        checked={checked}
+        onCheckedChange={onChange}
+        data-testid="advent-calendar-effects-switch"
+      />
+      <Label htmlFor="advent-calendar-effects">{t('effects.label')}</Label>
+    </div>
+  );
+}
+
 interface AdventCalendarProps {
   calendar: AdventCalendarResponseDto;
+  receivedAt: number;
+  effectsOn: boolean;
   selectedDoor?: number;
+  onDoorDue: () => void;
 }
 
 function AdventCalendar({
   calendar,
+  receivedAt,
+  effectsOn,
   selectedDoor,
+  onDoorDue,
 }: Readonly<AdventCalendarProps>) {
   const { t } = useTranslation('advent-calendar');
   const navigate = useNavigate({ from: '/advent-calendar' });
-  const now = new Date(calendar.now);
-  const today = todaysDoor(now);
-  const { isOpened, markOpened } = useOpenedAdventDoors(adventSeasonYear(now));
+  const { isOpened, markOpened } = useOpenedAdventDoors(
+    adventSeasonYear(new Date(calendar.now)),
+  );
 
   const openDoor = calendar.doors.find(
     (candidate) => candidate.day === selectedDoor && candidate.content,
@@ -115,20 +158,14 @@ function AdventCalendar({
           <AlertDescription>{t('preview.description')}</AlertDescription>
         </Alert>
       )}
-      <div className="advent-calendar-board grid grid-flow-row-dense grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3">
-        <div className="col-span-2 col-start-2 row-span-2 row-start-3 flex items-center sm:col-start-3 sm:row-span-3 sm:row-start-2">
-          <AdventWreath litCandles={litCandleCount(now)} />
-        </div>
-        {calendar.doors.map((calendarDoor) => (
-          <AdventCalendarDoor
-            key={calendarDoor.day}
-            day={calendarDoor.day}
-            state={doorDisplayState(calendarDoor, isOpened)}
-            isToday={calendarDoor.day === today}
-            onOpen={selectDoor}
-          />
-        ))}
-      </div>
+      <AdventCalendarBoard
+        calendar={calendar}
+        receivedAt={receivedAt}
+        effectsOn={effectsOn}
+        isOpened={isOpened}
+        onOpen={selectDoor}
+        onDoorDue={onDoorDue}
+      />
       <AdventCalendarDoorDialog
         door={
           openDoor?.content
