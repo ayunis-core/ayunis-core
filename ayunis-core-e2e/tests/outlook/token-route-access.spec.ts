@@ -48,7 +48,10 @@ function routesByScope(threadId: string): Record<string, RouteCall[]> {
       { method: "GET", path: `/threads/${threadId}/sources` },
       { method: "DELETE", path: `/threads/${threadId}/sources/${MISSING}` },
     ],
-    voice: [{ method: "POST", path: "/transcriptions" }],
+    voice: [
+      { method: "POST", path: "/transcriptions" },
+      { method: "POST", path: "/speech" },
+    ],
   };
 }
 

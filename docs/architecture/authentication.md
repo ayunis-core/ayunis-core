@@ -433,7 +433,7 @@ policies.
 | `chat` | Threads, runs, message images, citations and PII reveal |
 | `uploads` | Direct upload and thread source management |
 | `models:read` | Model availability, modes and default selection |
-| `voice` | Transcription |
+| `voice` | Transcription and read aloud |
 | `chat-settings:read` | Chat-start defaults |
 | `academy:read` | Academy access status |
 

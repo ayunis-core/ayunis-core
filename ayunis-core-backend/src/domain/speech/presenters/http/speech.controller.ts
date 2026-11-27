@@ -6,9 +6,11 @@ import { pipeline } from 'node:stream/promises';
 import { reportUnexpectedError } from 'src/common/errors/report-unexpected-error.helper';
 import { RequireFeature } from 'src/common/guards/feature.guard';
 import { FeatureFlag } from 'src/config/features.config';
+import { SurfaceScope } from 'src/config/surface-scope';
 import { SynthesizeSpeechCommand } from 'src/domain/speech/application/use-cases/synthesize-speech/synthesize-speech.command';
 import { SynthesizeSpeechUseCase } from 'src/domain/speech/application/use-cases/synthesize-speech/synthesize-speech.use-case';
 import { RequireAcademyCertificate } from 'src/iam/academy-access/application/decorators/academy-certificate.decorator';
+import { RequireSurfaceScope } from 'src/iam/authorization/application/decorators/surface-scope.decorator';
 import { ApiSynthesizeSpeech } from './decorators/api-synthesize-speech.decorator';
 import { SynthesizeSpeechDto } from './dto/synthesize-speech.dto';
 
@@ -24,6 +26,7 @@ export class SpeechController {
     private readonly synthesizeSpeechUseCase: SynthesizeSpeechUseCase,
   ) {}
 
+  @RequireSurfaceScope(SurfaceScope.VOICE)
   @Post()
   @ApiSynthesizeSpeech()
   async synthesize(
