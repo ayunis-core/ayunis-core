@@ -69,6 +69,7 @@ vi.mock('./PinnedSkills', () => ({ PinnedSkills: () => null }));
 vi.mock('./UnreadNotificationsPanel', () => ({
   UnreadNotificationsPanel: () => null,
 }));
+vi.mock('./AdventCalendarCard', () => ({ AdventCalendarCard: () => null }));
 vi.mock('./WorkspacePicker', () => ({
   WorkspacePicker: () => <div data-testid="workspace-picker" />,
 }));

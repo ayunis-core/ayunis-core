@@ -36,6 +36,7 @@ import {
   type OnboardingChat,
 } from '@/pages/new-chat/lib/onboarding-chat';
 import { UnreadNotificationsPanel } from './UnreadNotificationsPanel';
+import { AdventCalendarCard } from './AdventCalendarCard';
 import { useAppChatSurface } from '@/features/chat-surface';
 
 interface NewChatPageProps {
@@ -271,11 +272,12 @@ export default function NewChatPage({
       leadingContent={
         <>
           {!isCreating && (
-            <div className="mb-1.5 flex justify-start">
+            <div className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
               <WorkspacePicker
                 workspaceId={workspaceId}
                 onWorkspaceChange={handleWorkspaceChange}
               />
+              <AdventCalendarCard className="ml-auto" />
             </div>
           )}
           <AcademyGateNotice className="mb-2" />

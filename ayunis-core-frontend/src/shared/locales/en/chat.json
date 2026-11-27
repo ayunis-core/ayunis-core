@@ -429,6 +429,7 @@
     "configureModel": "Configure Model",
     "upgradeToProError": "You need to upgrade to a paid plan to use this feature.",
     "privacyHint": "Only you can see your chats.",
+    "adventCalendarCard": "Door {{day}} is open",
     "onboardingHint": {
       "profile": {
         "title": "Let me get to know you",
