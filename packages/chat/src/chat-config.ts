@@ -31,6 +31,8 @@ export type ChatNavigationTarget =
   | { readonly kind: 'releaseNote'; readonly releaseNoteId: string }
   | { readonly kind: 'notification'; readonly notificationId: string }
   | { readonly kind: 'recording'; readonly recordingId: string }
+  /** A chat of the history; `History` opens it through `onSelect`. */
+  | { readonly kind: 'thread'; readonly threadId: string }
   /** The inbox, filtered to one notification type. */
   | { readonly kind: 'inbox'; readonly type: NotificationType }
   | { readonly kind: 'releaseNotes' }

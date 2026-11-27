@@ -10,13 +10,7 @@ import type { PiiMaskEntry } from '@ayunis/chat/markdown';
 import { showError, showSuccess } from './chat-toasts';
 import { useConfirmDialog } from './confirm-dialog';
 import { mergePiiMasks } from './merge-pii-masks';
-
-function errorCode(error: unknown): string | undefined {
-  if (typeof error !== 'object' || error === null) return undefined;
-  const { response } = error as { response?: { data?: { code?: unknown } } };
-  const code = response?.data?.code;
-  return typeof code === 'string' ? code : undefined;
-}
+import { apiErrorCode } from './api-error-code';
 
 function useUnmaskMutation() {
   const { t } = useTranslation('chat');
@@ -35,7 +29,7 @@ function useUnmaskMutation() {
       },
       onError: (error: unknown) => {
         showError(
-          errorCode(error) === 'THREAD_PII_MASK_NOT_FOUND'
+          apiErrorCode(error) === 'THREAD_PII_MASK_NOT_FOUND'
             ? t('chat.piiMask.unmaskNotFound')
             : t('chat.piiMask.unmaskError'),
         );

@@ -162,13 +162,16 @@ interface PaneViewProps {
   readonly onError: () => void;
 }
 
-function PaneHistoryView({ session, runtime, onError }: PaneViewProps) {
+function PaneHistoryView(props: PaneViewProps) {
+  const { session, runtime, onError } = props;
   const { navigation, lifecycle } = runtime;
+  const startNewChat = () => navigation.startNewChat(currentOutlookItemKey());
   return (
     <PaneChatHistory
-      onBack={() => navigation.startNewChat(currentOutlookItemKey())}
+      config={paneChatConfig(props, startNewChat)}
+      lifecycle={lifecycle}
+      onBack={startNewChat}
       onSignOut={session.signOut}
-      session={lifecycle.getSessionSignal()}
       onSelect={navigation.openThread}
       onError={onError}
     />

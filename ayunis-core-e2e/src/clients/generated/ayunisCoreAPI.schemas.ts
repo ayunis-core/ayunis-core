@@ -8287,7 +8287,7 @@ type?: ThreadType;
  */
 routineId?: string;
 /**
- * Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit to list only threads started in the web app.
+ * Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit for the session's own client: the web app's threads for a browser session or API key, the pane's for an Outlook token.
  */
 client?: SessionClient;
 /**

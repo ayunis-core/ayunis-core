@@ -8,7 +8,6 @@ import {
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  ChatSurface,
   Conversation,
   createClientToolRegistry,
   type ChatConfig,
@@ -350,7 +349,7 @@ describe('shared chat composition', () => {
     expect(await screen.findByText('Ready now')).toBeTruthy();
   });
 
-  it('shows a first message waiting for its file instead of the empty state', () => {
+  it('shows a first message waiting for its file as pending', () => {
     const processing = {
       ...first,
       sources: [
@@ -363,15 +362,12 @@ describe('shared chat composition', () => {
       <Conversation
         threadId={first.id}
         config={chatConfig({ send: vi.fn() })}
-        emptyState={<p data-testid="empty-chat" />}
       />,
       [processing],
     );
-    expect(screen.getByTestId('empty-chat')).toBeTruthy();
 
     send('Wait for the file');
 
-    expect(screen.queryByTestId('empty-chat')).toBeNull();
     expect(screen.getByTestId('pending-user-message').textContent).toContain(
       'Wait for the file',
     );
@@ -1531,18 +1527,6 @@ describe('shared chat composition', () => {
     expect(requests.some(({ method }) => method === 'POST')).toBe(false);
     await act(async () => pending.close());
   });
-});
-
-it('leaves the viewport unobstructed when a conditional header renders nothing', () => {
-  const { container } = render(
-    <ChatSurface
-      slots={{ header: () => false }}
-      renderContent={() => <p>Conversation</p>}
-      composer={<p>Composer</p>}
-    />,
-  );
-  expect(container.querySelector('.content-scroll-header')).toBeNull();
-  expect(container.querySelector('.content-scroll-header-offset')).toBeNull();
 });
 
 describe('package-owned conversation surface', () => {

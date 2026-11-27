@@ -35,10 +35,9 @@ The package also provides shared chat views:
 - `@ayunis/chat/attachments` renders the canonical source, knowledge-base, and
   integration badges, including upload, processing, reindexing, and failure
   states. Hosts supply source data and removal callbacks.
-- `@ayunis/chat/history` renders history lists, entries, loading/error/empty
-  states, pagination, and thread rename/delete dialogs. Hosts retain queries,
-  routing, mutation side effects, and row-specific actions; pagination exposes
-  a typed control renderer when a host must preserve router-link semantics.
+- `@ayunis/chat/history` exports the chat row (`ChatHistoryEntry`) and the
+  rename dialog for Web's lists outside the chat (the sidebar, a workspace's
+  and a routine's chats). The chat history itself is the `History` screen.
 - `@ayunis/chat/model-presentation` owns the canonical academy gate,
   unavailable-model, provider-fault, and long-chat notices. Hosts supply status
   and actions such as academy navigation or starting a new chat.
@@ -48,11 +47,11 @@ The package also provides shared chat views:
 - `@ayunis/chat/notifications` renders a notification type's icon and its
   unread count, which the new chat's unread tabs and the hosts' inbox share.
 
-`@ayunis/chat/surface` provides the `NewChat` and `Conversation` screens, the
-embedded `NewChatComposer`, scrolling shell, run lifecycle, and the
-`ChatConfig` contract. Hosts
-import `@ayunis/chat/surface.css`; they do not supply replacement conversation,
-header or composer renderers.
+`@ayunis/chat/surface` provides the chat's four public screens, `NewChat`,
+`Conversation`, `History` and the embedded `NewChatComposer`, the run
+lifecycle, and the `ChatConfig` contract. Hosts import
+`@ayunis/chat/surface.css`; they render only these screens, each with a
+`ChatConfig`, and own only the frame around them.
 
 ## ChatConfig
 
@@ -78,11 +77,13 @@ Each surface describes itself with one `ChatConfig`:
   targets) and `newChat` (a New chat button in the header): conversation
   features shown only when their data is passed.
 - `toolCards` and `clientTools`: the rich-card and client-tool registries.
-- `events`: `onNewChat` (the notices' New chat action), `onThreadStarted` (a
+- `events`: `onNewChat` (the notices' and the empty history's New chat
+  action), `onThreadStarted` (a
   new chat was started; the host opens it), `onNavigate` and `hrefFor` (links
   that leave the chat: the academy, the trail, a chat's origin, a cited
   recording, and the unread notifications and product updates; without
-  `onNavigate` the academy, origin and recording links are not shown),
+  `onNavigate` the academy, origin and recording links are not shown;
+  `hrefFor` also gives a history row's chat its address),
   `onOpenArtifact`, `onThreadState` (the chat's live messages and masks),
   `onThreadDeleted`, `onRunError`, `onRunSettled`, `observeRun`,
   `onMessageCopied`, `onCodeCopied`, `onUnauthorized` and `onError`.
@@ -90,7 +91,14 @@ Each surface describes itself with one `ChatConfig`:
   voice, send, model and anonymous controls, the workspace picker and the
   pinned skills.
 
-The config carries no UI. The composer fetches its shared data itself through
+The config carries no UI: no `ReactNode`, component or render function, in
+`ChatConfig` or in the props of the screens. The tool-card and client-tool
+registries are the exceptions the contract names: they register a tool's
+card by name. `screen-props-carry-no-ui.test.ts` fails the package
+`typecheck` when a field that can hold UI is added. A feature shows when its
+data is passed; there are no on/off flags.
+
+The composer fetches its shared data itself through
 `@ayunis/api-client`, with the transport the host configured through
 `configureApiTransport` and the host's `QueryClientProvider`: permitted models
 and modes, the default selection and chat-start defaults, the embedding and
@@ -163,21 +171,62 @@ Client tools can register an executor, a custom card, or both by tool name.
 The shared lifecycle coordinates execution and routes results to the run.
 The host supplies the executor invocation and its context.
 
+## History
+
+Render `History` from `@ayunis/chat/surface` with the surface's `ChatConfig`
+and `onSelect`, which opens a chat. The package loads the user's chats a page
+(20) at a time through `@ayunis/api-client` and renders the list, its loading,
+error (with retry) and empty states, and the pagination. The request names no
+surface: the session decides whose and which surface's chats come back, so an
+Outlook token lists only Outlook chats and the web app only its own.
+
+Each row links to its chat (`events.hrefFor` with `{ kind: 'thread' }` when
+the host has addresses, so it can open in a new tab) and offers Delete, with
+a confirmation and toasts; the pin and Move to workspace show when
+`favorites` and `workspaces` are passed, and favorites come first. Renaming
+happens in the conversation's header; the history lists the new title.
+Deleting the last chat of the last page goes back a page.
+
+`search` lists only the chats matching it. `pagination` lets the host keep
+the page, e.g. in its URL; otherwise the history keeps it and starts over when
+the search changes. `onEmptyChange` reports when the user has no chats at all,
+so the host can frame the empty state as a full-screen message. Pass the
+session's run `lifecycle`, as to `Conversation`, so deleting a chat stops its
+run. `chatHistoryQuery({ search, page })` is the page's query, e.g. for a
+route loader to prefetch.
+
+## NewChatComposer
+
+`NewChatComposer` is the fourth public screen: a new chat's composer alone,
+for a host page that embeds one (Web's workspace, notification, release-note
+and empty-state pages). It follows the same rules as the other three: a
+`ChatConfig` (the composer's part of it) and typed data (`workspaceId`,
+`origin`, `initialModel`, `placeholder`), no UI.
+
+## Test host
+
+`src/test-host` renders `NewChat`, `Conversation`, `History` and
+`NewChatComposer` from a `ChatConfig` alone, against a stand-in backend on the
+configured API transport. It covers sending and streaming, Stop, rejoining a
+run in progress, switching chats mid-stream, completing a registered client
+tool, renaming and deleting, and the history's pages. It runs with the
+package's `test` script in CI.
+
 ## Supported host entry points
 
 | Entry point | Purpose |
 | --- | --- |
-| `@ayunis/chat/surface` | `ChatConfig`, the `NewChat` and `Conversation` screens, the embedded new-chat composer, surface shell, slots, and client-tool registration |
+| `@ayunis/chat/surface` | `ChatConfig`, the `NewChat`, `Conversation` and `History` screens, the embedded `NewChatComposer`, `chatHistoryQuery`, and client-tool registration |
 | `@ayunis/chat/runs` | Transport contracts and the shared session lifecycle used for pre-navigation handoff |
 | `@ayunis/chat/new-chat` | The new-chat backdrop, for a host page in its place (e.g. without a model) |
 | `@ayunis/chat/notifications` | Notification type icons, appearance and unread-count formatting |
-| `@ayunis/chat/history` | Canonical history list, rows, states, pagination, rename, and delete presentation |
+| `@ayunis/chat/history` | The chat row and rename dialog for host lists outside the chat |
 | `@ayunis/chat/model-presentation` | Canonical selector hierarchy, modes, model metadata, and shared notices |
 | `@ayunis/chat/attachments` | Canonical source, knowledge-base, and integration badges |
 | `@ayunis/chat/messages`, `@ayunis/chat/timeline`, `@ayunis/chat/tool-cards` | Message/timeline rendering and registered rich tool cards |
 | `@ayunis/chat/markdown` | Markdown, citations, PII reveal, and legal-reference presentation |
 | `@ayunis/chat/workspaces` | Workspace icons, appearance catalogue, and picker menu body |
 
-Internal files under `packages/chat/src` are not host APIs. The package does not
-export a generic configured-history wrapper or a composer replacement slot;
-hosts compose routing and queries around the canonical public primitives.
+Internal files under `packages/chat/src` are not host APIs. The package exports
+no slot, render override or composer replacement; hosts frame the screens and
+resolve navigation in `events`.

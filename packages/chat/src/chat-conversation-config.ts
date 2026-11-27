@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
 import type { ChatConfig, ChatEvents } from './chat-config';
 import type { ClientToolDispatch } from './client-tool-dispatch';
@@ -27,8 +26,6 @@ export interface ConversationProps<Context = unknown, Outcome = unknown> {
   readonly threadId: string;
   /** Shares runs with the host's own new-chat start; owned by the conversation otherwise. */
   readonly lifecycle?: ChatRunLifecycle;
-  /** Shown for a chat without messages. */
-  readonly emptyState?: ReactNode;
 }
 
 export interface ChatActiveRunSnapshot {

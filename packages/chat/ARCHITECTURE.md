@@ -24,7 +24,7 @@ flowchart TB
   subgraph CHAT["@ayunis/chat · shared product"]
     EXPERIENCE["Canonical experience<br/>new chat · composer · conversation · history"]
     RUNTIME["Client runtime<br/>runs · streaming · cancellation · reattach · client tools"]
-    CONTRACTS["Surface-neutral contracts<br/>ChatConfig · adapters · slots · registries"]
+    CONTRACTS["Surface-neutral contracts<br/>ChatConfig · adapters · registries"]
     EXPERIENCE --> RUNTIME
     EXPERIENCE --> CONTRACTS
     RUNTIME --> CONTRACTS
@@ -55,18 +55,22 @@ ESLint configuration rejects surface-named behavior and styling branches.
 | Models                  | Canonical selector, model/mode presentation, the new-chat selection and default, the locked selector of an existing chat                                                                                                     | A preferred initial model for a new chat, e.g. from a link (`NewChat` `prefill`)                                                                                                                                     |
 | Attachments             | Selection state, pending previews, upload policies, direct thread uploads with progress, source chips, upload and removal errors                                                                                             | Nothing                                                                                                                                                                                                              |
 | New chat                | Greeting and starter layout, backdrop, composer lift and settle, academy notice, privacy hint, disclaimer, the start (create, upload, attach, first-message handoff)                                                         | `NewChat` `content` (greeting, starter prompts), the session `lifecycle`, `draftKey`, `prefill`, and `events.onThreadStarted`, which opens the chat                                                                  |
+| History                 | Loading and paging the session's chats, rows, loading/error/empty states, deletion with its confirmation, pin and Move to workspace, favorites first                                                                         | `onSelect`, `search`, an optional URL-held `pagination`, the frame (switched on `onEmptyChange`)                                                                                                                     |
 | Voice                   | Recording, transcription, and the instance's `voiceEnabled` flag                                                                                                                                                             | Nothing                                                                                                                                                                                                              |
 | Surface-specific data   | Knowledge-base and integration menus and chips, the selected-skill badge, workspace picker, pinned skills, unread tabs, onboarding hint, Move to workspace, pin, artifact button, context hint, breadcrumbs, header New chat | `ChatConfig.knowledgeBases`, `integrations`, `skills`, `workspaces`, `productUpdates`, `onboarding`, `favorites`, `artifactPanel`, `contextHint`, `trail`, `newChat`; absent data shows nothing and requests nothing |
-| History                 | Canonical list and row presentation                                                                                                                                                                                          | Client-scoped query data, pagination, rename/delete operations, navigation                                                                                                                                           |
 | Client tools            | Registry, dispatch, consent, deferred results, result routing                                                                                                                                                                | Office.js or other host executor and its context (`ChatConfig.clientTools`)                                                                                                                                          |
 | Rich tools/artifacts    | Registry-driven timeline cards                                                                                                                                                                                               | `ChatConfig.toolCards` and `onOpenArtifact` host action                                                                                                                                                              |
 | Conversation            | Thread loading, header, citations and their dialog, PII reveal, read aloud, message images, nudges, response-start orb, file-processing rows, sent/waiting/failed message                                                    | `threadId`, navigation (`onNavigate`, `hrefFor`) and the frame around the screen                                                                                                                                     |
 
-Core presentation has no generic render override or theme prop. The new chat,
-the composer and the conversation have no slots: their controls, header,
-notices and hierarchy are package-owned, and the host configures them only
-through data in `ChatConfig` and the new chat's strict `content`. Markdown
-follows the document theme through `@ayunis/ui`.
+Core presentation has no generic render override or theme prop. The chat's
+public screens are `NewChat`, `Conversation`, `History` and the embedded
+`NewChatComposer`. They have no slots: their controls, header, notices and
+hierarchy are package-owned, and the host configures them only through data in
+`ChatConfig`, the new chat's strict `content` and typed props. No `ReactNode`,
+component or render function enters `ChatConfig` or the screens' props, except
+the tool-card and client-tool registries, which register a tool's card by name;
+`screen-props-carry-no-ui.test.ts` enforces it at type level. Markdown follows
+the document theme through `@ayunis/ui`.
 
 ## Public host boundaries
 
@@ -76,6 +80,8 @@ follows the document theme through `@ayunis/ui`.
 | Feature availability  | Optional `ChatConfig` data                              | Pass the data a surface supports; never use a surface name as the condition      |
 | New-chat content      | `NewChat` `content` and `prefill`                       | Greeting, starter prompts, and a link's model, message or files                  |
 | Conversation data     | `Conversation` `threadId`                               | Choose the chat; the package loads it with the host's transport                  |
+| History               | `History` `onSelect`, `search`, `pagination`            | Open the chosen chat; keep the search and page where the host wants them         |
+| Embedded start        | `NewChatComposer` `workspaceId`, `origin`               | Embed a new chat's composer in a host page, under the same rules                 |
 | Runtime effects       | `ChatConfig.events`                                     | Refresh host caches, analytics, navigation, auth recovery                        |
 | New-chat start        | `events.onThreadStarted`, `stopChatStart`               | Open the started chat (timing from `settled`); stop a draft's start on leaving   |
 | First-message handoff | One `ChatRunLifecycle` for `NewChat` and `Conversation` | Share the session lifecycle; never start or stream the first message in the host |
@@ -86,8 +92,9 @@ follows the document theme through `@ayunis/ui`.
 Web router/AppLayout, TanStack Query ownership, analytics, workspaces,
 onboarding, and artifact panels stay in the Web host. Office authentication,
 Office.js, current mail/document context, Reply/Reply All, and client-tool
-executors stay in the Office host. Outlook history remains scoped with
-`client=outlook`; Web and Outlook histories must not mix. Office manifests and
+executors stay in the Office host. The history request names no surface: the
+backend lists the session client's chats, so Web and Outlook histories do not
+mix. Office manifests and
 task-pane URLs are outside the package contract.
 
 ## Parity baseline
@@ -96,15 +103,15 @@ Visual evidence is captured at the affected viewport during each migration PR;
 it is not stored as brittle screenshot assertions. Durable tests protect the
 user-visible behavior behind each state.
 
-| State               | Canonical Web baseline                                                 | Outlook baseline                                                                    | Durable checks                                                                                                                                                |
-| ------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| New chat            | Web greeting, workspace context, backdrop, composer lift, privacy hint | Same product shell at pane width with mail greeting and starter prompts             | `new-chat-first-message.spec.ts`, `new-chat.test.tsx`, `use-chat-start.test.tsx`, `onboarding-hint.spec.ts`, `pane-new-chat.spec.ts`, `embedded-pane.spec.ts` |
-| Active conversation | Shared messages/timeline, streaming, Stop, citations, PII reveal       | Same conversation/runtime with Office tools and pane navigation                     | `send-message.spec.ts`, `background-run.spec.ts`, `pane-chat.spec.ts`, `pane-review-regressions.spec.ts`                                                      |
-| Composer            | Web spacing, prompt history, send/stop, voice, anonymous mode          | Same hierarchy and interactions within the narrow pane                              | `NewChatComposer.test.tsx`, `draft-persistence.spec.ts`, `pane-review-regressions.spec.ts`                                                                    |
-| Model picker        | Desktop modes plus `More models`; phone lists models inline            | `layout: 'narrow'` keeps the desktop hierarchy; existing-chat selector stays locked | `ModelSelectorMenu.test.tsx`, `model-modes.spec.ts`, `embedded-pane.spec.ts`                                                                                  |
-| Attachments         | Pending/processing/error/ready states and send gating                  | Same states through the bearer transport                                            | `new-chat-slow-file.spec.ts`, `pdf-upload.spec.ts`, `pane-upload.spec.ts`, `pane-new-chat.spec.ts`                                                            |
-| History             | Web-scoped rows, rename/delete, pagination/navigation                  | Outlook-scoped rows; Back to start preserves draft while New chat clears it         | `thread-crud.spec.ts`, `pane-chat.spec.ts`, `embedded-pane.spec.ts`, `pane-review-regressions.spec.ts`                                                        |
-| Notices/errors      | Provider fault, unavailable model, long-chat and retry states          | Shared notices plus pane sign-in/retry recovery                                     | `model-provider-fault.spec.ts`, `embedded-pane.spec.ts`                                                                                                       |
+| State               | Canonical Web baseline                                                 | Outlook baseline                                                                    | Durable checks                                                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New chat            | Web greeting, workspace context, backdrop, composer lift, privacy hint | Same product shell at pane width with mail greeting and starter prompts             | `new-chat-first-message.spec.ts`, `new-chat.test.tsx`, `use-chat-start.test.tsx`, `onboarding-hint.spec.ts`, `pane-new-chat.spec.ts`, `embedded-pane.spec.ts`         |
+| Active conversation | Shared messages/timeline, streaming, Stop, citations, PII reveal       | Same conversation/runtime with Office tools and pane navigation                     | `send-message.spec.ts`, `background-run.spec.ts`, `pane-chat.spec.ts`, `pane-review-regressions.spec.ts`                                                              |
+| Composer            | Web spacing, prompt history, send/stop, voice, anonymous mode          | Same hierarchy and interactions within the narrow pane                              | `NewChatComposer.test.tsx`, `draft-persistence.spec.ts`, `pane-review-regressions.spec.ts`                                                                            |
+| Model picker        | Desktop modes plus `More models`; phone lists models inline            | `layout: 'narrow'` keeps the desktop hierarchy; existing-chat selector stays locked | `ModelSelectorMenu.test.tsx`, `model-modes.spec.ts`, `embedded-pane.spec.ts`                                                                                          |
+| Attachments         | Pending/processing/error/ready states and send gating                  | Same states through the bearer transport                                            | `new-chat-slow-file.spec.ts`, `pdf-upload.spec.ts`, `pane-upload.spec.ts`, `pane-new-chat.spec.ts`                                                                    |
+| History             | Web-scoped rows, pin, Move to workspace, delete, pagination in the URL | Outlook-scoped rows; Back to start preserves draft while New chat clears it         | `test-host/neutral-host.test.tsx`, `history-scope.spec.ts`, `content-search.spec.ts`, `pane-chat.spec.ts`, `embedded-pane.spec.ts`, `pane-review-regressions.spec.ts` |
+| Notices/errors      | Provider fault, unavailable model, long-chat and retry states          | Shared notices plus pane sign-in/retry recovery                                     | `model-provider-fault.spec.ts`, `embedded-pane.spec.ts`                                                                                                               |
 
 ## Migration rule
 
@@ -112,8 +119,9 @@ Extract from Web first, verify Web is unchanged, then adopt the package entry in
 Outlook and future surfaces. A migration is incomplete while a host retains a
 parallel run lifecycle or a second implementation of package-owned product UI.
 
-The AYC-2116 extraction is complete when Web and Outlook both use
-`Conversation` without a core-UI replacement slot, and the public-API
-composition suite proves send, stream, stop, rejoin, thread switching, and
-client tools. Visitor endpoint adaptation remains in AYC-2049 and does not
+Web and Outlook render only the package screens, each with a `ChatConfig`.
+The neutral test host (`src/test-host`) builds the chat from `ChatConfig`
+alone and proves send, stream, stop, rejoin, switching chats mid-stream, a
+client tool, rename, delete and the history's pages; Web's
+`ChatSurface.composition.test.tsx` covers the conversation in more depth. Visitor endpoint adaptation remains in AYC-2049 and does not
 change this ownership contract.

@@ -60,10 +60,9 @@ export function NewChatButton({ onClick }: Readonly<{ onClick: () => void }>) {
 
 export function PinButton({
   isPinned,
+  label,
   onToggle,
-}: Readonly<{ isPinned: boolean; onToggle: () => void }>) {
-  const { t } = useTranslation('common');
-  const label = isPinned ? t('sidebar.unpinChat') : t('sidebar.pinChat');
+}: Readonly<{ isPinned: boolean; label: string; onToggle: () => void }>) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>

@@ -100,11 +100,11 @@ test("can reach Outlook chats on an older history page", async ({ page }) => {
     });
   });
   await page.getByTestId("embedded-history").click();
-  await expect(page.getByTestId("chat-card")).toHaveText("Recent chat");
-  await page.getByTestId("outlook-history-next").click();
-  await expect(page.getByTestId("chat-card")).toHaveText("Older chat");
-  await page.getByTestId("outlook-history-previous").click();
-  await expect(page.getByTestId("chat-card")).toHaveText("Recent chat");
+  await expect(page.getByTestId("chat-card")).toContainText("Recent chat");
+  await page.getByTestId("chat-history-next").click();
+  await expect(page.getByTestId("chat-card")).toContainText("Older chat");
+  await page.getByTestId("chat-history-previous").click();
+  await expect(page.getByTestId("chat-card")).toContainText("Recent chat");
 });
 
 test("can retry a saved Outlook chat that fails to load", async ({ page }) => {

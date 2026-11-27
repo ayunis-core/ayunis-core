@@ -208,23 +208,15 @@ function ConversationView<Context, Outcome>(
   return (
     <ChatSurface
       resetKey={thread.id}
-      slots={{
-        header: () => (
-          <ConversationHeader
-            config={config}
-            lifecycle={lifecycle}
-            thread={thread}
-            title={run.threadTitle}
-          />
-        ),
-        emptyState: props.emptyState,
-      }}
-      empty={
-        !run.messages.length &&
-        !run.isStreaming &&
-        submission.pendingSubmission === null
+      header={
+        <ConversationHeader
+          config={config}
+          lifecycle={lifecycle}
+          thread={thread}
+          title={run.threadTitle}
+        />
       }
-      renderContent={() => (
+      content={
         <ChatConversationContent
           config={config}
           threadId={thread.id}
@@ -238,7 +230,7 @@ function ConversationView<Context, Outcome>(
           processing={activity.unit}
           showOrb={!activity.processing}
         />
-      )}
+      }
       composer={<ViewComposer key={thread.id} props={props} view={view} />}
     />
   );

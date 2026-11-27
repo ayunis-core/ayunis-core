@@ -31,18 +31,18 @@ export default tseslint.config(
         {
           selector:
             ':matches(Identifier, JSXIdentifier)[name=/^(web|outlook|excel|powerpoint|office|visitor|embedded)$/i]',
-          message: 'Configure chat through host capabilities and slots.',
+          message: 'Configure chat through ChatConfig data.',
         },
         {
           // Keep this case-sensitive: /i would make [A-Z] match lowercase.
           selector:
             ':matches(Identifier, JSXIdentifier)[name=/(^|[_$])(outlook|excel|power[Pp]oint|office|visitor|embedded)([_$]|[A-Z])|(Outlook|Excel|PowerPoint|Office|Visitor|Embedded)($|[_$]|[A-Z])|(^|[_$])(OUTLOOK|EXCEL|POWERPOINT|OFFICE|VISITOR|EMBEDDED)($|[_$])/]',
-          message: 'Configure chat through host capabilities and slots.',
+          message: 'Configure chat through ChatConfig data.',
         },
         {
           selector:
             ':matches(Identifier, JSXIdentifier)[name=/(^|[_$])isWeb($|[_$])|(^|[_$])isWeb(Pane|Host|Chat|Surface|App|Client)($|[_$]|[A-Z])|(^|[_$])(web|word)(Pane|Host|Chat|Surface|App|Client)($|[_$]|[A-Z])|(Web|Word)(Pane|Host|Chat|Surface|App|Client)($|[_$]|[A-Z])|^(WEB|WORD)(_(PANE|HOST|CHAT|SURFACE|APP|CLIENT))?$/]',
-          message: 'Configure chat through host capabilities and slots.',
+          message: 'Configure chat through ChatConfig data.',
         },
         {
           selector:

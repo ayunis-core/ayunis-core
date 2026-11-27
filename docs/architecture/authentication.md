@@ -422,6 +422,11 @@ authentication rejects an unknown client claim. Browser sessions, API keys
 and the public body-token refresh and sign-out endpoints retain their usual
 authentication and authorization checks.
 
+A chat records the session client it was started from, and `GET /threads`
+lists the current session client's chats unless the request names a `client`.
+An Outlook token therefore sees only Outlook chats and a browser session only
+web chats; ownership still limits both to the user's own.
+
 `GET /api/auth/me` returns `scopes` from the registry for the current token
 surface. Browser sessions receive an empty scope list. User roles, resource
 ownership and organization boundaries are still checked by their existing

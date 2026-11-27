@@ -1,5 +1,3 @@
-export { ChatSurface, type ChatSurfaceProps } from './chat-surface';
-export type { ChatSlots } from './chat-surface-config';
 export type {
   ChatArtifactPanel,
   ChatConfig,
@@ -57,3 +55,5 @@ export {
   type NewChatComposerProps,
 } from './new-chat-composer';
 export { stopChatStart } from './use-chat-start';
+export { History, type HistoryPagination, type HistoryProps } from './history';
+export { chatHistoryQuery, type ChatHistoryPageRequest } from './history-query';

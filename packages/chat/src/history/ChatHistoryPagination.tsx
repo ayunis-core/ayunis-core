@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button, buttonVariants } from '@ayunis/ui/components/button';
-import { cn } from '@ayunis/ui/lib/cn';
+import { Button } from '@ayunis/ui/components/button';
 import {
   Pagination,
   PaginationContent,
@@ -30,14 +29,10 @@ export function ChatHistoryPagination({
   currentPage,
   totalPages,
   onPage,
-  renderControl,
-  testIdPrefix = 'chat-history',
 }: Readonly<{
   currentPage: number;
   totalPages: number;
   onPage: (page: number) => void;
-  renderControl?: ChatHistoryPaginationControlRenderer;
-  testIdPrefix?: string;
 }>) {
   if (totalPages <= 1) return null;
   return (
@@ -45,24 +40,28 @@ export function ChatHistoryPagination({
       <PaginationContent>
         <PageControl
           direction="previous"
-          page={currentPage - 1}
           disabled={currentPage === 1}
-          renderControl={renderControl}
-          testIdPrefix={testIdPrefix}
           onClick={() => onPage(currentPage - 1)}
         />
-        <PageLinks
-          currentPage={currentPage}
-          totalPages={totalPages}
-          renderControl={renderControl}
-          onPage={onPage}
-        />
+        {pageNumbers(currentPage, totalPages).map((page, index) =>
+          page === 'ellipsis' ? (
+            <PaginationItem key={`ellipsis-${index}`}>
+              <PaginationEllipsis />
+            </PaginationItem>
+          ) : (
+            <PaginationItem key={page}>
+              <PageButton
+                current={page === currentPage}
+                onClick={() => onPage(page)}
+              >
+                {page}
+              </PageButton>
+            </PaginationItem>
+          ),
+        )}
         <PageControl
           direction="next"
-          page={currentPage + 1}
           disabled={currentPage === totalPages}
-          renderControl={renderControl}
-          testIdPrefix={testIdPrefix}
           onClick={() => onPage(currentPage + 1)}
         />
       </PaginationContent>
@@ -70,143 +69,54 @@ export function ChatHistoryPagination({
   );
 }
 
-function PageLinks({
-  currentPage,
-  totalPages,
-  renderControl,
-  onPage,
-}: Readonly<{
-  currentPage: number;
-  totalPages: number;
-  renderControl?: ChatHistoryPaginationControlRenderer;
-  onPage: (page: number) => void;
-}>) {
-  return pageNumbers(currentPage, totalPages).map((page, index) =>
-    page === 'ellipsis' ? (
-      <PaginationItem key={`ellipsis-${index}`}>
-        <PaginationEllipsis />
-      </PaginationItem>
-    ) : (
-      <PaginationItem key={page}>
-        <PaginationControl
-          control={{
-            page,
-            current: page === currentPage,
-            variant: page === currentPage ? 'outline' : 'ghost',
-            size: 'icon',
-            children: page,
-            onSelect: () => onPage(page),
-          }}
-          renderControl={renderControl}
-        />
-      </PaginationItem>
-    ),
+function PageButton({
+  current,
+  onClick,
+  children,
+}: Readonly<{ current: boolean; onClick: () => void; children: ReactNode }>) {
+  return (
+    <Button
+      type="button"
+      variant={current ? 'outline' : 'ghost'}
+      size="icon"
+      aria-current={current ? 'page' : undefined}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
   );
 }
 
 function PageControl({
   direction,
-  page,
   disabled,
-  renderControl,
-  testIdPrefix,
   onClick,
 }: Readonly<{
   direction: 'previous' | 'next';
-  page: number;
   disabled: boolean;
-  renderControl?: ChatHistoryPaginationControlRenderer;
-  testIdPrefix: string;
   onClick: () => void;
 }>) {
   const { t } = useTranslation('common');
   const previous = direction === 'previous';
-  const label = previous ? 'Go to previous page' : 'Go to next page';
   return (
     <PaginationItem>
-      <PaginationControl
-        control={{
-          page,
-          disabled,
-          label,
-          testId: `${testIdPrefix}-${direction}`,
-          variant: 'ghost',
-          className: previous
-            ? 'gap-1 px-2.5 sm:pl-2.5'
-            : 'gap-1 px-2.5 sm:pr-2.5',
-          children: (
-            <>
-              {previous && <ChevronLeft />}
-              <span className="hidden sm:block">
-                {t(`common.pagination.${direction}`)}
-              </span>
-              {!previous && <ChevronRight />}
-            </>
-          ),
-          onSelect: onClick,
-        }}
-        renderControl={renderControl}
-      />
+      <Button
+        type="button"
+        variant="ghost"
+        className={
+          previous ? 'gap-1 px-2.5 sm:pl-2.5' : 'gap-1 px-2.5 sm:pr-2.5'
+        }
+        disabled={disabled}
+        aria-label={previous ? 'Go to previous page' : 'Go to next page'}
+        data-testid={`chat-history-${direction}`}
+        onClick={onClick}
+      >
+        {previous && <ChevronLeft />}
+        <span className="hidden sm:block">
+          {t(`common.pagination.${direction}`)}
+        </span>
+        {!previous && <ChevronRight />}
+      </Button>
     </PaginationItem>
-  );
-}
-
-type ControlVariant = 'ghost' | 'outline';
-
-export interface ChatHistoryPaginationControl {
-  page: number;
-  children: ReactNode;
-  className?: string;
-  current?: boolean;
-  disabled?: boolean;
-  label?: string;
-  onSelect: () => void;
-  size?: 'default' | 'icon';
-  testId?: string;
-  variant: ControlVariant;
-}
-
-export type ChatHistoryPaginationControlRenderer = (
-  control: ChatHistoryPaginationControl,
-) => ReactNode;
-
-function PaginationControl({
-  control,
-  renderControl,
-}: Readonly<{
-  control: ChatHistoryPaginationControl;
-  renderControl?: ChatHistoryPaginationControlRenderer;
-}>): ReactNode {
-  if (renderControl) {
-    return (
-      <>
-        {renderControl({
-          ...control,
-          className: cn(
-            buttonVariants({
-              variant: control.variant,
-              size: control.size ?? 'default',
-            }),
-            control.className,
-            control.disabled && 'pointer-events-none opacity-50',
-          ),
-        })}
-      </>
-    );
-  }
-  return (
-    <Button
-      type="button"
-      variant={control.variant}
-      size={control.size}
-      className={control.className}
-      disabled={control.disabled}
-      aria-current={control.current ? 'page' : undefined}
-      aria-label={control.label}
-      data-testid={control.testId}
-      onClick={control.onSelect}
-    >
-      {control.children}
-    </Button>
   );
 }

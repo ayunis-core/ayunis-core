@@ -32,5 +32,9 @@
     "success": "Chat deleted successfully!",
     "error": "Failed to delete chat. Please try again.",
     "notFound": "Chat not found"
+  },
+  "history": {
+    "loadFailed": "The request failed. Try again.",
+    "retry": "Retry"
   }
 }
