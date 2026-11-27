@@ -18,6 +18,7 @@ export class ReleaseNoteMapper {
       announced: record.announced,
       createdAt: record.createdAt,
       publishedOn: record.publishedOn,
+      attentionMechanism: record.attentionMechanism,
     });
   }
 
@@ -41,6 +42,7 @@ export class ReleaseNoteMapper {
     record.createdAt = domain.createdAt;
     record.announced = domain.announced;
     record.publishedOn = domain.publishedOn;
+    record.attentionMechanism = domain.attentionMechanism;
     return record;
   }
 }

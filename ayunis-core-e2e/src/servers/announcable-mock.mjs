@@ -19,7 +19,9 @@ const notes = [
     cta_label_override: "",
     cta_href_override: "",
     hide_cta: false,
-    attentionMechanism: "instant_open",
+    // Not instant_open: should a factory note be stored before the first sync,
+    // this note would be announced and open a modal over unrelated tests.
+    attentionMechanism: "show_indicator",
   },
 ];
 

@@ -15,6 +15,7 @@ import { FeatureFlag } from 'src/config/features.config';
 import { CountUnreadReleaseNotesUseCase } from 'src/domain/release-notes/application/use-cases/count-unread-release-notes/count-unread-release-notes.use-case';
 import { DownloadReleaseNoteImageQuery } from 'src/domain/release-notes/application/use-cases/download-release-note-image/download-release-note-image.query';
 import { DownloadReleaseNoteImageUseCase } from 'src/domain/release-notes/application/use-cases/download-release-note-image/download-release-note-image.use-case';
+import { FindInstantOpenReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-instant-open-release-note/find-instant-open-release-note.use-case';
 import { FindMyReleaseNotesUseCase } from 'src/domain/release-notes/application/use-cases/find-my-release-notes/find-my-release-notes.use-case';
 import { FindReleaseNoteQuery } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.query';
 import { FindReleaseNoteUseCase } from 'src/domain/release-notes/application/use-cases/find-release-note/find-release-note.use-case';
@@ -22,6 +23,7 @@ import { MarkReleaseNoteReadCommand } from 'src/domain/release-notes/application
 import { MarkReleaseNoteReadUseCase } from 'src/domain/release-notes/application/use-cases/mark-release-note-read/mark-release-note-read.use-case';
 import { ReleaseNoteParamsDto } from './dto/release-note-params.dto';
 import {
+  InstantOpenReleaseNoteResponseDto,
   ReleaseNoteResponseDto,
   UnreadReleaseNoteCountResponseDto,
 } from './dto/release-note-response.dto';
@@ -40,6 +42,7 @@ export class ReleaseNotesController {
   constructor(
     private readonly findMyReleaseNotesUseCase: FindMyReleaseNotesUseCase,
     private readonly countUnreadReleaseNotesUseCase: CountUnreadReleaseNotesUseCase,
+    private readonly findInstantOpenReleaseNoteUseCase: FindInstantOpenReleaseNoteUseCase,
     private readonly findReleaseNoteUseCase: FindReleaseNoteUseCase,
     private readonly markReleaseNoteReadUseCase: MarkReleaseNoteReadUseCase,
     private readonly downloadReleaseNoteImageUseCase: DownloadReleaseNoteImageUseCase,
@@ -60,6 +63,18 @@ export class ReleaseNotesController {
   @ApiResponse({ status: 200, type: UnreadReleaseNoteCountResponseDto })
   async countUnread(): Promise<UnreadReleaseNoteCountResponseDto> {
     return { count: await this.countUnreadReleaseNotesUseCase.execute() };
+  }
+
+  @Get('instant-open')
+  @ApiOperation({
+    summary: 'Get the release note to open right away for the current user',
+  })
+  @ApiResponse({ status: 200, type: InstantOpenReleaseNoteResponseDto })
+  async findInstantOpen(): Promise<InstantOpenReleaseNoteResponseDto> {
+    const releaseNote = await this.findInstantOpenReleaseNoteUseCase.execute();
+    return {
+      releaseNote: releaseNote && this.releaseNoteDtoMapper.toDto(releaseNote),
+    };
   }
 
   @Get(':id')

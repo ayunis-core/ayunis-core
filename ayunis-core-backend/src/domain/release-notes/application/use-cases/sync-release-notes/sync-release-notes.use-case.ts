@@ -106,10 +106,12 @@ export class SyncReleaseNotesUseCase {
     };
     for (const feedNote of feedNotes) {
       const existing = storedById.get(feedNote.id) ?? null;
-      // Notes stored before their date was kept get it on the next sync.
+      // Notes stored before their date or attention mechanism was kept get
+      // them on the next sync.
       if (
         existing?.lastUpdateOn === feedNote.lastUpdateOn &&
-        existing.publishedOn === publishedOn(feedNote)
+        existing.publishedOn === publishedOn(feedNote) &&
+        existing.attentionMechanism === feedNote.attentionMechanism
       ) {
         changes.unchanged++;
         changes.kept.push(existing);
@@ -156,6 +158,7 @@ export class SyncReleaseNotesUseCase {
       announced: existing ? existing.announced : announce,
       createdAt: existing?.createdAt,
       publishedOn: publishedOn(feedNote),
+      attentionMechanism: feedNote.attentionMechanism,
     });
   }
 

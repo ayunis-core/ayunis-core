@@ -44,6 +44,16 @@ export class ReleaseNoteResponseDto {
   date: string;
 }
 
+export class InstantOpenReleaseNoteResponseDto {
+  @ApiProperty({
+    type: ReleaseNoteResponseDto,
+    nullable: true,
+    description:
+      'The newest release note Announcable wants opened right away, while the current user has not read it; else null',
+  })
+  releaseNote: ReleaseNoteResponseDto | null;
+}
+
 export class UnreadReleaseNoteCountResponseDto {
   @ApiProperty({ example: 1 })
   count: number;

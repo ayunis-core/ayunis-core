@@ -10,7 +10,7 @@ import {
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
-} from './-default-model-selection-query';
+} from '@/widgets/model-select-options';
 
 export const Route = createFileRoute('/_authenticated/inbox/$notificationId')({
   component: RouteComponent,

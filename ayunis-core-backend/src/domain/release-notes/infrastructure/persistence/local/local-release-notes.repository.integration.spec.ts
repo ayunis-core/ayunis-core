@@ -11,6 +11,7 @@ import {
   TEST_IMAGE_PATH,
   TEST_LOOM_URL,
 } from 'src/domain/release-notes/application/testing/release-note.fixtures';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { LocalReleaseNotesRepository } from './local-release-notes.repository';
 import { ReleaseNoteMapper } from './mappers/release-note.mapper';
@@ -37,6 +38,7 @@ const releaseNoteSchema = new EntitySchema<ReleaseNoteRecord>({
     lastUpdateOn: { type: String },
     announced: { type: Boolean, default: false },
     publishedOn: { type: 'date', nullable: true },
+    attentionMechanism: { type: String, default: 'show_indicator' },
   },
 });
 // Only the column the unread rule reads, so the test needs no complete users.
@@ -306,6 +308,48 @@ describe('LocalReleaseNotesRepository (PostgreSQL)', () => {
       ).resolves.toMatchObject({ unread: false });
       await expect(repository.countUnread(early, 100)).resolves.toBe(1);
       await expect(repository.countUnread(late, 100)).resolves.toBe(0);
+    });
+
+    it('finds the newest instant-open note with its read state, so an older unread one never pops up and a newer indicator-only one is passed over', async () => {
+      const reader = await aUser('2026-01-01');
+      await aStoredNote('2026-11-01', {
+        announced: true,
+        attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+      });
+      const newestInstantOpen = await aStoredNote('2026-11-05', {
+        announcableId: OTHER_ANNOUNCABLE_ID,
+        announced: true,
+        attentionMechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+      });
+      await aStoredNote('2026-11-07', {
+        announcableId: '0c77830d-8211-4cad-a159-0330c5ada41b',
+        announced: true,
+      });
+
+      await expect(
+        repository.findNewestInstantOpenForUser(reader),
+      ).resolves.toMatchObject({
+        unread: true,
+        note: { id: newestInstantOpen },
+      });
+
+      await repository.markRead(reader, newestInstantOpen);
+
+      await expect(
+        repository.findNewestInstantOpenForUser(reader),
+      ).resolves.toMatchObject({
+        unread: false,
+        note: { id: newestInstantOpen },
+      });
+    });
+
+    it('finds no instant-open note while every note only shows the indicator', async () => {
+      const reader = await aUser('2026-01-01');
+      await aStoredNote('2026-11-05', { announced: true });
+
+      await expect(
+        repository.findNewestInstantOpenForUser(reader),
+      ).resolves.toBeNull();
     });
 
     it('counts only unread notes the list shows, so the bell never points at a note out of reach', async () => {

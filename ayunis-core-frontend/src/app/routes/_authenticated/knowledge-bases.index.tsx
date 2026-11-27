@@ -9,7 +9,7 @@ import {
   getMyPermissionsControllerGetMineQueryKey,
 } from '@ayunis/api-client/endpoints';
 import { personalKnowledgeBaseListParams } from '@/shared/api/knowledge-base-scopes';
-import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
+import { loadChatStarterDefaults } from '@/widgets/chat-starter';
 
 export const Route = createFileRoute('/_authenticated/knowledge-bases/')({
   component: RouteComponent,

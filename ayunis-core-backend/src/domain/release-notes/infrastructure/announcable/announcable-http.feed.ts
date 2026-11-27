@@ -10,6 +10,7 @@ import {
   AnnouncableFeedInvalidError,
   AnnouncableRequestRejectedError,
 } from 'src/domain/release-notes/application/release-notes.errors';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 
 const PROVIDER = { provider: 'announcable' };
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -134,7 +135,14 @@ function toReleaseNote(item: unknown): AnnouncableReleaseNote {
     lastUpdateOn: requiredText(note, 'last_update_on'),
     ctaLabelOverride: optionalText(note.cta_label_override),
     ctaHrefOverride: optionalText(note.cta_href_override),
+    attentionMechanism: attentionMechanism(note.attentionMechanism),
   };
+}
+
+function attentionMechanism(value: unknown): ReleaseNoteAttentionMechanism {
+  return value === ReleaseNoteAttentionMechanism.INSTANT_OPEN
+    ? ReleaseNoteAttentionMechanism.INSTANT_OPEN
+    : ReleaseNoteAttentionMechanism.SHOW_INDICATOR;
 }
 
 /** An empty title is the sync's to skip; only identity fields must be set. */

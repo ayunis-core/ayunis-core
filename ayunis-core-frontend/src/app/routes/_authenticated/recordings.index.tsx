@@ -10,7 +10,7 @@ import {
 } from '@ayunis/api-client/endpoints';
 import { personalRecordingListParams } from '@/shared/api/recording-scopes';
 import { requireRecordingsEnabled } from './-recordings-enabled';
-import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
+import { loadChatStarterDefaults } from '@/widgets/chat-starter';
 
 export const Route = createFileRoute('/_authenticated/recordings/')({
   component: RouteComponent,

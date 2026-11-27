@@ -17,5 +17,8 @@
   "detail": {
     "kicker": "Produkt-Update vom {{date}}",
     "chatPlaceholder": "Frage zu diesem Update stellen"
+  },
+  "announcement": {
+    "close": "Schließen"
   }
 }

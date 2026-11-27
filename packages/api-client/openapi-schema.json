@@ -16869,6 +16869,26 @@
         "summary": "List the marketplace skills suggested to users without skills",
         "tags": ["marketplace"]
       }
+    },
+    "/release-notes/instant-open": {
+      "get": {
+        "operationId": "ReleaseNotesController_findInstantOpen",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstantOpenReleaseNoteResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the release note to open right away for the current user",
+        "tags": ["release-notes"]
+      }
     }
   },
   "info": {
@@ -29888,6 +29908,22 @@
           }
         },
         "required": ["identifier", "name", "shortDescription", "iconName"]
+      },
+      "InstantOpenReleaseNoteResponseDto": {
+        "type": "object",
+        "properties": {
+          "releaseNote": {
+            "nullable": true,
+            "description": "The newest release note Announcable wants opened right away, while the current user has not read it; else null",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReleaseNoteResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["releaseNote"]
       }
     }
   }

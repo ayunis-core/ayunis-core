@@ -1,17 +1,14 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Megaphone } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
-import { ChatStarter } from '@/widgets/chat-starter';
-import { Markdown } from '@/widgets/markdown';
-import { NotificationMedia } from '@/features/notifications';
 import {
-  formatReleaseNoteDate,
-  releaseNoteImageUrl,
-  useMarkReleaseNoteRead,
-} from '@/features/release-notes';
+  ReleaseNoteChatStarter,
+  ReleaseNoteContent,
+  ReleaseNoteKicker,
+} from '@/widgets/release-note-content';
+import { useMarkReleaseNoteRead } from '@/features/release-notes';
 import type { ReleaseNoteResponseDto } from '@ayunis/api-client/schemas';
 import { useReleaseNote } from '@/pages/release-note/api/useReleaseNote';
 
@@ -22,7 +19,7 @@ interface ReleaseNotePageProps {
 }
 
 export default function ReleaseNotePage(props: Readonly<ReleaseNotePageProps>) {
-  const { t, i18n } = useTranslation('release-notes');
+  const { t } = useTranslation('release-notes');
   const { releaseNote } = useReleaseNote(props.releaseNote);
   const { mutate: markRead } = useMarkReleaseNoteRead();
 
@@ -49,11 +46,8 @@ export default function ReleaseNotePage(props: Readonly<ReleaseNotePageProps>) {
             data-testid="release-note-detail"
           >
             <header className="flex flex-col gap-2">
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Megaphone className="size-4" aria-hidden />
-                {t('detail.kicker', {
-                  date: formatReleaseNoteDate(releaseNote.date, i18n.language),
-                })}
+              <p className="text-sm text-muted-foreground">
+                <ReleaseNoteKicker date={releaseNote.date} />
               </p>
               <h1
                 className="text-2xl font-semibold"
@@ -62,23 +56,12 @@ export default function ReleaseNotePage(props: Readonly<ReleaseNotePageProps>) {
                 {releaseNote.headline}
               </h1>
             </header>
-            <NotificationMedia
-              media={releaseNote.media}
-              imageSrc={releaseNoteImageUrl(releaseNote.id)}
-              title={releaseNote.headline}
-              testIdPrefix="release-note-detail"
+            <ReleaseNoteContent releaseNote={releaseNote} />
+            <ReleaseNoteChatStarter
+              releaseNoteId={releaseNote.id}
+              selectedModelId={props.selectedModelId}
+              isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
             />
-            <Markdown renderImages={false} className="text-sm">
-              {releaseNote.body}
-            </Markdown>
-            <div data-testid="release-note-chat-starter">
-              <ChatStarter
-                origin={{ kind: 'release_note', releaseNoteId: releaseNote.id }}
-                placeholder={t('detail.chatPlaceholder')}
-                selectedModelId={props.selectedModelId}
-                isEmbeddingModelEnabled={props.isEmbeddingModelEnabled}
-              />
-            </div>
           </article>
         }
       />

@@ -12,6 +12,7 @@ import type {
 import { In, Repository } from 'typeorm';
 import type { UserReleaseNote } from 'src/domain/release-notes/application/models/user-release-note';
 import { ReleaseNotesRepository } from 'src/domain/release-notes/application/ports/release-notes.repository';
+import { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 import type { ReleaseNote } from 'src/domain/release-notes/domain/release-note.entity';
 import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/schema/user.record';
 import { ReleaseNoteMapper } from './mappers/release-note.mapper';
@@ -70,6 +71,18 @@ export class LocalReleaseNotesRepository extends ReleaseNotesRepository {
     id: UUID,
   ): Promise<UserReleaseNote | null> {
     const query = this.forUser(userId).andWhere('note.id = :id', { id });
+    return (await this.toUserReleaseNotes(query)).at(0) ?? null;
+  }
+
+  async findNewestInstantOpenForUser(
+    userId: UUID,
+  ): Promise<UserReleaseNote | null> {
+    const query = newestFirst(
+      this.forUser(userId).andWhere('note.attentionMechanism = :mechanism', {
+        mechanism: ReleaseNoteAttentionMechanism.INSTANT_OPEN,
+      }),
+      'note',
+    ).limit(1);
     return (await this.toUserReleaseNotes(query)).at(0) ?? null;
   }
 

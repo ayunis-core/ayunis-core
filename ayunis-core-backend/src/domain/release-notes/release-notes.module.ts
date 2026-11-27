@@ -6,6 +6,7 @@ import { ReleaseNotesRepository } from './application/ports/release-notes.reposi
 import { ReleaseNoteMediaService } from './application/services/release-note-media.service';
 import { CountUnreadReleaseNotesUseCase } from './application/use-cases/count-unread-release-notes/count-unread-release-notes.use-case';
 import { DownloadReleaseNoteImageUseCase } from './application/use-cases/download-release-note-image/download-release-note-image.use-case';
+import { FindInstantOpenReleaseNoteUseCase } from './application/use-cases/find-instant-open-release-note/find-instant-open-release-note.use-case';
 import { FindMyReleaseNotesUseCase } from './application/use-cases/find-my-release-notes/find-my-release-notes.use-case';
 import { FindReleaseNoteUseCase } from './application/use-cases/find-release-note/find-release-note.use-case';
 import { MarkReleaseNoteReadUseCase } from './application/use-cases/mark-release-note-read/mark-release-note-read.use-case';
@@ -37,6 +38,7 @@ import { ReleaseNotesController } from './presenters/http/release-notes.controll
     FindMyReleaseNotesUseCase,
     FindReleaseNoteUseCase,
     CountUnreadReleaseNotesUseCase,
+    FindInstantOpenReleaseNoteUseCase,
     MarkReleaseNoteReadUseCase,
     DownloadReleaseNoteImageUseCase,
     ReleaseNoteDtoMapper,

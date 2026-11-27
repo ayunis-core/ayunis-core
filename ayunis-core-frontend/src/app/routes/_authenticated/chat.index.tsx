@@ -16,7 +16,7 @@ import { z } from 'zod';
 import {
   defaultModelSelectionQueryOptions,
   toComposerValue,
-} from './-default-model-selection-query';
+} from '@/widgets/model-select-options';
 import { searchParamString } from '@/shared/lib/search-params';
 
 function handleDefaultModelLoadError(error: unknown): null {

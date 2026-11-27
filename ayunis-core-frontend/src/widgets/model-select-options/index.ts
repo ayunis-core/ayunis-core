@@ -17,3 +17,7 @@ export {
   ModelMode,
 } from './lib/model-modes';
 export { useSelectedModel } from './model/useSelectedModel';
+export {
+  defaultModelSelectionQueryOptions,
+  toComposerValue,
+} from './lib/default-model-selection';

@@ -5,7 +5,7 @@ import {
   routinesControllerFindAll,
 } from '@ayunis/api-client/endpoints';
 import { canManageRoutines } from './-manage-routines-access';
-import { loadChatStarterDefaults } from './-chat-starter-defaults-query';
+import { loadChatStarterDefaults } from '@/widgets/chat-starter';
 
 export const Route = createFileRoute('/_authenticated/routines/')({
   component: RouteComponent,

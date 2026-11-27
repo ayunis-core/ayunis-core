@@ -1,3 +1,4 @@
+import type { ReleaseNoteAttentionMechanism } from 'src/domain/release-notes/domain/release-note-attention-mechanism';
 /**
  * The fields of an Announcable release note the sync relies on. Optional
  * fields Announcable sends empty are empty strings.
@@ -15,4 +16,5 @@ export interface AnnouncableReleaseNote {
   readonly lastUpdateOn: string;
   readonly ctaLabelOverride: string;
   readonly ctaHrefOverride: string;
+  readonly attentionMechanism: ReleaseNoteAttentionMechanism;
 }

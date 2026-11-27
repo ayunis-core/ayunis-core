@@ -17,5 +17,8 @@
   "detail": {
     "kicker": "Product update from {{date}}",
     "chatPlaceholder": "Ask a question about this update"
+  },
+  "announcement": {
+    "close": "Close"
   }
 }
