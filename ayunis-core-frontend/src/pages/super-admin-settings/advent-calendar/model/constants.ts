@@ -1,0 +1,13 @@
+export const DOOR_TITLE_MAX_LENGTH = 200;
+export const DOOR_BODY_MAX_LENGTH = 5000;
+export const DOOR_MAX_BUTTONS = 2;
+export const DOOR_BUTTON_LABEL_MAX_LENGTH = 40;
+export const DOOR_LINK_URL_MAX_LENGTH = 2000;
+export const DOOR_PROMPT_MAX_LENGTH = 4000;
+export const DOOR_QUIZ_QUESTION_MAX_LENGTH = 300;
+export const DOOR_QUIZ_MIN_ANSWERS = 2;
+export const DOOR_QUIZ_MAX_ANSWERS = 4;
+export const DOOR_QUIZ_ANSWER_MAX_LENGTH = 150;
+export const DOOR_QUIZ_EXPLANATION_MAX_LENGTH = 1000;
+export const DOOR_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+export const DOOR_IMAGE_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp';

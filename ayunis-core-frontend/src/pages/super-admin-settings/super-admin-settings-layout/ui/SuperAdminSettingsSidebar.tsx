@@ -10,6 +10,7 @@ import {
   EyeOff,
   ListTree,
   Landmark,
+  Gift,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -66,6 +67,12 @@ export function SuperAdminSettingsSidebar() {
           to: '/super-admin-settings/app-alerts',
           icon: <Megaphone />,
           label: t('layout.appAlerts'),
+        },
+        {
+          to: '/super-admin-settings/advent-calendar',
+          testId: 'super-admin-nav-advent-calendar',
+          icon: <Gift />,
+          label: t('layout.adventCalendar'),
         },
         {
           to: '/super-admin-settings/anonymization',

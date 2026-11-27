@@ -1,0 +1,144 @@
+{
+  "title": "Advent Calendar",
+  "loadError": "Failed to load the advent calendar.",
+  "enabled": {
+    "title": "Show advent calendar",
+    "description": "While on, every user sees the calendar from 1 December to 6 January. Super admins can always preview it on the calendar page."
+  },
+  "doors": {
+    "title": "Doors",
+    "description": "Door N opens at midnight (Berlin time) on N December. A door only needs content by its day.",
+    "day": "Door {{day}}",
+    "noTitle": "No content yet",
+    "filled": "Filled",
+    "empty": "Empty"
+  },
+  "door": {
+    "title": "Title",
+    "body": "Text",
+    "bodyDescription": "Markdown is supported.",
+    "save": "Save",
+    "clear": "Clear door",
+    "clearConfirm": {
+      "title": "Clear door {{day}}?",
+      "description": "Its title, text, buttons and image are deleted, and the door is empty until it is filled again.",
+      "confirm": "Clear",
+      "cancel": "Cancel"
+    }
+  },
+  "media": {
+    "label": "Media",
+    "kinds": {
+      "none": "None",
+      "image": "Image",
+      "vimeo": "Vimeo video"
+    },
+    "image": "Image",
+    "imageDescription": "JPEG, PNG, GIF or WebP, up to 10 MB. Uploaded when the door is saved.",
+    "uploadImage": "Upload image",
+    "replaceImage": "Replace",
+    "removeImage": "Remove",
+    "vimeoUrl": "Vimeo URL",
+    "vimeoUrlDescription": "e.g. https://vimeo.com/<id>, https://vimeo.com/<id>/<hash> or https://player.vimeo.com/video/<id>?h=<hash>"
+  },
+  "buttons": {
+    "label": "Buttons",
+    "description": "Up to two buttons, at most one of them a quiz.",
+    "kinds": {
+      "link": "Link",
+      "prompt": "Prompt",
+      "quiz": "Quiz"
+    },
+    "add": {
+      "link": "Link",
+      "prompt": "Prompt",
+      "quiz": "Quiz"
+    },
+    "remove": "Remove button",
+    "buttonLabel": "Button label",
+    "url": "URL",
+    "urlDescription": "An https:// address opens in a new tab, an in-app path such as /marketplace in the same tab.",
+    "prompt": "Prompt",
+    "promptDescription": "Filled into a new chat without being sent."
+  },
+  "quiz": {
+    "question": "Question",
+    "answers": "Answers",
+    "answersDescription": "Mark the one correct answer.",
+    "answerPlaceholder": "Answer {{number}}",
+    "markCorrect": "Answer {{number}} is correct",
+    "removeAnswer": "Remove answer",
+    "addAnswer": "Add answer",
+    "explanation": "Explanation (optional)"
+  },
+  "toast": {
+    "enabled": "The advent calendar is switched on.",
+    "disabled": "The advent calendar is switched off.",
+    "enabledError": "Failed to switch the advent calendar.",
+    "saved": "Door {{day}} saved.",
+    "saveError": "Failed to save the door.",
+    "imageError": "The text was saved, but the image could not be changed.",
+    "cleared": "Door {{day}} cleared.",
+    "clearError": "Failed to clear door {{day}}."
+  },
+  "validation": {
+    "title": {
+      "isNotEmpty": "A title is required.",
+      "maxLength": "The title must be 200 characters or fewer.",
+      "invalid": "Invalid title."
+    },
+    "body": {
+      "maxLength": "The text must be 5,000 characters or fewer.",
+      "invalid": "Invalid text."
+    },
+    "vimeoUrl": {
+      "isVimeoUrl": "Enter a vimeo.com or player.vimeo.com video URL.",
+      "invalid": "Enter a vimeo.com or player.vimeo.com video URL."
+    },
+    "imageFile": {
+      "unsupported": "The image must be a JPEG, PNG, GIF or WebP file.",
+      "tooLarge": "The image must be 10 MB or smaller.",
+      "notSaved": "The image could not be uploaded. The door was not saved."
+    },
+    "buttons": {
+      "arrayMaxSize": "A door can have at most two buttons.",
+      "atMostOneQuiz": "A door can have at most one quiz.",
+      "invalid": "Invalid buttons.",
+      "label": {
+        "isNotEmpty": "A label is required.",
+        "maxLength": "The label must be 40 characters or fewer.",
+        "invalid": "Invalid label."
+      },
+      "url": {
+        "isLinkUrl": "Enter an http(s) URL or an in-app path starting with /.",
+        "maxLength": "The URL must be 2,000 characters or fewer.",
+        "invalid": "Enter an http(s) URL or an in-app path starting with /."
+      },
+      "prompt": {
+        "isNotEmpty": "A prompt is required.",
+        "maxLength": "The prompt must be 4,000 characters or fewer.",
+        "invalid": "Invalid prompt."
+      },
+      "question": {
+        "isNotEmpty": "A question is required.",
+        "maxLength": "The question must be 300 characters or fewer.",
+        "invalid": "Invalid question."
+      },
+      "answers": {
+        "arrayMinSize": "A quiz needs at least two answers.",
+        "arrayMaxSize": "A quiz can have at most four answers.",
+        "isNotEmpty": "Every answer needs a text.",
+        "maxLength": "Answers must be 150 characters or fewer.",
+        "invalid": "Invalid answers."
+      },
+      "correctAnswerIndex": {
+        "invalid": "Mark exactly one answer as correct."
+      },
+      "explanation": {
+        "maxLength": "The explanation must be 1,000 characters or fewer.",
+        "invalid": "Invalid explanation."
+      }
+    },
+    "invalid": "Invalid input."
+  }
+}

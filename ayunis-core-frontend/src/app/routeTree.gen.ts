@@ -79,6 +79,7 @@ import { Route as AuthenticatedAdminSettingsModelsIndexRouteImport } from './rou
 import { Route as AuthenticatedAdminSettingsTeamsIndexRouteImport } from './routes/_authenticated/admin-settings.teams.index'
 import { Route as AuthenticatedAdminSettingsTeamsIdRouteImport } from './routes/_authenticated/admin-settings.teams.$id'
 import { Route as AuthenticatedSuperAdminSettingsAcademyIndexRouteImport } from './routes/_authenticated/super-admin-settings.academy.index'
+import { Route as AuthenticatedSuperAdminSettingsAdventCalendarIndexRouteImport } from './routes/_authenticated/super-admin-settings.advent-calendar.index'
 import { Route as AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport } from './routes/_authenticated/super-admin-settings.anonymization.index'
 import { Route as AuthenticatedSuperAdminSettingsAppAlertsIndexRouteImport } from './routes/_authenticated/super-admin-settings.app-alerts.index'
 import { Route as AuthenticatedSuperAdminSettingsModelsCatalogIndexRouteImport } from './routes/_authenticated/super-admin-settings.models-catalog.index'
@@ -493,6 +494,12 @@ const AuthenticatedSuperAdminSettingsAcademyIndexRoute =
     path: '/academy/',
     getParentRoute: () => AuthenticatedSuperAdminSettingsRoute,
   } as any)
+const AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute =
+  AuthenticatedSuperAdminSettingsAdventCalendarIndexRouteImport.update({
+    id: '/advent-calendar/',
+    path: '/advent-calendar/',
+    getParentRoute: () => AuthenticatedSuperAdminSettingsRoute,
+  } as any)
 const AuthenticatedSuperAdminSettingsAnonymizationIndexRoute =
   AuthenticatedSuperAdminSettingsAnonymizationIndexRouteImport.update({
     id: '/anonymization/',
@@ -658,6 +665,7 @@ export interface FileRoutesByFullPath {
   '/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/super-admin-settings/advent-calendar/': typeof AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute
   '/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -741,6 +749,7 @@ export interface FileRoutesByTo {
   '/admin-settings/models': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/admin-settings/teams': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/super-admin-settings/academy': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/super-admin-settings/advent-calendar': typeof AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute
   '/super-admin-settings/anonymization': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/super-admin-settings/app-alerts': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/super-admin-settings/models-catalog': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -829,6 +838,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-settings/models/': typeof AuthenticatedAdminSettingsModelsIndexRoute
   '/_authenticated/admin-settings/teams/': typeof AuthenticatedAdminSettingsTeamsIndexRoute
   '/_authenticated/super-admin-settings/academy/': typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  '/_authenticated/super-admin-settings/advent-calendar/': typeof AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute
   '/_authenticated/super-admin-settings/anonymization/': typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   '/_authenticated/super-admin-settings/app-alerts/': typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   '/_authenticated/super-admin-settings/models-catalog/': typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -917,6 +927,7 @@ export interface FileRouteTypes {
     | '/admin-settings/models/'
     | '/admin-settings/teams/'
     | '/super-admin-settings/academy/'
+    | '/super-admin-settings/advent-calendar/'
     | '/super-admin-settings/anonymization/'
     | '/super-admin-settings/app-alerts/'
     | '/super-admin-settings/models-catalog/'
@@ -1000,6 +1011,7 @@ export interface FileRouteTypes {
     | '/admin-settings/models'
     | '/admin-settings/teams'
     | '/super-admin-settings/academy'
+    | '/super-admin-settings/advent-calendar'
     | '/super-admin-settings/anonymization'
     | '/super-admin-settings/app-alerts'
     | '/super-admin-settings/models-catalog'
@@ -1087,6 +1099,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-settings/models/'
     | '/_authenticated/admin-settings/teams/'
     | '/_authenticated/super-admin-settings/academy/'
+    | '/_authenticated/super-admin-settings/advent-calendar/'
     | '/_authenticated/super-admin-settings/anonymization/'
     | '/_authenticated/super-admin-settings/app-alerts/'
     | '/_authenticated/super-admin-settings/models-catalog/'
@@ -1614,6 +1627,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRouteImport
       parentRoute: typeof AuthenticatedSuperAdminSettingsRoute
     }
+    '/_authenticated/super-admin-settings/advent-calendar/': {
+      id: '/_authenticated/super-admin-settings/advent-calendar/'
+      path: '/advent-calendar'
+      fullPath: '/super-admin-settings/advent-calendar/'
+      preLoaderRoute: typeof AuthenticatedSuperAdminSettingsAdventCalendarIndexRouteImport
+      parentRoute: typeof AuthenticatedSuperAdminSettingsRoute
+    }
     '/_authenticated/super-admin-settings/anonymization/': {
       id: '/_authenticated/super-admin-settings/anonymization/'
       path: '/anonymization'
@@ -1809,6 +1829,7 @@ interface AuthenticatedSuperAdminSettingsRouteChildren {
   AuthenticatedSuperAdminSettingsIndexRoute: typeof AuthenticatedSuperAdminSettingsIndexRoute
   AuthenticatedSuperAdminSettingsOrgsIdRoute: typeof AuthenticatedSuperAdminSettingsOrgsIdRoute
   AuthenticatedSuperAdminSettingsAcademyIndexRoute: typeof AuthenticatedSuperAdminSettingsAcademyIndexRoute
+  AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute: typeof AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute
   AuthenticatedSuperAdminSettingsAnonymizationIndexRoute: typeof AuthenticatedSuperAdminSettingsAnonymizationIndexRoute
   AuthenticatedSuperAdminSettingsAppAlertsIndexRoute: typeof AuthenticatedSuperAdminSettingsAppAlertsIndexRoute
   AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute: typeof AuthenticatedSuperAdminSettingsModelsCatalogIndexRoute
@@ -1828,6 +1849,8 @@ const AuthenticatedSuperAdminSettingsRouteChildren: AuthenticatedSuperAdminSetti
       AuthenticatedSuperAdminSettingsOrgsIdRoute,
     AuthenticatedSuperAdminSettingsAcademyIndexRoute:
       AuthenticatedSuperAdminSettingsAcademyIndexRoute,
+    AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute:
+      AuthenticatedSuperAdminSettingsAdventCalendarIndexRoute,
     AuthenticatedSuperAdminSettingsAnonymizationIndexRoute:
       AuthenticatedSuperAdminSettingsAnonymizationIndexRoute,
     AuthenticatedSuperAdminSettingsAppAlertsIndexRoute:
