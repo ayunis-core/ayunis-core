@@ -1,13 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
+import { chatHistoryQuery } from '@ayunis/chat/surface';
 import { ChatsPage } from '@/pages/chats';
-import {
-  threadsControllerFindAll,
-  getThreadsControllerFindAllQueryKey,
-} from '@ayunis/api-client/endpoints';
 import { searchParamString } from '@/shared/lib/search-params';
-
-const CHATS_PER_PAGE = 20;
 
 const searchSchema = z.object({
   search: searchParamString.optional(),
@@ -17,38 +12,23 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_authenticated/chats/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { search, page = 1 }, context: { queryClient } }) => {
-    const offset = (page - 1) * CHATS_PER_PAGE;
-    const chatsResponse = await queryClient.query({
-      queryKey: getThreadsControllerFindAllQueryKey({
-        search,
-        limit: CHATS_PER_PAGE,
-        offset,
-      }),
-      queryFn: () =>
-        threadsControllerFindAll({
-          search,
-          limit: CHATS_PER_PAGE,
-          offset,
-        }),
-    });
-    const chats = chatsResponse.data;
-    const pagination = chatsResponse.pagination;
-    return { chats, pagination, search, page };
+  // The package history loads the same page; loading it first keeps the page
+  // from showing a loading state on navigation.
+  loader: async ({
+    deps: { search, page = 1 },
+    context: { queryClient, user },
+  }) => {
+    await queryClient.query(chatHistoryQuery({ search, page }));
+    return {
+      search,
+      page,
+      sessionKey: JSON.stringify([user.id, user.orgId]),
+    };
   },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { chats, pagination, search, page } = Route.useLoaderData();
-  const hasFilters = Boolean(search);
-  return (
-    <ChatsPage
-      chats={chats}
-      search={search}
-      hasFilters={hasFilters}
-      pagination={pagination}
-      currentPage={page}
-    />
-  );
+  const { search, page, sessionKey } = Route.useLoaderData();
+  return <ChatsPage sessionKey={sessionKey} search={search} page={page} />;
 }

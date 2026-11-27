@@ -18,6 +18,7 @@ import type {
   NewChatSourceFile,
   NewChatSourceStatus,
 } from './use-new-chat-sources';
+import { apiErrorCode } from './api-error-code';
 
 /** Everything a new chat starts with. */
 export interface ChatStartRequest {
@@ -53,13 +54,6 @@ export class ChatStartError extends Error {
   }
 }
 
-function errorCode(error: unknown): string | undefined {
-  if (typeof error !== 'object' || error === null) return undefined;
-  const { response } = error as { response?: { data?: { code?: unknown } } };
-  const code = response?.data?.code;
-  return typeof code === 'string' ? code : undefined;
-}
-
 async function createThread(
   request: ChatStartRequest,
   signal: AbortSignal,
@@ -77,7 +71,7 @@ async function createThread(
     );
   } catch (error) {
     const key =
-      errorCode(error) === 'MODEL_MODE_UNAVAILABLE'
+      apiErrorCode(error) === 'MODEL_MODE_UNAVAILABLE'
         ? 'chat.errorModeUnavailable'
         : 'chat.errorSendMessage';
     throw new ChatStartError({ ns: 'chat', key }, error);

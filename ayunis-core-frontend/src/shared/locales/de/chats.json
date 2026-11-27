@@ -32,5 +32,9 @@
     "success": "Chat erfolgreich gelöscht!",
     "error": "Chat konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "notFound": "Chat nicht gefunden"
+  },
+  "history": {
+    "loadFailed": "Die Anfrage ist fehlgeschlagen. Versuchen Sie es erneut.",
+    "retry": "Erneut versuchen"
   }
 }

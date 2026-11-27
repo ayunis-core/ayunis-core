@@ -4,63 +4,22 @@ import {
   getActiveRunsControllerFindActiveQueryKey,
   getThreadsControllerFindAllQueryKey,
   getThreadsControllerFindOneQueryKey,
-  threadsControllerDelete,
-  threadsControllerUpdateTitle,
-  useThreadsControllerFindAll,
 } from '@ayunis/api-client/endpoints';
-import { SessionClient, ThreadType } from '@ayunis/api-client/schemas';
 
-export const PANE_HISTORY_PAGE_SIZE = 20;
-
-export function usePaneHistory(offset: number) {
-  return useThreadsControllerFindAll({
-    client: SessionClient.outlook,
-    type: ThreadType.chat,
-    limit: PANE_HISTORY_PAGE_SIZE,
-    offset,
-  });
-}
-
+/** Refreshes the chat, the history and the runs once a run settled. */
 export function usePaneThreadActions() {
   const queryClient = useQueryClient();
-  const refreshThread = useCallback(
-    (id: string) =>
-      queryClient.invalidateQueries({
-        queryKey: getThreadsControllerFindOneQueryKey(id),
-      }),
-    [queryClient],
-  );
-  const refreshHistory = useCallback(() => {
-    void queryClient.invalidateQueries({
-      queryKey: getThreadsControllerFindAllQueryKey(),
-    });
-  }, [queryClient]);
   const refreshRun = useCallback(
     (id: string) => {
-      void refreshThread(id);
-      refreshHistory();
-      void queryClient.invalidateQueries({
-        queryKey: getActiveRunsControllerFindActiveQueryKey(),
-      });
+      for (const queryKey of [
+        getThreadsControllerFindOneQueryKey(id),
+        getThreadsControllerFindAllQueryKey(),
+        getActiveRunsControllerFindActiveQueryKey(),
+      ]) {
+        void queryClient.invalidateQueries({ queryKey });
+      }
     },
-    [queryClient, refreshHistory, refreshThread],
+    [queryClient],
   );
-
-  return {
-    refreshThread,
-    refreshRun,
-    async rename(id: string, title: string, signal: AbortSignal) {
-      await threadsControllerUpdateTitle(id, { title }, signal);
-      await refreshThread(id);
-      refreshHistory();
-    },
-    async remove(id: string, signal: AbortSignal) {
-      await threadsControllerDelete(id, signal);
-      queryClient.removeQueries({
-        queryKey: getThreadsControllerFindOneQueryKey(id),
-        exact: true,
-      });
-      refreshHistory();
-    },
-  };
+  return { refreshRun };
 }

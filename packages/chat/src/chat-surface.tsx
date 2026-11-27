@@ -1,35 +1,21 @@
-import { Children, useCallback, type ReactNode, type UIEvent } from 'react';
-import type { ChatSlots } from './chat-surface-config';
+import { useCallback, type ReactNode, type UIEvent } from 'react';
 import { useAutoScroll } from './use-auto-scroll';
 import { useContentScrollHeader } from './use-content-scroll-header';
 
-export interface ChatSurfaceProps {
-  readonly renderContent: (
-    openArtifact?: ChatSlots['onOpenArtifact'],
-  ) => ReactNode;
+interface ChatSurfaceProps {
+  readonly header: ReactNode;
+  readonly content: ReactNode;
   readonly composer: ReactNode;
-  readonly slots?: ChatSlots;
-  readonly empty?: boolean;
-  readonly resetKey?: unknown;
+  readonly resetKey: unknown;
 }
 
+/** The conversation's scrolling frame: header over the timeline, composer below. */
 export function ChatSurface({
-  renderContent,
+  header,
+  content,
   composer,
-  slots,
-  empty,
   resetKey,
 }: ChatSurfaceProps) {
-  const {
-    emptyState,
-    onOpenArtifact,
-    header: renderHeader,
-    actions,
-  } = slots ?? {};
-  const content =
-    (empty ? emptyState : undefined) ?? renderContent(onOpenArtifact);
-  const header = renderHeader ? renderHeader(actions) : actions;
-  const hasHeader = Children.toArray(header).some((child) => child !== '');
   const { setScrollRef, onScroll, headerScrolled } = useChatScroll(
     content,
     resetKey,
@@ -43,19 +29,15 @@ export function ChatSurface({
           ref={setScrollRef}
           onScroll={onScroll}
         >
-          {hasHeader && (
-            <div className="content-scroll-header-offset" aria-hidden />
-          )}
+          <div className="content-scroll-header-offset" aria-hidden />
           <div className="mx-auto w-full max-w-[800px]">{content}</div>
         </div>
-        {hasHeader && (
-          <div
-            className="content-scroll-header"
-            data-scrolled={headerScrolled ? 'true' : 'false'}
-          >
-            {header}
-          </div>
-        )}
+        <div
+          className="content-scroll-header"
+          data-scrolled={headerScrolled ? 'true' : 'false'}
+        >
+          {header}
+        </div>
       </div>
       <div className="sticky bottom-0 z-10 mx-auto w-full min-w-0 max-w-[800px] flex-shrink-0 bg-background">
         {composer}

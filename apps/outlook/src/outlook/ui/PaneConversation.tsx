@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Conversation,
   type ChatConfig,
@@ -24,15 +23,6 @@ const NO_STATE: Pick<ChatThreadState, 'messages' | 'piiMasks'> = {
   messages: [],
   piiMasks: [],
 };
-
-function ConversationEmptyState() {
-  const { t } = useTranslation('outlook');
-  return (
-    <p className="p-4 text-sm text-muted-foreground">
-      {t('chat.empty', { defaultValue: 'Ask about this email' })}
-    </p>
-  );
-}
 
 export function PaneConversation({
   threadId,
@@ -62,7 +52,6 @@ export function PaneConversation({
           },
         }}
         lifecycle={lifecycle}
-        emptyState={<ConversationEmptyState />}
       />
     </OutlookToolBridgeContext.Provider>
   );

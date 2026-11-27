@@ -28,11 +28,15 @@ The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
   PII reveal, read aloud and the sent, waiting and failed message. The pane
   passes no workspaces, favorites, trail, artifact panel or navigation, so
   those controls and the citation's recording link do not show. After a delete
-  the pane opens the history (`events.onThreadDeleted`).
-  History queries remain scoped to `SessionClient.outlook`, while the list,
-  empty/loading/error states, pagination, thread dialogs, and academy notice use
-  the canonical package presentation. The pane supplies offset navigation,
-  mutations, retry, back, and sign-out behavior.
+  the pane opens the history (`events.onThreadDeleted`). A chat without
+  messages shows no hint, as on Web.
+  `ui/PaneChatHistory.tsx` frames the package `History` screen under the pane
+  heading (Back to start, Sign out). The package loads and pages the chats,
+  opens one through `onSelect`, and deletes them; its empty state starts a
+  chat through `events.onNewChat`. The pane only switches its frame to a
+  centred message when `onEmptyChange` says there are no chats. The list asks
+  for no client: the backend lists the Outlook token's own chats, so it stays
+  Outlook-only.
   Attachment and source badges, uploads and source removal are
   package-owned. Web chat uses its own router and build.
 - `lib/pane-item-chats.ts` tracks one chat per email and principal. It matches

@@ -18,7 +18,7 @@ export class FindAllThreadsQuery extends PaginatedQuery {
       /** Only routine threads when true, every other thread when false. */
       isRoutine?: boolean;
       routineId?: UUID;
-      /** Threads of this client; without it, only threads of the web app. */
+      /** Threads of this client; without it, the session's client (the web app for a browser session). */
       client?: SessionClient;
     },
     pagination?: { limit?: number; offset?: number },

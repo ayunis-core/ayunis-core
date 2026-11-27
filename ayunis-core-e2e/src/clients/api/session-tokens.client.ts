@@ -48,6 +48,28 @@ export function listThreadsStatusForAccessToken(
   return withAccessToken(accessToken, listThreadsStatus);
 }
 
+/** The ids of the chats `GET /threads` lists, as the pane asks: no filter. */
+export async function listThreadIds(api: APIRequestContext): Promise<string[]> {
+  const { data } = await generatedApi.threadsControllerFindAll(
+    { limit: 100 },
+    { api },
+  );
+  return data.map(({ id }) => id);
+}
+
+export function listThreadIdsForAccessToken(
+  accessToken: string,
+): Promise<string[]> {
+  return withAccessToken(accessToken, listThreadIds);
+}
+
+export function withPaneApi<T>(
+  accessToken: string,
+  call: (api: APIRequestContext) => Promise<T>,
+): Promise<T> {
+  return withAccessToken(accessToken, call);
+}
+
 /** A route the Outlook pane has no business calling. */
 export function listApiKeysStatusForAccessToken(
   accessToken: string,

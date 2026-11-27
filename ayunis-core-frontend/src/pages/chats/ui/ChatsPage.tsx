@@ -1,86 +1,106 @@
-import { ChatHistory } from '@ayunis/chat/history';
+import { useState, type ReactNode } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import { History } from '@ayunis/chat/surface';
 import AppLayout from '@/layouts/app-layout';
 import ContentAreaLayout from '@/layouts/content-area-layout/ui/ContentAreaLayout';
+import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { ListToolbar } from '@/widgets/list-toolbar';
-import ChatsFilters from './ChatsFilters';
-import ChatCard from './ChatCard';
-import ChatsEmptyState from './ChatsEmptyState';
-import ChatsPagination from './ChatsPagination';
-import FullScreenMessageLayout from '@/layouts/full-screen-message-layout/ui/FullScreenMessageLayout';
-import { useTranslation } from 'react-i18next';
+import { CreateChatWorkspaceDialog } from '@/widgets/chat-workspace-menu';
+import { threadRunLifecycle } from '@/features/thread-run';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
-import type { ChatListItem } from '@/pages/chats/model/types';
-import { sortFavoritesFirst, useFavorites } from '@/features/favorites';
+import { useChatsHistoryConfig } from '@/pages/chats/hooks/useChatsHistoryConfig';
+import ChatsFilters from './ChatsFilters';
+
 interface ChatsPageProps {
-  chats: ChatListItem[];
-  search?: string;
-  hasFilters: boolean;
-  pagination?: { total?: number; limit: number; offset: number };
-  currentPage: number;
+  readonly sessionKey: string;
+  readonly search?: string;
+  readonly page: number;
 }
 
 export default function ChatsPage({
-  chats,
+  sessionKey,
   search,
-  hasFilters,
-  pagination,
-  currentPage,
-}: Readonly<ChatsPageProps>) {
-  const { t } = useTranslation('chats');
-  const { favorites } = useFavorites();
-  const sortedChats = sortFavoritesFirst(chats, favorites, 'thread');
-
-  const total = pagination?.total ?? 0;
-  const limit = pagination?.limit ?? 20;
-  const totalPages = Math.ceil(total / limit);
-
-  if (chats.length === 0 && !hasFilters && currentPage === 1) {
-    return (
-      <AppLayout>
-        <FullScreenMessageLayout
-          header={
-            <ContentAreaHeader
-              breadcrumbs={[{ label: t('page.title') }]}
-              action={<HelpLink path="chat/" />}
-            />
-          }
-        >
-          <ChatsEmptyState hasFilters={false} />
-        </FullScreenMessageLayout>
-      </AppLayout>
-    );
-  }
+  page,
+}: ChatsPageProps) {
+  const navigate = useNavigate();
+  const [empty, setEmpty] = useState(false);
+  const [workspaceFor, setWorkspaceFor] = useState<string>();
+  const config = useChatsHistoryConfig({
+    sessionKey,
+    onCreateWorkspace: setWorkspaceFor,
+  });
+  const history = (
+    <History
+      config={config}
+      lifecycle={threadRunLifecycle}
+      search={search}
+      pagination={{
+        page,
+        onPage: (next) =>
+          void navigate({ to: '/chats', search: { search, page: next } }),
+      }}
+      onSelect={(threadId) =>
+        void navigate({ to: '/chats/$threadId', params: { threadId } })
+      }
+      onEmptyChange={setEmpty}
+    />
+  );
 
   return (
     <AppLayout>
-      <ContentAreaLayout
-        contentHeader={
+      <ChatsFrame empty={empty} search={search}>
+        {history}
+      </ChatsFrame>
+      {workspaceFor && (
+        <CreateChatWorkspaceDialog
+          threadId={workspaceFor}
+          open
+          onOpenChange={(open) => {
+            if (!open) setWorkspaceFor(undefined);
+          }}
+        />
+      )}
+    </AppLayout>
+  );
+}
+
+/** Without any chats the page is a full-screen message without the search. */
+function ChatsFrame({
+  empty,
+  search,
+  children,
+}: Readonly<{ empty: boolean; search?: string; children: ReactNode }>) {
+  const { t } = useTranslation('chats');
+  if (empty) {
+    return (
+      <FullScreenMessageLayout
+        header={
           <ContentAreaHeader
             breadcrumbs={[{ label: t('page.title') }]}
-            action={
-              <ListToolbar data-testid="chats-toolbar">
-                <ChatsFilters search={search} />
-                <HelpLink path="chat/" />
-              </ListToolbar>
-            }
+            action={<HelpLink path="chat/" />}
           />
         }
-        contentArea={
-          <ChatHistory
-            chats={sortedChats}
-            renderChat={(chat) => <ChatCard chat={chat} />}
-            empty={<ChatsEmptyState hasFilters={hasFilters} />}
-            pagination={
-              <ChatsPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                search={search}
-              />
-            }
-          />
-        }
-      />
-    </AppLayout>
+      >
+        {children}
+      </FullScreenMessageLayout>
+    );
+  }
+  return (
+    <ContentAreaLayout
+      contentHeader={
+        <ContentAreaHeader
+          breadcrumbs={[{ label: t('page.title') }]}
+          action={
+            <ListToolbar data-testid="chats-toolbar">
+              <ChatsFilters search={search} />
+              <HelpLink path="chat/" />
+            </ListToolbar>
+          }
+        />
+      }
+      contentArea={children}
+    />
   );
 }

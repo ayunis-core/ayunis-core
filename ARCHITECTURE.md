@@ -156,10 +156,12 @@ available to a surface when its entry grants it.
 ## Frontend (React + Feature-Sliced Design)
 
 The [Outlook app](apps/outlook/src/outlook/SUMMARY.md) owns its Office shell,
-navigation, bearer session, and mail tools. It uses the workspace
-[`@ayunis/chat`](packages/chat/README.md) runtime with host capabilities and
-adapters. The web app and Outlook build separately and are served by the same
-backend image.
+navigation, bearer session, and mail tools. Both hosts render the chat from
+the workspace [`@ayunis/chat`](packages/chat/README.md) package's screens
+(`NewChat`, `Conversation`, `History`, and Web's embedded `NewChatComposer`),
+each configured by one `ChatConfig` that carries data and events but no UI;
+the hosts own only the frame around them. The web app and Outlook build
+separately and are served by the same backend image.
 
 📁 **[`ayunis-core-frontend/src/`](ayunis-core-frontend/src/SUMMARY.md)**
 

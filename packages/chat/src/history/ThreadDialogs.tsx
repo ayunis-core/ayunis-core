@@ -12,17 +12,6 @@ import { Button } from '@ayunis/ui/components/button';
 import { Input } from '@ayunis/ui/components/input';
 import { Label } from '@ayunis/ui/components/label';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@ayunis/ui/components/alert-dialog';
-import {
   Dialog,
   DialogClose,
   DialogContent,
@@ -202,60 +191,21 @@ function RenameThreadActions({
 export function ChatHistoryDeleteAction({
   title,
   busy,
-  dismissible = true,
   onDelete,
 }: Readonly<{
   title: string;
   busy?: boolean;
-  dismissible?: boolean;
   onDelete: () => void;
 }>) {
   const { t } = useTranslation('chats');
   const [open, setOpen] = useState(false);
-  if (dismissible) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <DeleteTrigger label={t('card.confirmDelete.title')} busy={busy} />
-        </DialogTrigger>
-        <DialogDeleteContent title={title} onDelete={onDelete} />
-      </Dialog>
-    );
-  }
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <DeleteTrigger label={t('card.confirmDelete.title')} busy={busy} />
-      </AlertDialogTrigger>
-      <AlertDeleteContent title={title} onDelete={onDelete} />
-    </AlertDialog>
-  );
-}
-
-export function DeleteThreadDialog({
-  title,
-  open,
-  dismissible = true,
-  onOpenChange,
-  onDelete,
-}: Readonly<{
-  title: string;
-  open: boolean;
-  dismissible?: boolean;
-  onOpenChange: (open: boolean) => void;
-  onDelete: () => void;
-}>) {
-  if (dismissible) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogDeleteContent title={title} onDelete={onDelete} />
-      </Dialog>
-    );
-  }
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDeleteContent title={title} onDelete={onDelete} />
-    </AlertDialog>
+      </DialogTrigger>
+      <DialogDeleteContent title={title} onDelete={onDelete} />
+    </Dialog>
   );
 }
 
@@ -315,34 +265,5 @@ function DialogDeleteContent({
         </DialogClose>
       </DialogFooter>
     </DialogContent>
-  );
-}
-
-function AlertDeleteContent({
-  title,
-  onDelete,
-}: Readonly<{ title: string; onDelete: () => void }>) {
-  const { t } = useTranslation('chats');
-  return (
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>{t('card.confirmDelete.title')}</AlertDialogTitle>
-        <AlertDialogDescription>
-          {t('card.confirmDelete.description', { title })}
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel data-testid="confirmation-cancel">
-          {t('card.confirmDelete.cancelText')}
-        </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          data-testid="confirmation-confirm"
-          onClick={onDelete}
-        >
-          {t('card.confirmDelete.confirmText')}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
   );
 }

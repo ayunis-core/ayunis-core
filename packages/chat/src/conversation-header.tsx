@@ -8,7 +8,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@ayunis/ui/components/breadcrumb';
-import type { ChatLayout, ChatTrailItem, ChatViewConfig } from './chat-config';
+import type {
+  ChatFavorites,
+  ChatLayout,
+  ChatTrailItem,
+  ChatViewConfig,
+} from './chat-config';
 import { ChatLink } from './chat-link';
 import type { ChatRunLifecycle } from './run-lifecycle';
 import {
@@ -91,10 +96,7 @@ function HeaderActions({
     <div className="flex items-center gap-1">
       {config.newChat && <NewChatButton onClick={config.newChat.start} />}
       {config.favorites && (
-        <PinButton
-          isPinned={config.favorites.isFavorite(thread.id)}
-          onToggle={() => config.favorites?.toggle(thread.id)}
-        />
+        <HeaderPinButton favorites={config.favorites} threadId={thread.id} />
       )}
       <ThreadActionsMenu
         config={config}
@@ -144,5 +146,20 @@ function HeaderTrail({
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
+  );
+}
+
+function HeaderPinButton({
+  favorites,
+  threadId,
+}: Readonly<{ favorites: ChatFavorites; threadId: string }>) {
+  const { t } = useTranslation('common');
+  const isPinned = favorites.isFavorite(threadId);
+  return (
+    <PinButton
+      isPinned={isPinned}
+      label={isPinned ? t('sidebar.unpinChat') : t('sidebar.pinChat')}
+      onToggle={() => favorites.toggle(threadId)}
+    />
   );
 }
