@@ -11,6 +11,7 @@ import type { ActiveThreadRun } from 'src/domain/runs/application/services/activ
 import { ExecuteRunAndSetTitleUseCase } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.use-case';
 import { ExecuteRunAndSetTitleCommand } from 'src/domain/runs/application/use-cases/execute-run-and-set-title/execute-run-and-set-title.command';
 import { SendMessageCommand } from './send-message.command';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 /**
  * Starts the run detached from the request and streams it to the requester.
@@ -40,7 +41,11 @@ export class SendMessageUseCase {
         this.consumeTrialMessage(orgId);
       }
       return this.activeThreadRuns.startDetached(
-        { threadId: command.threadId, userId },
+        {
+          threadId: command.threadId,
+          userId,
+          client: getCurrentThreadClient(this.contextService),
+        },
         (signal) => this.runEvents(command, signal),
       );
     } catch (error) {

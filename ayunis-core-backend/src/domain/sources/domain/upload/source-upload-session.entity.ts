@@ -9,11 +9,16 @@ import { SourceUploadTargetType } from './source-upload-target-type.enum';
 import { SourceUploadPipeline } from './source-upload-pipeline.enum';
 import { SourceUploadSessionStatus } from './source-upload-session-status.enum';
 import type { UploadedSourceReference } from './uploaded-source-reference';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
+
+export type SourceUploadSurface = SessionClient | 'web';
 
 export class SourceUploadSession {
   id: UUID;
   orgId: UUID;
   userId: UUID | null;
+  /** Immutable surface that reserved the upload; null only on legacy rows. */
+  surface: SourceUploadSurface | null;
   targetType: SourceUploadTargetType;
   targetId: UUID;
   fileName: string;
@@ -40,6 +45,7 @@ export class SourceUploadSession {
     id?: UUID;
     orgId: UUID;
     userId: UUID | null;
+    surface?: SourceUploadSurface | null;
     targetType: SourceUploadTargetType;
     targetId: UUID;
     fileName: string;
@@ -58,6 +64,7 @@ export class SourceUploadSession {
     this.id = params.id ?? randomUUID();
     this.orgId = params.orgId;
     this.userId = params.userId;
+    this.surface = params.surface ?? null;
     this.targetType = params.targetType;
     this.targetId = params.targetId;
     this.fileName = params.fileName;

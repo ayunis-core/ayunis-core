@@ -124,7 +124,7 @@ describe('SendMessageUseCase', () => {
     await events.return(undefined);
 
     expect(run.signal()?.aborted).toBe(false);
-    expect(activeThreadRuns.listForUser(USER_ID)).toEqual([
+    expect(activeThreadRuns.listForUser(USER_ID, null)).toEqual([
       { threadId: THREAD_ID, cancellable: true },
     ]);
     run.release();
@@ -135,7 +135,9 @@ describe('SendMessageUseCase', () => {
     const events = useCase.execute(commandWith(false));
     await events.next();
 
-    const attached = activeThreadRuns.find(THREAD_ID, USER_ID)?.subscribe();
+    const attached = activeThreadRuns
+      .find(THREAD_ID, USER_ID, null)
+      ?.subscribe();
 
     await expect(attached?.next()).resolves.toEqual({
       done: false,
@@ -149,7 +151,7 @@ describe('SendMessageUseCase', () => {
     const events = useCase.execute(commandWith(false));
     await events.next();
 
-    activeThreadRuns.cancel(THREAD_ID, USER_ID);
+    activeThreadRuns.cancel(THREAD_ID, USER_ID, null);
 
     expect(run.signal()?.aborted).toBe(true);
     run.release();
@@ -158,7 +160,7 @@ describe('SendMessageUseCase', () => {
   it('removes the run once it has finished', async () => {
     await collect(useCase.execute(commandWith(false)));
 
-    expect(activeThreadRuns.listForUser(USER_ID)).toEqual([]);
+    expect(activeThreadRuns.listForUser(USER_ID, null)).toEqual([]);
   });
 
   it('holds uploaded images until the run ends, not until the listener leaves', async () => {

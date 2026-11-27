@@ -291,8 +291,8 @@ describe('ExecuteUnattendedRunUseCase', () => {
         runs,
         () => {
           if (watched) return;
-          listed = activeThreadRuns.listForUser(ownerId);
-          const run = activeThreadRuns.find(threadId, ownerId);
+          listed = activeThreadRuns.listForUser(ownerId, null);
+          const run = activeThreadRuns.find(threadId, ownerId, null);
           watched = (async () => {
             const events: RunEvent[] = [];
             for await (const event of run!.subscribe()) events.push(event);
@@ -344,7 +344,7 @@ describe('ExecuteUnattendedRunUseCase', () => {
       const { result, activeThreadRuns } = await watchFirstRun([finishedRun()]);
       await result;
 
-      expect(activeThreadRuns.listForUser(ownerId)).toEqual([]);
+      expect(activeThreadRuns.listForUser(ownerId, null)).toEqual([]);
     });
 
     it('tells a watcher why the execution failed before it ends', async () => {
@@ -372,7 +372,7 @@ describe('ExecuteUnattendedRunUseCase', () => {
       ]);
       await expect(result).rejects.toBeInstanceOf(RunMaxIterationsReachedError);
 
-      expect(activeThreadRuns.listForUser(ownerId)).toEqual([]);
+      expect(activeThreadRuns.listForUser(ownerId, null)).toEqual([]);
     });
   });
 });

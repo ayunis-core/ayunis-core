@@ -1,7 +1,6 @@
 import type { UUID } from 'crypto';
 import { PaginatedQuery } from 'src/common/pagination/paginated.query';
 import { ThreadsConstants } from 'src/domain/threads/domain/threads.constants';
-import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export class FindAllThreadsQuery extends PaginatedQuery {
   constructor(
@@ -18,8 +17,6 @@ export class FindAllThreadsQuery extends PaginatedQuery {
       /** Only routine threads when true, every other thread when false. */
       isRoutine?: boolean;
       routineId?: UUID;
-      /** Threads of this client; without it, only threads of the web app. */
-      client?: SessionClient;
     },
     pagination?: { limit?: number; offset?: number },
   ) {

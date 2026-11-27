@@ -18,7 +18,7 @@ import {
 } from 'src/domain/threads/application/ports/threads.repository';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, type FindOptionsWhere } from 'typeorm';
 import type { EntityManager } from 'typeorm';
 import { ThreadRecord } from './schema/thread.record';
 import { ThreadMapper } from './mappers/thread.mapper';
@@ -33,11 +33,12 @@ import { applyThreadListFilters } from './queries/apply-thread-list-filters';
 import { applyThreadListRelations } from './queries/apply-thread-list-relations';
 import { findPastChat, findPastChats } from './queries/past-chats';
 import { grepPastMessages } from './queries/grep-past-messages';
+import * as findThreads from './queries/find-threads';
 import {
-  accessibleThread,
-  personalOrMemberWorkspace,
+  accessibleThreadForSurface,
   personalOrMemberWorkspaceSql,
 } from './queries/personal-or-member-workspace';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 @Injectable()
 export class LocalThreadsRepository extends ThreadsRepository {
@@ -89,10 +90,24 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.threadMapper.toDomain(reloadedThreadEntity);
   }
 
-  async findOne(id: UUID, userId: UUID): Promise<Thread | null> {
-    this.logger.log({ id, userId }, 'findOne');
+  findOneForSurface(
+    id: UUID,
+    userId: UUID,
+    client: SessionClient | null,
+  ): Promise<Thread | null> {
+    this.logger.log({ id, userId, client }, 'findOne');
+    return this.findOneByAccess(
+      id,
+      accessibleThreadForSurface(id, userId, client),
+    );
+  }
+
+  private async findOneByAccess(
+    id: UUID,
+    where: FindOptionsWhere<ThreadRecord>,
+  ): Promise<Thread | null> {
     const threadEntity = await this.threadRepository.findOne({
-      where: accessibleThread(id, userId),
+      where,
       relationLoadStrategy: 'query',
       relations: [
         'messages',
@@ -113,55 +128,49 @@ export class LocalThreadsRepository extends ThreadsRepository {
     return this.threadMapper.toDomain(threadEntity);
   }
 
-  existsForUser(id: UUID, userId: UUID): Promise<boolean> {
+  existsForSurface(
+    id: UUID,
+    userId: UUID,
+    client: SessionClient | null,
+  ): Promise<boolean> {
     return this.threadRepository.exists({
-      where: accessibleThread(id, userId),
+      where: accessibleThreadForSurface(id, userId, client),
     });
   }
 
   async findContextRefs(
     id: UUID,
     userId: UUID,
+    client: SessionClient | null,
   ): Promise<ThreadContextRefs | null> {
-    const rows = await this.threadRepository
-      .createQueryBuilder('thread')
-      .leftJoin('thread.knowledgeBaseAssignments', 'assignment')
-      .select('thread.workspaceId', 'workspaceId')
-      .addSelect('assignment.knowledgeBaseId', 'knowledgeBaseId')
-      .where('thread.id = :id', { id })
-      .andWhere('thread.userId = :userId', { userId })
-      .andWhere(personalOrMemberWorkspaceSql('thread.workspaceId', ':userId'))
-      .getRawMany<{
-        workspaceId: UUID | null;
-        knowledgeBaseId: UUID | null;
-      }>();
-    if (rows.length === 0) return null;
-    return {
-      workspaceId: rows[0].workspaceId,
-      knowledgeBaseIds: rows.flatMap(({ knowledgeBaseId }) =>
-        knowledgeBaseId ? [knowledgeBaseId] : [],
-      ),
-    };
+    return findThreads.findThreadContextRefs(
+      this.threadRepository,
+      id,
+      userId,
+      client,
+    );
   }
 
   async findCitationContext(
     id: UUID,
     userId: UUID,
+    client: SessionClient | null,
   ): Promise<ThreadCitationContext | null> {
-    return findThreadCitationContext(this.threadRepository, id, userId);
+    return findThreadCitationContext(this.threadRepository, id, userId, client);
   }
 
-  async findAllByIds(userId: UUID, ids: UUID[]): Promise<Thread[]> {
-    if (ids.length === 0) return [];
-
-    const records = await this.threadRepository.find({
-      where: {
-        userId,
-        id: In(ids),
-        workspaceId: personalOrMemberWorkspace(userId),
-      },
-    });
-    return records.map((record) => this.threadMapper.toDomain(record));
+  async findAllByIds(
+    userId: UUID,
+    ids: UUID[],
+    client: SessionClient | null,
+  ): Promise<Thread[]> {
+    return findThreads.findThreadsByIds(
+      this.threadRepository,
+      this.threadMapper,
+      userId,
+      ids,
+      client,
+    );
   }
 
   findPastChats(params: FindPastChatsParams): Promise<Paginated<Thread>> {
@@ -226,34 +235,12 @@ export class LocalThreadsRepository extends ThreadsRepository {
     options?: ThreadsFindAllOptions,
   ): Promise<Thread[]> {
     this.logger.log({ modelId }, 'findAllByModel');
-    const threadEntities = await this.threadRepository.find({
-      where: { modelId },
-      relations: this.getRelations(options),
-      order: options?.withMessages
-        ? { messages: { createdAt: 'ASC' } }
-        : undefined,
-    });
-    return threadEntities.map((entity) => this.threadMapper.toDomain(entity));
-  }
-
-  private getRelations(options?: ThreadsFindAllOptions): string[] {
-    const relations: string[] = ['mcpIntegrations'];
-    if (options?.withMessages) relations.push('messages');
-    if (options?.withModel) relations.push('model');
-    if (options?.withSources) {
-      relations.push(
-        'sourceAssignments',
-        'sourceAssignments.source',
-        'sourceAssignments.source.dataSourceDetails',
-      );
-    }
-    if (options?.withKnowledgeBases) {
-      relations.push(
-        'knowledgeBaseAssignments',
-        'knowledgeBaseAssignments.knowledgeBase',
-      );
-    }
-    return relations;
+    return findThreads.findThreadsByModel(
+      this.threadRepository,
+      this.threadMapper,
+      modelId,
+      options,
+    );
   }
 
   async update(thread: Thread): Promise<Thread> {
@@ -266,6 +253,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async updateTitle(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     title: string;
   }): Promise<void> {
     this.logger.log(
@@ -277,7 +265,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       'updateTitle',
     );
     const result = await this.threadRepository.update(
-      accessibleThread(params.threadId, params.userId),
+      accessibleThreadForSurface(params.threadId, params.userId, params.client),
       { title: params.title },
     );
     if (!result.affected || result.affected === 0) {
@@ -299,6 +287,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async addSourceAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     sourceAssignment: SourceAssignment;
   }): Promise<void> {
     return this.assignments.addSourceAssignment(params);
@@ -307,6 +296,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async attachSourcesWithinCapacity(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     sourceIds: UUID[];
     maxSources: number;
   }): Promise<void> {
@@ -345,6 +335,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async updateMcpIntegrations(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     mcpIntegrationIds: UUID[];
   }): Promise<void> {
     return this.assignments.updateMcpIntegrations(params);
@@ -353,6 +344,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async addKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
@@ -362,6 +354,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async removeKnowledgeBaseAssignment(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     knowledgeBaseId: UUID;
     originSkillId?: UUID;
   }): Promise<void> {
@@ -407,6 +400,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
   async assignToWorkspace(params: {
     threadId: UUID;
     userId: UUID;
+    client: SessionClient | null;
     workspaceId: UUID | null;
   }): Promise<void> {
     this.logger.log(
@@ -418,7 +412,7 @@ export class LocalThreadsRepository extends ThreadsRepository {
       'assignToWorkspace',
     );
     const result = await this.threadRepository.update(
-      accessibleThread(params.threadId, params.userId),
+      accessibleThreadForSurface(params.threadId, params.userId, params.client),
       { workspaceId: params.workspaceId },
     );
     if (!result.affected) {

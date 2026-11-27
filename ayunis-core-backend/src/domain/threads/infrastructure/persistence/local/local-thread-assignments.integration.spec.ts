@@ -23,6 +23,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     id: { type: 'uuid', primary: true },
     userId: { type: 'uuid' },
     workspaceId: { type: 'uuid', nullable: true },
+    client: { type: String, nullable: true },
   },
 });
 const assignmentSchema = new EntitySchema<ThreadKnowledgeBaseAssignmentRecord>({
@@ -131,6 +132,7 @@ describe('Thread assignment transaction', () => {
       repository.attachSourcesWithinCapacity({
         threadId,
         userId,
+        client: null,
         sourceIds,
         maxSources: 3,
       }),
@@ -143,6 +145,7 @@ describe('Thread assignment transaction', () => {
         await repository.addKnowledgeBaseAssignment({
           threadId,
           userId: ownerId,
+          client: null,
           knowledgeBaseId,
         });
         throw new Error('attachment failed');
@@ -160,6 +163,7 @@ describe('Thread assignment transaction', () => {
       await repository.addKnowledgeBaseAssignment({
         threadId: newThreadId,
         userId: ownerId,
+        client: null,
         knowledgeBaseId,
       });
     });
@@ -175,6 +179,7 @@ describe('Thread assignment transaction', () => {
       repository.addKnowledgeBaseAssignment({
         threadId,
         userId: randomUUID(),
+        client: null,
         knowledgeBaseId,
       }),
     ).rejects.toBeInstanceOf(ThreadNotFoundError);
@@ -183,6 +188,7 @@ describe('Thread assignment transaction', () => {
       repository.addKnowledgeBaseAssignment({
         threadId,
         userId: ownerId,
+        client: null,
         knowledgeBaseId,
       }),
     );
@@ -220,7 +226,12 @@ describe('Thread assignment transaction', () => {
   });
 
   it('restores removed assignments on failure and supports committed recreation', async () => {
-    const params = { threadId, userId: ownerId, knowledgeBaseId };
+    const params = {
+      threadId,
+      userId: ownerId,
+      client: null,
+      knowledgeBaseId,
+    };
     await repository.addKnowledgeBaseAssignment(params);
     await expect(
       txHost.withTransaction(async () => {

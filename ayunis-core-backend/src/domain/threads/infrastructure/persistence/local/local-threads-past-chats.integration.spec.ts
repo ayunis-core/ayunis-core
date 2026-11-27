@@ -18,6 +18,7 @@ import {
   PastMessageSearchTimeoutError,
 } from 'src/domain/threads/application/threads.errors';
 import { ThreadOriginKind } from 'src/domain/threads/domain/thread-origin';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import type { LocalThreadAssignmentsRepository } from './local-thread-assignments.repository';
 import { LocalThreadsRepository } from './local-threads.repository';
 import type { ThreadMapper } from './mappers/thread.mapper';
@@ -38,6 +39,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     origin: { type: String, default: ThreadOriginKind.CHAT },
     createdAt: { type: 'timestamp' },
     lastActivityAt: { type: 'timestamp', nullable: true },
+    client: { type: String, nullable: true },
   },
   relations: {
     messages: {
@@ -150,6 +152,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       workspaceId?: UUID;
       isAnonymous?: boolean;
       origin?: ThreadOriginKind;
+      client?: SessionClient;
       createdAt?: string;
       /** Null for a chat from before activity was recorded. */
       lastActivity?: string | null;
@@ -164,6 +167,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       workspaceId: rest.workspaceId ?? null,
       isAnonymous: rest.isAnonymous ?? false,
       origin: rest.origin ?? ThreadOriginKind.CHAT,
+      client: rest.client ?? null,
       createdAt: at(rest.createdAt ?? '2026-10-01T08:00:00'),
       lastActivityAt: lastActivity === null ? () => 'NULL' : at(lastActivity),
     });
@@ -194,9 +198,11 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
     scope: PastChatScope = everywhere,
     userId: UUID = owner,
     activity: PastChatActivityRange = {},
+    client: SessionClient | null = null,
   ): Promise<UUID[]> {
     const page = await repository.findPastChats({
       userId,
+      client,
       scope,
       activity,
       pagination: { limit: 50, offset: 0 },
@@ -211,11 +217,13 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       userId?: UUID;
       created?: PastChatActivityRange;
       limit?: number;
+      client?: SessionClient;
     } = {},
     on: LocalThreadsRepository = repository,
   ): Promise<PastMessageMatch[]> {
     return on.grepPastMessages({
       userId: options.userId ?? owner,
+      client: options.client ?? null,
       scope: options.scope ?? everywhere,
       pattern,
       created: options.created ?? {},
@@ -232,7 +240,10 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
     threadId: UUID,
     scope: PastChatScope = everywhere,
     userId: UUID = owner,
-  ) => (await repository.findPastChat({ userId, scope, threadId })) !== null;
+    client: SessionClient | null = null,
+  ) =>
+    (await repository.findPastChat({ userId, client, scope, threadId })) !==
+    null;
 
   it('offers only the user’s own chats, notification chats included, never anonymous or routine ones or the current chat', async () => {
     const own = await chat();
@@ -254,6 +265,23 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
     }
     expect(await readable(own)).toBe(true);
     expect(await readable(aboutNotification)).toBe(true);
+  });
+
+  it('keeps list, read and grep history inside the authenticated surface', async () => {
+    const browser = await chat();
+    const outlook = await chat({ client: 'outlook' });
+    const excel = await chat({ client: 'excel' });
+    await message(browser, '2026-11-02T10:00:00', MessageRole.USER, 'budget');
+    await message(outlook, '2026-11-02T10:01:00', MessageRole.USER, 'budget');
+    await message(excel, '2026-11-02T10:02:00', MessageRole.USER, 'budget');
+
+    expect(await listed()).toEqual([browser]);
+    expect(await listed(everywhere, owner, {}, 'outlook')).toEqual([outlook]);
+    expect(await listed(everywhere, owner, {}, 'excel')).toEqual([excel]);
+    expect(await readable(excel, everywhere, owner, 'outlook')).toBe(false);
+    expect(await readable(excel, everywhere, owner, 'excel')).toBe(true);
+    const excelMatches = await grep('budget', { client: 'excel' });
+    expect(excelMatches.map((match) => match.threadId)).toEqual([excel]);
   });
 
   it('offers a workspace chat only that workspace’s chats, any other chat all of them', async () => {
@@ -306,6 +334,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       pages.push(
         await repository.findPastChats({
           userId: owner,
+          client: null,
           scope: everywhere,
           activity: {},
           pagination: { limit: 2, offset },
@@ -362,6 +391,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
 
     const thread = await repository.findPastChat({
       userId: owner,
+      client: null,
       scope: everywhere,
       threadId: id,
     });
@@ -635,6 +665,7 @@ describe('Past chats a run may look back on (PostgreSQL)', () => {
       const [match] = await grep('hundesteuer');
       const read = await repository.findPastChat({
         userId: owner,
+        client: null,
         scope: everywhere,
         threadId: id,
       });

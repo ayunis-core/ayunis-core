@@ -6,9 +6,10 @@ import express, {
   type Router,
 } from 'express';
 import { join } from 'node:path';
-import { isSurfaceFeatureEnabled } from 'src/config/features.config';
+import type { FeaturesConfig } from 'src/config/features.config';
 import { frameOrigins, isFrameOrigin } from 'src/config/frame-origins';
 import {
+  isSurfaceEnabled,
   SURFACE_REGISTRY,
   type SurfaceDefinition,
   type SurfaceFraming,
@@ -16,6 +17,7 @@ import {
 
 export function serveSurfaces(
   rootPath: string,
+  features: FeaturesConfig,
   registry: Readonly<Record<string, SurfaceDefinition>> = SURFACE_REGISTRY,
 ): Router {
   const router = express.Router();
@@ -24,10 +26,21 @@ export function serveSurfaces(
     .filter(([, surface]) => surface.staticPrefix !== '/')
     .sort(([, a], [, b]) => b.staticPrefix.length - a.staticPrefix.length);
 
+  // Controller routes are registered before this router. Anything still
+  // under /api is therefore missing and must not fall through to the SPA.
+  router.use('/api', (_req, res) => {
+    res.status(404).end();
+  });
+
   for (const [id, surface] of prefixedSurfaces) {
     router.use(
       surface.staticPrefix,
-      servePrefixedSurface(join(rootPath, id), webPath, surface),
+      servePrefixedSurface(
+        join(rootPath, id),
+        webPath,
+        surface,
+        isSurfaceEnabled(surface, features),
+      ),
     );
   }
 
@@ -49,10 +62,11 @@ function servePrefixedSurface(
   rootPath: string,
   webPath: string,
   surface: SurfaceDefinition,
+  enabled: boolean,
 ): Router {
   const router = express.Router();
   router.use((_, res, next) => {
-    if (!isSurfaceFeatureEnabled(surface.featureFlag)) {
+    if (!enabled) {
       res.status(404).end();
       return;
     }

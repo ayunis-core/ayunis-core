@@ -15,6 +15,7 @@ const OWNER_ID = 'b6a1c3e5-7d9f-4b2a-8c4e-6f8a0b2c4d6e' as UUID;
 const OTHER_USER_ID = 'c7b2d4f6-8e0a-4c3b-9d5f-7a9b1c3d5e7f' as UUID;
 const ASSISTANT_MESSAGE_ID = 'd8c3e5a7-9f1b-4d4c-8e6a-8b0c2d4e6f8a' as UUID;
 const USER_MESSAGE_ID = 'e9d4f6b8-0a2c-4e5d-9f7b-9c1d3e5f7a9b' as UUID;
+const WEB_OWNER = { threadId: THREAD_ID, userId: OWNER_ID, client: null };
 
 function sessionEvent(streaming: boolean): RunEvent {
   return {
@@ -105,10 +106,7 @@ describe('ActiveThreadRuns', () => {
   describe('detached runs', () => {
     it('keeps running after its listener leaves', async () => {
       const source = controllableSource();
-      const run = runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        source.source,
-      );
+      const run = runs.startDetached(WEB_OWNER, source.source);
       const listener = new AbortController();
       const events = run.subscribe(listener.signal);
       source.emit(sessionEvent(true));
@@ -120,17 +118,14 @@ describe('ActiveThreadRuns', () => {
       await flush();
 
       expect(source.signal()?.aborted).toBe(false);
-      expect(runs.listForUser(OWNER_ID)).toEqual([
+      expect(runs.listForUser(OWNER_ID, null)).toEqual([
         { threadId: THREAD_ID, cancellable: true },
       ]);
     });
 
     it('ends a listener when its signal aborts while it waits for events', async () => {
       const source = controllableSource();
-      const run = runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        source.source,
-      );
+      const run = runs.startDetached(WEB_OWNER, source.source);
       const listener = new AbortController();
       const events = run.subscribe(listener.signal);
       source.emit(sessionEvent(true));
@@ -147,10 +142,7 @@ describe('ActiveThreadRuns', () => {
 
     it('is removed once its source ends, and its listeners end with it', async () => {
       const source = controllableSource();
-      const run = runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        source.source,
-      );
+      const run = runs.startDetached(WEB_OWNER, source.source);
       const events = collect(run.subscribe());
       source.emit(sessionEvent(true));
       source.emit(sessionEvent(false));
@@ -160,8 +152,8 @@ describe('ActiveThreadRuns', () => {
         sessionEvent(true),
         sessionEvent(false),
       ]);
-      expect(runs.listForUser(OWNER_ID)).toEqual([]);
-      expect(runs.find(THREAD_ID, OWNER_ID)).toBeUndefined();
+      expect(runs.listForUser(OWNER_ID, null)).toEqual([]);
+      expect(runs.find(THREAD_ID, OWNER_ID, null)).toBeUndefined();
     });
 
     it('is removed when its source throws', async () => {
@@ -170,30 +162,24 @@ describe('ActiveThreadRuns', () => {
         await Promise.resolve();
         throw new Error('provider connection reset');
       }
-      const run = runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        failingSource,
-      );
+      const run = runs.startDetached(WEB_OWNER, failingSource);
 
       await expect(collect(run.subscribe())).resolves.toEqual([]);
-      expect(runs.listForUser(OWNER_ID)).toEqual([]);
+      expect(runs.listForUser(OWNER_ID, null)).toEqual([]);
     });
   });
 
   describe('reattaching', () => {
     it('replays the latest snapshot of each message, then follows live events', async () => {
       const source = controllableSource();
-      runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        source.source,
-      );
+      runs.startDetached(WEB_OWNER, source.source);
       source.emit(sessionEvent(true));
       source.emit(messageEvent(USER_MESSAGE_ID, 'Was gilt für Hunde?'));
       source.emit(messageEvent(ASSISTANT_MESSAGE_ID, 'Laut'));
       source.emit(messageEvent(ASSISTANT_MESSAGE_ID, 'Laut Satzung'));
       await flush();
 
-      const run = runs.find(THREAD_ID, OWNER_ID);
+      const run = runs.find(THREAD_ID, OWNER_ID, null);
       const events = run!.subscribe();
       const replayed = await take(events, 3);
       source.emit(messageEvent(ASSISTANT_MESSAGE_ID, 'Laut Satzung gilt'));
@@ -214,10 +200,7 @@ describe('ActiveThreadRuns', () => {
 
     it('replays the latest masks and title before the messages', async () => {
       const source = controllableSource();
-      runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        source.source,
-      );
+      runs.startDetached(WEB_OWNER, source.source);
       const masks = (count: number): RunEvent => ({
         type: 'masks',
         threadId: THREAD_ID,
@@ -245,7 +228,7 @@ describe('ActiveThreadRuns', () => {
       await flush();
 
       const replayed = await take(
-        runs.find(THREAD_ID, OWNER_ID)!.subscribe(),
+        runs.find(THREAD_ID, OWNER_ID, null)!.subscribe(),
         4,
       );
 
@@ -258,30 +241,35 @@ describe('ActiveThreadRuns', () => {
     });
 
     it('does not reveal another user’s run', () => {
+      runs.startDetached(WEB_OWNER, controllableSource().source);
+
+      expect(runs.find(THREAD_ID, OTHER_USER_ID, null)).toBeUndefined();
+      expect(runs.listForUser(OTHER_USER_ID, null)).toEqual([]);
+    });
+
+    it('does not reveal the same user’s run from another surface', () => {
       runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
+        { threadId: THREAD_ID, userId: OWNER_ID, client: 'excel' },
         controllableSource().source,
       );
 
-      expect(runs.find(THREAD_ID, OTHER_USER_ID)).toBeUndefined();
-      expect(runs.listForUser(OTHER_USER_ID)).toEqual([]);
+      expect(runs.find(THREAD_ID, OWNER_ID, 'outlook')).toBeUndefined();
+      expect(runs.listForUser(OWNER_ID, 'outlook')).toEqual([]);
+      expect(runs.find(THREAD_ID, OWNER_ID, 'excel')).toBeDefined();
+      expect(runs.listForUser(OWNER_ID, 'excel')).toEqual([
+        { threadId: THREAD_ID, cancellable: true },
+      ]);
     });
 
     it('attaches to the newest run when two runs share a thread', async () => {
       const first = controllableSource();
       const second = controllableSource();
-      runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        first.source,
-      );
-      const newest = runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        second.source,
-      );
+      runs.startDetached(WEB_OWNER, first.source);
+      const newest = runs.startDetached(WEB_OWNER, second.source);
       await flush();
 
-      expect(runs.find(THREAD_ID, OWNER_ID)).toBe(newest);
-      expect(runs.listForUser(OWNER_ID)).toEqual([
+      expect(runs.find(THREAD_ID, OWNER_ID, null)).toBe(newest);
+      expect(runs.listForUser(OWNER_ID, null)).toEqual([
         { threadId: THREAD_ID, cancellable: true },
       ]);
     });
@@ -291,17 +279,11 @@ describe('ActiveThreadRuns', () => {
     it('aborts every run of the owner on that thread', async () => {
       const first = controllableSource();
       const second = controllableSource();
-      runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        first.source,
-      );
-      runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
-        second.source,
-      );
+      runs.startDetached(WEB_OWNER, first.source);
+      runs.startDetached(WEB_OWNER, second.source);
       await flush();
 
-      runs.cancel(THREAD_ID, OWNER_ID);
+      runs.cancel(THREAD_ID, OWNER_ID, null);
 
       expect(first.signal()?.aborted).toBe(true);
       expect(second.signal()?.aborted).toBe(true);
@@ -309,37 +291,49 @@ describe('ActiveThreadRuns', () => {
 
     it('ignores a cancel from another user', async () => {
       const source = controllableSource();
+      runs.startDetached(WEB_OWNER, source.source);
+      await flush();
+
+      runs.cancel(THREAD_ID, OTHER_USER_ID, null);
+
+      expect(source.signal()?.aborted).toBe(false);
+    });
+
+    it('ignores a cancel from another surface of the same user', async () => {
+      const source = controllableSource();
       runs.startDetached(
-        { threadId: THREAD_ID, userId: OWNER_ID },
+        { threadId: THREAD_ID, userId: OWNER_ID, client: 'excel' },
         source.source,
       );
       await flush();
 
-      runs.cancel(THREAD_ID, OTHER_USER_ID);
+      runs.cancel(THREAD_ID, OWNER_ID, 'outlook');
 
       expect(source.signal()?.aborted).toBe(false);
+      runs.cancel(THREAD_ID, OWNER_ID, 'excel');
+      expect(source.signal()?.aborted).toBe(true);
     });
 
     it('leaves runs on other threads alone', async () => {
       const source = controllableSource();
       runs.startDetached(
-        { threadId: OTHER_THREAD_ID, userId: OWNER_ID },
+        { threadId: OTHER_THREAD_ID, userId: OWNER_ID, client: null },
         source.source,
       );
       await flush();
 
-      runs.cancel(THREAD_ID, OWNER_ID);
+      runs.cancel(THREAD_ID, OWNER_ID, null);
 
       expect(source.signal()?.aborted).toBe(false);
     });
 
     it('cannot cancel a run opened without an abort controller', () => {
-      const run = runs.open({ threadId: THREAD_ID, userId: OWNER_ID });
+      const run = runs.open(WEB_OWNER);
 
-      runs.cancel(THREAD_ID, OWNER_ID);
+      runs.cancel(THREAD_ID, OWNER_ID, null);
 
-      expect(runs.find(THREAD_ID, OWNER_ID)).toBe(run);
-      expect(runs.listForUser(OWNER_ID)).toEqual([
+      expect(runs.find(THREAD_ID, OWNER_ID, null)).toBe(run);
+      expect(runs.listForUser(OWNER_ID, null)).toEqual([
         { threadId: THREAD_ID, cancellable: false },
       ]);
     });
@@ -352,8 +346,7 @@ describe('ActiveThreadRuns', () => {
     it('aborts a cancellable run nobody has watched for the timeout', () => {
       const controller = new AbortController();
       runs.open({
-        threadId: THREAD_ID,
-        userId: OWNER_ID,
+        ...WEB_OWNER,
         abortController: controller,
       });
 
@@ -365,8 +358,7 @@ describe('ActiveThreadRuns', () => {
     it('keeps a run alive while someone watches it', async () => {
       const controller = new AbortController();
       const run = runs.open({
-        threadId: THREAD_ID,
-        userId: OWNER_ID,
+        ...WEB_OWNER,
         abortController: controller,
       });
       const events = run.subscribe();
@@ -383,8 +375,7 @@ describe('ActiveThreadRuns', () => {
     it('restarts the timeout when the last listener leaves', async () => {
       const controller = new AbortController();
       const run = runs.open({
-        threadId: THREAD_ID,
-        userId: OWNER_ID,
+        ...WEB_OWNER,
         abortController: controller,
       });
       run.publish(sessionEvent(true));
@@ -403,8 +394,7 @@ describe('ActiveThreadRuns', () => {
     it('stops the timeout once the run is closed', () => {
       const controller = new AbortController();
       const run = runs.open({
-        threadId: THREAD_ID,
-        userId: OWNER_ID,
+        ...WEB_OWNER,
         abortController: controller,
       });
 

@@ -2,12 +2,14 @@ import type { UUID } from 'crypto';
 import type { Repository } from 'typeorm';
 import type { ThreadCitationContext } from 'src/domain/threads/application/models/thread-citation-context';
 import type { ThreadRecord } from 'src/domain/threads/infrastructure/persistence/local/schema/thread.record';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import { personalOrMemberWorkspaceSql } from './personal-or-member-workspace';
 
 export async function findThreadCitationContext(
   threadRepository: Repository<ThreadRecord>,
   id: UUID,
   userId: UUID,
+  client: SessionClient | null,
 ): Promise<ThreadCitationContext | null> {
   const contexts = await threadRepository.query<ThreadCitationContext[]>(
     `SELECT
@@ -31,8 +33,9 @@ export async function findThreadCitationContext(
        ), '[]'::jsonb) AS "knowledgeBaseAssignments"
      FROM threads thread
      WHERE thread.id = $1 AND thread."userId" = $2
+       AND thread.client IS NOT DISTINCT FROM $3
        AND ${personalOrMemberWorkspaceSql('thread."workspaceId"', '$2')}`,
-    [id, userId],
+    [id, userId, client],
   );
   return contexts[0] ?? null;
 }

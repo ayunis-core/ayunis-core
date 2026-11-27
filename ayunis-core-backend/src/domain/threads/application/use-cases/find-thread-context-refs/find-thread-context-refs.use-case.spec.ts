@@ -1,5 +1,9 @@
 import type { UUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
+import {
+  aUserContext,
+  getFromStore,
+} from 'src/common/context/testing/context.fixtures';
 import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { FindThreadContextRefsQuery } from './find-thread-context-refs.query';
@@ -18,7 +22,9 @@ function setup() {
     }),
   } as unknown as jest.Mocked<ThreadsRepository>;
   const contextService = {
-    get: jest.fn().mockReturnValue(USER_ID),
+    get: jest.fn(
+      getFromStore({ ...aUserContext({ userId: USER_ID }), client: 'excel' }),
+    ),
   } as unknown as jest.Mocked<ContextService>;
   return {
     useCase: new FindThreadContextRefsUseCase(
@@ -42,6 +48,7 @@ describe(FindThreadContextRefsUseCase.name, () => {
     expect(threadsRepository.findContextRefs).toHaveBeenCalledWith(
       THREAD_ID,
       USER_ID,
+      'excel',
     );
   });
 

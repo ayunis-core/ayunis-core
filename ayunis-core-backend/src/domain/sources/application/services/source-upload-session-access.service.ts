@@ -24,8 +24,13 @@ export class SourceUploadSessionAccessService {
 
   async requireOwned(uploadId: UUID): Promise<SourceUploadSession> {
     const { userId, orgId } = getRequiredUserContext(this.contextService);
+    const surface = this.contextService.get('client') ?? 'web';
     const session = await this.sessions.findById(uploadId);
-    if (session?.userId !== userId || session.orgId !== orgId) {
+    if (
+      session?.userId !== userId ||
+      session.orgId !== orgId ||
+      session.surface !== surface
+    ) {
       throw new SourceUploadNotFoundError(uploadId);
     }
     return session;

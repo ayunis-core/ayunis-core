@@ -81,9 +81,10 @@ composer, conversation timeline, history, or new-chat shell.
 Web router/AppLayout, TanStack Query ownership, analytics, workspaces,
 onboarding, and artifact panels stay in the Web host. Office authentication,
 Office.js, current mail/document context, Reply/Reply All, and client-tool
-executors stay in the Office host. Outlook history remains scoped with
-`client=outlook`; Web and Outlook histories must not mix. Office manifests and
-task-pane URLs are outside the package contract.
+executors stay in the Office host. History is scoped by the authenticated
+session client; request parameters cannot select another surface. Web, Outlook,
+and Excel histories must not mix. Office manifests and task-pane URLs are
+outside the package contract.
 
 ## Parity baseline
 

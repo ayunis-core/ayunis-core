@@ -79,6 +79,7 @@ export class CreateSourceUploadSessionUseCase {
       id: sessionId,
       orgId,
       userId,
+      surface: this.contextService.get('client') ?? 'web',
       targetType: command.targetType,
       targetId: command.targetId,
       fileName: command.fileName,

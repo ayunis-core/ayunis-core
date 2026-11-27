@@ -21,11 +21,15 @@ export interface RoutineRunProfileInput {
   };
 }
 
-/** The same chat, run from the Outlook add-in pane instead of the web app. */
 export type OutlookRunProfileInput =
   typeof SURFACE_REGISTRY.outlook.run.profile;
 
+export type ExcelRunProfileInput = typeof SURFACE_REGISTRY.excel.run.profile;
+
 export type RunProfileInput =
-  ChatRunProfileInput | OutlookRunProfileInput | RoutineRunProfileInput;
+  | ChatRunProfileInput
+  | OutlookRunProfileInput
+  | ExcelRunProfileInput
+  | RoutineRunProfileInput;
 
 export type RunProfileId = RunProfileInput['id'];

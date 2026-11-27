@@ -1,10 +1,12 @@
 import type { UUID } from 'crypto';
 import type { RunEvent } from 'src/domain/runs/application/run-events';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 import { RunEventReplay } from './run-event-replay';
 
 export interface ActiveThreadRunOwner {
   threadId: UUID;
   userId: UUID;
+  client: SessionClient | null;
 }
 
 class RunEventListener {

@@ -7,6 +7,7 @@ import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.
 import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
 import { AssignThreadToWorkspaceCommand } from './assign-thread-to-workspace.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class AssignThreadToWorkspaceUseCase {
@@ -44,6 +45,7 @@ export class AssignThreadToWorkspaceUseCase {
     await this.threadsRepository.assignToWorkspace({
       threadId: command.threadId,
       userId,
+      client: getCurrentThreadClient(this.contextService),
       workspaceId: command.workspaceId,
     });
   }

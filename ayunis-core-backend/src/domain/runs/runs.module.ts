@@ -81,6 +81,7 @@ import { MemoryModule } from 'src/domain/memory/memory.module';
 import { RoutineInternetCapability } from './application/run-capabilities/capabilities/routine-internet.capability';
 import { ChatRunProfile } from './application/run-profiles/chat-run-profile';
 import { OutlookRunProfile } from './application/run-profiles/outlook-run-profile';
+import { ExcelRunProfile } from './application/run-profiles/excel-run-profile';
 import { RoutineRunProfile } from './application/run-profiles/routine-run-profile';
 import { ExecuteUnattendedRunUseCase } from './application/use-cases/execute-unattended-run/execute-unattended-run.use-case';
 import { RunProfileAssembler } from './application/run-profiles/run-profile-assembler.service';
@@ -177,6 +178,7 @@ import { ThreadSourceCitationsController } from './presenters/http/thread-source
     RunModelAdmissionService,
     UnmaskedTermsService,
     RunProfileRegistry,
+    ExcelRunProfile,
     RunProfileAssembler,
     RunCapabilityContextFactory,
     ChatRunProfile,

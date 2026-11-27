@@ -140,6 +140,7 @@ describe('LocalThreadAssignmentsRepository', () => {
       await repository.addSourceAssignment({
         threadId,
         userId,
+        client: null,
         sourceAssignment: assignment,
       });
 
@@ -163,6 +164,7 @@ describe('LocalThreadAssignmentsRepository', () => {
       await repository.addSourceAssignment({
         threadId,
         userId,
+        client: null,
         sourceAssignment: new SourceAssignment({
           source: new ConcreteSource({ name: 'new.pdf' }),
         }),
@@ -182,6 +184,7 @@ describe('LocalThreadAssignmentsRepository', () => {
         repository.addSourceAssignment({
           threadId,
           userId,
+          client: null,
           sourceAssignment: new SourceAssignment({
             source: new ConcreteSource({ name: 'new.pdf' }),
           }),
@@ -196,6 +199,7 @@ describe('LocalThreadAssignmentsRepository', () => {
       await repository.addSourceAssignment({
         threadId,
         userId,
+        client: null,
         sourceAssignment: new SourceAssignment({
           source: new ConcreteSource({ name: 'new.pdf' }),
         }),

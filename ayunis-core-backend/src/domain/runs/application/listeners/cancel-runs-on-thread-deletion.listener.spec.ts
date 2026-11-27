@@ -17,7 +17,7 @@ describe('CancelRunsOnThreadDeletionListener', () => {
   beforeEach(() => {
     activeThreadRuns = new ActiveThreadRuns();
     activeThreadRuns.startDetached(
-      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID },
+      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID, client: null },
       // eslint-disable-next-line require-yield, sonarjs/generator-without-yield
       async function* (signal): AsyncGenerator<RunEvent> {
         runSignal = signal;
@@ -34,7 +34,7 @@ describe('CancelRunsOnThreadDeletionListener', () => {
     new CancelRunsOnThreadDeletionListener(activeThreadRuns).handle(event);
   });
 
-  afterEach(() => activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID));
+  afterEach(() => activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID, null));
 
   it('leaves the run alone until the thread is actually deleted', () => {
     expect(runSignal?.aborted).toBe(false);

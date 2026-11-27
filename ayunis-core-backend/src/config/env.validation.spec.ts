@@ -88,6 +88,22 @@ describe('validateEnv', () => {
       ).not.toThrow();
     },
   );
+  it.each(['yes', 'TRUE', '1'])(
+    'rejects invalid Excel add-in flag %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_EXCEL_ADDIN_ENABLED: value })),
+      ).toThrow('FEATURE_EXCEL_ADDIN_ENABLED');
+    },
+  );
+  it.each(['', 'true', 'false'])(
+    'accepts the Excel add-in flag %s',
+    (value) => {
+      expect(() =>
+        validateEnv(baseEnv({ FEATURE_EXCEL_ADDIN_ENABLED: value })),
+      ).not.toThrow();
+    },
+  );
   it.each([
     'https://*.office.com',
     '*',

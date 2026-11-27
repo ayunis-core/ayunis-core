@@ -11,6 +11,7 @@ import {
 } from 'src/domain/threads/application/threads.errors';
 import { FindThreadContextRefsQuery } from './find-thread-context-refs.query';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class FindThreadContextRefsUseCase {
@@ -32,6 +33,7 @@ export class FindThreadContextRefsUseCase {
     const refs = await this.threadsRepository.findContextRefs(
       query.threadId,
       userId,
+      getCurrentThreadClient(this.contextService),
     );
     if (!refs) throw new ThreadNotFoundError(query.threadId, userId);
     return refs;

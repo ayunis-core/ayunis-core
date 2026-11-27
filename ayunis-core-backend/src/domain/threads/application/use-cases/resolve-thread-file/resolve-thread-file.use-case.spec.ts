@@ -57,7 +57,7 @@ describe('ResolveThreadFileUseCase', () => {
     threads = [];
     currentUserId = USER_A;
     const threadsRepository = {
-      findOne: jest.fn((id: UUID, userId: UUID) =>
+      findOneForSurface: jest.fn((id: UUID, userId: UUID) =>
         Promise.resolve(
           threads.find((t) => t.id === id && t.userId === userId) ?? null,
         ),

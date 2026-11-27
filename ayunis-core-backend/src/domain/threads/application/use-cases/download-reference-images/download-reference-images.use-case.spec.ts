@@ -34,10 +34,12 @@ describe('DownloadReferenceImagesUseCase', () => {
 
   beforeEach(() => {
     contextService = {
-      get: jest.fn().mockReturnValue(orgId),
+      get: jest.fn((key: string) => (key === 'orgId' ? orgId : undefined)),
     } as unknown as jest.Mocked<ContextService>;
+    const findOne = jest.fn();
     threadsRepository = {
-      findOne: jest.fn(),
+      findOne,
+      findOneForSurface: findOne,
     } as unknown as jest.Mocked<ThreadsRepository>;
     generatedImagesRepository = {
       findByIdAndThreadId: jest.fn(),
@@ -107,13 +109,13 @@ describe('DownloadReferenceImagesUseCase', () => {
   });
 
   it('should throw ThreadNotFoundError when the thread does not belong to the user', async () => {
-    threadsRepository.findOne.mockResolvedValue(null);
+    threadsRepository.findOneForSurface.mockResolvedValue(null);
 
     await expect(useCase.execute(query())).rejects.toThrow(ThreadNotFoundError);
   });
 
   it('should download a generated image by ID from its storage key', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
     const imageId = randomUUID();
     generatedImagesRepository.findByIdAndThreadId.mockResolvedValue(
       new GeneratedImage(
@@ -145,7 +147,7 @@ describe('DownloadReferenceImagesUseCase', () => {
   });
 
   it('should throw GeneratedImageNotFoundError for an ID not in the thread', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
     generatedImagesRepository.findByIdAndThreadId.mockResolvedValue(null);
 
     await expect(
@@ -155,7 +157,9 @@ describe('DownloadReferenceImagesUseCase', () => {
 
   it('should download the referenced uploaded images from their storage paths', async () => {
     const message = buildImageMessage(2, new Date('2026-08-01T10:00:00Z'));
-    threadsRepository.findOne.mockResolvedValue(buildThread([message]));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread([message]),
+    );
     stubDownloadWithPathEcho();
 
     const result = await useCase.execute(
@@ -177,7 +181,9 @@ describe('DownloadReferenceImagesUseCase', () => {
   it('should return uploaded images in the order they were referenced', async () => {
     const older = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
     const newer = buildImageMessage(1, new Date('2026-08-02T10:00:00Z'));
-    threadsRepository.findOne.mockResolvedValue(buildThread([older, newer]));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread([older, newer]),
+    );
     stubDownloadWithPathEcho();
 
     const result = await useCase.execute(
@@ -193,7 +199,7 @@ describe('DownloadReferenceImagesUseCase', () => {
   it('should only download the referenced image, not other thread uploads', async () => {
     const referenced = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
     const other = buildImageMessage(1, new Date('2026-08-02T10:00:00Z'));
-    threadsRepository.findOne.mockResolvedValue(
+    threadsRepository.findOneForSurface.mockResolvedValue(
       buildThread([referenced, other]),
     );
     stubDownloadWithPathEcho();
@@ -210,7 +216,9 @@ describe('DownloadReferenceImagesUseCase', () => {
 
   it('should not download uploaded images when none are referenced', async () => {
     const message = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
-    threadsRepository.findOne.mockResolvedValue(buildThread([message]));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread([message]),
+    );
 
     const result = await useCase.execute(query());
 
@@ -219,7 +227,7 @@ describe('DownloadReferenceImagesUseCase', () => {
   });
 
   it('should throw MessageImageNotFoundError for a ref to an unknown message', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
 
     await expect(
       useCase.execute(
@@ -230,7 +238,9 @@ describe('DownloadReferenceImagesUseCase', () => {
 
   it('should throw MessageImageNotFoundError for an out-of-range image index', async () => {
     const message = buildImageMessage(1, new Date('2026-08-01T10:00:00Z'));
-    threadsRepository.findOne.mockResolvedValue(buildThread([message]));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread([message]),
+    );
 
     await expect(
       useCase.execute(query({ uploadedImageRefs: [refTo(message, 3)] })),
@@ -243,7 +253,9 @@ describe('DownloadReferenceImagesUseCase', () => {
       createdAt: new Date('2026-08-01T10:00:00Z'),
       content: [new ImageMessageContent(0, 'image/gif')],
     });
-    threadsRepository.findOne.mockResolvedValue(buildThread([message]));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread([message]),
+    );
 
     await expect(
       useCase.execute(query({ uploadedImageRefs: [refTo(message, 0)] })),
@@ -253,7 +265,9 @@ describe('DownloadReferenceImagesUseCase', () => {
 
   it('should skip images larger than the 10 MB reference limit', async () => {
     const message = buildImageMessage(2, new Date('2026-08-01T10:00:00Z'));
-    threadsRepository.findOne.mockResolvedValue(buildThread([message]));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread([message]),
+    );
     const oversized = Buffer.alloc(10 * 1024 * 1024 + 1);
     downloadObjectUseCase.execute
       .mockResolvedValueOnce(Readable.from([oversized]))
@@ -272,7 +286,9 @@ describe('DownloadReferenceImagesUseCase', () => {
     const messages = Array.from({ length: 5 }, (_, i) =>
       buildImageMessage(4, new Date(`2026-08-0${i + 1}T10:00:00Z`)),
     );
-    threadsRepository.findOne.mockResolvedValue(buildThread(messages));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread(messages),
+    );
     const uploadedImageRefs = messages.flatMap((message) =>
       message.content
         .filter((c) => c instanceof ImageMessageContent)

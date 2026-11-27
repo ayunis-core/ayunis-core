@@ -9,6 +9,7 @@ export class SourceUploadSessionMapper {
       id: record.id,
       orgId: record.orgId,
       userId: record.userId,
+      surface: record.surface,
       targetType: record.targetType,
       targetId: record.targetId,
       fileName: record.fileName,
@@ -31,6 +32,7 @@ export class SourceUploadSessionMapper {
     record.id = session.id;
     record.orgId = session.orgId;
     record.userId = session.userId;
+    record.surface = session.surface;
     record.targetType = session.targetType;
     record.targetId = session.targetId;
     record.fileName = session.fileName;

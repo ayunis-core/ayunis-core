@@ -15,7 +15,7 @@ export class CancelRunsOnThreadDeletionListener {
   @OnEvent(ThreadDeletionRequestedEvent.EVENT_NAME)
   handle(event: ThreadDeletionRequestedEvent): void {
     event.deferCleanup('cancel thread runs', () => {
-      this.activeThreadRuns.cancel(event.threadId, event.userId);
+      this.activeThreadRuns.cancelAllForUser(event.threadId, event.userId);
       return Promise.resolve();
     });
   }

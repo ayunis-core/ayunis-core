@@ -6,6 +6,7 @@ import type { PastMessageMatch } from 'src/domain/threads/application/models/pas
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { UnexpecteThreadError } from 'src/domain/threads/application/threads.errors';
 import { GrepPastMessagesQuery } from './grep-past-messages.query';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 /**
  * The current user's messages in their past chats that match a pattern.
@@ -30,6 +31,7 @@ export class GrepPastMessagesUseCase {
     const { userId } = getRequiredUserContext(this.contextService);
     return this.threadsRepository.grepPastMessages({
       userId,
+      client: getCurrentThreadClient(this.contextService),
       scope: query.scope,
       pattern: query.pattern,
       created: query.created,

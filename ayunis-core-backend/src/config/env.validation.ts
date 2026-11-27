@@ -86,6 +86,10 @@ export class EnvironmentVariables {
   @IsIn(BOOLEAN_STRINGS)
   FEATURE_OPARL_ENABLED?: string;
 
+  @IsOptional()
+  @IsIn(BOOLEAN_STRINGS)
+  FEATURE_EXCEL_ADDIN_ENABLED?: string;
+
   // Auth — JWT_SECRET / COOKIE_SECRET are required in every environment; there
   // is no insecure default fallback (a shared default would let anyone forge
   // auth tokens/cookies). COOKIE_SECURE=true is additionally required in

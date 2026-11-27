@@ -7,14 +7,17 @@ import type {
 import { config } from "../../config";
 import { generatedApi } from "./generated-api";
 
-// Token clients (the Outlook add-in) call the API with a Bearer access token
-// and never hold cookies. API keys are Bearer secrets too.
-async function withAccessToken<T>(
+export type OfficeSessionClient = "outlook" | "excel";
+
+// Token clients call the API with a Bearer access token and never hold
+// cookies. API keys are Bearer secrets too.
+export async function withAccessToken<T>(
   accessToken: string,
   call: (api: APIRequestContext) => Promise<T>,
+  apiURL = config.apiURL,
 ): Promise<T> {
   const api = await apiRequest.newContext({
-    baseURL: config.apiURL,
+    baseURL: apiURL,
     // The backend prefers an access-token cookie over the bearer header, so a
     // context that inherited the spec's cookies would answer as a browser
     // session and a closed-route assertion would pass for the wrong reason.
@@ -30,9 +33,12 @@ async function withAccessToken<T>(
 
 export function currentUserForAccessToken(
   accessToken: string,
+  apiURL = config.apiURL,
 ): Promise<MeResponseDto> {
-  return withAccessToken(accessToken, (api) =>
-    generatedApi.authenticationControllerMe({ api }),
+  return withAccessToken(
+    accessToken,
+    (api) => generatedApi.authenticationControllerMe({ api }),
+    apiURL,
   );
 }
 
@@ -48,7 +54,7 @@ export function listThreadsStatusForAccessToken(
   return withAccessToken(accessToken, listThreadsStatus);
 }
 
-/** A route the Outlook pane has no business calling. */
+/** A route the embedded Office pane has no business calling. */
 export function listApiKeysStatusForAccessToken(
   accessToken: string,
 ): Promise<number> {
@@ -89,12 +95,13 @@ export async function refreshPaneTokens(
  * Tokens the sign-in dialog would hand the pane for the cookie session in
  * `api`. The backend only hands a session over to the frontend origin.
  */
-export async function handOffSessionToOutlook(
+export async function handOffSession(
   api: APIRequestContext,
+  client: OfficeSessionClient,
 ): Promise<SessionTokensResponseDto> {
   const response = await api.post(`${config.apiURL}/api/auth/session/handoff`, {
     headers: { Origin: new URL(config.baseURL).origin },
-    data: { client: "outlook" },
+    data: { client },
   });
   if (!response.ok()) {
     throw new Error(
@@ -104,39 +111,63 @@ export async function handOffSessionToOutlook(
   return (await response.json()) as SessionTokensResponseDto;
 }
 
+export function handOffSessionToOutlook(
+  api: APIRequestContext,
+): Promise<SessionTokensResponseDto> {
+  return handOffSession(api, "outlook");
+}
+
+export function handOffSessionToExcel(
+  api: APIRequestContext,
+): Promise<SessionTokensResponseDto> {
+  return handOffSession(api, "excel");
+}
+
 export interface RouteCall {
-  method: "GET" | "POST" | "DELETE";
+  method: "GET" | "POST" | "PATCH" | "DELETE";
   path: string;
 }
 
 function fetchRoute(
   api: APIRequestContext,
   { method, path }: RouteCall,
+  apiURL = config.apiURL,
 ): Promise<APIResponse> {
-  return api.fetch(`${config.apiURL}/api${path}`, { method });
+  return api.fetch(`${apiURL}/api${path}`, { method });
 }
 
 export async function routeStatus(
   api: APIRequestContext,
   call: RouteCall,
+  apiURL = config.apiURL,
 ): Promise<number> {
-  return (await fetchRoute(api, call)).status();
+  return (await fetchRoute(api, call, apiURL)).status();
 }
 
 export function routeDenialWithBearer(
   bearer: string,
   call: RouteCall,
+  apiURL = config.apiURL,
 ): Promise<{ status: number; code?: string }> {
-  return withAccessToken(bearer, async (api) => {
-    const response = await fetchRoute(api, call);
-    const { code } = (await response.json()) as { code?: string };
-    return { status: response.status(), code };
-  });
+  return withAccessToken(
+    bearer,
+    async (api) => {
+      const response = await fetchRoute(api, call, apiURL);
+      const { code } = (await response.json()) as { code?: string };
+      return { status: response.status(), code };
+    },
+    apiURL,
+  );
 }
 
 export function routeStatusWithBearer(
   bearer: string,
   call: RouteCall,
+  apiURL = config.apiURL,
 ): Promise<number> {
-  return withAccessToken(bearer, (api) => routeStatus(api, call));
+  return withAccessToken(
+    bearer,
+    (api) => routeStatus(api, call, apiURL),
+    apiURL,
+  );
 }

@@ -31,6 +31,8 @@ export interface FeatureTogglesResponseDto {
   connectorsEnabled: boolean;
   /** Council information systems (OParl) are mirrored and managed by super admins */
   oparlEnabled: boolean;
+  /** The independently deployed Excel add-in surface is available */
+  excelAddinEnabled: boolean;
 }
 
 export interface CreateOrgRequestDto {
@@ -3404,6 +3406,7 @@ export type SessionClient = typeof SessionClient[keyof typeof SessionClient];
 
 export const SessionClient = {
   outlook: 'outlook',
+  excel: 'excel',
 } as const;
 
 export interface GetThreadsResponseDto {
@@ -7630,6 +7633,7 @@ export type SessionHandoffRequestDtoClient = typeof SessionHandoffRequestDtoClie
 
 export const SessionHandoffRequestDtoClient = {
   outlook: 'outlook',
+  excel: 'excel',
 } as const;
 
 export interface SessionHandoffRequestDto {
@@ -8107,7 +8111,7 @@ type?: ThreadType;
  */
 routineId?: string;
 /**
- * Only threads started from this client, e.g. `outlook` for the Outlook pane. Omit to list only threads started in the web app.
+ * Deprecated and ignored. Thread visibility is derived from the authenticated session client.
  */
 client?: SessionClient;
 /**

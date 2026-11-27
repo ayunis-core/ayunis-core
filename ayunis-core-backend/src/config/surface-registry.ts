@@ -1,12 +1,7 @@
 import { SurfaceScope } from 'src/config/surface-scope';
+import { FeatureFlag, type FeaturesConfig } from 'src/config/features.config';
 import { ToolType } from 'src/domain/tools/domain/value-objects/tool-type.enum';
 import type { Request } from 'express';
-
-export interface SurfaceFeatureFlag {
-  readonly name: string;
-  readonly envKey: string;
-  readonly defaultEnabled: boolean;
-}
 
 export type SurfaceFraming = {
   readonly documents: readonly string[];
@@ -32,20 +27,24 @@ export interface SurfaceDefinition {
   } | null;
   readonly clientTools: readonly ToolType[];
   readonly webShellPaths?: readonly string[];
-  readonly featureFlag: SurfaceFeatureFlag | null;
+  readonly featureFlag: FeatureFlag | null;
   readonly framing: SurfaceFraming | null;
   readonly manifest: {
     readonly route: string;
     readonly taskPane: string;
-    readonly events: string;
-    readonly classicEvents: string;
+    readonly events?: string;
+    readonly classicEvents?: string;
   } | null;
 }
 
 const outlookPrefix = '/outlook';
+const excelPrefix = '/excel';
 const outlookLaunchDocuments = {
   taskPane: 'taskpane.html',
   events: 'events.html',
+} as const;
+const excelLaunchDocuments = {
+  taskPane: 'taskpane.html',
 } as const;
 
 // Capability order is observable in the tools and the composed prompt.
@@ -159,6 +158,50 @@ export const SURFACE_REGISTRY = {
       classicEvents: 'events-classic.js',
     },
   },
+  excel: {
+    signIn: 'token',
+    staticPrefix: excelPrefix,
+    scopes: [
+      SurfaceScope.ACADEMY_READ,
+      SurfaceScope.CHAT,
+      SurfaceScope.CHAT_SETTINGS_READ,
+      SurfaceScope.MODELS_READ,
+      SurfaceScope.SESSION,
+      SurfaceScope.UPLOADS,
+      SurfaceScope.VOICE,
+    ],
+    run: {
+      profile: { id: 'excel' },
+      capabilities: [
+        'dateTime',
+        'dataHandling',
+        'anonymization',
+        'behavior',
+        'legalReferences',
+        'customInstructions',
+        'internet',
+        'threadSources',
+        'knowledgeBases',
+        'recordings',
+        'oparl',
+        'notificationContext',
+        'releaseNoteContext',
+        'workspaceInstructions',
+        'mcp',
+      ],
+    },
+    clientTools: [],
+    featureFlag: FeatureFlag.ExcelAddin,
+    framing: {
+      documents: Object.values(excelLaunchDocuments),
+      originsEnvKey: 'EXCEL_ADDIN_FRAME_ORIGINS',
+      defaultOrigins: ['https://excel.cloud.microsoft'],
+    },
+    manifest: {
+      route: `${excelPrefix.slice(1)}/manifest.xml`,
+      ...excelLaunchDocuments,
+    },
+  },
   website: {
     signIn: 'visitor',
     staticPrefix: '/embed',
@@ -184,6 +227,25 @@ export const TOKEN_SURFACES = (
 
 export function getTokenSurfaceScopes(
   client: TokenSurfaceId | null,
+  features: FeaturesConfig,
 ): readonly SurfaceScope[] {
-  return client ? SURFACE_REGISTRY[client].scopes : [];
+  if (!client) return [];
+  if (!isTokenSurfaceEnabled(client, features)) {
+    return [SurfaceScope.SESSION];
+  }
+  return SURFACE_REGISTRY[client].scopes;
+}
+
+export function isTokenSurfaceEnabled(
+  client: TokenSurfaceId,
+  features: FeaturesConfig,
+): boolean {
+  return isSurfaceEnabled(SURFACE_REGISTRY[client], features);
+}
+
+export function isSurfaceEnabled(
+  surface: SurfaceDefinition,
+  features: FeaturesConfig,
+): boolean {
+  return surface.featureFlag === null || features[surface.featureFlag];
 }

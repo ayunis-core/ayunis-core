@@ -1,4 +1,8 @@
-import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ValidationPipe,
+} from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import {
@@ -10,6 +14,7 @@ import { AuthTokens } from 'src/iam/authentication/domain/auth-tokens.entity';
 import { SessionHandoffRequestDto } from 'src/iam/authentication/presenters/http/dtos/session-tokens.dto';
 import { SessionTokensResponseDtoMapper } from 'src/iam/authentication/presenters/http/mappers/session-tokens-response-dto.mapper';
 import { SessionHandoffController } from 'src/iam/authentication/presenters/http/session-handoff.controller';
+import { featuresConfig } from 'src/config/features.config';
 
 describe(SessionHandoffController.name, () => {
   const handOffSessionUseCase = { execute: jest.fn() };
@@ -18,6 +23,7 @@ describe(SessionHandoffController.name, () => {
       key === 'app.frontend.baseUrl' ? 'http://localhost:3001' : defaultValue,
     ),
   } as unknown as ConfigService;
+  const features = { ...featuresConfig(), excelAddinEnabled: false };
   const dialogRequest = (cookies: Record<string, string>, origin?: string) =>
     ({
       cookies,
@@ -27,8 +33,12 @@ describe(SessionHandoffController.name, () => {
     handOffSessionUseCase as unknown as HandOffSessionUseCase,
     configService,
     new SessionTokensResponseDtoMapper(configService),
+    features,
   );
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    features.excelAddinEnabled = false;
+  });
 
   it('returns the client session tokens from the refresh cookie', async () => {
     handOffSessionUseCase.execute.mockResolvedValue(
@@ -63,6 +73,38 @@ describe(SessionHandoffController.name, () => {
       }),
     ).rejects.toBeInstanceOf(InvalidTokenError);
     expect(handOffSessionUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('hides Excel handoff while the Excel surface is disabled', async () => {
+    await expect(
+      controller.handoff(
+        dialogRequest(
+          { refresh_token: 'dialog-refresh-token' },
+          'http://localhost:3001',
+        ),
+        { client: 'excel' },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(handOffSessionUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('hands off to Excel through the normal session path when enabled', async () => {
+    features.excelAddinEnabled = true;
+    handOffSessionUseCase.execute.mockResolvedValue(
+      new AuthTokens('excel-access-jwt', 'excel-refresh-token'),
+    );
+
+    await controller.handoff(
+      dialogRequest(
+        { refresh_token: 'dialog-refresh-token' },
+        'http://localhost:3001',
+      ),
+      { client: 'excel' },
+    );
+
+    expect(handOffSessionUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ client: 'excel' }),
+    );
   });
 
   // The dialog always runs on the frontend origin. Any other origin is a

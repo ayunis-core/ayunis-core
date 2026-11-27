@@ -38,14 +38,16 @@ describe('DownloadMessageImageUseCase', () => {
   }
 
   beforeEach(() => {
+    const findOne = jest.fn();
     threadsRepository = {
-      findOne: jest.fn(),
+      findOne,
+      findOneForSurface: findOne,
     } as unknown as jest.Mocked<ThreadsRepository>;
     downloadObjectUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<DownloadObjectUseCase>;
     contextService = {
-      get: jest.fn().mockReturnValue(orgId),
+      get: jest.fn((key: string) => (key === 'orgId' ? orgId : undefined)),
     } as unknown as jest.Mocked<ContextService>;
 
     useCase = new DownloadMessageImageUseCase(
@@ -61,7 +63,7 @@ describe('DownloadMessageImageUseCase', () => {
 
   it('streams the image for an owned thread', async () => {
     const mockStream = new Readable();
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
     downloadObjectUseCase.execute.mockResolvedValue(mockStream);
 
     const result = await useCase.execute(
@@ -71,7 +73,11 @@ describe('DownloadMessageImageUseCase', () => {
     expect(result.stream).toBe(mockStream);
     expect(result.contentType).toBe('image/png');
     expect(result.filename).toBe('0.png');
-    expect(threadsRepository.findOne).toHaveBeenCalledWith(threadId, userId);
+    expect(threadsRepository.findOneForSurface).toHaveBeenCalledWith(
+      threadId,
+      userId,
+      null,
+    );
     expect(downloadObjectUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         objectName: `${orgId}/${threadId}/${messageId}/0.png`,
@@ -80,7 +86,7 @@ describe('DownloadMessageImageUseCase', () => {
   });
 
   it('throws ThreadNotFoundError when the thread is not owned by the user', async () => {
-    threadsRepository.findOne.mockResolvedValue(null);
+    threadsRepository.findOneForSurface.mockResolvedValue(null);
 
     await expect(
       useCase.execute(
@@ -91,7 +97,7 @@ describe('DownloadMessageImageUseCase', () => {
   });
 
   it('throws MessageImageNotFoundError when the message is not in the thread', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
     const otherMessageId = '123e4567-e89b-12d3-a456-426614174009' as UUID;
 
     await expect(
@@ -103,7 +109,7 @@ describe('DownloadMessageImageUseCase', () => {
   });
 
   it('throws MessageImageNotFoundError when no image content exists at the index', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
 
     await expect(
       useCase.execute(
@@ -114,7 +120,9 @@ describe('DownloadMessageImageUseCase', () => {
   });
 
   it('throws UnsupportedImageContentTypeError for a disallowed content type', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread('image/svg+xml'));
+    threadsRepository.findOneForSurface.mockResolvedValue(
+      buildThread('image/svg+xml'),
+    );
 
     await expect(
       useCase.execute(
@@ -132,11 +140,11 @@ describe('DownloadMessageImageUseCase', () => {
         new DownloadMessageImageQuery(threadId, messageId, 0, userId),
       ),
     ).rejects.toThrow(UnauthorizedAccessError);
-    expect(threadsRepository.findOne).not.toHaveBeenCalled();
+    expect(threadsRepository.findOneForSurface).not.toHaveBeenCalled();
   });
 
   it('propagates ObjectNotFoundError from the download', async () => {
-    threadsRepository.findOne.mockResolvedValue(buildThread());
+    threadsRepository.findOneForSurface.mockResolvedValue(buildThread());
     downloadObjectUseCase.execute.mockRejectedValue(
       new ObjectNotFoundError({ objectName: 'x' }),
     );
@@ -149,7 +157,9 @@ describe('DownloadMessageImageUseCase', () => {
   });
 
   it('wraps unexpected errors in UnexpecteThreadError', async () => {
-    threadsRepository.findOne.mockRejectedValue(new TypeError('boom'));
+    threadsRepository.findOneForSurface.mockRejectedValue(
+      new TypeError('boom'),
+    );
 
     await expect(
       useCase.execute(

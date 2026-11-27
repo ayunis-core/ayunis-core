@@ -68,16 +68,16 @@ data.
 
 ## Browser entry points
 
-| Entry point | Purpose |
-| --- | --- |
-| `/login` | Email-first discovery, then password and/or SSO according to the organization policy. |
-| `/sso/{identifier}` | Direct SSO start. `identifier` may be a verified domain or an Ayunis organization UUID. |
-| `/two-factor` | Completes Core TOTP verification or forced enrollment after primary authentication. |
-| `/sso/success` | Records a successful SSO organization in browser session storage, then continues to the saved internal path. |
-| `/sso/error?code=...` | Displays a stable, non-sensitive SSO failure outcome. |
-| `/password/forgot`, `/password/reset`, `/account/activate` | Local password recovery and initial-password paths. |
-| `/outlook/login?client=outlook` | Office dialog of the Outlook add-in: the `/login` page with `/outlook/handoff` as redirect, which continues to `/outlook/dialog.html` to hand the session to the pane (see [Token clients](#token-clients)). |
-| `/accept-invite` | Invitation acceptance follows the invited organization's policy: password when allowed, otherwise organization-pinned SSO. Broker admission consumes the pending invite. |
+| Entry point                                                | Purpose                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/login`                                                   | Email-first discovery, then password and/or SSO according to the organization policy.                                                                                                                                                                                                       |
+| `/sso/{identifier}`                                        | Direct SSO start. `identifier` may be a verified domain or an Ayunis organization UUID.                                                                                                                                                                                                     |
+| `/two-factor`                                              | Completes Core TOTP verification or forced enrollment after primary authentication.                                                                                                                                                                                                         |
+| `/sso/success`                                             | Records a successful SSO organization in browser session storage, then continues to the saved internal path.                                                                                                                                                                                |
+| `/sso/error?code=...`                                      | Displays a stable, non-sensitive SSO failure outcome.                                                                                                                                                                                                                                       |
+| `/password/forgot`, `/password/reset`, `/account/activate` | Local password recovery and initial-password paths.                                                                                                                                                                                                                                         |
+| `/<client>/login?client=<client>`                          | Office dialog of a token-client add-in: the `/login` page with the client-specific handoff as redirect. Outlook continues to `/outlook/dialog.html` to hand the session to the pane (see [Token clients](#token-clients)); Excel uses the same shared authentication boundary once enabled. |
+| `/accept-invite`                                           | Invitation acceptance follows the invited organization's policy: password when allowed, otherwise organization-pinned SSO. Broker admission consumes the pending invite.                                                                                                                    |
 
 For a domain identifier, the frontend discovers the connection by submitting a
 synthetic address such as `sso@stadt.example`; no email is stored from this
@@ -278,13 +278,13 @@ Both primary authentication methods call `StartAuthenticatedSessionUseCase`.
 This prevents password and SSO from developing different account-lock,
 MFA, cookie, or refresh behavior.
 
-| Evidence and Core state | Result |
-| --- | --- |
-| SSO ID token `amr` contains `mfa` | Broker MFA satisfies the Core login challenge. |
-| SSO `amr` contains only `otp`, is absent, or is unknown | Continue with normal Core MFA evaluation. |
-| User has confirmed Core TOTP | Require TOTP or a single-use recovery code. |
+| Evidence and Core state                                       | Result                                          |
+| ------------------------------------------------------------- | ----------------------------------------------- |
+| SSO ID token `amr` contains `mfa`                             | Broker MFA satisfies the Core login challenge.  |
+| SSO `amr` contains only `otp`, is absent, or is unknown       | Continue with normal Core MFA evaluation.       |
+| User has confirmed Core TOTP                                  | Require TOTP or a single-use recovery code.     |
 | Organization requires Core MFA and user has no confirmed TOTP | Force TOTP enrollment before issuing a session. |
-| No user TOTP and no organization requirement | Issue the session immediately. |
+| No user TOTP and no organization requirement                  | Issue the session immediately.                  |
 
 When Core MFA is required, primary authentication produces only a signed,
 HTTP-only `mfa_pending_token`; it does not produce an access or refresh token.
@@ -305,14 +305,14 @@ atomically. Accepted TOTP counters can only move forward, preventing replay.
 
 ## Session lifecycle
 
-| Artifact | Storage and purpose |
-| --- | --- |
-| `access_token` cookie | Signed JWT containing the Core user, organization, and roles. HTTP-only; one hour by default. |
-| `refresh_token` cookie | Opaque random value. Only its SHA-256 hash is stored. Seven days by default. |
-| `refresh_tokens` rows | One row per token in a device/login family, including `password` or `sso` provenance, optional Zitadel `sid`, optional token client, rotation state, and expiry. |
-| `mfa_pending_token` cookie | Signed short-lived proof of primary authentication; never accepted by the normal JWT strategy. |
-| SSO correlation cookie | Ten-minute browser binding for one authorization transaction. |
-| Browser `sessionStorage` | Safe post-login path, pending SSO org, and remembered successful SSO org. It is UX state, not trusted identity state. |
+| Artifact                   | Storage and purpose                                                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `access_token` cookie      | Signed JWT containing the Core user, organization, and roles. HTTP-only; one hour by default.                                                                    |
+| `refresh_token` cookie     | Opaque random value. Only its SHA-256 hash is stored. Seven days by default.                                                                                     |
+| `refresh_tokens` rows      | One row per token in a device/login family, including `password` or `sso` provenance, optional Zitadel `sid`, optional token client, rotation state, and expiry. |
+| `mfa_pending_token` cookie | Signed short-lived proof of primary authentication; never accepted by the normal JWT strategy.                                                                   |
+| SSO correlation cookie     | Ten-minute browser binding for one authorization transaction.                                                                                                    |
+| Browser `sessionStorage`   | Safe post-login path, pending SSO org, and remembered successful SSO org. It is UX state, not trusted identity state.                                            |
 
 Protected requests pass through the global `JwtAuthGuard`. If the access token
 is missing or expired but the refresh cookie is present, the guard rotates the
@@ -395,23 +395,23 @@ repeated valid notifications are idempotent.
 ## Token clients
 
 The [shared API client](../../packages/api-client/README.md) receives its
-transport from the app entry point. The web uses cookies, and the Outlook
-pane supplies bearer authorization and its single-flight refresh callback.
+transport from the app entry point. The web uses cookies, and Office add-in
+panes supply bearer authorization and a single-flight refresh callback.
 The same transport supplies credentials for generated and streamed requests.
 
 Office add-ins run in a cross-site iframe or WebView where session cookies are
 blocked or partitioned, so they hold their session as tokens instead. The value
-identifying such a client (`outlook` today) comes from the token sign-in entries
-in the [backend surface registry](../../ayunis-core-backend/src/config/surface-registry.ts).
+identifying such a client (`outlook` or independently flagged `excel`) comes
+from the token sign-in entries in the [backend surface registry](../../ayunis-core-backend/src/config/surface-registry.ts).
 That ID is carried in the access token and persisted on refresh sessions.
 
-| Step | Behavior |
-| --- | --- |
-| Login | The add-in opens an Office dialog on Core's own origin (`/outlook/login`). Password, SSO, and MFA run there unchanged and end with the usual session cookies in the dialog, then on `/outlook/dialog.html`, a separate page that loads Office.js. |
+| Step                                          | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Login                                         | The add-in opens an Office dialog on Core's own origin (`/<client>/login`). Password, SSO, and MFA run there unchanged and end with the usual session cookies in the dialog. Outlook then uses `/outlook/dialog.html`, a separate page that loads Office.js; each add-in owns its final handoff page.                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `POST /api/auth/session/handoff` `{ client }` | Authenticates the dialog's refresh cookie with the refresh checks (reuse revokes its family), starts a separate family bound to `client` with the same provenance and SSO deadline, and returns `{ accessToken, refreshToken, expiresIn }`. Only accepted from the frontend origin (`Origin` header), since the dialog always runs there and a permissive CORS setup would otherwise let a same-site page read the tokens. The cookie session and its cookies stay untouched: on Outlook on the web the dialog shares cookies with the web app. The dialog page passes the tokens to the pane with `messageParent`; the pane keeps the access token in memory and the refresh token in `localStorage`. |
-| API calls | `Authorization: Bearer <access JWT>`. `JwtStrategy` reads the cookie first and the header second; the token carries a `client` claim. |
-| `POST /api/auth/refresh` `{ refreshToken }` | Used only when no refresh cookie is present. Same rotation, grace, and reuse revocation as the cookie path; tokens come back in the body and no cookies are written. `JwtAuthGuard`'s inline refresh stays cookie-only. |
-| `POST /api/auth/logout` `{ refreshToken }` | Same fallback: revokes the family without cookie writes. |
+| API calls                                     | `Authorization: Bearer <access JWT>`. `JwtStrategy` reads the cookie first and the header second; the token carries a `client` claim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `POST /api/auth/refresh` `{ refreshToken }`   | Used only when no refresh cookie is present. Same rotation, grace, and reuse revocation as the cookie path; tokens come back in the body and no cookies are written. `JwtAuthGuard`'s inline refresh stays cookie-only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `POST /api/auth/logout` `{ refreshToken }`    | Same fallback: revokes the family without cookie writes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 The refresh-token row stores `client`, and rotation copies it to every
 successor. `SurfaceScopeGuard` runs directly after `JwtAuthGuard`. A protected
@@ -422,25 +422,46 @@ authentication rejects an unknown client claim. Browser sessions, API keys
 and the public body-token refresh and sign-out endpoints retain their usual
 authentication and authorization checks.
 
+When the Excel flag is off, new handoffs return 404. An existing
+Excel token retains only the `session` scope so `/auth/me`, body-token refresh,
+and sign-out can finish or clear the session; chat and all other operations are
+denied. Outlook has no feature flag and keeps its full grant in either state.
+The Excel task-pane shell and manifest are delivered by the add-in follow-up;
+the registry reserves their routes and framing policy without making a generic
+web shell impersonate the not-yet-implemented Excel application.
+
 `GET /api/auth/me` returns `scopes` from the registry for the current token
 surface. Browser sessions receive an empty scope list. User roles, resource
 ownership and organization boundaries are still checked by their existing
 policies.
 
-| Outlook grant | Area |
-| --- | --- |
-| `session` | Current session information, refresh and sign-out |
-| `chat` | Threads, runs, message images, citations and PII reveal |
-| `uploads` | Direct upload and thread source management |
-| `models:read` | Model availability, modes and default selection |
-| `voice` | Transcription |
-| `chat-settings:read` | Chat-start defaults |
-| `academy:read` | Academy access status |
+| Office add-in grant  | Declared endpoints                                                                                                                                                                                                                                                                                                                                                |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `session`            | `GET /auth/me`, `POST /auth/refresh`, `POST /auth/logout`                                                                                                                                                                                                                                                                                                         |
+| `chat`               | `POST/GET /threads`, `GET/DELETE /threads/:id`, `PATCH /threads/:id/title`, `POST /threads/:id/pii-masks/:maskId/unmask`, `GET /threads/:threadId/messages/:messageId/images/:index`, `POST /runs/send-message`, `GET /runs/active`, `GET /runs/threads/:threadId/events`, `POST /runs/threads/:threadId/cancel`, `GET /threads/:threadId/source-chunks/:chunkId` |
+| `uploads`            | `GET /threads/:id/sources`, `GET /threads/:id/sources/progress`, `POST /threads/:id/uploads`, `POST /threads/:id/uploads/:uploadId/complete`, `DELETE /threads/:id/sources/:sourceId`, `POST /source-uploads/:id/sign`, `DELETE /source-uploads/:id`                                                                                                              |
+| `models:read`        | `GET /models/permitted/language-models`, `GET /models/embedding/enabled`, `GET /models/default-selection`, `GET /models/modes`                                                                                                                                                                                                                                    |
+| `voice`              | `POST /transcriptions`, `POST /speech`                                                                                                                                                                                                                                                                                                                            |
+| `chat-settings:read` | `GET /chat-settings/chat-start-defaults`                                                                                                                                                                                                                                                                                                                          |
+| `academy:read`       | `GET /academy-access/status`                                                                                                                                                                                                                                                                                                                                      |
 
 Add the required scope to a route when token clients should reach it. A
 surface with the grant can call that route subject to its existing guards.
-The standalone Outlook app configures chat capabilities from the scopes
-returned by `/auth/me`.
+Each standalone add-in configures chat capabilities from the scopes returned by
+`/auth/me`.
+
+Thread access is also bound to the verified session client. The browser sees
+only browser threads, Outlook sees only Outlook threads, and Excel sees only
+Excel threads, even when the same user owns all three. The deprecated `client`
+query on `GET /threads` is accepted for compatibility but ignored; a request
+parameter can never select another surface. Direct thread reads, chat-history
+tools, favorites, every thread mutation, active runs, uploads, citations,
+titles, deletes, and image paths apply the same user-and-client scope and
+return the normal not-found response across a surface boundary. Direct upload
+sessions persist the verified client as well, so their sign, complete, and
+abort lifecycle cannot cross surfaces. Rows created before surface ownership
+was recorded have no trusted owner and are denied to every surface until they
+expire; a newly reserved upload always stores `web`, `outlook`, or `excel`.
 
 The Outlook pane sends requests without cookies: the axios client uses the fetch
 adapter with `credentials: 'omit'` and the pane's Bearer token, the streaming
@@ -453,12 +474,12 @@ flight, since refresh tokens rotate) and retries.
 The Superadmin organization SSO tab is the only current management UI. Customer
 admins cannot change these values.
 
-| State | SSO login | Password login | Mapping changes |
-| --- | --- | --- | --- |
-| No connection row | Unavailable | Allowed by default | Create mapping. |
-| Configured, disabled | Unavailable | Allowed | Allowed. |
-| Enabled, additive | Available | Allowed | Add verified domains without interruption; removing domains or changing the Zitadel organization requires disablement. |
-| Enabled, SSO-only | Available | Blocked at every password admission/session boundary | Add verified domains while preserving broker identifiers; restore password login before changing the direct IdP. |
+| State                | SSO login   | Password login                                       | Mapping changes                                                                                                        |
+| -------------------- | ----------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| No connection row    | Unavailable | Allowed by default                                   | Create mapping.                                                                                                        |
+| Configured, disabled | Unavailable | Allowed                                              | Allowed.                                                                                                               |
+| Enabled, additive    | Available   | Allowed                                              | Add verified domains without interruption; removing domains or changing the Zitadel organization requires disablement. |
+| Enabled, SSO-only    | Available   | Blocked at every password admission/session boundary | Add verified domains while preserving broker identifiers; restore password login before changing the direct IdP.       |
 
 The independent controls are:
 
@@ -498,34 +519,34 @@ Zitadel; Core and its database never receive them.
 
 ## Account and credential lifecycle
 
-| Path | Authentication consequence |
-| --- | --- |
-| Self-registration | Creates a new organization and local `ADMIN`, then a password-origin Core session. Email verification may still gate protected routes. |
-| Local invite acceptance | Creates a password user with the invited role. Rejected without consuming the invite when the organization is SSO-only. |
-| SSO invite acceptance | Creates a verified passwordless user, preserves the invited role, and consumes the invite atomically with the identity mapping. |
-| SSO JIT admission | Creates a verified passwordless `USER` after seat admission. |
-| Forgot/reset password | Generic public response. No token or email is issued for passwordless users or SSO-only organizations. Redemption rechecks policy and revokes all user sessions. |
-| Initial password | The explicit path that may add a first password to a passwordless user, but it is unavailable while the organization is SSO-only. |
-| Authenticated password change | Requires the current password and revokes other Core session families; the actor's current family survives when identifiable. |
-| Account unlock | Organization admin or platform superadmin clears persistent password-failure state; neither may unlock itself. |
-| User or organization deletion | Cascades to federated identities, refresh sessions, SSO transactions, broker-session hints, and MFA state. |
+| Path                          | Authentication consequence                                                                                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Self-registration             | Creates a new organization and local `ADMIN`, then a password-origin Core session. Email verification may still gate protected routes.                           |
+| Local invite acceptance       | Creates a password user with the invited role. Rejected without consuming the invite when the organization is SSO-only.                                          |
+| SSO invite acceptance         | Creates a verified passwordless user, preserves the invited role, and consumes the invite atomically with the identity mapping.                                  |
+| SSO JIT admission             | Creates a verified passwordless `USER` after seat admission.                                                                                                     |
+| Forgot/reset password         | Generic public response. No token or email is issued for passwordless users or SSO-only organizations. Redemption rechecks policy and revokes all user sessions. |
+| Initial password              | The explicit path that may add a first password to a passwordless user, but it is unavailable while the organization is SSO-only.                                |
+| Authenticated password change | Requires the current password and revokes other Core session families; the actor's current family survives when identifiable.                                    |
+| Account unlock                | Organization admin or platform superadmin clears persistent password-failure state; neither may unlock itself.                                                   |
+| User or organization deletion | Cascades to federated identities, refresh sessions, SSO transactions, broker-session hints, and MFA state.                                                       |
 
 ## Persistence map
 
-| Table | Authentication responsibility | Sensitive value handling |
-| --- | --- | --- |
-| `users` | Core identity, organization, roles, email verification, nullable password hash, and account-lock state. | Passwords are one-way hashes. |
-| `org_sso_connections` | One connection per Core org; broker IDs and runtime policy switches. | Contains no customer IdP credentials. |
-| `org_sso_email_domains` | Globally unique, normalized verified domains used for discovery and callback validation. | Non-secret routing data. |
-| `federated_identities` | Unique broker `(issuer, subject)` to Core `userId` mapping. | External subject never becomes a Core JWT subject. |
-| `sso_login_transactions` | One-time state/browser hashes, pinned orgs, purpose, and callback material. | PKCE verifier and nonce are encrypted; rows expire after ten minutes. |
-| `sso_broker_sessions` | Zitadel `sid` to encrypted ID-token logout hint. | Access and refresh tokens are never stored. |
-| `refresh_tokens` | Opaque session family, provenance, rotation, revocation, and broker correlation. | Only token hashes are stored. |
-| `org_mfa_requirements` | Organization-level Core MFA requirement. | Non-secret policy. |
-| `user_totps` | User enrollment, replay counter, and MFA lockout state. | TOTP secret is encrypted. |
-| `mfa_recovery_codes` | Single-use MFA recovery credentials. | Codes are one-way hashes. |
-| `password_set_tokens` | Reset and initial-password links. | Only token hashes are stored and consumption is atomic. |
-| `invites` | Pending organization admission and assigned role; also reserves a seat. | Invite links are signed separately. |
+| Table                    | Authentication responsibility                                                                           | Sensitive value handling                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `users`                  | Core identity, organization, roles, email verification, nullable password hash, and account-lock state. | Passwords are one-way hashes.                                         |
+| `org_sso_connections`    | One connection per Core org; broker IDs and runtime policy switches.                                    | Contains no customer IdP credentials.                                 |
+| `org_sso_email_domains`  | Globally unique, normalized verified domains used for discovery and callback validation.                | Non-secret routing data.                                              |
+| `federated_identities`   | Unique broker `(issuer, subject)` to Core `userId` mapping.                                             | External subject never becomes a Core JWT subject.                    |
+| `sso_login_transactions` | One-time state/browser hashes, pinned orgs, purpose, and callback material.                             | PKCE verifier and nonce are encrypted; rows expire after ten minutes. |
+| `sso_broker_sessions`    | Zitadel `sid` to encrypted ID-token logout hint.                                                        | Access and refresh tokens are never stored.                           |
+| `refresh_tokens`         | Opaque session family, provenance, rotation, revocation, and broker correlation.                        | Only token hashes are stored.                                         |
+| `org_mfa_requirements`   | Organization-level Core MFA requirement.                                                                | Non-secret policy.                                                    |
+| `user_totps`             | User enrollment, replay counter, and MFA lockout state.                                                 | TOTP secret is encrypted.                                             |
+| `mfa_recovery_codes`     | Single-use MFA recovery credentials.                                                                    | Codes are one-way hashes.                                             |
+| `password_set_tokens`    | Reset and initial-password links.                                                                       | Only token hashes are stored and consumption is atomic.               |
+| `invites`                | Pending organization admission and assigned role; also reserves a seat.                                 | Invite links are signed separately.                                   |
 
 ## Module ownership and dependency direction
 
@@ -582,18 +603,18 @@ session flows.
 
 ## Where to change or diagnose a path
 
-| Concern | Primary location |
-| --- | --- |
-| Password login, JWT, MFA-pending state | `ayunis-core-backend/src/iam/authentication` |
-| Broker protocol, discovery, linking, provisioning, logout | `ayunis-core-backend/src/iam/sso` |
-| Refresh rotation and revocation | `ayunis-core-backend/src/iam/sessions` |
-| Passwords, account lockout, reset/initial-password links | `ayunis-core-backend/src/iam/users` |
-| TOTP and organization MFA | `ayunis-core-backend/src/iam/mfa` |
-| Invite admission | `ayunis-core-backend/src/iam/invites` |
-| Seat checks and allocation lock | `ayunis-core-backend/src/iam/subscriptions` |
-| Login, SSO, two-factor, and account UI | `ayunis-core-frontend/src/pages/auth`, `src/features/sso`, and `src/pages/settings/account-settings` |
-| Superadmin SSO management UI | `ayunis-core-frontend/src/pages/super-admin-settings/org` |
-| Broker deployment and customer onboarding | `ayunis-core-auth`, `ayunis-infra`, and the operator runbook linked above |
+| Concern                                                   | Primary location                                                                                     |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Password login, JWT, MFA-pending state                    | `ayunis-core-backend/src/iam/authentication`                                                         |
+| Broker protocol, discovery, linking, provisioning, logout | `ayunis-core-backend/src/iam/sso`                                                                    |
+| Refresh rotation and revocation                           | `ayunis-core-backend/src/iam/sessions`                                                               |
+| Passwords, account lockout, reset/initial-password links  | `ayunis-core-backend/src/iam/users`                                                                  |
+| TOTP and organization MFA                                 | `ayunis-core-backend/src/iam/mfa`                                                                    |
+| Invite admission                                          | `ayunis-core-backend/src/iam/invites`                                                                |
+| Seat checks and allocation lock                           | `ayunis-core-backend/src/iam/subscriptions`                                                          |
+| Login, SSO, two-factor, and account UI                    | `ayunis-core-frontend/src/pages/auth`, `src/features/sso`, and `src/pages/settings/account-settings` |
+| Superadmin SSO management UI                              | `ayunis-core-frontend/src/pages/super-admin-settings/org`                                            |
+| Broker deployment and customer onboarding                 | `ayunis-core-auth`, `ayunis-infra`, and the operator runbook linked above                            |
 
 When diagnosing a failed SSO login, follow the stages in order: connection
 discovery, authorization transaction, broker callback validation, organization

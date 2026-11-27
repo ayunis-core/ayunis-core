@@ -45,6 +45,18 @@ describe('SourceUploadSessionAccessService', () => {
     ).rejects.toBeInstanceOf(SourceUploadNotFoundError);
   });
 
+  it('reads as not found from another surface of the same user', async () => {
+    sessions.findById.mockResolvedValue(
+      buildUploadSession({ surface: 'excel' }),
+    );
+
+    await expect(
+      build(createOwnerContext({ client: 'outlook' })).requireOwned(
+        UPLOAD_SESSION_ID,
+      ),
+    ).rejects.toBeInstanceOf(SourceUploadNotFoundError);
+  });
+
   it('reads as not found when the session does not exist', async () => {
     sessions.findById.mockResolvedValue(null);
 
@@ -74,6 +86,26 @@ describe('SourceUploadSessionAccessService', () => {
       build().requireTransferable(UPLOAD_SESSION_ID),
     ).rejects.toBeInstanceOf(SourceUploadExpiredError);
   });
+
+  it('denies legacy ownership and accepts an explicitly recreated session', async () => {
+    sessions.findById.mockResolvedValue(buildUploadSession({ surface: null }));
+
+    await expect(
+      build().requireOwned(UPLOAD_SESSION_ID),
+    ).rejects.toBeInstanceOf(SourceUploadNotFoundError);
+    await expect(
+      build(createOwnerContext({ client: 'outlook' })).requireOwned(
+        UPLOAD_SESSION_ID,
+      ),
+    ).rejects.toBeInstanceOf(SourceUploadNotFoundError);
+
+    const recreated = buildUploadSession({ surface: 'web' });
+    sessions.findById.mockResolvedValue(recreated);
+    await expect(build().requireOwned(UPLOAD_SESSION_ID)).resolves.toBe(
+      recreated,
+    );
+  });
+
   it('denies every principal once deletion detaches the owner', async () => {
     const session = buildUploadSession();
     sessions.findById.mockResolvedValue(session);

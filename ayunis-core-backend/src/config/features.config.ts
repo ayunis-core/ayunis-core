@@ -1,6 +1,5 @@
 import { registerAs } from '@nestjs/config';
 import { releaseNotesConfig } from './release-notes.config';
-import type { SurfaceFeatureFlag } from './surface-registry';
 
 export enum FeatureFlag {
   ExternalSubscriptions = 'externalSubscriptionsEnabled',
@@ -27,6 +26,8 @@ export enum FeatureFlag {
    * its sync schedule and the super-admin catalog.
    */
   Oparl = 'oparlEnabled',
+  /** Off until the Excel add-in has passed the internal rollout. */
+  ExcelAddin = 'excelAddinEnabled',
 }
 
 export type FeaturesConfig = Record<FeatureFlag, boolean>;
@@ -40,15 +41,6 @@ export const parseBooleanWithDefault = (
   if (value === undefined || value.trim() === '') return defaultValue;
   return value.trim() === 'true';
 };
-
-export function isSurfaceFeatureEnabled(
-  feature: SurfaceFeatureFlag | null,
-): boolean {
-  return (
-    feature === null ||
-    parseBooleanWithDefault(process.env[feature.envKey], feature.defaultEnabled)
-  );
-}
 
 export const featuresConfig = registerAs('features', (): FeaturesConfig => {
   const routinesEnabled = parseBooleanWithDefault(
@@ -84,6 +76,10 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
     ),
     oparlEnabled: parseBooleanWithDefault(
       process.env.FEATURE_OPARL_ENABLED,
+      false,
+    ),
+    excelAddinEnabled: parseBooleanWithDefault(
+      process.env.FEATURE_EXCEL_ADDIN_ENABLED,
       false,
     ),
   };

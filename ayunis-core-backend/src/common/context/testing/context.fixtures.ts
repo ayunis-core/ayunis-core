@@ -10,7 +10,13 @@ import { UserRole } from 'src/iam/users/domain/value-objects/role.object';
 /** The named CLS keys without the `ClsStore` symbol index signature. */
 type ContextStore = Pick<
   MyClsStore,
-  'userId' | 'apiKeyId' | 'orgId' | 'role' | 'systemRole' | 'refreshToken'
+  | 'userId'
+  | 'apiKeyId'
+  | 'orgId'
+  | 'role'
+  | 'systemRole'
+  | 'refreshToken'
+  | 'client'
 >;
 
 export const TEST_USER_ID = '11111111-1111-4111-8111-111111111111' as UUID;

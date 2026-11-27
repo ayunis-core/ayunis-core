@@ -6,6 +6,7 @@ import { UserRecord } from 'src/iam/users/infrastructure/repositories/local/sche
 import { SourceUploadSessionStatus } from 'src/domain/sources/domain/upload/source-upload-session-status.enum';
 import { SourceUploadTargetType } from 'src/domain/sources/domain/upload/source-upload-target-type.enum';
 import type { UploadedSourceReference } from 'src/domain/sources/domain/upload/uploaded-source-reference';
+import type { SourceUploadSurface } from 'src/domain/sources/domain/upload/source-upload-session.entity';
 
 @Entity('source_upload_sessions')
 export class SourceUploadSessionRecord extends BaseRecord {
@@ -23,6 +24,9 @@ export class SourceUploadSessionRecord extends BaseRecord {
   @ManyToOne(() => UserRecord, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'userId' })
   user: UserRecord | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  surface: SourceUploadSurface | null;
 
   @Column({ type: 'enum', enum: SourceUploadTargetType })
   targetType: SourceUploadTargetType;

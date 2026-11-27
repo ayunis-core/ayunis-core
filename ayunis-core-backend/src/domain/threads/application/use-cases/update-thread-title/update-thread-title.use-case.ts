@@ -5,6 +5,7 @@ import { UnexpecteThreadError } from 'src/domain/threads/application/threads.err
 import { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import { UpdateThreadTitleCommand } from './update-thread-title.command';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class UpdateThreadTitleUseCase {
@@ -29,6 +30,7 @@ export class UpdateThreadTitleUseCase {
     await this.threadsRepository.updateTitle({
       threadId: command.threadId,
       userId,
+      client: getCurrentThreadClient(this.contextService),
       title: command.title,
     });
   }

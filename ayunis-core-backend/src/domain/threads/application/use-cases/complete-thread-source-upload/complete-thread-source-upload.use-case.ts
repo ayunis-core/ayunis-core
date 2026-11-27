@@ -13,6 +13,7 @@ import { assertThreadHasSourceCapacity } from 'src/domain/threads/application/ut
 import { FindThreadUseCase } from 'src/domain/threads/application/use-cases/find-thread/find-thread.use-case';
 import { FindThreadQuery } from 'src/domain/threads/application/use-cases/find-thread/find-thread.query';
 import { CompleteThreadSourceUploadCommand } from './complete-thread-source-upload.command';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 /**
  * Finishes a direct upload for a thread: the sources module verifies the
@@ -57,6 +58,7 @@ export class CompleteThreadSourceUploadUseCase {
           this.threadsRepository.attachSourcesWithinCapacity({
             threadId: thread.id,
             userId,
+            client: getCurrentThreadClient(this.contextService),
             sourceIds: created.map((created) => created.id),
             maxSources: ThreadsConstants.MAX_SOURCES,
           }),

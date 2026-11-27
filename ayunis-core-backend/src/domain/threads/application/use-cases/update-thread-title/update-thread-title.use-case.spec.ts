@@ -1,5 +1,9 @@
 import { randomUUID } from 'crypto';
 import type { ContextService } from 'src/common/context/services/context.service';
+import {
+  aUserContext,
+  getFromStore,
+} from 'src/common/context/testing/context.fixtures';
 import type { ThreadsRepository } from 'src/domain/threads/application/ports/threads.repository';
 import {
   ThreadErrorCode,
@@ -14,11 +18,12 @@ describe('UpdateThreadTitleUseCase', () => {
     const userId = randomUUID();
     const notFoundError = new ThreadNotFoundError(threadId, userId);
     const threadsRepository = {
-      findOne: jest.fn().mockResolvedValue(null),
       updateTitle: jest.fn().mockRejectedValue(notFoundError),
     } as unknown as jest.Mocked<ThreadsRepository>;
     const contextService = {
-      get: jest.fn().mockReturnValue(userId),
+      get: jest.fn(
+        getFromStore({ ...aUserContext({ userId }), client: 'excel' }),
+      ),
     } as unknown as ContextService;
     const useCase = new UpdateThreadTitleUseCase(
       threadsRepository,
@@ -35,6 +40,12 @@ describe('UpdateThreadTitleUseCase', () => {
     await expect(result).rejects.toMatchObject({
       code: ThreadErrorCode.THREAD_NOT_FOUND,
       statusCode: 404,
+    });
+    expect(threadsRepository.updateTitle).toHaveBeenCalledWith({
+      threadId,
+      userId,
+      client: 'excel',
+      title: 'Updated conversation title',
     });
   });
 });

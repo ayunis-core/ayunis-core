@@ -28,7 +28,7 @@ describe('DeleteThreadUseCase', () => {
 
   beforeEach(async () => {
     const mockThreadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
       delete: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -80,7 +80,9 @@ describe('DeleteThreadUseCase', () => {
     };
 
     it('should delete the thread row before purging its storage prefixes', async () => {
-      threadsRepository.findOne.mockResolvedValue(existingThread as never);
+      threadsRepository.findOneForSurface.mockResolvedValue(
+        existingThread as never,
+      );
       const callOrder: string[] = [];
       threadsRepository.delete.mockImplementation(() => {
         callOrder.push('delete');
@@ -117,7 +119,7 @@ describe('DeleteThreadUseCase', () => {
     });
 
     it('should succeed silently and skip the purge when the thread does not exist', async () => {
-      threadsRepository.findOne.mockResolvedValue(null);
+      threadsRepository.findOneForSurface.mockResolvedValue(null);
 
       await useCase.execute(new DeleteThreadCommand(mockThreadId));
 
@@ -127,7 +129,9 @@ describe('DeleteThreadUseCase', () => {
     });
 
     it('should propagate repository errors and not purge storage', async () => {
-      threadsRepository.findOne.mockResolvedValue(existingThread as never);
+      threadsRepository.findOneForSurface.mockResolvedValue(
+        existingThread as never,
+      );
       const repositoryError = new Error('Database connection failed');
       threadsRepository.delete.mockRejectedValue(repositoryError);
 
@@ -140,7 +144,9 @@ describe('DeleteThreadUseCase', () => {
     });
 
     it('should swallow purge failures after a successful delete', async () => {
-      threadsRepository.findOne.mockResolvedValue(existingThread as never);
+      threadsRepository.findOneForSurface.mockResolvedValue(
+        existingThread as never,
+      );
       threadsRepository.delete.mockResolvedValue(undefined);
       purgeStoragePrefixesUseCase.execute.mockRejectedValue(
         new Error('storage unavailable'),

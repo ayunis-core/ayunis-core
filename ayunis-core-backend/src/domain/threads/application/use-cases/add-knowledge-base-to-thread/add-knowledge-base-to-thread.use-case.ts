@@ -11,6 +11,7 @@ import {
 import { FindAccessibleKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/find-accessible-knowledge-base/find-accessible-knowledge-base.use-case';
 import { KnowledgeBaseNotFoundError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class AddKnowledgeBaseToThreadUseCase {
@@ -36,9 +37,11 @@ export class AddKnowledgeBaseToThreadUseCase {
 
     const { userId, orgId } = getRequiredUserContext(this.contextService);
 
-    const thread = await this.threadsRepository.findOne(
+    const client = getCurrentThreadClient(this.contextService);
+    const thread = await this.threadsRepository.findOneForSurface(
       command.threadId,
       userId,
+      client,
     );
 
     if (!thread) {
@@ -72,6 +75,7 @@ export class AddKnowledgeBaseToThreadUseCase {
     await this.threadsRepository.addKnowledgeBaseAssignment({
       threadId: command.threadId,
       userId,
+      client,
       knowledgeBaseId: command.knowledgeBaseId,
       originSkillId: command.originSkillId,
     });

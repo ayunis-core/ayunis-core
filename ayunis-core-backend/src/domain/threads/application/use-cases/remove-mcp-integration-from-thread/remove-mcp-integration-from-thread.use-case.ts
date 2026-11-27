@@ -4,6 +4,7 @@ import { RemoveMcpIntegrationFromThreadCommand } from './remove-mcp-integration-
 import { ContextService } from 'src/common/context/services/context.service';
 import { ThreadNotFoundError } from 'src/domain/threads/application/threads.errors';
 import { getRequiredUserContext } from 'src/common/context/required-context';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 @Injectable()
 export class RemoveMcpIntegrationFromThreadUseCase {
@@ -27,9 +28,11 @@ export class RemoveMcpIntegrationFromThreadUseCase {
 
     const { userId } = getRequiredUserContext(this.contextService);
 
-    const thread = await this.threadsRepository.findOne(
+    const client = getCurrentThreadClient(this.contextService);
+    const thread = await this.threadsRepository.findOneForSurface(
       command.threadId,
       userId,
+      client,
     );
 
     if (!thread) {
@@ -51,6 +54,7 @@ export class RemoveMcpIntegrationFromThreadUseCase {
     await this.threadsRepository.updateMcpIntegrations({
       threadId: command.threadId,
       userId,
+      client,
       mcpIntegrationIds: updatedIds,
     });
   }

@@ -42,7 +42,7 @@ describe('AddSourceToThreadUseCase', () => {
 
   beforeAll(async () => {
     const mockThreadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
       addSourceAssignment: jest.fn(),
     };
 
@@ -80,13 +80,14 @@ describe('AddSourceToThreadUseCase', () => {
     const command = new AddSourceCommand(thread, source);
 
     // Mock DB returning thread with no existing assignments
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     await useCase.execute(command);
 
-    expect(threadsRepository.findOne).toHaveBeenCalledWith(
+    expect(threadsRepository.findOneForSurface).toHaveBeenCalledWith(
       thread.id,
       mockUserId,
+      null,
     );
     expect(threadsRepository.addSourceAssignment).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -115,7 +116,7 @@ describe('AddSourceToThreadUseCase', () => {
     });
     const command = new AddSourceCommand(freshThread, newSource);
 
-    threadsRepository.findOne.mockResolvedValue(freshThread);
+    threadsRepository.findOneForSurface.mockResolvedValue(freshThread);
 
     await useCase.execute(command);
 
@@ -138,7 +139,7 @@ describe('AddSourceToThreadUseCase', () => {
     });
     const command = new AddSourceCommand(thread, source, skillId);
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     await useCase.execute(command);
 
@@ -160,7 +161,7 @@ describe('AddSourceToThreadUseCase', () => {
     const command = new AddSourceCommand(thread, source);
 
     // DB returns thread with the source already assigned
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SourceAlreadyAssignedError,
@@ -177,7 +178,7 @@ describe('AddSourceToThreadUseCase', () => {
     });
     const command = new AddSourceCommand(thread, source);
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     const dbError = Object.assign(
       new Error('duplicate key value violates unique constraint'),
       { driverError: { code: '23505' } },
@@ -198,7 +199,7 @@ describe('AddSourceToThreadUseCase', () => {
     });
     const command = new AddSourceCommand(thread, source);
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.addSourceAssignment.mockRejectedValue(
       new Error('Connection terminated'),
     );
@@ -226,7 +227,7 @@ describe('AddSourceToThreadUseCase', () => {
     });
 
     const command = new AddSourceCommand(staleThread, source);
-    threadsRepository.findOne.mockResolvedValue(freshThread);
+    threadsRepository.findOneForSurface.mockResolvedValue(freshThread);
 
     await expect(useCase.execute(command)).rejects.toThrow(
       SourceAlreadyAssignedError,

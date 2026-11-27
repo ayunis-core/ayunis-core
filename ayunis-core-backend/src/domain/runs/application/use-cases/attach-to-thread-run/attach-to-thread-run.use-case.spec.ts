@@ -28,7 +28,7 @@ describe('AttachToThreadRunUseCase', () => {
 
   it('replays the owner’s run from its start', async () => {
     activeThreadRuns.startDetached(
-      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID },
+      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID, client: null },
       runUntilAborted,
     );
     await new Promise((resolve) => setImmediate(resolve));
@@ -41,16 +41,16 @@ describe('AttachToThreadRunUseCase', () => {
       value: { type: 'session', streaming: true },
     });
     listener.abort();
-    activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID);
+    activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID, null);
   });
 
   it('does not find another user’s run', async () => {
     activeThreadRuns.startDetached(
-      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID },
+      { threadId: RUN_THREAD_ID, userId: RUN_OWNER_ID, client: null },
       runUntilAborted,
     );
 
     await expect(attachAs(OTHER_USER_ID)).resolves.toBeNull();
-    activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID);
+    activeThreadRuns.cancel(RUN_THREAD_ID, RUN_OWNER_ID, null);
   });
 });

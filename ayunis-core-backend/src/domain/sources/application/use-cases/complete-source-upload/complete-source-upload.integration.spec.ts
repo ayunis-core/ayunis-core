@@ -120,6 +120,7 @@ const sessionSchema = new EntitySchema<SourceUploadSessionRecord>({
     ...base,
     orgId: { type: 'uuid' },
     userId: { type: 'uuid' },
+    surface: { type: String, nullable: true },
     targetId: { type: 'uuid' },
     targetType: { type: String },
     fileName: { type: String },
@@ -142,6 +143,7 @@ const threadSchema = new EntitySchema<ThreadRecord>({
     id: { type: 'uuid', primary: true },
     userId: { type: 'uuid' },
     workspaceId: { type: 'uuid', nullable: true },
+    client: { type: String, nullable: true },
   },
 });
 const assignmentSchema = new EntitySchema<ThreadSourceAssignmentRecord>({
@@ -288,6 +290,7 @@ describe('CompleteSourceUploadUseCase transaction', () => {
       await assignments.addSourceAssignment({
         threadId: session.targetId,
         userId: UPLOAD_USER_ID,
+        client: null,
         sourceAssignment: new SourceAssignment({ source }),
       });
     }

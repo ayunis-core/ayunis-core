@@ -30,7 +30,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
 
   beforeAll(async () => {
     const mockThreadsRepository = {
-      findOne: jest.fn(),
+      findOneForSurface: jest.fn(),
       updateMcpIntegrations: jest.fn(),
     };
 
@@ -73,7 +73,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
       mcpIntegrationIds: [],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.updateMcpIntegrations.mockResolvedValue(undefined);
     getMcpIntegrationsByIdsUseCase.execute.mockResolvedValue([
       mockIntegration(mockMcpIntegrationId),
@@ -89,6 +89,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     expect(threadsRepository.updateMcpIntegrations).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       mcpIntegrationIds: [mockMcpIntegrationId],
     });
   });
@@ -101,7 +102,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
       mcpIntegrationIds: [mockMcpIntegrationId],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.updateMcpIntegrations.mockResolvedValue(undefined);
     getMcpIntegrationsByIdsUseCase.execute.mockResolvedValue([
       mockIntegration(mockMcpIntegrationId2),
@@ -117,6 +118,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
     expect(threadsRepository.updateMcpIntegrations).toHaveBeenCalledWith({
       threadId: mockThreadId,
       userId: mockUserId,
+      client: null,
       mcpIntegrationIds: [mockMcpIntegrationId, mockMcpIntegrationId2],
     });
   });
@@ -129,7 +131,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
       mcpIntegrationIds: [mockMcpIntegrationId],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     threadsRepository.updateMcpIntegrations.mockResolvedValue(undefined);
 
     const command = new AddMcpIntegrationToThreadCommand(
@@ -143,7 +145,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
   });
 
   it('should throw ThreadNotFoundError when thread does not exist', async () => {
-    threadsRepository.findOne.mockResolvedValue(null);
+    threadsRepository.findOneForSurface.mockResolvedValue(null);
 
     const command = new AddMcpIntegrationToThreadCommand(
       mockThreadId,
@@ -161,7 +163,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
       mcpIntegrationIds: [],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
     getMcpIntegrationsByIdsUseCase.execute.mockResolvedValue([]);
 
     const command = new AddMcpIntegrationToThreadCommand(
@@ -183,7 +185,7 @@ describe('AddMcpIntegrationToThreadUseCase', () => {
       mcpIntegrationIds: [mockMcpIntegrationId],
     });
 
-    threadsRepository.findOne.mockResolvedValue(thread);
+    threadsRepository.findOneForSurface.mockResolvedValue(thread);
 
     const command = new AddMcpIntegrationToThreadCommand(
       mockThreadId,

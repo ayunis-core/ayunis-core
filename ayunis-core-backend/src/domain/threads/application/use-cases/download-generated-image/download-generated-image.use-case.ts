@@ -15,6 +15,8 @@ import {
   UnsupportedImageContentTypeError,
 } from 'src/domain/threads/application/threads.errors';
 import { DownloadGeneratedImageQuery } from './download-generated-image.query';
+import { ContextService } from 'src/common/context/services/context.service';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 
 export interface GeneratedImageDownload {
   stream: NodeJS.ReadableStream;
@@ -30,6 +32,7 @@ export class DownloadGeneratedImageUseCase {
     private readonly threadsRepository: ThreadsRepository,
     private readonly generatedImagesRepository: GeneratedImagesRepository,
     private readonly downloadObjectUseCase: DownloadObjectUseCase,
+    private readonly contextService: ContextService,
   ) {}
 
   @HandleUnexpectedErrors(UnexpecteThreadError)
@@ -41,9 +44,10 @@ export class DownloadGeneratedImageUseCase {
       'Downloading generated image',
     );
 
-    const ownsThread = await this.threadsRepository.existsForUser(
+    const ownsThread = await this.threadsRepository.existsForSurface(
       query.threadId,
       query.userId,
+      getCurrentThreadClient(this.contextService),
     );
     if (!ownsThread) {
       throw new ThreadNotFoundError(query.threadId, query.userId);

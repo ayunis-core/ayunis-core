@@ -5,6 +5,7 @@ import {
   ActiveThreadRun,
   type ActiveThreadRunOwner,
 } from './active-thread-run';
+import type { SessionClient } from 'src/iam/sessions/domain/value-objects/session-client';
 
 export const UNWATCHED_RUN_TIMEOUT_MS = 15 * 60_000;
 
@@ -30,7 +31,11 @@ export class ActiveThreadRuns {
     owner: ActiveThreadRunOwner & { abortController?: AbortController },
   ): ActiveThreadRun {
     const run: ActiveThreadRun = new ActiveThreadRun(
-      { threadId: owner.threadId, userId: owner.userId },
+      {
+        threadId: owner.threadId,
+        userId: owner.userId,
+        client: owner.client,
+      },
       owner.abortController,
       UNWATCHED_RUN_TIMEOUT_MS,
       () => this.remove(run),
@@ -55,23 +60,42 @@ export class ActiveThreadRuns {
     return run;
   }
 
-  /** The newest run on the thread, if `userId` owns it. */
-  find(threadId: UUID, userId: UUID): ActiveThreadRun | undefined {
+  /** The newest run on the thread owned by this user and surface. */
+  find(
+    threadId: UUID,
+    userId: UUID,
+    client: SessionClient | null,
+  ): ActiveThreadRun | undefined {
     return [...(this.runsByThread.get(threadId) ?? [])]
-      .filter((run) => run.owner.userId === userId)
+      .filter(
+        (run) => run.owner.userId === userId && run.owner.client === client,
+      )
       .at(-1);
   }
 
-  cancel(threadId: UUID, userId: UUID): void {
+  cancel(threadId: UUID, userId: UUID, client: SessionClient | null): void {
+    this.runsByThread.get(threadId)?.forEach((run) => {
+      if (run.owner.userId === userId && run.owner.client === client) {
+        run.cancel();
+      }
+    });
+  }
+
+  cancelAllForUser(threadId: UUID, userId: UUID): void {
     this.runsByThread.get(threadId)?.forEach((run) => {
       if (run.owner.userId === userId) run.cancel();
     });
   }
 
-  listForUser(userId: UUID): ActiveThreadRunSummary[] {
+  listForUser(
+    userId: UUID,
+    client: SessionClient | null,
+  ): ActiveThreadRunSummary[] {
     const summaries: ActiveThreadRunSummary[] = [];
     for (const [threadId, runs] of this.runsByThread) {
-      const owned = [...runs].filter((run) => run.owner.userId === userId);
+      const owned = [...runs].filter(
+        (run) => run.owner.userId === userId && run.owner.client === client,
+      );
       if (owned.length === 0) continue;
       summaries.push({
         threadId,

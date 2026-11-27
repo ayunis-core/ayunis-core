@@ -13,6 +13,7 @@ import { ExecuteRunUseCase } from 'src/domain/runs/application/use-cases/execute
 import { ContextService } from 'src/common/context/services/context.service';
 import { getRequiredUserContext } from 'src/common/context/required-context';
 import { ActiveThreadRuns } from 'src/domain/runs/application/services/active-thread-runs.service';
+import { getCurrentSessionClient as getCurrentThreadClient } from 'src/common/context/current-session-client';
 import type { ActiveThreadRun } from 'src/domain/runs/application/services/active-thread-run';
 import type { RunCompletionPolicy } from 'src/domain/runs/application/run-profiles/run-profile';
 import {
@@ -61,6 +62,7 @@ export class ExecuteUnattendedRunUseCase {
     const watched = this.activeThreadRuns.open({
       threadId: command.threadId,
       userId,
+      client: getCurrentThreadClient(this.contextService),
     });
     watched.publish(runSessionEvent(command.threadId, true));
     try {
