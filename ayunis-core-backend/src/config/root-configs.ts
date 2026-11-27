@@ -25,6 +25,7 @@ import { coreConnectConfig } from './core-connect.config';
 import { routinesConfig } from './routines.config';
 import { recordingsConfig } from './recordings.config';
 import { releaseNotesConfig } from './release-notes.config';
+import { adventCalendarConfig } from './advent-calendar.config';
 import { connectorsConfig } from './connectors.config';
 
 /**
@@ -66,4 +67,5 @@ export const rootConfigs = [
   recordingsConfig,
   releaseNotesConfig,
   connectorsConfig,
+  adventCalendarConfig,
 ];

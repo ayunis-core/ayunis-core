@@ -16902,6 +16902,290 @@
         "summary": "Mark every release note read for the current user",
         "tags": ["release-notes"]
       }
+    },
+    "/advent-calendar": {
+      "get": {
+        "operationId": "AdventCalendarController_getCalendar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdventCalendarResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the advent calendar with the doors the caller may open",
+        "tags": ["advent-calendar"]
+      }
+    },
+    "/advent-calendar/doors/{day}/image": {
+      "get": {
+        "operationId": "AdventCalendarController_downloadDoorImage",
+        "parameters": [
+          {
+            "name": "day",
+            "required": true,
+            "in": "path",
+            "description": "The day of December the door opens on",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image streamed successfully"
+          },
+          "404": {
+            "description": "The door is not openable for the caller or has no image"
+          }
+        },
+        "summary": "Download the image of a door the caller may open",
+        "tags": ["advent-calendar"]
+      }
+    },
+    "/super-admin/advent-calendar": {
+      "get": {
+        "operationId": "SuperAdminAdventCalendarController_getCalendar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminAdventCalendarResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the switch and every door with its content",
+        "tags": ["Super Admin Advent Calendar"]
+      }
+    },
+    "/super-admin/advent-calendar/doors/{day}": {
+      "put": {
+        "operationId": "SuperAdminAdventCalendarController_saveDoor",
+        "parameters": [
+          {
+            "name": "day",
+            "required": true,
+            "in": "path",
+            "description": "The day of December the door opens on",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAdventCalendarDoorRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminAdventCalendarDoorResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid door content"
+          }
+        },
+        "summary": "Create or replace the content of a door",
+        "tags": ["Super Admin Advent Calendar"]
+      },
+      "delete": {
+        "operationId": "SuperAdminAdventCalendarController_clearDoor",
+        "parameters": [
+          {
+            "name": "day",
+            "required": true,
+            "in": "path",
+            "description": "The day of December the door opens on",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The door is empty"
+          }
+        },
+        "summary": "Clear a door: its content and image are deleted",
+        "tags": ["Super Admin Advent Calendar"]
+      }
+    },
+    "/super-admin/advent-calendar/doors/{day}/image": {
+      "put": {
+        "description": "JPEG, PNG, GIF or WebP up to 10 MB, recognised by its bytes. Replaces a Vimeo video.",
+        "operationId": "SuperAdminAdventCalendarController_uploadDoorImage",
+        "parameters": [
+          {
+            "name": "day",
+            "required": true,
+            "in": "path",
+            "description": "The day of December the door opens on",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminAdventCalendarDoorResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No file or not a supported image"
+          },
+          "404": {
+            "description": "The door has no content"
+          },
+          "413": {
+            "description": "The image is larger than 10 MB"
+          }
+        },
+        "summary": "Upload or replace the image of a door that has content",
+        "tags": ["Super Admin Advent Calendar"]
+      },
+      "delete": {
+        "operationId": "SuperAdminAdventCalendarController_removeDoorImage",
+        "parameters": [
+          {
+            "name": "day",
+            "required": true,
+            "in": "path",
+            "description": "The day of December the door opens on",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuperAdminAdventCalendarDoorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The door has no content"
+          }
+        },
+        "summary": "Remove the image of a door, keeping its text",
+        "tags": ["Super Admin Advent Calendar"]
+      },
+      "get": {
+        "operationId": "SuperAdminAdventCalendarController_downloadDoorImage",
+        "parameters": [
+          {
+            "name": "day",
+            "required": true,
+            "in": "path",
+            "description": "The day of December the door opens on",
+            "schema": {
+              "minimum": 1,
+              "maximum": 24,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image streamed successfully"
+          },
+          "404": {
+            "description": "The door has no image"
+          }
+        },
+        "summary": "Download the image of any door",
+        "tags": ["Super Admin Advent Calendar"]
+      }
+    },
+    "/super-admin/advent-calendar/enabled": {
+      "put": {
+        "operationId": "SuperAdminAdventCalendarController_setEnabled",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdventCalendarEnabledDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdventCalendarEnabledDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Switch the advent calendar on or off for users",
+        "tags": ["Super Admin Advent Calendar"]
+      }
     }
   },
   "info": {
@@ -29937,6 +30221,311 @@
           }
         },
         "required": ["releaseNote"]
+      },
+      "AdventCalendarDoorContentResponseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdown"
+          },
+          "media": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdventCalendarDoorMediaResponseDto"
+              }
+            ]
+          },
+          "buttons": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AdventCalendarLinkButtonDto"
+                },
+                {
+                  "$ref": "#/components/schemas/AdventCalendarPromptButtonDto"
+                },
+                {
+                  "$ref": "#/components/schemas/AdventCalendarQuizButtonDto"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind"
+              }
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Changes with every edit, e.g. to reload a replaced image"
+          }
+        },
+        "required": ["title", "body", "media", "buttons", "updatedAt"]
+      },
+      "AdventCalendarDoorMediaResponseDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "An image is served by the door image endpoint; a video is embedded as https://player.vimeo.com/video/<vimeoVideoId>?dnt=1[&h=<vimeoHash>]",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdventCalendarMediaType"
+              }
+            ]
+          },
+          "vimeoVideoId": {
+            "type": "string",
+            "nullable": true,
+            "example": "76979871"
+          },
+          "vimeoHash": {
+            "type": "string",
+            "nullable": true,
+            "description": "The privacy hash of an unlisted video"
+          }
+        },
+        "required": ["type", "vimeoVideoId", "vimeoHash"]
+      },
+      "AdventCalendarDoorResponseDto": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 24
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdventCalendarDoorState"
+              }
+            ]
+          },
+          "content": {
+            "nullable": true,
+            "description": "Set exactly when the door is openable",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdventCalendarDoorContentResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["day", "state", "content"]
+      },
+      "AdventCalendarDoorState": {
+        "type": "string",
+        "enum": ["locked", "empty", "openable"]
+      },
+      "AdventCalendarEnabledDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Users see the calendar while this is on and today is between 1 December and 6 January"
+          }
+        },
+        "required": ["enabled"]
+      },
+      "AdventCalendarLinkButtonDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["link"]
+          },
+          "url": {
+            "type": "string",
+            "description": "An http(s) URL, opened in a new tab, or an in-app path starting with /, opened in the same tab",
+            "maxLength": 2000,
+            "example": "/marketplace"
+          }
+        },
+        "required": ["label", "kind", "url"]
+      },
+      "AdventCalendarMediaType": {
+        "type": "string",
+        "enum": ["image", "vimeo"],
+        "description": "An image is served by the door image endpoint; a video is embedded as https://player.vimeo.com/video/<vimeoVideoId>?dnt=1[&h=<vimeoHash>]"
+      },
+      "AdventCalendarPromptButtonDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["prompt"]
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Filled into the input of a new chat, not sent",
+            "maxLength": 4000
+          }
+        },
+        "required": ["label", "kind", "prompt"]
+      },
+      "AdventCalendarQuizButtonDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["quiz"]
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "answers": {
+            "minItems": 2,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correctAnswerIndex": {
+            "type": "number",
+            "description": "The index of the one correct answer",
+            "minimum": 0
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true,
+            "description": "Shown after an answer is picked",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "label",
+          "kind",
+          "question",
+          "answers",
+          "correctAnswerIndex"
+        ]
+      },
+      "AdventCalendarResponseDto": {
+        "type": "object",
+        "properties": {
+          "visible": {
+            "type": "boolean",
+            "description": "The calendar is switched on and today is between 1 December and 6 January (Europe/Berlin)"
+          },
+          "preview": {
+            "type": "boolean",
+            "description": "The caller is a super admin: every door with content is openable, visible or not"
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The server's time the door states were computed for"
+          },
+          "doors": {
+            "description": "All 24 doors by day, or none when the calendar is neither visible nor previewed",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdventCalendarDoorResponseDto"
+            }
+          }
+        },
+        "required": ["visible", "preview", "now", "doors"]
+      },
+      "SaveAdventCalendarDoorRequestDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdown; may be empty",
+            "maxLength": 5000
+          },
+          "vimeoUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "https://vimeo.com/<id>, https://vimeo.com/<id>/<hash> or https://player.vimeo.com/video/<id>[?h=<hash>]. Replaces the image; without it the door keeps its image, if any, and has no video.",
+            "example": "https://vimeo.com/76979871"
+          },
+          "buttons": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AdventCalendarLinkButtonDto"
+                },
+                {
+                  "$ref": "#/components/schemas/AdventCalendarPromptButtonDto"
+                },
+                {
+                  "$ref": "#/components/schemas/AdventCalendarQuizButtonDto"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "kind"
+              }
+            },
+            "description": "Up to two buttons, at most one of them a quiz"
+          }
+        },
+        "required": ["title", "body", "buttons"]
+      },
+      "SuperAdminAdventCalendarDoorResponseDto": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 24
+          },
+          "content": {
+            "nullable": true,
+            "description": "Null for an empty door",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdventCalendarDoorContentResponseDto"
+              }
+            ]
+          }
+        },
+        "required": ["day", "content"]
+      },
+      "SuperAdminAdventCalendarResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "doors": {
+            "description": "All 24 doors by day, with their full content",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SuperAdminAdventCalendarDoorResponseDto"
+            }
+          }
+        },
+        "required": ["enabled", "doors"]
       }
     }
   }

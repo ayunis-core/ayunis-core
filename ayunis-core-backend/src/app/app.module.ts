@@ -22,6 +22,7 @@ import { RoutinesModule } from 'src/domain/routines/routines.module';
 import { RecordingsModule } from 'src/domain/recordings/recordings.module';
 import { NotificationsModule } from 'src/domain/notifications/notifications.module';
 import { ReleaseNotesModule } from 'src/domain/release-notes/release-notes.module';
+import { AdventCalendarModule } from 'src/domain/advent-calendar/advent-calendar.module';
 import { SplitterModule } from 'src/domain/rag/splitters/splitter.module';
 import { EmbeddingsModule } from 'src/domain/rag/embeddings/embeddings.module';
 import { RetrieverModule } from 'src/domain/retrievers/retriever.module';
@@ -118,6 +119,7 @@ import { QueueTelemetryModule } from 'src/integrations/queue-telemetry/queue-tel
     ConnectorsModule,
     KnowledgeBaseSyncModule,
     OparlModule,
+    AdventCalendarModule,
     IamModule.register({
       authProvider:
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- env var may be undefined at runtime despite type cast

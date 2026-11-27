@@ -44,6 +44,8 @@ import type {
   AddWorkspaceMembersDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
+  AdventCalendarEnabledDto,
+  AdventCalendarResponseDto,
   ApiKeyCreditLimitItemDto,
   ApiKeyCreditLimitResponseDto,
   ApiKeyResponseDto,
@@ -241,6 +243,7 @@ import type {
   RunSessionResponseDto,
   RunThreadResponseDto,
   RunsControllerSendMessageBody,
+  SaveAdventCalendarDoorRequestDto,
   SaveMicrosoft365ConnectorDto,
   SavedMicrosoft365ConnectorResponseDto,
   SessionHandoffRequestDto,
@@ -291,6 +294,9 @@ import type {
   SubscriptionResponseDto,
   SubscriptionResponseDtoNullable,
   SuccessResponseDto,
+  SuperAdminAdventCalendarControllerUploadDoorImageBody,
+  SuperAdminAdventCalendarDoorResponseDto,
+  SuperAdminAdventCalendarResponseDto,
   SuperAdminInvitesControllerGetInvitesParams,
   SuperAdminOrgListResponseDto,
   SuperAdminOrgOverviewResponseDto,
@@ -36471,5 +36477,718 @@ export const useReleaseNotesControllerMarkAllRead = <TError = unknown,
         TContext
       > => {
       return useMutation(getReleaseNotesControllerMarkAllReadMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Get the advent calendar with the doors the caller may open
+ */
+export const adventCalendarControllerGetCalendar = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<AdventCalendarResponseDto>(
+      {url: `/advent-calendar`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getAdventCalendarControllerGetCalendarQueryKey = () => {
+    return [
+    `/advent-calendar`
+    ] as const;
+    }
+
+
+export const getAdventCalendarControllerGetCalendarQueryOptions = <TData = Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdventCalendarControllerGetCalendarQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>> = ({ signal }) => adventCalendarControllerGetCalendar(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdventCalendarControllerGetCalendarQueryResult = NonNullable<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>>
+export type AdventCalendarControllerGetCalendarQueryError = unknown
+
+
+export function useAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>,
+          TError,
+          Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>,
+          TError,
+          Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the advent calendar with the doors the caller may open
+ */
+
+export function useAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerGetCalendar>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdventCalendarControllerGetCalendarQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Download the image of a door the caller may open
+ */
+export const adventCalendarControllerDownloadDoorImage = (
+    day: number,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/advent-calendar/doors/${day}/image`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getAdventCalendarControllerDownloadDoorImageQueryKey = (day: number,) => {
+    return [
+    `/advent-calendar/doors/${day}/image`
+    ] as const;
+    }
+
+
+export const getAdventCalendarControllerDownloadDoorImageQueryOptions = <TData = Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError = void>(day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdventCalendarControllerDownloadDoorImageQueryKey(day);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>> = ({ signal }) => adventCalendarControllerDownloadDoorImage(day, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: day !== null && day !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdventCalendarControllerDownloadDoorImageQueryResult = NonNullable<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>>
+export type AdventCalendarControllerDownloadDoorImageQueryError = void
+
+
+export function useAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>,
+          TError,
+          Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>,
+          TError,
+          Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the image of a door the caller may open
+ */
+
+export function useAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adventCalendarControllerDownloadDoorImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdventCalendarControllerDownloadDoorImageQueryOptions(day,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Get the switch and every door with its content
+ */
+export const superAdminAdventCalendarControllerGetCalendar = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminAdventCalendarResponseDto>(
+      {url: `/super-admin/advent-calendar`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerGetCalendarQueryKey = () => {
+    return [
+    `/super-admin/advent-calendar`
+    ] as const;
+    }
+
+
+export const getSuperAdminAdventCalendarControllerGetCalendarQueryOptions = <TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminAdventCalendarControllerGetCalendarQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>> = ({ signal }) => superAdminAdventCalendarControllerGetCalendar(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminAdventCalendarControllerGetCalendarQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>>
+export type SuperAdminAdventCalendarControllerGetCalendarQueryError = unknown
+
+
+export function useSuperAdminAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the switch and every door with its content
+ */
+
+export function useSuperAdminAdventCalendarControllerGetCalendar<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerGetCalendar>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminAdventCalendarControllerGetCalendarQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Create or replace the content of a door
+ */
+export const superAdminAdventCalendarControllerSaveDoor = (
+    day: number,
+    saveAdventCalendarDoorRequestDto: SaveAdventCalendarDoorRequestDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminAdventCalendarDoorResponseDto>(
+      {url: `/super-admin/advent-calendar/doors/${day}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: saveAdventCalendarDoorRequestDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerSaveDoorMutationKey = () => ['superAdminAdventCalendarControllerSaveDoor'] as const;
+
+export const getSuperAdminAdventCalendarControllerSaveDoorMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSaveDoor>>, TError,SuperAdminAdventCalendarControllerSaveDoorMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSaveDoor>>, TError,SuperAdminAdventCalendarControllerSaveDoorMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAdventCalendarControllerSaveDoorMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSaveDoor>>, SuperAdminAdventCalendarControllerSaveDoorMutationVariables> = (props) => {
+          const {day,data} = props ?? {};
+
+          return  superAdminAdventCalendarControllerSaveDoor(day,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAdventCalendarControllerSaveDoorMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSaveDoor>>>
+    export type SuperAdminAdventCalendarControllerSaveDoorMutationBody = SaveAdventCalendarDoorRequestDto
+    export type SuperAdminAdventCalendarControllerSaveDoorMutationError = void
+    export type SuperAdminAdventCalendarControllerSaveDoorMutationVariables = {day: number;data: SaveAdventCalendarDoorRequestDto}
+
+    /**
+ * @summary Create or replace the content of a door
+ */
+export const useSuperAdminAdventCalendarControllerSaveDoor = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSaveDoor>>, TError,SuperAdminAdventCalendarControllerSaveDoorMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAdventCalendarControllerSaveDoor>>,
+        TError,
+        SuperAdminAdventCalendarControllerSaveDoorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAdventCalendarControllerSaveDoorMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Clear a door: its content and image are deleted
+ */
+export const superAdminAdventCalendarControllerClearDoor = (
+    day: number,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/advent-calendar/doors/${day}`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerClearDoorMutationKey = () => ['superAdminAdventCalendarControllerClearDoor'] as const;
+
+export const getSuperAdminAdventCalendarControllerClearDoorMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerClearDoor>>, TError,SuperAdminAdventCalendarControllerClearDoorMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerClearDoor>>, TError,SuperAdminAdventCalendarControllerClearDoorMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAdventCalendarControllerClearDoorMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerClearDoor>>, SuperAdminAdventCalendarControllerClearDoorMutationVariables> = (props) => {
+          const {day} = props ?? {};
+
+          return  superAdminAdventCalendarControllerClearDoor(day,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAdventCalendarControllerClearDoorMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerClearDoor>>>
+
+    export type SuperAdminAdventCalendarControllerClearDoorMutationError = unknown
+    export type SuperAdminAdventCalendarControllerClearDoorMutationVariables = {day: number}
+
+    /**
+ * @summary Clear a door: its content and image are deleted
+ */
+export const useSuperAdminAdventCalendarControllerClearDoor = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerClearDoor>>, TError,SuperAdminAdventCalendarControllerClearDoorMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAdventCalendarControllerClearDoor>>,
+        TError,
+        SuperAdminAdventCalendarControllerClearDoorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAdventCalendarControllerClearDoorMutationOptions(options), queryClient);
+    }
+
+/**
+ * JPEG, PNG, GIF or WebP up to 10 MB, recognised by its bytes. Replaces a Vimeo video.
+ * @summary Upload or replace the image of a door that has content
+ */
+export const superAdminAdventCalendarControllerUploadDoorImage = (
+    day: number,
+    superAdminAdventCalendarControllerUploadDoorImageBody: SuperAdminAdventCalendarControllerUploadDoorImageBody,
+ signal?: AbortSignal
+) => {
+
+      const formData = new FormData();
+formData.append(`file`, superAdminAdventCalendarControllerUploadDoorImageBody.file);
+
+      return customAxiosInstance<SuperAdminAdventCalendarDoorResponseDto>(
+      {url: `/super-admin/advent-calendar/doors/${day}/image`, method: 'PUT',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerUploadDoorImageMutationKey = () => ['superAdminAdventCalendarControllerUploadDoorImage'] as const;
+
+export const getSuperAdminAdventCalendarControllerUploadDoorImageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerUploadDoorImage>>, TError,SuperAdminAdventCalendarControllerUploadDoorImageMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerUploadDoorImage>>, TError,SuperAdminAdventCalendarControllerUploadDoorImageMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAdventCalendarControllerUploadDoorImageMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerUploadDoorImage>>, SuperAdminAdventCalendarControllerUploadDoorImageMutationVariables> = (props) => {
+          const {day,data} = props ?? {};
+
+          return  superAdminAdventCalendarControllerUploadDoorImage(day,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAdventCalendarControllerUploadDoorImageMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerUploadDoorImage>>>
+    export type SuperAdminAdventCalendarControllerUploadDoorImageMutationBody = SuperAdminAdventCalendarControllerUploadDoorImageBody
+    export type SuperAdminAdventCalendarControllerUploadDoorImageMutationError = void
+    export type SuperAdminAdventCalendarControllerUploadDoorImageMutationVariables = {day: number;data: SuperAdminAdventCalendarControllerUploadDoorImageBody}
+
+    /**
+ * @summary Upload or replace the image of a door that has content
+ */
+export const useSuperAdminAdventCalendarControllerUploadDoorImage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerUploadDoorImage>>, TError,SuperAdminAdventCalendarControllerUploadDoorImageMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAdventCalendarControllerUploadDoorImage>>,
+        TError,
+        SuperAdminAdventCalendarControllerUploadDoorImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAdventCalendarControllerUploadDoorImageMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Remove the image of a door, keeping its text
+ */
+export const superAdminAdventCalendarControllerRemoveDoorImage = (
+    day: number,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SuperAdminAdventCalendarDoorResponseDto>(
+      {url: `/super-admin/advent-calendar/doors/${day}/image`, method: 'DELETE', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerRemoveDoorImageMutationKey = () => ['superAdminAdventCalendarControllerRemoveDoorImage'] as const;
+
+export const getSuperAdminAdventCalendarControllerRemoveDoorImageMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerRemoveDoorImage>>, TError,SuperAdminAdventCalendarControllerRemoveDoorImageMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerRemoveDoorImage>>, TError,SuperAdminAdventCalendarControllerRemoveDoorImageMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAdventCalendarControllerRemoveDoorImageMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerRemoveDoorImage>>, SuperAdminAdventCalendarControllerRemoveDoorImageMutationVariables> = (props) => {
+          const {day} = props ?? {};
+
+          return  superAdminAdventCalendarControllerRemoveDoorImage(day,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAdventCalendarControllerRemoveDoorImageMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerRemoveDoorImage>>>
+
+    export type SuperAdminAdventCalendarControllerRemoveDoorImageMutationError = void
+    export type SuperAdminAdventCalendarControllerRemoveDoorImageMutationVariables = {day: number}
+
+    /**
+ * @summary Remove the image of a door, keeping its text
+ */
+export const useSuperAdminAdventCalendarControllerRemoveDoorImage = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerRemoveDoorImage>>, TError,SuperAdminAdventCalendarControllerRemoveDoorImageMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAdventCalendarControllerRemoveDoorImage>>,
+        TError,
+        SuperAdminAdventCalendarControllerRemoveDoorImageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAdventCalendarControllerRemoveDoorImageMutationOptions(options), queryClient);
+    }
+
+/**
+ * @summary Download the image of any door
+ */
+export const superAdminAdventCalendarControllerDownloadDoorImage = (
+    day: number,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/super-admin/advent-calendar/doors/${day}/image`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerDownloadDoorImageQueryKey = (day: number,) => {
+    return [
+    `/super-admin/advent-calendar/doors/${day}/image`
+    ] as const;
+    }
+
+
+export const getSuperAdminAdventCalendarControllerDownloadDoorImageQueryOptions = <TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError = void>(day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSuperAdminAdventCalendarControllerDownloadDoorImageQueryKey(day);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>> = ({ signal }) => superAdminAdventCalendarControllerDownloadDoorImage(day, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: day !== null && day !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SuperAdminAdventCalendarControllerDownloadDoorImageQueryResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>>
+export type SuperAdminAdventCalendarControllerDownloadDoorImageQueryError = void
+
+
+export function useSuperAdminAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>,
+          TError,
+          Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSuperAdminAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Download the image of any door
+ */
+
+export function useSuperAdminAdventCalendarControllerDownloadDoorImage<TData = Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError = void>(
+ day: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerDownloadDoorImage>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSuperAdminAdventCalendarControllerDownloadDoorImageQueryOptions(day,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+/**
+ * @summary Switch the advent calendar on or off for users
+ */
+export const superAdminAdventCalendarControllerSetEnabled = (
+    adventCalendarEnabledDto: AdventCalendarEnabledDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<AdventCalendarEnabledDto>(
+      {url: `/super-admin/advent-calendar/enabled`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: adventCalendarEnabledDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getSuperAdminAdventCalendarControllerSetEnabledMutationKey = () => ['superAdminAdventCalendarControllerSetEnabled'] as const;
+
+export const getSuperAdminAdventCalendarControllerSetEnabledMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSetEnabled>>, TError,SuperAdminAdventCalendarControllerSetEnabledMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSetEnabled>>, TError,SuperAdminAdventCalendarControllerSetEnabledMutationVariables, TContext> => {
+
+const mutationKey = getSuperAdminAdventCalendarControllerSetEnabledMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSetEnabled>>, SuperAdminAdventCalendarControllerSetEnabledMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  superAdminAdventCalendarControllerSetEnabled(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuperAdminAdventCalendarControllerSetEnabledMutationResult = NonNullable<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSetEnabled>>>
+    export type SuperAdminAdventCalendarControllerSetEnabledMutationBody = AdventCalendarEnabledDto
+    export type SuperAdminAdventCalendarControllerSetEnabledMutationError = unknown
+    export type SuperAdminAdventCalendarControllerSetEnabledMutationVariables = {data: AdventCalendarEnabledDto}
+
+    /**
+ * @summary Switch the advent calendar on or off for users
+ */
+export const useSuperAdminAdventCalendarControllerSetEnabled = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof superAdminAdventCalendarControllerSetEnabled>>, TError,SuperAdminAdventCalendarControllerSetEnabledMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof superAdminAdventCalendarControllerSetEnabled>>,
+        TError,
+        SuperAdminAdventCalendarControllerSetEnabledMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSuperAdminAdventCalendarControllerSetEnabledMutationOptions(options), queryClient);
     }
 

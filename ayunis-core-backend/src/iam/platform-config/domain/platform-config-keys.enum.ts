@@ -25,4 +25,6 @@ export enum PlatformConfigKey {
   ACADEMY_MINIMUM_MODULE_SECONDS = 'ACADEMY_MINIMUM_MODULE_SECONDS',
   // ID of the catalog embedding model that embeds the OParl mirror's chunks.
   OPARL_EMBEDDING_MODEL_ID = 'OPARL_EMBEDDING_MODEL_ID',
+  // Stored as the string 'true' | 'false'; unset means off.
+  ADVENT_CALENDAR_ENABLED = 'ADVENT_CALENDAR_ENABLED',
 }

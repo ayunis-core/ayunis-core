@@ -5,6 +5,7 @@ import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
+  IsISO8601,
   Matches,
   IsNotEmpty,
   IsNumber,
@@ -277,6 +278,14 @@ export class EnvironmentVariables {
   @IsUUID()
   ANNOUNCABLE_ORG_ID?: string;
   @IsOptionalHttpUrl() ANNOUNCABLE_URL?: string;
+
+  // Advent calendar — e2e tests only; validated as `adventCalendarConfig` reads it.
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsISO8601({ strict: true })
+  ADVENT_CALENDAR_NOW?: string;
 
   // Connectors
   @IsOptionalHttpUrl() MICROSOFT_LOGIN_URL?: string;
