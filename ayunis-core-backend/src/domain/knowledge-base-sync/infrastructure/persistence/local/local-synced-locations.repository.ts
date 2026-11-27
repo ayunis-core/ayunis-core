@@ -10,6 +10,7 @@ import type {
 } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import type { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
+import type { NextSyncs } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
@@ -35,6 +36,24 @@ interface SkippedFileRow {
   name: string;
   path: string;
   skipReason: SyncedFileSkipReason;
+}
+
+/** Sets each location's next sync to its provider's in `next`. */
+function nextSyncByProvider(next: NextSyncs): {
+  nextSyncAt: () => string;
+  parameters: Record<string, Date>;
+} {
+  const entries = Object.entries(next);
+  const cases = entries.map(
+    ([provider]) =>
+      `WHEN '${provider}' THEN CAST(:next_${provider} AS timestamptz)`,
+  );
+  return {
+    nextSyncAt: () => `CASE "provider" ${cases.join(' ')} END`,
+    parameters: Object.fromEntries(
+      entries.map(([provider, at]) => [`next_${provider}`, at]),
+    ),
+  };
 }
 
 @Injectable()
@@ -64,10 +83,13 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
   }
 
   async create(location: SyncedLocation): Promise<boolean> {
-    const result = await this.locations
+    const record = this.locationMapper.toInsertRecord(location);
+    // Inserting through the subclass writes its provider.
+    const result = await this.manager
       .createQueryBuilder()
       .insert()
-      .values(this.locationMapper.toInsertRow(location))
+      .into(record.constructor)
+      .values(record)
       .orIgnore()
       .returning(['id'])
       .execute();
@@ -216,8 +238,15 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
       .execute();
   }
 
-  async recordSyncEnded(id: UUID, nextSyncAt: Date): Promise<void> {
-    await this.locations.update(id, { syncingSince: null, nextSyncAt });
+  async recordSyncEnded(id: UUID, next: NextSyncs): Promise<void> {
+    const { nextSyncAt, parameters } = nextSyncByProvider(next);
+    await this.locations
+      .createQueryBuilder()
+      .update()
+      .set({ syncingSince: null, nextSyncAt })
+      .where({ id })
+      .setParameters(parameters)
+      .execute();
   }
 
   async pause(id: UUID, until: Date): Promise<void> {
@@ -233,7 +262,7 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
 
   async claimDue(
     now: Date,
-    next: Date,
+    next: NextSyncs,
     limit: number,
   ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]> {
     const due = this.locations
@@ -246,12 +275,13 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
       // A location locked by its running sync is taken by a later call.
       .setLock('pessimistic_write')
       .setOnLocked('skip_locked');
+    const { nextSyncAt, parameters } = nextSyncByProvider(next);
     const result = await this.locations
       .createQueryBuilder()
       .update()
-      .set({ nextSyncAt: next })
+      .set({ nextSyncAt })
       .where(`id IN (${due.getQuery()})`)
-      .setParameters({ now })
+      .setParameters({ ...parameters, now })
       .returning(['id', 'orgId'])
       .execute();
     return result.raw as Pick<SyncedLocation, 'id' | 'orgId'>[];

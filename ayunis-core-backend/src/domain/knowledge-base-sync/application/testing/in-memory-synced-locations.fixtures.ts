@@ -4,7 +4,9 @@ import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/applic
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import type { NextSyncs } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
+import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 
 /** The locations and files of the sync engine, without a database. */
@@ -16,7 +18,8 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
     const duplicate = [...this.locations.values()].some(
       (existing) =>
         existing.knowledgeBaseId === location.knowledgeBaseId &&
-        existing.connectorId === location.connectorId &&
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- one provider so far
+        existing.provider === location.provider &&
         existing.location === location.location,
     );
     if (!duplicate) this.locations.set(location.id, location);
@@ -94,8 +97,13 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
     return Promise.resolve();
   }
 
-  recordSyncEnded(id: UUID, nextSyncAt: Date): Promise<void> {
-    this.update(id, { syncingSince: null, nextSyncAt });
+  recordSyncEnded(id: UUID, next: NextSyncs): Promise<void> {
+    const location = this.locations.get(id);
+    if (location)
+      this.update(id, {
+        syncingSince: null,
+        nextSyncAt: next[location.provider],
+      });
     return Promise.resolve();
   }
 
@@ -108,7 +116,7 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
 
   claimDue(
     now: Date,
-    next: Date,
+    next: NextSyncs,
     limit: number,
   ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]> {
     const due = [...this.locations.values()]
@@ -117,7 +125,8 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
       )
       .sort((a, b) => a.nextSyncAt.getTime() - b.nextSyncAt.getTime())
       .slice(0, limit);
-    for (const { id } of due) this.update(id, { nextSyncAt: next });
+    for (const { id, provider } of due)
+      this.update(id, { nextSyncAt: next[provider] });
     return Promise.resolve(due.map(({ id, orgId }) => ({ id, orgId })));
   }
 
@@ -203,7 +212,16 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
 
   private update(id: UUID, changes: Partial<SyncedLocation>): void {
     const location = this.locations.get(id);
-    if (location)
-      this.locations.set(id, new SyncedLocation({ ...location, ...changes }));
+    if (location) this.locations.set(id, withChanges(location, changes));
   }
+}
+
+/** A copy of the location with `changes`, of the same subclass. */
+export function withChanges(
+  location: SyncedLocation,
+  changes: Partial<SyncedLocation>,
+): SyncedLocation {
+  if (location instanceof ConnectorSyncedLocation)
+    return new ConnectorSyncedLocation({ ...location, ...changes });
+  throw new Error(`Unknown synced location subtype for ${location.id}`);
 }

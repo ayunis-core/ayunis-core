@@ -10,18 +10,22 @@ import {
   KnowledgeBaseSyncDisabledError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
-import type { KnowledgeBaseSyncOverview } from 'src/domain/knowledge-base-sync/application/models/knowledge-base-sync-overview';
+import type {
+  KnowledgeBaseSyncOverview,
+  SyncedLocationOverview,
+} from 'src/domain/knowledge-base-sync/application/models/knowledge-base-sync-overview';
 import { EMPTY_SYNCED_FILES_SUMMARY } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
 import { ListSyncedLocationsQuery } from './list-synced-locations.query';
 
 /** Enough to see why files are missing; the rest is counted. */
 const SKIPPED_FILES_SHOWN = 100;
 
 /**
- * The locations a knowledge base syncs, with their state and what their
- * files amount to, for a user who may read it; and the products whose
- * locations can be added to it.
+ * The locations a knowledge base syncs, with their state, the product of
+ * those synced through a connector and what their files amount to, for a
+ * user who may read it; and the products whose locations can be added to it.
  */
 @Injectable()
 export class ListSyncedLocationsUseCase {
@@ -56,11 +60,13 @@ export class ListSyncedLocationsUseCase {
       connectors.map(({ connectorId, product }) => [connectorId, product]),
     );
     return {
-      locations: locations.flatMap((location) => {
+      locations: locations.flatMap((location): SyncedLocationOverview[] => {
+        const files = summaries.get(location.id) ?? EMPTY_SYNCED_FILES_SUMMARY;
+        if (!(location instanceof ConnectorSyncedLocation))
+          return [{ location, product: null, files }];
         const product = productOf.get(location.connectorId);
         // Always listed: a location's connector is its organization's own.
         if (!product) return [];
-        const files = summaries.get(location.id) ?? EMPTY_SYNCED_FILES_SUMMARY;
         return [{ location, product, files }];
       }),
       availableProducts: connectors

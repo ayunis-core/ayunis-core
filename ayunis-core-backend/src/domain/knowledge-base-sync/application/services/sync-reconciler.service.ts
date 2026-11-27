@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import type { UUID } from 'crypto';
-import type { ConnectorItem } from 'src/domain/connectors/domain/sync/connector-item';
+import type { SyncItem } from 'src/domain/knowledge-base-sync/application/models/sync-source-results';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import type { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 
 export interface ListedChanges {
-  items: ConnectorItem[];
+  items: SyncItem[];
   removedItemIds: string[];
   fullListing: boolean;
 }
@@ -106,7 +106,7 @@ export class SyncReconciler {
 
   private removedIds(
     known: Map<string, SyncedFile>,
-    listed: Map<string, ConnectorItem>,
+    listed: Map<string, SyncItem>,
     changes: ListedChanges,
   ): string[] {
     const candidates = changes.fullListing
@@ -117,7 +117,7 @@ export class SyncReconciler {
 
   private newFile(
     locationId: UUID,
-    item: ConnectorItem,
+    item: SyncItem,
     rejection: SyncedFileSkipReason | null,
   ): SyncedFile {
     return new SyncedFile({
@@ -137,7 +137,7 @@ export class SyncReconciler {
   private applyItem(
     plan: SyncPlan,
     file: SyncedFile,
-    item: ConnectorItem,
+    item: SyncItem,
     rejection: SyncedFileSkipReason | null,
   ): void {
     const change = this.changeOf(file, item, rejection);
@@ -159,7 +159,7 @@ export class SyncReconciler {
 
   private changeOf(
     file: SyncedFile,
-    item: ConnectorItem,
+    item: SyncItem,
     rejection: SyncedFileSkipReason | null,
   ): ItemChange | null {
     const renamed = file.name !== item.name;

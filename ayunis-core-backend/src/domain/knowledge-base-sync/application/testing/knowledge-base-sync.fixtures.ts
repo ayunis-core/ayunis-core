@@ -17,13 +17,15 @@ import type { SyncedFileJobData } from 'src/domain/knowledge-base-sync/applicati
 import type { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import { SyncReconciler } from 'src/domain/knowledge-base-sync/application/services/sync-reconciler.service';
 import { SyncPlanApplier } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
+import { ConnectorSyncSource } from 'src/domain/knowledge-base-sync/application/services/connector-sync-source.service';
+import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
 import { InMemorySyncedLocationsRepository } from './in-memory-synced-locations.fixtures';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { NextSyncedFileBatchQuery } from 'src/domain/knowledge-base-sync/application/use-cases/next-synced-file-batch/next-synced-file-batch.query';
 import { NextSyncedFileBatchUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/next-synced-file-batch/next-synced-file-batch.use-case';
 import { SyncLocationOutcome } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location/sync-location.result';
 import { SyncLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/sync-location/sync-location.use-case';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
 import { CheckSourceFileAcceptanceUseCase } from 'src/domain/sources/application/use-cases/check-source-file-acceptance/check-source-file-acceptance.use-case';
 import type { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
@@ -311,6 +313,21 @@ export function syncedLocationLocks(
   return new SyncedLocationLocks(repository, noLock, noLock, noLock);
 }
 
+/** The sync sources, with the connectors module answering from `system`. */
+export function connectorSyncSources(system: FakeSourceSystem): SyncSources {
+  return new SyncSources(
+    new ConnectorSyncSource(
+      {
+        execute: ({ cursor }: { cursor: string | null }) =>
+          system.listChanges(cursor),
+      } as never,
+      {
+        execute: ({ itemId }: { itemId: string }) => system.fetch(itemId),
+      } as never,
+    ),
+  );
+}
+
 function syncLocationUseCase(
   repository: InMemorySyncedLocationsRepository,
   knowledgeBase: FakeKnowledgeBase,
@@ -319,10 +336,7 @@ function syncLocationUseCase(
 ): SyncLocationUseCase {
   return new SyncLocationUseCase(
     repository,
-    {
-      execute: ({ cursor }: { cursor: string | null }) =>
-        system.listChanges(cursor),
-    } as never,
+    connectorSyncSources(system),
     new CheckSourceFileAcceptanceUseCase(
       { maxUploadBytes: 200 * 1024 * 1024 } as never,
       { pdfMaxBytes: 100 * 1024 * 1024 },
@@ -376,7 +390,7 @@ export function createSyncHarness(
   const knowledgeBase = new FakeKnowledgeBase(() => repository);
   const system = new FakeSourceSystem();
   const queue: FakeQueue = { jobs: [], failing: false };
-  const location = new SyncedLocation({
+  const location = new ConnectorSyncedLocation({
     orgId: ORG_ID,
     knowledgeBaseId: KNOWLEDGE_BASE_ID,
     connectorId: CONNECTOR_ID,

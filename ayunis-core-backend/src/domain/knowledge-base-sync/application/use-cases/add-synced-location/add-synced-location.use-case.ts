@@ -13,7 +13,7 @@ import {
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
 import { AddSyncedLocationCommand } from './add-synced-location.command';
 
 /**
@@ -34,7 +34,9 @@ export class AddSyncedLocationUseCase {
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseSyncError)
-  async execute(command: AddSyncedLocationCommand): Promise<SyncedLocation> {
+  async execute(
+    command: AddSyncedLocationCommand,
+  ): Promise<ConnectorSyncedLocation> {
     this.logger.log(
       { knowledgeBaseId: command.knowledgeBaseId, product: command.product },
       'execute',
@@ -47,7 +49,7 @@ export class AddSyncedLocationUseCase {
     const connector = await this.findConnector.execute(
       new FindSetUpConnectorQuery(command.product),
     );
-    const location = new SyncedLocation({
+    const location = new ConnectorSyncedLocation({
       orgId: knowledgeBase.orgId,
       knowledgeBaseId: knowledgeBase.id,
       connectorId: connector.id,

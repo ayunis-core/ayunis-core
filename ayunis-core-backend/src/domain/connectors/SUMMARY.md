@@ -60,5 +60,5 @@ Controller: `ConnectorsController`, base path `/connectors`, tag `connectors`. O
 
 ## Consumers
 
-- `domain/knowledge-base-sync`: synced knowledge base locations reference a connector by ID and sync through the exported use cases.
+- `domain/knowledge-base-sync`: connector locations of a knowledge base reference a connector by ID and sync through the exported use cases (its `ConnectorSyncSource`).
 - Frontend: admin settings → **Integrations** (`/admin-settings/integrations`), in the Connections section above the MCP integrations, linking to each provider's page.

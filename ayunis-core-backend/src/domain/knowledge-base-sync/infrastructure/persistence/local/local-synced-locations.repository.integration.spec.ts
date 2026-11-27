@@ -12,11 +12,14 @@ import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { CreateKnowledgeBaseSyncTables1795019918718 } from 'src/db/migrations/1795019918718-CreateKnowledgeBaseSyncTables';
 import { AddSyncedFileProcessing1795033122250 } from 'src/db/migrations/1795033122250-AddSyncedFileProcessing';
 import { AddSyncedLocationSchedule1795040884040 } from 'src/db/migrations/1795040884040-AddSyncedLocationSchedule';
+import { MakeSyncedLocationsProviderBased1795382453624 } from 'src/db/migrations/1795382453624-MakeSyncedLocationsProviderBased';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
-import { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
 import { SourceProcessingErrorCode } from 'src/domain/sources/domain/source-processing-error-code.enum';
 import { LockSourcesUseCase } from 'src/domain/sources/application/use-cases/lock-sources/lock-sources.use-case';
@@ -25,7 +28,10 @@ import { LocalSyncedLocationsRepository } from './local-synced-locations.reposit
 import { SyncedFileMapper } from './mappers/synced-file.mapper';
 import { SyncedLocationMapper } from './mappers/synced-location.mapper';
 import { SyncedFileRecord } from './schema/synced-file.record';
-import { SyncedLocationRecord } from './schema/synced-location.record';
+import {
+  ConnectorSyncedLocationRecord,
+  SyncedLocationRecord,
+} from './schema/synced-location.record';
 
 // ts-jest drops the column types of the records, so the tables are declared
 // explicitly; the real migration creates them.
@@ -37,12 +43,12 @@ const locationSchema = new EntitySchema<SyncedLocationRecord>({
   name: 'SyncedLocationRecord',
   target: SyncedLocationRecord,
   tableName: 'knowledge_base_synced_locations',
+  inheritance: { pattern: 'STI', column: { name: 'provider', type: String } },
   columns: {
     id: { type: String, primary: true },
     ...timestamps,
     orgId: { type: String },
     knowledgeBaseId: { type: String },
-    connectorId: { type: String },
     location: { type: String },
     cursor: { type: String, nullable: true },
     state: { type: String },
@@ -52,6 +58,15 @@ const locationSchema = new EntitySchema<SyncedLocationRecord>({
     pausedUntil: { type: 'timestamptz', nullable: true },
   },
 });
+const connectorLocationSchema = new EntitySchema<ConnectorSyncedLocationRecord>(
+  {
+    name: 'ConnectorSyncedLocationRecord',
+    target: ConnectorSyncedLocationRecord,
+    type: 'entity-child',
+    discriminatorValue: SyncedLocationProvider.CONNECTOR,
+    columns: { connectorId: { type: String, nullable: true } },
+  },
+);
 const fileSchema = new EntitySchema<SyncedFileRecord>({
   name: 'SyncedFileRecord',
   target: SyncedFileRecord,
@@ -95,7 +110,7 @@ describe('LocalSyncedLocationsRepository', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [locationSchema, fileSchema],
+      entities: [locationSchema, connectorLocationSchema, fileSchema],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -119,6 +134,7 @@ describe('LocalSyncedLocationsRepository', () => {
     await new CreateKnowledgeBaseSyncTables1795019918718().up(inSchema);
     await new AddSyncedFileProcessing1795033122250().up(inSchema);
     await new AddSyncedLocationSchedule1795040884040().up(inSchema);
+    await new MakeSyncedLocationsProviderBased1795382453624().up(inSchema);
     await setup.query('SET search_path TO public');
     await setup.release();
     repository = new LocalSyncedLocationsRepository(
@@ -153,7 +169,7 @@ describe('LocalSyncedLocationsRepository', () => {
   async function aLocation(
     schedule: { nextSyncAt?: Date; pausedUntil?: Date } = {},
   ) {
-    const location = new SyncedLocation({
+    const location = new ConnectorSyncedLocation({
       orgId: await insert('orgs'),
       knowledgeBaseId: await insert('knowledge_bases'),
       connectorId: await insert('connectors'),
@@ -255,14 +271,35 @@ describe('LocalSyncedLocationsRepository', () => {
     );
   });
 
-  it('keeps one location per knowledge base, connector and URL', async () => {
+  it('loads a stored location as the subclass of its provider, with its connector', async () => {
     const location = await aLocation();
 
-    expect(
-      await repository.create(
-        new SyncedLocation({ ...location, id: randomUUID() }),
-      ),
-    ).toBe(false);
+    const loaded = await repository.findById(location.id);
+
+    expect(loaded).toBeInstanceOf(ConnectorSyncedLocation);
+    expect(loaded).toMatchObject({
+      provider: SyncedLocationProvider.CONNECTOR,
+      connectorId: location.connectorId,
+      location: location.location,
+    });
+  });
+
+  it('keeps one location per knowledge base, provider and URL, whichever connector it syncs through', async () => {
+    const location = await aLocation();
+
+    for (const connectorId of [
+      location.connectorId,
+      await insert('connectors'),
+    ])
+      expect(
+        await repository.create(
+          new ConnectorSyncedLocation({
+            ...location,
+            id: randomUUID(),
+            connectorId,
+          }),
+        ),
+      ).toBe(false);
   });
 
   it('overwrites a saved file in place and keeps sizes above 2 GB', async () => {
@@ -363,6 +400,7 @@ describe('LocalSyncedLocationsRepository', () => {
     const at = (time: string) => new Date(`2000-01-01T${time}:00.000Z`);
     const now = at('01:00');
     const next = at('02:00');
+    const nextSyncs = { [SyncedLocationProvider.CONNECTOR]: next };
 
     it('takes the due locations that are not paused, oldest first, each once', async () => {
       const oldest = await aLocation({ nextSyncAt: at('00:10') });
@@ -374,9 +412,9 @@ describe('LocalSyncedLocationsRepository', () => {
       await aLocation({ nextSyncAt: at('00:05'), pausedUntil: at('01:30') });
       await aLocation({ nextSyncAt: at('01:10') });
 
-      const first = await repository.claimDue(now, next, 2);
-      const second = await repository.claimDue(now, next, 2);
-      const third = await repository.claimDue(now, next, 2);
+      const first = await repository.claimDue(now, nextSyncs, 2);
+      const second = await repository.claimDue(now, nextSyncs, 2);
+      const third = await repository.claimDue(now, nextSyncs, 2);
 
       expect(new Set(first.map(({ id }) => id))).toEqual(
         new Set([oldest.id, pauseOver.id]),
@@ -405,13 +443,13 @@ describe('LocalSyncedLocationsRepository', () => {
       );
       await isLocked;
 
-      const claimed = await repository.claimDue(now, next, 10);
+      const claimed = await repository.claimDue(now, nextSyncs, 10);
       release();
       await sync;
 
       expect(claimed.map(({ id }) => id)).not.toContain(held.id);
       expect(
-        (await repository.claimDue(now, next, 10)).map(({ id }) => id),
+        (await repository.claimDue(now, nextSyncs, 10)).map(({ id }) => id),
       ).toContain(held.id);
     });
 
@@ -432,7 +470,7 @@ describe('LocalSyncedLocationsRepository', () => {
       await repository.recordSyncStarted(location.id, at('00:10'));
       await repository.recordSyncStarted(location.id, at('00:20'));
       const running = await repository.findById(location.id);
-      await repository.recordSyncEnded(location.id, next);
+      await repository.recordSyncEnded(location.id, nextSyncs);
       const ended = await repository.findById(location.id);
 
       expect(running?.syncingSince).toEqual(at('00:10'));

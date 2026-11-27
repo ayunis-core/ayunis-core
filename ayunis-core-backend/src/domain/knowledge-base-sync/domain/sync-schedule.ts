@@ -1,7 +1,10 @@
 import { findProviderOutage } from 'src/common/errors/find-provider-outage.helper';
+import { SyncedLocationProvider } from './synced-location-provider.enum';
 
 /** A location syncs again this long after its last sync ended. */
-export const SYNC_INTERVAL_MS = 60 * 60 * 1000;
+export const SYNC_INTERVALS_MS: Record<SyncedLocationProvider, number> = {
+  [SyncedLocationProvider.CONNECTOR]: 60 * 60 * 1000,
+};
 
 /**
  * The shortest pause: a `Retry-After` of zero or in the past would otherwise
@@ -17,8 +20,16 @@ const MAX_OUTAGE_PAUSE_MS = 60 * 60 * 1000;
  */
 const MAX_OUTAGE_PAUSES = 6;
 
-export function nextSyncAfter(time: Date): Date {
-  return new Date(time.getTime() + SYNC_INTERVAL_MS);
+/** When the next sync of a location is due, by its provider. */
+export type NextSyncs = Record<SyncedLocationProvider, Date>;
+
+export function nextSyncsAfter(time: Date): NextSyncs {
+  return Object.fromEntries(
+    Object.values(SyncedLocationProvider).map((provider) => [
+      provider,
+      new Date(time.getTime() + SYNC_INTERVALS_MS[provider]),
+    ]),
+  ) as NextSyncs;
 }
 
 export function mayPauseForOutage(pausesMade: number): boolean {

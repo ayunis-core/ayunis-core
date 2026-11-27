@@ -2,25 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
 import { FeatureFlag } from 'src/config/features.config';
-import {
-  ConnectorSyncOutcome,
-  type ConnectorChanges,
-} from 'src/domain/connectors/application/models/connector-sync-results';
-import { ListConnectorChangesCommand } from 'src/domain/connectors/application/use-cases/list-connector-changes/list-connector-changes.command';
-import { ListConnectorChangesUseCase } from 'src/domain/connectors/application/use-cases/list-connector-changes/list-connector-changes.use-case';
-import type { ConnectorItem } from 'src/domain/connectors/domain/sync/connector-item';
 import { KnowledgeBasesConstants } from 'src/domain/knowledge-bases/domain/knowledge-bases.constants';
 import {
   SyncedLocationNotFoundError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
+import {
+  SyncSourceOutcome,
+  type SyncChanges,
+  type SyncItem,
+} from 'src/domain/knowledge-base-sync/application/models/sync-source-results';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
 import {
   SyncPlanApplier,
   type AppliedSync,
 } from 'src/domain/knowledge-base-sync/application/services/sync-plan-applier.service';
+import { SyncSources } from 'src/domain/knowledge-base-sync/application/services/sync-sources.service';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
-import { skipReasonOf } from 'src/domain/knowledge-base-sync/domain/connector-skip-reason';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { throttlePauseEnd } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
@@ -35,7 +33,7 @@ import {
 } from './sync-location.result';
 
 /**
- * The listing of a location's sync: the connector's changes since the cursor
+ * The listing of a location's sync: its source's changes since the cursor
  * are reconciled with the location's files and documents, and the location
  * is marked as syncing. Runs without a user, in a run of the sync queue that
  * then feeds the files to processing (`NextSyncedFileBatchUseCase`).
@@ -46,7 +44,7 @@ export class SyncLocationUseCase {
 
   constructor(
     private readonly repository: SyncedLocationsRepository,
-    private readonly listChanges: ListConnectorChangesUseCase,
+    private readonly sources: SyncSources,
     private readonly checkAcceptance: CheckSourceFileAcceptanceUseCase,
     private readonly applier: SyncPlanApplier,
     private readonly configService: ConfigService,
@@ -65,34 +63,27 @@ export class SyncLocationUseCase {
       return { outcome: SyncLocationOutcome.PAUSED, retryAt: pausedUntil };
     await this.repository.recordSyncStarted(location.id, now);
 
-    const changes = await this.listChanges.execute(
-      new ListConnectorChangesCommand({
-        connectorId: location.connectorId,
-        orgId: location.orgId,
-        location: location.location,
-        cursor: location.cursor,
-      }),
-    );
+    const changes = await this.sources.listChanges(location);
     switch (changes.outcome) {
-      case ConnectorSyncOutcome.ACCESS_LOST:
+      case SyncSourceOutcome.ACCESS_LOST:
         await this.repository.markNoLongerAccessible(
           location.id,
           location.lastSyncedAt,
         );
         return { outcome: SyncLocationOutcome.ACCESS_LOST };
-      case ConnectorSyncOutcome.THROTTLED: {
+      case SyncSourceOutcome.THROTTLED: {
         const retryAt = throttlePauseEnd(changes.retryAt, new Date());
         await this.repository.pause(location.id, retryAt);
         return { outcome: SyncLocationOutcome.THROTTLED, retryAt };
       }
-      case ConnectorSyncOutcome.CHANGES:
+      case SyncSourceOutcome.CHANGES:
         return this.reconcile(location, changes);
     }
   }
 
   private async reconcile(
     location: SyncedLocation,
-    changes: ConnectorChanges,
+    changes: SyncChanges,
   ): Promise<SyncLocationResult> {
     const rejections = await this.rejections(changes.items);
     const applied = await this.applier.apply(location, changes, rejections);
@@ -103,15 +94,14 @@ export class SyncLocationUseCase {
   }
 
   private async rejections(
-    items: ConnectorItem[],
+    items: SyncItem[],
   ): Promise<Map<string, SyncedFileSkipReason>> {
     const rejections = new Map<string, SyncedFileSkipReason>();
     // A provider may list an item twice in one round; the last one counts.
     const listed = new Map(items.map((item) => [item.id, item]));
     for (const item of listed.values()) {
-      const reason = item.unprocessableReason
-        ? skipReasonOf(item.unprocessableReason)
-        : await this.uploadRejection(item);
+      const reason =
+        item.unprocessableReason ?? (await this.uploadRejection(item));
       if (reason) rejections.set(item.id, reason);
     }
     return rejections;
@@ -119,7 +109,7 @@ export class SyncLocationUseCase {
 
   /** Synced files are held to the limits of uploads to a knowledge base. */
   private async uploadRejection(
-    item: ConnectorItem,
+    item: SyncItem,
   ): Promise<SyncedFileSkipReason | null> {
     const rejection = await this.checkAcceptance.execute(
       new CheckSourceFileAcceptanceQuery({
