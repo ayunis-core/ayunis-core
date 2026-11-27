@@ -53,6 +53,8 @@ import enInbox from './shared/locales/en/inbox.json';
 import deInbox from './shared/locales/de/inbox.json';
 import enReleaseNotes from './shared/locales/en/release-notes.json';
 import deReleaseNotes from './shared/locales/de/release-notes.json';
+import enAdventCalendar from './shared/locales/en/advent-calendar.json';
+import deAdventCalendar from './shared/locales/de/advent-calendar.json';
 import deSkill from './shared/locales/de/skill.json';
 import enKnowledgeBases from './shared/locales/en/knowledge-bases.json';
 import deKnowledgeBases from './shared/locales/de/knowledge-bases.json';
@@ -133,6 +135,7 @@ const resources = {
     routines: enRoutines,
     inbox: enInbox,
     'release-notes': enReleaseNotes,
+    'advent-calendar': enAdventCalendar,
     workspaces: enWorkspaces,
     workspace: enWorkspace,
     skill: enSkill,
@@ -187,6 +190,7 @@ const resources = {
     routines: deRoutines,
     inbox: deInbox,
     'release-notes': deReleaseNotes,
+    'advent-calendar': deAdventCalendar,
     workspaces: deWorkspaces,
     workspace: deWorkspace,
     skill: deSkill,

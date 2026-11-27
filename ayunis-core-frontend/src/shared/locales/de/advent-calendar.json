@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Adventskalender"
+  },
+  "preview": {
+    "title": "Vorschau",
+    "description": "Als Super Admin sehen Sie alle Türchen mit Inhalt. Nutzer sehen ein Türchen erst ab seinem Tag und nur, solange der Kalender eingeschaltet ist."
+  },
+  "notAvailable": {
+    "title": "Der Adventskalender ist gerade nicht verfügbar",
+    "description": "Schauen Sie in der Adventszeit wieder vorbei."
+  },
+  "error": {
+    "title": "Der Adventskalender konnte nicht geladen werden",
+    "retry": "Erneut versuchen"
+  },
+  "wreath": {
+    "label_one": "Adventskranz: {{count}} von 4 Kerzen brennt",
+    "label_other": "Adventskranz: {{count}} von 4 Kerzen brennen"
+  },
+  "door": {
+    "today": "Heute",
+    "label": {
+      "locked": "Türchen {{day}}, öffnet am {{day}}. Dezember",
+      "empty": "Türchen {{day}}, leer",
+      "openable": "Türchen {{day}} öffnen",
+      "opened": "Türchen {{day}}, bereits geöffnet"
+    }
+  },
+  "dialog": {
+    "kicker": "Türchen {{day}}"
+  },
+  "quiz": {
+    "correct": "Richtig!",
+    "incorrect": "Leider falsch.",
+    "tryAgain": "Noch einmal versuchen"
+  }
+}
