@@ -73,7 +73,7 @@ function useRunObserver<Context, Outcome>(
       onThreadEvent: ({ title }) => state.setThreadTitle(title),
       onMasksEvent: state.handleMasks,
       onErrorEvent: adapters?.onRunError,
-      onError: adapters?.onRunTransportError ?? adapters?.onError,
+      onError: adapters?.onError,
     },
     { transport: props.transport, observeRequest },
   );
@@ -107,7 +107,7 @@ function observeConversationRun<Context, Outcome>(
     },
     onError(error) {
       if (observer?.onError) observer.onError(error);
-      else (adapters?.onRunTransportError ?? adapters?.onError)?.(error);
+      else adapters?.onError?.(error);
     },
     onEvent(event) {
       observer?.onEvent?.(event);

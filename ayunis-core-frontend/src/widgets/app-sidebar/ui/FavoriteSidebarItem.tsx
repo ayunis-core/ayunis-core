@@ -24,7 +24,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@ayunis/ui/components/sidebar';
-import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
+import { WorkspaceIcon } from '@ayunis/chat/workspaces';
 import {
   ChatWorkspaceSubmenu,
   CreateChatWorkspaceDialog,

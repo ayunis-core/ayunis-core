@@ -1,5 +1,5 @@
 import { useWorkspaces } from '@/features/workspaces';
-import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
+import { WorkspacePickerMenuWithCreate } from '@ayunis/chat/workspaces';
 import { useAssignThreadToWorkspace } from '@/widgets/chat-workspace-menu/api/useAssignThreadToWorkspace';
 
 export interface ChatWorkspacePickerProps {

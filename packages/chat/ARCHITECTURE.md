@@ -46,41 +46,41 @@ ESLint configuration rejects surface-named behavior and styling branches.
 
 ## Ownership contract
 
-| Concern                 | Package owns                                                                                                                             | Host supplies                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Product presentation    | Message hierarchy, timeline, the whole composer, model presentation, history rows, new-chat primitives, shared notices                   | Approved content and actions through named slots outside the composer            |
-| Run lifecycle           | Send, stream, cancel, reattach, event routing, reconciliation                                                                            | `RunEndpoints`, cache refresh, analytics, authentication recovery                |
-| Principal/session state | Session reset, thread-local run state, drafts through `ChatDraftStorage`                                                                 | Stable `sessionKey` and principal-scoped storage                                 |
-| Shared data             | Models, modes, chat-start defaults, embedding and academy status, the voice flag, uploads and transcription through `@ayunis/api-client` | The configured API transport (`configureApiTransport`) and its query client      |
-| Models                  | Canonical selector, model/mode presentation, the new-chat selection and default, the locked selector of an existing chat                 | A preferred initial model for a new chat, e.g. from a link                       |
-| Attachments             | Selection state, pending previews, upload policies, direct thread uploads with progress, source chips, upload and removal errors         | Starting a new chat with its queued files                                        |
-| Voice                   | Recording, transcription, and the instance's `voiceEnabled` flag                                                                         | Nothing                                                                          |
-| Surface-specific data   | Knowledge-base and integration menus and chips, the selected-skill badge                                                                 | `ChatConfig.knowledgeBases`, `integrations`, `skills`; absent data shows nothing |
-| History                 | Canonical list and row presentation                                                                                                      | Client-scoped query data, pagination, rename/delete operations, navigation       |
-| Client tools            | Registry, dispatch, consent, deferred results, result routing                                                                            | Office.js or other host executor and its context (`ChatConfig.clientTools`)      |
-| Rich tools/artifacts    | Registry-driven timeline cards                                                                                                           | `ChatConfig.toolCards` and `onOpenArtifact` host action                          |
-| Host context            | Typed slots in `ChatConversationSlots` outside the composer                                                                              | Conversation header, context hint, message images and nudges, host navigation    |
+| Concern                 | Package owns                                                                                                                                                              | Host supplies                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product presentation    | Message hierarchy, timeline, the whole composer, the conversation header, model presentation, history rows, new-chat primitives, shared notices                           | Approved new-chat content and actions through named slots outside the conversation                                                                              |
+| Run lifecycle           | Send, stream, cancel, reattach, event routing, reconciliation                                                                                                             | `RunEndpoints`, cache refresh, analytics, authentication recovery                                                                                               |
+| Principal/session state | Session reset, thread-local run state, drafts through `ChatDraftStorage`                                                                                                  | Stable `sessionKey` and principal-scoped storage                                                                                                                |
+| Shared data             | Models, modes, chat-start defaults, embedding and academy status, the voice flag, uploads and transcription through `@ayunis/api-client`                                  | The configured API transport (`configureApiTransport`) and its query client                                                                                     |
+| Models                  | Canonical selector, model/mode presentation, the new-chat selection and default, the locked selector of an existing chat                                                  | A preferred initial model for a new chat, e.g. from a link                                                                                                      |
+| Attachments             | Selection state, pending previews, upload policies, direct thread uploads with progress, source chips, upload and removal errors                                          | Starting a new chat with its queued files                                                                                                                       |
+| Voice                   | Recording, transcription, and the instance's `voiceEnabled` flag                                                                                                          | Nothing                                                                                                                                                         |
+| Surface-specific data   | Knowledge-base and integration menus and chips, the selected-skill badge, Move to workspace, pin, artifact button, context hint, breadcrumbs, header New chat             | `ChatConfig.knowledgeBases`, `integrations`, `skills`, `workspaces`, `favorites`, `artifactPanel`, `contextHint`, `trail`, `newChat`; absent data shows nothing |
+| History                 | Canonical list and row presentation                                                                                                                                       | Client-scoped query data, pagination, rename/delete operations, navigation                                                                                      |
+| Client tools            | Registry, dispatch, consent, deferred results, result routing                                                                                                             | Office.js or other host executor and its context (`ChatConfig.clientTools`)                                                                                     |
+| Rich tools/artifacts    | Registry-driven timeline cards                                                                                                                                            | `ChatConfig.toolCards` and `onOpenArtifact` host action                                                                                                         |
+| Conversation            | Thread loading, header, citations and their dialog, PII reveal, read aloud, message images, nudges, response-start orb, file-processing rows, sent/waiting/failed message | `threadId`, navigation (`onNavigate`, `hrefFor`) and the frame around the screen                                                                                |
 
 Core presentation has no generic render override or theme prop. The composer
-has no slots: its controls, notices and hierarchy are package-owned, and the
-host configures it only through data in `ChatConfig`. Markdown follows the
-document theme through `@ayunis/ui`. The remaining slots are named for
-host-owned content and actions; they must not replace or restyle the
-conversation timeline, history, or new-chat shell.
+and the conversation have no slots: their controls, header, notices and
+hierarchy are package-owned, and the host configures them only through data in
+`ChatConfig`. Markdown follows the document theme through `@ayunis/ui`. The
+remaining new-chat slots are named for host-owned content and actions; they
+must not replace or restyle history or the new-chat shell.
 
 ## Public host boundaries
 
-| Boundary             | Contract                                          | Valid host responsibility                                                       |
-| -------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Configuration        | `ChatConfig`                                      | Session key, run transport, layout, surface-specific data, events, tour targets |
-| Feature availability | Optional `ChatConfig` data                        | Pass the data a surface supports; never use a surface name as the condition     |
-| Conversation data    | `ChatConversationProps.thread` and `activeRun`    | Supply snapshots scoped to the current principal and client                     |
-| Runtime effects      | `ChatConfig.events`, `ChatConversationAdapters`   | Refresh host caches, analytics, navigation, auth recovery, host-owned sends     |
-| Deferred context     | `deferSend` and `ChatConversationHandle`          | Report host context readiness; never execute or stream the run in the host      |
-| Product extensions   | `ChatConversationSlots`                           | Supply named content/actions that remain host-owned                             |
-| Client tools         | `ClientToolDispatch` and the client-tool registry | Execute host APIs; the package coordinates lifecycle and results                |
-| Rich cards           | Tool-card registry and `TimelinePresentation`     | Register domain cards and artifact opening behavior                             |
-| Drafts               | `ChatDraftStorage`                                | Persist drafts under a principal-, client-, and context-safe key                |
+| Boundary             | Contract                                            | Valid host responsibility                                                        |
+| -------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Configuration        | `ChatConfig`                                        | Session key, run transport, layout, surface-specific data, events, tour targets  |
+| Feature availability | Optional `ChatConfig` data                          | Pass the data a surface supports; never use a surface name as the condition      |
+| Conversation data    | `Conversation` `threadId`                           | Choose the chat; the package loads it with the host's transport                  |
+| Runtime effects      | `ChatConfig.events`                                 | Refresh host caches, analytics, navigation, auth recovery                        |
+| Deferred first send  | `ChatRunLifecycle.startThreadRun`, `deferThreadRun` | Hand a new chat's first message to the conversation; never stream it in the host |
+| Product extensions   | `ChatSlots` (new chat)                              | Supply named new-chat content/actions that remain host-owned                     |
+| Client tools         | `ClientToolDispatch` and the client-tool registry   | Execute host APIs; the package coordinates lifecycle and results                 |
+| Rich cards           | Tool-card registry and `TimelinePresentation`       | Register domain cards and artifact opening behavior                              |
+| Drafts               | `ChatDraftStorage`                                  | Persist drafts under a principal-, client-, and context-safe key                 |
 
 Web router/AppLayout, TanStack Query ownership, analytics, workspaces,
 onboarding, and artifact panels stay in the Web host. Office authentication,
@@ -112,7 +112,7 @@ Outlook and future surfaces. A migration is incomplete while a host retains a
 parallel run lifecycle or a second implementation of package-owned product UI.
 
 The AYC-2116 extraction is complete when Web and Outlook both use
-`ChatConversation` without a core-UI replacement slot, and the public-API
+`Conversation` without a core-UI replacement slot, and the public-API
 composition suite proves send, stream, stop, rejoin, thread switching, and
 client tools. Visitor endpoint adaptation remains in AYC-2049 and does not
 change this ownership contract.

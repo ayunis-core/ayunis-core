@@ -4,7 +4,7 @@ import type { WorkspaceResponseDto } from '@ayunis/api-client/schemas';
 import {
   DEFAULT_WORKSPACE_ICON,
   defaultWorkspaceColor,
-} from '@/shared/lib/workspace-appearance';
+} from '@ayunis/chat/workspaces';
 import { useResetFormOnOpen } from '@/shared/lib/use-reset-form-on-open';
 import {
   WorkspaceFormDialog,

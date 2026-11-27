@@ -117,7 +117,37 @@
     "modelProviderFaultWarning": "The model ‘{{modelName}}’ currently has a known provider issue. You can continue this conversation, but responses may fail.",
     "longChatWarningTitle": "This chat has reached your model's limit",
     "longChatWarningDescription": "Every message sends the entire conversation so far, including all attached files, to the model again. Your selected model has a fixed limit for this, and this chat has almost reached it. That is a property of the model, not an Ayunis setting. If you would like to keep working, start a new chat.",
-    "longChatWarningDismiss": "Dismiss warning"
+    "longChatWarningDismiss": "Dismiss warning",
+    "deleteThreadTitle": "Delete Chat",
+    "deleteThreadDescription": "Are you sure you want to delete this chat? This action cannot be undone.",
+    "deleteText": "Delete",
+    "cancelText": "Cancel",
+    "errorDeleteThread": "Failed to delete chat",
+    "readAloud": "Read aloud",
+    "stopReadingAloud": "Stop reading aloud",
+    "readAloudError": "The message could not be read aloud.",
+    "sourceCitation": {
+      "title": "Source citation",
+      "loading": "Loading source…",
+      "unavailable": "This source is unavailable or you do not have access.",
+      "line": "Line {{line}}",
+      "lines": "Lines {{start}}–{{end}}",
+      "excerpt": "Cited excerpt",
+      "close": "Close",
+      "recording": {
+        "uploaded": "Uploaded on {{date}}",
+        "summary": "From the summary",
+        "timeRange": "{{start}}–{{end}}",
+        "speaker": "Speaker {{number}}",
+        "open": "Open meeting"
+      }
+    },
+    "errorRestoreFailedSubmission": "Your previous message and attachments couldn't be restored because the input already contains a draft.",
+    "conversation": {
+      "loading": "Loading …",
+      "loadFailed": "The request failed. Try again.",
+      "retry": "Retry"
+    }
   },
   "newChat": {
     "newChat": "New Chat",
@@ -126,5 +156,21 @@
       "summarizeEmail": "Summarize email"
     },
     "privacyHint": "Only you can see your chats."
+  },
+  "attachments": {
+    "pages_one": "{{count}} page read.",
+    "pages_other": "{{count}} pages read.",
+    "parts_one": "{{count}} part read.",
+    "parts_other": "{{count}} parts read.",
+    "timeline": {
+      "queued": "Waiting to process {{name}}",
+      "preparing": "Preparing {{name}}",
+      "extracting": "Reading {{name}}",
+      "transcribing": "Transcribing {{name}}",
+      "indexing": "Making {{name}} available for search",
+      "retrying": "Retrying {{name}}",
+      "ready": "Processed {{name}}",
+      "failed": "Could not process {{name}}"
+    }
   }
 }

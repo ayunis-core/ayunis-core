@@ -33,8 +33,6 @@ import {
   usePaneNavigation,
   type PaneView,
 } from '@/outlook/lib/use-pane-navigation';
-import { usePaneThread } from '@/outlook/lib/use-pane-chat-data';
-import { PaneLoadError } from '@/outlook/ui/PaneLoadError';
 import { PaneChatHistory } from '@/outlook/ui/PaneChatHistory';
 import { PaneConversation } from '@/outlook/ui/PaneConversation';
 import { PaneNewChat } from '@/outlook/ui/PaneNewChat';
@@ -210,21 +208,25 @@ function PaneNewChatView({
 
 function paneChatConfig(
   { user, runtime, onError }: PaneViewProps,
-  onNewChat: () => void,
+  startNewChat: () => void,
 ): ComponentProps<typeof PaneConversation>['config'] {
+  const { navigation } = runtime;
   return {
     sessionKey: user.id,
     transport: runtime.transport,
     layout: 'narrow',
     drafts: runtime.drafts,
-    events: { onNewChat, onError },
+    newChat: { start: startNewChat },
+    events: {
+      onNewChat: startNewChat,
+      onError,
+      onThreadDeleted: navigation.showHistoryAfterDelete,
+    },
   };
 }
 
 function PaneThread(props: PaneViewProps & { readonly threadId: string }) {
-  const { threadId, runtime, startAttempt, onError } = props;
-  const { t } = useTranslation('outlook');
-  const thread = usePaneThread(threadId);
+  const { threadId, runtime, startAttempt } = props;
   const { lifecycle, navigation } = runtime;
   function startNewChat() {
     const itemKey = currentOutlookItemKey();
@@ -232,32 +234,12 @@ function PaneThread(props: PaneViewProps & { readonly threadId: string }) {
     startAttempt.stop(newChatDraftKey(itemKey));
     navigation.newChat(itemKey);
   }
-  if (thread.data) {
-    return (
-      <PaneConversation
-        thread={thread.data}
-        config={paneChatConfig(props, startNewChat)}
-        lifecycle={lifecycle}
-        onNewChat={startNewChat}
-        onDeleted={navigation.showHistoryAfterDelete}
-        onError={onError}
-      />
-    );
-  }
-  if (thread.isError) {
-    return (
-      <PaneLoadError
-        onRetry={() => {
-          void thread.refetch();
-        }}
-        testId="outlook-thread-retry"
-      />
-    );
-  }
   return (
-    <p role="status" className="p-4">
-      {t('pane.loading')}
-    </p>
+    <PaneConversation
+      threadId={threadId}
+      config={paneChatConfig(props, startNewChat)}
+      lifecycle={lifecycle}
+    />
   );
 }
 

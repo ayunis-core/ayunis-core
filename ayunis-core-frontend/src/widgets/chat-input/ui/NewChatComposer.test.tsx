@@ -11,7 +11,7 @@ import type * as ComposerExports from '@ayunis/chat/composer';
 import type { PermittedLanguageModelResponseDto } from '@ayunis/api-client/schemas';
 import { toast } from '@ayunis/ui/lib/toast';
 import {
-  ChatConversation,
+  Conversation,
   NewChatComposer,
   type ChatKnowledgeBases,
   type NewChatComposerHandle,
@@ -646,30 +646,32 @@ describe('composer surface-specific features', () => {
 describe('conversation composer prompt recall', () => {
   function renderWithPrompts(prompts: string[] = []) {
     serveComposer();
+    const thread = {
+      id: 'thread',
+      title: 'Thread',
+      piiMasks: [],
+      messages: prompts.map(
+        (text, index) =>
+          ({
+            id: `u${index}`,
+            threadId: 'thread',
+            role: 'user',
+            createdAt: '2026-11-24T12:00:00Z',
+            content: [{ type: 'text', text }],
+          }) as never,
+      ),
+    };
     renderWithQueryClient(
-      <ChatConversation
+      <Conversation
         config={{
           sessionKey: 'test-user',
           transport: { send: vi.fn() },
           layout: 'page',
           events: { onNewChat: vi.fn() },
         }}
-        thread={{
-          id: 'thread',
-          title: 'Thread',
-          piiMasks: [],
-          messages: prompts.map(
-            (text, index) =>
-              ({
-                id: `u${index}`,
-                threadId: 'thread',
-                role: 'user',
-                createdAt: '2026-11-24T12:00:00Z',
-                content: [{ type: 'text', text }],
-              }) as never,
-          ),
-        }}
+        threadId={thread.id}
       />,
+      [thread],
     );
     const input = screen.getByTestId<HTMLTextAreaElement>('input');
     fireEvent.focus(input);

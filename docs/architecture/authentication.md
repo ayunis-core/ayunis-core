@@ -431,7 +431,7 @@ policies.
 | --- | --- |
 | `session` | Current session information, refresh and sign-out |
 | `chat` | Threads, runs, message images, citations and PII reveal |
-| `uploads` | Direct upload and thread source management |
+| `uploads` | Direct upload, thread source management and file processing progress |
 | `models:read` | Model availability, modes and default selection |
 | `voice` | Transcription and read aloud |
 | `chat-settings:read` | Chat-start defaults |

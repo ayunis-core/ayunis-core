@@ -43,24 +43,16 @@ function lockedModelControl(
   };
 }
 
-function hasProcessingSource(sources: ChatThreadSnapshot['sources']) {
-  return (sources ?? NO_SOURCES).some(({ status }) => status === 'processing');
-}
-
 /**
  * The composer of an existing chat: its model and anonymous mode are fixed,
- * files upload straight to the thread.
+ * files upload straight to the thread. A message sent while one is still
+ * processing waits for it instead of blocking Send.
  */
-export function useThreadComposer(
-  thread: ChatThreadSnapshot,
-  hostDefersSend: boolean,
-) {
+export function useThreadComposer(thread: ChatThreadSnapshot) {
   const models = useComposerModels();
   const environment = useComposerEnvironment();
   const model = findThreadModel(models.models, thread);
   const files = useThreadSources(thread.id, thread.sources ?? NO_SOURCES);
-  const waitsForSources =
-    !hostDefersSend && hasProcessingSource(thread.sources);
   const features: ComposerFeatures = {
     model: lockedModelControl(models, thread, model),
     anonymous: { isAnonymous: Boolean(thread.isAnonymous), disabled: true },
@@ -69,8 +61,7 @@ export function useThreadComposer(
     uploadFiles: environment.documents ? files.upload : undefined,
     imageAttachments: Boolean(model?.canVision),
     voice: environment.voice,
-    sendDisabled:
-      files.uploading || environment.academyGated || waitsForSources,
+    sendDisabled: files.uploading || environment.academyGated,
   };
   return {
     features,

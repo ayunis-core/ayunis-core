@@ -1,8 +1,12 @@
 export { ChatSurface, type ChatSurfaceProps } from './chat-surface';
 export type { ChatSlots } from './chat-surface-config';
 export type {
+  ChatArtifactPanel,
   ChatConfig,
+  ChatContextHint,
+  ChatContextSummary,
   ChatEvents,
+  ChatFavorites,
   ChatIntegrationItem,
   ChatIntegrations,
   ChatIntegrationSummary,
@@ -11,10 +15,15 @@ export type {
   ChatLayout,
   ChatMenuStatus,
   ChatNavigationTarget,
+  ChatNewChat,
   ChatResourceSummary,
   ChatSelectedSkill,
   ChatSkills,
+  ChatThreadState,
   ChatTourTarget,
+  ChatTrailItem,
+  ChatTrailThread,
+  ChatWorkspaces,
 } from './chat-config';
 export {
   createClientToolRegistry,
@@ -23,14 +32,10 @@ export {
   type ClientToolRegistration,
 } from './client-tools';
 export { useContentScrollHeader } from './use-content-scroll-header';
-export { ChatConversation } from './chat-conversation';
+export { Conversation } from './conversation';
 export type {
-  ChatConversationAdapters,
-  ChatConversationComposerConfig,
-  ChatConversationHandle,
-  ChatConversationProps,
-  ChatConversationSlots,
   ChatThreadSnapshot,
+  ConversationProps,
 } from './chat-conversation-config';
 export {
   NewChatComposer,

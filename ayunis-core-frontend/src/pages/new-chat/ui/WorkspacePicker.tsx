@@ -8,8 +8,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
-import { WorkspaceIcon } from '@/shared/ui/workspace-icon';
-import { WorkspacePickerMenuWithCreate } from '@/widgets/workspace-picker-menu';
+import { WorkspaceIcon } from '@ayunis/chat/workspaces';
+import { WorkspacePickerMenuWithCreate } from '@ayunis/chat/workspaces';
 import { CreateWorkspaceDialog } from '@/widgets/create-workspace-dialog';
 import { useWorkspaces } from '@/features/workspaces';
 import { useDropdownDialogTransition } from '@/shared/hooks/useDropdownDialogTransition';

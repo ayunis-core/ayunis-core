@@ -20,7 +20,8 @@
     "./upload-policy": "./src/composer/document-upload-policy.ts",
     "./new-chat": "./src/new-chat/index.ts",
     "./attachments": "./src/attachments/index.ts",
-    "./source-errors": "./src/source-processing-error.ts"
+    "./source-errors": "./src/source-processing-error.ts",
+    "./workspaces": "./src/workspaces/index.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
@@ -55,13 +57,14 @@
     "eslint-plugin-sonarjs": "^4.2.1",
     "globals": "^16.5.0",
     "i18next": "^26.4.0",
+    "jsdom": "^29.1.1",
     "madge": "^8.0.0",
     "prettier": "^3.9.6",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-i18next": "^15.5.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.11",
-    "typescript-eslint": "^8.68.0"
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
   }
 }

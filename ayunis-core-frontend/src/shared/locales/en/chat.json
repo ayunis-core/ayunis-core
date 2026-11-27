@@ -419,7 +419,12 @@
       "confirmed": "Confirmed",
       "rejected": "Rejected"
     },
-    "integrationUnavailable": "{{name}} is unavailable. Check its connection settings or ask your administrator for help. Your chat can continue with the other available integrations."
+    "integrationUnavailable": "{{name}} is unavailable. Check its connection settings or ask your administrator for help. Your chat can continue with the other available integrations.",
+    "conversation": {
+      "loading": "Loading …",
+      "loadFailed": "The request failed. Try again.",
+      "retry": "Retry"
+    }
   },
   "newChat": {
     "newChat": "New Chat",

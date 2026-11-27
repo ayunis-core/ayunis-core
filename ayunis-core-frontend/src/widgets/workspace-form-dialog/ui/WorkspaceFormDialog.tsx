@@ -20,8 +20,8 @@ import { Input } from '@ayunis/ui/components/input';
 import { Textarea } from '@ayunis/ui/components/textarea';
 import { Button } from '@ayunis/ui/components/button';
 import { WorkspaceAppearancePicker } from '@/widgets/workspace-appearance-picker';
-import { defaultWorkspaceColor } from '@/shared/lib/workspace-appearance';
-import type { WorkspaceFormData } from '../model/types';
+import { defaultWorkspaceColor } from '@ayunis/chat/workspaces';
+import type { WorkspaceFormData } from '@/widgets/workspace-form-dialog/model/types';
 
 interface WorkspaceFormDialogProps {
   title: string;

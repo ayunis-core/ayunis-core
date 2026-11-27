@@ -1,16 +1,18 @@
-import { createRef, useState, type ReactElement } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getThreadsControllerFindOneQueryKey } from '@ayunis/api-client/endpoints';
+import { useState, type ComponentProps, type ReactElement } from 'react';
+import type * as ChatMessages from '@ayunis/chat/messages';
+import type { QueryClient } from '@tanstack/react-query';
+import {
+  getActiveRunsControllerFindActiveQueryKey,
+  getThreadsControllerFindOneQueryKey,
+} from '@ayunis/api-client/endpoints';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  ChatConversation,
   ChatSurface,
+  Conversation,
   createClientToolRegistry,
   type ChatConfig,
-  type ChatConversationHandle,
-  type ChatConversationProps,
-  type ChatThreadSnapshot,
+  type ConversationProps,
 } from '@ayunis/chat/surface';
 import { MAX_IMAGE_SIZE_BYTES } from '@ayunis/chat/composer';
 import { toast } from '@ayunis/ui/lib/toast';
@@ -20,6 +22,7 @@ import {
   type RunMessagePayload,
 } from '@ayunis/chat/runs';
 import type {
+  ActiveThreadRunResponseDto,
   AssistantMessageResponseDto,
   GetThreadResponseDto,
   PermittedLanguageModelResponseDto,
@@ -29,9 +32,35 @@ import { initReactI18next } from 'react-i18next';
 import {
   renderWithQueryClient,
   serveChatApi,
+  serveThreads,
+  type ServedThread,
 } from '@/shared/api/serve-chat-api';
 
-vi.mock('@ayunis/ui/lib/toast', () => ({ toast: { error: vi.fn() } }));
+vi.mock('@ayunis/ui/lib/toast', () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
+}));
+
+/** Counts renders of each answer frame and user message, by unit key and message id. */
+const renders = vi.hoisted(() => new Map<string, number>());
+vi.mock('@ayunis/chat/messages', async (importOriginal) => {
+  const actual = await importOriginal<typeof ChatMessages>();
+  const count = (key: string) => renders.set(key, (renders.get(key) ?? 0) + 1);
+  return {
+    ...actual,
+    AssistantMessageFrame(
+      props: ComponentProps<typeof actual.AssistantMessageFrame>,
+    ) {
+      const unit = (props.children as ReactElement<{ unit?: { key: string } }>)
+        .props.unit;
+      if (unit) count(unit.key);
+      return <actual.AssistantMessageFrame {...props} />;
+    },
+    UserMessage(props: ComponentProps<typeof actual.UserMessage>) {
+      count(props.message.id);
+      return <actual.UserMessage {...props} />;
+    },
+  };
+});
 const sourceUpload = vi.hoisted(() => ({ uploadSourceFile: vi.fn() }));
 vi.mock('@ayunis/api-client/source-upload', () => sourceUpload);
 
@@ -57,12 +86,31 @@ beforeAll(async () => {
     });
 });
 
+let activeRuns: ActiveThreadRunResponseDto[] | Promise<never> = [];
+
+/** The chat API, with the server's runs in progress as the test lists them. */
+function serveConversation(routes: Parameters<typeof serveChatApi>[0] = {}) {
+  return serveChatApi({ 'GET /runs/active': () => activeRuns, ...routes });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  serveChatApi();
+  renders.clear();
+  activeRuns = [];
+  serveConversation();
 });
 
-const render = (ui: ReactElement) => renderWithQueryClient(ui);
+function render(
+  ui: ReactElement,
+  threads: readonly ServedThread[] = [first, second],
+) {
+  return renderWithQueryClient(ui, threads);
+}
+
+function listRuns(client: QueryClient, runs: ActiveThreadRunResponseDto[]) {
+  activeRuns = runs;
+  client.setQueryData(getActiveRunsControllerFindActiveQueryKey(), runs);
+}
 
 function chatConfig<Context = unknown, Outcome = unknown>(
   transport: RunEndpoints,
@@ -77,6 +125,12 @@ function chatConfig<Context = unknown, Outcome = unknown>(
   };
 }
 
+class NoResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 const visionModel = {
   id: 'vision-model',
   modelId: 'catalog-vision',
@@ -88,7 +142,7 @@ const visionModel = {
 
 /** A model that accepts images, so the composer offers image attachments. */
 function serveVisionModel(routes: Parameters<typeof serveChatApi>[0] = {}) {
-  serveChatApi({
+  serveConversation({
     'GET /models/permitted/language-models': [visionModel],
     ...routes,
   });
@@ -122,7 +176,7 @@ function userMessage(
   } as unknown as Message;
 }
 
-function TestHost(props: Pick<ChatConversationProps, 'config' | 'adapters'>) {
+function TestHost(props: Pick<ConversationProps, 'config'>) {
   const [thread, setThread] = useState(first);
   return (
     <>
@@ -132,13 +186,9 @@ function TestHost(props: Pick<ChatConversationProps, 'config' | 'adapters'>) {
       <button type="button" onClick={() => setThread(second)}>
         {second.title}
       </button>
-      <ChatConversation {...props} thread={thread} />
+      <Conversation {...props} threadId={thread.id} />
     </>
   );
-}
-
-function NudgeNotice({ text }: Readonly<{ text: string }>) {
-  return <aside data-testid="routine-nudge">{text}</aside>;
 }
 
 function event(
@@ -222,8 +272,8 @@ function deferredToolRun(
         },
       },
     ),
-  } satisfies Omit<ChatConversationProps<undefined, string>, 'thread'>;
-  const saved: ChatThreadSnapshot = { ...first, messages: [toolCall.message] };
+  } satisfies Omit<ConversationProps<undefined, string>, 'threadId'>;
+  const saved: ServedThread = { ...first, messages: [toolCall.message] };
   async function finish() {
     await act(async () => {
       pending.push(toolCall);
@@ -237,56 +287,62 @@ function deferredToolRun(
 describe('shared chat composition', () => {
   it('replaces the composer with a new-chat offer once the chat model is no longer permitted', async () => {
     const onNewChat = vi.fn();
-    const conversation = createRef<ChatConversationHandle>();
+    const withdrawn = { ...first, permittedModelId: 'withdrawn-model' };
     render(
-      <ChatConversation
-        conversationRef={conversation}
-        thread={{ ...first, permittedModelId: 'withdrawn-model' }}
+      <Conversation
+        threadId={withdrawn.id}
         config={chatConfig({ send: vi.fn() }, { events: { onNewChat } })}
       />,
+      [withdrawn],
     );
 
     await waitFor(() =>
       expect(screen.queryByRole('textbox', { name: 'Message' })).toBeNull(),
     );
-    expect(
-      conversation.current?.restoreFailedSubmission('Keep this prompt', []),
-    ).toBeUndefined();
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button', { name: 'newChat.newChat' }));
     expect(onNewChat).toHaveBeenCalledOnce();
   });
 
-  it('lets a neutral host defer a send and resume it through the conversation handle', async () => {
+  it('holds a message while a file of the chat processes and sends it once the file is ready', async () => {
     const pending = stream();
     const request = vi.fn(async () => pending.response);
-    const lifecycle = createChatRunLifecycle({ send: request });
-    const conversation = createRef<ChatConversationHandle>();
-    const deferSend = vi.fn(() => true);
-    render(
-      <ChatConversation
-        conversationRef={conversation}
-        lifecycle={lifecycle}
-        thread={first}
+    const processing = {
+      ...first,
+      sources: [
+        { id: 'source-1', name: 'notes.txt', status: 'processing' },
+      ] as GetThreadResponseDto['sources'],
+    };
+    serveConversation({ 'GET /threads/first/sources/progress': [] });
+    vi.stubGlobal('ResizeObserver', NoResizeObserver);
+    const { client } = render(
+      <Conversation
+        threadId={first.id}
         config={chatConfig({ send: request })}
-        composer={{ clearOnSend: true }}
-        adapters={{ deferSend }}
       />,
+      [processing],
     );
 
-    send('Wait for the host');
-    expect(deferSend).toHaveBeenCalledWith(
-      first.id,
-      expect.objectContaining({ text: 'Wait for the host' }),
-    );
+    send('Wait for the file');
     expect(request).not.toHaveBeenCalled();
-    expect(screen.queryByDisplayValue('Wait for the host')).toBeNull();
+    expect(screen.queryByDisplayValue('Wait for the file')).toBeNull();
+    expect(screen.getByTestId('pending-user-message').textContent).toContain(
+      'Wait for the file',
+    );
 
-    lifecycle.startThreadRun({
-      threadId: first.id,
-      text: 'Wait for the host',
-      images: [],
-    });
-    expect(conversation.current?.resumeStartedRun()).toBe(true);
+    const threadKey = getThreadsControllerFindOneQueryKey(first.id);
+    await waitFor(() =>
+      expect(client.isFetching({ queryKey: threadKey })).toBe(0),
+    );
+    await act(async () => serveThreads([first], client));
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          threadId: first.id,
+          text: 'Wait for the file',
+        }),
+        expect.any(AbortSignal),
+      ),
+    );
     await act(async () => {
       pending.push(answer(first.id, 'a1', 'Ready now'));
       pending.close();
@@ -294,16 +350,83 @@ describe('shared chat composition', () => {
     expect(await screen.findByText('Ready now')).toBeTruthy();
   });
 
-  it('does not clear or hand a draft to the host while an active run is being checked', () => {
-    const request = vi.fn(async () => new Response(null, { status: 204 }));
-    const deferSend = vi.fn(() => false);
+  it('shows a first message waiting for its file instead of the empty state', () => {
+    const processing = {
+      ...first,
+      sources: [
+        { id: 'source-1', name: 'notes.txt', status: 'processing' },
+      ] as GetThreadResponseDto['sources'],
+    };
+    serveConversation({ 'GET /threads/first/sources/progress': [] });
+    vi.stubGlobal('ResizeObserver', NoResizeObserver);
     render(
-      <ChatConversation
-        thread={first}
-        activeRun={{ dataUpdatedAt: 0, isFetching: true }}
+      <Conversation
+        threadId={first.id}
+        config={chatConfig({ send: vi.fn() })}
+        emptyState={<p data-testid="empty-chat" />}
+      />,
+      [processing],
+    );
+    expect(screen.getByTestId('empty-chat')).toBeTruthy();
+
+    send('Wait for the file');
+
+    expect(screen.queryByTestId('empty-chat')).toBeNull();
+    expect(screen.getByTestId('pending-user-message').textContent).toContain(
+      'Wait for the file',
+    );
+  });
+
+  it('takes a waiting message back into the composer when it is stopped', () => {
+    const request = vi.fn(async () => new Response(null, { status: 204 }));
+    const processing = {
+      ...first,
+      sources: [
+        { id: 'source-1', name: 'notes.txt', status: 'processing' },
+      ] as GetThreadResponseDto['sources'],
+    };
+    serveConversation({ 'GET /threads/first/sources/progress': [] });
+    vi.stubGlobal('ResizeObserver', NoResizeObserver);
+    render(
+      <Conversation
+        threadId={first.id}
+        config={chatConfig({ send: request })}
+      />,
+      [processing],
+    );
+
+    send('Never mind');
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+
+    expect(screen.getByDisplayValue('Never mind')).toBeTruthy();
+    expect(screen.queryByTestId('pending-user-message')).toBeNull();
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('puts a message whose send failed back into the composer', async () => {
+    const request = vi.fn(async () => {
+      throw new Error('Offline');
+    });
+    render(
+      <Conversation
+        threadId={first.id}
+        config={chatConfig({ send: request })}
+      />,
+    );
+
+    send('Keep this prompt');
+    expect(screen.queryByDisplayValue('Keep this prompt')).toBeNull();
+
+    expect(await screen.findByDisplayValue('Keep this prompt')).toBeTruthy();
+  });
+
+  it('does not clear the draft while an active run is being checked', () => {
+    const request = vi.fn(async () => new Response(null, { status: 204 }));
+    activeRuns = new Promise<never>(() => undefined);
+    render(
+      <Conversation
+        threadId={first.id}
         config={chatConfig({ send: request, follow: vi.fn() })}
-        composer={{ clearOnSend: true }}
-        adapters={{ deferSend }}
       />,
     );
 
@@ -313,7 +436,7 @@ describe('shared chat composition', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
 
     expect(screen.getByDisplayValue('Keep this draft')).toBeTruthy();
-    expect(deferSend).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('pending-user-message')).toBeNull();
     expect(request).not.toHaveBeenCalled();
   });
 
@@ -321,12 +444,13 @@ describe('shared chat composition', () => {
     const toolOnly = event(first.id, 'a1', [
       { type: 'tool_use', id: 'call', name: 'read_context', params: {} },
     ]).message;
+    const thread = { ...first, messages: [toolOnly] };
     render(
-      <ChatConversation
-        thread={{ ...first, messages: [toolOnly] }}
+      <Conversation
+        threadId={thread.id}
         config={chatConfig({ send: vi.fn() })}
-        slots={{ assistantActions: () => null }}
       />,
+      [thread],
     );
 
     expect(
@@ -334,8 +458,7 @@ describe('shared chat composition', () => {
     ).toBeNull();
   });
 
-  it('does not rerender existing user messages during active-run polling', () => {
-    const renderUser = vi.fn(() => null);
+  it('does not rerender existing user messages during active-run polling', async () => {
     const thread = {
       ...first,
       messages: [
@@ -345,22 +468,20 @@ describe('shared chat composition', () => {
         ]),
       ],
     };
-    const config = chatConfig({ send: vi.fn() });
-    const conversation = (isFetching: boolean) => (
-      <ChatConversation
-        thread={thread}
-        config={config}
-        slots={{ messageImage: renderUser }}
-        activeRun={{ dataUpdatedAt: 1, isFetching }}
-      />
+    const { client } = render(
+      <Conversation
+        threadId={thread.id}
+        config={chatConfig({ send: vi.fn() })}
+      />,
+      [thread],
     );
-    const { rerender } = render(conversation(false));
+    await waitFor(() => expect(renders.get('u1')).toBeGreaterThan(0));
+    const before = renders.get('u1');
 
-    expect(renderUser).toHaveBeenCalledOnce();
+    await act(async () => listRuns(client, []));
+    await act(async () => listRuns(client, []));
 
-    rerender(conversation(true));
-
-    expect(renderUser).toHaveBeenCalledOnce();
+    expect(renders.get('u1')).toBe(before);
   });
 
   it('does not rerender completed assistant runs while the next run streams', async () => {
@@ -374,30 +495,14 @@ describe('shared chat composition', () => {
         completed,
       ],
     };
-    const renders = new Map<string, number>();
-    const assistantActions: NonNullable<
-      NonNullable<ChatConversationProps['slots']>['assistantActions']
-    > = (unit) => {
-      renders.set(unit.key, (renders.get(unit.key) ?? 0) + 1);
-      return null;
-    };
-    const onMessageCopied = vi.fn();
     const config = chatConfig(
       { send: request },
-      { events: { onNewChat: vi.fn(), onMessageCopied } },
+      { events: { onNewChat: vi.fn(), onMessageCopied: vi.fn() } },
     );
-    const conversation = (dataUpdatedAt: number, isFetching: boolean) => (
-      <ChatConversation
-        thread={thread}
-        config={config}
-        slots={{ assistantActions }}
-        activeRun={{
-          dataUpdatedAt,
-          isFetching,
-        }}
-      />
+    const { client } = render(
+      <Conversation threadId={thread.id} config={config} />,
+      [thread],
     );
-    const { rerender } = render(conversation(0, false));
 
     send('Next question');
     const nextUser = event(first.id, 'u2', [
@@ -414,7 +519,7 @@ describe('shared chat composition', () => {
     });
     expect(await screen.findByText('Par')).toBeTruthy();
     const completedRenders = renders.get('run-a1');
-    rerender(conversation(1, true));
+    await act(async () => listRuns(client, []));
     await act(async () => {
       pending.push(answer(first.id, 'a2', 'Partial answer'));
     });
@@ -453,7 +558,7 @@ describe('shared chat composition', () => {
     expect(screen.getByDisplayValue('Second draft')).toBeTruthy();
   });
 
-  it('keeps the sent text visible until the batched user message reaches the timeline', async () => {
+  it('shows the sent text as pending until the batched user message reaches the timeline', async () => {
     vi.useFakeTimers({
       toFake: ['requestAnimationFrame', 'cancelAnimationFrame'],
     });
@@ -462,6 +567,10 @@ describe('shared chat composition', () => {
       const request = vi.fn(async () => pending.response);
       render(<TestHost config={chatConfig({ send: request })} />);
       send('Visible prompt');
+      expect(screen.queryByDisplayValue('Visible prompt')).toBeNull();
+      expect(screen.getByTestId('pending-user-message').textContent).toContain(
+        'Visible prompt',
+      );
       const echoed = answer(first.id, 'u1', 'Visible prompt');
       await act(async () =>
         pending.push({
@@ -469,10 +578,11 @@ describe('shared chat composition', () => {
           message: { ...echoed.message, role: 'user' },
         }),
       );
-      expect(screen.getByDisplayValue('Visible prompt')).toBeDefined();
       act(() => vi.advanceTimersToNextFrame());
-      expect(screen.getByText('Visible prompt')).toBeDefined();
-      expect(screen.queryByDisplayValue('Visible prompt')).toBeNull();
+      expect(screen.getByTestId('user-message').textContent).toContain(
+        'Visible prompt',
+      );
+      expect(screen.queryByTestId('pending-user-message')).toBeNull();
     } finally {
       await act(async () => pending.close());
       vi.useRealTimers();
@@ -489,8 +599,8 @@ describe('shared chat composition', () => {
     const observeRun = vi.fn(() => observer);
     const onRunSettled = vi.fn();
     render(
-      <ChatConversation
-        thread={first}
+      <Conversation
+        threadId={first.id}
         config={chatConfig(
           { send: request },
           { events: { onNewChat: vi.fn(), observeRun, onRunSettled } },
@@ -524,11 +634,10 @@ describe('shared chat composition', () => {
     );
   });
 
-  it('owns the first-message handoff and reports its pending state to the host', async () => {
+  it('takes over a first message started before navigation and shows it as pending', async () => {
     const pending = stream();
     const request = vi.fn(async () => pending.response);
     const lifecycle = createChatRunLifecycle({ send: request });
-    const onStartedRun = vi.fn();
     lifecycle.startThreadRun({
       threadId: first.id,
       text: 'Started before navigation',
@@ -537,12 +646,14 @@ describe('shared chat composition', () => {
     });
 
     render(
-      <ChatConversation
+      <Conversation
         lifecycle={lifecycle}
-        thread={first}
+        threadId={first.id}
         config={chatConfig({ send: request })}
-        adapters={{ onStartedRun }}
       />,
+    );
+    expect(screen.getByTestId('pending-user-message').textContent).toContain(
+      'Started before navigation',
     );
     await act(async () => {
       pending.push(answer(first.id, 'a1', 'Handoff complete'));
@@ -551,17 +662,9 @@ describe('shared chat composition', () => {
 
     expect(await screen.findByText('Handoff complete')).toBeTruthy();
     expect(request).toHaveBeenCalledOnce();
-    expect(onStartedRun).toHaveBeenCalledExactlyOnceWith(
-      first.id,
-      expect.objectContaining({
-        text: 'Started before navigation',
-        messageCountBeforeSend: 0,
-      }),
-      false,
-    );
   });
 
-  it('places host context directly before the first user turn', () => {
+  it('places the context hint directly before the first user turn', () => {
     const persisted = {
       ...first,
       messages: [
@@ -570,83 +673,86 @@ describe('shared chat composition', () => {
         userMessage('u1', [{ type: 'text', text: 'First question' }]),
       ],
     };
-    const { container, rerender } = render(
-      <ChatConversation
-        thread={persisted}
-        config={chatConfig({ send: vi.fn() })}
-        slots={{ contextHint: <div data-testid="context-hint" /> }}
+    const open = vi.fn();
+    render(
+      <Conversation
+        threadId={persisted.id}
+        config={chatConfig(
+          { send: vi.fn() },
+          {
+            contextHint: {
+              summary: { skills: 2, knowledgeBases: 1 },
+              open,
+            },
+          },
+        )}
       />,
+      [persisted],
     );
-    const hint = screen.getByTestId('context-hint');
+    const hint = screen.getByTestId('chat-context-hint');
     const message = screen.getByTestId('user-message');
     expect(
       hint.compareDocumentPosition(message) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-
-    rerender(
-      <ChatConversation
-        thread={first}
-        pendingSubmission="Pending question"
-        config={chatConfig({ send: vi.fn() })}
-        slots={{ contextHint: <div data-testid="context-hint" /> }}
-      />,
-    );
-    expect(
-      container.querySelector('[data-testid="context-hint"]'),
-    ).toBeTruthy();
-    expect(
-      container.querySelector('[data-testid="pending-user-message"]'),
-    ).toBeTruthy();
+    fireEvent.click(hint);
+    expect(open).toHaveBeenCalledOnce();
   });
 
-  it('hides host context until a user turn exists', () => {
-    render(
-      <ChatConversation
-        thread={first}
-        config={chatConfig({ send: vi.fn() })}
-        slots={{ contextHint: <div data-testid="context-hint" /> }}
+  it('shows no context hint without a user turn or while its summary is unknown', () => {
+    const asked = {
+      ...first,
+      messages: [userMessage('u1', [{ type: 'text', text: 'Question' }])],
+    };
+    const { unmount } = render(
+      <Conversation
+        threadId={first.id}
+        config={chatConfig(
+          { send: vi.fn() },
+          {
+            contextHint: {
+              summary: { skills: 0, knowledgeBases: 0 },
+              open: vi.fn(),
+            },
+          },
+        )}
       />,
     );
-    expect(screen.queryByTestId('context-hint')).toBeNull();
+    expect(screen.queryByTestId('chat-context-hint')).toBeNull();
+    unmount();
+
+    render(
+      <Conversation
+        threadId={asked.id}
+        config={chatConfig(
+          { send: vi.fn() },
+          { contextHint: { summary: null, open: vi.fn() } },
+        )}
+      />,
+      [asked],
+    );
+    expect(screen.queryByTestId('chat-context-hint')).toBeNull();
   });
 
   it('renders a routine nudge as a notice instead of a user bubble', () => {
+    const nudged = {
+      ...first,
+      messages: [
+        userMessage('nudge', [
+          { type: 'text', text: 'Check in later', isNudge: true },
+        ]),
+      ],
+    };
     render(
-      <ChatConversation
-        thread={{
-          ...first,
-          messages: [
-            userMessage('nudge', [
-              { type: 'text', text: 'Check in later', isNudge: true },
-            ]),
-          ],
-        }}
+      <Conversation
+        threadId={nudged.id}
         config={chatConfig({ send: vi.fn() })}
-        slots={{ messageNudge: (text) => <NudgeNotice text={text} /> }}
       />,
+      [nudged],
     );
-    expect(screen.getByTestId('routine-nudge').textContent).toBe(
+    expect(screen.getByTestId('routine-nudge').textContent).toContain(
       'Check in later',
     );
     expect(screen.queryByTestId('user-message')).toBeNull();
-  });
-
-  it('keeps the shared default nudge presentation unchanged without a host slot', () => {
-    render(
-      <ChatConversation
-        thread={{
-          ...first,
-          messages: [
-            userMessage('nudge', [
-              { type: 'text', text: 'Plain surface nudge', isNudge: true },
-            ]),
-          ],
-        }}
-        config={chatConfig({ send: vi.fn() })}
-      />,
-    );
-    expect(screen.getByText('Plain surface nudge')).toBeTruthy();
-    expect(screen.queryByTestId('routine-nudge')).toBeNull();
   });
 
   it('copies the resolved user prompt and reports the host action', async () => {
@@ -656,38 +762,40 @@ describe('shared chat composition', () => {
       value: { write: vi.fn(), writeText },
     });
     const onMessageCopied = vi.fn();
+    const masked = {
+      ...first,
+      piiMasks: [
+        {
+          id: 'mask-1',
+          token: '{{pii:PERSON_NAME_1}}',
+          value: 'Erika Mustermann',
+          category: 'person_name',
+          unmasked: false,
+        },
+      ],
+      messages: [
+        userMessage('u1', [
+          {
+            type: 'text',
+            text: 'Internal skill instruction',
+            isSkillInstruction: true,
+          },
+          {
+            type: 'text',
+            text: 'Schreibe **{{pii:PERSON_NAME_1}}** eine Antwort',
+          },
+        ]),
+      ],
+    } as ServedThread;
     render(
-      <ChatConversation
-        thread={{
-          ...first,
-          piiMasks: [
-            {
-              id: 'mask-1',
-              token: '{{pii:PERSON_NAME_1}}',
-              value: 'Erika Mustermann',
-              category: 'person_name',
-              unmasked: false,
-            },
-          ],
-          messages: [
-            userMessage('u1', [
-              {
-                type: 'text',
-                text: 'Internal skill instruction',
-                isSkillInstruction: true,
-              },
-              {
-                type: 'text',
-                text: 'Schreibe **{{pii:PERSON_NAME_1}}** eine Antwort',
-              },
-            ]),
-          ],
-        }}
+      <Conversation
+        threadId={masked.id}
         config={chatConfig(
           { send: vi.fn() },
           { events: { onNewChat: vi.fn(), onMessageCopied } },
         )}
       />,
+      [masked],
     );
     fireEvent.click(
       screen.getByRole('button', { name: 'chat.copyToClipboard' }),
@@ -706,19 +814,21 @@ describe('shared chat composition', () => {
       value: { write: vi.fn(), writeText: vi.fn(async () => undefined) },
     });
     const onCodeCopied = vi.fn();
+    const coded = {
+      ...first,
+      messages: [
+        answer(first.id, 'a1', '```js\nconst permit = 1;\n```').message,
+      ],
+    };
     render(
-      <ChatConversation
-        thread={{
-          ...first,
-          messages: [
-            answer(first.id, 'a1', '```js\nconst permit = 1;\n```').message,
-          ],
-        }}
+      <Conversation
+        threadId={coded.id}
         config={chatConfig(
           { send: vi.fn() },
           { events: { onNewChat: vi.fn(), onCodeCopied } },
         )}
       />,
+      [coded],
     );
     const [copyCode] = screen.getAllByRole('button', {
       name: 'chat.copyToClipboard',
@@ -765,12 +875,13 @@ describe('shared chat composition', () => {
       },
     );
     serveVisionModel();
+    const vision = { ...first, permittedModelId: visionModel.id };
     const { unmount } = render(
-      <ChatConversation
-        thread={{ ...first, permittedModelId: visionModel.id }}
+      <Conversation
+        threadId={vision.id}
         config={chatConfig({ send: request })}
-        composer={{ clearOnSend: true }}
       />,
+      [vision],
     );
     try {
       fireEvent.change(await imagePicker(), {
@@ -812,13 +923,13 @@ describe('shared chat composition', () => {
         { sessionKey, events: { onNewChat: vi.fn(), onRunSettled } },
       );
     const { rerender } = render(
-      <ChatConversation thread={first} config={config('first-user')} />,
+      <Conversation threadId={first.id} config={config('first-user')} />,
     );
     send('Old session prompt');
     const signal = request.mock.calls[0][1];
     await act(async () => {
       rerender(
-        <ChatConversation thread={first} config={config('second-user')} />,
+        <Conversation threadId={first.id} config={config('second-user')} />,
       );
     });
     expect(signal.aborted).toBe(true);
@@ -838,14 +949,10 @@ describe('shared chat composition', () => {
     const follow = vi.fn(async () => pending.response);
     const cancel = vi.fn(async () => undefined);
     const request = vi.fn(async () => new Response(null, { status: 204 }));
+    activeRuns = [{ threadId: first.id, cancellable: true }];
     render(
-      <ChatConversation
-        thread={first}
-        activeRun={{
-          run: { cancellable: true },
-          dataUpdatedAt: Date.now(),
-          isFetching: false,
-        }}
+      <Conversation
+        threadId={first.id}
         config={chatConfig({ send: request, follow, cancel })}
       />,
     );
@@ -863,49 +970,18 @@ describe('shared chat composition', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
-  it('stops a deferred send that becomes active before cancellation', () => {
-    const cancel = vi.fn(async () => undefined);
-    const follow = vi.fn(() => new Promise<Response>(() => undefined));
-    const request = vi.fn(async () => new Response(null, { status: 204 }));
-    const lifecycle = createChatRunLifecycle({ send: request, cancel });
-    const controller = new AbortController();
-    const cancelDeferredSend = vi.fn(() => {
-      lifecycle.registerActiveThreadRun(first.id, controller);
-      return false;
-    });
-    render(
-      <ChatConversation
-        lifecycle={lifecycle}
-        thread={first}
-        pendingSubmission="Question"
-        activeRun={{
-          run: { cancellable: false },
-          dataUpdatedAt: Date.now(),
-          isFetching: false,
-        }}
-        config={chatConfig({ send: request, follow, cancel })}
-        composer={{ deferredSendCancellable: true }}
-        adapters={{ cancelDeferredSend }}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-
-    expect(cancelDeferredSend).toHaveBeenCalledWith(first.id);
-    expect(cancel).toHaveBeenCalledWith(first.id);
-    expect(controller.signal.aborted).toBe(true);
-  });
-
   it('removes an unsaved streaming tool call when the shared runtime stops', async () => {
     const pending = stream();
     const request = vi.fn(async () => pending.response);
     const cancel = vi.fn(async () => undefined);
     const onThreadState = vi.fn();
     render(
-      <ChatConversation
-        thread={first}
-        config={chatConfig({ send: request, cancel })}
-        adapters={{ onThreadState }}
+      <Conversation
+        threadId={first.id}
+        config={chatConfig(
+          { send: request, cancel },
+          { events: { onNewChat: vi.fn(), onThreadState } },
+        )}
       />,
     );
     send('Create a document');
@@ -948,8 +1024,8 @@ describe('shared chat composition', () => {
     const execute = vi.fn(async () => 'test result');
     const registry = createClientToolRegistry({ read_context: { execute } });
     render(
-      <ChatConversation
-        thread={first}
+      <Conversation
+        threadId={first.id}
         config={chatConfig(
           { send: request },
           {
@@ -987,17 +1063,14 @@ describe('shared chat composition', () => {
     const request = vi.fn(
       async () => new Response(chunk(answer(first.id, 'final', 'Done'))),
     );
+    activeRuns = [{ threadId: first.id, cancellable: true }];
     render(
-      <ChatConversation
+      <Conversation
         {...props}
         config={{ ...props.config, transport: { follow, send: request } }}
-        thread={saved}
-        activeRun={{
-          run: { cancellable: true },
-          dataUpdatedAt: Date.now(),
-          isFetching: false,
-        }}
+        threadId={saved.id}
       />,
+      [saved],
     );
 
     expect(await screen.findByText('Done')).toBeTruthy();
@@ -1017,15 +1090,18 @@ describe('shared chat composition', () => {
           finishFirstRead = resolve;
         }),
     );
-    const { rerender } = render(<ChatConversation {...props} thread={first} />);
+    const { client, rerender } = render(
+      <Conversation {...props} threadId={first.id} />,
+    );
     send('Read this context');
     await finish();
     await waitFor(() => expect(execute).toHaveBeenCalledOnce());
 
-    rerender(<ChatConversation {...props} thread={second} />);
+    rerender(<Conversation {...props} threadId={second.id} />);
     await act(async () => finishFirstRead?.('read from the old view'));
     expect(request).toHaveBeenCalledTimes(1);
-    rerender(<ChatConversation {...props} thread={saved} />);
+    serveThreads([saved], client);
+    rerender(<Conversation {...props} threadId={saved.id} />);
 
     expect(await screen.findByText('Done')).toBeTruthy();
     expect(request).toHaveBeenCalledTimes(2);
@@ -1038,11 +1114,11 @@ describe('shared chat composition', () => {
     'posts the deferred tool result after a stale follow returns %i',
     async (status) => {
       const { props, saved, request, execute, finish } = deferredToolRun();
-      const { rerender } = render(
-        <ChatConversation {...props} thread={first} />,
+      const { client, rerender } = render(
+        <Conversation {...props} threadId={first.id} />,
       );
       send('Read the original context');
-      rerender(<ChatConversation {...props} thread={second} />);
+      rerender(<Conversation {...props} threadId={second.id} />);
       await finish();
       expect(execute).not.toHaveBeenCalled();
       expect(request).toHaveBeenCalledTimes(1);
@@ -1055,16 +1131,13 @@ describe('shared chat composition', () => {
         async () =>
           new Response(status === 204 ? null : chunk(olderCall), { status }),
       );
+      serveThreads([stale], client);
+      listRuns(client, [{ threadId: first.id, cancellable: true }]);
       rerender(
-        <ChatConversation
+        <Conversation
           {...props}
           config={{ ...props.config, transport: { send: request, follow } }}
-          thread={stale}
-          activeRun={{
-            run: { cancellable: true },
-            dataUpdatedAt: Date.now(),
-            isFetching: false,
-          }}
+          threadId={stale.id}
         />,
       );
       await waitFor(() =>
@@ -1072,7 +1145,9 @@ describe('shared chat composition', () => {
       );
       expect(follow).toHaveBeenCalledWith(first.id, expect.any(AbortSignal));
       expect(execute).not.toHaveBeenCalled();
-      rerender(<ChatConversation {...props} thread={saved} />);
+      listRuns(client, []);
+      serveThreads([saved], client);
+      rerender(<Conversation {...props} threadId={saved.id} />);
       expect(await screen.findByText('Done')).toBeTruthy();
       expect(execute).toHaveBeenCalledOnce();
       expect(request).toHaveBeenLastCalledWith(
@@ -1087,8 +1162,8 @@ describe('shared chat composition', () => {
         },
         expect.any(AbortSignal),
       );
-      rerender(<ChatConversation {...props} thread={second} />);
-      rerender(<ChatConversation {...props} thread={saved} />);
+      rerender(<Conversation {...props} threadId={second.id} />);
+      rerender(<Conversation {...props} threadId={saved.id} />);
       expect(request).toHaveBeenCalledTimes(2);
     },
   );
@@ -1104,15 +1179,18 @@ describe('shared chat composition', () => {
     );
     const config = { ...props.config, transport: { send: request } };
     const { rerender } = render(
-      <ChatConversation {...props} config={config} thread={second} />,
+      <Conversation {...props} config={config} threadId={second.id} />,
+      [saved, second],
     );
 
-    rerender(<ChatConversation {...props} config={config} thread={saved} />);
+    rerender(<Conversation {...props} config={config} threadId={saved.id} />);
     expect(canDispatch).toHaveBeenCalled();
     expect(execute).not.toHaveBeenCalled();
 
     canDispatch.mockReturnValue(true);
-    rerender(<ChatConversation {...props} config={config} thread={saved} />);
+    rerender(
+      <Conversation {...props} config={{ ...config }} threadId={saved.id} />,
+    );
     expect(await screen.findByText('Done')).toBeTruthy();
     expect(request).toHaveBeenCalledOnce();
   });
@@ -1122,17 +1200,26 @@ describe('shared chat composition', () => {
     const { props, saved, request, execute, finish } = deferredToolRun({
       canDispatch,
     });
-    const { rerender } = render(<ChatConversation {...props} thread={first} />);
+    const { client, rerender } = render(
+      <Conversation {...props} threadId={first.id} />,
+    );
     send('Read the original context');
-    rerender(<ChatConversation {...props} thread={second} />);
+    rerender(<Conversation {...props} threadId={second.id} />);
     await finish();
-    rerender(<ChatConversation {...props} thread={saved} />);
+    serveThreads([saved], client);
+    rerender(<Conversation {...props} threadId={saved.id} />);
     expect(canDispatch).toHaveBeenCalled();
     expect(execute).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledTimes(1);
 
     canDispatch.mockReturnValue(true);
-    rerender(<ChatConversation {...props} thread={saved} />);
+    rerender(
+      <Conversation
+        {...props}
+        config={{ ...props.config }}
+        threadId={saved.id}
+      />,
+    );
     expect(await screen.findByText('Done')).toBeTruthy();
     expect(execute).toHaveBeenCalledOnce();
     expect(request).toHaveBeenCalledTimes(2);
@@ -1142,15 +1229,18 @@ describe('shared chat composition', () => {
     const { props, saved, request, execute, finish } = deferredToolRun({
       contextKey: 'original',
     });
-    const { rerender } = render(<ChatConversation {...props} thread={first} />);
+    const { client, rerender } = render(
+      <Conversation {...props} threadId={first.id} />,
+    );
     send('Read the original context');
-    rerender(<ChatConversation {...props} thread={second} />);
+    rerender(<Conversation {...props} threadId={second.id} />);
     await finish();
 
+    serveThreads([saved], client);
     rerender(
-      <ChatConversation
+      <Conversation
         {...props}
-        thread={saved}
+        threadId={saved.id}
         config={{
           ...props.config,
           clientTools: {
@@ -1163,7 +1253,7 @@ describe('shared chat composition', () => {
     expect(execute).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledTimes(1);
 
-    rerender(<ChatConversation {...props} thread={saved} />);
+    rerender(<Conversation {...props} threadId={saved.id} />);
     expect(await screen.findByText('Done')).toBeTruthy();
     expect(execute).toHaveBeenCalledOnce();
     expect(request).toHaveBeenCalledTimes(2);
@@ -1173,12 +1263,14 @@ describe('shared chat composition', () => {
     const { props, request, execute, finish } = deferredToolRun({
       contextKey: 'original',
     });
-    const { rerender } = render(<ChatConversation {...props} thread={first} />);
+    const { rerender } = render(
+      <Conversation {...props} threadId={first.id} />,
+    );
     send('Read the original context');
     rerender(
-      <ChatConversation
+      <Conversation
         {...props}
-        thread={first}
+        threadId={first.id}
         config={{
           ...props.config,
           clientTools: {
@@ -1193,7 +1285,7 @@ describe('shared chat composition', () => {
     expect(execute).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledTimes(1);
 
-    rerender(<ChatConversation {...props} thread={first} />);
+    rerender(<Conversation {...props} threadId={first.id} />);
     expect(await screen.findByText('Done')).toBeTruthy();
     expect(execute).toHaveBeenCalledOnce();
     expect(request).toHaveBeenCalledTimes(2);
@@ -1209,18 +1301,19 @@ describe('shared chat composition', () => {
       const { props, saved, request, execute, finish } = deferredToolRun({
         contextKey: 'original',
       });
-      const { rerender } = render(
-        <ChatConversation {...props} thread={first} />,
+      const { client, rerender } = render(
+        <Conversation {...props} threadId={first.id} />,
       );
       send('Read the original context');
-      rerender(<ChatConversation {...props} thread={second} />);
+      rerender(<Conversation {...props} threadId={second.id} />);
       await finish();
 
+      serveThreads([saved], client);
       await act(async () => {
         rerender(
-          <ChatConversation
+          <Conversation
             {...props}
-            thread={saved}
+            threadId={saved.id}
             config={{
               ...props.config,
               sessionKey,
@@ -1265,7 +1358,7 @@ describe('shared chat composition', () => {
     });
     vi.useFakeTimers({ toFake: ['Date'] });
     try {
-      const requests = serveChatApi({
+      const requests = serveConversation({
         'GET /feature-toggles': { voiceEnabled: true },
       });
       const send = vi.fn(async () => new Response(null, { status: 204 }));
@@ -1290,27 +1383,24 @@ describe('shared chat composition', () => {
     }
   });
 
-  it('reports a failed send to the run handler instead of the generic error event', async () => {
+  it('reports a failed send to the host once', async () => {
     const onError = vi.fn();
-    const sendError = vi.fn();
     const request = vi.fn(async () => {
       throw new Error('Offline');
     });
     render(
-      <ChatConversation
-        thread={first}
+      <Conversation
+        threadId={first.id}
         config={chatConfig(
           { send: request },
           { events: { onNewChat: vi.fn(), onError } },
         )}
-        adapters={{ onRunTransportError: sendError }}
       />,
     );
 
     send('Try to send');
 
-    await waitFor(() => expect(sendError).toHaveBeenCalledOnce());
-    expect(onError).not.toHaveBeenCalled();
+    await waitFor(() => expect(onError).toHaveBeenCalledOnce());
   });
 
   it('keeps an accepted photo and explains why the larger one was rejected', async () => {
@@ -1329,11 +1419,10 @@ describe('shared chat composition', () => {
     );
     vi.stubGlobal('crypto', { randomUUID: undefined });
     serveVisionModel();
+    const vision = { ...first, permittedModelId: visionModel.id };
     const { unmount } = render(
-      <ChatConversation
-        thread={{ ...first, permittedModelId: visionModel.id }}
-        config={chatConfig({ send })}
-      />,
+      <Conversation threadId={vision.id} config={chatConfig({ send })} />,
+      [vision],
     );
     try {
       fireEvent.change(await imagePicker(), {
@@ -1356,10 +1445,12 @@ describe('shared chat composition', () => {
     ['fails', () => Promise.reject(new Error('Offline'))],
     ['is still running', () => new Promise<never>(() => undefined)],
   ])(
-    'shows an uploaded source once and holds sending while it processes when the thread refresh %s',
+    'shows an uploaded source once and sends nothing while it processes when the thread refresh %s',
     async (_state, refreshThread) => {
-      serveChatApi({
+      serveConversation({
         'GET /models/embedding/enabled': { isEmbeddingModelEnabled: true },
+        'GET /threads/first': refreshThread,
+        'GET /threads/first/sources/progress': [],
       });
       sourceUpload.uploadSourceFile.mockResolvedValue([
         {
@@ -1371,23 +1462,6 @@ describe('shared chat composition', () => {
           status: 'processing',
         },
       ]);
-      function CachedThreadHost() {
-        const { data } = useQuery({
-          queryKey: getThreadsControllerFindOneQueryKey(first.id),
-          queryFn: refreshThread,
-          initialData: {
-            ...first,
-            sources: [],
-          } as unknown as GetThreadResponseDto,
-          staleTime: Infinity,
-        });
-        return (
-          <ChatConversation
-            thread={data}
-            config={chatConfig({ send: vi.fn() })}
-          />
-        );
-      }
       vi.stubGlobal(
         'ResizeObserver',
         class {
@@ -1396,7 +1470,10 @@ describe('shared chat composition', () => {
           disconnect() {}
         },
       );
-      render(<CachedThreadHost />);
+      const send = vi.fn(async () => new Response(null, { status: 204 }));
+      render(
+        <Conversation threadId={first.id} config={chatConfig({ send })} />,
+      );
       const picker = screen.getByTestId<HTMLInputElement>(
         'chat-file-upload-input',
       );
@@ -1418,19 +1495,20 @@ describe('shared chat composition', () => {
       fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
         target: { value: 'Summarise the notes' },
       });
-      expect(screen.getByTestId<HTMLButtonElement>('send').disabled).toBe(true);
+      fireEvent.click(screen.getByTestId('send'));
+      expect(send).not.toHaveBeenCalled();
       vi.unstubAllGlobals();
     },
   );
 
   it('does not upload a document dropped while a reply streams', async () => {
     const pending = stream();
-    const requests = serveChatApi({
+    const requests = serveConversation({
       'GET /models/embedding/enabled': { isEmbeddingModelEnabled: true },
     });
     render(
-      <ChatConversation
-        thread={first}
+      <Conversation
+        threadId={first.id}
         config={chatConfig({ send: vi.fn(async () => pending.response) })}
       />,
     );
@@ -1465,4 +1543,227 @@ it('leaves the viewport unobstructed when a conditional header renders nothing',
   );
   expect(container.querySelector('.content-scroll-header')).toBeNull();
   expect(container.querySelector('.content-scroll-header-offset')).toBeNull();
+});
+
+describe('package-owned conversation surface', () => {
+  const chunkId = '6a1f6c64-8d7c-4f3e-9c55-0f2d0d3b9a11';
+  const origin = {
+    kind: 'release_note',
+    releaseNoteId: 'note-1',
+  } as GetThreadResponseDto['origin'];
+
+  async function openThreadMenu() {
+    const trigger = document.querySelector<HTMLButtonElement>(
+      '.content-scroll-header button[aria-haspopup="menu"]',
+    );
+    if (!trigger) throw new Error('No thread menu');
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+    return screen.findAllByRole('menuitem');
+  }
+
+  it('shows only the header controls whose data the surface passes', async () => {
+    serveConversation({
+      'GET /feature-toggles': { releaseNotesEnabled: true },
+    });
+    const thread = { ...first, origin };
+    render(
+      <Conversation
+        threadId={thread.id}
+        config={chatConfig({ send: vi.fn() })}
+      />,
+      [thread],
+    );
+
+    expect((await openThreadMenu()).map((item) => item.textContent)).toEqual([
+      'chat.renameThread',
+      'chat.deleteThread',
+    ]);
+    expect(screen.queryByTestId('chat-side-panel-toggle')).toBeNull();
+    expect(screen.queryByTestId('chat-header-new-chat')).toBeNull();
+    expect(screen.queryByTestId('chat-source-release-note')).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'sidebar.pinChat' }),
+    ).toBeNull();
+  });
+
+  it('offers the controls of the data a surface passes', async () => {
+    serveConversation({
+      'GET /feature-toggles': { releaseNotesEnabled: true },
+    });
+    const start = vi.fn();
+    const toggleArtifacts = vi.fn();
+    const onNavigate = vi.fn();
+    const thread = { ...first, origin };
+    render(
+      <Conversation
+        threadId={thread.id}
+        config={chatConfig(
+          { send: vi.fn() },
+          {
+            newChat: { start },
+            favorites: { isFavorite: () => false, toggle: vi.fn() },
+            artifactPanel: { open: false, toggle: toggleArtifacts },
+            workspaces: { items: [], moveThread: vi.fn(), create: vi.fn() },
+            events: {
+              onNewChat: vi.fn(),
+              onNavigate,
+              hrefFor: () => '/news/note-1',
+            },
+          },
+        )}
+      />,
+      [thread],
+    );
+
+    fireEvent.click(screen.getByTestId('chat-header-new-chat'));
+    fireEvent.click(screen.getByTestId('chat-side-panel-toggle'));
+    fireEvent.click(await screen.findByTestId('chat-source-release-note'));
+    expect(start).toHaveBeenCalledOnce();
+    expect(toggleArtifacts).toHaveBeenCalledOnce();
+    expect(onNavigate).toHaveBeenCalledWith({
+      kind: 'releaseNote',
+      releaseNoteId: 'note-1',
+    });
+    expect(
+      screen.getByRole('button', { name: 'sidebar.pinChat' }),
+    ).toBeTruthy();
+    expect(await openThreadMenu()).toHaveLength(3);
+  });
+
+  it('deletes the chat after confirmation and lets the host leave it', async () => {
+    const requests = serveConversation({ 'DELETE /threads/first': null });
+    const onThreadDeleted = vi.fn();
+    render(
+      <Conversation
+        threadId={first.id}
+        config={chatConfig(
+          { send: vi.fn() },
+          { events: { onNewChat: vi.fn(), onThreadDeleted } },
+        )}
+      />,
+    );
+
+    const items = await openThreadMenu();
+    fireEvent.click(items[items.length - 1]);
+    fireEvent.click(await screen.findByTestId('confirmation-confirm'));
+
+    await waitFor(() => expect(onThreadDeleted).toHaveBeenCalledWith('first'));
+    expect(
+      requests
+        .filter(({ method }) => method === 'DELETE')
+        .map(({ url }) => url),
+    ).toEqual(['/threads/first']);
+  });
+
+  it.each([
+    ['links', true],
+    ['does not link', false],
+  ])(
+    'opens a cited source in the dialog and %s the recording when the host navigates',
+    async (_case, navigates) => {
+      serveConversation({
+        [`GET /threads/first/source-chunks/${chunkId}`]: {
+          source: { id: 'source-1', name: 'Council meeting', url: null },
+          chunk: {
+            content: 'The budget passed.',
+            startLine: null,
+            endLine: null,
+          },
+          recording: {
+            id: 'recording-1',
+            name: 'Council meeting',
+            uploadedAt: '2026-11-20T10:00:00Z',
+            position: 'transcript',
+            start: 12,
+            end: 30,
+            speakerNumbers: [1],
+          },
+        },
+      });
+      const cited = {
+        ...first,
+        messages: [
+          answer(first.id, 'a1', `It passed {{source:${chunkId}|Meeting}}.`)
+            .message,
+        ],
+      };
+      const onNavigate = vi.fn();
+      render(
+        <Conversation
+          threadId={cited.id}
+          config={chatConfig(
+            { send: vi.fn() },
+            {
+              events: navigates
+                ? { onNewChat: vi.fn(), onNavigate }
+                : { onNewChat: vi.fn() },
+            },
+          )}
+        />,
+        [cited],
+      );
+
+      fireEvent.click(screen.getByTestId('source-citation'));
+
+      expect(
+        (await screen.findByTestId('source-citation-excerpt')).textContent,
+      ).toContain('The budget passed.');
+      const recording = screen.queryByTestId('source-citation-open-recording');
+      expect(recording !== null).toBe(navigates);
+      if (recording) {
+        fireEvent.click(recording);
+        expect(onNavigate).toHaveBeenCalledWith({
+          kind: 'recording',
+          recordingId: 'recording-1',
+        });
+      }
+    },
+  );
+
+  it('reveals a masked value after confirmation without refetching the chat', async () => {
+    const mask = {
+      id: 'mask-1',
+      token: '{{pii:PERSON_NAME_1}}',
+      value: 'Erika Mustermann',
+      category: 'person_name',
+      unmasked: false,
+    };
+    const requests = serveConversation({
+      'POST /threads/first/pii-masks/mask-1/unmask': [
+        { ...mask, unmasked: true },
+      ],
+    });
+    const masked = {
+      ...first,
+      piiMasks: [mask],
+      messages: [
+        answer(first.id, 'a1', 'Antwort an {{pii:PERSON_NAME_1}}').message,
+      ],
+    } as ServedThread;
+    const { client } = render(
+      <Conversation
+        threadId={masked.id}
+        config={chatConfig({ send: vi.fn() })}
+      />,
+      [masked],
+    );
+    await waitFor(() =>
+      expect(
+        requests.filter(({ url }) => url === '/threads/first'),
+      ).toHaveLength(1),
+    );
+
+    fireEvent.click(screen.getByTestId('pii-mask'));
+    fireEvent.click(await screen.findByTestId('confirmation-confirm'));
+
+    expect(await screen.findByTestId('pii-mask-unmasked')).toBeTruthy();
+    expect(
+      client.getQueryData<GetThreadResponseDto>(
+        getThreadsControllerFindOneQueryKey(first.id),
+      )?.piiMasks,
+    ).toEqual([{ ...mask, unmasked: true }]);
+    expect(requests.filter(({ url }) => url === '/threads/first')).toHaveLength(
+      1,
+    );
+  });
 });

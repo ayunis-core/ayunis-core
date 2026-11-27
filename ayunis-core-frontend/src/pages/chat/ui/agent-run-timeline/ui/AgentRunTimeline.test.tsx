@@ -2,7 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { AgentRunUnit } from '@ayunis/chat/timeline';
 import type { ToolCardProps } from '@ayunis/chat/tool-cards';
+import { AgentRunTimeline as SharedAgentRunTimeline } from '@ayunis/chat/timeline';
 import AgentRunTimeline from './AgentRunTimeline';
+import { chatToolCards } from '@/pages/chat/ui/agent-run-timeline/lib/tool-card-registrations';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -51,9 +53,18 @@ vi.mock(
   },
 );
 
-vi.mock('@/pages/chat/ui/ResponseStartOrb', () => ({
-  default: () => <div data-testid="response-start-orb" />,
-}));
+/** The timeline as the conversation presents it, with its response-start orb. */
+function OrbTimeline({ unit }: Readonly<{ unit: AgentRunUnit }>) {
+  return (
+    <SharedAgentRunTimeline
+      unit={unit}
+      presentation={{
+        toolCards: chatToolCards,
+        pendingIndicator: <div data-testid="response-start-orb" />,
+      }}
+    />
+  );
+}
 
 const unit: AgentRunUnit = {
   kind: 'agent-run',
@@ -328,7 +339,7 @@ describe('AgentRunTimeline', () => {
   });
 
   it('does not render the response-start orb after timeline content exists', () => {
-    render(<AgentRunTimeline unit={{ ...unit, isStreaming: true }} />);
+    render(<OrbTimeline unit={{ ...unit, isStreaming: true }} />);
 
     expect(screen.queryByTestId('response-start-orb')).toBeNull();
     expect(renderCard).toHaveBeenLastCalledWith(
@@ -339,7 +350,7 @@ describe('AgentRunTimeline', () => {
   it('renders a continuation indicator after a completed tool while streaming', () => {
     const blocksThroughRichTool = unit.blocks.slice(0, 3);
     render(
-      <AgentRunTimeline
+      <OrbTimeline
         unit={{ ...unit, blocks: blocksThroughRichTool, isStreaming: true }}
       />,
     );
@@ -379,7 +390,7 @@ describe('AgentRunTimeline', () => {
       ],
     };
 
-    render(<AgentRunTimeline unit={activeToolUnit} />);
+    render(<OrbTimeline unit={activeToolUnit} />);
 
     expect(screen.queryByTestId('response-start-orb')).toBeNull();
   });

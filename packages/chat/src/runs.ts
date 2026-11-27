@@ -14,10 +14,13 @@ export type { RunViewEvent } from './run-event-routing';
 export {
   createChatRunLifecycle,
   type ChatRunLifecycle,
+  type ChatRunLifecycleOptions,
   type RunRequestObserver,
 } from './run-lifecycle';
 export { createFrameCoalescer } from './frame-coalescer';
 export type { ThreadRunStart, StartedThreadRun } from './started-thread-run';
+export type { WaitingMessageStorage } from './deferred-thread-runs';
+export type { ThreadSubmission } from './thread-submissions';
 export {
   useChatRunLifecycle,
   type ChatRunParams,

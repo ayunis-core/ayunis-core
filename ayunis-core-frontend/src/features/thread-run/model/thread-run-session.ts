@@ -1,18 +1,15 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { getActiveRunsControllerFindActiveQueryKey } from '@ayunis/api-client/endpoints';
 import { setWaitingMessagePrincipal } from '@/shared/lib/waiting-message-storage';
-import { resetDeferredThreadRuns } from './deferred-thread-run';
-import { resetThreadSubmissions } from './pending-submissions';
 import { threadRunLifecycle } from './thread-run-lifecycle';
 
 let principal: string | undefined;
 
 export function resetThreadRunSession(queryClient: QueryClient): void {
   principal = undefined;
+  // Also drops waiting messages and their kept text, and pending submissions.
   threadRunLifecycle.reset();
-  resetDeferredThreadRuns();
   setWaitingMessagePrincipal(undefined);
-  resetThreadSubmissions();
   queryClient.removeQueries({
     queryKey: getActiveRunsControllerFindActiveQueryKey(),
     exact: true,

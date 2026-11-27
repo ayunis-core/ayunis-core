@@ -1,6 +1,9 @@
 import { test, expect } from '../../src/fixtures/test';
-import { startThread } from '../../src/flows/chat.flow';
+import { sendMessage, startThread } from '../../src/flows/chat.flow';
 import { speechMock } from '../../src/clients/mistral-speech-mock.client';
+import { stubOfficeHost } from '../../src/clients/office-host-stub';
+import { openSignedInPane } from '../../src/flows/outlook.flow';
+import { createMemberSession } from '../../src/factories/user.factory';
 
 // The speech contract server keeps one request log for the whole run.
 test.describe.configure({ mode: 'serial' });
@@ -56,4 +59,48 @@ test('reads an answer aloud while its audio streams in and replays it from the c
     timeout: 10_000,
   });
   expect(await speechMock.requests(request)).toHaveLength(2);
+});
+
+// The Outlook pane renders the same conversation and reads with its own token.
+test('reads an answer aloud in the Outlook pane', async ({
+  api,
+  browser,
+  mail,
+  org,
+  request,
+}) => {
+  const reply = `${org.defaultModel.provider}::${org.defaultModel.name}`;
+  // Without cookies, so the pane authenticates with its bearer token alone.
+  const context = await browser.newContext({
+    storageState: { cookies: [], origins: [] },
+  });
+  try {
+    const pane = await context.newPage();
+    await stubOfficeHost(pane);
+    // A member of their own, so this chat stays out of other pane tests' history.
+    const member = await createMemberSession(
+      api,
+      mail,
+      `pane-read-aloud-${Date.now()}`,
+    );
+    try {
+      await openSignedInPane(pane, member.api);
+    } finally {
+      await member.api.dispose();
+    }
+    await sendMessage(pane, 'E2E read this aloud');
+    await expect(pane.getByTestId('assistant-message').last()).toContainText(
+      reply,
+    );
+    const readAloud = pane.getByTestId('assistant-read-aloud').last();
+
+    await readAloud.click();
+
+    await expect(readAloud).toHaveAttribute('data-status', 'playing');
+    expect(await speechMock.requests(request)).toEqual([
+      expect.objectContaining({ input: reply }),
+    ]);
+  } finally {
+    await context.close();
+  }
 });
