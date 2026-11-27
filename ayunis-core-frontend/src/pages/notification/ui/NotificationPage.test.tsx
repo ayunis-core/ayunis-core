@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { CreateThreadOrigin } from '@/features/chat-initiation';
+import type { ChatStartOrigin } from '@ayunis/chat/surface';
 import type { NotificationResponseDto } from '@ayunis/api-client/schemas';
 import NotificationPage from './NotificationPage';
 
@@ -27,11 +27,13 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/widgets/markdown', () => ({
   Markdown: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
+vi.mock('@ayunis/chat/notifications', () => ({
+  NotificationTypeIcon: () => null,
+}));
 vi.mock('@/features/notifications', async () => ({
   NotificationMedia: (
     await import('@/features/notifications/ui/NotificationMedia')
   ).NotificationMedia,
-  NotificationTypeIcon: () => null,
   useMarkNotificationRead: () => ({ mutate: vi.fn() }),
 }));
 vi.mock('@/features/permissions', () => ({
@@ -42,7 +44,7 @@ vi.mock('@/features/permissions', () => ({
 }));
 vi.mock('@/widgets/chat-starter', () => ({
   ChatStarter: (props: {
-    origin?: CreateThreadOrigin;
+    origin?: ChatStartOrigin;
     workspaceId?: string;
     selectedModelId?: string;
   }) => <output data-testid="chat-starter">{JSON.stringify(props)}</output>,

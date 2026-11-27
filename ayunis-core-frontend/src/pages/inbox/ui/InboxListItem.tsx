@@ -12,8 +12,8 @@ import { cn } from '@ayunis/ui/lib/cn';
 import {
   NotificationMarkReadButton,
   NotificationMarkUnreadButton,
-  NotificationTypeIcon,
 } from '@/features/notifications';
+import { NotificationTypeIcon } from '@ayunis/chat/notifications';
 import { formatRelativeDate } from '@/shared/lib/format-relative-date';
 import {
   NotificationType,

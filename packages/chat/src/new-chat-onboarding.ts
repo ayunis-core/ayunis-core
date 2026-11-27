@@ -1,23 +1,11 @@
-import type {
-  ModelMode,
-  OnboardingStage,
-  OnboardingStageResponseDto,
-} from '@ayunis/api-client/schemas';
-
-export type ChatModel = { modelId: string } | { mode: ModelMode };
+import type { OnboardingStage } from '@ayunis/api-client/schemas';
+import type { ChatOnboardingHint } from './chat-config';
+import type { NewChatModel, NewChatSelection } from './start-composer';
 
 export interface OnboardingChat {
-  stage: OnboardingStage;
-  model: ChatModel;
-  isAnonymous: boolean;
-}
-
-export function composerChatModel(
-  resolvedModelId: string | undefined,
-  mode: ModelMode | null,
-): ChatModel | null {
-  if (!resolvedModelId) return null;
-  return mode ? { mode } : { modelId: resolvedModelId };
+  readonly stage: OnboardingStage;
+  readonly model: NewChatModel;
+  readonly isAnonymous: boolean;
 }
 
 /**
@@ -26,8 +14,8 @@ export function composerChatModel(
  * doesn't have, so it ignores the composer's choices.
  */
 export function onboardingChat(
-  { stage, modelId }: OnboardingStageResponseDto,
-  composer: { model: ChatModel | null; isAnonymous: boolean },
+  { stage, modelId }: ChatOnboardingHint,
+  composer: Pick<NewChatSelection, 'model' | 'isAnonymous'>,
 ): OnboardingChat | null {
   if (stage === 'profile') {
     return modelId ? { stage, model: { modelId }, isAnonymous: false } : null;

@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef, useState, type RefObject } from 'react';
-import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Megaphone } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
@@ -12,23 +11,23 @@ import {
 } from '@ayunis/ui/components/item';
 import { Skeleton } from '@ayunis/ui/components/skeleton';
 import { cn } from '@ayunis/ui/lib/cn';
-import {
-  NOTIFICATION_TYPE_APPEARANCE,
-  NotificationTypeIcon,
-  formatUnreadCount,
-  isKnownNotificationType,
-  useUnreadNotificationCount,
-} from '@/features/notifications';
-import { useUnreadReleaseNoteCount } from '@/features/release-notes';
 import type {
   NotificationResponseDto,
   NotificationType,
 } from '@ayunis/api-client/schemas';
-import { formatRelativeDate } from '@/shared/lib/format-relative-date';
-import { useUnreadNotifications } from '@/pages/new-chat/api/useUnreadNotifications';
-import { useViewportMaxHeight } from '@/pages/new-chat/lib/useViewportMaxHeight';
-import { UnreadReleaseNoteList } from './UnreadReleaseNoteList';
-import './unread-notifications-panel.css';
+import type { ChatEvents, ChatProductUpdates } from './chat-config';
+import { ChatLink } from './chat-link';
+import { formatRelativeDate } from './new-chat/format-relative-date';
+import { useUnreadNotifications } from './new-chat/use-unread-notifications';
+import { useViewportMaxHeight } from './new-chat/use-viewport-max-height';
+import { UnreadReleaseNoteList } from './new-chat-release-notes';
+import {
+  NOTIFICATION_TYPE_APPEARANCE,
+  isKnownNotificationType,
+} from './notifications/notification-type-appearance';
+import { NotificationTypeIcon } from './notifications/NotificationTypeIcon';
+import { formatUnreadCount } from './notifications/format-unread-count';
+import './new-chat/unread-updates-panel.css';
 
 const PRODUCT_UPDATES_TAB = 'product_updates';
 
@@ -40,32 +39,32 @@ const UNREAD_TABS: UnreadTab[] = [
   PRODUCT_UPDATES_TAB,
 ];
 
-interface UnreadNotificationsPanelProps {
-  isCollapsed: boolean;
+type UpdateLinks = Pick<ChatEvents, 'onNavigate' | 'hrefFor'>;
+
+interface UnreadUpdatesPanelProps {
+  readonly updates: ChatProductUpdates;
+  readonly links: UpdateLinks;
+  readonly isCollapsed: boolean;
 }
 
-export function UnreadNotificationsPanel({
-  isCollapsed,
-}: Readonly<UnreadNotificationsPanelProps>) {
-  const { unreadByType } = useUnreadNotificationCount();
-  const { unreadCount: unreadReleaseNotes } = useUnreadReleaseNoteCount();
-  const [openType, setOpenType] = useState<UnreadTab | null>(null);
-  const [shown, setShown] = useState<{
-    type: UnreadTab;
-    opening: number;
-  }>();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const bodyId = useId();
-  const counts = new Map<string, number>([
-    ...unreadByType.map(({ type, count }): [string, number] => [type, count]),
-    [PRODUCT_UPDATES_TAB, unreadReleaseNotes],
+function unreadCounts({ notifications, releaseNotes }: ChatProductUpdates) {
+  return new Map<string, number>([
+    ...notifications.map(({ type, count }): [string, number] => [type, count]),
+    [PRODUCT_UPDATES_TAB, releaseNotes ?? 0],
   ]);
+}
+
+/** Which tab is open, and which list its body shows while it closes. */
+function useUnreadTabs(updates: ChatProductUpdates) {
+  const [openType, setOpenType] = useState<UnreadTab | null>(null);
+  const [shown, setShown] = useState<{ type: UnreadTab; opening: number }>();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const counts = unreadCounts(updates);
   const unreadTypes = UNREAD_TABS.filter((type) => (counts.get(type) ?? 0) > 0);
   const activeType =
     openType && unreadTypes.includes(openType) ? openType : null;
   if (openType && !activeType) setOpenType(null);
   useDismiss(rootRef, activeType !== null, setOpenType);
-  if (unreadTypes.length === 0) return null;
 
   function toggle(type: UnreadTab) {
     if (activeType === type) {
@@ -75,6 +74,18 @@ export function UnreadNotificationsPanel({
     setShown((current) => ({ type, opening: (current?.opening ?? 0) + 1 }));
     setOpenType(type);
   }
+  return { rootRef, counts, unreadTypes, activeType, shown, toggle };
+}
+
+/** What is new for the user: a tab per kind with unread items, each opening its newest. */
+export function UnreadUpdatesPanel({
+  updates,
+  links,
+  isCollapsed,
+}: UnreadUpdatesPanelProps) {
+  const tabs = useUnreadTabs(updates);
+  const bodyId = useId();
+  if (tabs.unreadTypes.length === 0) return null;
 
   return (
     <div
@@ -86,26 +97,27 @@ export function UnreadNotificationsPanel({
       data-testid="new-chat-unread-notifications"
     >
       <div
-        ref={rootRef}
+        ref={tabs.rootRef}
         className="unread-panel absolute inset-x-4 -top-5 z-10"
-        data-open={activeType ? true : undefined}
+        data-open={tabs.activeType ? true : undefined}
       >
         <div className="unread-panel__bar flex flex-wrap items-center gap-1 text-xs">
-          {unreadTypes.map((type) => (
+          {tabs.unreadTypes.map((type) => (
             <UnreadTypeChip
               key={type}
               type={type}
-              count={counts.get(type) ?? 0}
-              isOpen={activeType === type}
+              count={tabs.counts.get(type) ?? 0}
+              isOpen={tabs.activeType === type}
               controls={bodyId}
-              onToggle={() => toggle(type)}
+              onToggle={() => tabs.toggle(type)}
             />
           ))}
         </div>
         <UnreadPanelBody
           id={bodyId}
-          shown={shown}
-          isOpen={activeType !== null}
+          shown={tabs.shown}
+          isOpen={tabs.activeType !== null}
+          links={links}
         />
       </div>
     </div>
@@ -134,6 +146,32 @@ function useDismiss(
   }, [rootRef, isOpen, setOpenType]);
 }
 
+function chipAppearance(type: UnreadTab) {
+  return type === PRODUCT_UPDATES_TAB
+    ? { labelClassName: '', countClassName: 'text-brand' }
+    : NOTIFICATION_TYPE_APPEARANCE[type];
+}
+
+function UnreadCount({
+  count,
+  className,
+}: Readonly<{ count: number; className: string }>) {
+  const bumps = useIncreaseCount(count);
+  return (
+    <span
+      key={bumps}
+      className={cn(
+        'unread-panel__count',
+        className,
+        bumps > 0 && 'unread-panel__count--bump',
+      )}
+      data-testid="new-chat-unread-notifications-count"
+    >
+      {formatUnreadCount(count)}
+    </span>
+  );
+}
+
 function UnreadTypeChip({
   type,
   count,
@@ -148,11 +186,7 @@ function UnreadTypeChip({
   onToggle: () => void;
 }>) {
   const { t } = useTranslation('chat');
-  const { labelClassName, countClassName } =
-    type === PRODUCT_UPDATES_TAB
-      ? { labelClassName: '', countClassName: 'text-brand' }
-      : NOTIFICATION_TYPE_APPEARANCE[type];
-  const bumps = useIncreaseCount(count);
+  const { labelClassName, countClassName } = chipAppearance(type);
 
   return (
     <Button
@@ -173,17 +207,7 @@ function UnreadTypeChip({
       <span className={labelClassName}>
         {t(`newChat.unreadNotifications.tabs.${type}`)}
       </span>
-      <span
-        key={bumps}
-        className={cn(
-          'unread-panel__count',
-          countClassName,
-          bumps > 0 && 'unread-panel__count--bump',
-        )}
-        data-testid="new-chat-unread-notifications-count"
-      >
-        {formatUnreadCount(count)}
-      </span>
+      <UnreadCount count={count} className={countClassName} />
     </Button>
   );
 }
@@ -202,10 +226,12 @@ function UnreadPanelBody({
   id,
   shown,
   isOpen,
+  links,
 }: Readonly<{
   id: string;
   shown?: { type: UnreadTab; opening: number };
   isOpen: boolean;
+  links: UpdateLinks;
 }>) {
   const { ref, maxHeight } = useViewportMaxHeight(isOpen);
 
@@ -214,10 +240,14 @@ function UnreadPanelBody({
       <div className="min-h-0 overflow-hidden">
         <div ref={ref} className="unread-panel__scroll" style={{ maxHeight }}>
           {shown?.type === PRODUCT_UPDATES_TAB ? (
-            <UnreadReleaseNoteList key={shown.opening} />
+            <UnreadReleaseNoteList key={shown.opening} links={links} />
           ) : (
             shown && (
-              <UnreadNotificationList key={shown.opening} type={shown.type} />
+              <UnreadNotificationList
+                key={shown.opening}
+                type={shown.type}
+                links={links}
+              />
             )
           )}
         </div>
@@ -228,7 +258,8 @@ function UnreadPanelBody({
 
 function UnreadNotificationList({
   type,
-}: Readonly<{ type: NotificationType }>) {
+  links,
+}: Readonly<{ type: NotificationType; links: UpdateLinks }>) {
   const { t } = useTranslation('chat');
   const { notifications, isLoading } = useUnreadNotifications(type);
 
@@ -242,12 +273,13 @@ function UnreadNotificationList({
             key={notification.id}
             notification={notification}
             index={index}
+            links={links}
           />
         ))
       )}
-      <Link
-        to="/inbox"
-        search={{ type }}
+      <ChatLink
+        to={{ kind: 'inbox', type }}
+        events={links}
         className="group flex items-center justify-center gap-1 rounded-md py-1.5 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
         data-testid="new-chat-unread-notifications-inbox-link"
       >
@@ -256,7 +288,7 @@ function UnreadNotificationList({
           className="size-3 transition-transform group-hover:translate-x-0.5"
           aria-hidden
         />
-      </Link>
+      </ChatLink>
     </div>
   );
 }
@@ -264,7 +296,12 @@ function UnreadNotificationList({
 function UnreadNotificationItem({
   notification,
   index,
-}: Readonly<{ notification: NotificationResponseDto; index: number }>) {
+  links,
+}: Readonly<{
+  notification: NotificationResponseDto;
+  index: number;
+  links: UpdateLinks;
+}>) {
   const { i18n } = useTranslation();
   const details = [
     notification.subheadline,
@@ -275,11 +312,11 @@ function UnreadNotificationItem({
 
   return (
     <Item asChild size="sm">
-      <Link
+      <ChatLink
         className="unread-panel__row"
         style={{ animationDelay: `${80 + Math.min(index, 6) * 50}ms` }}
-        to="/inbox/$notificationId"
-        params={{ notificationId: notification.id }}
+        to={{ kind: 'notification', notificationId: notification.id }}
+        events={links}
         data-testid="new-chat-unread-notification"
         data-type={notification.type}
       >
@@ -293,7 +330,7 @@ function UnreadNotificationItem({
           <ItemDescription>{details}</ItemDescription>
         </ItemContent>
         <span className="size-2 shrink-0 rounded-full bg-brand" aria-hidden />
-      </Link>
+      </ChatLink>
     </Item>
   );
 }

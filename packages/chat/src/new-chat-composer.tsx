@@ -1,62 +1,37 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
-import {
-  useModelModeDefaultsControllerGetDefaultSelection,
-  useOrgChatSettingsControllerGetChatStartDefaults,
-} from '@ayunis/api-client/endpoints';
-import type { ModelMode } from '@ayunis/api-client/schemas';
-import {
-  createMemoryChatDraftStorage,
-  useChatDraft,
-} from '@ayunis/chat/composer';
-import { resolveSelectedModel } from './model-presentation/model-modes';
-import type { ChatConfig } from './chat-config';
-import { ConfiguredComposer } from './configured-composer';
-import type {
-  ComposerFeatures,
-  ComposerModelControl,
-  ConfiguredComposerRef,
-} from './configured-composer-types';
-import { useComposerEnvironment, useComposerModels } from './composer-data';
-import { defaultComposerValue } from './new-chat-model';
-import {
-  useNewChatSources,
-  type NewChatSourceFile,
-  type NewChatSourceStatus,
-} from './use-new-chat-sources';
-import type { SendMessageInput } from './use-chat-run-lifecycle';
+import type { ChatConfig, ChatStartOrigin } from './chat-config';
+import type { ChatStartRequest } from './chat-start';
+import { useComposerEnvironment } from './composer-data';
+import { AcademyGateNotice } from './model-presentation/AcademyGateNotice';
+import type { ChatRunLifecycle } from './run-lifecycle';
+import { StartComposer, type NewChatStart } from './start-composer';
+import { useChatStart } from './use-chat-start';
 
-export type { NewChatSourceFile, NewChatSourceStatus };
-
-export type NewChatModel = { modelId: string } | { mode: ModelMode };
-
-export interface NewChatSelection {
-  readonly model: NewChatModel | null;
-  readonly isAnonymous: boolean;
-  /** False while the composer could not start a chat, e.g. while gated or loading. */
-  readonly canStart: boolean;
+export interface NewChatContext {
+  readonly workspaceId?: string;
+  readonly origin?: ChatStartOrigin;
 }
 
-export interface NewChatStart extends SendMessageInput {
-  readonly modelId?: string;
-  readonly mode?: ModelMode;
-  readonly isAnonymous: boolean;
-  readonly sources: readonly NewChatSourceFile[];
-  readonly onSourceStatus: (
-    sourceId: string,
-    status: NewChatSourceStatus,
-  ) => void;
-}
-
-export interface NewChatComposerHandle {
-  readonly setMessage: (message: string) => void;
-  readonly sendMessage: (message: string) => void;
-  readonly addFiles: (files: File[]) => void;
+/** The chat a composer's send starts, with what the surface attached. */
+export function chatStartRequest(
+  start: NewChatStart,
+  config: Pick<ChatConfig, 'knowledgeBases' | 'integrations'>,
+  context: NewChatContext,
+): ChatStartRequest {
+  return {
+    text: start.text,
+    images: start.images ?? [],
+    modelId: start.mode ? undefined : start.modelId,
+    mode: start.mode,
+    isAnonymous: start.isAnonymous,
+    workspaceId: context.workspaceId,
+    origin: context.origin,
+    skillId: start.skillId,
+    voiceInput: start.voiceInput,
+    sources: start.sources,
+    onSourceStatus: start.onSourceStatus,
+    knowledgeBases: config.knowledgeBases?.attached ?? [],
+    integrations: config.integrations?.attached ?? [],
+  };
 }
 
 export interface NewChatComposerProps {
@@ -64,192 +39,61 @@ export interface NewChatComposerProps {
     ChatConfig,
     | 'layout'
     | 'drafts'
-    | 'skills'
     | 'knowledgeBases'
     | 'integrations'
     | 'tourTargets'
+    | 'events'
   >;
-  /** Persists the unsent draft under this key; without it the draft lives only while mounted. */
-  readonly draftKey?: string;
-  /** A model id or `mode:<mode>` preferred over the user's default, e.g. from a link. */
+  /** Shares runs with the `Conversation` that opens the started chat. */
+  readonly lifecycle: ChatRunLifecycle;
+  /** Files the chat under this workspace. */
+  readonly workspaceId?: string;
+  /** Why the chat exists, e.g. a notification; a plain chat without it. */
+  readonly origin?: ChatStartOrigin;
+  /** A model id or `mode:<mode>` preferred over the user's default. */
   readonly initialModel?: string;
   readonly placeholder?: string;
-  /** A start is in flight. */
-  readonly busy: boolean;
-  readonly onStart: (start: NewChatStart, accepted: () => void) => void;
-  readonly onStop: () => void;
-  readonly onSelectionChange?: (selection: NewChatSelection) => void;
 }
 
-function useModelChoice(preferred: string | undefined) {
-  const [picked, setPicked] = useState<{
-    readonly preferred: string | undefined;
-    readonly value: string;
-  }>();
-  // A changed default (e.g. after an admin changed it) replaces an earlier pick.
-  const value =
-    picked && picked.preferred === preferred ? picked.value : preferred;
-  return {
-    value,
-    pick: (next: string) => setPicked({ preferred, value: next }),
-  };
-}
-
-function useAnonymousChoice() {
-  const startDefaults = useOrgChatSettingsControllerGetChatStartDefaults();
-  const [choice, setChoice] = useState<boolean>();
-  return {
-    isAnonymous: choice ?? startDefaults.data?.anonymousModeByDefault ?? false,
-    pending: startDefaults.isPending,
-    choose: setChoice,
-  };
-}
-
-function useNewChatModel(
-  initialModel: string | undefined,
-  isAnonymous: boolean,
-) {
-  const models = useComposerModels();
-  const defaults = useModelModeDefaultsControllerGetDefaultSelection();
-  const choice = useModelChoice(
-    initialModel ?? defaultComposerValue(defaults.data, models.models),
-  );
-  const resolved = resolveSelectedModel(
-    choice.value,
-    models.models,
-    models.resolutions,
-    isAnonymous,
-    defaults.data ?? undefined,
-  );
-  // A pick made before the default arrives would be replaced by it.
-  const awaitingDefault = initialModel === undefined && defaults.isPending;
-  const control: ComposerModelControl = {
-    models: models.models,
-    resolutions: models.resolutions,
-    value: choice.value,
-    placeholder: models.placeholder,
-    disabled: models.unavailable || awaitingDefault,
-    locked: false,
-    onChange: choice.pick,
-  };
-  return {
-    control,
-    resolved,
-    // A failed models request leaves the default model to start with.
-    pending: models.loading || awaitingDefault,
-  };
-}
-
-function useNewChatComposer(props: NewChatComposerProps) {
+/**
+ * A composer embedded in another page that starts a chat with what it was
+ * given and reports it through `events.onThreadStarted`, without settling.
+ */
+export function NewChatComposer(props: NewChatComposerProps) {
+  const { config } = props;
   const environment = useComposerEnvironment();
-  const anonymous = useAnonymousChoice();
-  const { control, resolved, pending } = useNewChatModel(
-    props.initialModel,
-    anonymous.isAnonymous,
-  );
-  const sources = useNewChatSources();
-  const ready = !pending && !anonymous.pending && !environment.academyGated;
-  const canStart = ready && Boolean(resolved.modelId);
-  const features: ComposerFeatures = {
-    model: control,
-    anonymous: {
-      isAnonymous: anonymous.isAnonymous,
-      isEnforced: resolved.isAnonymousEnforced,
-      disabled: anonymous.pending,
-      onChange: anonymous.choose,
-    },
-    sources: sources.items,
-    removeSource: sources.remove,
-    uploadFiles: environment.documents ? sources.add : undefined,
-    imageAttachments: Boolean(resolved.model?.canVision),
-    voice: environment.voice,
-    sendDisabled: !canStart,
-  };
-  return {
-    features,
-    sources,
-    modelId: resolved.modelId,
-    mode: resolved.mode,
-    isAnonymous: resolved.isAnonymousEnforced || anonymous.isAnonymous,
-    canStart,
-  };
-}
-
-function chatModel(
-  modelId: string | undefined,
-  mode: ModelMode | null,
-): NewChatModel | null {
-  if (!modelId) return null;
-  return mode ? { mode } : { modelId };
-}
-
-function useSelectionReport(
-  {
-    modelId,
-    mode,
-    isAnonymous,
-    canStart,
-  }: ReturnType<typeof useNewChatComposer>,
-  onSelectionChange: NewChatComposerProps['onSelectionChange'],
-) {
-  const report = useRef(onSelectionChange);
-  useEffect(() => {
-    report.current = onSelectionChange;
+  const chat = useChatStart({
+    lifecycle: props.lifecycle,
+    events: config.events,
+    settleMs: 0,
   });
-  useEffect(() => {
-    report.current?.({
-      model: chatModel(modelId, mode),
-      isAnonymous,
-      canStart,
-    });
-  }, [modelId, mode, isAnonymous, canStart]);
-}
-
-/** The composer of a chat that doesn't exist yet; the host starts it. */
-export const NewChatComposer = forwardRef<
-  NewChatComposerHandle,
-  NewChatComposerProps
->(function NewChatComposer(props, ref) {
-  const [memoryDrafts] = useState(createMemoryChatDraftStorage);
-  const draft = useChatDraft(
-    props.draftKey,
-    props.config.drafts ?? memoryDrafts,
-  );
-  const chat = useNewChatComposer(props);
-  const composerRef = useRef<ConfiguredComposerRef>(null);
-  useSelectionReport(chat, props.onSelectionChange);
-  useImperativeHandle(ref, () => ({
-    setMessage: draft.setMessage,
-    sendMessage: (message) => composerRef.current?.sendMessage(message),
-    addFiles: chat.sources.add,
-  }));
+  const { onNavigate } = config.events;
   return (
-    <ConfiguredComposer
-      ref={composerRef}
-      config={props.config}
-      features={chat.features}
-      threadId={props.draftKey ?? 'new-chat'}
-      draft={draft}
-      placeholder={props.placeholder}
-      isSubmitting={props.busy}
-      isStreaming={false}
-      isCheckingForRun={false}
-      onSend={(input, accepted) =>
-        props.onStart(
-          {
-            ...input,
-            ...chatModel(chat.modelId, chat.mode),
-            isAnonymous: chat.isAnonymous,
-            sources: chat.sources.files,
-            onSourceStatus: chat.sources.setStatus,
-          },
-          accepted,
-        )
-      }
-      onStop={() => {
-        props.onStop();
-        chat.sources.resetStatus();
-      }}
-    />
+    <div>
+      {environment.academyGated && (
+        <AcademyGateNotice
+          className="mb-2"
+          onOpenAcademy={
+            onNavigate ? () => onNavigate({ kind: 'academy' }) : undefined
+          }
+        />
+      )}
+      <StartComposer
+        config={config}
+        initialModel={props.initialModel}
+        placeholder={props.placeholder}
+        busy={chat.busy}
+        onStart={(start, accepted) =>
+          void chat.start(
+            chatStartRequest(start, config, {
+              workspaceId: props.workspaceId,
+              origin: props.origin,
+            }),
+            accepted,
+          )
+        }
+        onStop={chat.stop}
+      />
+    </div>
   );
-});
+}

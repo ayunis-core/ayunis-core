@@ -5,7 +5,7 @@ import type { NotificationType } from '@ayunis/api-client/schemas';
 interface NotificationTypeAppearance {
   icon: LucideIcon;
   iconClassName: string;
-  /** The type's tab label in the new chat page's unread panel. */
+  /** The type's tab label in the new chat's unread panel. */
   labelClassName: string;
   /** The unread count in that tab. */
   countClassName: string;

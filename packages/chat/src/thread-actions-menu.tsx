@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FolderOpen, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import type { GetThreadResponseDto } from '@ayunis/api-client/schemas';
@@ -17,6 +17,7 @@ import { useConfirmDialog } from './confirm-dialog';
 import { RenameThreadDialog } from './history/ThreadDialogs';
 import type { ChatRunLifecycle } from './run-lifecycle';
 import { WorkspacePickerMenuWithCreate } from './workspaces/WorkspacePickerMenuWithCreate';
+import { useMenuDialogTransition } from './workspaces/use-menu-dialog-transition';
 import { useDeleteThread, useRenameThread } from './use-thread-actions';
 
 export type HeaderThread = Pick<
@@ -29,23 +30,6 @@ interface ThreadActionsMenuProps {
   readonly lifecycle: ChatRunLifecycle;
   readonly thread: HeaderThread;
   readonly title?: string;
-}
-
-/** Opens a dialog only after the menu closed, so focus does not return to it. */
-function useMenuDialogTransition() {
-  const openDialog = useRef<(() => void) | null>(null);
-  return {
-    requestDialogOpen: (open: () => void) => {
-      openDialog.current = open;
-    },
-    handleCloseAutoFocus: (event: Event) => {
-      const open = openDialog.current;
-      if (!open) return;
-      openDialog.current = null;
-      event.preventDefault();
-      open();
-    },
-  };
 }
 
 /** Asks before deleting the chat, in the confirmation the chat uses everywhere. */

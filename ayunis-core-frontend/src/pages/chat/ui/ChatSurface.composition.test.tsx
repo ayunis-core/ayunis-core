@@ -1603,7 +1603,13 @@ describe('package-owned conversation surface', () => {
             newChat: { start },
             favorites: { isFavorite: () => false, toggle: vi.fn() },
             artifactPanel: { open: false, toggle: toggleArtifacts },
-            workspaces: { items: [], moveThread: vi.fn(), create: vi.fn() },
+            workspaces: {
+              items: [],
+              selected: null,
+              select: vi.fn(),
+              moveThread: vi.fn(),
+              create: vi.fn(),
+            },
             events: {
               onNewChat: vi.fn(),
               onNavigate,

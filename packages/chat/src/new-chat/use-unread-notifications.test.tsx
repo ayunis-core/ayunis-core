@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NotificationType } from '@ayunis/api-client/schemas';
-import { useUnreadNotifications } from './useUnreadNotifications';
+import { useUnreadNotifications } from './use-unread-notifications';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
@@ -33,8 +33,10 @@ beforeEach(() => {
   });
   unreadRoutineHeadlines = ['Neue Verordnung'];
   request.mockImplementation(
-    async ({ url, params }: { url: string; params?: { type?: string } }) => {
-      if (url !== '/notifications') return { count: 0, byType: [] };
+    ({ url, params }: { url: string; params?: { type?: string } }) => {
+      if (url !== '/notifications') {
+        return Promise.resolve({ count: 0, byType: [] });
+      }
       const data =
         params?.type === 'routine'
           ? unreadRoutineHeadlines.map((headline, i) => ({
@@ -43,7 +45,7 @@ beforeEach(() => {
               headline,
             }))
           : [];
-      return { data, pagination: { total: data.length } };
+      return Promise.resolve({ data, pagination: { total: data.length } });
     },
   );
 });

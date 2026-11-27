@@ -9,6 +9,8 @@ export const WEB_CHAT_TOUR_TARGETS = {
   send: TOUR_TARGET.sendMessage,
   model: TOUR_TARGET.modelSelector,
   anonymous: TOUR_TARGET.anonymousMode,
+  workspace: TOUR_TARGET.selectWorkspaceInChat,
+  pinnedSkills: TOUR_TARGET.pinnedSkills,
 } satisfies ChatConfig['tourTargets'];
 
 export const WEB_CHAT_DRAFTS = { read: readChatDraft, write: writeChatDraft };

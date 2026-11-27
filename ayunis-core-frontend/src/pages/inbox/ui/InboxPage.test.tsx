@@ -33,8 +33,10 @@ vi.mock('@/widgets/content-area-header/ui/ContentAreaHeader', () => ({
     </header>
   ),
 }));
-vi.mock('@/features/notifications', () => ({
+vi.mock('@ayunis/chat/notifications', () => ({
   NotificationTypeIcon: () => null,
+}));
+vi.mock('@/features/notifications', () => ({
   useUnreadNotificationCount: () => ({ unreadCount: mocks.unreadCount }),
 }));
 vi.mock('@/pages/inbox/api/useNotifications', () => ({

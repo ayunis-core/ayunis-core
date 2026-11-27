@@ -1,52 +1,43 @@
-import { useRef, useState, type ReactNode } from 'react';
-import {
-  NewChatComposer,
-  type ChatConfig,
-  type NewChatComposerHandle,
-  type NewChatStart,
-} from '@ayunis/chat/surface';
-import type { useStartPaneThread } from '@/outlook/lib/use-start-pane-thread';
-import { PaneAcademyNotice } from '@/outlook/ui/PaneAcademyNotice';
-import { PaneNewChatLayout } from '@/outlook/ui/PaneNewChatLayout';
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { NewChat, type ChatViewConfig } from '@ayunis/chat/surface';
+import type { ChatRunLifecycle } from '@ayunis/chat/runs';
+import { useEmailGreeting } from '@/outlook/lib/use-email-greeting';
 
 type PaneNewChatProps = Readonly<{
   draftKey: string;
   header: ReactNode;
-  config: Pick<ChatConfig, 'layout' | 'drafts'>;
-  startAttempt: ReturnType<typeof useStartPaneThread>;
-  isAcademyGated: boolean;
+  config: ChatViewConfig;
+  lifecycle: ChatRunLifecycle;
 }>;
 
-export function PaneNewChat(props: PaneNewChatProps) {
-  const { draftKey, startAttempt } = props;
-  const composerRef = useRef<NewChatComposerHandle>(null);
-  const [canStart, setCanStart] = useState(false);
-  function start(input: NewChatStart, accepted: () => void) {
-    void startAttempt.start(
-      { ...input, files: input.sources.map(({ file }) => file) },
-      accepted,
-    );
-  }
+export function PaneNewChat({
+  draftKey,
+  header,
+  config,
+  lifecycle,
+}: PaneNewChatProps) {
+  const { t } = useTranslation('chat');
+  const greeting = useEmailGreeting();
+  const starterPrompts = [
+    t('newChat.embedded.prepareReply'),
+    t('newChat.embedded.summarizeEmail'),
+  ].map((prompt) => ({ label: prompt, prompt }));
+
   return (
-    <PaneNewChatLayout
-      header={props.header}
-      busy={startAttempt.busy}
-      waiting={startAttempt.busy || !canStart}
-      onStarter={(text) => composerRef.current?.sendMessage(text)}
-      composer={
-        <>
-          {props.isAcademyGated && <PaneAcademyNotice />}
-          <NewChatComposer
-            ref={composerRef}
-            config={props.config}
-            draftKey={draftKey}
-            busy={startAttempt.busy}
-            onStart={start}
-            onStop={() => startAttempt.stop()}
-            onSelectionChange={(selection) => setCanStart(selection.canStart)}
-          />
-        </>
-      }
-    />
+    <main
+      className="absolute inset-0 isolate flex flex-col overflow-hidden"
+      data-testid="outlook-new-chat"
+    >
+      <div className="sticky top-0 z-10 mb-1.5 w-full shrink-0 bg-background px-3 pt-2">
+        {header}
+      </div>
+      <NewChat
+        config={config}
+        content={{ greeting: { title: greeting }, starterPrompts }}
+        lifecycle={lifecycle}
+        draftKey={draftKey}
+      />
+    </main>
   );
 }

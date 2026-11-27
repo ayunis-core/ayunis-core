@@ -6,9 +6,9 @@ import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
 import { Markdown } from '@/widgets/markdown';
 import { ChatStarter } from '@/widgets/chat-starter';
+import { NotificationTypeIcon } from '@ayunis/chat/notifications';
 import {
   NotificationMedia,
-  NotificationTypeIcon,
   useMarkNotificationRead,
 } from '@/features/notifications';
 import { useMyPermissions } from '@/features/permissions';

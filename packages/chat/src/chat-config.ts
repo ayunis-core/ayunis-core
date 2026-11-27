@@ -1,5 +1,8 @@
 import type {
+  CreateThreadDto,
   GetThreadResponseDto,
+  NotificationType,
+  OnboardingStage,
   RunErrorResponseDto,
 } from '@ayunis/api-client/schemas';
 import type { ChatDraftStorage } from '@ayunis/chat/composer';
@@ -13,7 +16,14 @@ import type { RunRequestObserver } from './run-lifecycle';
 export type ChatLayout = 'page' | 'narrow';
 
 export type ChatTourTarget =
-  'composer' | 'upload' | 'voice' | 'send' | 'model' | 'anonymous';
+  | 'composer'
+  | 'upload'
+  | 'voice'
+  | 'send'
+  | 'model'
+  | 'anonymous'
+  | 'workspace'
+  | 'pinnedSkills';
 
 /** A place outside the chat; the host resolves it in `events.onNavigate`. */
 export type ChatNavigationTarget =
@@ -21,6 +31,9 @@ export type ChatNavigationTarget =
   | { readonly kind: 'releaseNote'; readonly releaseNoteId: string }
   | { readonly kind: 'notification'; readonly notificationId: string }
   | { readonly kind: 'recording'; readonly recordingId: string }
+  /** The inbox, filtered to one notification type. */
+  | { readonly kind: 'inbox'; readonly type: NotificationType }
+  | { readonly kind: 'releaseNotes' }
   /** A host location of the host's own trail. */
   | { readonly kind: 'path'; readonly path: string };
 
@@ -44,9 +57,25 @@ export interface ChatSelectedSkill {
   readonly name: string;
 }
 
+export interface ChatPinnedSkill extends ChatSelectedSkill {
+  /** Absent for a personal or shared skill. */
+  readonly workspaceId?: string;
+}
+
+export interface ChatPinnedSkills {
+  readonly items: readonly ChatPinnedSkill[];
+  /** Whether the selected workspace's pins have loaded. */
+  readonly status: ChatMenuStatus;
+  /** Where pinning skills is explained. */
+  readonly helpUrl: string;
+  readonly select: (skill: ChatPinnedSkill) => void;
+}
+
 export interface ChatSkills {
   readonly selected?: ChatSelectedSkill;
   readonly clear: () => void;
+  /** The new chat's quick picks. */
+  readonly pinned?: ChatPinnedSkills;
 }
 
 export interface ChatResourceSummary {
@@ -85,10 +114,16 @@ export interface ChatIntegrations {
 
 export interface ChatWorkspaces {
   readonly items: readonly ChatWorkspace[];
+  /** The workspace a new chat is filed under; `null` for none. */
+  readonly selected: string | null;
+  readonly select: (workspaceId: string | null) => void;
   /** `null` removes the chat from its workspace. */
   readonly moveThread: (threadId: string, workspaceId: string | null) => void;
-  /** Opens the host's workspace creation, which files the chat there. */
-  readonly create: (threadId: string) => void;
+  /**
+   * Opens the host's workspace creation. It files the chat there, or, without
+   * a chat, selects the created workspace for the new chat.
+   */
+  readonly create: (threadId?: string) => void;
 }
 
 export interface ChatFavorites {
@@ -118,8 +153,51 @@ export interface ChatNewChat {
   readonly start: () => void;
 }
 
+export interface ChatUnreadNotifications {
+  readonly type: NotificationType;
+  readonly count: number;
+}
+
+/** What is new for the user, shown under the new chat's composer. */
+export interface ChatProductUpdates {
+  /** A type without unread notifications shows no tab. */
+  readonly notifications: readonly ChatUnreadNotifications[];
+  /** Unread product updates; without it there is no product-updates tab. */
+  readonly releaseNotes?: number;
+}
+
+export interface ChatOnboardingHint {
+  readonly stage: OnboardingStage;
+  /** The model a profile chat runs on; without it the stage offers no chat. */
+  readonly modelId: string | null;
+}
+
+export interface ChatOnboarding {
+  /** `null` while the user has no stage to complete. */
+  readonly hint: ChatOnboardingHint | null;
+}
+
+export type ChatStartOrigin = NonNullable<CreateThreadDto['origin']>;
+
+/** A chat the new chat started; its first message is on its way. */
+export interface ChatStarted {
+  readonly thread: GetThreadResponseDto;
+  readonly origin?: ChatStartOrigin;
+  readonly skillId?: string;
+  readonly sources: readonly { readonly name: string }[];
+  readonly knowledgeBases: readonly ChatResourceSummary[];
+  readonly integrations: readonly ChatResourceSummary[];
+  /**
+   * Resolves once the new chat's settle animation has played: `true` while
+   * the start still stands, `false` once it was stopped.
+   */
+  readonly settled: Promise<boolean>;
+}
+
 export interface ChatEvents {
   readonly onNewChat: () => void;
+  /** A new chat was created and its first message handed off; the host opens it. */
+  readonly onThreadStarted?: (started: ChatStarted) => void;
   /** Without it, links that leave the chat (academy, origin, recordings) are not shown. */
   readonly onNavigate?: (target: ChatNavigationTarget) => void;
   /** The address of a target, so its link can also open in a new tab. */
@@ -159,6 +237,8 @@ export interface ChatConfig<Context = unknown, Outcome = unknown> {
   readonly favorites?: ChatFavorites;
   readonly artifactPanel?: ChatArtifactPanel;
   readonly contextHint?: ChatContextHint;
+  readonly productUpdates?: ChatProductUpdates;
+  readonly onboarding?: ChatOnboarding;
   /** The conversation header's breadcrumbs before the chat's title. */
   readonly trail?: (thread: ChatTrailThread) => readonly ChatTrailItem[];
   /** Offers starting a new chat from the conversation header. */

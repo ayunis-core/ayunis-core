@@ -85,9 +85,11 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 
 function RouteComponent() {
   const { modelId, prompt, attachmentUrl, workspaceId } = Route.useSearch();
+  const { user } = Route.useRouteContext();
   return (
     <NewChatPage
       key={workspaceId ?? 'no-workspace'}
+      sessionKey={JSON.stringify([user.id, user.orgId])}
       initialModel={modelId}
       initialPrompt={prompt}
       initialAttachmentUrl={attachmentUrl}

@@ -19,6 +19,7 @@
     "./surface.css": "./src/content-scroll.css",
     "./upload-policy": "./src/composer/document-upload-policy.ts",
     "./new-chat": "./src/new-chat/index.ts",
+    "./notifications": "./src/notifications/index.ts",
     "./attachments": "./src/attachments/index.ts",
     "./source-errors": "./src/source-processing-error.ts",
     "./workspaces": "./src/workspaces/index.ts"
@@ -33,6 +34,7 @@
     "@ayunis/api-client": "workspace:*",
     "@ayunis/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
+    "date-fns": "^4.4.0",
     "lucide-react": "catalog:",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.2",

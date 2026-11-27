@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useUnreadReleaseNotes } from './useUnreadReleaseNotes';
+import { useUnreadReleaseNotes } from './use-unread-release-notes';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
 
@@ -35,9 +35,11 @@ beforeEach(() => {
     { headline: 'Routinen sind da', unread: false },
     { headline: 'Neue Modelle', unread: true },
   ];
-  request.mockImplementation(async ({ url }: { url: string }) => {
-    if (url !== '/release-notes') return { count: 0 };
-    return releaseNotes.map((note, i) => ({ id: `note-${i}`, ...note }));
+  request.mockImplementation(({ url }: { url: string }) => {
+    if (url !== '/release-notes') return Promise.resolve({ count: 0 });
+    return Promise.resolve(
+      releaseNotes.map((note, i) => ({ id: `note-${i}`, ...note })),
+    );
   });
 });
 

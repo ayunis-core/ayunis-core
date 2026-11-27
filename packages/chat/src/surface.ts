@@ -16,13 +16,22 @@ export type {
   ChatMenuStatus,
   ChatNavigationTarget,
   ChatNewChat,
+  ChatOnboarding,
+  ChatOnboardingHint,
+  ChatPinnedSkill,
+  ChatPinnedSkills,
+  ChatProductUpdates,
   ChatResourceSummary,
   ChatSelectedSkill,
   ChatSkills,
+  ChatStarted,
+  ChatStartOrigin,
   ChatThreadState,
   ChatTourTarget,
   ChatTrailItem,
   ChatTrailThread,
+  ChatUnreadNotifications,
+  ChatViewConfig,
   ChatWorkspaces,
 } from './chat-config';
 export {
@@ -38,12 +47,13 @@ export type {
   ConversationProps,
 } from './chat-conversation-config';
 export {
+  NewChat,
+  type NewChatContent,
+  type NewChatPrefill,
+  type NewChatProps,
+} from './new-chat';
+export {
   NewChatComposer,
-  type NewChatComposerHandle,
   type NewChatComposerProps,
-  type NewChatModel,
-  type NewChatSelection,
-  type NewChatSourceFile,
-  type NewChatSourceStatus,
-  type NewChatStart,
 } from './new-chat-composer';
+export { stopChatStart } from './use-chat-start';

@@ -46,6 +46,7 @@ export function webChatTrail(
 
 /** Workspaces, pinning and breadcrumbs: the Web data the conversation shows. */
 export function useWebConversationData(
+  thread: ChatTrailThread,
   onCreateWorkspace: (threadId: string) => void,
 ) {
   const { t } = useTranslation('chat');
@@ -60,11 +61,14 @@ export function useWebConversationData(
   };
   const trail = (thread: ChatTrailThread) =>
     webChatTrail(thread, workspaces, labels);
+  const moveThread = (threadId: string, workspaceId: string | null) =>
+    assignToWorkspace({ threadId, workspaceId });
   const workspaceData: ChatWorkspaces = {
     items: workspaces,
-    moveThread: (threadId, workspaceId) =>
-      assignToWorkspace({ threadId, workspaceId }),
-    create: onCreateWorkspace,
+    selected: thread.workspaceId ?? null,
+    select: (workspaceId) => moveThread(thread.id, workspaceId),
+    moveThread,
+    create: (threadId = thread.id) => onCreateWorkspace(threadId),
   };
   const favoriteData: ChatFavorites = {
     isFavorite: (threadId) => isFavorite(favorites, threadId, 'thread'),
