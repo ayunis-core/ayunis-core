@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.88.0](https://github.com/ayunis-core/ayunis-core/compare/v2.87.0...v2.88.0) (2026-11-27)
+
+
+### Features
+
+* **advent-calendar:** add advent calendar page and sidebar entry (AYC-2155) ([#2591](https://github.com/ayunis-core/ayunis-core/issues/2591)) ([90009f7](https://github.com/ayunis-core/ayunis-core/commit/90009f7f801e365f5e60311c969404ed46bfe55a))
+
 ## [2.87.0](https://github.com/ayunis-core/ayunis-core/compare/v2.86.0...v2.87.0) (2026-11-27)
 
 
