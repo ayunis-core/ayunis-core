@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
@@ -17,7 +19,19 @@
     "vitest": "^4.1.11",
     "@testing-library/react": "^16.3.3",
     "@types/office-js": "^1.0.616",
-    "@types/node": "^24.12.2"
+    "@types/node": "^24.12.2",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.5",
+    "eslint-plugin-sonarjs": "^4.2.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.68.0"
   },
   "dependencies": {
     "@ayunis/api-client": "workspace:*",

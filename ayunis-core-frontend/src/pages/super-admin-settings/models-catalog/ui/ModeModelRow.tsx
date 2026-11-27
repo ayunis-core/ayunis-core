@@ -13,7 +13,7 @@ import {
   ItemTitle,
 } from '@ayunis/ui/components/item';
 import type { LanguageModelResponseDto } from '@ayunis/api-client';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
+import { ProviderFlag } from '@ayunis/chat/model-presentation';
 
 interface ModeModelRowProps {
   model: LanguageModelResponseDto;

@@ -9,11 +9,11 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as ComposerExports from '@ayunis/chat/composer';
 import { showError } from '@/shared/lib/toast';
+import ChatInput, { type ChatInputRef } from './ChatInput';
 import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_TOTAL_IMAGE_SIZE_BYTES,
-} from '@/widgets/chat-input/model/image-upload-policy';
-import ChatInput, { type ChatInputRef } from './ChatInput';
+} from '@ayunis/chat/composer';
 
 const voiceFlag = vi.hoisted(() => ({ enabled: true }));
 const voiceRecorder = vi.hoisted(() => ({

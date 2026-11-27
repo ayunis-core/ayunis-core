@@ -60,7 +60,7 @@ it('keeps documents disabled while resolved image support remains available', as
     />,
   );
 
-  const picker = screen.getByTestId('chat-attach-files') as HTMLInputElement;
+  const picker = screen.getByTestId<HTMLInputElement>('chat-attach-files');
   expect(picker.disabled).toBe(false);
   expect(picker.accept).toBe('image/*');
 

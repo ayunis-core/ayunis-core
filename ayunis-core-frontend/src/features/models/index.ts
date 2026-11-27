@@ -10,4 +10,3 @@ export {
   isImageGenerationModel,
 } from './lib/model-type-guards';
 export type { CatalogModel } from './lib/model-type-guards';
-export { getHostingPriority } from './lib/model-sorting';

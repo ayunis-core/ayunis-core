@@ -16,6 +16,25 @@ function newChatView(itemKey: string | null = null, revision = 0) {
   return { kind: 'new' as const, draftKey: newChatDraftKey(itemKey), revision };
 }
 
+function subscribe<T>(listeners: Set<T>, listener: T): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+// An ItemChanged lookup can leave the old composer visible briefly.
+function isStaleComposer(draftKey: string): boolean {
+  const itemKey = currentOutlookItemKey();
+  return Boolean(
+    itemKey &&
+    itemKey !== 'read:' &&
+    isReadItemKey(itemKey) &&
+    draftKey !== newChatDraftKey(null) &&
+    draftKey !== newChatDraftKey(itemKey),
+  );
+}
+
 function createNavigation(
   setView: (view: PaneView) => void,
   drafts: ChatDraftStorage,
@@ -36,33 +55,14 @@ function createNavigation(
     startNewChat(itemKey) {
       select(newChatView(itemKey));
     },
-    onThreadOpening(listener) {
-      opening.add(listener);
-      return () => {
-        opening.delete(listener);
-      };
-    },
-    onThreadOpened(listener) {
-      opened.add(listener);
-      return () => {
-        opened.delete(listener);
-      };
-    },
+    onThreadOpening: (listener) => subscribe(opening, listener),
+    onThreadOpened: (listener) => subscribe(opened, listener),
   };
   return {
     ...navigation,
-    openPreparedThread(draftKey: string, threadId: string) {
+    openPreparedThread: (draftKey: string, threadId: string) => {
       if (current.kind !== 'new' || current.draftKey !== draftKey) return;
-      const itemKey = currentOutlookItemKey();
-      // An ItemChanged lookup can leave the old composer visible briefly.
-      if (
-        itemKey &&
-        itemKey !== 'read:' &&
-        isReadItemKey(itemKey) &&
-        draftKey !== newChatDraftKey(null) &&
-        draftKey !== newChatDraftKey(itemKey)
-      )
-        return;
+      if (isStaleComposer(draftKey)) return;
       navigation.openThread(threadId);
     },
     newChat(itemKey: string | null) {
@@ -71,7 +71,7 @@ function createNavigation(
       select(view);
     },
     showHistory: () => select({ kind: 'history' }),
-    showHistoryAfterDelete(threadId: string) {
+    showHistoryAfterDelete: (threadId: string) => {
       if (current.kind === 'thread' && current.threadId === threadId) {
         select({ kind: 'history' });
       }

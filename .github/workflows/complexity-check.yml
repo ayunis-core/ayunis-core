@@ -6,6 +6,8 @@ on:
       - 'ayunis-core-backend/**/*.ts'
       - 'packages/**/*.ts'
       - 'packages/**/*.tsx'
+      - 'apps/**/*.ts'
+      - 'apps/**/*.tsx'
       - '.github/actions/setup-node-pnpm/action.yml'
 
 permissions:
@@ -35,10 +37,12 @@ jobs:
             ayunis-core-backend/**/*.ts
             packages/**/*.ts
             packages/**/*.tsx
+            apps/**/*.ts
+            apps/**/*.tsx
 
-      # AST-accurate complexity gate (replaces the old lizard step). Mirrors the
-      # changed-files scope lizard used (backend + workspace packages, frontend
-      # excluded), but uses ESLint so it understands TS syntax and segments
+      # AST-accurate complexity gate (replaces the old lizard step). Covers the
+      # changed backend, workspace-package and app files (the web frontend is
+      # excluded), and uses ESLint so it understands TS syntax and segments
       # functions correctly. The dedicated config enables only `complexity`
       # (<=10) and `max-lines-per-function` (<=50) as errors — the same
       # thresholds as eslint.config.mjs — and applies the same exclusion set via

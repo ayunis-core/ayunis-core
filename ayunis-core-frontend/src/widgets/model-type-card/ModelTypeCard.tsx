@@ -34,10 +34,12 @@ import {
 import { CircleHelp } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { cn } from '@ayunis/ui/lib/cn';
-import { getHostingPriority } from '@/shared/lib/model-provider-metadata';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
-import { ModelInfoCard } from '@/widgets/model-select-options';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
+import {
+  getHostingPriority,
+  ProviderFlag,
+  ModelInfoCard,
+} from '@ayunis/chat/model-presentation';
 
 export interface ModelActions {
   readonly deletePermittedModel: (permittedModelId: string) => void;

@@ -12,10 +12,14 @@ import {
 } from '@ayunis/ui/components/item';
 import { cn } from '@ayunis/ui/lib/cn';
 import { PiiText } from '@ayunis/chat/markdown';
-import type { OutlookToolName } from '@/features/outlook-tools';
+import type {
+  OutlookToolCall,
+  OutlookToolName,
+} from '@/features/outlook-tools';
 import type { ToolUseMessageContentResponseDto as ToolUseMessageContent } from '@ayunis/api-client/schemas';
 import {
   useOutlookToolBridgeContext,
+  type OutlookToolBridge,
   type OutlookToolState,
 } from '@/outlook/model/outlook-tool-bridge';
 
@@ -33,19 +37,132 @@ function statusKey(state: OutlookToolState | undefined): string | null {
   }
 }
 
+function draftCall(content: ToolUseMessageContent): OutlookToolCall {
+  return {
+    id: content.id,
+    name: content.name as OutlookToolName,
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- params may be undefined while the call streams
+    params: content.params ?? {},
+  };
+}
+
+function DraftBody({
+  body,
+  status,
+  isStreaming,
+}: Readonly<{ body: string; status: string | null; isStreaming: boolean }>) {
+  const { t } = useTranslation('chat');
+  return (
+    <ItemContent className="min-w-0">
+      <p
+        className={cn(
+          'whitespace-pre-wrap break-words text-sm',
+          isStreaming && 'animate-pulse',
+        )}
+      >
+        <PiiText>{body}</PiiText>
+      </p>
+      {status && (
+        <ItemDescription>
+          {t(`chat.outlookDraft.status.${status}`)}
+        </ItemDescription>
+      )}
+    </ItemContent>
+  );
+}
+
+interface DraftActionProps {
+  readonly bridge: OutlookToolBridge;
+  readonly call: OutlookToolCall;
+  readonly running: boolean;
+}
+
+function DraftReplyActions({ bridge, call, running }: DraftActionProps) {
+  const { t } = useTranslation('chat');
+  return (
+    <ItemFooter>
+      <ItemActions>
+        <Button
+          size="sm"
+          disabled={running}
+          onClick={() => bridge.openReply(call, 'all')}
+          data-testid="outlook-draft-reply-all"
+        >
+          {t('chat.outlookDraft.replyAll')}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={running}
+          onClick={() => bridge.openReply(call, 'sender')}
+          data-testid="outlook-draft-reply"
+        >
+          {t('chat.outlookDraft.reply')}
+        </Button>
+      </ItemActions>
+    </ItemFooter>
+  );
+}
+
+function DraftInsertAction({
+  bridge,
+  call,
+  running,
+  isStreaming,
+}: DraftActionProps & { readonly isStreaming: boolean }) {
+  const { t } = useTranslation('chat');
+  return (
+    <ItemFooter>
+      <Button
+        size="sm"
+        disabled={isStreaming || running}
+        onClick={() => bridge.insertDraft(call)}
+        data-testid="outlook-draft-insert"
+      >
+        {t('chat.outlookDraft.insert')}
+      </Button>
+    </ItemFooter>
+  );
+}
+
+function DraftActions({
+  bridge,
+  call,
+  state,
+  isStreaming,
+}: Readonly<{
+  bridge: OutlookToolBridge;
+  call: OutlookToolCall;
+  state: OutlookToolState | undefined;
+  isStreaming: boolean;
+}>) {
+  const action = bridge.draftAction(call);
+  const running = state?.status === 'running';
+  if (action === 'reply' && !isStreaming) {
+    return <DraftReplyActions bridge={bridge} call={call} running={running} />;
+  }
+  if (action === 'insert' && state?.status !== 'done') {
+    return (
+      <DraftInsertAction
+        bridge={bridge}
+        call={call}
+        running={running}
+        isStreaming={isStreaming}
+      />
+    );
+  }
+  return null;
+}
+
 export default function OutlookDraftWidget({
   content,
   isStreaming = false,
 }: Readonly<{ content: ToolUseMessageContent; isStreaming?: boolean }>) {
-  const { t } = useTranslation('chat');
   const bridge = useOutlookToolBridgeContext();
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- params may be undefined while the call streams
-  const params = (content.params ?? {}) as Record<string, unknown>;
-  const body = typeof params.body === 'string' ? params.body : '';
+  const call = draftCall(content);
+  const body = typeof call.params.body === 'string' ? call.params.body : '';
   const state = bridge?.stateFor(content.id);
   const status = statusKey(state);
-  const call = { id: content.id, name: content.name as OutlookToolName };
-  const action = bridge?.draftAction(call);
 
   return (
     <Item
@@ -58,55 +175,14 @@ export default function OutlookDraftWidget({
       <ItemMedia variant="icon">
         <Mail />
       </ItemMedia>
-      <ItemContent className="min-w-0">
-        <p
-          className={cn(
-            'whitespace-pre-wrap break-words text-sm',
-            isStreaming && 'animate-pulse',
-          )}
-        >
-          <PiiText>{body}</PiiText>
-        </p>
-        {status && (
-          <ItemDescription>
-            {t(`chat.outlookDraft.status.${status}`)}
-          </ItemDescription>
-        )}
-      </ItemContent>
-      {action === 'reply' && !isStreaming && (
-        <ItemFooter>
-          <ItemActions>
-            <Button
-              size="sm"
-              disabled={state?.status === 'running'}
-              onClick={() => bridge?.openReply({ ...call, params }, 'all')}
-              data-testid="outlook-draft-reply-all"
-            >
-              {t('chat.outlookDraft.replyAll')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={state?.status === 'running'}
-              onClick={() => bridge?.openReply({ ...call, params }, 'sender')}
-              data-testid="outlook-draft-reply"
-            >
-              {t('chat.outlookDraft.reply')}
-            </Button>
-          </ItemActions>
-        </ItemFooter>
-      )}
-      {action === 'insert' && state?.status !== 'done' && (
-        <ItemFooter>
-          <Button
-            size="sm"
-            disabled={isStreaming || state?.status === 'running'}
-            onClick={() => bridge?.insertDraft({ ...call, params })}
-            data-testid="outlook-draft-insert"
-          >
-            {t('chat.outlookDraft.insert')}
-          </Button>
-        </ItemFooter>
+      <DraftBody body={body} status={status} isStreaming={isStreaming} />
+      {bridge && (
+        <DraftActions
+          bridge={bridge}
+          call={call}
+          state={state}
+          isStreaming={isStreaming}
+        />
       )}
     </Item>
   );

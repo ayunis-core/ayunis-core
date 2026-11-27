@@ -1,7 +1,0 @@
-export {
-  MAX_IMAGES,
-  MAX_IMAGE_SIZE_BYTES,
-  MAX_IMAGE_SIZE_MIB,
-  MAX_TOTAL_IMAGE_SIZE_BYTES,
-  MAX_TOTAL_IMAGE_SIZE_MIB,
-} from '@ayunis/chat/composer';

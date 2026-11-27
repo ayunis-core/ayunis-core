@@ -18,16 +18,18 @@ import { useMemo } from 'react';
 import TooltipIf from '@/widgets/tooltip-if/ui/TooltipIf';
 import {
   ModelSelectOptions,
-  getModeFromValue,
-  getModeValue,
-  type ModelMode,
   type ModelOption,
 } from '@/widgets/model-select-options';
-import { ProviderFlag } from '@/shared/ui/provider-flag';
 import {
   modeOptionsForLevel,
   unavailableModesHint,
 } from '@/widgets/org-default-model-card/lib/mode-options';
+import {
+  getModeFromValue,
+  getModeValue,
+  type ModelMode,
+  ProviderFlag,
+} from '@ayunis/chat/model-presentation';
 
 interface OrgDefaultModelCardWidgetProps {
   models: ModelWithConfigResponseDto[];

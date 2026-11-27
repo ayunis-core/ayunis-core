@@ -1,8 +1,5 @@
-import {
-  MODEL_MODES,
-  type ModeOption,
-  type ModelMode,
-} from '@/widgets/model-select-options';
+import type { ModeOption } from '@/widgets/model-select-options';
+import { MODEL_MODES, type ModelMode } from '@ayunis/chat/model-presentation';
 
 /**
  * Every mode is offered as a level's default; those that do not resolve there

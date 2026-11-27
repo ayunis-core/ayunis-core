@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as ModelPresentation from '@ayunis/chat/model-presentation';
 import type { ModelOption } from './ModelSelectOptions';
 import ModelSelectOptions from './ModelSelectOptions';
 
@@ -56,12 +57,12 @@ vi.mock('@ayunis/ui/components/select', () => ({
   SelectSeparator: () => <hr />,
 }));
 
-vi.mock('./ModelProviderFaultIndicator', () => ({
-  default: () => <span data-testid="model-provider-fault-indicator" />,
-}));
-
-vi.mock('./ModelModeInfoCard', () => ({
-  default: ({ mode }: { mode: string }) => (
+vi.mock('@ayunis/chat/model-presentation', async (importOriginal) => ({
+  ...(await importOriginal<typeof ModelPresentation>()),
+  ModelProviderFaultIndicator: () => (
+    <span data-testid="model-provider-fault-indicator" />
+  ),
+  ModelModeInfoCard: ({ mode }: { mode: string }) => (
     <span data-testid={`mode-info-${mode}`} />
   ),
 }));

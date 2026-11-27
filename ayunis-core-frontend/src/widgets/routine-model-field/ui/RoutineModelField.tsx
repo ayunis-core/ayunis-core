@@ -22,13 +22,15 @@ import {
   type RoutineFormFields,
 } from '@/features/routines';
 import {
-  MODEL_MODES,
   ModelSelectOptions,
+  type ModeOption,
+} from '@/widgets/model-select-options';
+import {
+  MODEL_MODES,
   getModeFromValue,
   getModeValue,
   resolveModeModel,
-  type ModeOption,
-} from '@/widgets/model-select-options';
+} from '@ayunis/chat/model-presentation';
 
 /** The routine's model: the user's default, a mode, or a permitted model. */
 export function RoutineModelField({

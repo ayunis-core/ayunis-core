@@ -3,7 +3,7 @@ import {
   getModeValue,
   resolveModeModel,
   resolveSelectedModel,
-} from './model-modes';
+} from '@ayunis/chat/model-presentation';
 
 const balanced = { id: 'balanced' };
 const strong = { id: 'strong' };

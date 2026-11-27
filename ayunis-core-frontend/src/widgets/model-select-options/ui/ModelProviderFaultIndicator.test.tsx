@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import ModelProviderFaultIndicator from './ModelProviderFaultIndicator';
+import { ModelProviderFaultIndicator } from '@ayunis/chat/model-presentation';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),

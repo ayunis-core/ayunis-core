@@ -18,14 +18,16 @@ import { useUserDefaultModel } from '@/pages/settings/chat-settings/api/useUserD
 import { useModelModes } from '@/features/useModelModes';
 import { useModelModeDefault } from '@/features/model-mode-defaults';
 import {
-  MODEL_MODES,
   ModelSelectOptions,
-  getModeFromValue,
-  getModeValue,
-  resolveModeModel,
   type ModeOption,
 } from '@/widgets/model-select-options';
 import { SettingsFieldRow } from '@/pages/settings/settings-layout';
+import {
+  MODEL_MODES,
+  getModeFromValue,
+  getModeValue,
+  resolveModeModel,
+} from '@ayunis/chat/model-presentation';
 
 export function ChatSettingsCard() {
   const { t } = useTranslation('settings');

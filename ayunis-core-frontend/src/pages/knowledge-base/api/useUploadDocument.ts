@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-error';
 import { showSuccess, showInfo, showError } from '@/shared/lib/toast';
 import {
   getKnowledgeBasesControllerListDocumentsQueryKey,
@@ -10,6 +9,7 @@ import {
 import { KnowledgeBaseDocumentResponseDtoStatus } from '@ayunis/api-client/schemas';
 import handleSourceUploadError from '@/shared/lib/handle-source-upload-error';
 import { useDirectSourceUpload } from '@/shared/lib/source-upload';
+import { getSourceProcessingErrorReason } from '@ayunis/chat/source-errors';
 
 export function useUploadDocument(knowledgeBaseId: string) {
   const { t } = useTranslation('knowledge-bases');

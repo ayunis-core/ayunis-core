@@ -1,5 +1,5 @@
 import React from 'react';
-import { useContentScrollHeader } from '@/features/useContentScrollHeader';
+import { useContentScrollHeader } from '@ayunis/chat/surface';
 
 interface ContentAreaLayoutProps {
   contentHeader?: React.ReactNode;

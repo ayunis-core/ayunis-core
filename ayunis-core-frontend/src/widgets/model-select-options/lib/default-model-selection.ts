@@ -3,7 +3,7 @@ import {
   modelModeDefaultsControllerGetDefaultSelection,
   type DefaultModelSelectionResponseDto,
 } from '@ayunis/api-client';
-import { getModeValue } from './model-modes';
+import { getModeValue } from '@ayunis/chat/model-presentation';
 
 export function defaultModelSelectionQueryOptions() {
   return {

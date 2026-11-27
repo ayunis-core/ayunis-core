@@ -22,7 +22,7 @@ import {
   type SourceProcessingErrorCode,
 } from '@ayunis/api-client/schemas';
 import { formatDate } from '@/shared/lib/format-date';
-import { getSourceProcessingErrorReason } from '@/shared/lib/source-processing-error';
+import { getSourceProcessingErrorReason } from '@ayunis/chat/source-errors';
 
 /** Processing sources older than this are shown with a slow-processing warning. */
 const SLOW_PROCESSING_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes

@@ -1,5 +1,5 @@
-import { copyableMessageContent } from '@/pages/chat/lib/copyable-message-content';
 import { SPEECH_TEXT_ATTRIBUTE } from '@/widgets/markdown';
+import { copyableMessageContent } from '@ayunis/chat/messages';
 
 /**
  * The text of an answer as it should be read aloud: the same text blocks copy

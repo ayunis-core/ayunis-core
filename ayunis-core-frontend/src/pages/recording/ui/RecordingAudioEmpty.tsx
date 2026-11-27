@@ -10,9 +10,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@ayunis/ui/components/empty';
-import { ACCEPTED_AUDIO_PICKER_TYPES } from '@/shared/lib/audio-files';
 import { PendingUploadItems } from '@/shared/ui/pending-upload-items';
 import type { useUploadRecordingAudio } from '@/features/recording-audio';
+import { ACCEPTED_AUDIO_PICKER_TYPES } from '@ayunis/chat/upload-policy';
 
 export type RecordingAudioUpload = ReturnType<typeof useUploadRecordingAudio>;
 
