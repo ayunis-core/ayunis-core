@@ -121,7 +121,7 @@ function useWebChatConfig(
   { sidePanel, onThreadState, onCreateWorkspace }: WebChatConfigOptions,
 ): ChatConfig {
   const { transitions } = sidePanel;
-  const data = useWebConversationData(onCreateWorkspace);
+  const data = useWebConversationData(thread, onCreateWorkspace);
   const contextSummary = useContextHintSummary(thread.id, thread.workspaceId);
   return {
     sessionKey,

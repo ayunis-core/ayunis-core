@@ -1,4 +1,3 @@
-import { createRef } from 'react';
 import {
   act,
   cleanup,
@@ -14,9 +13,9 @@ import {
   Conversation,
   NewChatComposer,
   type ChatKnowledgeBases,
-  type NewChatComposerHandle,
   type NewChatComposerProps,
 } from '@ayunis/chat/surface';
+import { createChatRunLifecycle } from '@ayunis/chat/runs';
 import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_TOTAL_IMAGE_SIZE_BYTES,
@@ -66,6 +65,8 @@ const municipalModel = {
   isDefault: true,
 } as PermittedLanguageModelResponseDto;
 
+const startedThread = { id: 'started-thread', sources: [], messages: [] };
+
 function serveComposer(routes: Parameters<typeof serveChatApi>[0] = {}) {
   return serveChatApi({
     'GET /models/permitted/language-models': [municipalModel],
@@ -74,29 +75,50 @@ function serveComposer(routes: Parameters<typeof serveChatApi>[0] = {}) {
       permittedModelId: municipalModel.id,
     },
     'GET /feature-toggles': { voiceEnabled: true },
+    'POST /threads': startedThread,
     ...routes,
   });
 }
 
-async function renderComposer(props: Partial<NewChatComposerProps> = {}) {
-  const onStart = vi.fn();
-  const ref = createRef<NewChatComposerHandle>();
-  renderWithQueryClient(
+/** Renders the composer of a chat to start; `starts` lists the first messages it handed off. */
+function mountComposer(props: Partial<NewChatComposerProps> = {}) {
+  const lifecycle = createChatRunLifecycle({
+    send: () => Promise.resolve(new Response('')),
+  });
+  const handOff = vi
+    .spyOn(lifecycle, 'startThreadRun')
+    .mockImplementation(() => undefined);
+  const view = renderWithQueryClient(
     <NewChatComposer
-      ref={ref}
-      config={{ layout: 'page' }}
-      busy={false}
-      onStart={onStart}
-      onStop={vi.fn()}
+      config={{ layout: 'page', events: { onNewChat: vi.fn() } }}
+      lifecycle={lifecycle}
       {...props}
     />,
   );
+  const starts = () => handOff.mock.calls.map(([run]) => run);
+  return { ...view, starts };
+}
+
+async function renderComposer(props: Partial<NewChatComposerProps> = {}) {
+  const composer = mountComposer(props);
   await waitFor(() =>
     expect(screen.getByTestId('chat-model-selector').textContent).toContain(
       municipalModel.displayName,
     ),
   );
-  return { onStart, ref };
+  return composer;
+}
+
+function send(text: string) {
+  fireEvent.change(screen.getByTestId('input'), { target: { value: text } });
+  fireEvent.click(screen.getByTestId('send'));
+}
+
+/** What the chat the composer started was created with. */
+function createdChats(requests: readonly ServedRequest[]) {
+  return requests
+    .filter(({ method, url }) => method === 'POST' && url === '/threads')
+    .map(({ data }) => JSON.parse(String(data)) as Record<string, unknown>);
 }
 
 function oversizedImage(): File {
@@ -249,37 +271,46 @@ describe('composer attachment selection', () => {
 });
 
 describe('composer while a start is in flight', () => {
+  function holdCreation() {
+    return serveComposer({
+      'POST /threads': () => new Promise(() => undefined),
+    });
+  }
+
   it('ignores Send, so a waiting message is not replaced', async () => {
-    serveComposer();
-    const { onStart } = await renderComposer({ busy: true });
+    const requests = holdCreation();
+    await renderComposer();
+    send('Bitte Antrag prüfen');
+    await waitFor(() => expect(createdChats(requests)).toHaveLength(1));
 
     fireEvent.change(screen.getByTestId('input'), {
-      target: { value: 'Bitte Antrag prüfen' },
+      target: { value: 'Noch eine Frage' },
     });
     fireEvent.keyDown(screen.getByTestId('input'), { key: 'Enter' });
 
-    expect(onStart).not.toHaveBeenCalled();
+    expect(createdChats(requests)).toHaveLength(1);
   });
 
-  it('offers cancellation', async () => {
-    serveComposer();
-    const onStop = vi.fn();
-    await renderComposer({ busy: true, onStop });
+  it('offers cancellation, which starts nothing', async () => {
+    holdCreation();
+    const { starts } = await renderComposer();
+    send('Bitte Antrag prüfen');
 
-    fireEvent.click(screen.getByTestId('cancel'));
+    fireEvent.click(await screen.findByTestId('cancel'));
 
-    expect(onStop).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.queryByTestId('cancel')).toBeNull());
+    expect(starts()).toHaveLength(0);
   });
 });
 
 describe('composer voice input', () => {
   async function renderWithSend() {
     serveComposer();
-    const { onStart } = await renderComposer();
-    const voiceInputOfSend = () => {
+    const { starts } = await renderComposer();
+    const voiceInputOfSend = async () => {
       fireEvent.click(screen.getByTestId('send'));
-      return (onStart.mock.calls[0]?.[0] as { voiceInput?: boolean })
-        .voiceInput;
+      await waitFor(() => expect(starts()).toHaveLength(1));
+      return starts()[0]?.voiceInput;
     };
     return { input: screen.getByTestId('input'), voiceInputOfSend };
   }
@@ -289,7 +320,7 @@ describe('composer voice input', () => {
 
     fireEvent.click(screen.getByTestId('chat-input-microphone'));
 
-    expect(voiceInputOfSend()).toBe(true);
+    expect(await voiceInputOfSend()).toBe(true);
   });
 
   it('does not report a typed prompt as voice input', async () => {
@@ -297,7 +328,7 @@ describe('composer voice input', () => {
 
     fireEvent.change(input, { target: { value: 'Bitte Antrag prüfen' } });
 
-    expect(voiceInputOfSend()).toBe(false);
+    expect(await voiceInputOfSend()).toBe(false);
   });
 
   it('forgets dictated text once the prompt was cleared', async () => {
@@ -307,7 +338,7 @@ describe('composer voice input', () => {
     fireEvent.change(input, { target: { value: '' } });
     fireEvent.change(input, { target: { value: 'Bitte Antrag prüfen' } });
 
-    expect(voiceInputOfSend()).toBe(false);
+    expect(await voiceInputOfSend()).toBe(false);
   });
 
   it('inserts dictated text into the textarea undo history and restores focus', async () => {
@@ -359,31 +390,33 @@ describe('composer voice input', () => {
 });
 
 describe('composer starting a chat', () => {
-  // The Outlook pane's starter prompts send through the composer.
-  it('sends a prompt with the images already attached in the composer', async () => {
-    serveComposer();
-    const { onStart, ref } = await renderComposer();
+  it('starts the chat with the images already attached in the composer', async () => {
+    const requests = serveComposer();
+    const { starts } = await renderComposer();
     const screenshot = imageOfSize(1024);
     fireEvent.change(screen.getByTestId('chat-file-upload-input'), {
       target: { files: [screenshot] },
     });
     await act(() => Promise.resolve());
 
-    act(() => ref.current?.sendMessage('Prepare reply'));
+    send('Prepare reply');
 
-    expect(onStart).toHaveBeenCalledWith(
+    await waitFor(() => expect(starts()).toHaveLength(1));
+    expect(starts()[0]).toMatchObject({
+      threadId: startedThread.id,
+      text: 'Prepare reply',
+      images: [{ file: screenshot, altText: 'site-photo.jpg' }],
+    });
+    expect(createdChats(requests)).toEqual([
       expect.objectContaining({
-        text: 'Prepare reply',
-        images: [{ file: screenshot, altText: 'site-photo.jpg' }],
         modelId: municipalModel.id,
         isAnonymous: false,
       }),
-      expect.any(Function),
-    );
+    ]);
   });
 
   it('starts a chat in a mode by sending the mode, not a model id', async () => {
-    serveComposer({
+    const requests = serveComposer({
       'GET /models/default-selection': {
         mode: 'auto',
         permittedModelId: municipalModel.id,
@@ -396,17 +429,7 @@ describe('composer starting a chat', () => {
         },
       ],
     });
-    const onStart = vi.fn();
-    const ref = createRef<NewChatComposerHandle>();
-    renderWithQueryClient(
-      <NewChatComposer
-        ref={ref}
-        config={{ layout: 'page' }}
-        busy={false}
-        onStart={onStart}
-        onStop={vi.fn()}
-      />,
-    );
+    mountComposer();
     await waitFor(() =>
       expect(screen.getByTestId<HTMLButtonElement>('send').disabled).toBe(true),
     );
@@ -421,13 +444,14 @@ describe('composer starting a chat', () => {
 
     fireEvent.click(screen.getByTestId('send'));
 
-    const [start] = onStart.mock.calls[0] as [Record<string, unknown>];
-    expect(start.mode).toBe('auto');
-    expect(start).not.toHaveProperty('modelId');
+    await waitFor(() => expect(createdChats(requests)).toHaveLength(1));
+    const [created] = createdChats(requests);
+    expect(created.mode).toBe('auto');
+    expect(created).not.toHaveProperty('modelId');
   });
 
   it('does not start a chat in a mode that resolves to no model', async () => {
-    serveComposer({
+    const requests = serveComposer({
       'GET /models/default-selection': {
         mode: 'max',
         permittedModelId: municipalModel.id,
@@ -440,15 +464,7 @@ describe('composer starting a chat', () => {
         },
       ],
     });
-    const onStart = vi.fn();
-    renderWithQueryClient(
-      <NewChatComposer
-        config={{ layout: 'page' }}
-        busy={false}
-        onStart={onStart}
-        onStop={vi.fn()}
-      />,
-    );
+    mountComposer();
     fireEvent.change(screen.getByTestId('input'), {
       target: { value: 'Hello' },
     });
@@ -456,22 +472,23 @@ describe('composer starting a chat', () => {
 
     fireEvent.click(screen.getByTestId('send'));
 
-    expect(onStart).not.toHaveBeenCalled();
+    expect(createdChats(requests)).toHaveLength(0);
   });
 
   it('starts a chat on an anonymous-only model as anonymous', async () => {
-    serveComposer({
+    const requests = serveComposer({
       'GET /models/permitted/language-models': [
         { ...municipalModel, anonymousOnly: true },
       ],
     });
-    const { onStart, ref } = await renderComposer();
+    await renderComposer();
 
-    act(() => ref.current?.sendMessage('Prüfe den Antrag'));
+    send('Prüfe den Antrag');
 
-    expect(onStart).toHaveBeenCalledWith(
-      expect.objectContaining({ isAnonymous: true }),
-      expect.any(Function),
+    await waitFor(() =>
+      expect(createdChats(requests)).toEqual([
+        expect.objectContaining({ isAnonymous: true }),
+      ]),
     );
   });
 
@@ -479,14 +496,7 @@ describe('composer starting a chat', () => {
     serveComposer({
       'GET /models/default-selection': () => new Promise(() => undefined),
     });
-    renderWithQueryClient(
-      <NewChatComposer
-        config={{ layout: 'page' }}
-        busy={false}
-        onStart={vi.fn()}
-        onStop={vi.fn()}
-      />,
-    );
+    mountComposer();
     await waitFor(() =>
       expect(screen.getByTestId('chat-model-selector').textContent).toContain(
         municipalModel.displayName,
@@ -499,20 +509,12 @@ describe('composer starting a chat', () => {
   });
 
   it('starts a chat on the default model when the model list cannot be loaded', async () => {
-    serveComposer({
+    const requests = serveComposer({
       'GET /models/permitted/language-models': () => {
         throw new Error('Models unavailable');
       },
     });
-    const onStart = vi.fn();
-    renderWithQueryClient(
-      <NewChatComposer
-        config={{ layout: 'page' }}
-        busy={false}
-        onStart={onStart}
-        onStop={vi.fn()}
-      />,
-    );
+    mountComposer();
     fireEvent.change(screen.getByTestId('input'), {
       target: { value: 'Hello' },
     });
@@ -524,40 +526,44 @@ describe('composer starting a chat', () => {
 
     fireEvent.click(screen.getByTestId('send'));
 
-    expect(onStart).toHaveBeenCalledWith(
-      expect.objectContaining({ modelId: municipalModel.id }),
-      expect.any(Function),
+    await waitFor(() =>
+      expect(createdChats(requests)).toEqual([
+        expect.objectContaining({ modelId: municipalModel.id }),
+      ]),
     );
   });
 
-  it('keeps the photos of a start that was not accepted, so it can be retried', async () => {
-    serveComposer();
-    const { onStart, ref } = await renderComposer();
+  it('keeps the text and photos of a start that failed, so it can be retried', async () => {
+    serveComposer({
+      'POST /threads': () => {
+        throw new Error('Unavailable');
+      },
+    });
+    await renderComposer();
     fireEvent.change(screen.getByTestId('chat-file-upload-input'), {
       target: { files: [imageOfSize(1024)] },
     });
     await act(() => Promise.resolve());
 
-    act(() => ref.current?.sendMessage('Prepare reply'));
+    send('Prepare reply');
 
-    expect(onStart).toHaveBeenCalledOnce();
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        'chat.errorSendMessage',
+        expect.anything(),
+      ),
+    );
+    expect(screen.getByTestId<HTMLTextAreaElement>('input').value).toBe(
+      'Prepare reply',
+    );
     expect(screen.getByAltText('site-photo.jpg')).toBeTruthy();
   });
 
   it('starts with a model from the link without waiting for the default', async () => {
-    serveComposer({
+    const requests = serveComposer({
       'GET /models/default-selection': () => new Promise(() => undefined),
     });
-    const onStart = vi.fn();
-    renderWithQueryClient(
-      <NewChatComposer
-        config={{ layout: 'page' }}
-        initialModel={municipalModel.id}
-        busy={false}
-        onStart={onStart}
-        onStop={vi.fn()}
-      />,
-    );
+    mountComposer({ initialModel: municipalModel.id });
     fireEvent.change(screen.getByTestId('input'), {
       target: { value: 'Hello' },
     });
@@ -569,23 +575,23 @@ describe('composer starting a chat', () => {
 
     fireEvent.click(screen.getByTestId('send'));
 
-    expect(onStart).toHaveBeenCalledWith(
-      expect.objectContaining({ modelId: municipalModel.id }),
-      expect.any(Function),
+    await waitFor(() =>
+      expect(createdChats(requests)).toEqual([
+        expect.objectContaining({ modelId: municipalModel.id }),
+      ]),
     );
   });
 
   it('keeps sending disabled for a user without the academy certificate', async () => {
-    serveComposer({ 'GET /academy-access/status': { allowed: false } });
-    const { onStart } = await renderComposer();
+    const requests = serveComposer({
+      'GET /academy-access/status': { allowed: false },
+    });
+    await renderComposer();
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
 
-    fireEvent.change(screen.getByTestId('input'), {
-      target: { value: 'Hello' },
-    });
-    fireEvent.click(screen.getByTestId('send'));
+    send('Hello');
 
-    expect(onStart).not.toHaveBeenCalled();
+    expect(createdChats(requests)).toHaveLength(0);
   });
 });
 
@@ -608,38 +614,64 @@ describe('composer surface-specific features', () => {
   });
 
   it('closes the plus menu when a start begins but keeps the passed menu', async () => {
-    serveComposer();
-    const knowledgeBases: ChatKnowledgeBases = {
-      items: [],
-      status: 'ready',
-      attached: [],
-      attach: vi.fn(),
-      detach: vi.fn(),
-      create: vi.fn(),
-    };
-    const { rerender } = renderWithQueryClient(
-      <NewChatComposer
-        config={{ layout: 'page', knowledgeBases }}
-        busy={false}
-        onStart={vi.fn()}
-        onStop={vi.fn()}
-      />,
-    );
+    serveComposer({ 'POST /threads': () => new Promise(() => undefined) });
+    await renderComposer({
+      config: {
+        layout: 'page',
+        knowledgeBases: {
+          items: [],
+          status: 'ready',
+          attached: [],
+          attach: vi.fn(),
+          detach: vi.fn(),
+          create: vi.fn(),
+        },
+        events: { onNewChat: vi.fn() },
+      },
+    });
+    fireEvent.change(screen.getByTestId('input'), {
+      target: { value: 'Hello' },
+    });
     openPlusMenu();
     expect(await screen.findByText('chatInput.addKnowledgeBase')).toBeTruthy();
 
-    rerender(
-      <NewChatComposer
-        config={{ layout: 'page', knowledgeBases }}
-        busy
-        onStart={vi.fn()}
-        onStop={vi.fn()}
-      />,
-    );
+    fireEvent.click(screen.getByTestId('send'));
 
     await waitFor(() =>
       expect(screen.queryByText('chatInput.addKnowledgeBase')).toBeNull(),
     );
+  });
+
+  it('attaches the knowledge bases picked before the start to the new chat', async () => {
+    const requests = serveComposer({
+      'POST /threads/started-thread/knowledge-bases/kb-budget': {},
+    });
+    const knowledgeBases: ChatKnowledgeBases = {
+      items: [],
+      status: 'ready',
+      attached: [{ id: 'kb-budget', name: 'Haushalt' }],
+      attach: vi.fn(),
+      detach: vi.fn(),
+      create: vi.fn(),
+    };
+    const { starts } = await renderComposer({
+      config: {
+        layout: 'page',
+        knowledgeBases,
+        events: { onNewChat: vi.fn() },
+      },
+    });
+
+    send('Fasse den Haushalt zusammen');
+
+    await waitFor(() => expect(starts()).toHaveLength(1));
+    expect(
+      requests.some(
+        ({ method, url }) =>
+          method === 'POST' &&
+          url === '/threads/started-thread/knowledge-bases/kb-budget',
+      ),
+    ).toBe(true);
   });
 });
 

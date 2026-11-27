@@ -13,6 +13,10 @@ export function webChatHref(target: ChatNavigationTarget): string {
       return `/inbox/${encodeURIComponent(target.notificationId)}`;
     case 'recording':
       return `/recordings/${encodeURIComponent(target.recordingId)}`;
+    case 'inbox':
+      return `/inbox?type=${encodeURIComponent(target.type)}`;
+    case 'releaseNotes':
+      return '/news';
     case 'path':
       return target.path;
   }

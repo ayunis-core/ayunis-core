@@ -147,7 +147,9 @@
       "loading": "Wird geladen …",
       "loadFailed": "Die Anfrage ist fehlgeschlagen. Versuchen Sie es erneut.",
       "retry": "Erneut versuchen"
-    }
+    },
+    "errorSendMessage": "Nachricht konnte nicht gesendet werden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+    "errorModeUnavailable": "Für diesen Modus ist gerade kein Modell verfügbar. Bitte wählen Sie ein Modell unter „Weitere Modelle“."
   },
   "newChat": {
     "newChat": "Neuer Chat",

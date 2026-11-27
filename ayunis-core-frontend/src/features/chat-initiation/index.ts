@@ -1,5 +1,1 @@
-export {
-  useInitiateChat,
-  type CreateThreadOrigin,
-  type SourceUploadStatus,
-} from './api/useInitiateChat';
+export { useWebChatStarted } from './api/useWebChatStarted';

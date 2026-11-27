@@ -13,7 +13,7 @@ import {
 } from '@tanstack/react-query';
 import {
   activeRunsControllerCancel,
-  useAcademyAccessControllerGetStatus,
+  getThreadsControllerFindOneQueryKey,
 } from '@ayunis/api-client/endpoints';
 import { SurfaceScope, type MeResponseDto } from '@ayunis/api-client/schemas';
 import {
@@ -21,12 +21,12 @@ import {
   createChatRunLifecycle,
 } from '@ayunis/chat/runs';
 import { createMemoryChatDraftStorage } from '@ayunis/chat/composer';
+import { stopChatStart, type ChatStarted } from '@ayunis/chat/surface';
 import { Button } from '@ayunis/ui/components/button';
 import { History } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { OfficeAddinSession } from '@ayunis/office-addin/session';
 import { currentOutlookItemKey } from '@/features/outlook-tools';
-import { useStartPaneThread } from '@/outlook/lib/use-start-pane-thread';
 import { startPaneItemChats } from '@/outlook/lib/pane-item-chats';
 import {
   newChatDraftKey,
@@ -120,13 +120,6 @@ function usePaneRuntime({ user, session }: PaneProps) {
 
 type PaneRuntime = ReturnType<typeof usePaneRuntime>;
 
-function useAcademyGate() {
-  const academy = useAcademyAccessControllerGetStatus({
-    query: { retry: false },
-  });
-  return academy.data?.allowed === false;
-}
-
 function PaneRequestFailed({ onDismiss }: Readonly<{ onDismiss: () => void }>) {
   const { t } = useTranslation('outlook');
   return (
@@ -166,8 +159,6 @@ interface PaneViewProps {
   readonly user: MeResponseDto;
   readonly session: OfficeAddinSession;
   readonly runtime: PaneRuntime;
-  readonly startAttempt: ReturnType<typeof useStartPaneThread>;
-  readonly isAcademyGated: boolean;
   readonly onError: () => void;
 }
 
@@ -184,24 +175,37 @@ function PaneHistoryView({ session, runtime, onError }: PaneViewProps) {
   );
 }
 
-function PaneNewChatView({
-  view,
-  runtime,
-  startAttempt,
-  isAcademyGated,
-}: PaneViewProps & { readonly view: Extract<PaneView, { kind: 'new' }> }) {
+function PaneNewChatView(
+  props: PaneViewProps & { readonly view: Extract<PaneView, { kind: 'new' }> },
+) {
+  const { view, runtime } = props;
+  const { lifecycle, navigation } = runtime;
+  const queryClient = useQueryClient();
   function showHistory() {
-    startAttempt.stop();
-    runtime.navigation.showHistory();
+    stopChatStart(lifecycle, view.draftKey);
+    navigation.showHistory();
   }
+  // Opens a started chat at once; its first message is already on its way.
+  function openStarted({ thread }: ChatStarted) {
+    queryClient.setQueryData(
+      getThreadsControllerFindOneQueryKey(thread.id),
+      thread,
+    );
+    navigation.openPreparedThread(view.draftKey, thread.id);
+  }
+  const config = paneChatConfig(props, () =>
+    navigation.newChat(currentOutlookItemKey()),
+  );
   return (
     <PaneNewChat
       key={`${view.revision}:${view.draftKey}`}
       draftKey={view.draftKey}
       header={<NewChatHeading onHistory={showHistory} />}
-      config={{ layout: 'narrow', drafts: runtime.drafts }}
-      startAttempt={startAttempt}
-      isAcademyGated={isAcademyGated}
+      config={{
+        ...config,
+        events: { ...config.events, onThreadStarted: openStarted },
+      }}
+      lifecycle={lifecycle}
     />
   );
 }
@@ -226,12 +230,11 @@ function paneChatConfig(
 }
 
 function PaneThread(props: PaneViewProps & { readonly threadId: string }) {
-  const { threadId, runtime, startAttempt } = props;
+  const { threadId, runtime } = props;
   const { lifecycle, navigation } = runtime;
   function startNewChat() {
     const itemKey = currentOutlookItemKey();
-    startAttempt.stop();
-    startAttempt.stop(newChatDraftKey(itemKey));
+    stopChatStart(lifecycle, newChatDraftKey(itemKey));
     navigation.newChat(itemKey);
   }
   return (
@@ -245,22 +248,10 @@ function PaneThread(props: PaneViewProps & { readonly threadId: string }) {
 
 function PaneChat(props: PaneProps) {
   const runtime = usePaneRuntime(props);
-  const { view, navigation, lifecycle } = runtime;
+  const { view } = runtime;
   const [failedView, setFailedView] = useState<PaneView>();
   const onError = useCallback(() => setFailedView(view), [view]);
-  const startAttempt = useStartPaneThread({
-    lifecycle,
-    draftKey: view.kind === 'new' ? view.draftKey : undefined,
-    openThread: navigation.openPreparedThread,
-    onError,
-  });
-  const viewProps: PaneViewProps = {
-    ...props,
-    isAcademyGated: useAcademyGate(),
-    runtime,
-    startAttempt,
-    onError,
-  };
+  const viewProps: PaneViewProps = { ...props, runtime, onError };
 
   return (
     <div className="outlook-pane flex h-full min-h-0 flex-col bg-background">

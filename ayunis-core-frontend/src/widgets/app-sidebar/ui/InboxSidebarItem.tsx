@@ -7,10 +7,8 @@ import {
   SidebarMenuItem,
 } from '@ayunis/ui/components/sidebar';
 import { useIsFeatureEnabled } from '@/features/feature-toggles';
-import {
-  formatUnreadCount,
-  useUnreadNotificationCount,
-} from '@/features/notifications';
+import { formatUnreadCount } from '@ayunis/chat/notifications';
+import { useUnreadNotificationCount } from '@/features/notifications';
 
 /** Not tied to manage_routines: notifications stay readable without it. */
 export function InboxSidebarItem() {

@@ -1,101 +1,110 @@
-import type { ReactNode } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { NewChatComposerProps } from '@ayunis/chat/surface';
+import type { PermittedLanguageModelResponseDto } from '@ayunis/api-client/schemas';
+import { threadRunLifecycle } from '@/features/thread-run';
+import {
+  renderWithQueryClient,
+  serveChatApi,
+  type ServedRequest,
+} from '@/shared/api/serve-chat-api';
 import { ChatStarter } from './ChatStarter';
 
-const mocks = vi.hoisted(() => ({ initiateChat: vi.fn() }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn() }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-vi.mock('@/features/chat-initiation', () => ({
-  useInitiateChat: () => ({
-    initiateChat: mocks.initiateChat,
-    cancel: vi.fn(),
-    isCreating: false,
-  }),
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => mocks.navigate,
 }));
-vi.mock('@/features/academy', () => ({
-  useAcademyAccessStatus: () => ({ isGated: false }),
-}));
-vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
-vi.mock('@/widgets/academy-gate-notice', () => ({
-  AcademyGateNotice: () => null,
-}));
-vi.mock('@/widgets/chat-input', () => ({
-  WEB_CHAT_TOUR_TARGETS: {},
-  useChatResourceSelection: () => ({
-    attached: [],
-    attach: vi.fn(),
-    detach: vi.fn(),
-  }),
+vi.mock('@/widgets/chat-input/api/useWebResourceMenus', () => ({
   useWebKnowledgeBases: () => undefined,
   useWebIntegrations: () => undefined,
 }));
-vi.mock('@ayunis/chat/surface', () => ({
-  NewChatComposer: ({ onStart }: Pick<NewChatComposerProps, 'onStart'>) => (
-    <button
-      onClick={() =>
-        onStart(
-          {
-            text: 'Hello',
-            modelId: 'medium',
-            isAnonymous: false,
-            sources: [],
-            onSourceStatus: vi.fn(),
-          },
-          vi.fn(),
-        )
-      }
-    >
-      Send
-    </button>
-  ),
-}));
 
-beforeEach(() => vi.clearAllMocks());
-afterEach(cleanup);
+const model = {
+  id: 'medium',
+  displayName: 'Medium',
+  isDefault: true,
+} as PermittedLanguageModelResponseDto;
 
-function wrapper({ children }: { children: ReactNode }) {
-  return (
-    <QueryClientProvider client={new QueryClient()}>
-      {children}
-    </QueryClientProvider>
-  );
+function serveStarter() {
+  return serveChatApi({
+    'GET /models/permitted/language-models': [model],
+    'POST /threads': { id: 'started-thread', sources: [], messages: [] },
+  });
 }
 
-describe('ChatStarter', () => {
-  it('starts a chat in the given workspace', () => {
-    render(<ChatStarter workspaceId="workspace-id" />, { wrapper });
+function createdChat(requests: readonly ServedRequest[]) {
+  const created = requests.find(
+    ({ method, url }) => method === 'POST' && url === '/threads',
+  );
+  return created && (JSON.parse(String(created.data)) as unknown);
+}
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(mocks.initiateChat).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Hello',
-        modelId: 'medium',
-        workspaceId: 'workspace-id',
-        origin: undefined,
+async function sendHello() {
+  const input = await screen.findByTestId('input');
+  fireEvent.change(input, { target: { value: 'Hello' } });
+  await waitFor(() =>
+    expect(screen.getByTestId<HTMLButtonElement>('send').disabled).toBe(false),
+  );
+  fireEvent.click(screen.getByTestId('send'));
+}
+
+beforeEach(() => {
+  vi.spyOn(threadRunLifecycle, 'startThreadRun').mockImplementation(
+    () => undefined,
+  );
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+describe('ChatStarter', () => {
+  it('starts a chat in the given workspace and opens it', async () => {
+    const requests = serveStarter();
+    renderWithQueryClient(<ChatStarter workspaceId="workspace-id" />);
+
+    await sendHello();
+
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith({
+        to: '/chats/$threadId',
+        params: { threadId: 'started-thread' },
       }),
     );
+    expect(createdChat(requests)).toMatchObject({
+      modelId: 'medium',
+      workspaceId: 'workspace-id',
+    });
+    expect(createdChat(requests)).not.toHaveProperty('origin');
   });
 
-  it('starts a chat about the given notification outside any workspace', () => {
-    render(
+  it('starts a chat about the given notification outside any workspace', async () => {
+    const requests = serveStarter();
+    renderWithQueryClient(
       <ChatStarter
         origin={{ kind: 'notification', notificationId: 'notification-id' }}
       />,
-      { wrapper },
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(mocks.initiateChat).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Hello',
+    await sendHello();
+
+    await waitFor(() =>
+      expect(createdChat(requests)).toMatchObject({
         modelId: 'medium',
-        workspaceId: undefined,
         origin: { kind: 'notification', notificationId: 'notification-id' },
       }),
     );
+    expect(createdChat(requests)).not.toHaveProperty('workspaceId');
   });
 });

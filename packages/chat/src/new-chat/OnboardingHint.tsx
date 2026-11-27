@@ -14,10 +14,10 @@ import './onboarding-hint.css';
 const STAGE_ICON = { profile: Brain, first_skill: Sparkles };
 
 interface OnboardingHintProps {
-  stage: OnboardingStage;
-  disabled: boolean;
-  onStart: () => void;
-  className?: string;
+  readonly stage: OnboardingStage;
+  readonly disabled: boolean;
+  readonly onStart: () => void;
+  readonly className?: string;
 }
 
 export function OnboardingHint({

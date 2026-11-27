@@ -1,4 +1,4 @@
-import type { APIRequestContext, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import {
   stubOfficeHost,
   type OfficeStubReadItem,
@@ -7,8 +7,6 @@ import {
 import { expect, test } from "../../src/fixtures/outlook";
 import { sendMessage } from "../../src/flows/chat.flow";
 import { openSignedInPane } from "../../src/flows/outlook.flow";
-import { generatedApi } from "../../src/clients/api/generated-api";
-import type { GetThreadResponseDto } from "../../src/clients/generated/ayunisCoreAPI.schemas";
 
 const subject = "Review fixture budget";
 const readItem: OfficeStubReadItem = {
@@ -119,108 +117,3 @@ test("preserves the new-chat draft when returning from history and keeps it scop
   await selectEmail(page, readItem);
   await expect(input).toHaveValue(draft);
 });
-
-test("stops a first send and lets a retry finish on its original email", async ({
-  page,
-  api,
-}) => {
-  await permitEmbeddingModel(api);
-  await openSignedInPane(page, api);
-  let processingPolls = 0;
-  let holdProcessing = true;
-  await page.route(
-    (url) => /\/api\/threads\/[0-9a-f-]{36}$/.test(url.pathname),
-    async (route) => {
-      if (!holdProcessing || route.request().method() !== "GET")
-        return route.continue();
-      const response = await route.fetch();
-      if (!response.ok()) return route.fulfill({ response });
-      const thread = (await response.json()) as GetThreadResponseDto;
-      if (!thread.sources.length) return route.fulfill({ response });
-      processingPolls += 1;
-      await route.fulfill({
-        response,
-        json: {
-          ...thread,
-          sources: thread.sources.map((source) => ({
-            ...source,
-            status: "processing",
-          })),
-        },
-      });
-    },
-  );
-  const runRequests: string[] = [];
-  page.on("request", (request) => {
-    if (request.url().endsWith("/api/runs/send-message")) {
-      runRequests.push(request.postData() ?? "");
-    }
-  });
-  await attachReviewSource(page);
-  await sendMessage(page, "Read the attachment");
-  await expect.poll(() => processingPolls).toBeGreaterThan(0);
-  await page.getByTestId("cancel").click();
-  await expect(page.getByTestId("input")).toHaveValue("Read the attachment");
-  await expect(page.getByTestId("send")).toBeEnabled();
-
-  const pollsAfterStop = processingPolls;
-  await sendMessage(page, "This send is stopped by History");
-  await expect.poll(() => processingPolls).toBeGreaterThan(pollsAfterStop);
-  await page.getByTestId("embedded-history").click();
-  await expect(page.getByTestId("chat-card").first()).toBeVisible();
-  await selectEmail(page, secondReadItem);
-  await expect(page.getByTestId("input")).toHaveValue("");
-  await selectEmail(page, readItem);
-  await expect(page.getByTestId("input")).toHaveValue(
-    "This send is stopped by History",
-  );
-  await expect(page.getByTestId("send")).toBeEnabled();
-  await attachReviewSource(page);
-
-  const pollsAfterHistory = processingPolls;
-  await sendMessage(page, "Retry the attachment");
-  await expect.poll(() => processingPolls).toBeGreaterThan(pollsAfterHistory);
-  await selectEmail(page, secondReadItem);
-  await expect(page.getByTestId("cancel")).toBeHidden();
-  await expect(page.getByTestId("input")).toHaveValue("");
-  await sendMessage(page, "A separate new chat");
-  await expect(page.getByTestId("assistant-message").last()).toBeVisible();
-  expect(runRequests).toHaveLength(1);
-  expect(runRequests[0]).toContain("A separate new chat");
-
-  holdProcessing = false;
-  await expect.poll(() => runRequests).toHaveLength(2);
-  expect(runRequests[1]).toContain("Retry the attachment");
-  await expect(page.getByTestId("user-message")).toHaveText(
-    "A separate new chat",
-  );
-  await selectEmail(page, readItem);
-  await expect(page.getByTestId("user-message")).toHaveText(
-    "Retry the attachment",
-  );
-  expect(runRequests).toHaveLength(2);
-});
-
-async function attachReviewSource(page: Page): Promise<void> {
-  const picker = page.getByTestId("chat-file-upload-input");
-  await expect(picker).toBeEnabled();
-  await picker.setInputFiles({
-    name: "review-source.txt",
-    mimeType: "text/plain",
-    buffer: Buffer.from("Budget information for review"),
-  });
-  await expect(page.getByTestId("chat-source")).toContainText(
-    "review-source.txt",
-  );
-}
-
-async function permitEmbeddingModel(api: APIRequestContext): Promise<void> {
-  const [embedding] =
-    await generatedApi.modelsControllerGetAvailableEmbeddingModels({ api });
-  if (embedding && !embedding.permittedModelId) {
-    await generatedApi.modelsControllerCreatePermittedModel(
-      { modelId: embedding.modelId },
-      { api },
-    );
-  }
-}

@@ -1,6 +1,1 @@
-export {
-  NewChatShell,
-  type NewChatShellPhase,
-  type NewChatShellProps,
-  type NewChatStarterPrompt,
-} from './NewChatShell';
+export { default as NewChatBackdrop } from './NewChatBackdrop';

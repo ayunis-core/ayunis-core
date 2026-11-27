@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Badge } from '@ayunis/ui/components/badge';
 import { Button } from '@ayunis/ui/components/button';
-import { NotificationTypeIcon } from '@/features/notifications';
+import { NotificationTypeIcon } from '@ayunis/chat/notifications';
 import type { NotificationType } from '@ayunis/api-client/schemas';
 
 interface InboxTypeFilterProps {

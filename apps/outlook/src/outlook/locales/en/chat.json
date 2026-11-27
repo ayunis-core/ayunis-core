@@ -147,7 +147,9 @@
       "loading": "Loading …",
       "loadFailed": "The request failed. Try again.",
       "retry": "Retry"
-    }
+    },
+    "errorSendMessage": "Message could not be sent. Please refresh the page and try again.",
+    "errorModeUnavailable": "No model is currently available for this mode. Please choose a model under \"More models\"."
   },
   "newChat": {
     "newChat": "New Chat",

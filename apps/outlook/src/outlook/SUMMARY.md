@@ -13,6 +13,14 @@ The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
 - `ui/OutlookChatApp.tsx` owns the pane's new-chat, conversation, and history
   views. It supplies a `ChatConfig` with the bearer transport, the `narrow`
   layout, session-owned drafts, client tools and events to `@ayunis/chat`.
+  `ui/PaneNewChat.tsx` renders the package `NewChat` screen under the pane
+  heading, with the time-of-day mail greeting and the Prepare reply and
+  Summarize email starter prompts as its content and the email's draft key.
+  The package starts the chat like Web's: it creates the chat, uploads its
+  files and hands off the first message, which waits in the opened chat while
+  the files process. The pane opens a started chat at once
+  (`events.onThreadStarted`), and History or New chat stops a start still in
+  progress (`stopChatStart`).
   `ui/PaneConversation.tsx` renders the package `Conversation` screen for the
   open chat: the package loads the thread and renders its header (title,
   anonymous badge, Rename and Delete, and the New chat button the pane asks
@@ -25,14 +33,13 @@ The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
   empty/loading/error states, pagination, thread dialogs, and academy notice use
   the canonical package presentation. The pane supplies offset navigation,
   mutations, retry, back, and sign-out behavior.
-  Attachment and source badges, uploads to an existing chat and source
-  removal are package-owned. A new conversation's files are uploaded by the
-  pane once it created the chat, and its first send uses the package handoff
-  after attachments are ready. Stop and explicit pane navigation cancel preparation. Web chat
-  uses its own router and build.
+  Attachment and source badges, uploads and source removal are
+  package-owned. Web chat uses its own router and build.
 - `lib/pane-item-chats.ts` tracks one chat per email and principal. It matches
   the original email when a reply opens, supports older EWS-keyed associations,
-  and captures the mail when creation or navigation begins.
+  and captures the mail when creation or navigation begins. It watches the
+  package's create-thread mutation, which settles once the new chat's files
+  are uploaded.
 - `lib/use-standalone-outlook-tools.ts` registers the Office.js executors and
   draft cards. A draft belongs to its original email and can open or fill a reply
   only for that email. The shared lifecycle governs tool execution and results;
