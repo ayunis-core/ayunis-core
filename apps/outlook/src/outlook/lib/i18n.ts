@@ -1,5 +1,9 @@
 import i18next, { type i18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import {
+  applyOfficeAddinLanguage,
+  resolveOfficeAddinLanguage,
+} from '@ayunis/office-addin/language';
 import deOutlook from '@/outlook/locales/de/outlook.json';
 import enOutlook from '@/outlook/locales/en/outlook.json';
 
@@ -19,7 +23,7 @@ import enChats from '@/outlook/locales/en/chats.json';
 export function createOutlookI18n(displayLanguage: string): i18n {
   const instance = i18next.createInstance();
   void instance.use(initReactI18next).init({
-    lng: outlookLanguage(displayLanguage),
+    lng: resolveOfficeAddinLanguage(displayLanguage),
     fallbackLng: 'de',
     defaultNS: 'outlook',
     resources: {
@@ -41,20 +45,8 @@ export function createOutlookI18n(displayLanguage: string): i18n {
     interpolation: { escapeValue: false },
     initAsync: false,
   });
-  document.documentElement.lang = outlookLanguage(displayLanguage);
+  document.documentElement.lang = resolveOfficeAddinLanguage(displayLanguage);
   return instance;
 }
 
-/** Switches to Outlook's display language once Office has reported it. */
-export function applyOutlookLanguage(
-  instance: i18n,
-  displayLanguage: string,
-): void {
-  const lng = outlookLanguage(displayLanguage);
-  document.documentElement.lang = lng;
-  void instance.changeLanguage(lng);
-}
-
-function outlookLanguage(displayLanguage: string): 'de' | 'en' {
-  return displayLanguage.toLowerCase().startsWith('de') ? 'de' : 'en';
-}
+export const applyOutlookLanguage = applyOfficeAddinLanguage;

@@ -4,11 +4,12 @@ The standalone pane is a Vite app under `apps/outlook`. Its task pane, sign-in
 handoff, launch events, and classic event script are served under `/outlook`.
 The manifest and `/outlook/taskpane.html` URLs stay stable for installed copies.
 
-- `taskpane.tsx` owns the Outlook language and session. The sign-in window uses
-  the normal web sign-in routes and hands bearer tokens back through Office.js.
-  The pane sends requests without cookies and refreshes bearer tokens once on a
-  rejected request. Sign-out and expiry dispose the principal's local run state
-  and query cache.
+- `taskpane.tsx` configures the host-neutral `@ayunis/office-addin` foundation
+  with Outlook's client, login path, refresh-token key, localized copy, and
+  signed-in chat. The shared package owns Office.js readiness, dialog sign-in,
+  session handoff, bearer-session restore/refresh/sign-out, display-language
+  mapping, and the signed-out shell. Sign-out and expiry dispose the
+  principal's local run state and query cache.
 - `ui/OutlookChatApp.tsx` owns the pane's new-chat, conversation, and history
   views. It supplies the bearer transport, scope-derived capabilities, thread
   operations, and session-owned drafts and run state to `@ayunis/chat`.

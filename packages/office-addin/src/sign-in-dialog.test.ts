@@ -1,17 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SessionHandoffRequestDtoClient } from '@ayunis/api-client/schemas';
 import {
-  openSignInDialog,
-  type SignInResult,
-} from '@/outlook/lib/sign-in-dialog';
+  createOfficeSignInDialog,
+  type OfficeSignInResult,
+} from './sign-in-dialog';
 
 type Handler = (arg: unknown) => void;
 
+const client = Object.values(SessionHandoffRequestDtoClient)[0];
 const session = {
   type: 'session',
   accessToken: 'access-1',
   refreshToken: 'refresh-1',
   expiresIn: 3600,
-};
+} as const;
 
 function stubOffice(close: () => void) {
   const handlers: Record<string, Handler> = {};
@@ -40,31 +42,25 @@ function stubOffice(close: () => void) {
   return handlers;
 }
 
-describe('openSignInDialog', () => {
+describe('createOfficeSignInDialog', () => {
   const close = vi.fn();
-
-  beforeEach(() => {
-    close.mockReset();
+  const openSignInDialog = createOfficeSignInDialog({
+    client,
+    loginPath: '/host/login',
   });
+
+  beforeEach(() => close.mockReset());
   afterEach(() => vi.unstubAllGlobals());
 
-  // Office closes the window on the first call; on Outlook on the web a second
-  // close of the same dialog throws. The pane closes once on receipt and once
-  // more while handling the result, so the result must still get through.
   it('reports the session even when closing an already closed dialog throws', () => {
-    close
-      .mockImplementationOnce(() => undefined)
-      .mockImplementation(() => {
-        throw new Error('Dialog already closed');
-      });
-    const handlers = stubOffice(close);
-    const results: SignInResult[] = [];
-    let stop: (() => void) | undefined;
-    // eslint-disable-next-line prefer-const -- assigned after the callback that uses it is created
-    stop = openSignInDialog((result) => {
-      results.push(result);
-      stop?.();
-    });
+    let closeCalls = 0;
+    const closeOnce = () => {
+      closeCalls += 1;
+      if (closeCalls > 1) throw new Error('Dialog already closed');
+    };
+    const handlers = stubOffice(closeOnce);
+    const results: OfficeSignInResult[] = [];
+    const stop = openSignInDialog((result) => results.push(result));
 
     expect(() =>
       handlers.dialogMessageReceived({
@@ -72,13 +68,12 @@ describe('openSignInDialog', () => {
         origin: window.location.origin,
       }),
     ).not.toThrow();
+    expect(() => stop()).not.toThrow();
 
     expect(results).toEqual([session]);
-    expect(close).toHaveBeenCalledTimes(1);
+    expect(closeCalls).toBe(1);
   });
 
-  // The login page hands a kept cookie session over without a form; a user
-  // switching accounts needs the form, so the pane has to ask for it.
   it('asks the login page for a fresh login when switching account', () => {
     const displayDialogAsync = vi.fn();
     vi.stubGlobal('Office', {
@@ -98,5 +93,18 @@ describe('openSignInDialog', () => {
     );
     expect(switching).toBe('login');
     expect(plain).toBeNull();
+  });
+
+  it('rejects a message from a different origin', () => {
+    const handlers = stubOffice(close);
+    const results: OfficeSignInResult[] = [];
+    openSignInDialog((result) => results.push(result));
+
+    handlers.dialogMessageReceived({
+      message: JSON.stringify(session),
+      origin: 'https://attacker.example',
+    });
+
+    expect(results).toEqual([{ type: 'error', code: 'UNEXPECTED_ORIGIN' }]);
   });
 });

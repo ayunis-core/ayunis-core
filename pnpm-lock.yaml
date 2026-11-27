@@ -85,6 +85,9 @@ importers:
       '@ayunis/chat':
         specifier: workspace:*
         version: link:../../packages/chat
+      '@ayunis/office-addin':
+        specifier: workspace:*
+        version: link:../../packages/office-addin
       '@ayunis/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -109,9 +112,6 @@ importers:
       react-i18next:
         specifier: ^15.5.3
         version: 15.7.4(i18next@26.4.2(typescript@6.0.3))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)
-      zod:
-        specifier: ^4.5.4
-        version: 4.5.4
     devDependencies:
       '@tailwindcss/vite':
         specifier: 'catalog:'
@@ -1308,6 +1308,76 @@ importers:
       vitest:
         specifier: ^4.1.9
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.19.2)(jsdom@29.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.22.4)(yaml@2.9.1))
+
+  packages/office-addin:
+    dependencies:
+      '@ayunis/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@ayunis/ui':
+        specifier: workspace:*
+        version: link:../ui
+      axios:
+        specifier: 'catalog:'
+        version: 1.20.0
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
+    devDependencies:
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.9.1(jiti@2.7.0))
+      '@testing-library/react':
+        specifier: ^16.3.3
+        version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@types/office-js':
+        specifier: ^1.0.616
+        version: 1.0.616
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      eslint:
+        specifier: ^10.9.1
+        version: 10.9.1(jiti@2.7.0)
+      eslint-config-prettier:
+        specifier: ^10.1.8
+        version: 10.1.8(eslint@10.9.1(jiti@2.7.0))
+      eslint-plugin-prettier:
+        specifier: ^5.5.4
+        version: 5.5.6(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.9.1(jiti@2.7.0)))(eslint@10.9.1(jiti@2.7.0))(prettier@3.9.6)
+      eslint-plugin-sonarjs:
+        specifier: ^4.2.1
+        version: 4.2.1(eslint@10.9.1(jiti@2.7.0))
+      globals:
+        specifier: ^16.5.0
+        version: 16.5.0
+      i18next:
+        specifier: ^26.4.0
+        version: 26.4.2(typescript@6.0.3)
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1
+      madge:
+        specifier: ^8.0.0
+        version: 8.0.0(typescript@6.0.3)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.1(react@19.3.1)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      typescript-eslint:
+        specifier: ^8.68.0
+        version: 8.69.0(eslint@10.9.1(jiti@2.7.0))(typescript@6.0.3)
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(jsdom@29.1.1)(vite@8.3.5(@types/node@25.9.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.22.4)(yaml@2.9.1))
 
   packages/provider-anthropic:
     dependencies:

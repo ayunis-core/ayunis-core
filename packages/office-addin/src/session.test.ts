@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  createPaneSession,
-  SessionExpiredError,
-} from '@/outlook/api/pane-session';
+  createOfficeAddinSession,
+  OfficeAddinSessionExpiredError,
+} from './session';
 
-const REFRESH_TOKEN_KEY = 'ayunis.outlook.refreshToken';
+const REFRESH_TOKEN_KEY = 'ayunis.test.refreshToken';
 const user = {
   id: 'user-1',
   name: 'Sachbearbeitung',
@@ -23,7 +23,14 @@ function tokens(n: number) {
   };
 }
 
-describe('createPaneSession', () => {
+function createSession() {
+  return createOfficeAddinSession({
+    baseUrl: '/api',
+    refreshTokenKey: REFRESH_TOKEN_KEY,
+  });
+}
+
+describe('createOfficeAddinSession', () => {
   const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
@@ -41,7 +48,7 @@ describe('createPaneSession', () => {
       .mockResolvedValueOnce(json(401))
       .mockResolvedValueOnce(json(200, tokens(2)))
       .mockResolvedValueOnce(json(200, user));
-    const session = createPaneSession('/api');
+    const session = createSession();
 
     await expect(session.signIn(tokens(1))).resolves.toEqual(user);
 
@@ -60,7 +67,7 @@ describe('createPaneSession', () => {
       .mockResolvedValueOnce(json(200, tokens(1)))
       .mockResolvedValueOnce(json(200, user))
       .mockResolvedValueOnce(json(200, {}));
-    const session = createPaneSession('/api');
+    const session = createSession();
     await session.signIn(tokens(1));
 
     await session.transport.fetch('/threads', {
@@ -73,7 +80,7 @@ describe('createPaneSession', () => {
   });
 
   it('refreshes once for concurrent 401s, so the rotated token is never replayed', async () => {
-    const session = createPaneSession('/api');
+    const session = createSession();
     fetchMock.mockResolvedValueOnce(json(200, user));
     await session.signIn(tokens(1));
     fetchMock.mockImplementation((_url, init) => {
@@ -98,22 +105,20 @@ describe('createPaneSession', () => {
     window.localStorage.setItem(REFRESH_TOKEN_KEY, 'revoked');
     fetchMock.mockResolvedValueOnce(json(401));
 
-    await expect(createPaneSession('/api').restore()).rejects.toBeInstanceOf(
-      SessionExpiredError,
+    await expect(createSession().restore()).rejects.toBeInstanceOf(
+      OfficeAddinSessionExpiredError,
     );
     expect(window.localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
   });
 
-  // The embedded chat app can't navigate to a login page in the pane; the
-  // pane entry shows its own sign-in when told the session ended.
   it('tells its listeners when the session ends and why', async () => {
     const ended = vi.fn();
     fetchMock.mockResolvedValueOnce(json(401)).mockResolvedValueOnce(json(401));
-    const session = createPaneSession('/api');
+    const session = createSession();
     session.onEnd(ended);
 
     await expect(session.signIn(tokens(1))).rejects.toBeInstanceOf(
-      SessionExpiredError,
+      OfficeAddinSessionExpiredError,
     );
     expect(ended).toHaveBeenLastCalledWith('expired');
 
@@ -126,29 +131,27 @@ describe('createPaneSession', () => {
     expect(ended).toHaveBeenCalledTimes(2);
   });
 
-  // Panes share the stored token: one pane signing out removes it for all.
   it('ends the session when the stored token is gone at the next refresh', async () => {
     const ended = vi.fn();
     fetchMock
       .mockResolvedValueOnce(json(200, user))
       .mockResolvedValueOnce(json(401));
-    const session = createPaneSession('/api');
+    const session = createSession();
     session.onEnd(ended);
     await session.signIn(tokens(1));
 
     window.localStorage.removeItem(REFRESH_TOKEN_KEY);
     await expect(session.transport.fetch('/threads')).rejects.toBeInstanceOf(
-      SessionExpiredError,
+      OfficeAddinSessionExpiredError,
     );
 
     expect(ended).toHaveBeenCalledWith('expired');
   });
 
-  // Signing out from the history page can race the page's own request.
   it('reports no expiry for a request that fails after the user signed out', async () => {
     const ended = vi.fn();
     fetchMock.mockResolvedValueOnce(json(200, user));
-    const session = createPaneSession('/api');
+    const session = createSession();
     session.onEnd(ended);
     await session.signIn(tokens(1));
 
@@ -164,16 +167,16 @@ describe('createPaneSession', () => {
     await session.signOut();
     answer?.(json(401));
 
-    await expect(inFlight).rejects.toBeInstanceOf(SessionExpiredError);
+    await expect(inFlight).rejects.toBeInstanceOf(
+      OfficeAddinSessionExpiredError,
+    );
     expect(ended.mock.calls).toEqual([['signedOut']]);
   });
 
-  // Logout revokes the session at once, so a request still running gets a
-  // 401 and tries a refresh while the logout request is pending.
   it('reports only the sign-out when a request fails while signing out', async () => {
     const ended = vi.fn();
     fetchMock.mockResolvedValueOnce(json(200, user));
-    const session = createPaneSession('/api');
+    const session = createSession();
     session.onEnd(ended);
     await session.signIn(tokens(1));
 
@@ -189,7 +192,7 @@ describe('createPaneSession', () => {
     });
     const signingOut = session.signOut();
     await expect(session.transport.fetch('/threads')).rejects.toBeInstanceOf(
-      SessionExpiredError,
+      OfficeAddinSessionExpiredError,
     );
     finishLogout?.(json(200));
     await signingOut;
@@ -197,10 +200,9 @@ describe('createPaneSession', () => {
     expect(ended.mock.calls).toEqual([['signedOut']]);
   });
 
-  // A request sent for one account must not be retried as the next one.
   it('does not retry a request from an earlier sign-in with the current account', async () => {
     fetchMock.mockResolvedValueOnce(json(200, user));
-    const session = createPaneSession('/api');
+    const session = createSession();
     await session.signIn(tokens(1));
 
     let answer: ((response: Response) => void) | undefined;
@@ -218,7 +220,9 @@ describe('createPaneSession', () => {
     await session.signIn(tokens(2));
     answer?.(json(401));
 
-    await expect(earlier).rejects.toBeInstanceOf(SessionExpiredError);
+    await expect(earlier).rejects.toBeInstanceOf(
+      OfficeAddinSessionExpiredError,
+    );
     const retriedAs = fetchMock.mock.calls
       .filter(([url]) => (url as string).endsWith('/threads'))
       .map(([, init]) => new Headers(init?.headers).get('Authorization'));
@@ -246,7 +250,7 @@ describe('createPaneSession', () => {
         }
         return Promise.resolve(json(200, user));
       });
-      const session = createPaneSession('/api');
+      const session = createSession();
       const ends: string[] = [];
       session.onEnd((reason) => ends.push(reason));
       await session.signIn(tokens(1));
@@ -256,7 +260,9 @@ describe('createPaneSession', () => {
       await session.signOut();
       await session.signIn(tokens(2));
       answerRefresh?.(refreshAnswer());
-      await expect(earlier).rejects.toBeInstanceOf(SessionExpiredError);
+      await expect(earlier).rejects.toBeInstanceOf(
+        OfficeAddinSessionExpiredError,
+      );
       await session.transport.fetch('/threads');
 
       expect(ends).toEqual(['signedOut']);
@@ -270,9 +276,7 @@ describe('createPaneSession', () => {
     window.localStorage.setItem(REFRESH_TOKEN_KEY, 'refresh-1');
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
-    await expect(createPaneSession('/api').restore()).rejects.toBeInstanceOf(
-      TypeError,
-    );
+    await expect(createSession().restore()).rejects.toBeInstanceOf(TypeError);
     expect(window.localStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-1');
   });
 
@@ -282,10 +286,12 @@ describe('createPaneSession', () => {
       window.localStorage.setItem(REFRESH_TOKEN_KEY, 'refresh-1');
       fetchMock.mockResolvedValueOnce(json(status));
 
-      const restored = createPaneSession('/api').restore();
+      const restored = createSession().restore();
 
       await expect(restored).rejects.toThrow();
-      await expect(restored).rejects.not.toBeInstanceOf(SessionExpiredError);
+      await expect(restored).rejects.not.toBeInstanceOf(
+        OfficeAddinSessionExpiredError,
+      );
       expect(window.localStorage.getItem(REFRESH_TOKEN_KEY)).toBe('refresh-1');
     },
   );
@@ -311,7 +317,7 @@ describe('createPaneSession', () => {
     });
 
     it('treats the pane as never signed in', async () => {
-      await expect(createPaneSession('/api').restore()).resolves.toBeNull();
+      await expect(createSession().restore()).resolves.toBeNull();
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -321,9 +327,7 @@ describe('createPaneSession', () => {
         .mockResolvedValueOnce(json(200, tokens(2)))
         .mockResolvedValueOnce(json(200, user));
 
-      await expect(
-        createPaneSession('/api').signIn(tokens(1)),
-      ).resolves.toEqual(user);
+      await expect(createSession().signIn(tokens(1))).resolves.toEqual(user);
 
       const [, refresh] = fetchMock.mock.calls;
       expect(refresh[1]?.body).toBe(
@@ -335,7 +339,7 @@ describe('createPaneSession', () => {
       fetchMock
         .mockResolvedValueOnce(json(200, user))
         .mockResolvedValueOnce(json(200));
-      const session = createPaneSession('/api');
+      const session = createSession();
       await session.signIn(tokens(1));
 
       await expect(session.signOut()).resolves.toBeUndefined();

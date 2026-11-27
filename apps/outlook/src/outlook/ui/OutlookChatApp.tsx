@@ -19,7 +19,7 @@ import { createMemoryChatDraftStorage } from '@ayunis/chat/composer';
 import { Button } from '@ayunis/ui/components/button';
 import { History } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { PaneSession } from '@/outlook/api/pane-session';
+import type { OfficeAddinSession } from '@ayunis/office-addin/session';
 import { currentOutlookItemKey } from '@/features/outlook-tools';
 import { useStartPaneThread } from '@/outlook/lib/use-start-pane-thread';
 import { outlookChatCapabilities } from '@/outlook/lib/outlook-chat-capabilities';
@@ -36,7 +36,10 @@ import { PaneConversation } from '@/outlook/ui/PaneConversation';
 import { PaneNewChat } from '@/outlook/ui/PaneNewChat';
 import { PaneHeading } from '@/outlook/ui/PaneHeading';
 
-type PaneProps = Readonly<{ user: MeResponseDto; session: PaneSession }>;
+type PaneProps = Readonly<{
+  user: MeResponseDto;
+  session: OfficeAddinSession;
+}>;
 
 function storedPaneTheme() {
   try {

@@ -5,6 +5,7 @@
 @import '@ayunis/chat/composer.css';
 @import './scrollbar.css';
 @source '../../../../packages/chat/src';
+@source '../../../../packages/office-addin/src';
 
 html,
 body,

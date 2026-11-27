@@ -8,6 +8,7 @@ on:
       - 'packages/ui/**'
       - 'packages/api-client/**'
       - 'packages/chat/**'
+      - 'packages/office-addin/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/frontend-build.yml'
       - '.github/actions/setup-node-pnpm/action.yml'
@@ -19,6 +20,7 @@ on:
       - 'packages/ui/**'
       - 'packages/api-client/**'
       - 'packages/chat/**'
+      - 'packages/office-addin/**'
       - 'pnpm-lock.yaml'
 
 permissions:
@@ -47,6 +49,10 @@ jobs:
 
       - name: Check chat package
         working-directory: packages/chat
+        run: pnpm run typecheck && pnpm run lint && pnpm run deps:check
+
+      - name: Check Office add-in package
+        working-directory: packages/office-addin
         run: pnpm run typecheck && pnpm run lint && pnpm run deps:check
 
       - name: Run production build
@@ -83,6 +89,10 @@ jobs:
 
       - name: Run chat package tests
         working-directory: packages/chat
+        run: pnpm run test
+
+      - name: Run Office add-in package tests
+        working-directory: packages/office-addin
         run: pnpm run test
 
       - name: Run tests
