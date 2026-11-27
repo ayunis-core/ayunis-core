@@ -62,7 +62,7 @@ test('with connectors disabled the integrations have no Connections section and 
   await expect(page.getByTestId('connections-section')).toHaveCount(0);
 });
 
-test('with connectors disabled there are no synced locations, and the documents synced before stay in the knowledge base', async ({
+test('with connectors disabled the synced locations list no SharePoint location, and the documents synced before stay in the knowledge base', async ({
   browser,
 }, testInfo) => {
   test.setTimeout(120_000);
@@ -99,8 +99,14 @@ test('with connectors disabled there are no synced locations, and the documents 
       .toBe(2);
     const documentIds = await readyDocumentIds();
 
+    const listed = await requestSyncedLocations.list(
+      api,
+      knowledgeBase.id,
+      disabledApiUrl,
+    );
+    expect(listed.status()).toBe(200);
+    expect(await listed.json()).toEqual({ data: [], availableProducts: [] });
     for (const response of [
-      await requestSyncedLocations.list(api, knowledgeBase.id, disabledApiUrl),
       await requestSyncedLocations.add(
         api,
         knowledgeBase.id,

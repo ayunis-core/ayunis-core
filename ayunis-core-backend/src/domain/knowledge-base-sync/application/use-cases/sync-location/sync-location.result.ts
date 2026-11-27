@@ -5,7 +5,7 @@ export enum SyncLocationOutcome {
   THROTTLED = 'throttled',
   /** The location is paused; nothing was listed. */
   PAUSED = 'paused',
-  /** Connectors are switched off; nothing was synced. */
+  /** The location's provider is switched off; nothing was synced. */
   DISABLED = 'disabled',
   /** Another sync of the location was recorded meanwhile; nothing applied. */
   SUPERSEDED = 'superseded',

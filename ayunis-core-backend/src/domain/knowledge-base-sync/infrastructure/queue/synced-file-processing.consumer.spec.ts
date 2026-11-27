@@ -23,7 +23,7 @@ import { ProviderServerError } from 'src/common/errors/provider.errors';
 import {
   connectorSyncSources,
   createSyncHarness,
-  featureConfig,
+  enabledProviders,
   inlineTransactions,
   syncedLocationLocks,
   type FakeDocument,
@@ -271,7 +271,7 @@ function createProcessingHarness(
       } as never,
       documents,
       pauseSourceProcessing,
-      featureConfig(options.processingEnabled ?? true),
+      enabledProviders(options.processingEnabled ?? true),
     ),
     new CompleteSyncedFileProcessingUseCase(
       replacements.get as never,

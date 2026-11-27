@@ -116,18 +116,28 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
 
   claimDue(
     now: Date,
-    next: NextSyncs,
+    next: Partial<NextSyncs>,
     limit: number,
   ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]> {
     const due = [...this.locations.values()]
-      .filter(
-        (location) => location.nextSyncAt <= now && !location.pausedAt(now),
+      .flatMap((location) => {
+        const nextSyncAt = next[location.provider];
+        return nextSyncAt &&
+          location.nextSyncAt <= now &&
+          !location.pausedAt(now)
+          ? [{ location, nextSyncAt }]
+          : [];
+      })
+      .sort(
+        (a, b) =>
+          a.location.nextSyncAt.getTime() - b.location.nextSyncAt.getTime(),
       )
-      .sort((a, b) => a.nextSyncAt.getTime() - b.nextSyncAt.getTime())
       .slice(0, limit);
-    for (const { id, provider } of due)
-      this.update(id, { nextSyncAt: next[provider] });
-    return Promise.resolve(due.map(({ id, orgId }) => ({ id, orgId })));
+    for (const { location, nextSyncAt } of due)
+      this.update(location.id, { nextSyncAt });
+    return Promise.resolve(
+      due.map(({ location: { id, orgId } }) => ({ id, orgId })),
+    );
   }
 
   delete(id: UUID): Promise<void> {

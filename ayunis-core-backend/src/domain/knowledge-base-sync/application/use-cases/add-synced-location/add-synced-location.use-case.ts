@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { HandleUnexpectedErrors } from 'src/common/decorators/handle-unexpected-errors.decorator';
-import { FeatureFlag } from 'src/config/features.config';
 import { FindSetUpConnectorQuery } from 'src/domain/connectors/application/use-cases/find-set-up-connector/find-set-up-connector.query';
 import { FindSetUpConnectorUseCase } from 'src/domain/connectors/application/use-cases/find-set-up-connector/find-set-up-connector.use-case';
 import { AssertKnowledgeBaseWriteAccessQuery } from 'src/domain/knowledge-bases/application/use-cases/assert-knowledge-base-write-access/assert-knowledge-base-write-access.query';
@@ -13,7 +11,9 @@ import {
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
 import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
 import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import { AddSyncedLocationCommand } from './add-synced-location.command';
 
 /**
@@ -30,7 +30,7 @@ export class AddSyncedLocationUseCase {
     private readonly writeAccess: AssertKnowledgeBaseWriteAccessUseCase,
     private readonly findConnector: FindSetUpConnectorUseCase,
     private readonly runs: SyncRunsPort,
-    private readonly configService: ConfigService,
+    private readonly providers: EnabledSyncProviders,
   ) {}
 
   @HandleUnexpectedErrors(UnexpectedKnowledgeBaseSyncError)
@@ -41,7 +41,7 @@ export class AddSyncedLocationUseCase {
       { knowledgeBaseId: command.knowledgeBaseId, product: command.product },
       'execute',
     );
-    if (!this.configService.get<boolean>(`features.${FeatureFlag.Connectors}`))
+    if (!this.providers.includes(SyncedLocationProvider.CONNECTOR))
       throw new KnowledgeBaseSyncDisabledError();
     const knowledgeBase = await this.writeAccess.execute(
       new AssertKnowledgeBaseWriteAccessQuery(command.knowledgeBaseId),

@@ -11,8 +11,6 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { UUID } from 'crypto';
-import { RequireFeature } from 'src/common/guards/feature.guard';
-import { FeatureFlag } from 'src/config/features.config';
 import { EMPTY_SYNCED_FILES_SUMMARY } from 'src/domain/knowledge-base-sync/application/models/synced-files-summary';
 import { AddSyncedLocationCommand } from 'src/domain/knowledge-base-sync/application/use-cases/add-synced-location/add-synced-location.command';
 import { AddSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/add-synced-location/add-synced-location.use-case';
@@ -46,13 +44,13 @@ const LOCATION_ID_PARAM = {
 } as const;
 
 /**
- * Locations a knowledge base syncs from a connected product. Readers of the
- * knowledge base see them; whoever may change its documents adds, syncs and
- * removes them.
+ * Locations a knowledge base syncs. Readers of the knowledge base see them;
+ * whoever may change its documents adds, syncs and removes them. Not behind a
+ * feature flag: the use cases leave out the locations of switched-off
+ * providers.
  */
 @ApiTags('knowledge-bases')
 @Controller('knowledge-bases')
-@RequireFeature(FeatureFlag.Connectors)
 export class KnowledgeBaseSyncedLocationsController {
   constructor(
     private readonly listSyncedLocationsUseCase: ListSyncedLocationsUseCase,

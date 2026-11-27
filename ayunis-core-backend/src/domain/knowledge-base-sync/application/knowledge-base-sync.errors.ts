@@ -9,7 +9,10 @@ export enum KnowledgeBaseSyncErrorCode {
   UNEXPECTED_KNOWLEDGE_BASE_SYNC_ERROR = 'UNEXPECTED_KNOWLEDGE_BASE_SYNC_ERROR',
 }
 
-/** Connectors are switched off (`FEATURE_CONNECTORS_ENABLED`). */
+/**
+ * The provider of the location is switched off, e.g. connectors
+ * (`FEATURE_CONNECTORS_ENABLED`).
+ */
 export class KnowledgeBaseSyncDisabledError extends ApplicationError {
   constructor() {
     super(

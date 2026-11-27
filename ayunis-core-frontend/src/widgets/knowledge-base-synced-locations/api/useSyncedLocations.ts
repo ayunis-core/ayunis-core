@@ -13,15 +13,11 @@ import {
 
 export function useSyncedLocations(
   knowledgeBaseId: string,
-  {
-    enabled,
-    syncRequestedAt,
-  }: { enabled: boolean; syncRequestedAt: number | null },
+  { syncRequestedAt }: { syncRequestedAt: number | null },
 ) {
   const { data, isLoading, isError, refetch } =
     useKnowledgeBaseSyncedLocationsControllerList(knowledgeBaseId, {
       query: {
-        enabled,
         refetchInterval: (query) =>
           syncedLocationsPollInterval(
             query.state.data?.data ?? [],

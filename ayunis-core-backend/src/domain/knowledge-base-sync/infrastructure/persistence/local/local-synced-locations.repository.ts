@@ -39,7 +39,7 @@ interface SkippedFileRow {
 }
 
 /** Sets each location's next sync to its provider's in `next`. */
-function nextSyncByProvider(next: NextSyncs): {
+function nextSyncByProvider(next: Partial<NextSyncs>): {
   nextSyncAt: () => string;
   parameters: Record<string, Date>;
 } {
@@ -262,13 +262,16 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
 
   async claimDue(
     now: Date,
-    next: NextSyncs,
+    next: Partial<NextSyncs>,
     limit: number,
   ): Promise<Pick<SyncedLocation, 'id' | 'orgId'>[]> {
+    const providers = Object.keys(next);
+    if (providers.length === 0) return [];
     const due = this.locations
       .createQueryBuilder('due')
       .select('due.id')
-      .where('due."nextSyncAt" <= :now')
+      .where('due."provider" IN (:...providers)')
+      .andWhere('due."nextSyncAt" <= :now')
       .andWhere('(due."pausedUntil" IS NULL OR due."pausedUntil" <= :now)')
       .orderBy('due."nextSyncAt"', 'ASC')
       .limit(limit)
@@ -281,7 +284,7 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
       .update()
       .set({ nextSyncAt })
       .where(`id IN (${due.getQuery()})`)
-      .setParameters({ ...parameters, now })
+      .setParameters({ ...parameters, now, providers })
       .returning(['id', 'orgId'])
       .execute();
     return result.raw as Pick<SyncedLocation, 'id' | 'orgId'>[];
