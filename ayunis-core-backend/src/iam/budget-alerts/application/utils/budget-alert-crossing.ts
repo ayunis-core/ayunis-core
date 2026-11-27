@@ -9,6 +9,11 @@ const WARNING_THRESHOLDS_BY_SCOPE: Record<BudgetAlertScope, readonly number[]> =
     [BudgetAlertScope.API_KEY]: [80, 100],
   };
 
+// Late in the month the remaining days make a 50% heads-up meaningless, so it
+// is only sent through this day of the (UTC) budget period.
+const HALF_BUDGET_WARNING_THRESHOLD = 50;
+const HALF_BUDGET_WARNING_LAST_DAY_OF_MONTH = 20;
+
 export interface BudgetTarget {
   scope: BudgetAlertScope;
   targetId: UUID;
@@ -39,10 +44,11 @@ export function notificationKey(
 export function collectCrossings(
   targets: BudgetTarget[],
   sentKeys: ReadonlySet<string>,
+  now: Date,
 ): BudgetCrossing[] {
   const crossings: BudgetCrossing[] = [];
   for (const target of targets) {
-    const crossing = evaluateTarget(target, sentKeys);
+    const crossing = evaluateTarget(target, sentKeys, now);
     if (crossing) {
       crossings.push(crossing);
     }
@@ -50,15 +56,25 @@ export function collectCrossings(
   return crossings;
 }
 
+function activeThresholds(scope: BudgetAlertScope, now: Date): number[] {
+  const halfBudgetWarningActive =
+    now.getUTCDate() <= HALF_BUDGET_WARNING_LAST_DAY_OF_MONTH;
+  return WARNING_THRESHOLDS_BY_SCOPE[scope].filter(
+    (threshold) =>
+      halfBudgetWarningActive || threshold !== HALF_BUDGET_WARNING_THRESHOLD,
+  );
+}
+
 function evaluateTarget(
   target: BudgetTarget,
   sentKeys: ReadonlySet<string>,
+  now: Date,
 ): BudgetCrossing | null {
   if (target.monthlyCredits <= 0) {
     return null;
   }
   const percentUsed = (target.creditsUsed / target.monthlyCredits) * 100;
-  const recordThresholds = WARNING_THRESHOLDS_BY_SCOPE[target.scope].filter(
+  const recordThresholds = activeThresholds(target.scope, now).filter(
     (threshold) =>
       percentUsed >= threshold &&
       !sentKeys.has(notificationKey(target.scope, target.targetId, threshold)),
