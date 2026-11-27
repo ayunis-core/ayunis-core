@@ -1,6 +1,8 @@
 {
   "page": {
-    "title": "What's new"
+    "title": "What's new",
+    "markAllRead": "Mark all as read",
+    "markAllReadError": "The product updates could not be marked as read."
   },
   "bell": {
     "label": "What's new",

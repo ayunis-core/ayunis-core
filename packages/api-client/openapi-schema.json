@@ -16889,6 +16889,19 @@
         "summary": "Get the release note to open right away for the current user",
         "tags": ["release-notes"]
       }
+    },
+    "/release-notes/read-all": {
+      "post": {
+        "operationId": "ReleaseNotesController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Mark every release note read for the current user",
+        "tags": ["release-notes"]
+      }
     }
   },
   "info": {

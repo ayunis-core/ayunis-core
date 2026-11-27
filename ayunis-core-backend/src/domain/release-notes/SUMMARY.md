@@ -24,6 +24,7 @@ A note is **unread** for a user when it is `announced`, was created after the us
 | GET    | `/release-notes/instant-open` | `FindInstantOpenReleaseNoteUseCase` — the newest `instant_open` note while it is unread for the current user, else null; only the newest counts, so an older unread one never opens once it is read |
 | GET    | `/release-notes/:id`          | `FindReleaseNoteUseCase` (exported) — 404 `RELEASE_NOTE_NOT_FOUND`                                                                                                                                  |
 | GET    | `/release-notes/:id/image`    | `DownloadReleaseNoteImageUseCase` — streams the stored image with `nosniff`; without an image 404 `RELEASE_NOTE_IMAGE_NOT_FOUND`                                                                    |
+| POST   | `/release-notes/read-all`     | `MarkAllReleaseNotesReadUseCase` (204) — one `INSERT … SELECT … ON CONFLICT DO NOTHING` over every note that is unread for the current user                                                         |
 | POST   | `/release-notes/:id/read`     | `MarkReleaseNoteReadUseCase` — one `INSERT … SELECT … ON CONFLICT DO NOTHING`, so a second read or a deleted note writes nothing                                                                    |
 
 Consumers of `FindReleaseNoteUseCase`: **threads** (`CreateThreadUseCase` checks a `sourceReleaseNoteId`) and **runs** (`ReleaseNoteContextCapability` reads the note a chat is about).

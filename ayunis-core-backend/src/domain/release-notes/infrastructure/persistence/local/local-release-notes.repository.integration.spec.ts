@@ -369,6 +369,23 @@ describe('LocalReleaseNotesRepository (PostgreSQL)', () => {
       await expect(repository.countUnread(reader, 100)).resolves.toBe(1);
     });
 
+    it('marks every unread note read for the reader only, and twice without error', async () => {
+      const reader = await aUser('2026-01-01');
+      const colleague = await aUser('2026-01-01');
+      await aStoredNote('2026-11-01', { announced: true });
+      const newest = await aStoredNote('2026-11-05', {
+        announcableId: OTHER_ANNOUNCABLE_ID,
+        announced: true,
+      });
+      await repository.markRead(reader, newest);
+
+      await repository.markAllRead(reader);
+      await repository.markAllRead(reader);
+
+      await expect(repository.countUnread(reader, 100)).resolves.toBe(0);
+      await expect(repository.countUnread(colleague, 100)).resolves.toBe(2);
+    });
+
     it('marks a note read for the reader only, once', async () => {
       const reader = await aUser('2026-01-01');
       const colleague = await aUser('2026-01-01');

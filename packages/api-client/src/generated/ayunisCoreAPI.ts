@@ -36407,3 +36407,69 @@ export function useReleaseNotesControllerFindInstantOpen<TData = Awaited<ReturnT
 
 
 
+/**
+ * @summary Mark every release note read for the current user
+ */
+export const releaseNotesControllerMarkAllRead = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<void>(
+      {url: `/release-notes/read-all`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getReleaseNotesControllerMarkAllReadMutationKey = () => ['releaseNotesControllerMarkAllRead'] as const;
+
+export const getReleaseNotesControllerMarkAllReadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkAllRead>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkAllRead>>, TError,void, TContext> => {
+
+const mutationKey = getReleaseNotesControllerMarkAllReadMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof releaseNotesControllerMarkAllRead>>, void> = () => {
+
+
+          return  releaseNotesControllerMarkAllRead()
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReleaseNotesControllerMarkAllReadMutationResult = NonNullable<Awaited<ReturnType<typeof releaseNotesControllerMarkAllRead>>>
+
+    export type ReleaseNotesControllerMarkAllReadMutationError = unknown
+
+
+    /**
+ * @summary Mark every release note read for the current user
+ */
+export const useReleaseNotesControllerMarkAllRead = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseNotesControllerMarkAllRead>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof releaseNotesControllerMarkAllRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getReleaseNotesControllerMarkAllReadMutationOptions(options), queryClient);
+    }
+

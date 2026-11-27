@@ -163,6 +163,7 @@
   "/recordings/{id}/uploads/{uploadId}/complete",
   "/release-notes",
   "/release-notes/instant-open",
+  "/release-notes/read-all",
   "/release-notes/unread-count",
   "/release-notes/{id}",
   "/release-notes/{id}/image",

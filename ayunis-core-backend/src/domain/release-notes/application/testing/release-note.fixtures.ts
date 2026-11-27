@@ -115,6 +115,13 @@ export class InMemoryReleaseNotesRepository extends ReleaseNotesRepository {
     return Promise.resolve();
   }
 
+  markAllRead(userId: UUID): Promise<void> {
+    for (const note of this.notes.values()) {
+      if (note.announced) this.reads.add(`${userId}:${note.id}`);
+    }
+    return Promise.resolve();
+  }
+
   /** Every reader joined before every note. */
   private forUser(userId: UUID, note: ReleaseNote): UserReleaseNote {
     return {

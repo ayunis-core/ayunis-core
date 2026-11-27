@@ -112,6 +112,20 @@ export class LocalReleaseNotesRepository extends ReleaseNotesRepository {
     );
   }
 
+  async markAllRead(userId: UUID): Promise<void> {
+    const manager = this.repo.manager;
+    await manager.query(
+      `INSERT INTO ${tablePath(manager, ReleaseNoteReadRecord)}
+         ("id", "userId", "releaseNoteId")
+       SELECT gen_random_uuid(), reader."id", note."id"
+       FROM ${tablePath(manager, ReleaseNoteRecord)} note
+       JOIN ${tablePath(manager, UserRecord)} reader ON reader."id" = $1
+       WHERE note."announced" AND note."createdAt" > reader."createdAt"
+       ON CONFLICT ("userId", "releaseNoteId") DO NOTHING`,
+      [userId],
+    );
+  }
+
   /** Notes with the reader's row and their read mark, if any, joined in. */
   private forUser(userId: UUID): SelectQueryBuilder<ReleaseNoteRecord> {
     return this.repo
