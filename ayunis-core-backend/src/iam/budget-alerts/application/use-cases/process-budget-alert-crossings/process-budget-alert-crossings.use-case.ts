@@ -46,7 +46,7 @@ export class ProcessBudgetAlertCrossingsUseCase {
     this.logger.log({ orgId: query.orgId }, 'execute');
 
     const sentKeys = await this.loadSentKeys(query.orgId, query.periodStart);
-    const crossings = collectCrossings(query.targets, sentKeys);
+    const crossings = collectCrossings(query.targets, sentKeys, new Date());
     if (crossings.length === 0) {
       return;
     }

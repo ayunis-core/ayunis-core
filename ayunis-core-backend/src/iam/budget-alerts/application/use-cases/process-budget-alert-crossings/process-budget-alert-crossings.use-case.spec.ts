@@ -32,6 +32,17 @@ describe('ProcessBudgetAlertCrossingsUseCase', () => {
     creditsUsed: 830,
   };
 
+  // The 50% org warning is only sent through the 20th of the month.
+  beforeAll(() => {
+    jest.useFakeTimers({
+      now: new Date('2026-07-10T12:00:00.000Z'),
+      doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'],
+    });
+  });
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(async () => {
     admins = {
       execute: jest
