@@ -1,5 +1,4 @@
 import {
-  useAddUrl,
   useKnowledgeBaseDocuments,
   useRemoveDocument,
   useRemoveFailedDocuments,
@@ -16,7 +15,6 @@ export default function KnowledgeBaseDocumentsCard({
   const upload = useUploadDocument(knowledgeBaseId);
   const remove = useRemoveDocument(knowledgeBaseId);
   const removeFailed = useRemoveFailedDocuments(knowledgeBaseId);
-  const addUrl = useAddUrl(knowledgeBaseId);
   const synced = useSyncedSources(knowledgeBaseId, disabled);
 
   return (
@@ -28,7 +26,6 @@ export default function KnowledgeBaseDocumentsCard({
         ...upload,
         ...remove,
         ...removeFailed,
-        ...addUrl,
       }}
     />
   );

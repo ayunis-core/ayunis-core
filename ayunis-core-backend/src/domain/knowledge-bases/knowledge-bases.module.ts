@@ -41,7 +41,6 @@ import { ListKnowledgeBasesUseCase } from './application/use-cases/list-knowledg
 import { AddDocumentToKnowledgeBaseUseCase } from './application/use-cases/add-document-to-knowledge-base/add-document-to-knowledge-base.use-case';
 import { CreateKnowledgeBaseUploadUseCase } from './application/use-cases/create-knowledge-base-upload/create-knowledge-base-upload.use-case';
 import { CompleteKnowledgeBaseUploadUseCase } from './application/use-cases/complete-knowledge-base-upload/complete-knowledge-base-upload.use-case';
-import { AddUrlToKnowledgeBaseUseCase } from './application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
 import { RemoveDocumentFromKnowledgeBaseUseCase } from './application/use-cases/remove-document-from-knowledge-base/remove-document-from-knowledge-base.use-case';
 import { RemoveFailedDocumentsFromKnowledgeBaseUseCase } from './application/use-cases/remove-failed-documents-from-knowledge-base/remove-failed-documents-from-knowledge-base.use-case';
 import { AddSyncedDocumentsToKnowledgeBaseUseCase } from './application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.use-case';
@@ -95,7 +94,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     AddDocumentToKnowledgeBaseUseCase,
     CreateKnowledgeBaseUploadUseCase,
     CompleteKnowledgeBaseUploadUseCase,
-    AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     RemoveFailedDocumentsFromKnowledgeBaseUseCase,
     AddSyncedDocumentsToKnowledgeBaseUseCase,
@@ -142,7 +140,6 @@ import { KnowledgeBaseDtoMapper } from './presenters/http/mappers/knowledge-base
     FindKnowledgeBaseUseCase,
     ListKnowledgeBasesUseCase,
     AddDocumentToKnowledgeBaseUseCase,
-    AddUrlToKnowledgeBaseUseCase,
     RemoveDocumentFromKnowledgeBaseUseCase,
     RemoveFailedDocumentsFromKnowledgeBaseUseCase,
     AddSyncedDocumentsToKnowledgeBaseUseCase,

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import type { PendingSourceUpload } from '@/shared/lib/source-upload';
 import { PendingUploadItems } from '@/shared/ui/pending-upload-items';
 import {
@@ -17,9 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { cn } from '@ayunis/ui/lib/cn';
 import { useDocumentDrop } from '@/shared/hooks/useDocumentDrop';
-import { isValidUrl } from '@/widgets/knowledge-base-documents-card/lib/isValidUrl';
 import type { SyncedSources } from '@/widgets/knowledge-base-documents-card/model/synced-sources';
-import { AddUrlDialog } from './AddUrlDialog';
 import { AddSourceMenu } from './AddSourceMenu';
 import { RemoveFailedDocumentsButton } from './RemoveFailedDocumentsButton';
 import { SourcesList } from './SourcesList';
@@ -59,8 +57,6 @@ export interface KnowledgeBaseDocumentsController {
   isRemoving: boolean;
   removeFailedDocuments: () => void;
   isRemovingFailed: boolean;
-  addUrlAsync?: (url: string, depth: number) => Promise<unknown>;
-  isAddingUrl?: boolean;
 }
 
 export default function KnowledgeBaseDocumentsCard({
@@ -76,9 +72,6 @@ export default function KnowledgeBaseDocumentsCard({
   const { t: tCommon } = useTranslation('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [urlDialogOpen, setUrlDialogOpen] = useState(false);
-  const [urlInput, setUrlInput] = useState('');
-  const [urlDepth, setUrlDepth] = useState(0);
   const {
     documents,
     isLoading,
@@ -89,8 +82,6 @@ export default function KnowledgeBaseDocumentsCard({
     isRemoving,
     removeFailedDocuments,
     isRemovingFailed,
-    addUrlAsync,
-    isAddingUrl = false,
   } = controller;
   const failedCount = documents.filter(
     (doc) => doc.status === KnowledgeBaseDocumentResponseDtoStatus.failed,
@@ -114,28 +105,6 @@ export default function KnowledgeBaseDocumentsCard({
         uploadDocument(file);
       }
       e.target.value = '';
-    }
-  };
-
-  const handleAddUrl = async () => {
-    const trimmed = urlInput.trim();
-    if (!addUrlAsync || !trimmed || !isValidUrl(trimmed) || isAddingUrl) return;
-    try {
-      await addUrlAsync(trimmed, urlDepth);
-      setUrlInput('');
-      setUrlDepth(0);
-      setUrlDialogOpen(false);
-    } catch {
-      // error toast is handled by the mutation's onError callback
-    }
-  };
-
-  const handleUrlDialogOpenChange = (open: boolean) => {
-    if (!open && isAddingUrl) return;
-    setUrlDialogOpen(open);
-    if (!open) {
-      setUrlInput('');
-      setUrlDepth(0);
     }
   };
 
@@ -176,11 +145,8 @@ export default function KnowledgeBaseDocumentsCard({
               />
               <AddSourceMenu
                 onUpload={() => fileInputRef.current?.click()}
-                onAddUrl={
-                  addUrlAsync ? () => setUrlDialogOpen(true) : undefined
-                }
                 entries={synced?.addMenuEntries}
-                isBusy={isUploading || isAddingUrl}
+                isBusy={isUploading}
               />
             </div>
           </CardAction>
@@ -207,19 +173,6 @@ export default function KnowledgeBaseDocumentsCard({
           disabled={disabled}
         />
       </CardContent>
-      {addUrlAsync ? (
-        <AddUrlDialog
-          open={urlDialogOpen}
-          onOpenChange={handleUrlDialogOpenChange}
-          urlInput={urlInput}
-          onUrlChange={setUrlInput}
-          depth={urlDepth}
-          onDepthChange={setUrlDepth}
-          onSubmit={() => void handleAddUrl()}
-          isAddingUrl={isAddingUrl}
-          t={t}
-        />
-      ) : null}
       {synced?.dialogs}
     </Card>
   );

@@ -1,5 +1,3 @@
-import { AddUrlToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.use-case';
-import { AddUrlToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-url-to-knowledge-base/add-url-to-knowledge-base.command';
 import { AddSyncedDocumentsToKnowledgeBaseUseCase } from 'src/domain/knowledge-bases/application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.use-case';
 import { AddSyncedDocumentsToKnowledgeBaseCommand } from 'src/domain/knowledge-bases/application/use-cases/add-synced-documents-to-knowledge-base/add-synced-documents-to-knowledge-base.command';
 import { PersonalKnowledgeBase } from 'src/domain/knowledge-bases/domain/personal-knowledge-base.entity';
@@ -11,10 +9,7 @@ import 'src/config/env';
 import { typeormConfigRaw } from 'src/config/typeorm.config';
 import { SourceRecord } from 'src/domain/sources/infrastructure/persistence/local/schema/source.record';
 import { selectCrawledFilesWithinCapacity } from 'src/domain/sources/infrastructure/persistence/local/crawled-file-sources.helpers';
-import {
-  FileSource,
-  UrlSource,
-} from 'src/domain/sources/domain/sources/text-source.entity';
+import { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
 import { FileType, TextType } from 'src/domain/sources/domain/source-type.enum';
 import { KnowledgeBaseSourceLimitExceededError } from 'src/domain/knowledge-bases/application/knowledge-bases.errors';
 import { KnowledgeBaseRecord } from './schema/knowledge-base.record';
@@ -108,128 +103,71 @@ describe('Knowledge-base capacity across source writers', () => {
     return false;
   }
 
-  async function addUrl(
-    knowledgeBaseId: ReturnType<typeof randomUUID>,
-    id: ReturnType<typeof randomUUID>,
-  ) {
-    const create = {
-      execute: async () => {
-        await transactions
-          .getStore()!
-          .getRepository(SourceRecord)
-          .update(id, { knowledgeBaseId });
-        return new UrlSource({
-          id,
-          knowledgeBaseId,
-          name: 'Statutes',
-          url: 'https://municipality.test/statutes',
-          type: TextType.WEB,
-        });
-      },
-    };
-    const enqueue = {
-      execute: async () => {
-        expect(transactions.getStore()).toBeUndefined();
-        expect(
-          (await db.getRepository(SourceRecord).findOneByOrFail({ id }))
-            .knowledgeBaseId,
-        ).toBe(knowledgeBaseId);
-      },
-    };
-    const txHost = {
-      withTransaction: (operation: () => Promise<unknown>) =>
-        db.transaction((manager) => transactions.run(manager, operation)),
-    };
-    const useCase = new AddUrlToKnowledgeBaseUseCase(
-      repository,
-      { requireWrite: async () => undefined } as never,
-      create as never,
-      enqueue as never,
-      {} as never,
-      { get: () => randomUUID() } as never,
-      txHost as never,
-    );
-    return useCase.execute(
-      new AddUrlToKnowledgeBaseCommand({
+  it('rejects an upload admission racing the last slot taken by a PDF registration', async () => {
+    const knowledgeBaseId = randomUUID();
+    const uploadId = randomUUID();
+    const rootId = randomUUID();
+    await db.getRepository(KnowledgeBaseRecord).insert({ id: knowledgeBaseId });
+    await db.getRepository(SourceRecord).insert([
+      { id: rootId, knowledgeBaseId },
+      ...Array.from({ length: 498 }, () => ({
+        id: randomUUID(),
         knowledgeBaseId,
-        url: 'https://municipality.test/statutes',
-        maxDepth: 0,
-      }),
-    );
-  }
-
-  it.each(['upload', 'URL'])(
-    'rejects a %s admission racing the last slot taken by a PDF registration',
-    async (kind) => {
-      const knowledgeBaseId = randomUUID();
-      const uploadId = randomUUID();
-      const rootId = randomUUID();
-      await db
-        .getRepository(KnowledgeBaseRecord)
-        .insert({ id: knowledgeBaseId });
-      await db.getRepository(SourceRecord).insert([
-        { id: rootId, knowledgeBaseId },
-        ...Array.from({ length: 498 }, () => ({
-          id: randomUUID(),
-          knowledgeBaseId,
-        })),
-        { id: uploadId },
-      ]);
-      const pdf = new FileSource({
-        name: 'Statute',
-        type: TextType.FILE,
-        fileType: FileType.PDF,
-        knowledgeBaseId,
-      });
-      let unlock!: () => void;
-      let locked!: () => void;
-      const release = new Promise<void>((resolve) => {
-        unlock = resolve;
-      });
-      const acquired = new Promise<void>((resolve) => {
-        locked = resolve;
-      });
-      const registration = db.transaction(async (manager) => {
-        const selected = await selectCrawledFilesWithinCapacity(
-          manager,
-          rootId,
-          [pdf],
-          500,
-        );
-        expect(selected).toHaveLength(1);
-        locked();
-        await release;
-        await manager
-          .getRepository(SourceRecord)
-          .insert({ id: pdf.id, knowledgeBaseId });
-      });
-      await acquired;
-      const admission = (
-        kind === 'upload'
-          ? repository.assignSourceToKnowledgeBase(uploadId, knowledgeBaseId)
-          : addUrl(knowledgeBaseId, uploadId)
-      ).then(
+      })),
+      { id: uploadId },
+    ]);
+    const pdf = new FileSource({
+      name: 'Statute',
+      type: TextType.FILE,
+      fileType: FileType.PDF,
+      knowledgeBaseId,
+    });
+    let unlock!: () => void;
+    let locked!: () => void;
+    const release = new Promise<void>((resolve) => {
+      unlock = resolve;
+    });
+    const acquired = new Promise<void>((resolve) => {
+      locked = resolve;
+    });
+    const registration = db.transaction(async (manager) => {
+      const selected = await selectCrawledFilesWithinCapacity(
+        manager,
+        rootId,
+        [pdf],
+        500,
+      );
+      expect(selected).toHaveLength(1);
+      locked();
+      await release;
+      await manager
+        .getRepository(SourceRecord)
+        .insert({ id: pdf.id, knowledgeBaseId });
+    });
+    await acquired;
+    const admission = repository
+      .assignSourceToKnowledgeBase(uploadId, knowledgeBaseId)
+      .then(
         () => undefined,
         (error: unknown) => error,
       );
-      try {
-        expect(await competingWriterIsWaiting()).toBe(true);
-      } finally {
-        unlock();
-      }
-      await registration;
-      expect(await admission).toBeInstanceOf(
-        KnowledgeBaseSourceLimitExceededError,
-      );
-      expect(
-        await db.getRepository(SourceRecord).countBy({ knowledgeBaseId }),
-      ).toBe(500);
-      expect(
-        (await db.getRepository(SourceRecord).findOneByOrFail({ id: uploadId }))
-          .knowledgeBaseId,
-      ).toBeNull();
-    },
-  );
+    try {
+      expect(await competingWriterIsWaiting()).toBe(true);
+    } finally {
+      unlock();
+    }
+    await registration;
+    expect(await admission).toBeInstanceOf(
+      KnowledgeBaseSourceLimitExceededError,
+    );
+    expect(
+      await db.getRepository(SourceRecord).countBy({ knowledgeBaseId }),
+    ).toBe(500);
+    expect(
+      (await db.getRepository(SourceRecord).findOneByOrFail({ id: uploadId }))
+        .knowledgeBaseId,
+    ).toBeNull();
+  });
   it('gives synced files only the room left once a racing writer has taken its slot', async () => {
     const knowledgeBaseId = randomUUID();
     const rootId = randomUUID();

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Globe, Loader2, Plus, Upload } from 'lucide-react';
+import { ChevronDown, Loader2, Plus, Upload } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import {
   DropdownMenu,
@@ -12,12 +12,10 @@ import type { AddMenuEntry } from '@/widgets/knowledge-base-documents-card/model
 
 export function AddSourceMenu({
   onUpload,
-  onAddUrl,
   entries = [],
   isBusy,
 }: Readonly<{
   onUpload: () => void;
-  onAddUrl?: () => void;
   entries?: AddMenuEntry[];
   isBusy: boolean;
 }>) {
@@ -42,15 +40,6 @@ export function AddSourceMenu({
           <Upload />
           {t('detail.documents.addDocument')}
         </DropdownMenuItem>
-        {onAddUrl && (
-          <DropdownMenuItem
-            data-testid="knowledge-base-documents-add-url"
-            onSelect={() => requestDialogOpen(onAddUrl)}
-          >
-            <Globe />
-            {t('detail.documents.addUrl')}
-          </DropdownMenuItem>
-        )}
         {entries.map(({ key, label, icon: Icon, testId, openDialog }) => (
           <DropdownMenuItem
             key={key}

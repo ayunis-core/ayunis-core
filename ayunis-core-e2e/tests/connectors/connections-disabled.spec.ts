@@ -11,12 +11,17 @@ import { permitEmbeddingModel } from '../../src/clients/api/models.client';
 import { requestFeatureToggles } from '../../src/clients/api/routines.client';
 import {
   addSharePointLocation,
+  listSyncedLocations,
   requestSyncedLocations,
 } from '../../src/clients/api/synced-locations.client';
 import { sharePointLibraryUrl } from '../../src/clients/graph-mock.client';
 import { connectMicrosoft365 } from '../../src/factories/microsoft-365.factory';
 import { createOrg } from '../../src/factories/org.factory';
 import { expect, test } from '../../src/fixtures/test';
+import {
+  htmlPage,
+  startWebsiteServer,
+} from '../../src/servers/website.server';
 
 // Same database and frontend build, served by a second backend started with
 // FEATURE_CONNECTORS_ENABLED=false (see .github/workflows/e2e-tests.yml).
@@ -147,5 +152,124 @@ test('with connectors disabled the synced locations list no SharePoint location,
   } finally {
     await context.close();
     await api.dispose();
+  }
+});
+
+test('with connectors disabled a website is added, shown, synced and removed, and the SharePoint entries stay hidden', async ({
+  browser,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  const key = randomUUID().slice(0, 8);
+  const site = await startWebsiteServer({
+    '/abfall': htmlPage(
+      'Abfallkalender',
+      '<p>Die Biotonne wird dienstags geleert.</p>',
+    ),
+  });
+  const { storageState } = await createOrg(
+    `website-off-${key}`,
+    testInfo.outputPath('org.json'),
+  );
+  const api = await request.newContext({ baseURL: config.apiURL, storageState });
+  const context = await browser.newContext({ storageState });
+  try {
+    await permitEmbeddingModel(api);
+    await connectMicrosoft365(api);
+    const knowledgeBase = await generatedApi.knowledgeBasesControllerCreate(
+      { ownerType: 'personal', name: `Abfall ${key}` },
+      { api },
+    );
+    const sharePoint = await addSharePointLocation(
+      api,
+      knowledgeBase.id,
+      sharePointLibraryUrl(`abfall-${key}`),
+    );
+
+    const page = await context.newPage();
+    await page.goto(`${disabledBaseUrl}/knowledge-bases/${knowledgeBase.id}`);
+    await page.getByTestId('knowledge-base-documents-add').click();
+    await expect(
+      page.getByTestId('knowledge-base-synced-locations-add-sharepoint'),
+    ).toHaveCount(0);
+    await page.getByTestId('knowledge-base-documents-add-url').click();
+    await page.getByTestId('website-url').fill(site.url('/abfall'));
+    await page.getByTestId('website-add').click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    const listed = await requestSyncedLocations.list(
+      api,
+      knowledgeBase.id,
+      disabledApiUrl,
+    );
+    const { data } = (await listed.json()) as Awaited<
+      ReturnType<typeof listSyncedLocations>
+    >;
+    expect(data.map(({ provider }) => provider)).toEqual(['web']);
+    const website = data[0];
+    const row = page.getByTestId(`synced-location-${website.id}`);
+    await expect(row).toHaveAttribute('data-sync-state', 'synced', {
+      timeout: 60_000,
+    });
+    await expect(page.getByTestId(`synced-location-${sharePoint.id}`)).toHaveCount(
+      0,
+    );
+    await expect
+      .poll(
+        async () =>
+          (
+            await generatedApi.knowledgeBasesControllerListDocuments(
+              knowledgeBase.id,
+              { api },
+            )
+          ).data
+            .filter(({ syncedLocationId }) => syncedLocationId === website.id)
+            .map(({ name, status }) => `${name}:${status}`),
+        { timeout: 60_000 },
+      )
+      .toEqual(['Abfallkalender:ready']);
+
+    site.setPage(
+      '/abfall',
+      htmlPage(
+        'Abfallkalender 2027',
+        '<p>Die Biotonne wird ab Januar mittwochs geleert.</p>',
+      ),
+    );
+    await row.getByTestId('synced-location-sync-now').click();
+    await expect
+      .poll(
+        async () =>
+          (
+            await generatedApi.knowledgeBasesControllerListDocuments(
+              knowledgeBase.id,
+              { api },
+            )
+          ).data
+            .filter(({ syncedLocationId }) => syncedLocationId === website.id)
+            .map(({ name }) => name),
+        { timeout: 60_000 },
+      )
+      .toEqual(['Abfallkalender 2027']);
+
+    await row.getByTestId('synced-location-remove').click();
+    await page.getByTestId('confirmation-confirm').click();
+    await expect(row).toHaveCount(0);
+    expect(
+      (await listSyncedLocations(api, knowledgeBase.id)).data.map(
+        ({ id }) => id,
+      ),
+    ).toEqual([sharePoint.id]);
+    expect(
+      (
+        await generatedApi.knowledgeBasesControllerListDocuments(
+          knowledgeBase.id,
+          { api },
+        )
+      ).data.filter(({ syncedLocationId }) => syncedLocationId === website.id),
+    ).toEqual([]);
+  } finally {
+    await context.close();
+    await api.dispose();
+    await site.close();
   }
 });

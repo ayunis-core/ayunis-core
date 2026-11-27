@@ -6,7 +6,6 @@ import {
   useKnowledgeBasesControllerListDocuments,
   knowledgeBaseUploadsControllerCompleteUpload,
   knowledgeBaseUploadsControllerCreateUpload,
-  knowledgeBasesControllerAddUrl,
   knowledgeBasesControllerRemoveDocument,
   knowledgeBasesControllerRemoveFailedDocuments,
 } from '@ayunis/api-client/endpoints';
@@ -19,7 +18,7 @@ import {
   isSourcePending,
   useProcessingPollInterval,
 } from '@/shared/lib/processing-poll';
-import { showError, showSuccess } from '@/shared/lib/toast';
+import { showError } from '@/shared/lib/toast';
 import { useInvalidateWorkspaceResources } from './useInvalidateWorkspaceResources';
 
 function useDocuments(
@@ -142,39 +141,6 @@ function useRemoveFailedDocuments(
   };
 }
 
-function addUrlErrorKey(error: unknown) {
-  const { code } = extractErrorData(error);
-  if (code === 'UNSUPPORTED_CONTENT_TYPE')
-    return 'detail.documents.addUrlUnsupportedContentType';
-  if (code === 'RETRIEVAL_FAILED')
-    return 'detail.documents.addUrlRetrievalFailed';
-  return 'detail.documents.addUrlError';
-}
-
-function useAddUrl(knowledgeBaseId: string, refresh: () => Promise<void>) {
-  const { t } = useTranslation('knowledge-bases');
-  const mutation = useMutation({
-    mutationFn: ({ url, maxDepth }: { url: string; maxDepth: number }) =>
-      knowledgeBasesControllerAddUrl(knowledgeBaseId, { url, maxDepth }),
-    onSuccess: async () => {
-      await refresh();
-      showSuccess(t('detail.documents.addUrlSuccess'));
-    },
-    onError: (error) => {
-      try {
-        showError(t(addUrlErrorKey(error)));
-      } catch {
-        showError(t('detail.documents.addUrlError'));
-      }
-    },
-  });
-  return {
-    addUrlAsync: (url: string, maxDepth: number) =>
-      mutation.mutateAsync({ url, maxDepth }),
-    isAddingUrl: mutation.isPending,
-  };
-}
-
 export function useWorkspaceKnowledgeBaseDocuments(
   workspaceId: string,
   knowledgeBaseId: string,
@@ -188,7 +154,6 @@ export function useWorkspaceKnowledgeBaseDocuments(
   const upload = useUploadDocument(knowledgeBaseId, refresh);
   const remove = useRemoveDocument(knowledgeBaseId, refresh);
   const removeFailed = useRemoveFailedDocuments(knowledgeBaseId, refresh);
-  const addUrl = useAddUrl(knowledgeBaseId, refresh);
   return {
     documents: response.data.map((document) => ({
       ...document,
@@ -198,6 +163,5 @@ export function useWorkspaceKnowledgeBaseDocuments(
     ...upload,
     ...remove,
     ...removeFailed,
-    ...addUrl,
   };
 }

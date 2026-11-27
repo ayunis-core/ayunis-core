@@ -40,7 +40,7 @@ import type {
   AddOparlSystemDto,
   AddSyncedLocationDto,
   AddTeamMemberDto,
-  AddUrlToKnowledgeBaseDto,
+  AddWebsiteDto,
   AddWorkspaceMembersDto,
   AddonStatusResponseDto,
   AdminUpdateUserDto,
@@ -13262,75 +13262,6 @@ export const useKnowledgeBasesControllerAddDocument = <TError = void,
     }
 
 /**
- * @summary Add a URL source to a knowledge base
- */
-export const knowledgeBasesControllerAddUrl = (
-    id: string,
-    addUrlToKnowledgeBaseDto: AddUrlToKnowledgeBaseDto,
- signal?: AbortSignal
-) => {
-
-
-      return customAxiosInstance<KnowledgeBaseDocumentResponseDto>(
-      {url: `/knowledge-bases/${id}/urls`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: addUrlToKnowledgeBaseDto, signal
-    },
-      );
-    }
-
-
-
-
-export const getKnowledgeBasesControllerAddUrlMutationKey = () => ['knowledgeBasesControllerAddUrl'] as const;
-
-export const getKnowledgeBasesControllerAddUrlMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,KnowledgeBasesControllerAddUrlMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,KnowledgeBasesControllerAddUrlMutationVariables, TContext> => {
-
-const mutationKey = getKnowledgeBasesControllerAddUrlMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, KnowledgeBasesControllerAddUrlMutationVariables> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  knowledgeBasesControllerAddUrl(id,data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type KnowledgeBasesControllerAddUrlMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>>
-    export type KnowledgeBasesControllerAddUrlMutationBody = AddUrlToKnowledgeBaseDto
-    export type KnowledgeBasesControllerAddUrlMutationError = void
-    export type KnowledgeBasesControllerAddUrlMutationVariables = {id: string;data: AddUrlToKnowledgeBaseDto}
-
-    /**
- * @summary Add a URL source to a knowledge base
- */
-export const useKnowledgeBasesControllerAddUrl = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>, TError,KnowledgeBasesControllerAddUrlMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof knowledgeBasesControllerAddUrl>>,
-        TError,
-        KnowledgeBasesControllerAddUrlMutationVariables,
-        TContext
-      > => {
-      return useMutation(getKnowledgeBasesControllerAddUrlMutationOptions(options), queryClient);
-    }
-
-/**
  * @summary Remove a document from a knowledge base
  */
 export const knowledgeBasesControllerRemoveDocument = (
@@ -24482,6 +24413,76 @@ export const useKnowledgeBaseSyncedLocationsControllerAdd = <TError = void,
         TContext
       > => {
       return useMutation(getKnowledgeBaseSyncedLocationsControllerAddMutationOptions(options), queryClient);
+    }
+
+/**
+ * The website is synced daily: every page reached up to the link depth and every PDF they link to becomes a document of the knowledge base, within its document limit. The first sync starts right away.
+ * @summary Add a website to a knowledge base
+ */
+export const knowledgeBaseSyncedLocationsControllerAddWebsite = (
+    id: string,
+    addWebsiteDto: AddWebsiteDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customAxiosInstance<SyncedLocationResponseDto>(
+      {url: `/knowledge-bases/${id}/urls`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addWebsiteDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getKnowledgeBaseSyncedLocationsControllerAddWebsiteMutationKey = () => ['knowledgeBaseSyncedLocationsControllerAddWebsite'] as const;
+
+export const getKnowledgeBaseSyncedLocationsControllerAddWebsiteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAddWebsite>>, TError,KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAddWebsite>>, TError,KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationVariables, TContext> => {
+
+const mutationKey = getKnowledgeBaseSyncedLocationsControllerAddWebsiteMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAddWebsite>>, KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeBaseSyncedLocationsControllerAddWebsite(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAddWebsite>>>
+    export type KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationBody = AddWebsiteDto
+    export type KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationError = void
+    export type KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationVariables = {id: string;data: AddWebsiteDto}
+
+    /**
+ * @summary Add a website to a knowledge base
+ */
+export const useKnowledgeBaseSyncedLocationsControllerAddWebsite = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAddWebsite>>, TError,KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeBaseSyncedLocationsControllerAddWebsite>>,
+        TError,
+        KnowledgeBaseSyncedLocationsControllerAddWebsiteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getKnowledgeBaseSyncedLocationsControllerAddWebsiteMutationOptions(options), queryClient);
     }
 
 /**
