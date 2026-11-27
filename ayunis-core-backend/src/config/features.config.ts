@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { releaseNotesConfig } from './release-notes.config';
-import { SURFACE_REGISTRY, type SurfaceFeatureFlag } from './surface-registry';
+import type { SurfaceFeatureFlag } from './surface-registry';
 
 export enum FeatureFlag {
   ExternalSubscriptions = 'externalSubscriptionsEnabled',
@@ -29,11 +29,7 @@ export enum FeatureFlag {
   Oparl = 'oparlEnabled',
 }
 
-type SurfaceFeatureName = NonNullable<
-  (typeof SURFACE_REGISTRY)[keyof typeof SURFACE_REGISTRY]['featureFlag']
->['name'];
-
-export type FeaturesConfig = Record<FeatureFlag | SurfaceFeatureName, boolean>;
+export type FeaturesConfig = Record<FeatureFlag, boolean>;
 
 export const parseBooleanWithDefault = (
   value: string | undefined,
@@ -78,9 +74,6 @@ export const featuresConfig = registerAs('features', (): FeaturesConfig => {
     readAloudEnabled:
       voiceEnabled &&
       parseBooleanWithDefault(process.env.FEATURE_READ_ALOUD_ENABLED, false),
-    [SURFACE_REGISTRY.outlook.featureFlag.name]: isSurfaceFeatureEnabled(
-      SURFACE_REGISTRY.outlook.featureFlag,
-    ),
     memoryEnabled: parseBooleanWithDefault(
       process.env.FEATURE_MEMORY_ENABLED,
       false,

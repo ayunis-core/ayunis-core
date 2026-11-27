@@ -16935,11 +16935,6 @@
             "description": "Assistant messages can be read aloud (opt-in, needs voice to be available)",
             "default": false
           },
-          "outlookAddinEnabled": {
-            "type": "boolean",
-            "description": "The Outlook add-in can be installed (manifest) and signed in to (session handoff)",
-            "default": false
-          },
           "memoryEnabled": {
             "type": "boolean",
             "description": "The assistant remembers facts about each user across chats, and users can manage what it remembers",
@@ -16963,7 +16958,6 @@
           "releaseNotesEnabled",
           "voiceEnabled",
           "readAloudEnabled",
-          "outlookAddinEnabled",
           "memoryEnabled",
           "connectorsEnabled",
           "oparlEnabled"

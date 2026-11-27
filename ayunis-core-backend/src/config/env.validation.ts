@@ -76,10 +76,6 @@ export class EnvironmentVariables {
 
   @IsOptional()
   @IsIn(BOOLEAN_STRINGS)
-  FEATURE_OUTLOOK_ADDIN_ENABLED?: string;
-
-  @IsOptional()
-  @IsIn(BOOLEAN_STRINGS)
   FEATURE_MEMORY_ENABLED?: string;
 
   @IsOptional()

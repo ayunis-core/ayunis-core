@@ -217,13 +217,6 @@ task pane and event runtime can be framed by the origins in
 browsers apply both policies. [Outlook Add-in](#outlook-add-in) lists the
 paths to allow.
 
-### 2.75.0: the Outlook add-in is behind a flag
-
-`FEATURE_OUTLOOK_ADDIN_ENABLED` defaults to `false`. A deployment that served
-the add-in manifest or let the add-in sign in before this release needs
-`FEATURE_OUTLOOK_ADDIN_ENABLED=true` in its backend environment to keep doing
-so; see [Outlook Add-in](#outlook-add-in).
-
 ### 2.71.0: direct uploads need a public MinIO host and an upload user
 
 File uploads now go from the browser straight to MinIO (AYC-1541). Two things
@@ -423,11 +416,8 @@ At least one must be configured:
   production.
 - `REDIS_HOST` / `REDIS_PORT`: Redis connection settings (the password itself is
   required — see above)
-- `FEATURE_OUTLOOK_ADDIN_ENABLED`: `true` serves the Outlook add-in manifest and
-  lets the add-in sign in (see [Outlook Add-in](#outlook-add-in)). Off by
-  default.
 - `OUTLOOK_ADDIN_FRAME_ORIGINS`: comma-separated origins allowed to frame the
-  Outlook task pane and event runtime while the add-in is on. See [Outlook Add-in](#outlook-add-in).
+  Outlook task pane and event runtime. See [Outlook Add-in](#outlook-add-in).
 - `FEATURE_OPARL_ENABLED`: `true` lets super admins add council information
   systems (OParl) whose data is mirrored and synced daily from the API or
   ingestion worker, which then makes outbound requests to those public hosts.
@@ -568,11 +558,6 @@ One backend image serves both builds. The Outlook pane configures bearer
 authorization through the [shared API client](packages/api-client/README.md)
 and uses the [shared chat runtime](packages/chat/README.md).
 
-The add-in is off unless `FEATURE_OUTLOOK_ADDIN_ENABLED=true` is set: without
-it the manifest below answers 404 and an installed add-in cannot sign in. Turn
-it on per deployment, for example on an instance your own Microsoft 365 tenant
-uses to try the add-in before it is released.
-
 The [backend surface registry](ayunis-core-backend/src/config/surface-registry.ts)
 defines the manifest route and the HTML documents allowed to load inside Outlook.
 Each deployment renders its manifest for its `FRONTEND_BASEURL` at this address.
@@ -588,8 +573,8 @@ that address: changing `FRONTEND_BASEURL` makes Outlook see a different add-in,
 and admins have to deploy the new manifest and remove the old one.
 
 Outlook on the web and the new Outlook for Windows show the add-in in an
-iframe. While the add-in is on, Ayunis allows these origins to frame the task
-pane (`/outlook/taskpane.html`) and the event runtime
+iframe. Ayunis allows these origins to frame the task pane
+(`/outlook/taskpane.html`) and the event runtime
 (`/outlook/events.html`). Other pages allow framing by Ayunis only.
 
 ```text
