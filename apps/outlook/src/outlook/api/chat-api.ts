@@ -2,7 +2,6 @@ import {
   threadSourcesControllerCompleteUpload,
   threadsControllerFindOne,
   threadSourcesControllerCreateUpload,
-  transcriptionsControllerTranscribe,
 } from '@ayunis/api-client/endpoints';
 
 export async function uploadPaneFiles(
@@ -32,18 +31,6 @@ export async function uploadPaneFiles(
       signal,
     );
   }
-}
-
-export async function transcribePaneAudio(
-  audio: Blob,
-  filename: string,
-  signal: AbortSignal,
-): Promise<string> {
-  const response = await transcriptionsControllerTranscribe(
-    { file: new File([audio], filename, { type: audio.type }) },
-    signal,
-  );
-  return response.text;
 }
 
 export async function waitForPaneFiles(threadId: string, signal: AbortSignal) {

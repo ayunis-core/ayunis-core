@@ -1,23 +1,22 @@
 import NewChatPageLayout, { type NewChatMistPhase } from './NewChatPageLayout';
-import ChatInput, { type ChatInputRef } from '@/widgets/chat-input';
 import {
-  useInitiateChat,
-  type SourceUploadStatus,
-} from '@/features/chat-initiation';
+  NewChatComposer,
+  type NewChatComposerHandle,
+  type NewChatSelection,
+  type NewChatStart,
+} from '@ayunis/chat/surface';
+import { useInitiateChat } from '@/features/chat-initiation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ContentAreaHeader from '@/widgets/content-area-header/ui/ContentAreaHeader';
 import { HelpLink } from '@/shared/ui/help-link/HelpLink';
 import { OnboardingTourTarget, TOUR_TARGET } from '@/widgets/onboarding';
-import { showError } from '@/shared/lib/toast';
-import { generateUUID } from '@/shared/lib/uuid';
 import {
-  SourceResponseDtoStatus,
-  SourceResponseDtoType,
-} from '@ayunis/api-client/schemas';
-import { usePermittedModels } from '@/features/usePermittedModels';
-import { useAnonymousModeDefault } from '@/features/anonymous-mode-default';
-import { useSelectedModel } from '@/widgets/model-select-options';
+  WEB_CHAT_TOUR_TARGETS,
+  useChatResourceSelection,
+  useWebIntegrations,
+  useWebKnowledgeBases,
+} from '@/widgets/chat-input';
 import { WorkspacePicker } from './WorkspacePicker';
 import { useAcademyAccessStatus } from '@/features/academy';
 import { AcademyGateNotice } from '@/widgets/academy-gate-notice';
@@ -31,139 +30,73 @@ import { PinnedSkills } from './PinnedSkills';
 import { OnboardingHint } from './OnboardingHint';
 import { useOnboardingStage } from '@/pages/new-chat/api/useOnboardingStage';
 import {
-  composerChatModel,
   onboardingChat,
   type OnboardingChat,
 } from '@/pages/new-chat/lib/onboarding-chat';
 import { UnreadNotificationsPanel } from './UnreadNotificationsPanel';
-import { useAppChatSurface } from '@/features/chat-surface';
 
 interface NewChatPageProps {
-  selectedModelId?: string;
-  isEmbeddingModelEnabled: boolean;
+  /** A model id or `mode:<mode>` from the link that opened the page. */
+  initialModel?: string;
   initialPrompt?: string;
   initialAttachmentUrl?: string;
   /** Preselects a workspace, e.g. when arriving from a workspace page. */
   initialWorkspaceId?: string;
 }
 
+interface SelectedSkill {
+  id: string;
+  name: string;
+  workspaceId?: string;
+}
+
+const NO_SELECTION: NewChatSelection = {
+  model: null,
+  isAnonymous: false,
+  canStart: false,
+};
+
 export default function NewChatPage({
-  selectedModelId,
-  isEmbeddingModelEnabled,
+  initialModel,
   initialPrompt,
   initialAttachmentUrl,
   initialWorkspaceId,
 }: Readonly<NewChatPageProps>) {
   const { t } = useTranslation('chat');
-  const { capabilities } = useAppChatSurface();
   const { initiateChat, cancel, isCreating } = useInitiateChat();
   const { isGated: isAcademyGated } = useAcademyAccessStatus();
-  const { models } = usePermittedModels();
   const greeting = useTimeBasedGreeting();
   const onboardingStage = useOnboardingStage(true);
-  const chatInputRef = useRef<ChatInputRef>(null);
+  const composerRef = useRef<NewChatComposerHandle>(null);
+  const [selection, setSelection] = useState(NO_SELECTION);
 
   useEffect(() => {
     if (initialPrompt) {
-      chatInputRef.current?.setMessage(initialPrompt);
+      composerRef.current?.setMessage(initialPrompt);
     }
   }, [initialPrompt]);
-  useFileFromUrl(initialAttachmentUrl, (file) => handleFileUpload([file]));
+  useFileFromUrl(initialAttachmentUrl, (file) =>
+    composerRef.current?.addFiles([file]),
+  );
 
-  const [modelId, setModelId] = useState(selectedModelId);
-  const [previousDefaultModelId, setPreviousDefaultModelId] =
-    useState(selectedModelId);
-  if (selectedModelId !== previousDefaultModelId) {
-    setPreviousDefaultModelId(selectedModelId);
-    setModelId(selectedModelId);
-  }
-  const { isAnonymousByDefault } = useAnonymousModeDefault();
-  const [isAnonymous, setIsAnonymous] = useState(isAnonymousByDefault);
   const [workspaceId, setWorkspaceId] = useState<string | null>(
     initialWorkspaceId ?? null,
   );
-  type LocalSource = {
-    id: string;
-    name: string;
-    type: SourceResponseDtoType;
-    file: File;
-    status?: SourceResponseDtoStatus;
-    processingError?: string;
-    uploadProgress?: number;
-  };
-  const [sources, setSources] = useState<LocalSource[]>([]);
-
-  function applySourceStatus(
-    source: LocalSource,
-    status: SourceUploadStatus,
-  ): LocalSource {
-    if (status.kind === 'failed') {
-      return {
-        ...source,
-        status: SourceResponseDtoStatus.failed,
-        processingError: status.message,
-        uploadProgress: undefined,
-      };
-    }
-    return {
-      ...source,
-      status: SourceResponseDtoStatus.processing,
-      processingError: undefined,
-      uploadProgress: status.kind === 'uploading' ? status.progress : undefined,
-    };
-  }
-  const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<
-    KnowledgeBaseSummary[]
-  >([]);
-  const [selectedIntegrations, setSelectedIntegrations] = useState<
-    IntegrationSummary[]
-  >([]);
-  const [selectedSkill, setSelectedSkill] = useState<{
-    id: string;
-    name: string;
-    workspaceId?: string;
-  }>();
+  const selectedKnowledgeBases =
+    useChatResourceSelection<KnowledgeBaseSummary>();
+  const selectedIntegrations = useChatResourceSelection<IntegrationSummary>();
+  const knowledgeBases = useWebKnowledgeBases(selectedKnowledgeBases);
+  const integrations = useWebIntegrations(selectedIntegrations);
+  const [selectedSkill, setSelectedSkill] = useState<SelectedSkill>();
   const selectedSkillId = selectedSkill?.id;
-  const selectedSkillName = selectedSkill?.name;
   const [mistPhase, setMistPhase] = useState<NewChatMistPhase>('idle');
 
   const handleMistExitComplete = useCallback(() => {
     setMistPhase('hidden');
   }, []);
-  const {
-    model: selectedModel,
-    modelId: resolvedModelId,
-    mode: selectedMode,
-    isAnonymousEnforced,
-  } = useSelectedModel(modelId, models, isAnonymous);
-
-  const isVisionEnabled = selectedModel?.canVision ?? false;
   const onboarding = onboardingStage
-    ? onboardingChat(onboardingStage, {
-        model: composerChatModel(resolvedModelId, selectedMode),
-        isAnonymous,
-      })
+    ? onboardingChat(onboardingStage, selection)
     : null;
-
-  function handleFileUpload(files: File[]) {
-    const newSources: LocalSource[] = files.map((file) => ({
-      id: generateUUID(),
-      name: file.name,
-      type: file.name.endsWith('.csv')
-        ? SourceResponseDtoType.data
-        : SourceResponseDtoType.text,
-      file,
-    }));
-    setSources((prev) => [...prev, ...newSources]);
-  }
-
-  function handleRemoveSource(sourceId: string) {
-    setSources(sources.filter((source) => source.id !== sourceId));
-  }
-
-  function handleModelChange(modelId: string) {
-    setModelId(modelId);
-  }
 
   function handleSkillSelect(
     id: string,
@@ -188,37 +121,31 @@ export default function NewChatPage({
     setWorkspaceId(id);
   }
 
-  function handleSourceStatus(sourceId: string, status: SourceUploadStatus) {
-    setSources((prev) =>
-      prev.map((s) => (s.id === sourceId ? applySourceStatus(s, status) : s)),
-    );
-  }
-
-  function handleSend(
-    message: string,
-    imageFiles?: Array<{ file: File; altText?: string }>,
-    skillId?: string,
-    voiceInput?: boolean,
-  ) {
-    if (!resolvedModelId) {
-      showError(t('newChat.noModelOrAgentError'));
-      return;
-    }
-
+  function handleStart({
+    text,
+    images,
+    modelId,
+    mode,
+    isAnonymous,
+    sources,
+    onSourceStatus,
+    skillId,
+    voiceInput,
+  }: NewChatStart) {
     setMistPhase((current) => (current === 'idle' ? 'exiting' : current));
 
     void initiateChat({
-      message,
-      images: imageFiles ?? [],
-      ...(selectedMode ? { mode: selectedMode } : { modelId: resolvedModelId }),
-      sources,
-      knowledgeBases: selectedKnowledgeBases,
-      mcpIntegrations: selectedIntegrations,
+      message: text,
+      images: images ?? [],
+      ...(mode ? { mode } : { modelId }),
+      sources: [...sources],
+      knowledgeBases: selectedKnowledgeBases.attached,
+      mcpIntegrations: selectedIntegrations.attached,
       isAnonymous,
       workspaceId: workspaceId ?? undefined,
       skillId,
       voiceInput,
-      onSourceStatus: handleSourceStatus,
+      onSourceStatus,
     });
   }
 
@@ -238,18 +165,6 @@ export default function NewChatPage({
       isAnonymous,
       origin: { kind: 'onboarding', stage },
     });
-  }
-
-  function handleCancel() {
-    cancel();
-    setSources((prev) =>
-      prev.map((s) => ({
-        ...s,
-        status: undefined,
-        processingError: undefined,
-        uploadProgress: undefined,
-      })),
-    );
   }
 
   return (
@@ -290,58 +205,36 @@ export default function NewChatPage({
         </>
       }
       composer={
-        <ChatInput
-          ref={chatInputRef}
-          modelId={modelId}
-          sources={sources}
-          knowledgeBases={selectedKnowledgeBases}
-          mcpIntegrations={selectedIntegrations}
-          submissionState={isCreating ? 'submitting' : 'idle'}
-          isSendDisabled={isAcademyGated || !resolvedModelId}
-          onModelChange={handleModelChange}
-          onSend={handleSend}
-          onCancel={handleCancel}
-          onFileUpload={handleFileUpload}
-          onRemoveSource={handleRemoveSource}
-          onAddKnowledgeBase={(kb) => {
-            setSelectedKnowledgeBases((prev) => [...prev, kb]);
+        <NewChatComposer
+          ref={composerRef}
+          config={{
+            layout: 'page',
+            knowledgeBases,
+            integrations,
+            skills: {
+              selected: selectedSkill,
+              clear: handleSkillRemove,
+            },
+            tourTargets: WEB_CHAT_TOUR_TARGETS,
           }}
-          onRemoveKnowledgeBase={(kbId) => {
-            setSelectedKnowledgeBases((prev) =>
-              prev.filter((kb) => kb.id !== kbId),
-            );
-          }}
-          onAddIntegration={(integration) => {
-            setSelectedIntegrations((prev) => [...prev, integration]);
-          }}
-          onRemoveIntegration={(integrationId) => {
-            setSelectedIntegrations((prev) =>
-              prev.filter((integration) => integration.id !== integrationId),
-            );
-          }}
-          isEmbeddingModelEnabled={isEmbeddingModelEnabled}
-          isAnonymous={isAnonymous}
-          onAnonymousChange={setIsAnonymous}
-          isAnonymousEnforced={isAnonymousEnforced}
-          isVisionEnabled={isVisionEnabled}
-          selectedSkillId={selectedSkillId}
-          selectedSkillName={selectedSkillName}
-          onSkillRemove={handleSkillRemove}
+          initialModel={initialModel}
+          busy={isCreating}
+          onStart={handleStart}
+          onStop={cancel}
+          onSelectionChange={setSelection}
         />
       }
       supportingContent={<UnreadNotificationsPanel isCollapsed={isCreating} />}
       extras={
-        capabilities.skills && (
-          // Keep the tour target settling through the 200 ms delay + 700 ms entrance.
-          <OnboardingTourTarget name={TOUR_TARGET.pinnedSkills} settleMs={900}>
-            <PinnedSkills
-              isSubmitting={isCreating}
-              workspaceId={workspaceId}
-              onSkillSelect={handleSkillSelect}
-              selectedSkillId={selectedSkillId}
-            />
-          </OnboardingTourTarget>
-        )
+        // Keep the tour target settling through the 200 ms delay + 700 ms entrance.
+        <OnboardingTourTarget name={TOUR_TARGET.pinnedSkills} settleMs={900}>
+          <PinnedSkills
+            isSubmitting={isCreating}
+            workspaceId={workspaceId}
+            onSkillSelect={handleSkillSelect}
+            selectedSkillId={selectedSkillId}
+          />
+        </OnboardingTourTarget>
       }
       privacyHint={t('newChat.privacyHint')}
     />

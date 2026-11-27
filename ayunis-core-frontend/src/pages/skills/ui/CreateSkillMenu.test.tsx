@@ -4,7 +4,7 @@ import CreateSkillMenu from './CreateSkillMenu';
 import SkillsEmptyState from './SkillsEmptyState';
 
 const MARKETPLACE_URL = 'https://marketplace.ayunis.com/';
-const CHAT_STARTER = { isEmbeddingModelEnabled: false };
+const CHAT_STARTER = {};
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),

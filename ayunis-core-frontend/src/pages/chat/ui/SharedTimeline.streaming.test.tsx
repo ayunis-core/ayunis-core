@@ -17,7 +17,8 @@ vi.mock(
   },
 );
 
-vi.mock('@/widgets/markdown', () => ({
+vi.mock('@ayunis/chat/markdown', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   Markdown: ({ children }: { children: string }) => {
     markdownRenders.byText.set(
       children,
@@ -25,7 +26,6 @@ vi.mock('@/widgets/markdown', () => ({
     );
     return <p>{children}</p>;
   },
-  usePiiMasks: () => new Map(),
 }));
 
 vi.mock('@/pages/chat/ui/ReadAloudButton', () => ({

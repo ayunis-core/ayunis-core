@@ -52,7 +52,6 @@ interface WorkspacePageProps {
   chatSearch?: string;
   chatPage: number;
   selectedModelId?: string;
-  isEmbeddingModelEnabled: boolean;
 }
 
 export default function WorkspacePage({
@@ -64,7 +63,6 @@ export default function WorkspacePage({
   chatSearch,
   chatPage,
   selectedModelId,
-  isEmbeddingModelEnabled,
 }: Readonly<WorkspacePageProps>) {
   const { t } = useTranslation('workspace');
   const navigate = useNavigate();
@@ -121,7 +119,6 @@ export default function WorkspacePage({
             <ChatStarter
               workspaceId={workspace.id}
               selectedModelId={selectedModelId}
-              isEmbeddingModelEnabled={isEmbeddingModelEnabled}
             />
 
             <Tabs

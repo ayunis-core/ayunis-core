@@ -14,8 +14,15 @@ import {
 } from '@ayunis/chat/composer';
 import { ConfiguredComposer } from './configured-composer';
 import { ChatSurface } from './chat-surface';
-import type { ChatConversationProps } from './chat-conversation-config';
-import type { ConfiguredComposerRef } from './configured-composer-types';
+import type {
+  ChatConversationProps,
+  ConversationRuntime,
+} from './chat-conversation-config';
+import type {
+  ComposerConfig,
+  ConfiguredComposerRef,
+} from './configured-composer-types';
+import type { ChatConfig } from './chat-config';
 import { UnavailableModelNotice } from './model-presentation/UnavailableModelNotice';
 import {
   ChatConversationContent,
@@ -25,11 +32,12 @@ import { createChatRunLifecycle, type ChatRunLifecycle } from './run-lifecycle';
 import { useConversationRun } from './use-conversation-run';
 import { sentPrompts } from '@ayunis/chat/messages';
 import type { ChatSlots } from './chat-surface-config';
+import { ThreadComposerNotices, useThreadComposer } from './thread-composer';
 
 export function ChatConversation<Context, Outcome>(
   props: ChatConversationProps<Context, Outcome>,
 ) {
-  return <ConversationSession key={props.sessionKey} {...props} />;
+  return <ConversationSession key={props.config.sessionKey} {...props} />;
 }
 
 function ConversationSession<Context, Outcome>(
@@ -44,7 +52,7 @@ function ConversationSession<Context, Outcome>(
     <ConversationView
       {...props}
       lifecycle={props.lifecycle ?? ownedLifecycle}
-      drafts={props.adapters?.drafts ?? memoryDrafts}
+      drafts={props.config.drafts ?? memoryDrafts}
     />
   );
 }
@@ -71,11 +79,38 @@ type ConversationViewProps<Context, Outcome> = ChatConversationProps<
   drafts: ChatDraftStorage;
 };
 
+function conversationRuntime<Context, Outcome>({
+  config,
+  thread,
+  adapters,
+  activeRun,
+}: ChatConversationProps<Context, Outcome>): ConversationRuntime<
+  Context,
+  Outcome
+> {
+  const { events } = config;
+  return {
+    thread,
+    activeRun,
+    transport: config.transport,
+    clientTools: config.clientTools,
+    adapters: {
+      ...adapters,
+      onRunSettled: events.onRunSettled,
+      observeRun: events.observeRun,
+      onMessageCopied: events.onMessageCopied,
+      onUnauthorized: events.onUnauthorized,
+      onError: events.onError,
+    },
+  };
+}
+
 function ConversationView<Context, Outcome>(
   props: ConversationViewProps<Context, Outcome>,
 ) {
-  const { thread, slots, lifecycle, drafts } = props;
-  const run = useConversationRun(lifecycle, props);
+  const { thread, slots, lifecycle, drafts, config } = props;
+  const runtime = conversationRuntime(props);
+  const run = useConversationRun(lifecycle, runtime);
   const draft = useChatDraft(thread.id, drafts);
   const composerRef = useRef<ConfiguredComposerRef>(null);
   useImperativeHandle(props.conversationRef, () => ({
@@ -84,8 +119,10 @@ function ConversationView<Context, Outcome>(
     resumeStartedRun: run.resumeStartedRun,
   }));
   const timeline = useConversationTimeline(
-    props.timeline,
-    props.clientTools?.registry,
+    config.toolCards,
+    slots?.pendingIndicator,
+    config.events.onCodeCopied,
+    config.clientTools?.registry,
   );
   return (
     <ChatSurface
@@ -125,11 +162,9 @@ function ConversationContent<Context, Outcome>({
   onOpenArtifact: ChatSlots['onOpenArtifact'];
 }>) {
   const slots = view.slots ?? {};
-  const adapters = view.adapters ?? {};
   return (
     <ChatConversationContent
       threadId={view.thread.id}
-      copyActions={view.compactComposer}
       messages={run.messages}
       masks={run.piiMasks}
       isStreaming={run.isStreaming}
@@ -139,14 +174,13 @@ function ConversationContent<Context, Outcome>({
       timeline={timeline}
       messageImage={slots.messageImage}
       messageNudge={slots.messageNudge}
-      messageMarkdown={slots.messageMarkdown}
       pendingSubmission={view.pendingSubmission ?? null}
       contextHint={slots.contextHint}
       waiting={slots.waiting}
       loading={slots.loading}
       assistantActions={slots.assistantActions}
-      onPiiUnmaskRequest={adapters.onPiiUnmaskRequest}
-      onMessageCopied={adapters.onMessageCopied}
+      onPiiUnmaskRequest={view.adapters?.onPiiUnmaskRequest}
+      onMessageCopied={view.config.events.onMessageCopied}
     />
   );
 }
@@ -155,14 +189,11 @@ type ConversationComposerProps = Readonly<{
   run: ReturnType<typeof useConversationRun>;
   view: Pick<
     ChatConversationProps,
-    | 'slots'
-    | 'config'
-    | 'adapters'
-    | 'compactComposer'
-    | 'thread'
-    | 'composer'
-    | 'pendingSubmission'
-  > & { readonly lifecycle: ChatRunLifecycle };
+    'adapters' | 'thread' | 'composer' | 'pendingSubmission'
+  > & {
+    readonly config: ComposerConfig & Pick<ChatConfig, 'transport' | 'events'>;
+    readonly lifecycle: ChatRunLifecycle;
+  };
   draft: ComponentProps<typeof ConfiguredComposer>['draft'];
   composerRef: RefObject<ConfiguredComposerRef | null>;
 }>;
@@ -173,10 +204,28 @@ function ConversationComposer(props: ConversationComposerProps) {
     () => sentPrompts(run.messages, run.piiMasks, view.pendingSubmission),
     [run.messages, run.piiMasks, view.pendingSubmission],
   );
-  if (view.composer?.unavailableModel) {
-    return <UnavailableModelNotice {...view.composer.unavailableModel} />;
+  const composer = useThreadComposer(
+    view.thread,
+    Boolean(view.adapters?.deferSend),
+  );
+  if (composer.unavailable) {
+    return <UnavailableModelNotice onNewChat={view.config.events.onNewChat} />;
   }
-  return <AvailableConversationComposer {...props} prompts={prompts} />;
+  return (
+    <>
+      <ThreadComposerNotices
+        thread={view.thread}
+        model={composer.model}
+        academyGated={composer.academyGated}
+        events={view.config.events}
+      />
+      <AvailableConversationComposer
+        {...props}
+        features={composer.features}
+        prompts={prompts}
+      />
+    </>
+  );
 }
 
 function AvailableConversationComposer({
@@ -185,33 +234,27 @@ function AvailableConversationComposer({
   draft,
   composerRef,
   prompts,
-}: ConversationComposerProps & { readonly prompts: readonly string[] }) {
-  const { slots, config, adapters, compactComposer, thread, composer } = view;
-  const onStop = conversationStop(run, view);
-  const onSend = conversationSend(run, view);
+  features,
+}: ConversationComposerProps & {
+  readonly prompts: readonly string[];
+  readonly features: ComponentProps<typeof ConfiguredComposer>['features'];
+}) {
   const isSubmitting = !run.isStreaming && view.pendingSubmission != null;
   return (
-    <>
-      {slots?.composerNotice}
-      <ConfiguredComposer
-        ref={composerRef}
-        compact={compactComposer}
-        threadId={thread.id}
-        capabilities={config.capabilities}
-        adapters={adapters}
-        draft={draft}
-        slots={slots}
-        sentPrompts={prompts}
-        fileInputTestId={composer?.fileInputTestId}
-        stopTestId={composer?.stopTestId}
-        clearImagesOnSend={composer?.clearOnSend}
-        isSubmitting={isSubmitting}
-        isStreaming={run.isStreaming}
-        isCheckingForRun={run.isCheckingForRun}
-        onSend={onSend}
-        onStop={onStop}
-      />
-    </>
+    <ConfiguredComposer
+      ref={composerRef}
+      config={view.config}
+      features={features}
+      threadId={view.thread.id}
+      draft={draft}
+      sentPrompts={prompts}
+      clearImagesOnSend={view.composer?.clearOnSend}
+      isSubmitting={isSubmitting}
+      isStreaming={run.isStreaming}
+      isCheckingForRun={run.isCheckingForRun}
+      onSend={conversationSend(run, view)}
+      onStop={conversationStop(run, view)}
+    />
   );
 }
 

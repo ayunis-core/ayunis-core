@@ -15,44 +15,37 @@ import {
 export const Route = createFileRoute('/_authenticated/inbox/$notificationId')({
   component: RouteComponent,
   loader: async ({ params: { notificationId }, context: { queryClient } }) => {
-    const [notification, defaultSelection, embeddingModelResponse] =
-      await Promise.all([
-        queryClient.query({
-          queryKey: getNotificationsControllerFindOneQueryKey(notificationId),
-          queryFn: () => notificationsControllerFindOne(notificationId),
-          // Deleting the routine clears the notification's routine link, which
-          // decides whether Open routine is shown.
-          staleTime: 0,
-        }),
-        queryClient
-          .query(defaultModelSelectionQueryOptions())
-          .catch(() => null),
-        queryClient
-          .query({
-            queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
-            queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
-          })
-          .catch(() => null),
-        queryClient.query(anonymousModeDefaultQueryOptions()),
-      ]);
+    const [notification, defaultSelection] = await Promise.all([
+      queryClient.query({
+        queryKey: getNotificationsControllerFindOneQueryKey(notificationId),
+        queryFn: () => notificationsControllerFindOne(notificationId),
+        // Deleting the routine clears the notification's routine link, which
+        // decides whether Open routine is shown.
+        staleTime: 0,
+      }),
+      queryClient.query(defaultModelSelectionQueryOptions()).catch(() => null),
+      queryClient
+        .query({
+          queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
+          queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
+        })
+        .catch(() => null),
+      queryClient.query(anonymousModeDefaultQueryOptions()),
+    ]);
     return {
       notification,
       selectedModelId: toComposerValue(defaultSelection),
-      isEmbeddingModelEnabled:
-        embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
     };
   },
 });
 
 function RouteComponent() {
-  const { notification, selectedModelId, isEmbeddingModelEnabled } =
-    Route.useLoaderData();
+  const { notification, selectedModelId } = Route.useLoaderData();
   return (
     <NotificationPage
       key={notification.id}
       notification={notification}
       selectedModelId={selectedModelId}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />
   );
 }

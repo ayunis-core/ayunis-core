@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { AgentRunUnit } from '@ayunis/chat/timeline';
 import type { ToolCardProps } from '@ayunis/chat/tool-cards';
@@ -10,19 +10,18 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
-vi.mock('@/widgets/markdown', () => ({
+vi.mock('@ayunis/chat/markdown', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
   Markdown: ({
     children,
     renderLegalReferences,
     renderSourceCitations,
     renderUrlReferences,
-    onCodeCopied,
   }: {
     children: string;
     renderLegalReferences?: boolean;
     renderSourceCitations?: boolean;
     renderUrlReferences?: boolean;
-    onCodeCopied?: () => void;
   }) => (
     <div
       data-testid={`text-${children}`}
@@ -31,14 +30,8 @@ vi.mock('@/widgets/markdown', () => ({
       data-url-references={renderUrlReferences ? 'true' : 'false'}
     >
       {children}
-      <button data-testid={`copy-code-${children}`} onClick={onCodeCopied} />
     </div>
   ),
-}));
-
-const trackOutcome = vi.hoisted(() => vi.fn());
-vi.mock('@/shared/lib/openpanel-outcomes', () => ({
-  useTrackProductiveOutcome: () => trackOutcome,
 }));
 
 const renderCard = vi.hoisted(() => vi.fn<(props: ToolCardProps) => void>());
@@ -126,16 +119,6 @@ describe('AgentRunTimeline', () => {
       }
     },
   );
-
-  it('counts a copied code block of an assistant answer as code_copied', () => {
-    render(<AgentRunTimeline unit={unit} />);
-
-    fireEvent.click(screen.getByTestId('copy-code-after'));
-
-    expect(trackOutcome.mock.calls).toEqual([
-      [{ outcome_type: 'code_copied', output_type: 'code' }],
-    ]);
-  });
 
   it('renders a rich tool row and card inline between surrounding text', () => {
     render(<AgentRunTimeline unit={unit} />);

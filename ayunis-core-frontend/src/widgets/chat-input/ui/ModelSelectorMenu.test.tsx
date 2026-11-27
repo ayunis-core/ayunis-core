@@ -5,16 +5,18 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@ayunis/ui/components/dropdown-menu';
-import type { PermittedLanguageModelResponseDto } from '@ayunis/api-client';
-import { ModelSelectorMenu } from './ModelSelectorMenu';
+import type {
+  ModelModeResolutionResponseDto,
+  PermittedLanguageModelResponseDto,
+} from '@ayunis/api-client';
+import { ModelSelectorMenu } from '@ayunis/chat/model-presentation';
 
-const resolutions = vi.hoisted(() => ({ current: [] as unknown[] }));
+const resolutions = vi.hoisted(() => ({
+  current: [] as ModelModeResolutionResponseDto[],
+}));
 const isMobile = vi.hoisted(() => ({ current: false }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
-}));
-vi.mock('@/features/useModelModes', () => ({
-  useModelModes: () => ({ resolutions: resolutions.current }),
 }));
 vi.mock('@ayunis/ui/hooks/use-mobile', () => ({
   useIsMobile: () => isMobile.current,
@@ -33,6 +35,7 @@ function renderMenu(modelListPresentation?: 'responsive' | 'submenu') {
       <DropdownMenuContent>
         <ModelSelectorMenu
           models={[model]}
+          resolutions={resolutions.current}
           modelListPresentation={modelListPresentation}
           selectedValue={undefined}
           isAnonymous={false}

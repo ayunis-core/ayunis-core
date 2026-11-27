@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NewChatComposerProps } from '@ayunis/chat/surface';
 import { ChatStarter } from './ChatStarter';
 
 const mocks = vi.hoisted(() => ({ initiateChat: vi.fn() }));
@@ -15,15 +16,6 @@ vi.mock('@/features/chat-initiation', () => ({
     isCreating: false,
   }),
 }));
-vi.mock('@/features/usePermittedModels', () => ({
-  usePermittedModels: () => ({ models: [{ id: 'medium' }] }),
-}));
-vi.mock('@/features/useModelModes', () => ({
-  useModelModes: () => ({ resolutions: [] }),
-}));
-vi.mock('@/features/anonymous-mode-default', () => ({
-  useAnonymousModeDefault: () => ({ isAnonymousByDefault: false }),
-}));
 vi.mock('@/features/academy', () => ({
   useAcademyAccessStatus: () => ({ isGated: false }),
 }));
@@ -32,8 +24,33 @@ vi.mock('@/widgets/academy-gate-notice', () => ({
   AcademyGateNotice: () => null,
 }));
 vi.mock('@/widgets/chat-input', () => ({
-  default: ({ onSend }: { onSend: (message: string) => void }) => (
-    <button onClick={() => onSend('Hello')}>Send</button>
+  WEB_CHAT_TOUR_TARGETS: {},
+  useChatResourceSelection: () => ({
+    attached: [],
+    attach: vi.fn(),
+    detach: vi.fn(),
+  }),
+  useWebKnowledgeBases: () => undefined,
+  useWebIntegrations: () => undefined,
+}));
+vi.mock('@ayunis/chat/surface', () => ({
+  NewChatComposer: ({ onStart }: Pick<NewChatComposerProps, 'onStart'>) => (
+    <button
+      onClick={() =>
+        onStart(
+          {
+            text: 'Hello',
+            modelId: 'medium',
+            isAnonymous: false,
+            sources: [],
+            onSourceStatus: vi.fn(),
+          },
+          vi.fn(),
+        )
+      }
+    >
+      Send
+    </button>
   ),
 }));
 
@@ -50,14 +67,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe('ChatStarter', () => {
   it('starts a chat in the given workspace', () => {
-    render(
-      <ChatStarter
-        workspaceId="workspace-id"
-        selectedModelId="medium"
-        isEmbeddingModelEnabled={false}
-      />,
-      { wrapper },
-    );
+    render(<ChatStarter workspaceId="workspace-id" />, { wrapper });
 
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     expect(mocks.initiateChat).toHaveBeenCalledWith(
@@ -74,8 +84,6 @@ describe('ChatStarter', () => {
     render(
       <ChatStarter
         origin={{ kind: 'notification', notificationId: 'notification-id' }}
-        selectedModelId="medium"
-        isEmbeddingModelEnabled={false}
       />,
       { wrapper },
     );

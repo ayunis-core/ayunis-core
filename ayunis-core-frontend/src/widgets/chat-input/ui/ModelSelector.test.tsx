@@ -1,18 +1,10 @@
 import type { ReactNode } from 'react';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import ModelSelector from './ModelSelector';
+import { ModelSelector } from '@ayunis/chat/model-presentation';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
-}));
-
-vi.mock('@/features/usePermittedModels', () => ({
-  usePermittedModels: () => ({
-    models: [],
-    placeholder: 'placeholder',
-    isDisabled: false,
-  }),
 }));
 
 vi.mock('@ayunis/ui/components/dropdown-menu', () => ({
@@ -25,15 +17,15 @@ vi.mock('@ayunis/ui/components/dropdown-menu', () => ({
   ),
 }));
 
-vi.mock('./ModelSelectorMenu', () => ({
-  ModelSelectorMenu: () => null,
-}));
+vi.mock('@ayunis/ui/hooks/use-mobile', () => ({ useIsMobile: () => false }));
 
 const glints = () => document.querySelectorAll('.max-shimmer__glint');
 
 function renderSelector(isDisabled: boolean) {
   render(
     <ModelSelector
+      models={[]}
+      placeholder="placeholder"
       isDisabled={isDisabled}
       isAnonymous={false}
       selectedModelId="mode:max"

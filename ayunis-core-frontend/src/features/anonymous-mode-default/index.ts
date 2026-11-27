@@ -1,4 +1,1 @@
-export {
-  useAnonymousModeDefault,
-  anonymousModeDefaultQueryOptions,
-} from './useAnonymousModeDefault';
+export { anonymousModeDefaultQueryOptions } from './anonymous-mode-default-query';

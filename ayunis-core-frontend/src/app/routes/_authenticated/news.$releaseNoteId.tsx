@@ -20,42 +20,35 @@ export const Route = createFileRoute('/_authenticated/news/$releaseNoteId')({
     if (!toggles.releaseNotesEnabled) {
       throw redirect({ to: '/chat' });
     }
-    const [releaseNote, defaultSelection, embeddingModelResponse] =
-      await Promise.all([
-        queryClient.query({
-          queryKey: getReleaseNotesControllerFindOneQueryKey(releaseNoteId),
-          queryFn: () => releaseNotesControllerFindOne(releaseNoteId),
-          staleTime: 0,
-        }),
-        queryClient
-          .query(defaultModelSelectionQueryOptions())
-          .catch(() => null),
-        queryClient
-          .query({
-            queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
-            queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
-          })
-          .catch(() => null),
-        queryClient.query(anonymousModeDefaultQueryOptions()),
-      ]);
+    const [releaseNote, defaultSelection] = await Promise.all([
+      queryClient.query({
+        queryKey: getReleaseNotesControllerFindOneQueryKey(releaseNoteId),
+        queryFn: () => releaseNotesControllerFindOne(releaseNoteId),
+        staleTime: 0,
+      }),
+      queryClient.query(defaultModelSelectionQueryOptions()).catch(() => null),
+      queryClient
+        .query({
+          queryKey: getModelsControllerIsEmbeddingModelEnabledQueryKey(),
+          queryFn: () => modelsControllerIsEmbeddingModelEnabled(),
+        })
+        .catch(() => null),
+      queryClient.query(anonymousModeDefaultQueryOptions()),
+    ]);
     return {
       releaseNote,
       selectedModelId: toComposerValue(defaultSelection),
-      isEmbeddingModelEnabled:
-        embeddingModelResponse?.isEmbeddingModelEnabled ?? false,
     };
   },
 });
 
 function RouteComponent() {
-  const { releaseNote, selectedModelId, isEmbeddingModelEnabled } =
-    Route.useLoaderData();
+  const { releaseNote, selectedModelId } = Route.useLoaderData();
   return (
     <ReleaseNotePage
       key={releaseNote.id}
       releaseNote={releaseNote}
       selectedModelId={selectedModelId}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
     />
   );
 }

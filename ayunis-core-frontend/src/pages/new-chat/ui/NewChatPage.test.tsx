@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NewChatComposerProps } from '@ayunis/chat/surface';
 import NewChatPage from './NewChatPage';
 
 const mocks = vi.hoisted(() => ({
@@ -21,28 +22,11 @@ vi.mock('@tanstack/react-router', () => ({
 vi.mock('@/features/chat-initiation', () => ({
   useInitiateChat: () => ({
     initiateChat: mocks.initiateChat,
+    cancel: vi.fn(),
     isCreating: mocks.isCreating,
   }),
 }));
-vi.mock('@/features/usePermittedModels', () => ({
-  usePermittedModels: () => ({ models: [{ id: 'balanced' }] }),
-}));
-vi.mock('@/features/useModelModes', () => ({
-  useModelModes: () => ({
-    resolutions: [
-      {
-        mode: 'auto',
-        permittedModelId: 'balanced',
-        anonymousPermittedModelId: 'balanced',
-      },
-      { mode: 'max', permittedModelId: null, anonymousPermittedModelId: null },
-    ],
-  }),
-}));
 vi.mock('@/shared/lib/toast', () => ({ showError: vi.fn() }));
-vi.mock('@/features/anonymous-mode-default', () => ({
-  useAnonymousModeDefault: () => ({ isAnonymousByDefault: false }),
-}));
 vi.mock('@/features/academy', () => ({
   useAcademyAccessStatus: () => ({ isGated: false }),
 }));
@@ -87,22 +71,48 @@ vi.mock('./NewChatPageLayout', () => ({
   ),
 }));
 vi.mock('@/widgets/chat-input', () => ({
-  default: ({
-    modelId,
-    onModelChange,
-    onSend,
-    onAnonymousChange,
-  }: {
-    modelId?: string;
-    onModelChange: (id: string) => void;
-    onSend: (message: string) => void;
-    onAnonymousChange: (isAnonymous: boolean) => void;
-  }) => (
+  WEB_CHAT_TOUR_TARGETS: {},
+  useChatResourceSelection: () => ({
+    attached: [],
+    attach: vi.fn(),
+    detach: vi.fn(),
+  }),
+  useWebKnowledgeBases: () => undefined,
+  useWebIntegrations: () => undefined,
+}));
+vi.mock('@ayunis/chat/surface', () => ({
+  NewChatComposer: ({
+    onStart,
+    onSelectionChange,
+  }: Pick<NewChatComposerProps, 'onStart' | 'onSelectionChange'>) => (
     <>
-      <output data-testid="selected-model">{modelId}</output>
-      <button onClick={() => onModelChange('manual')}>Choose manually</button>
-      <button onClick={() => onAnonymousChange(true)}>Go anonymous</button>
-      <button onClick={() => onSend('Hello')}>Send</button>
+      <button
+        onClick={() =>
+          onSelectionChange?.({
+            model: { mode: 'auto' },
+            isAnonymous: true,
+            canStart: true,
+          })
+        }
+      >
+        Go anonymous in Auto
+      </button>
+      <button
+        onClick={() =>
+          onStart(
+            {
+              text: 'Hello',
+              mode: 'auto',
+              isAnonymous: false,
+              sources: [],
+              onSourceStatus: vi.fn(),
+            },
+            vi.fn(),
+          )
+        }
+      >
+        Send
+      </button>
     </>
   ),
 }));
@@ -114,80 +124,31 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-function setup(modelId?: string) {
+function setup() {
   const client = new QueryClient();
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  return render(
-    <NewChatPage selectedModelId={modelId} isEmbeddingModelEnabled={false} />,
-    { wrapper },
-  );
+  return render(<NewChatPage />, { wrapper });
 }
 
-describe('new chat model selection', () => {
-  it('uses a refreshed route default for display and the new thread', () => {
-    const { rerender } = setup('medium');
-    rerender(
-      <NewChatPage selectedModelId="large" isEmbeddingModelEnabled={false} />,
-    );
-    expect(screen.getByTestId('selected-model').textContent).toBe('large');
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(mocks.initiateChat).toHaveBeenCalledWith(
-      expect.objectContaining({ modelId: 'large' }),
-    );
-  });
-
-  it('preserves a manual selection when the route default is unchanged', () => {
-    const { rerender } = setup('medium');
-    fireEvent.click(screen.getByRole('button', { name: 'Choose manually' }));
-    rerender(
-      <NewChatPage selectedModelId="medium" isEmbeddingModelEnabled={false} />,
-    );
-    expect(screen.getByTestId('selected-model').textContent).toBe('manual');
-  });
-
-  it('selects a default that becomes available after an empty result', () => {
-    const { rerender } = setup();
-    rerender(
-      <NewChatPage selectedModelId="large" isEmbeddingModelEnabled={false} />,
-    );
-    expect(screen.getByTestId('selected-model').textContent).toBe('large');
-  });
-
-  it('clears the old selection when a refresh no longer supplies a model', () => {
-    const { rerender } = setup('medium');
-    rerender(<NewChatPage isEmbeddingModelEnabled={false} />);
-    expect(screen.getByTestId('selected-model').textContent).toBe('');
-  });
-
-  it('starts a chat in a mode by sending the mode, not a model id', () => {
-    setup('mode:auto');
+describe('new chat start', () => {
+  it('passes the composer mode to the chat initiation without a model id', () => {
+    setup();
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     const [params] = mocks.initiateChat.mock.calls[0] as [
       Record<string, unknown>,
     ];
-    expect(params.mode).toBe('auto');
+    expect(params).toMatchObject({ message: 'Hello', mode: 'auto' });
     expect(params).not.toHaveProperty('modelId');
   });
 
-  it('does not start a chat in a mode that resolves to no model', () => {
-    setup('mode:max');
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    expect(mocks.initiateChat).not.toHaveBeenCalled();
-  });
-
   it('removes the workspace picker as soon as chat creation starts', () => {
-    const { rerender } = setup('mode:auto');
+    const { rerender } = setup();
     expect(screen.getByTestId('workspace-picker')).toBeTruthy();
 
     mocks.isCreating = true;
-    rerender(
-      <NewChatPage
-        selectedModelId="mode:auto"
-        isEmbeddingModelEnabled={false}
-      />,
-    );
+    rerender(<NewChatPage />);
 
     expect(screen.queryByTestId('workspace-picker')).toBeNull();
   });
@@ -196,8 +157,10 @@ describe('new chat model selection', () => {
 describe('new chat onboarding hint', () => {
   it('starts a non-anonymous profile chat on the stage model, whatever the composer selected', () => {
     mocks.onboardingStage = { stage: 'profile', modelId: 'memory-model' };
-    setup('mode:auto');
-    fireEvent.click(screen.getByRole('button', { name: 'Go anonymous' }));
+    setup();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Go anonymous in Auto' }),
+    );
 
     fireEvent.click(screen.getByTestId('new-chat-onboarding-hint'));
 
@@ -215,8 +178,10 @@ describe('new chat onboarding hint', () => {
 
   it('starts a first-skill chat with the composer model and anonymous mode', () => {
     mocks.onboardingStage = { stage: 'first_skill', modelId: null };
-    setup('mode:auto');
-    fireEvent.click(screen.getByRole('button', { name: 'Go anonymous' }));
+    setup();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Go anonymous in Auto' }),
+    );
 
     fireEvent.click(screen.getByTestId('new-chat-onboarding-hint'));
 

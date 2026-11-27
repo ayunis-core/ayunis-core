@@ -8,107 +8,39 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
+import { transcriptionsControllerTranscribe } from '@ayunis/api-client/endpoints';
 import { AttachmentMenu } from './composer-toolbar';
 import { useComposerAttachmentSelection } from './composer/use-composer-attachment-selection';
-import { Input } from '@ayunis/ui/components/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@ayunis/ui/components/select';
 import { useVoiceRecording } from '@ayunis/chat/composer';
 import { useChatAction } from './use-chat-action';
-import type {
-  ChatConversationAdapters,
-  ChatModelAdapter,
-} from './chat-conversation-config';
+import { showComposerError } from './composer-errors';
 
-type Upload = NonNullable<ChatConversationAdapters['uploadFiles']>;
-type Transcribe = NonNullable<ChatConversationAdapters['transcribe']>;
-type ChatAction = ReturnType<typeof useChatAction>;
+const TRANSCRIPTION_TIMEOUT_MS = 30_000;
 
-interface AttachmentProps {
-  readonly threadId: string;
-  readonly disabled: boolean;
-  readonly closeMenu: boolean;
-  readonly compact?: boolean;
-  readonly audio?: boolean;
-  readonly images?: boolean;
-  readonly upload?: Upload;
-  readonly onImages: (files: File[]) => void;
-  readonly onError?: (error: Error) => void;
-  readonly action: ChatAction;
-  readonly menuActions?: ReactNode;
-  readonly fileInputTestId?: string;
-}
-
-type AttachmentSelection = Readonly<{
-  disabled: boolean;
-  closeMenu: boolean;
-  audio?: boolean;
-  images?: boolean;
-  onFiles?: (files: File[]) => void;
-  onImages: (files: File[]) => void;
-  onError?: (error: Error) => void;
-  menuActions?: ReactNode;
-  fileInputTestId?: string;
-}>;
-
-export function AttachmentFields(props: AttachmentProps) {
-  const {
-    threadId,
-    disabled,
-    closeMenu,
-    compact,
-    audio,
-    images,
-    upload,
-    onImages,
-    onError,
-    action,
-    menuActions,
-    fileInputTestId,
-  } = props;
-  const selection: AttachmentSelection = {
-    disabled: disabled || action.busy,
-    closeMenu,
-    audio,
-    images,
-    onImages,
-    onError,
-    menuActions,
-    fileInputTestId,
-    onFiles: upload
-      ? (files) => {
-          if (files.length)
-            void action.run((signal) => upload(threadId, files, signal));
-        }
-      : undefined,
-  };
-  return compact ? (
-    <CompactAttachmentFields {...selection} />
-  ) : (
-    <LabeledAttachmentFields {...selection} />
-  );
-}
-
-function CompactAttachmentFields({
+export function AttachmentFields({
   disabled,
   closeMenu,
-  audio,
   images,
-  onFiles,
+  upload,
   onImages,
-  onError,
   menuActions,
-  fileInputTestId,
-}: AttachmentSelection) {
+}: Readonly<{
+  disabled: boolean;
+  closeMenu: boolean;
+  images: boolean;
+  upload?: (files: File[]) => void;
+  onImages: (files: File[]) => void;
+  menuActions?: ReactNode;
+}>) {
+  const onFiles = upload
+    ? (files: File[]) => {
+        if (files.length) upload(files);
+      }
+    : undefined;
   const selectFiles = useComposerAttachmentSelection({
     onImages: images ? onImages : undefined,
     onFiles,
-    onError,
+    onError: (error) => showComposerError(error.message),
   });
 
   return (
@@ -116,147 +48,29 @@ function CompactAttachmentFields({
       disabled={disabled}
       closeMenu={closeMenu}
       onFiles={onFiles || images ? selectFiles : undefined}
-      onAudio={audio ? onFiles : undefined}
+      onAudio={onFiles}
       accept={onFiles ? undefined : 'image/*'}
       menuActions={menuActions}
-      fileInputTestId={fileInputTestId}
     />
   );
 }
 
-function isImage(file: File) {
-  return file.type.startsWith('image/');
-}
-
-function LabeledAttachmentFields({
-  disabled,
-  audio,
-  images,
-  onFiles,
-  onImages,
-}: AttachmentSelection) {
-  const { t } = useTranslation('common');
-  return (
-    <>
-      {onFiles && (
-        <FileField
-          testId="chat-attach-files"
-          label={t('chatSurface.attachFiles', { defaultValue: 'Attach files' })}
-          disabled={disabled}
-          select={onFiles}
-        />
-      )}
-      {onFiles && audio && (
-        <FileField
-          label={t('chatSurface.attachAudio', { defaultValue: 'Attach audio' })}
-          accept="audio/*"
-          disabled={disabled}
-          select={onFiles}
-        />
-      )}
-      {images && (
-        <FileField
-          label={t('chatSurface.attachImages', {
-            defaultValue: 'Attach images',
-          })}
-          accept="image/*"
-          disabled={disabled}
-          select={(files) => onImages(files.filter(isImage))}
-        />
-      )}
-    </>
+async function transcribe(audio: Blob, filename: string, signal: AbortSignal) {
+  const { text } = await transcriptionsControllerTranscribe(
+    { file: new File([audio], filename, { type: audio.type }) },
+    AbortSignal.any([signal, AbortSignal.timeout(TRANSCRIPTION_TIMEOUT_MS)]),
   );
-}
-
-function FileField({
-  label,
-  testId,
-  accept,
-  disabled,
-  select,
-}: Readonly<{
-  label: string;
-  testId?: string;
-  accept?: string;
-  disabled: boolean;
-  select: (files: File[]) => void;
-}>) {
-  return (
-    <label className="text-sm">
-      {label}
-      <Input
-        type="file"
-        data-testid={testId}
-        multiple
-        accept={accept}
-        disabled={disabled}
-        onChange={({ currentTarget: input }) => {
-          select(Array.from(input.files ?? []));
-          input.value = '';
-        }}
-      />
-    </label>
-  );
-}
-
-export function ModelField({
-  threadId,
-  disabled,
-  adapter,
-  action,
-}: Readonly<{
-  threadId: string;
-  disabled: boolean;
-  adapter: ChatModelAdapter;
-  action: ChatAction;
-}>) {
-  const { t } = useTranslation('common');
-  if (!adapter.available.length) return null;
-
-  return (
-    <Select
-      value={adapter.selected ?? ''}
-      disabled={disabled || action.busy}
-      onValueChange={(modelId) => {
-        void action.run((signal) => adapter.select(threadId, modelId, signal));
-      }}
-    >
-      <SelectTrigger
-        aria-label={t('chatSurface.model', { defaultValue: 'Model' })}
-      >
-        <SelectValue
-          placeholder={t('chatSurface.pickModel', {
-            defaultValue: 'Select model',
-          })}
-        />
-      </SelectTrigger>
-      <SelectContent>
-        {adapter.available.map(({ id, name }) => (
-          <SelectItem key={id} value={id}>
-            {name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
+  return text;
 }
 
 export function VoiceField({
-  transcribe,
-  compact,
   onTranscript,
-  onError,
-}: Readonly<{
-  transcribe: Transcribe;
-  compact?: boolean;
-  onTranscript: (text: string) => void;
-  onError?: (error: unknown) => void;
-}>) {
+}: Readonly<{ onTranscript: (text: string) => void }>) {
   const { t } = useTranslation('common');
   const action = useChatAction();
   const voice = useVoiceRecording(
     onTranscript,
-    (key) => onError?.(new Error(t(key))),
+    (key) => showComposerError(t(key)),
     async (audio, filename) => {
       let text: string | null = null;
       await action.run(async (signal) => {
@@ -272,18 +86,8 @@ export function VoiceField({
     if (recording) voice.stopRecording();
     else void voice.startRecording();
   }
-
-  if (compact)
-    return (
-      <ToolbarMicrophone recording={recording} busy={busy} toggle={toggle} />
-    );
-  const label = recording
-    ? t('chatSurface.stopRecording', { defaultValue: 'Stop recording' })
-    : t('chatSurface.dictate', { defaultValue: 'Dictate' });
   return (
-    <Button type="button" variant="outline" disabled={busy} onClick={toggle}>
-      {label}
-    </Button>
+    <ToolbarMicrophone recording={recording} busy={busy} toggle={toggle} />
   );
 }
 

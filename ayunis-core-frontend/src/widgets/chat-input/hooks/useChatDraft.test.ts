@@ -1,6 +1,11 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { useChatDraft } from './useChatDraft';
+import { useChatDraft as usePackageChatDraft } from '@ayunis/chat/composer';
+import { WEB_CHAT_DRAFTS } from '@/widgets/chat-input/model/web-chat-config';
+
+function useChatDraft(chatId: string) {
+  return usePackageChatDraft(chatId, WEB_CHAT_DRAFTS);
+}
 
 function createMemoryStorage(): Storage {
   const values = new Map<string, string>();

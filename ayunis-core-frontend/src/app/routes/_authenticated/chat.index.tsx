@@ -13,10 +13,7 @@ import {
 } from '@ayunis/api-client';
 import extractErrorData from '@/shared/api/extract-error-data';
 import { z } from 'zod';
-import {
-  defaultModelSelectionQueryOptions,
-  toComposerValue,
-} from '@/widgets/model-select-options';
+import { defaultModelSelectionQueryOptions } from '@/widgets/model-select-options';
 import { searchParamString } from '@/shared/lib/search-params';
 
 function handleDefaultModelLoadError(error: unknown): null {
@@ -53,19 +50,15 @@ export const Route = createFileRoute('/_authenticated/chat/')({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { modelId }, context: { queryClient } }) => {
+    // The composer reads these from the cache; loading them here keeps it
+    // from rendering before its defaults are known.
     await queryClient.query(anonymousModeDefaultQueryOptions());
-    let selectedModelId: string | undefined;
-    if (modelId) {
-      selectedModelId = modelId;
-    } else {
-      const defaultSelection = await queryClient
+    if (!modelId) {
+      await queryClient
         .query(defaultModelSelectionQueryOptions())
         .catch(handleDefaultModelLoadError);
-      selectedModelId = toComposerValue(defaultSelection);
     }
-    const { isEmbeddingModelEnabled } = await queryClient.query(
-      queryIsEmbeddingModelEnabledOptions(),
-    );
+    await queryClient.query(queryIsEmbeddingModelEnabledOptions());
     const { hasActiveSubscription } = await queryClient.query(
       queryHasActiveSubscriptionOptions(),
     );
@@ -74,11 +67,7 @@ export const Route = createFileRoute('/_authenticated/chat/')({
     await queryClient
       .query({ ...onboardingStageQueryOptions(), staleTime: 0 })
       .catch(() => undefined);
-    return {
-      selectedModelId,
-      hasActiveSubscription,
-      isEmbeddingModelEnabled,
-    };
+    return { hasActiveSubscription };
   },
   errorComponent: ({ error }) => {
     try {
@@ -95,13 +84,11 @@ export const Route = createFileRoute('/_authenticated/chat/')({
 });
 
 function RouteComponent() {
-  const { selectedModelId, isEmbeddingModelEnabled } = Route.useLoaderData();
-  const { prompt, attachmentUrl, workspaceId } = Route.useSearch();
+  const { modelId, prompt, attachmentUrl, workspaceId } = Route.useSearch();
   return (
     <NewChatPage
       key={workspaceId ?? 'no-workspace'}
-      selectedModelId={selectedModelId}
-      isEmbeddingModelEnabled={isEmbeddingModelEnabled}
+      initialModel={modelId}
       initialPrompt={prompt}
       initialAttachmentUrl={attachmentUrl}
       initialWorkspaceId={workspaceId}

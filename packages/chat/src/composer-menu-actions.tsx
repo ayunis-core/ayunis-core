@@ -12,56 +12,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@ayunis/ui/components/tooltip';
-import { Brain, Check, Loader2, Plug, Plus, Sparkles } from 'lucide-react';
+import { Brain, Loader2, Plug, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
-
-export type ComposerMenuStatus = 'loading' | 'error' | 'ready';
-
-export function SkillsMenuAction({
-  items,
-  status,
-  selectedId,
-  onSelect,
-}: Readonly<{
-  items: readonly { id: string; name: string }[];
-  status: ComposerMenuStatus;
-  selectedId?: string;
-  onSelect: (id: string, name: string) => void;
-}>) {
-  const { t } = useTranslation('common');
-  return (
-    <MenuSub
-      trigger={
-        <>
-          <Sparkles className="h-4 w-4" />
-          {t('chatInput.addSkill')}
-        </>
-      }
-    >
-      <MenuStatus
-        status={status}
-        empty={!items.length}
-        emptyKey="chatInput.skillsEmptyState"
-        errorKey="chatInput.skillsLoadError"
-      />
-      {status === 'ready' &&
-        items.map((item) => (
-          <DropdownMenuItem
-            key={item.id}
-            data-testid={`chat-input-skill-${item.id}`}
-            onClick={() => onSelect(item.id, item.name)}
-          >
-            <Sparkles className="h-4 w-4 shrink-0" />
-            <span className="flex-1 truncate" title={item.name}>
-              {item.name}
-            </span>
-            {selectedId === item.id && <Check className="h-4 w-4 shrink-0" />}
-          </DropdownMenuItem>
-        ))}
-    </MenuSub>
-  );
-}
+import type { ChatMenuStatus as ComposerMenuStatus } from './chat-config';
 
 export function KnowledgeBasesMenuAction({
   items,

@@ -76,7 +76,6 @@ function renderPage(overrides: Partial<NotificationResponseDto> = {}) {
     <NotificationPage
       notification={notification(overrides)}
       selectedModelId="medium"
-      isEmbeddingModelEnabled={false}
     />,
   );
 }
@@ -92,7 +91,6 @@ describe('NotificationPage', () => {
         notificationId: '6f0e4a52-8c1b-4f7e-9a51-3d2c1b0a9e8f',
       },
       selectedModelId: 'medium',
-      isEmbeddingModelEnabled: false,
     });
   });
 

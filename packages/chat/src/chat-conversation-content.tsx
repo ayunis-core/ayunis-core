@@ -28,6 +28,7 @@ import {
 } from '@ayunis/chat/timeline';
 import type { ClientToolRegistration } from './client-tools';
 import type { ToolCardRegistration } from './tool-cards';
+import type { ToolCards } from './timeline/tool-card-types';
 import type { ChatConversationSlots } from './chat-conversation-config';
 import type { ChatSlots } from './chat-surface-config';
 
@@ -35,7 +36,6 @@ type Message = GetThreadResponseDto['messages'][number];
 
 interface ContentProps {
   readonly threadId: string;
-  readonly copyActions?: boolean;
   readonly messages: Message[];
   readonly masks: GetThreadResponseDto['piiMasks'];
   readonly isStreaming: boolean;
@@ -45,7 +45,6 @@ interface ContentProps {
   readonly timeline?: TimelinePresentation;
   readonly messageImage: ChatConversationSlots['messageImage'];
   readonly messageNudge: ChatConversationSlots['messageNudge'];
-  readonly messageMarkdown: ChatConversationSlots['messageMarkdown'];
   readonly pendingSubmission: string | null;
   readonly contextHint?: ReactNode;
   readonly waiting?: ReactNode;
@@ -56,18 +55,18 @@ interface ContentProps {
 }
 
 export function useConversationTimeline<Context, Outcome>(
-  timeline?: TimelinePresentation,
+  registeredCards: ToolCards | undefined,
+  pendingIndicator: ReactNode,
+  onCodeCopied: (() => void) | undefined,
   registry?: ReadonlyMap<string, ClientToolRegistration<Context, Outcome>>,
 ): TimelinePresentation {
   return useMemo(() => {
-    const toolCards = new Map<string, ToolCardRegistration>(
-      timeline?.toolCards,
-    );
+    const toolCards = new Map<string, ToolCardRegistration>(registeredCards);
     for (const [name, { render }] of registry ?? []) {
       if (render && !toolCards.has(name)) toolCards.set(name, { render });
     }
-    return { ...timeline, toolCards };
-  }, [timeline, registry]);
+    return { toolCards, pendingIndicator, onCodeCopied };
+  }, [registeredCards, pendingIndicator, onCodeCopied, registry]);
 }
 
 export function ChatConversationContent(props: ContentProps) {
@@ -124,8 +123,6 @@ function ConversationMessages({
           message={message}
           messageImage={content.messageImage}
           messageNudge={content.messageNudge}
-          copyActions={content.copyActions}
-          Markdown={content.messageMarkdown ?? Markdown}
           onCopied={content.onMessageCopied}
         />
       )}
@@ -134,7 +131,6 @@ function ConversationMessages({
           unit={unit}
           grouped={grouped}
           threadId={content.threadId}
-          copyActions={content.copyActions}
           onOpenArtifact={content.onOpenArtifact}
           timeline={content.timeline}
           assistantActions={content.assistantActions}
@@ -151,7 +147,6 @@ const ConversationAssistantRun = memo(function ConversationAssistantRun({
   unit,
   grouped,
   threadId,
-  copyActions,
   onOpenArtifact,
   timeline,
   assistantActions,
@@ -160,28 +155,23 @@ const ConversationAssistantRun = memo(function ConversationAssistantRun({
   unit: AgentRunUnit;
   grouped: boolean;
   threadId: string;
-  copyActions?: boolean;
   onOpenArtifact: ContentProps['onOpenArtifact'];
   timeline: ContentProps['timeline'];
   assistantActions: ContentProps['assistantActions'];
   onMessageCopied: ContentProps['onMessageCopied'];
 }>) {
   const hasText = unit.blocks.some((block) => block.kind === 'text');
-  const showCopy = Boolean(copyActions && hasText);
-  const showActions = showCopy || Boolean(assistantActions && hasText);
   return (
     <AssistantMessageFrame
       grouped={grouped}
       actions={
-        showActions
+        hasText
           ? (ref) => (
               <>
-                {showCopy && (
-                  <CopyAssistantMessage
-                    contentRef={ref}
-                    onCopied={() => onMessageCopied?.('assistant')}
-                  />
-                )}
+                <CopyAssistantMessage
+                  contentRef={ref}
+                  onCopied={() => onMessageCopied?.('assistant')}
+                />
                 {assistantActions?.(unit, ref)}
               </>
             )
@@ -202,37 +192,27 @@ const ConversationUserMessage = memo(function ConversationUserMessage({
   message,
   messageImage,
   messageNudge,
-  copyActions,
-  Markdown: MessageMarkdown,
   onCopied,
 }: Readonly<{
   message: Message;
   messageImage: ContentProps['messageImage'];
   messageNudge: ContentProps['messageNudge'];
-  copyActions?: boolean;
-  Markdown: NonNullable<TimelinePresentation['Markdown']>;
   onCopied: ContentProps['onMessageCopied'];
 }>) {
   const masks = usePiiMasks();
   return (
     <UserMessage
       message={message}
-      renderText={(text) => (
-        <MessageMarkdown className={copyActions ? '[&_p]:!my-0' : undefined}>
-          {text}
-        </MessageMarkdown>
-      )}
+      renderText={(text) => <Markdown className="[&_p]:!my-0">{text}</Markdown>}
       renderNudge={(text) => messageNudge?.(text) ?? <PiiText>{text}</PiiText>}
       renderImage={(image) => messageImage?.(message, image)}
       actions={
-        copyActions && (
-          <CopyMessageButton
-            getContent={() => ({
-              text: resolvedPromptText(message, masks),
-            })}
-            onCopied={() => onCopied?.('user')}
-          />
-        )
+        <CopyMessageButton
+          getContent={() => ({
+            text: resolvedPromptText(message, masks),
+          })}
+          onCopied={() => onCopied?.('user')}
+        />
       }
     />
   );

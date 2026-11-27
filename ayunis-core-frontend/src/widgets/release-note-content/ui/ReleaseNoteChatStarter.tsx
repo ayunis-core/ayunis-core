@@ -9,7 +9,6 @@ interface ReleaseNoteChatStarterProps extends ChatStarterDefaults {
 export function ReleaseNoteChatStarter({
   releaseNoteId,
   selectedModelId,
-  isEmbeddingModelEnabled,
 }: Readonly<ReleaseNoteChatStarterProps>) {
   const { t } = useTranslation('release-notes');
 
@@ -19,7 +18,6 @@ export function ReleaseNoteChatStarter({
         origin={{ kind: 'release_note', releaseNoteId }}
         placeholder={t('detail.chatPlaceholder')}
         selectedModelId={selectedModelId}
-        isEmbeddingModelEnabled={isEmbeddingModelEnabled}
       />
     </div>
   );

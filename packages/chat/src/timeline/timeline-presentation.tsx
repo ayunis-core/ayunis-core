@@ -1,16 +1,10 @@
-import {
-  createContext,
-  useContext,
-  type ComponentType,
-  type ReactNode,
-} from 'react';
-import { Markdown, type MarkdownProps } from '@ayunis/chat/markdown';
+import { createContext, useContext, type ReactNode } from 'react';
 import { EMPTY_TOOL_CARDS, type ToolCards } from './tool-card-types';
 
 export interface TimelinePresentation {
   readonly toolCards: ToolCards;
-  readonly Markdown?: ComponentType<MarkdownProps>;
   readonly pendingIndicator?: ReactNode;
+  readonly onCodeCopied?: () => void;
 }
 
 export const DEFAULT_TIMELINE_PRESENTATION: TimelinePresentation = {
@@ -25,6 +19,6 @@ export function useTimelinePresentation() {
   const presentation = useContext(TimelinePresentationContext);
   return {
     toolCards: presentation.toolCards,
-    Markdown: presentation.Markdown ?? Markdown,
+    onCodeCopied: presentation.onCodeCopied,
   };
 }

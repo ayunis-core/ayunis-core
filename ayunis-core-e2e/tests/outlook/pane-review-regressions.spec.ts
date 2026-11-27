@@ -157,7 +157,7 @@ test("stops a first send and lets a retry finish on its original email", async (
   await attachReviewSource(page);
   await sendMessage(page, "Read the attachment");
   await expect.poll(() => processingPolls).toBeGreaterThan(0);
-  await page.getByTestId("stop").click();
+  await page.getByTestId("cancel").click();
   await expect(page.getByTestId("input")).toHaveValue("Read the attachment");
   await expect(page.getByTestId("send")).toBeEnabled();
 
@@ -179,7 +179,7 @@ test("stops a first send and lets a retry finish on its original email", async (
   await sendMessage(page, "Retry the attachment");
   await expect.poll(() => processingPolls).toBeGreaterThan(pollsAfterHistory);
   await selectEmail(page, secondReadItem);
-  await expect(page.getByTestId("stop")).toBeHidden();
+  await expect(page.getByTestId("cancel")).toBeHidden();
   await expect(page.getByTestId("input")).toHaveValue("");
   await sendMessage(page, "A separate new chat");
   await expect(page.getByTestId("assistant-message").last()).toBeVisible();
@@ -200,7 +200,7 @@ test("stops a first send and lets a retry finish on its original email", async (
 });
 
 async function attachReviewSource(page: Page): Promise<void> {
-  const picker = page.getByTestId("chat-attach-files");
+  const picker = page.getByTestId("chat-file-upload-input");
   await expect(picker).toBeEnabled();
   await picker.setInputFiles({
     name: "review-source.txt",

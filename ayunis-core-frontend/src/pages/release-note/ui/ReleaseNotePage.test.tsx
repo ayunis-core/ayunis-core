@@ -65,7 +65,6 @@ function renderPage(overrides: Partial<ReleaseNoteResponseDto> = {}) {
         date: '2026-11-05',
         ...overrides,
       }}
-      isEmbeddingModelEnabled={false}
     />,
   );
 }

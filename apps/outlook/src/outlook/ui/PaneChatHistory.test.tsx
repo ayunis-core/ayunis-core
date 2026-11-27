@@ -30,7 +30,6 @@ vi.mock('@/outlook/lib/use-pane-chat-data', () => ({
 
 it('returns to a valid history page when the last chat on the current page is deleted', () => {
   const props = {
-    capabilities: {},
     onSelect: vi.fn(),
     onError: vi.fn(),
     onBack: vi.fn(),

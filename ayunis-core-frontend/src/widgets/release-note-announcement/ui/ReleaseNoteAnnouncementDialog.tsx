@@ -73,9 +73,6 @@ export function ReleaseNoteAnnouncementDialog() {
           <ReleaseNoteChatStarter
             releaseNoteId={releaseNote.id}
             selectedModelId={chatStarterDefaults.selectedModelId}
-            isEmbeddingModelEnabled={
-              chatStarterDefaults.isEmbeddingModelEnabled
-            }
           />
         </div>
       </DialogContent>
