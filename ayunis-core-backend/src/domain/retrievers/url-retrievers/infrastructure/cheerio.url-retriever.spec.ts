@@ -499,6 +499,110 @@ describe('Cheerio discovered-PDF redirect destinations', () => {
   });
 });
 
+describe('CheerioUrlRetrieverHandler.head', () => {
+  beforeEach(() => jest.mocked(fetchWithUndiciDispatcher).mockReset());
+  afterEach(() => jest.restoreAllMocks());
+
+  class Guard extends UrlDestinationGuardService {
+    protected override async resolveAddresses(host: string): Promise<string[]> {
+      return host === 'public.customer.de' ? ['1.1.1.1'] : ['10.0.0.8'];
+    }
+  }
+
+  function guardedHandler(guard: UrlDestinationGuardService) {
+    return new CheerioUrlRetrieverHandler(
+      { getOrThrow: () => 5000 } as never,
+      guard,
+    );
+  }
+
+  it('returns the validator headers of the final response after following a redirect', async () => {
+    const handler = makeHandler();
+    const fetchSpy = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(redirect('https://cdn.example.org/satzung.pdf'))
+      .mockResolvedValueOnce(
+        makeResponse({
+          headers: {
+            etag: '"v3"',
+            'last-modified': 'Tue, 03 Nov 2026 08:15:00 GMT',
+            'content-length': '24411',
+          },
+        }),
+      );
+    const onRedirect = jest.fn().mockResolvedValue(undefined);
+
+    await expect(
+      handler.head({ url: 'https://example.com/satzung.pdf', onRedirect }),
+    ).resolves.toEqual({
+      finalUrl: 'https://cdn.example.org/satzung.pdf',
+      etag: '"v3"',
+      lastModified: 'Tue, 03 Nov 2026 08:15:00 GMT',
+      contentLength: '24411',
+    });
+    expect(onRedirect).toHaveBeenCalledWith(
+      'https://cdn.example.org/satzung.pdf',
+    );
+    expect(fetchSpy.mock.calls.map(([, init]) => init?.method)).toEqual([
+      'HEAD',
+      'HEAD',
+    ]);
+  });
+
+  it('reports the upstream status of a failed HEAD', async () => {
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(makeResponse({ status: 410 }));
+
+    await expect(
+      makeHandler().head({ url: 'https://example.com/alt.pdf' }),
+    ).rejects.toMatchObject({ upstreamStatus: 410 });
+  });
+
+  it('refuses an ungranted private destination before contacting it, as a GET does', async () => {
+    const guard = new Guard();
+    const nativeFetch = jest.spyOn(globalThis, 'fetch');
+    const requireGrant = jest.fn(async () => {
+      throw new CrawlDomainAccessDeniedError();
+    });
+    try {
+      await expect(
+        guardedHandler(guard).head({
+          url: 'https://intranet.customer.de/satzung.pdf',
+          assertPrivateDestinationAccess: requireGrant,
+        }),
+      ).rejects.toBeInstanceOf(CrawlDomainAccessDeniedError);
+      expect(requireGrant).toHaveBeenCalledWith(
+        'https://intranet.customer.de/satzung.pdf',
+      );
+      expect(nativeFetch).not.toHaveBeenCalled();
+      expect(fetchWithUndiciDispatcher).not.toHaveBeenCalled();
+    } finally {
+      await guard.onModuleDestroy();
+    }
+  });
+
+  it('sends a HEAD to a public destination through the rebinding-safe dispatcher', async () => {
+    const guard = new Guard();
+    const publicFetch = jest
+      .mocked(fetchWithUndiciDispatcher)
+      .mockResolvedValueOnce(makeResponse({ headers: { etag: '"v3"' } }));
+    try {
+      await guardedHandler(guard).head({
+        url: 'https://public.customer.de/satzung.pdf',
+        assertPrivateDestinationAccess: jest.fn(),
+      });
+      expect(publicFetch.mock.calls[0][1]).toMatchObject({
+        method: 'HEAD',
+        dispatcher: expect.anything(),
+        redirect: 'manual',
+      });
+    } finally {
+      await guard.onModuleDestroy();
+    }
+  });
+});
+
 describe('CheerioUrlRetrieverHandler.parseHtml', () => {
   it('retains PDF link labels and PDF media types even without a file extension', () => {
     const result = makeHandler().parseHtml(
