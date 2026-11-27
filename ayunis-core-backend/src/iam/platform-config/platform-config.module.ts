@@ -18,6 +18,8 @@ import { AppAlertController } from './presenters/http/app-alert.controller';
 
 import { GetOparlEmbeddingModelIdUseCase } from './application/use-cases/get-oparl-embedding-model-id/get-oparl-embedding-model-id.use-case';
 import { SetOparlEmbeddingModelIdUseCase } from './application/use-cases/set-oparl-embedding-model-id/set-oparl-embedding-model-id.use-case';
+import { GetAdventCalendarEnabledUseCase } from './application/use-cases/get-advent-calendar-enabled/get-advent-calendar-enabled.use-case';
+import { SetAdventCalendarEnabledUseCase } from './application/use-cases/set-advent-calendar-enabled/set-advent-calendar-enabled.use-case';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PlatformConfigRecord])],
@@ -39,6 +41,8 @@ import { SetOparlEmbeddingModelIdUseCase } from './application/use-cases/set-opa
     SetAcademyMinimumModuleSecondsUseCase,
     GetOparlEmbeddingModelIdUseCase,
     SetOparlEmbeddingModelIdUseCase,
+    GetAdventCalendarEnabledUseCase,
+    SetAdventCalendarEnabledUseCase,
   ],
   exports: [
     GetCreditsPerEuroUseCase,
@@ -47,6 +51,8 @@ import { SetOparlEmbeddingModelIdUseCase } from './application/use-cases/set-opa
     GetAcademyMinimumModuleSecondsUseCase,
     GetOparlEmbeddingModelIdUseCase,
     SetOparlEmbeddingModelIdUseCase,
+    GetAdventCalendarEnabledUseCase,
+    SetAdventCalendarEnabledUseCase,
   ],
 })
 export class PlatformConfigModule {}

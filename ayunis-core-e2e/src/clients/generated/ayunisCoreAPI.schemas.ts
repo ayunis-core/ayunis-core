@@ -7907,6 +7907,186 @@ export interface InstantOpenReleaseNoteResponseDto {
   releaseNote: ReleaseNoteResponseDto | null;
 }
 
+/**
+ * An image is served by the door image endpoint; a video is embedded as https://player.vimeo.com/video/<vimeoVideoId>?dnt=1[&h=<vimeoHash>]
+ */
+export type AdventCalendarMediaType = typeof AdventCalendarMediaType[keyof typeof AdventCalendarMediaType];
+
+
+export const AdventCalendarMediaType = {
+  image: 'image',
+  vimeo: 'vimeo',
+} as const;
+
+export interface AdventCalendarDoorMediaResponseDto {
+  /** An image is served by the door image endpoint; a video is embedded as https://player.vimeo.com/video/<vimeoVideoId>?dnt=1[&h=<vimeoHash>] */
+  type: AdventCalendarMediaType;
+  /** @nullable */
+  vimeoVideoId: string | null;
+  /**
+     * The privacy hash of an unlisted video
+     * @nullable
+     */
+  vimeoHash: string | null;
+}
+
+export type AdventCalendarLinkButtonDtoKind = typeof AdventCalendarLinkButtonDtoKind[keyof typeof AdventCalendarLinkButtonDtoKind];
+
+
+export const AdventCalendarLinkButtonDtoKind = {
+  link: 'link',
+} as const;
+
+export interface AdventCalendarLinkButtonDto {
+  /** @maxLength 40 */
+  label: string;
+  kind: AdventCalendarLinkButtonDtoKind;
+  /**
+     * An http(s) URL, opened in a new tab, or an in-app path starting with /, opened in the same tab
+     * @maxLength 2000
+     */
+  url: string;
+}
+
+export type AdventCalendarPromptButtonDtoKind = typeof AdventCalendarPromptButtonDtoKind[keyof typeof AdventCalendarPromptButtonDtoKind];
+
+
+export const AdventCalendarPromptButtonDtoKind = {
+  prompt: 'prompt',
+} as const;
+
+export interface AdventCalendarPromptButtonDto {
+  /** @maxLength 40 */
+  label: string;
+  kind: AdventCalendarPromptButtonDtoKind;
+  /**
+     * Filled into the input of a new chat, not sent
+     * @maxLength 4000
+     */
+  prompt: string;
+}
+
+export type AdventCalendarQuizButtonDtoKind = typeof AdventCalendarQuizButtonDtoKind[keyof typeof AdventCalendarQuizButtonDtoKind];
+
+
+export const AdventCalendarQuizButtonDtoKind = {
+  quiz: 'quiz',
+} as const;
+
+export interface AdventCalendarQuizButtonDto {
+  /** @maxLength 40 */
+  label: string;
+  kind: AdventCalendarQuizButtonDtoKind;
+  /** @maxLength 300 */
+  question: string;
+  /**
+     * @minItems 2
+     * @maxItems 4
+     */
+  answers: string[];
+  /**
+     * The index of the one correct answer
+     * @minimum 0
+     */
+  correctAnswerIndex: number;
+  /**
+     * Shown after an answer is picked
+     * @maxLength 1000
+     * @nullable
+     */
+  explanation?: string | null;
+}
+
+export interface AdventCalendarDoorContentResponseDto {
+  title: string;
+  /** Markdown */
+  body: string;
+  /** @nullable */
+  media: AdventCalendarDoorMediaResponseDto | null;
+  /** @maxItems 2 */
+  buttons: (AdventCalendarLinkButtonDto | AdventCalendarPromptButtonDto | AdventCalendarQuizButtonDto)[];
+  /** Changes with every edit, e.g. to reload a replaced image */
+  updatedAt: string;
+}
+
+export type AdventCalendarDoorState = typeof AdventCalendarDoorState[keyof typeof AdventCalendarDoorState];
+
+
+export const AdventCalendarDoorState = {
+  locked: 'locked',
+  empty: 'empty',
+  openable: 'openable',
+} as const;
+
+export interface AdventCalendarDoorResponseDto {
+  /**
+     * @minimum 1
+     * @maximum 24
+     */
+  day: number;
+  state: AdventCalendarDoorState;
+  /**
+     * Set exactly when the door is openable
+     * @nullable
+     */
+  content: AdventCalendarDoorContentResponseDto | null;
+}
+
+export interface AdventCalendarEnabledDto {
+  /** Users see the calendar while this is on and today is between 1 December and 6 January */
+  enabled: boolean;
+}
+
+export interface AdventCalendarResponseDto {
+  /** The calendar is switched on and today is between 1 December and 6 January (Europe/Berlin) */
+  visible: boolean;
+  /** The caller is a super admin: every door with content is openable, visible or not */
+  preview: boolean;
+  /** The server's time the door states were computed for */
+  now: string;
+  /** All 24 doors by day, or none when the calendar is neither visible nor previewed */
+  doors: AdventCalendarDoorResponseDto[];
+}
+
+export interface SaveAdventCalendarDoorRequestDto {
+  /** @maxLength 200 */
+  title: string;
+  /**
+     * Markdown; may be empty
+     * @maxLength 5000
+     */
+  body: string;
+  /**
+     * https://vimeo.com/<id>, https://vimeo.com/<id>/<hash> or https://player.vimeo.com/video/<id>[?h=<hash>]. Replaces the image; without it the door keeps its image, if any, and has no video.
+     * @nullable
+     */
+  vimeoUrl?: string | null;
+  /**
+     * Up to two buttons, at most one of them a quiz
+     * @maxItems 2
+     */
+  buttons: (AdventCalendarLinkButtonDto | AdventCalendarPromptButtonDto | AdventCalendarQuizButtonDto)[];
+}
+
+export interface SuperAdminAdventCalendarDoorResponseDto {
+  /**
+     * @minimum 1
+     * @maximum 24
+     */
+  day: number;
+  /**
+     * Null for an empty door
+     * @nullable
+     */
+  content: AdventCalendarDoorContentResponseDto | null;
+}
+
+export interface SuperAdminAdventCalendarResponseDto {
+  enabled: boolean;
+  /** All 24 doors by day, with their full content */
+  doors: SuperAdminAdventCalendarDoorResponseDto[];
+}
+
 export type SuperAdminOrgsControllerGetAllOrgsParams = {
 /**
  * Filter by derived lifecycle status: archived, then paying, then expired, then trial, otherwise no-plan
@@ -8538,5 +8718,9 @@ search?: string;
  * Only return members whose certificate is in this state
  */
 status?: CertificateValidityStatus;
+};
+
+export type SuperAdminAdventCalendarControllerUploadDoorImageBody = {
+  file: Blob | File;
 };
 
