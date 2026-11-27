@@ -3,6 +3,8 @@ import type {
   ModelWithConfigResponseDtoTier,
 } from '@ayunis/api-client/schemas';
 
+import { CHAT_SCRIPT } from './chat-script';
+
 export type WelcomeRole = 'admin' | 'user';
 
 export type WelcomeGradient = 'product' | 'mist';
@@ -27,9 +29,8 @@ export type WelcomeStage =
   | 'chapterKnow'
   | 'chat'
   | 'chapterDiscover'
-  | 'skills'
-  | 'routine'
-  | 'overview'
+  | 'capabilities'
+  | 'starter'
   | 'finale';
 
 export const ROLE_STAGES: Record<WelcomeRole, WelcomeStage[]> = {
@@ -43,9 +44,8 @@ export const ROLE_STAGES: Record<WelcomeRole, WelcomeStage[]> = {
     'chapterKnow',
     'chat',
     'chapterDiscover',
-    'skills',
-    'routine',
-    'overview',
+    'capabilities',
+    'starter',
     'finale',
   ],
   user: [
@@ -53,8 +53,8 @@ export const ROLE_STAGES: Record<WelcomeRole, WelcomeStage[]> = {
     'chapterKnow',
     'chat',
     'chapterDiscover',
-    'skills',
-    'routine',
+    'capabilities',
+    'starter',
     'finale',
   ],
 };
@@ -69,24 +69,68 @@ const STAGE_LABELS: Record<WelcomeStage, string> = {
   chapterKnow: 'Kennenlernen',
   chat: 'Chat',
   chapterDiscover: 'Entdecken',
-  skills: 'Fähigkeiten',
-  routine: 'Routine',
-  overview: 'Überblick',
+  capabilities: 'Was es kann',
+  starter: 'Direkt starten',
   finale: 'Loslegen',
 };
 
-export type WelcomeJump = 'intro' | WelcomeStage;
+export type ChatJump = `chat:${number}`;
+export type CapabilityJump = `cap:${number}`;
+
+export type WelcomeJump = 'intro' | WelcomeStage | ChatJump | CapabilityJump;
+
+const CAPABILITY_LABELS = [
+  'Dokumente',
+  'Tabellen',
+  'Diagramme',
+  'Recherche',
+  'Wissen',
+  'Besprechungen',
+  'Routinen',
+];
+
+const CAPABILITY_JUMPS: ReadonlyArray<{
+  value: CapabilityJump;
+  label: string;
+}> = CAPABILITY_LABELS.slice(1).map((label, index) => ({
+  value: `cap:${index + 1}` as const,
+  label,
+}));
+
+const CHAT_JUMPS: ReadonlyArray<{ value: ChatJump; label: string }> =
+  CHAT_SCRIPT.flatMap((step, index) => {
+    if (step.kind === 'question') {
+      return [{ value: `chat:${index}` as const, label: step.question.label }];
+    }
+    if (step.kind === 'memory') {
+      return [{ value: `chat:${index}` as const, label: 'Memory' }];
+    }
+    return [];
+  });
 
 export function jumpOptions(
   role: WelcomeRole,
 ): ReadonlyArray<{ value: WelcomeJump; label: string }> {
   return [
     { value: 'intro', label: 'Begrüßung' },
-    ...ROLE_STAGES[role].map((stage) => ({
-      value: stage,
-      label: STAGE_LABELS[stage],
-    })),
+    ...ROLE_STAGES[role].flatMap((stage) => [
+      { value: stage, label: STAGE_LABELS[stage] },
+      ...(stage === 'chat' ? CHAT_JUMPS : []),
+      ...(stage === 'capabilities' ? CAPABILITY_JUMPS : []),
+    ]),
   ];
+}
+
+export function subJumpOf(
+  jump: WelcomeJump,
+): { stage: WelcomeStage; start: number } | undefined {
+  if (jump.startsWith('chat:')) {
+    return { stage: 'chat', start: Number(jump.slice(5)) };
+  }
+  if (jump.startsWith('cap:')) {
+    return { stage: 'capabilities', start: Number(jump.slice(4)) };
+  }
+  return undefined;
 }
 
 export const WELCOME_PERSON = {
@@ -136,26 +180,6 @@ export const MODEL_TIERS: ModelTier[] = [
       { name: 'GPT OSS', provider: 'stackit' },
       { name: 'Qwen 3', provider: 'stackit' },
     ],
-  },
-];
-
-export interface SkillSuggestion {
-  name: string;
-  description: string;
-}
-
-export const MARKETPLACE_SKILLS: SkillSuggestion[] = [
-  {
-    name: 'Bürgeranfragen beantworten',
-    description: 'Verständliche Antworten im Ton Ihrer Verwaltung',
-  },
-  {
-    name: 'Stellungnahmen zusammenfassen',
-    description: 'Bündelt Stellungnahmen nach Themen',
-  },
-  {
-    name: 'Sitzungsvorlagen erstellen',
-    description: 'Entwürfe für Rat und Ausschüsse',
   },
 ];
 

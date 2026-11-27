@@ -277,14 +277,6 @@
   }
 }
 
-.wp-stage[data-phase='leaving'] .wp-backdrop__blobs {
-  transform: translate3d(0, -35%, 0) scale(2.6);
-  filter: saturate(1.2);
-  transition:
-    transform 1.25s var(--wp-ease-in-out),
-    filter 1.25s var(--wp-ease-in-out);
-}
-
 .wp-stage[data-phase='leaving'] .wp-intro > * {
   animation: wpBlurAway 0.7s var(--wp-ease-in) both;
 }

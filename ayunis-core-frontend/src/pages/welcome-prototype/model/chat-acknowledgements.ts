@@ -2,44 +2,35 @@ import type { ChatQuestion, ChatStep } from './chat-script';
 
 const ROLE_REPLIES: ReadonlyArray<[RegExp, string]> = [
   [
-    /teamleit/i,
-    'Als Teamleitung haben Sie viel mit Abstimmungen und Übersichten zu tun. Ayunis Core fasst deshalb lieber zusammen und hebt hervor, was entschieden werden muss.',
-  ],
-  [
-    /fachbereich|amtsleit|leitung/i,
-    'In der Leitung geht es oft um Zusammenhänge und Entscheidungsvorlagen. Ayunis Core denkt darum eher strategisch mit und bereitet Ergebnisse vorlagenfertig auf.',
+    /leit/i,
+    'Dann geht es oft um Überblick und Entscheidungen. Ayunis Core fasst deshalb lieber zusammen und hebt hervor, was zu entscheiden ist.',
   ],
   [
     /sachbearbeit/i,
     'Dann geht es meist um konkrete Vorgänge. Ayunis Core bleibt nah an den Vorschriften und schlägt Formulierungen vor, die Sie direkt übernehmen können.',
   ],
-];
-
-const TASK_HINTS: ReadonlyArray<[RegExp, string]> = [
   [
-    /bauantr/i,
-    'Bauanträge lassen sich gut gegen eine feste Checkliste prüfen.',
-  ],
-  [
-    /bürger|anfrag/i,
-    'Bei Bürgeranfragen hilft ein einheitlicher, verständlicher Ton.',
-  ],
-  [
-    /stellungnahm/i,
-    'Stellungnahmen lassen sich nach Themen bündeln und auswerten.',
+    /bürger|service/i,
+    'Dann haben Sie viel mit Menschen zu tun. Ayunis Core achtet auf klare, freundliche Sprache.',
   ],
 ];
 
-const STYLE_REPLIES: ReadonlyArray<[RegExp, string]> = [
+const TIME_REPLIES: ReadonlyArray<[RegExp, string]> = [
+  [/mail|anfrag/i, 'Antworten auf Anfragen lassen sich gut vorbereiten.'],
+  [
+    /text|vorlage/i,
+    'Texte und Vorlagen entstehen schnell aus ein paar Stichpunkten.',
+  ],
+  [
+    /dokument|lesen/i,
+    'Lange Unterlagen fasst Ayunis Core aufs Wesentliche zusammen.',
+  ],
+];
+
+const EXTRA_REPLIES: ReadonlyArray<[RegExp, string]> = [
   [/kurz|knapp/i, 'Gern, dann kommt Ayunis Core schnell auf den Punkt.'],
-  [
-    /ausführlich/i,
-    'Gern, dann erklärt Ayunis Core gründlich und nennt die Grundlagen.',
-  ],
-  [
-    /ausgewogen/i,
-    'Gut, dann kommt das Wichtigste zuerst, Details gibt es bei Bedarf.',
-  ],
+  [/quelle/i, 'Gern, dann nennt Ayunis Core die Grundlagen dazu.'],
+  [/nein|passt/i, 'Alles klar.'],
 ];
 
 function firstMatch(
@@ -49,30 +40,24 @@ function firstMatch(
   return replies.find(([pattern]) => pattern.test(answer))?.[1];
 }
 
-function acknowledgeTasks(answer: string) {
-  const hints = TASK_HINTS.filter(([pattern]) => pattern.test(answer)).map(
-    ([, hint]) => hint,
-  );
-  const lead = `Verstanden: ${answer}.`;
-  return hints.length > 0 ? `${lead} ${hints.join(' ')}` : lead;
+function allMatches(
+  replies: ReadonlyArray<[RegExp, string]>,
+  answer: string,
+): string | undefined {
+  const hits = replies
+    .filter(([pattern]) => pattern.test(answer))
+    .map(([, reply]) => reply);
+  return hits.length > 0 ? hits.join(' ') : undefined;
 }
 
 function acknowledgeQuestion(id: ChatQuestion['id'], answer: string) {
   switch (id) {
     case 'role':
-      return (
-        firstMatch(ROLE_REPLIES, answer) ??
-        `Danke, „${answer}“ ist notiert. Antworten richten sich danach.`
-      );
-    case 'tasks':
-      return acknowledgeTasks(answer);
-    case 'style':
-      return (
-        firstMatch(STYLE_REPLIES, answer) ??
-        'Gut, Ayunis Core richtet sich danach.'
-      );
-    case 'tools':
-      return 'Gut zu wissen.';
+      return firstMatch(ROLE_REPLIES, answer) ?? 'Danke, das hilft schon sehr.';
+    case 'time':
+      return allMatches(TIME_REPLIES, answer) ?? 'Danke, gut zu wissen.';
+    case 'extra':
+      return firstMatch(EXTRA_REPLIES, answer) ?? 'Danke, das ist notiert.';
   }
 }
 

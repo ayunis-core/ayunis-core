@@ -1,5 +1,5 @@
 export interface ChatQuestion {
-  id: 'role' | 'tasks' | 'style' | 'tools';
+  id: 'role' | 'time' | 'extra';
   label: string;
   title: string;
   note: string;
@@ -10,7 +10,8 @@ export interface ChatQuestion {
 export type ChatStep =
   | { kind: 'say'; text: string }
   | { kind: 'question'; question: ChatQuestion }
-  | { kind: 'memory'; text: string };
+  | { kind: 'memory'; text: string }
+  | { kind: 'finish'; text: string };
 
 export interface ChatFact {
   label: string;
@@ -25,36 +26,40 @@ export interface ChatMessage {
   note?: string;
   facts?: ChatFact[];
   stepIndex?: number;
-  isHero?: boolean;
+  instant?: boolean;
 }
 
 export const CHAT_SCRIPT: ChatStep[] = [
   {
     kind: 'say',
-    text: 'Damit Antworten zu Ihrer Arbeit passen, vier kurze Fragen zu Ihnen.',
+    text: 'Damit Antworten zu Ihrer Arbeit passen, ein paar kurze Fragen zu Ihnen.',
   },
   {
     kind: 'question',
     question: {
       id: 'role',
-      label: 'Funktion',
-      title: 'Was ist Ihre Funktion im Bauamt?',
-      note: 'Daran richtet Ayunis Core aus, wie fachlich Antworten sind.',
-      options: ['Sachbearbeitung', 'Teamleitung', 'Fachbereichsleitung'],
+      label: 'Tätigkeit',
+      title: 'Erzählen Sie kurz, was Sie in Ihrer Verwaltung machen.',
+      note: 'Gern in eigenen Worten.',
+      options: [
+        'Ich leite ein Amt',
+        'Ich bin in der Sachbearbeitung',
+        'Ich arbeite im Bürgerservice',
+      ],
       multiple: false,
     },
   },
   {
     kind: 'question',
     question: {
-      id: 'tasks',
-      label: 'Aufgaben',
-      title: 'Welche Aufgaben nehmen bei Ihnen die meiste Zeit ein?',
-      note: 'Gern in eigenen Worten.',
+      id: 'time',
+      label: 'Kostet Zeit',
+      title: 'Was kostet Sie im Alltag die meiste Zeit?',
+      note: 'Genau dort kann Ayunis Core am meisten abnehmen.',
       options: [
-        'Bauanträge prüfen',
-        'Bürgeranfragen beantworten',
-        'Stellungnahmen auswerten',
+        'E-Mails und Anfragen',
+        'Texte und Vorlagen',
+        'Lange Dokumente lesen',
       ],
       multiple: true,
     },
@@ -62,27 +67,20 @@ export const CHAT_SCRIPT: ChatStep[] = [
   {
     kind: 'question',
     question: {
-      id: 'style',
-      label: 'Antworten',
-      title: 'Wie sollen Antworten aussehen?',
-      note: 'In jedem Chat können Sie es anders festlegen.',
-      options: ['Kurz und knapp', 'Ausgewogen', 'Ausführlich'],
+      id: 'extra',
+      label: 'Wichtig',
+      title: 'Gibt es noch etwas, das Ayunis Core über Sie wissen sollte?',
+      note: 'Zum Beispiel, wie Ihnen Antworten am meisten helfen.',
+      options: ['Kurz und knapp', 'Gern mit Quellen', 'Nein, das passt'],
       multiple: false,
     },
   },
   {
-    kind: 'question',
-    question: {
-      id: 'tools',
-      label: 'Arbeitet mit',
-      title: 'Womit arbeiten Sie am meisten?',
-      note: 'So weiß Ayunis Core, in welcher Form Ergebnisse am meisten helfen.',
-      options: ['E-Mails', 'Dokumente', 'Vorlagen und Formulare'],
-      multiple: true,
-    },
+    kind: 'memory',
+    text: 'Danke! Jetzt kennen wir uns schon besser. Das weiß Ayunis Core ab sofort über Sie:',
   },
   {
-    kind: 'memory',
-    text: 'Jetzt kennen wir uns schon besser. Das weiß Ayunis Core ab sofort über Sie:',
+    kind: 'finish',
+    text: 'Dann schauen wir uns an, was Ayunis Core für Sie tun kann.',
   },
 ];

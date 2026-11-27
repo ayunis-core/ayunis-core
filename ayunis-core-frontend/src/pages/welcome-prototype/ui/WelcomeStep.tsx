@@ -10,20 +10,19 @@ import { ChatFlow } from './ChatFlow';
 import { FinaleScreen } from './FinaleScreen';
 import { ModeScreen } from './ModeScreen';
 import { ModelsScreen } from './ModelsScreen';
-import { OverviewScreen } from './OverviewScreen';
-import { RoutineScreen } from './RoutineScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { SkillsDemoScreen } from './SkillsDemoScreen';
+import { StarterScreen } from './StarterScreen';
+import { CapabilitiesScreen } from './CapabilitiesScreen';
 import { ToneScreen } from './ToneScreen';
-
-const KNOW_TITLE = `Jetzt geht es um Sie, ${WELCOME_PERSON.firstName}.`;
 
 function StageView({
   stage,
+  chatStart,
   onNext,
   onBack,
 }: Readonly<{
   stage: WelcomeStage;
+  chatStart: number;
   onNext: () => void;
   onBack: () => void;
 }>) {
@@ -59,12 +58,11 @@ function StageView({
               <Highlight>um Sie, {WELCOME_PERSON.firstName}.</Highlight>
             </>
           }
-          transitionName="wp-chat-hero"
           onDone={onNext}
         />
       );
     case 'chat':
-      return <ChatFlow heroText={KNOW_TITLE} onComplete={onNext} />;
+      return <ChatFlow startStep={chatStart} onComplete={onNext} />;
     case 'chapterDiscover':
       return (
         <ChapterScreen
@@ -77,12 +75,16 @@ function StageView({
           onDone={onNext}
         />
       );
-    case 'skills':
-      return <SkillsDemoScreen onDone={onNext} onBack={onBack} />;
-    case 'routine':
-      return <RoutineScreen onDone={onNext} onBack={onBack} />;
-    case 'overview':
-      return <OverviewScreen onDone={onNext} onBack={onBack} />;
+    case 'capabilities':
+      return (
+        <CapabilitiesScreen
+          startAt={chatStart}
+          onDone={onNext}
+          onBack={onBack}
+        />
+      );
+    case 'starter':
+      return <StarterScreen onDone={onNext} onBack={onBack} />;
     case 'finale':
       return <FinaleScreen />;
   }
@@ -91,11 +93,13 @@ function StageView({
 export function WelcomeStep({
   role,
   stageIndex,
+  chatStart,
   onNext,
   onBack,
 }: Readonly<{
   role: WelcomeRole;
   stageIndex: number;
+  chatStart: number;
   onNext: () => void;
   onBack: () => void;
 }>) {
@@ -103,7 +107,13 @@ export function WelcomeStep({
 
   return (
     <div className="wp-step">
-      <StageView key={stage} stage={stage} onNext={onNext} onBack={onBack} />
+      <StageView
+        key={`${stage}-${chatStart}`}
+        stage={stage}
+        chatStart={chatStart}
+        onNext={onNext}
+        onBack={onBack}
+      />
     </div>
   );
 }

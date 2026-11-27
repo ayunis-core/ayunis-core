@@ -6,12 +6,11 @@ import {
   type ChatStep,
 } from './chat-script';
 import { acknowledge } from './chat-acknowledgements';
-import { withViewTransition } from './view-transition';
 
-const HERO_HOLD_MS = 900;
-const AFTER_MORPH_MS = 1100;
+const START_MS = 700;
 const TYPING_MS = 1100;
 const SAY_PAUSE_MS = 1300;
+const MEMORY_PAUSE_MS = 3200;
 
 function factsFrom(answers: Partial<Record<string, string>>): ChatFact[] {
   return CHAT_SCRIPT.flatMap((step) => {
@@ -29,11 +28,12 @@ function messageFor(
 ): Omit<ChatMessage, 'id'> {
   switch (step.kind) {
     case 'say':
+    case 'finish':
       return { role: 'assistant', text: step.text, lead };
     case 'question':
       return {
         role: 'assistant',
-        text: step.question.title,
+        text: `**${step.question.title}**`,
         note: step.question.note,
         lead,
       };
@@ -48,13 +48,30 @@ function messageFor(
   }
 }
 
-export function useChatScript(heroText: string) {
-  const [phase, setPhase] = useState<'hero' | 'chat'>('hero');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+function prefill(startStep: number) {
+  const answers: Partial<Record<string, string>> = {};
+  const messages: ChatMessage[] = [];
+  CHAT_SCRIPT.slice(0, startStep).forEach((step, index) => {
+    messages.push({
+      ...messageFor(step, index, undefined, answers),
+      instant: true,
+      id: -2 * index - 2,
+    });
+    if (step.kind !== 'question') return;
+    const answer = step.question.options[0] ?? '';
+    answers[step.question.id] = answer;
+    messages.push({ role: 'user', text: answer, id: -2 * index - 3 });
+  });
+  return { answers, messages };
+}
+
+export function useChatScript(startStep: number) {
+  const [initial] = useState(() => prefill(startStep));
+  const [messages, setMessages] = useState<ChatMessage[]>(initial.messages);
   const [stepIndex, setStepIndex] = useState(-1);
   const [typing, setTyping] = useState(false);
   const timers = useRef<number[]>([]);
-  const answers = useRef<Partial<Record<string, string>>>({});
+  const answers = useRef<Partial<Record<string, string>>>(initial.answers);
   const nextId = useRef(1);
 
   const later = useCallback((callback: () => void, ms: number) => {
@@ -83,23 +100,19 @@ export function useChatScript(heroText: string) {
 
   useEffect(() => {
     if (typing || stepIndex < 0) return;
-    if (CHAT_SCRIPT.at(stepIndex)?.kind !== 'say') return;
-    later(() => ask(stepIndex + 1), SAY_PAUSE_MS);
+    const kind = CHAT_SCRIPT.at(stepIndex)?.kind;
+    if (kind !== 'say' && kind !== 'memory') return;
+    later(
+      () => ask(stepIndex + 1),
+      kind === 'memory' ? MEMORY_PAUSE_MS : SAY_PAUSE_MS,
+    );
   }, [ask, later, stepIndex, typing]);
 
   useEffect(() => {
     const pending = timers.current;
-    later(() => {
-      withViewTransition(() => {
-        setPhase('chat');
-        setMessages([
-          { id: 0, role: 'assistant', text: heroText, isHero: true },
-        ]);
-      });
-      later(() => ask(0), AFTER_MORPH_MS);
-    }, HERO_HOLD_MS);
+    later(() => ask(startStep), START_MS);
     return () => pending.forEach((id) => window.clearTimeout(id));
-  }, [ask, heroText, later]);
+  }, [ask, later, startStep]);
 
   const answer = useCallback(
     (text: string) => {
@@ -112,7 +125,6 @@ export function useChatScript(heroText: string) {
   );
 
   return {
-    phase,
     messages,
     typing,
     currentStep:

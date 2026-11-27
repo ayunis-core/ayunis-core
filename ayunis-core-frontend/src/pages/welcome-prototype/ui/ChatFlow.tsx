@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type KeyboardEvent,
-} from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ArrowUp, Mic, Plus } from 'lucide-react';
 import { Button } from '@ayunis/ui/components/button';
 import { ChatComposer } from '@ayunis/chat/composer';
@@ -20,37 +14,23 @@ import { useStreamedText } from '@/pages/welcome-prototype/model/use-streamed-te
 import { MemoryCard } from './MemoryCard';
 import './chat-flow.css';
 
-const HERO_TRANSITION: CSSProperties = { viewTransitionName: 'wp-chat-hero' };
+const FINISH_HOLD_MS = 3200;
 
-function AssistantMessage({
-  message,
-  isCurrent,
-  onConfirm,
-}: Readonly<{
-  message: ChatMessage;
-  isCurrent: boolean;
-  onConfirm: () => void;
-}>) {
+function AssistantMessage({ message }: Readonly<{ message: ChatMessage }>) {
   const text = [message.lead, message.text, message.note]
     .filter(Boolean)
     .join('\n\n');
-  const { shown, isDone } = useStreamedText(text, !message.isHero);
+  const { shown, isDone } = useStreamedText(text, !message.instant);
 
   return (
-    <div style={message.isHero ? HERO_TRANSITION : undefined}>
-      <AssistantMessageFrame grouped>
-        <Markdown isStreaming={!isDone}>{shown}</Markdown>
-        {message.facts && isDone && (
-          <div className="wp-msg__widget">
-            <MemoryCard
-              facts={message.facts}
-              active={isCurrent}
-              onConfirm={onConfirm}
-            />
-          </div>
-        )}
-      </AssistantMessageFrame>
-    </div>
+    <AssistantMessageFrame grouped>
+      <Markdown isStreaming={!isDone}>{shown}</Markdown>
+      {message.facts && isDone && (
+        <div className="wp-msg__widget">
+          <MemoryCard facts={message.facts} />
+        </div>
+      )}
+    </AssistantMessageFrame>
   );
 }
 
@@ -65,10 +45,10 @@ function UserMessageView({ text }: Readonly<{ text: string }>) {
 }
 
 export function ChatFlow({
-  heroText,
+  startStep,
   onComplete,
-}: Readonly<{ heroText: string; onComplete: () => void }>) {
-  const chat = useChatScript(heroText);
+}: Readonly<{ startStep: number; onComplete: () => void }>) {
+  const chat = useChatScript(startStep);
   const [draft, setDraft] = useState('');
   const [picked, setPicked] = useState<string[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
@@ -76,7 +56,14 @@ export function ChatFlow({
     chat.currentStep?.kind === 'question'
       ? chat.currentStep.question
       : undefined;
-  const lastMessageId = chat.messages.at(-1)?.id;
+
+  const isFinished = chat.currentStep?.kind === 'finish';
+
+  useEffect(() => {
+    if (!isFinished) return;
+    const timeoutId = window.setTimeout(onComplete, FINISH_HOLD_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isFinished, onComplete]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -108,16 +95,6 @@ export function ChatFlow({
     send([...picked, draft.trim()]);
   }
 
-  if (chat.phase === 'hero') {
-    return (
-      <section className="wp-flow">
-        <h2 className="wp-flow__title" style={HERO_TRANSITION}>
-          {heroText}
-        </h2>
-      </section>
-    );
-  }
-
   const canSend =
     Boolean(question) && (draft.trim().length > 0 || picked.length > 0);
 
@@ -129,12 +106,7 @@ export function ChatFlow({
             message.role === 'user' ? (
               <UserMessageView key={message.id} text={message.text} />
             ) : (
-              <AssistantMessage
-                key={message.id}
-                message={message}
-                isCurrent={message.id === lastMessageId}
-                onConfirm={onComplete}
-              />
+              <AssistantMessage key={message.id} message={message} />
             ),
           )}
           {chat.typing && (
