@@ -68,7 +68,6 @@ describe('serveSurfaces', () => {
   });
 
   beforeEach(() => {
-    process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'true';
     process.env.OUTLOOK_ADDIN_FRAME_ORIGINS =
       'https://outlook.office.com, https://mail.customer.de';
   });
@@ -137,20 +136,6 @@ describe('serveSurfaces', () => {
     expect(response.status).toBe(404);
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(await response.text()).not.toBe(WEB_SHELL);
-  });
-
-  it.each([
-    '/outlook',
-    '/outlook/login',
-    '/outlook/handoff',
-    '/outlook/taskpane.html',
-    '/outlook/events.html',
-    '/outlook/dialog.html',
-    '/outlook/events-classic.js',
-    '/outlook/assets/icon.png',
-  ])('returns 404 with Outlook disabled at %s', async (path) => {
-    process.env.FEATURE_OUTLOOK_ADDIN_ENABLED = 'false';
-    expect((await fetchPath(path)).status).toBe(404);
   });
 
   it('resolves and validates framing origins separately for each request', async () => {

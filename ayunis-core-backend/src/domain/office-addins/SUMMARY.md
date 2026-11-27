@@ -7,10 +7,10 @@ Ayunis Core as an Office add-in. Only Outlook exists so far.
 
 ## Outlook manifest
 
-`GET /api/office-addins/outlook/manifest.xml` (public, behind `FEATURE_OUTLOOK_ADDIN_ENABLED`, not in the OpenAPI spec)
+`GET /api/office-addins/outlook/manifest.xml` (public, not in the OpenAPI spec)
 returns the add-in-only XML manifest rendered for this deployment's
 `FRONTEND_BASEURL` (`renderOutlookManifest`). The backend surface registry
-supplies the manifest route, feature flag, static prefix and launch document
+supplies the manifest route, static prefix and launch document
 paths. How admins install it is in
 `DEPLOYMENT.md` ("Outlook Add-in").
 

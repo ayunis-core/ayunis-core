@@ -25,8 +25,6 @@ export interface FeatureTogglesResponseDto {
   voiceEnabled: boolean;
   /** Assistant messages can be read aloud (opt-in, needs voice to be available) */
   readAloudEnabled: boolean;
-  /** The Outlook add-in can be installed (manifest) and signed in to (session handoff) */
-  outlookAddinEnabled: boolean;
   /** The assistant remembers facts about each user across chats, and users can manage what it remembers */
   memoryEnabled: boolean;
   /** Admins can connect the organization to external products such as Microsoft 365 (Connections) */

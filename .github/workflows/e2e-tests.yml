@@ -359,9 +359,9 @@ jobs:
           MFA_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           CONNECTOR_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
-          # Flag-on contract for the main backend; the other backends below turn it off.
+          # Feature flags enabled for the main backend; the other backends below
+          # exercise their disabled-state contracts.
           FEATURE_ROUTINES_ENABLED=true
-          FEATURE_OUTLOOK_ADDIN_ENABLED=true
           FEATURE_RECORDINGS_ENABLED=true
           FEATURE_MEMORY_ENABLED=true
           FEATURE_CONNECTORS_ENABLED=true
@@ -505,19 +505,6 @@ jobs:
           nohup node dist/src/main > backend-release-notes-disabled.log 2>&1 &
           timeout 60 bash -c 'until curl -sf http://localhost:3004/api/health; do sleep 2; done' \
             || { cat backend-release-notes-disabled.log; exit 1; }
-
-      # Add-in flag unset: proves the flag-off contract
-      # (tests/outlook/addin-disabled.spec.ts). Its routine worker is stopped.
-      - name: Start backend with the Outlook add-in disabled
-        working-directory: ayunis-core-backend
-        env:
-          PORT: 3005
-          FEATURE_OUTLOOK_ADDIN_ENABLED: ''
-          FEATURE_ROUTINES_ENABLED: 'false'
-        run: |
-          nohup node dist/src/main > backend-outlook-addin-disabled.log 2>&1 &
-          timeout 60 bash -c 'until curl -sf http://localhost:3005/api/health; do sleep 2; done' \
-            || { cat backend-outlook-addin-disabled.log; exit 1; }
 
       - name: Cache Playwright browsers
         uses: actions/cache@v6

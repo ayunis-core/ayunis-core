@@ -141,11 +141,7 @@ export const SURFACE_REGISTRY = {
       ToolType.OUTLOOK_MOVE_EMAIL_TO_COMPOSER,
       ToolType.OUTLOOK_SAVE_EMAIL_TO_DRAFT,
     ],
-    featureFlag: {
-      name: 'outlookAddinEnabled',
-      envKey: 'FEATURE_OUTLOOK_ADDIN_ENABLED',
-      defaultEnabled: false,
-    },
+    featureFlag: null,
     webShellPaths: ['/login', '/handoff'],
     framing: {
       documents: Object.values(outlookLaunchDocuments),

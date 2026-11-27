@@ -24,15 +24,14 @@ const connectorPages = {
 
 export function ConnectionsSection({
   connectorsEnabled,
-  officeAddinsEnabled,
-}: Readonly<{ connectorsEnabled: boolean; officeAddinsEnabled: boolean }>) {
+}: Readonly<{ connectorsEnabled: boolean }>) {
   const { t } = useTranslation('admin-settings-connections');
 
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold">{t('connections.title')}</h2>
       {connectorsEnabled && <ConnectorItems />}
-      {officeAddinsEnabled && <OfficeAddinsItem />}
+      <OfficeAddinsItem />
     </section>
   );
 }

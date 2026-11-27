@@ -34,7 +34,6 @@ export function McpIntegrationsPage({
   );
   const [deleteIntegration, setDeleteIntegration] =
     useState<McpIntegration | null>(null);
-  const isOutlookAddinEnabled = useIsFeatureEnabled('outlookAddinEnabled');
   const isConnectorsEnabled = useIsFeatureEnabled('connectorsEnabled');
   const navigate = useNavigate({ from: '/admin-settings/integrations/' });
 
@@ -48,18 +47,14 @@ export function McpIntegrationsPage({
 
   // Connections sit apart from the MCP integrations and show whatever their
   // state.
-  const sectionsAboveMcp =
-    isConnectorsEnabled || isOutlookAddinEnabled ? (
-      <>
-        <ConnectionsSection
-          connectorsEnabled={isConnectorsEnabled}
-          officeAddinsEnabled={isOutlookAddinEnabled}
-        />
-        <h2 className="pt-2 text-lg font-semibold">
-          {t('integrations.page.mcpTitle')}
-        </h2>
-      </>
-    ) : null;
+  const sectionsAboveMcp = (
+    <>
+      <ConnectionsSection connectorsEnabled={isConnectorsEnabled} />
+      <h2 className="pt-2 text-lg font-semibold">
+        {t('integrations.page.mcpTitle')}
+      </h2>
+    </>
+  );
 
   const showSavedIntegration = (saved: McpIntegration) => {
     void navigate({ search: { integration: saved.id } });
@@ -94,9 +89,7 @@ export function McpIntegrationsPage({
   if (integrationsError) {
     return (
       <SettingsLayout title={tLayout('layout.integrations')}>
-        {sectionsAboveMcp && (
-          <div className="space-y-4">{sectionsAboveMcp}</div>
-        )}
+        <div className="space-y-4">{sectionsAboveMcp}</div>
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
             <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-600" />

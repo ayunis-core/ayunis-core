@@ -43,13 +43,6 @@ export class FeatureTogglesResponseDto {
 
   @ApiProperty({
     description:
-      'The Outlook add-in can be installed (manifest) and signed in to (session handoff)',
-    default: false,
-  })
-  outlookAddinEnabled: boolean;
-
-  @ApiProperty({
-    description:
       'The assistant remembers facts about each user across chats, and users can manage what it remembers',
     default: false,
   })
