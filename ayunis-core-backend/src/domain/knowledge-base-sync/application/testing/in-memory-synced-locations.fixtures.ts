@@ -8,6 +8,7 @@ import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/c
 import type { NextSyncs } from 'src/domain/knowledge-base-sync/domain/sync-schedule';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
+import { WebSyncedLocation } from 'src/domain/knowledge-base-sync/domain/web-synced-location.entity';
 
 /** The locations and files of the sync engine, without a database. */
 export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository {
@@ -18,7 +19,6 @@ export class InMemorySyncedLocationsRepository extends SyncedLocationsRepository
     const duplicate = [...this.locations.values()].some(
       (existing) =>
         existing.knowledgeBaseId === location.knowledgeBaseId &&
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- one provider so far
         existing.provider === location.provider &&
         existing.location === location.location,
     );
@@ -233,5 +233,7 @@ export function withChanges(
 ): SyncedLocation {
   if (location instanceof ConnectorSyncedLocation)
     return new ConnectorSyncedLocation({ ...location, ...changes });
+  if (location instanceof WebSyncedLocation)
+    return new WebSyncedLocation({ ...location, ...changes });
   throw new Error(`Unknown synced location subtype for ${location.id}`);
 }

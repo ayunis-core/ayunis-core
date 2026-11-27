@@ -15,6 +15,7 @@ import { ConnectorRecord } from 'src/domain/connectors/infrastructure/persistenc
 import { KnowledgeBaseRecord } from 'src/domain/knowledge-bases/infrastructure/persistence/local/schema/knowledge-base.record';
 import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
+import { WEB_SYNC_MAX_DEPTH } from 'src/domain/knowledge-base-sync/domain/web-synced-location.entity';
 import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema/org.record';
 
 // The unique constraint leads with knowledgeBaseId and so also serves the
@@ -25,6 +26,8 @@ import { OrgRecord } from 'src/iam/orgs/infrastructure/repositories/local/schema
 @Check(
   `("provider" = '${SyncedLocationProvider.CONNECTOR}') = ("connectorId" IS NOT NULL)`,
 )
+@Check(`("provider" = '${SyncedLocationProvider.WEB}') = ("depth" IS NOT NULL)`)
+@Check(`"depth" BETWEEN 0 AND ${WEB_SYNC_MAX_DEPTH}`)
 export abstract class SyncedLocationRecord extends BaseRecord {
   @Index()
   @Column({ type: 'uuid' })
@@ -84,4 +87,12 @@ export class ConnectorSyncedLocationRecord extends SyncedLocationRecord {
   @ManyToOne(() => ConnectorRecord, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'connectorId' })
   connector: ConnectorRecord | null;
+}
+
+// Nullable for the rows of other providers; the check constraint requires it
+// exactly for web locations.
+@ChildEntity(SyncedLocationProvider.WEB)
+export class WebSyncedLocationRecord extends SyncedLocationRecord {
+  @Column({ type: 'smallint', nullable: true })
+  depth: number | null;
 }

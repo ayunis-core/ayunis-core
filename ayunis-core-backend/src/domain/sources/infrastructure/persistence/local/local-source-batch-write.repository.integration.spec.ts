@@ -30,7 +30,7 @@ describe('LocalSourceBatchWriteRepository', () => {
     // The column types of the migrated table: IDs are varchar, not uuid. The
     // replacement's foreign key as AddSyncedFileProcessing creates it.
     await db.query(
-      `CREATE TABLE "${schema}"."sources" ("id" character varying PRIMARY KEY, "name" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "status" character varying, "knowledgeBaseId" character varying, "storageKey" character varying, "replacesSourceId" character varying REFERENCES "${schema}"."sources" ("id") ON DELETE CASCADE, "syncedLocationId" character varying)`,
+      `CREATE TABLE "${schema}"."sources" ("id" character varying PRIMARY KEY, "name" character varying NOT NULL, "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "status" character varying, "knowledgeBaseId" character varying, "storageKey" character varying, "replacesSourceId" character varying REFERENCES "${schema}"."sources" ("id") ON DELETE CASCADE, "syncedLocationId" character varying, "url" character varying)`,
     );
     repository = new LocalSourceBatchWriteRepository(
       { manager: db.manager } as never,
@@ -56,19 +56,31 @@ describe('LocalSourceBatchWriteRepository', () => {
     );
 
     await repository.rename([
-      { sourceId: renamed, name: 'Hundesteuersatzung 2024.pdf' },
-      { sourceId: other, name: "Gebühren (Stand '24).pdf" },
-      { sourceId: randomUUID(), name: 'Gelöscht.pdf' },
+      { sourceId: renamed, name: 'Hundesteuersatzung 2024.pdf', url: null },
+      {
+        sourceId: other,
+        name: "Gebühren (Stand '24).pdf",
+        url: 'https://musterstadt.de/gebuehren.pdf',
+      },
+      { sourceId: randomUUID(), name: 'Gelöscht.pdf', url: null },
     ]);
 
-    const rows = await db.query<{ id: string; name: string }[]>(
-      `SELECT "id", "name" FROM "${schema}"."sources"`,
-    );
-    expect(new Map(rows.map((row) => [row.id, row.name]))).toEqual(
+    const rows = await db.query<
+      { id: string; name: string; url: string | null }[]
+    >(`SELECT "id", "name", "url" FROM "${schema}"."sources"`);
+    expect(
+      new Map(rows.map(({ id, name, url }) => [id, { name, url }])),
+    ).toEqual(
       new Map([
-        [renamed, 'Hundesteuersatzung 2024.pdf'],
-        [other, "Gebühren (Stand '24).pdf"],
-        [untouched, 'Haushalt.xlsx'],
+        [renamed, { name: 'Hundesteuersatzung 2024.pdf', url: null }],
+        [
+          other,
+          {
+            name: "Gebühren (Stand '24).pdf",
+            url: 'https://musterstadt.de/gebuehren.pdf',
+          },
+        ],
+        [untouched, { name: 'Haushalt.xlsx', url: null }],
       ]),
     );
   });
@@ -76,6 +88,7 @@ describe('LocalSourceBatchWriteRepository', () => {
   describe('replacements of changed files', () => {
     const knowledgeBaseId = randomUUID();
     const syncedLocationId = randomUUID();
+    const CITATION_URL = 'https://musterstadt.de/hundesteuer.pdf';
 
     async function aSource(
       status: SourceStatus,
@@ -83,7 +96,7 @@ describe('LocalSourceBatchWriteRepository', () => {
     ): Promise<UUID> {
       const id = randomUUID();
       await db.query(
-        `INSERT INTO "${schema}"."sources" ("id", "name", "status", "knowledgeBaseId", "storageKey", "replacesSourceId", "syncedLocationId") VALUES ($1, 'Hundesteuer.pdf', $2, $3, $4, $5, $6)`,
+        `INSERT INTO "${schema}"."sources" ("id", "name", "status", "knowledgeBaseId", "storageKey", "replacesSourceId", "syncedLocationId", "url") VALUES ($1, 'Hundesteuer.pdf', $2, $3, $4, $5, $6, $7)`,
         [
           id,
           status,
@@ -91,6 +104,7 @@ describe('LocalSourceBatchWriteRepository', () => {
           `org/synced/${id}/Hundesteuer.pdf`,
           replaces,
           replaces ? null : syncedLocationId,
+          replaces ? null : CITATION_URL,
         ],
       );
       return id;
@@ -102,9 +116,10 @@ describe('LocalSourceBatchWriteRepository', () => {
           name: string;
           knowledgeBaseId: string | null;
           syncedLocationId: string | null;
+          url: string | null;
         }[]
       >(
-        `SELECT "name", "knowledgeBaseId", "syncedLocationId" FROM "${schema}"."sources" WHERE id = $1`,
+        `SELECT "name", "knowledgeBaseId", "syncedLocationId", "url" FROM "${schema}"."sources" WHERE id = $1`,
         [id],
       );
       return found ?? null;
@@ -129,11 +144,13 @@ describe('LocalSourceBatchWriteRepository', () => {
         id: replaced,
         storageKey: `org/synced/${replaced}/Hundesteuer.pdf`,
       });
-      // It stays listed under the location the replaced source belonged to.
+      // It stays listed under the location the replaced source belonged to,
+      // cited at its URL as it is now.
       expect(await row(replacement)).toEqual({
         name: 'Hundesteuer 2025.pdf',
         knowledgeBaseId,
         syncedLocationId,
+        url: CITATION_URL,
       });
       await db.query(`DELETE FROM "${schema}"."sources" WHERE id = $1`, [
         replaced,

@@ -26,6 +26,13 @@ export interface SyncItem {
   /** Path below the location, including the file name. */
   path: string;
   name: string;
+  /**
+   * The name its content is typed and stored by, when `name` does not tell
+   * the type (a web page's title); defaults to `name`.
+   */
+  fileName?: string;
+  /** Where a citation opens it; without one, citations open the stored file. */
+  url?: string;
   /** Changes whenever the content changes, and only then. */
   version: string;
   size: number;
@@ -47,6 +54,11 @@ export interface SyncChanges {
   items: SyncItem[];
   /** Items gone from the location; may include IDs never listed. */
   removedItemIds: string[];
+  /**
+   * Items the source could not read this time; their files stay as they
+   * are, also when missing from a full listing.
+   */
+  keptItemIds: string[];
   /** Opaque; passed back on the next listing. */
   cursor: string;
   /** The items are everything below the location: whatever is not listed is gone. */

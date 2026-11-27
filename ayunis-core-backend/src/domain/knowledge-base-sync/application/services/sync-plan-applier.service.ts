@@ -71,7 +71,11 @@ export class SyncPlanApplier {
       const created = await this.addDocuments.execute(
         new AddSyncedDocumentsToKnowledgeBaseCommand(
           location.knowledgeBaseId,
-          plan.awaitingDocument.map(({ name }) => name),
+          plan.awaitingDocument.map((file) => ({
+            name: file.name,
+            fileName: file.fileName,
+            url: file.url,
+          })),
           location.id,
         ),
       );

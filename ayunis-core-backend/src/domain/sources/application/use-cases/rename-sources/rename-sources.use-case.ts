@@ -4,7 +4,10 @@ import { SourceBatchWriteRepository } from 'src/domain/sources/application/ports
 import { UnexpectedSourceError } from 'src/domain/sources/application/sources.errors';
 import { RenameSourcesCommand } from './rename-sources.command';
 
-/** Renames sources without touching their content or index entries. */
+/**
+ * Renames sources and sets where their citations open, without touching
+ * their content or index entries.
+ */
 @Injectable()
 export class RenameSourcesUseCase {
   private readonly logger = new Logger(RenameSourcesUseCase.name);

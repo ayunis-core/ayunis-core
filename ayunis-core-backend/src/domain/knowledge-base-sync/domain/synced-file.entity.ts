@@ -13,6 +13,13 @@ export class SyncedFile {
   name: string;
   /** Below the location, including the name. */
   path: string;
+  /**
+   * The name its content is typed and stored by, when `name` does not tell
+   * the type (a web page's title); `null` when `name` does.
+   */
+  fileName: string | null;
+  /** Where a citation opens it; `null` when citations open the stored file. */
+  url: string | null;
   version: string;
   size: number;
   state: SyncedFileState;
@@ -44,6 +51,8 @@ export class SyncedFile {
     externalId: string;
     name: string;
     path: string;
+    fileName?: string | null;
+    url?: string | null;
     version: string;
     size: number;
     state: SyncedFileState;
@@ -60,6 +69,8 @@ export class SyncedFile {
     this.externalId = params.externalId;
     this.name = params.name;
     this.path = params.path;
+    this.fileName = params.fileName ?? null;
+    this.url = params.url ?? null;
     this.version = params.version;
     this.size = params.size;
     this.state = params.state;
@@ -70,6 +81,11 @@ export class SyncedFile {
     this.processingErrorCode = params.processingErrorCode ?? null;
     this.createdAt = params.createdAt ?? new Date();
     this.updatedAt = params.updatedAt ?? new Date();
+  }
+
+  /** The name its content is typed and stored by. */
+  typedFileName(): string {
+    return this.fileName ?? this.name;
   }
 
   /** Waiting for room, or imported but its document was removed. */

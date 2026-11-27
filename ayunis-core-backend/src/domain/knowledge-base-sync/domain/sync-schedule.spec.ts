@@ -3,7 +3,19 @@ import {
   ProviderRequestRejectedError,
   ProviderServerError,
 } from 'src/common/errors/provider.errors';
-import { outagePauseEnd } from './sync-schedule';
+import { nextSyncsAfter, outagePauseEnd } from './sync-schedule';
+import { SyncedLocationProvider } from './synced-location-provider.enum';
+
+describe('nextSyncsAfter', () => {
+  it('syncs a website a day after its last sync and a connector location an hour after', () => {
+    const next = nextSyncsAfter(new Date('2026-11-18T10:00:00.000Z'));
+
+    expect(next).toEqual({
+      [SyncedLocationProvider.CONNECTOR]: new Date('2026-11-18T11:00:00.000Z'),
+      [SyncedLocationProvider.WEB]: new Date('2026-11-19T10:00:00.000Z'),
+    });
+  });
+});
 
 describe('outagePauseEnd', () => {
   const now = new Date('2026-11-18T10:00:00.000Z');

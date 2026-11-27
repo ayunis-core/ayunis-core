@@ -4,4 +4,6 @@
  */
 export enum SyncedLocationProvider {
   CONNECTOR = 'connector',
+  /** A website, crawled without a connection. */
+  WEB = 'web',
 }

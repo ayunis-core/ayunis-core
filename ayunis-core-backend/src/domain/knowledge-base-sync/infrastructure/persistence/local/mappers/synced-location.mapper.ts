@@ -5,9 +5,11 @@ import type {
   SyncedLocation,
   SyncedLocationParams,
 } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
+import { WebSyncedLocation } from 'src/domain/knowledge-base-sync/domain/web-synced-location.entity';
 import {
   ConnectorSyncedLocationRecord,
   type SyncedLocationRecord,
+  WebSyncedLocationRecord,
 } from 'src/domain/knowledge-base-sync/infrastructure/persistence/local/schema/synced-location.record';
 
 @Injectable()
@@ -18,6 +20,11 @@ export class SyncedLocationMapper {
         ...this.toParams(record),
         connectorId: record.connectorId as UUID,
       });
+    if (record instanceof WebSyncedLocationRecord)
+      return new WebSyncedLocation({
+        ...this.toParams(record),
+        depth: record.depth as number,
+      });
     throw new Error(`Unknown synced location record subtype for ${record.id}`);
   }
 
@@ -27,6 +34,11 @@ export class SyncedLocationMapper {
       return Object.assign(new ConnectorSyncedLocationRecord(), {
         ...this.toRow(location),
         connectorId: location.connectorId,
+      });
+    if (location instanceof WebSyncedLocation)
+      return Object.assign(new WebSyncedLocationRecord(), {
+        ...this.toRow(location),
+        depth: location.depth,
       });
     throw new Error(`Unknown synced location subtype for ${location.id}`);
   }

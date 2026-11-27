@@ -16,7 +16,7 @@ import { AddSyncedDocumentsToKnowledgeBaseCommand } from './add-synced-documents
 /**
  * Creates PROCESSING documents for as many of the files as the knowledge
  * base still has room for, under the same row lock as uploads and URLs, and
- * returns them in the order of the names. For trusted callers only (the sync
+ * returns them in the order given. For trusted callers only (the sync
  * engine, which authorized the location when it was added).
  */
 @Injectable()
@@ -35,12 +35,12 @@ export class AddSyncedDocumentsToKnowledgeBaseUseCase {
   async execute(
     command: AddSyncedDocumentsToKnowledgeBaseCommand,
   ): Promise<FileSource[]> {
-    const { knowledgeBaseId, fileNames } = command;
+    const { knowledgeBaseId, documents } = command;
     this.logger.log(
-      { knowledgeBaseId, count: fileNames.length },
+      { knowledgeBaseId, count: documents.length },
       'Adding synced documents to knowledge base',
     );
-    if (fileNames.length === 0) return [];
+    if (documents.length === 0) return [];
     return this.txHost.withTransaction(async () => {
       const knowledgeBase = await this.repository.findById(knowledgeBaseId, {
         lock: true,
@@ -53,7 +53,7 @@ export class AddSyncedDocumentsToKnowledgeBaseUseCase {
       return this.createSources.execute(
         new CreateProcessingFileSourcesCommand(
           knowledgeBaseId,
-          fileNames.slice(0, room),
+          documents.slice(0, room),
           command.syncedLocationId,
         ),
       );

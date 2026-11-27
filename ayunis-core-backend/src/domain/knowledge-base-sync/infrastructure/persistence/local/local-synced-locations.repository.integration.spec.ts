@@ -13,11 +13,13 @@ import { CreateKnowledgeBaseSyncTables1795019918718 } from 'src/db/migrations/17
 import { AddSyncedFileProcessing1795033122250 } from 'src/db/migrations/1795033122250-AddSyncedFileProcessing';
 import { AddSyncedLocationSchedule1795040884040 } from 'src/db/migrations/1795040884040-AddSyncedLocationSchedule';
 import { MakeSyncedLocationsProviderBased1795382453624 } from 'src/db/migrations/1795382453624-MakeSyncedLocationsProviderBased';
+import { AddWebSyncedLocations1795391513548 } from 'src/db/migrations/1795391513548-AddWebSyncedLocations';
 import { SyncedLocationLocks } from 'src/domain/knowledge-base-sync/application/services/synced-location-locks.service';
 import { SyncedFile } from 'src/domain/knowledge-base-sync/domain/synced-file.entity';
 import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/synced-file-skip-reason.enum';
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
+import { WebSyncedLocation } from 'src/domain/knowledge-base-sync/domain/web-synced-location.entity';
 import type { SyncedLocation } from 'src/domain/knowledge-base-sync/domain/synced-location.entity';
 import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
 import { SyncedLocationState } from 'src/domain/knowledge-base-sync/domain/synced-location-state.enum';
@@ -31,6 +33,7 @@ import { SyncedFileRecord } from './schema/synced-file.record';
 import {
   ConnectorSyncedLocationRecord,
   SyncedLocationRecord,
+  WebSyncedLocationRecord,
 } from './schema/synced-location.record';
 
 // ts-jest drops the column types of the records, so the tables are declared
@@ -67,6 +70,13 @@ const connectorLocationSchema = new EntitySchema<ConnectorSyncedLocationRecord>(
     columns: { connectorId: { type: String, nullable: true } },
   },
 );
+const webLocationSchema = new EntitySchema<WebSyncedLocationRecord>({
+  name: 'WebSyncedLocationRecord',
+  target: WebSyncedLocationRecord,
+  type: 'entity-child',
+  discriminatorValue: SyncedLocationProvider.WEB,
+  columns: { depth: { type: 'smallint', nullable: true } },
+});
 const fileSchema = new EntitySchema<SyncedFileRecord>({
   name: 'SyncedFileRecord',
   target: SyncedFileRecord,
@@ -78,6 +88,8 @@ const fileSchema = new EntitySchema<SyncedFileRecord>({
     externalId: { type: String },
     name: { type: String },
     path: { type: String },
+    fileName: { type: String, nullable: true },
+    url: { type: String, nullable: true },
     version: { type: String },
     size: {
       type: 'bigint',
@@ -110,7 +122,12 @@ describe('LocalSyncedLocationsRepository', () => {
     db = new DataSource({
       ...(typeormConfigRaw as PostgresConnectionOptions),
       schema,
-      entities: [locationSchema, connectorLocationSchema, fileSchema],
+      entities: [
+        locationSchema,
+        connectorLocationSchema,
+        webLocationSchema,
+        fileSchema,
+      ],
       migrations: [],
       migrationsRun: false,
       logging: false,
@@ -135,6 +152,7 @@ describe('LocalSyncedLocationsRepository', () => {
     await new AddSyncedFileProcessing1795033122250().up(inSchema);
     await new AddSyncedLocationSchedule1795040884040().up(inSchema);
     await new MakeSyncedLocationsProviderBased1795382453624().up(inSchema);
+    await new AddWebSyncedLocations1795391513548().up(inSchema);
     await setup.query('SET search_path TO public');
     await setup.release();
     repository = new LocalSyncedLocationsRepository(
@@ -174,6 +192,21 @@ describe('LocalSyncedLocationsRepository', () => {
       knowledgeBaseId: await insert('knowledge_bases'),
       connectorId: await insert('connectors'),
       location: 'https://municipality.sharepoint.com/sites/bauamt',
+      ...schedule,
+    });
+    expect(await repository.create(location)).toBe(true);
+    return location;
+  }
+
+  async function aWebLocation(
+    knowledgeBaseId?: UUID,
+    schedule: { nextSyncAt?: Date } = {},
+  ) {
+    const location = new WebSyncedLocation({
+      orgId: await insert('orgs'),
+      knowledgeBaseId: knowledgeBaseId ?? (await insert('knowledge_bases')),
+      location: 'https://www.musterstadt.de/',
+      depth: 2,
       ...schedule,
     });
     expect(await repository.create(location)).toBe(true);
@@ -282,6 +315,74 @@ describe('LocalSyncedLocationsRepository', () => {
       connectorId: location.connectorId,
       location: location.location,
     });
+  });
+
+  it('loads a website as a web location with its depth, and keeps one per knowledge base and URL', async () => {
+    const location = await aWebLocation();
+
+    const loaded = await repository.findById(location.id);
+
+    expect(loaded).toBeInstanceOf(WebSyncedLocation);
+    expect(loaded).toMatchObject({
+      provider: SyncedLocationProvider.WEB,
+      depth: 2,
+      location: 'https://www.musterstadt.de/',
+    });
+    expect(
+      await repository.create(
+        new WebSyncedLocation({ ...location, id: randomUUID(), depth: 0 }),
+      ),
+    ).toBe(false);
+  });
+
+  it('rejects a web location without a depth of 0 to 2, and a connector location with one', async () => {
+    const orgId = await insert('orgs');
+    const knowledgeBaseId = await insert('knowledge_bases');
+    const row = (provider: SyncedLocationProvider, values: string) =>
+      db.query(
+        `INSERT INTO "${schema}"."knowledge_base_synced_locations"
+           ("id", "orgId", "knowledgeBaseId", "location", "provider", "connectorId", "depth")
+         VALUES ($1, $2, $3, $4, $5, ${values})`,
+        [randomUUID(), orgId, knowledgeBaseId, randomUUID(), provider],
+      );
+    const connectorId = await insert('connectors');
+
+    await expect(row(SyncedLocationProvider.WEB, 'NULL, NULL')).rejects.toThrow(
+      /check constraint/,
+    );
+    await expect(row(SyncedLocationProvider.WEB, 'NULL, 3')).rejects.toThrow(
+      /check constraint/,
+    );
+    await expect(
+      row(SyncedLocationProvider.CONNECTOR, `'${connectorId}', 1`),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it("keeps a file's typed file name and citation URL", async () => {
+    const location = await aWebLocation();
+    const file = new SyncedFile({
+      locationId: location.id,
+      externalId: 'https://www.musterstadt.de/rathaus',
+      name: 'Rathaus',
+      path: 'https://www.musterstadt.de/rathaus',
+      fileName: 'Rathaus.txt',
+      url: 'https://www.musterstadt.de/rathaus',
+      version: 'sha256:abc',
+      size: 120,
+      state: SyncedFileState.AWAITING_CAPACITY,
+    });
+    await repository.saveFiles([file]);
+    file.name = 'Rathaus und Verwaltung';
+    file.fileName = 'Rathaus und Verwaltung.txt';
+    await repository.saveFiles([file]);
+
+    expect(await filesOf(location)).toEqual([
+      expect.objectContaining({
+        name: 'Rathaus und Verwaltung',
+        fileName: 'Rathaus und Verwaltung.txt',
+        url: 'https://www.musterstadt.de/rathaus',
+      }),
+    ]);
   });
 
   it('keeps one location per knowledge base, provider and URL, whichever connector it syncs through', async () => {
@@ -400,7 +501,10 @@ describe('LocalSyncedLocationsRepository', () => {
     const at = (time: string) => new Date(`2000-01-01T${time}:00.000Z`);
     const now = at('01:00');
     const next = at('02:00');
-    const nextSyncs = { [SyncedLocationProvider.CONNECTOR]: next };
+    const nextSyncs = {
+      [SyncedLocationProvider.CONNECTOR]: next,
+      [SyncedLocationProvider.WEB]: at('03:00'),
+    };
 
     it('takes the due locations that are not paused, oldest first, each once', async () => {
       const oldest = await aLocation({ nextSyncAt: at('00:10') });
@@ -460,6 +564,25 @@ describe('LocalSyncedLocationsRepository', () => {
       expect(
         (await repository.claimDue(now, nextSyncs, 10)).map(({ id }) => id),
       ).toContain(held.id);
+    });
+
+    it("schedules each location's next sync by its provider", async () => {
+      const connector = await aLocation({ nextSyncAt: at('00:10') });
+      const web = await aWebLocation(undefined, { nextSyncAt: at('00:10') });
+
+      await repository.claimDue(now, nextSyncs, 10);
+      const claimed = await Promise.all(
+        [connector, web].map(({ id }) => repository.findById(id)),
+      );
+      await repository.recordSyncEnded(web.id, nextSyncs);
+
+      expect(claimed.map((location) => location?.nextSyncAt)).toEqual([
+        next,
+        at('03:00'),
+      ]);
+      expect((await repository.findById(web.id))?.nextSyncAt).toEqual(
+        at('03:00'),
+      );
     });
 
     it('keeps the later end when a location is paused twice', async () => {

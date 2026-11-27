@@ -7,6 +7,7 @@ import { EntityManager, Repository } from 'typeorm';
 import {
   SourceBatchWriteRepository,
   type ReplacedSource,
+  type SourceRename,
 } from 'src/domain/sources/application/ports/source-batch-write.repository';
 import { SourceStatus } from 'src/domain/sources/domain/source-status.enum';
 import type { FileSource } from 'src/domain/sources/domain/sources/text-source.entity';
@@ -35,16 +36,17 @@ export class LocalSourceBatchWriteRepository extends SourceBatchWriteRepository 
     await insertCrawledFileSources(this.manager, files);
   }
 
-  async rename(renames: { sourceId: UUID; name: string }[]): Promise<void> {
+  async rename(renames: SourceRename[]): Promise<void> {
     if (renames.length === 0) return;
     const values = renames.map(
-      (_, index) => `($${index * 2 + 1}::varchar, $${index * 2 + 2}::varchar)`,
+      (_, index) =>
+        `($${index * 3 + 1}::varchar, $${index * 3 + 2}::varchar, $${index * 3 + 3}::varchar)`,
     );
     await this.manager.query(
-      `UPDATE "sources" AS s SET "name" = v.name, "updatedAt" = now()
-       FROM (VALUES ${values.join(', ')}) AS v(id, name)
+      `UPDATE "sources" AS s SET "name" = v.name, "url" = v.url, "updatedAt" = now()
+       FROM (VALUES ${values.join(', ')}) AS v(id, name, url)
        WHERE s.id = v.id`,
-      renames.flatMap(({ sourceId, name }) => [sourceId, name]),
+      renames.flatMap(({ sourceId, name, url }) => [sourceId, name, url]),
     );
   }
 
@@ -109,7 +111,7 @@ export class LocalSourceBatchWriteRepository extends SourceBatchWriteRepository 
     const [rows]: [ReplacedSource[], number] = await this.manager.query(
       `UPDATE "sources" AS r
        SET "knowledgeBaseId" = o."knowledgeBaseId", "replacesSourceId" = NULL,
-           "syncedLocationId" = o."syncedLocationId",
+           "syncedLocationId" = o."syncedLocationId", "url" = o."url",
            "name" = $2, "updatedAt" = now()
        FROM "sources" AS o
        WHERE r.id = $1 AND o.id = r."replacesSourceId"

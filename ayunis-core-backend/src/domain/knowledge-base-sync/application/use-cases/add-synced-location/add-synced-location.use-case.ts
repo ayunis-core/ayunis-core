@@ -6,11 +6,9 @@ import { AssertKnowledgeBaseWriteAccessQuery } from 'src/domain/knowledge-bases/
 import { AssertKnowledgeBaseWriteAccessUseCase } from 'src/domain/knowledge-bases/application/use-cases/assert-knowledge-base-write-access/assert-knowledge-base-write-access.use-case';
 import {
   KnowledgeBaseSyncDisabledError,
-  SyncedLocationAlreadyExistsError,
   UnexpectedKnowledgeBaseSyncError,
 } from 'src/domain/knowledge-base-sync/application/knowledge-base-sync.errors';
-import { SyncRunsPort } from 'src/domain/knowledge-base-sync/application/ports/sync-runs.port';
-import { SyncedLocationsRepository } from 'src/domain/knowledge-base-sync/application/ports/synced-locations.repository';
+import { SyncedLocationRegistrar } from 'src/domain/knowledge-base-sync/application/services/synced-location-registrar.service';
 import { EnabledSyncProviders } from 'src/domain/knowledge-base-sync/application/services/enabled-sync-providers.service';
 import { ConnectorSyncedLocation } from 'src/domain/knowledge-base-sync/domain/connector-synced-location.entity';
 import { SyncedLocationProvider } from 'src/domain/knowledge-base-sync/domain/synced-location-provider.enum';
@@ -26,10 +24,9 @@ export class AddSyncedLocationUseCase {
   private readonly logger = new Logger(AddSyncedLocationUseCase.name);
 
   constructor(
-    private readonly repository: SyncedLocationsRepository,
     private readonly writeAccess: AssertKnowledgeBaseWriteAccessUseCase,
     private readonly findConnector: FindSetUpConnectorUseCase,
-    private readonly runs: SyncRunsPort,
+    private readonly registrar: SyncedLocationRegistrar,
     private readonly providers: EnabledSyncProviders,
   ) {}
 
@@ -49,23 +46,13 @@ export class AddSyncedLocationUseCase {
     const connector = await this.findConnector.execute(
       new FindSetUpConnectorQuery(command.product),
     );
-    const location = new ConnectorSyncedLocation({
-      orgId: knowledgeBase.orgId,
-      knowledgeBaseId: knowledgeBase.id,
-      connectorId: connector.id,
-      location: command.location.trim(),
-    });
-    if (!(await this.repository.create(location)))
-      throw new SyncedLocationAlreadyExistsError(knowledgeBase.id);
-    await this.runs
-      .enqueue([{ orgId: location.orgId, locationId: location.id }])
-      .catch((error: unknown) =>
-        // The sweep syncs it within a minute all the same: it is due.
-        this.logger.warn(
-          { locationId: location.id, error },
-          'Could not queue the first sync',
-        ),
-      );
-    return location;
+    return this.registrar.register(
+      new ConnectorSyncedLocation({
+        orgId: knowledgeBase.orgId,
+        knowledgeBaseId: knowledgeBase.id,
+        connectorId: connector.id,
+        location: command.location.trim(),
+      }),
+    );
   }
 }

@@ -20,8 +20,8 @@ import { SyncedFileSkipReason } from 'src/domain/knowledge-base-sync/domain/sync
 import { SyncedFileState } from 'src/domain/knowledge-base-sync/domain/synced-file-state.enum';
 import { PauseSyncedLocationUseCase } from 'src/domain/knowledge-base-sync/application/use-cases/pause-synced-location/pause-synced-location.use-case';
 import { ProviderServerError } from 'src/common/errors/provider.errors';
+import type { harnessFor } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
 import {
-  connectorSyncSources,
   createSyncHarness,
   enabledProviders,
   inlineTransactions,
@@ -30,6 +30,10 @@ import {
   type FakeKnowledgeBase,
 } from 'src/domain/knowledge-base-sync/application/testing/knowledge-base-sync.fixtures';
 import { withChanges } from 'src/domain/knowledge-base-sync/application/testing/in-memory-synced-locations.fixtures';
+import {
+  createWebSyncHarness,
+  WEBSITE,
+} from 'src/domain/knowledge-base-sync/application/testing/web-sync.fixtures';
 import { SyncedFileProcessingConsumer } from './synced-file-processing.consumer';
 
 const INDEXED = new Set([
@@ -50,6 +54,8 @@ class FakePipeline {
   /** While set, every run fails at the provider with it, like embeddings. */
   outage: Error | null = null;
   runs = 0;
+  /** What each run was handed. */
+  readonly documents: DocumentToProcess[] = [];
   private held: { reached: () => void; released: Promise<void> } | null = null;
 
   constructor(
@@ -70,6 +76,7 @@ class FakePipeline {
 
   async process(_job: Job, document: DocumentToProcess): Promise<void> {
     if (!this.processing(document.sourceId)) return;
+    this.documents.push(document);
     const held = this.held;
     this.held = null;
     if (held) {
@@ -115,6 +122,7 @@ function fakeReplacements(knowledgeBase: FakeKnowledgeBase) {
         id: UUID;
         replacedSourceId: UUID;
         name: string;
+        fileName: string | null;
         storageKey: string;
       }) => {
         if (!documents.has(command.replacedSourceId))
@@ -126,6 +134,7 @@ function fakeReplacements(knowledgeBase: FakeKnowledgeBase) {
         );
         documents.set(command.id, {
           name: command.name,
+          fileName: command.fileName,
           knowledgeBaseId: null,
           status: SourceStatus.PROCESSING,
           replaces: command.replacedSourceId,
@@ -156,6 +165,7 @@ function fakeReplacements(knowledgeBase: FakeKnowledgeBase) {
         documents.set(replacementId, {
           ...replacement,
           name,
+          url: replaced.url,
           knowledgeBaseId: replaced.knowledgeBaseId,
           replaces: undefined,
         });
@@ -211,11 +221,11 @@ async function readAll(stream: Readable): Promise<string> {
  * run through the real consumer and use cases, on the fake source system,
  * knowledge base, storage and document pipeline.
  */
-function createProcessingHarness(
+function processingHarnessFor<H extends ReturnType<typeof harnessFor>>(
+  harness: H,
   options: { processingEnabled?: boolean } = {},
 ) {
-  const harness = createSyncHarness();
-  const { repository, knowledgeBase, system } = harness;
+  const { repository, knowledgeBase } = harness;
   const storage = new Map<string, string>();
   const pipeline = new FakePipeline(knowledgeBase, storage);
   const replacements = fakeReplacements(knowledgeBase);
@@ -258,7 +268,7 @@ function createProcessingHarness(
     { execute: () => Promise.resolve(true) } as never,
     new StartSyncedFileProcessingUseCase(
       repository,
-      connectorSyncSources(system),
+      harness.sources,
       upload as never,
       replacements.create as never,
       replacements.get as never,
@@ -352,7 +362,13 @@ function createProcessingHarness(
   };
 }
 
-type Harness = ReturnType<typeof createProcessingHarness>;
+function createProcessingHarness(
+  options: { processingEnabled?: boolean } = {},
+) {
+  return processingHarnessFor(createSyncHarness(), options);
+}
+
+type Harness = ReturnType<typeof processingHarnessFor>;
 
 function fileAt(harness: Harness, path: string) {
   const file = harness.filesOf().find((candidate) => candidate.path === path);
@@ -845,5 +861,54 @@ describe('SyncedFileProcessingConsumer', () => {
     expect(documentOf(harness, 'Hundesteuer.pdf')?.status).toBe(
       SourceStatus.PROCESSING,
     );
+  });
+
+  describe('of a website', () => {
+    const createWebProcessingHarness = () =>
+      processingHarnessFor(createWebSyncHarness());
+
+    it('processes a page as the text the crawler extracts and a PDF as served, each cited by its URL', async () => {
+      const harness = createWebProcessingHarness();
+      const satzung = harness.website.pdf(
+        'downloads/hundesteuer',
+        'Hundesteuersatzung',
+        '%PDF-1.7 Hundesteuer',
+      );
+
+      await syncAndProcess(harness);
+
+      expect(harness.searchable()).toEqual([
+        '%PDF-1.7 Hundesteuer',
+        'Willkommen in Musterstadt',
+      ]);
+      expect(
+        harness.pipeline.documents
+          .map(({ fileName, fileType }) => ({ fileName, fileType }))
+          .sort((a, b) => a.fileName.localeCompare(b.fileName)),
+      ).toEqual([
+        { fileName: 'Hundesteuersatzung.pdf', fileType: 'application/pdf' },
+        { fileName: 'Startseite.txt', fileType: 'text/plain' },
+      ]);
+      expect(
+        [...harness.knowledgeBase.documents.values()]
+          .map(({ name, url }) => ({ name, url }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      ).toEqual([
+        { name: 'Hundesteuersatzung', url: satzung },
+        { name: 'Startseite', url: WEBSITE },
+      ]);
+    });
+
+    it('keeps finding the old text of a changed page until its new text is indexed', async () => {
+      const harness = createWebProcessingHarness();
+      await syncAndProcess(harness);
+
+      harness.website.editPage(WEBSITE, { text: 'Neu: Bürgerbüro' });
+      await harness.sync();
+
+      expect(harness.searchable()).toEqual(['Willkommen in Musterstadt']);
+      await harness.processQueued();
+      expect(harness.searchable()).toEqual(['Neu: Bürgerbüro']);
+    });
   });
 });

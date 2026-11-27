@@ -138,10 +138,7 @@ export class StartSyncedFileProcessingUseCase {
     file: SyncedFile,
     location: SyncedLocation,
   ): Promise<StartSyncedFileProcessingResult> {
-    const content = await this.sources.fetchItemContent(
-      location,
-      file.externalId,
-    );
+    const content = await this.sources.fetchItemContent(location, file);
     switch (content.outcome) {
       case SyncSourceOutcome.ACCESS_LOST:
         await this.repository.markNoLongerAccessible(
@@ -176,7 +173,7 @@ export class StartSyncedFileProcessingUseCase {
     const storageKey = buildSyncedOriginalKey(
       job.orgId,
       replacementId,
-      file.name,
+      file.typedFileName(),
     );
     const stored = await this.uploadObject
       .execute(
@@ -198,6 +195,7 @@ export class StartSyncedFileProcessingUseCase {
         replacedSourceId: job.sourceId,
         orgId: job.orgId,
         name: file.name,
+        fileName: file.fileName,
         storageKey,
       }),
     );
@@ -218,8 +216,9 @@ export class StartSyncedFileProcessingUseCase {
         sourceId: replacementIdOf(job),
         orgId: job.orgId,
         minioPath: storageKey,
-        fileName: file.name,
-        fileType: getCanonicalMimeType(detectFileType('', file.name)) ?? '',
+        fileName: file.typedFileName(),
+        fileType:
+          getCanonicalMimeType(detectFileType('', file.typedFileName())) ?? '',
         retainFile: true,
         expectedSize: stored.size,
         expectedETag: stored.etag,

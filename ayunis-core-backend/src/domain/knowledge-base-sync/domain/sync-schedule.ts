@@ -4,6 +4,7 @@ import { SyncedLocationProvider } from './synced-location-provider.enum';
 /** A location syncs again this long after its last sync ended. */
 export const SYNC_INTERVALS_MS: Record<SyncedLocationProvider, number> = {
   [SyncedLocationProvider.CONNECTOR]: 60 * 60 * 1000,
+  [SyncedLocationProvider.WEB]: 24 * 60 * 60 * 1000,
 };
 
 /**

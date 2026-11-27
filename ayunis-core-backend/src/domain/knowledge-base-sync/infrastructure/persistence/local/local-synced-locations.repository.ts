@@ -20,7 +20,7 @@ import { SyncedLocationMapper } from './mappers/synced-location.mapper';
 import { SyncedFileRecord } from './schema/synced-file.record';
 import { SyncedLocationRecord } from './schema/synced-location.record';
 
-// Each row binds 13 parameters; this keeps a batch far below Postgres' cap.
+// Each row binds 15 parameters; this keeps a batch far below Postgres' cap.
 const FILE_BATCH_SIZE = 1000;
 
 interface FileCountRow {
@@ -375,6 +375,8 @@ export class LocalSyncedLocationsRepository extends SyncedLocationsRepository {
           [
             'name',
             'path',
+            'fileName',
+            'url',
             'version',
             'size',
             'state',
