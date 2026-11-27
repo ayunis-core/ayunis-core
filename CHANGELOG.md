@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.87.0](https://github.com/ayunis-core/ayunis-core/compare/v2.86.0...v2.87.0) (2026-11-27)
+
+
+### Features
+
+* **budget-alerts:** stop sending 50% budget warnings after the 20th (AYC-2170) ([#2595](https://github.com/ayunis-core/ayunis-core/issues/2595)) ([ed428ac](https://github.com/ayunis-core/ayunis-core/commit/ed428ac3924ced4d3ecd01e5fa8ed648d736b8e0))
+* **outlook:** remove add-in feature flag (AYC-2141) ([#2581](https://github.com/ayunis-core/ayunis-core/issues/2581)) ([6898c12](https://github.com/ayunis-core/ayunis-core/commit/6898c122106f4a1ac6358851ee826d662599a654))
+* **release-notes:** mark all product updates as read (AYC-2161) ([#2589](https://github.com/ayunis-core/ayunis-core/issues/2589)) ([5e9ea55](https://github.com/ayunis-core/ayunis-core/commit/5e9ea5540eaa1fdd287b5c57fc85cfdab97d9a3a))
+* **release-notes:** open instant_open product updates in a modal (AYC-2140) ([#2583](https://github.com/ayunis-core/ayunis-core/issues/2583)) ([8c7af80](https://github.com/ayunis-core/ayunis-core/commit/8c7af80452faa9edba5c1f84a39ef657a96fe848))
+
 ## [2.86.0](https://github.com/ayunis-core/ayunis-core/compare/v2.85.0...v2.86.0) (2026-11-26)
 
 
